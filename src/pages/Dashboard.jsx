@@ -4,6 +4,7 @@ import HeroMetrics from '../components/HeroMetrics';
 import OnboardingProgress from '../components/OnboardingProgress';
 import ReferralSection from '../components/ReferralSection';
 import CameraScanner from '../components/CameraScanner';
+import AIInsights from '../components/AIInsights';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -194,6 +195,8 @@ function Dashboard({ user, onNavigate }) {
           </table>
         )}
       </div>
+
+      <AIInsights user={user} compact={true} />
 
       <ReferralSection user={user} />
     </div>
