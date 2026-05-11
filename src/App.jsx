@@ -8,6 +8,7 @@ import Metrics from './pages/Metrics';
 import CallHistory from './pages/CallHistory';
 import PaymentTracking from './pages/PaymentTracking';
 import Analytics from './pages/Analytics';
+import Inventory from './pages/Inventory';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -41,6 +42,7 @@ function App() {
     { key: 'message', label: '💬 Messages' },
     { key: 'payments', label: '💰 Payments' },
     { key: 'calls', label: '📋 Call History' },
+    { key: 'inventory', label: '📦 Inventory' },
     { key: 'analytics', label: '📈 Analytics' },
     { key: 'metrics', label: '🎯 Metrics' },
   ];
@@ -73,6 +75,7 @@ function App() {
         {currentPage === 'message' && <MessageGenerator user={user} />}
         {currentPage === 'payments' && <PaymentTracking user={user} />}
         {currentPage === 'calls' && <CallHistory user={user} />}
+        {currentPage === 'inventory' && <Inventory user={user} />}
         {currentPage === 'analytics' && <Analytics user={user} />}
         {currentPage === 'metrics' && <Metrics user={user} />}
       </main>
