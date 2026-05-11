@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import LoginSignup from './pages/LoginSignup';
 import Dashboard from './pages/Dashboard';
@@ -17,9 +17,11 @@ import AIChat from './components/AIChat';
 function App() {
   const [user, setUser] = useState(null);
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [pageKey, setPageKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef(null);
+  const observerRef = useRef(null);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('vantro_user');
@@ -35,6 +37,33 @@ function App() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  // Scroll reveal: observe all .reveal elements, add .visible when in view
+  const initScrollReveal = useCallback(() => {
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observerRef.current.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+    );
+    // Observe after a brief delay so the new page DOM is painted
+    setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach((el) => {
+        observerRef.current.observe(el);
+      });
+    }, 80);
+  }, []);
+
+  useEffect(() => {
+    if (user) initScrollReveal();
+    return () => observerRef.current?.disconnect();
+  }, [currentPage, pageKey, user, initScrollReveal]);
+
   const handleLogin = (userData) => {
     setUser(userData);
     localStorage.setItem('vantro_user', JSON.stringify(userData));
@@ -49,7 +78,9 @@ function App() {
 
   const navigate = (page) => {
     setCurrentPage(page);
+    setPageKey(k => k + 1);
     setMoreOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (loading) return <div className="loading">Loading...</div>;
@@ -118,20 +149,22 @@ function App() {
       </header>
       <AIChat user={user} onNavigate={navigate} />
       <main className="main-content">
-        <div className="user-greeting">
+        <div className="user-greeting reveal">
           <p>Welcome, <strong>{user.business_name}</strong> 👋</p>
         </div>
-        {currentPage === 'dashboard' && <Dashboard user={user} onNavigate={navigate} />}
-        {currentPage === 'priority' && <PriorityList user={user} onSelectCustomer={() => navigate('message')} />}
-        {currentPage === 'message' && <MessageGenerator user={user} />}
-        {currentPage === 'payments' && <PaymentTracking user={user} />}
-        {currentPage === 'calls' && <CallHistory user={user} />}
-        {currentPage === 'inventory' && <Inventory user={user} />}
-        {currentPage === 'analytics' && <Analytics user={user} />}
-        {currentPage === 'metrics' && <Metrics user={user} />}
-        {currentPage === 'prospects' && <Prospects user={user} />}
-        {currentPage === 'forecast' && <CashForecast user={user} />}
-        {currentPage === 'pricing' && <Pricing />}
+        <div key={pageKey} className="page-enter">
+          {currentPage === 'dashboard' && <Dashboard user={user} onNavigate={navigate} />}
+          {currentPage === 'priority' && <PriorityList user={user} onSelectCustomer={() => navigate('message')} />}
+          {currentPage === 'message' && <MessageGenerator user={user} />}
+          {currentPage === 'payments' && <PaymentTracking user={user} />}
+          {currentPage === 'calls' && <CallHistory user={user} />}
+          {currentPage === 'inventory' && <Inventory user={user} />}
+          {currentPage === 'analytics' && <Analytics user={user} />}
+          {currentPage === 'metrics' && <Metrics user={user} />}
+          {currentPage === 'prospects' && <Prospects user={user} />}
+          {currentPage === 'forecast' && <CashForecast user={user} />}
+          {currentPage === 'pricing' && <Pricing />}
+        </div>
       </main>
     </div>
   );

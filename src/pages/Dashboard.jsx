@@ -111,7 +111,7 @@ function Dashboard({ user, onNavigate }) {
         </div>
       )}
 
-      <div className="summary-cards">
+      <div className="summary-cards reveal reveal-d1">
         <div className="card card-red">
           <p className="label">Total Outstanding</p>
           <p className="value">₹{summary.total_outstanding?.toLocaleString('en-IN') || 0}</p>
@@ -126,7 +126,7 @@ function Dashboard({ user, onNavigate }) {
         </div>
       </div>
 
-      <div className="upload-section">
+      <div className="upload-section reveal reveal-d2">
         <div className="upload-header">
           <div>
             <h2>📤 Add Invoices</h2>
@@ -148,7 +148,7 @@ function Dashboard({ user, onNavigate }) {
         />
       )}
 
-      <div className="invoices-section">
+      <div className="invoices-section reveal reveal-d3">
         <div className="section-header">
           <h2>📋 Your Invoices</h2>
           {pending.length > 0 && (
