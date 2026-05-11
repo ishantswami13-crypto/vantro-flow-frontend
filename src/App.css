@@ -978,3 +978,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   transition: opacity 0.15s;
 }
 .ai-chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* WhatsApp links list */
+.wa-links-list { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem; }
+.wa-links-title { font-size: 0.75rem; font-weight: 700; color: #15803d; margin-bottom: 0.2rem; }
+.wa-link-btn {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.wa-link-btn:hover { background: #dcfce7; }
+.wa-link-icon { font-size: 1rem; }
+.wa-link-name { font-size: 0.83rem; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wa-link-preview { font-size: 0.73rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wa-link-send { font-size: 0.75rem; font-weight: 700; color: #16a34a; white-space: nowrap; }

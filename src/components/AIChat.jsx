@@ -5,12 +5,35 @@ const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 const SUGGESTIONS = [
   '📊 How is my business doing?',
-  '⚠️ Who owes me the most?',
-  '📞 Show my call stats',
-  '📦 Any low stock alerts?',
-  '💰 What\'s my cash forecast?',
-  '🎯 Show my CRM prospects',
+  '⚠️ Who owes me the most money?',
+  '💬 Send reminders to all overdue customers',
+  '📦 Order stock from supplier',
+  '🎯 Add a new CRM prospect',
+  '💰 What\'s my 30-day cash forecast?',
 ];
+
+function WALinksList({ links }) {
+  if (!links?.length) return null;
+  return (
+    <div className="wa-links-list">
+      <div className="wa-links-title">📱 Ready to send on WhatsApp:</div>
+      {links.map((link, i) => (
+        <a
+          key={i}
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="wa-link-btn"
+        >
+          <span className="wa-link-icon">💬</span>
+          <span className="wa-link-name">{link.to}</span>
+          <span className="wa-link-preview">{link.message.substring(0, 40)}…</span>
+          <span className="wa-link-send">Send →</span>
+        </a>
+      ))}
+    </div>
+  );
+}
 
 function Message({ msg }) {
   const isUser = msg.role === 'user';
@@ -28,6 +51,7 @@ function Message({ msg }) {
             ))}
           </div>
         )}
+        {msg.waLinks?.length > 0 && <WALinksList links={msg.waLinks} />}
         {msg.navigate && (
           <button className="chat-nav-btn" onClick={msg.onNavigate}>
             Go to {msg.navigate} →
@@ -52,7 +76,7 @@ export default function AIChat({ user, onNavigate }) {
     if (open && messages.length === 0) {
       setMessages([{
         role: 'assistant',
-        content: `Hi ${user.business_name?.split(' ')[0] || 'there'}! 👋 I'm Vantro AI. I can check your invoices, mark payments, manage CRM prospects, check inventory, and more. What do you need?`
+        content: `Hi ${user.business_name?.split(' ')[0] || 'there'}! 👋 I'm Vantro AI.\n\nI can check invoices, send WhatsApp reminders to customers, place orders with suppliers, manage your CRM, check inventory, and more.\n\nKya karna hai? 🚀`
       }]);
     }
   }, [open]);
@@ -76,9 +100,8 @@ export default function AIChat({ user, onNavigate }) {
     setLoading(true);
 
     try {
-      // Build history for API (only role+content, last 10 messages)
       const history = [...messages, userMsg]
-        .slice(-10)
+        .slice(-12)
         .map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }));
 
       const res = await axios.post(`${API_BASE}/api/ai-chat`, {
@@ -87,11 +110,12 @@ export default function AIChat({ user, onNavigate }) {
         messages: history
       });
 
-      const { message, actions, navigate } = res.data;
+      const { message, actions, navigate, waLinks } = res.data;
       const aiMsg = {
         role: 'assistant',
         content: message,
         actions: actions || [],
+        waLinks: waLinks || [],
         navigate,
         onNavigate: navigate ? () => { onNavigate?.(navigate); setOpen(false); } : null
       };
@@ -100,7 +124,8 @@ export default function AIChat({ user, onNavigate }) {
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: '⚠️ Sorry, I hit an error. Please try again.',
-        actions: []
+        actions: [],
+        waLinks: []
       }]);
     }
     setLoading(false);
@@ -131,7 +156,7 @@ export default function AIChat({ user, onNavigate }) {
               <span className="ai-chat-icon">🤖</span>
               <div>
                 <div className="ai-chat-name">Vantro AI</div>
-                <div className="ai-chat-status">● Online · Powered by Groq</div>
+                <div className="ai-chat-status">● Online · Can send WhatsApp & place orders</div>
               </div>
             </div>
             <button className="ai-chat-close" onClick={() => setOpen(false)}>✕</button>
@@ -150,7 +175,6 @@ export default function AIChat({ user, onNavigate }) {
               </div>
             )}
 
-            {/* Suggestions */}
             {showSuggestions && messages.length <= 1 && !loading && (
               <div className="chat-suggestions">
                 {SUGGESTIONS.map((s, i) => (
@@ -171,7 +195,7 @@ export default function AIChat({ user, onNavigate }) {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="Ask me anything... (Enter to send)"
+              placeholder="e.g. Send reminder to Rajesh, order 50 boxes from Sharma supplier..."
               rows={1}
               className="ai-chat-input"
               disabled={loading}
