@@ -9,6 +9,9 @@ import CallHistory from './pages/CallHistory';
 import PaymentTracking from './pages/PaymentTracking';
 import Analytics from './pages/Analytics';
 import Inventory from './pages/Inventory';
+import Prospects from './pages/Prospects';
+import CashForecast from './pages/CashForecast';
+import Pricing from './pages/Pricing';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -51,7 +54,7 @@ function App() {
   if (loading) return <div className="loading">Loading...</div>;
   if (!user) return <LoginSignup onLogin={handleLogin} />;
 
-  const morePages = ['inventory', 'metrics'];
+  const morePages = ['inventory', 'metrics', 'prospects', 'forecast', 'pricing'];
   const isMoreActive = morePages.includes(currentPage);
 
   return (
@@ -98,8 +101,12 @@ function App() {
               >⋯ More</button>
               {moreOpen && (
                 <div className="more-dropdown">
+                  <button onClick={() => navigate('prospects')}>🎯 CRM Prospects</button>
+                  <button onClick={() => navigate('forecast')}>💰 Cash Forecast</button>
+                  <button onClick={() => navigate('pricing')}>💳 Pricing</button>
+                  <div className="more-dropdown-divider" />
                   <button onClick={() => navigate('inventory')}>📦 Inventory</button>
-                  <button onClick={() => navigate('metrics')}>🎯 Metrics</button>
+                  <button onClick={() => navigate('metrics')}>📊 Metrics</button>
                 </div>
               )}
             </div>
@@ -120,6 +127,9 @@ function App() {
         {currentPage === 'inventory' && <Inventory user={user} />}
         {currentPage === 'analytics' && <Analytics user={user} />}
         {currentPage === 'metrics' && <Metrics user={user} />}
+        {currentPage === 'prospects' && <Prospects user={user} />}
+        {currentPage === 'forecast' && <CashForecast user={user} />}
+        {currentPage === 'pricing' && <Pricing />}
       </main>
     </div>
   );
