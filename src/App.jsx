@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import LoginSignup from './pages/LoginSignup';
 import Dashboard from './pages/Dashboard';
@@ -14,11 +14,21 @@ function App() {
   const [user, setUser] = useState(null);
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [loading, setLoading] = useState(true);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef(null);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('vantro_user');
     if (savedUser) setUser(JSON.parse(savedUser));
     setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
   const handleLogin = (userData) => {
@@ -33,19 +43,16 @@ function App() {
     setCurrentPage('login');
   };
 
+  const navigate = (page) => {
+    setCurrentPage(page);
+    setMoreOpen(false);
+  };
+
   if (loading) return <div className="loading">Loading...</div>;
   if (!user) return <LoginSignup onLogin={handleLogin} />;
 
-  const navItems = [
-    { key: 'dashboard', label: '📊 Dashboard' },
-    { key: 'priority', label: '📞 Priority List' },
-    { key: 'message', label: '💬 Messages' },
-    { key: 'payments', label: '💰 Payments' },
-    { key: 'calls', label: '📋 Call History' },
-    { key: 'inventory', label: '📦 Inventory' },
-    { key: 'analytics', label: '📈 Analytics' },
-    { key: 'metrics', label: '🎯 Metrics' },
-  ];
+  const morePages = ['inventory', 'metrics'];
+  const isMoreActive = morePages.includes(currentPage);
 
   return (
     <div className="app">
@@ -53,15 +60,50 @@ function App() {
         <div className="navbar-content">
           <h1 className="logo">🚀 Vantro Flow</h1>
           <nav className="nav-links">
-            {navItems.map(item => (
+            <button
+              className={currentPage === 'dashboard' ? 'active' : ''}
+              onClick={() => navigate('dashboard')}
+            >📊 Dashboard</button>
+
+            <div className="nav-group nav-group-green">
               <button
-                key={item.key}
-                className={currentPage === item.key ? 'active' : ''}
-                onClick={() => setCurrentPage(item.key)}
-              >
-                {item.label}
-              </button>
-            ))}
+                className={currentPage === 'payments' ? 'active' : ''}
+                onClick={() => navigate('payments')}
+              >💰 Payments</button>
+              <button
+                className={currentPage === 'calls' ? 'active' : ''}
+                onClick={() => navigate('calls')}
+              >📞 Calls</button>
+            </div>
+
+            <div className="nav-group nav-group-blue">
+              <button
+                className={currentPage === 'priority' ? 'active' : ''}
+                onClick={() => navigate('priority')}
+              >🎯 Priority</button>
+              <button
+                className={currentPage === 'message' ? 'active' : ''}
+                onClick={() => navigate('message')}
+              >💬 Messages</button>
+              <button
+                className={currentPage === 'analytics' ? 'active' : ''}
+                onClick={() => navigate('analytics')}
+              >📈 Analytics</button>
+            </div>
+
+            <div className="nav-more" ref={moreRef}>
+              <button
+                className={`more-btn ${isMoreActive ? 'active' : ''}`}
+                onClick={() => setMoreOpen(o => !o)}
+              >⋯ More</button>
+              {moreOpen && (
+                <div className="more-dropdown">
+                  <button onClick={() => navigate('inventory')}>📦 Inventory</button>
+                  <button onClick={() => navigate('metrics')}>🎯 Metrics</button>
+                </div>
+              )}
+            </div>
+
             <button onClick={handleLogout} className="logout-btn">Logout</button>
           </nav>
         </div>
@@ -70,8 +112,8 @@ function App() {
         <div className="user-greeting">
           <p>Welcome, <strong>{user.business_name}</strong> 👋</p>
         </div>
-        {currentPage === 'dashboard' && <Dashboard user={user} />}
-        {currentPage === 'priority' && <PriorityList user={user} onSelectCustomer={() => setCurrentPage('message')} />}
+        {currentPage === 'dashboard' && <Dashboard user={user} onNavigate={navigate} />}
+        {currentPage === 'priority' && <PriorityList user={user} onSelectCustomer={() => navigate('message')} />}
         {currentPage === 'message' && <MessageGenerator user={user} />}
         {currentPage === 'payments' && <PaymentTracking user={user} />}
         {currentPage === 'calls' && <CallHistory user={user} />}
