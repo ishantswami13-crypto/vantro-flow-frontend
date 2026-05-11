@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import AIInsights from '../components/AIInsights';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -133,6 +134,10 @@ function Analytics({ user }) {
             ? `${(data.paid_invoices / data.calls_made).toFixed(1)} paid/call`
             : '—'}</strong>
         </div>
+      </div>
+
+      <div style={{marginTop:'1.5rem'}}>
+        <AIInsights user={user} />
       </div>
     </div>
   );

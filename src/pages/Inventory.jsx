@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import CameraScanner from '../components/CameraScanner';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 const UNITS = ['unit', 'kg', 'litre', 'box', 'piece', 'packet', 'dozen', 'metre', 'set'];
@@ -28,6 +29,7 @@ function Inventory({ user }) {
   const [showSupplierForm, setShowSupplierForm] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(null);
   const [supplierForm, setSupplierForm] = useState({ name: '', phone: '', email: '', address: '', payment_terms: '30' });
+  const [showSupplierScanner, setShowSupplierScanner] = useState(false);
 
   const [saving, setSaving] = useState(false);
 
@@ -109,6 +111,18 @@ function Inventory({ user }) {
   };
 
   // ─── Supplier CRUD ───────────────────────────────────────────
+  const handleScannedSupplier = (extracted) => {
+    setEditingSupplier(null);
+    setSupplierForm({
+      name: extracted.name || '',
+      phone: extracted.phone || '',
+      email: extracted.email || '',
+      address: extracted.address || '',
+      payment_terms: extracted.payment_terms || '30',
+    });
+    setShowSupplierForm(true);
+  };
+
   const openNewSupplier = () => {
     setEditingSupplier(null);
     setSupplierForm({ name: '', phone: '', email: '', address: '', payment_terms: '30' });
@@ -421,8 +435,19 @@ function Inventory({ user }) {
         <div>
           <div className="section-header">
             <h3>Supplier Directory</h3>
-            <button className="add-btn" onClick={openNewSupplier}>+ Add Supplier</button>
+            <div style={{display:'flex',gap:'0.5rem'}}>
+              <button className="scan-invoice-btn" onClick={() => setShowSupplierScanner(true)}>📷 Scan Card</button>
+              <button className="add-btn" onClick={openNewSupplier}>+ Add Supplier</button>
+            </div>
           </div>
+
+          {showSupplierScanner && (
+            <CameraScanner
+              scanType="supplier"
+              onExtracted={handleScannedSupplier}
+              onClose={() => setShowSupplierScanner(false)}
+            />
+          )}
 
           {showSupplierForm && (
             <form className="inv-form" onSubmit={saveSupplier}>

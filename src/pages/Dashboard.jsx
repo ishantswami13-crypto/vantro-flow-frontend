@@ -3,6 +3,7 @@ import axios from 'axios';
 import HeroMetrics from '../components/HeroMetrics';
 import OnboardingProgress from '../components/OnboardingProgress';
 import ReferralSection from '../components/ReferralSection';
+import CameraScanner from '../components/CameraScanner';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -18,6 +19,7 @@ function Dashboard({ user, onNavigate }) {
   const [summary, setSummary] = useState({});
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
 
   useEffect(() => { fetchInvoices(); }, [user.id]);
 
@@ -50,6 +52,24 @@ function Dashboard({ user, onNavigate }) {
       setError('Failed to upload CSV');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleScannedInvoice = async (extracted) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      await axios.post(`${API_BASE}/api/invoices`, {
+        user_id: user.id,
+        customer_name: extracted.customer_name || 'Unknown Customer',
+        customer_phone: extracted.customer_phone || '',
+        invoice_amount: parseFloat(extracted.invoice_amount) || 0,
+        invoice_date: extracted.invoice_date || today,
+        payment_status: 'Pending',
+        days_overdue: 0,
+      });
+      fetchInvoices();
+    } catch (err) {
+      setError('Failed to save scanned invoice');
     }
   };
 
@@ -106,11 +126,26 @@ function Dashboard({ user, onNavigate }) {
       </div>
 
       <div className="upload-section">
-        <h2>📤 Upload Invoice Data</h2>
-        <p>Upload CSV file with: Customer Name, Invoice Amount, Invoice Date, Payment Status</p>
+        <div className="upload-header">
+          <div>
+            <h2>📤 Add Invoices</h2>
+            <p>Upload CSV or scan a physical invoice with your camera</p>
+          </div>
+          <button className="scan-invoice-btn" onClick={() => setShowScanner(true)}>
+            📷 Scan Invoice
+          </button>
+        </div>
         <input type="file" accept=".csv" onChange={handleFileUpload} disabled={uploading} />
         {uploading && <p>Uploading...</p>}
       </div>
+
+      {showScanner && (
+        <CameraScanner
+          scanType="invoice"
+          onExtracted={handleScannedInvoice}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
 
       <div className="invoices-section">
         <div className="section-header">
