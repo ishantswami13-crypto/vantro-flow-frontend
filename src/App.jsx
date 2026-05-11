@@ -12,6 +12,7 @@ import Inventory from './pages/Inventory';
 import Prospects from './pages/Prospects';
 import CashForecast from './pages/CashForecast';
 import Pricing from './pages/Pricing';
+import AIChat from './components/AIChat';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -115,6 +116,7 @@ function App() {
           </nav>
         </div>
       </header>
+      <AIChat user={user} onNavigate={navigate} />
       <main className="main-content">
         <div className="user-greeting">
           <p>Welcome, <strong>{user.business_name}</strong> 👋</p>
