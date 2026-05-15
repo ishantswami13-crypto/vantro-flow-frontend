@@ -1,42 +1,52 @@
 "use client";
 
-import { FiMenu, FiBell, FiSettings } from "react-icons/fi";
+import { FiMenu, FiBell, FiRefreshCw } from "react-icons/fi";
 import Link from "next/link";
 
-interface HeaderProps {
-  onMenuToggle: () => void;
-  pageTitle?: string;
-}
+interface HeaderProps { onMenuToggle: () => void; pageTitle?: string; }
 
 export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
   return (
-    <header className="h-16 bg-surface border-b border-border flex items-center justify-between px-4 lg:px-6 shrink-0">
+    <header className="h-16 glass border-b border-white/5 flex items-center justify-between px-4 lg:px-6 shrink-0 z-10">
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuToggle}
-          className="lg:hidden text-secondary hover:text-primary focus-ring rounded p-1"
+          className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-surface-2 border border-border text-secondary hover:text-primary hover:bg-surface-3 transition-all focus-ring"
           aria-label="Open menu"
         >
-          <FiMenu size={20} />
+          <FiMenu size={17} />
         </button>
         {pageTitle && (
-          <h1 className="text-sm font-semibold text-primary hidden sm:block">{pageTitle}</h1>
+          <div className="hidden sm:flex items-center gap-2.5">
+            <h1 className="text-sm font-bold text-primary tracking-tight">{pageTitle}</h1>
+            <span className="status-live text-xs text-success">Live</span>
+          </div>
         )}
       </div>
 
-      <div className="flex items-center gap-1">
-        <button className="p-2 text-secondary hover:text-primary hover:bg-surface-2 rounded-md transition-colors focus-ring" aria-label="Notifications">
-          <FiBell size={17} />
-        </button>
-        <Link
-          href="/settings"
-          className="p-2 text-secondary hover:text-primary hover:bg-surface-2 rounded-md transition-colors focus-ring"
-          aria-label="Settings"
+      <div className="flex items-center gap-1.5">
+        <button
+          className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-surface-2 border border-border text-secondary hover:text-primary hover:bg-surface-3 transition-all focus-ring"
+          aria-label="Sync data"
         >
-          <FiSettings size={17} />
-        </Link>
-        <div className="ml-2 w-8 h-8 rounded-md bg-accent-dim border border-accent/30 flex items-center justify-center">
-          <span className="text-xs font-semibold text-accent">R</span>
+          <FiRefreshCw size={15} />
+        </button>
+        <button
+          className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-surface-2 border border-border text-secondary hover:text-primary hover:bg-surface-3 transition-all focus-ring"
+          aria-label="Notifications"
+        >
+          <FiBell size={15} />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-danger border-2 border-bg" />
+        </button>
+
+        <div className="ml-1 flex items-center gap-2 px-2 py-1.5 rounded-xl bg-surface-2 border border-border hover:bg-surface-3 transition-all cursor-pointer">
+          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-accent to-success flex items-center justify-center text-xs font-bold text-white shrink-0">
+            R
+          </div>
+          <div className="hidden sm:block">
+            <p className="text-xs font-semibold text-primary leading-none">Rajesh</p>
+            <p className="text-2xs text-muted mt-0.5">Kumar Traders</p>
+          </div>
         </div>
       </div>
     </header>
