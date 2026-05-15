@@ -4,13 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   FiGrid, FiList, FiTrendingUp, FiSettings, FiLogOut, FiX, FiZap,
+  FiMessageSquare, FiPackage, FiUsers, FiBarChart2,
 } from "react-icons/fi";
 
 const NAV = [
-  { href: "/dashboard",   label: "Dashboard",     icon: FiGrid,       badge: null },
-  { href: "/collections", label: "Collections",   icon: FiList,       badge: "12" },
-  { href: "/forecast",    label: "Cash Forecast", icon: FiTrendingUp, badge: null },
-  { href: "/settings",    label: "Settings",      icon: FiSettings,   badge: null },
+  { href: "/dashboard",   label: "Dashboard",     icon: FiGrid,          badge: null },
+  { href: "/collections", label: "Collections",   icon: FiList,          badge: "12" },
+  { href: "/forecast",    label: "Cash Forecast", icon: FiTrendingUp,    badge: null },
+  { href: "/analytics",   label: "Analytics",     icon: FiBarChart2,     badge: null },
+  { href: "/inventory",   label: "Inventory",     icon: FiPackage,       badge: null },
+  { href: "/crm",         label: "CRM",           icon: FiUsers,         badge: null },
+  { href: "/ai-chat",     label: "AI Assistant",  icon: FiMessageSquare, badge: "AI" },
+  { href: "/settings",    label: "Settings",      icon: FiSettings,      badge: null },
 ];
 
 interface SidebarProps { open: boolean; onClose: () => void; }
