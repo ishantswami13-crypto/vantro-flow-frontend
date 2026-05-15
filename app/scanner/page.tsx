@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { FiCamera, FiUpload, FiZap, FiCheck, FiFileText, FiRefreshCw } from "react-icons/fi";
 import { api } from "@/lib/api";
+import { Badge } from "@/components/ui/Badge";
 
 interface Extracted {
   customerName: string;
