@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { FiSend, FiZap, FiUser, FiMessageSquare } from "react-icons/fi";
+import { api, getUser, type ChatMessage } from "@/lib/api";
 
 type Message = { role: "user" | "assistant"; content: string; time: string };
 
@@ -67,10 +68,27 @@ export default function AIChatPage() {
     setMessages(prev => [...prev, userMsg]);
     setLoading(true);
 
-    await new Promise(r => setTimeout(r, 900));
-    const reply = getResponse(msg);
-    setMessages(prev => [...prev, { role: "assistant", content: reply, time: "Now" }]);
-    setLoading(false);
+    try {
+      const user = getUser();
+      const userId = user?.id || "demo";
+      const businessName = user?.business_name || "My Business";
+      // Build chat history for API (exclude the initial assistant greeting from history)
+      const history: ChatMessage[] = messages
+        .filter(m => m.role === "user" || messages.indexOf(m) > 0)
+        .map(m => ({ role: m.role, content: m.content }));
+      history.push({ role: "user", content: msg });
+
+      const data = await api.aiChat(userId, history, businessName);
+      let reply = data.message || "I couldn't process that. Please try again.";
+      if (data.actions?.length) reply += "\n\n" + data.actions.join("\n");
+      setMessages(prev => [...prev, { role: "assistant", content: reply, time: "Now" }]);
+    } catch {
+      // Fallback to mock if backend unreachable
+      const reply = getResponse(msg);
+      setMessages(prev => [...prev, { role: "assistant", content: reply, time: "Now" }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

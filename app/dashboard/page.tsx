@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Alert } from "@/components/ui/Alert";
 import { Badge, ScoreBadge } from "@/components/ui/Badge";
@@ -12,6 +13,7 @@ import {
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
+import { api, getUser, type Metrics } from "@/lib/api";
 
 const CUSTOMERS = [
   { id: 1, name: "Mehta Fabrics Pvt Ltd", outstanding: 840000,  days: 62, score: 82, lastPayment: "12 Jan", contact: "9876543210" },
@@ -52,6 +54,24 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function DashboardPage() {
   const cashRunway = 12;
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+
+  useEffect(() => {
+    const user = getUser();
+    if (user?.id) {
+      api.metrics(user.id).then(d => setMetrics(d.metrics)).catch(() => {});
+    }
+  }, []);
+
+  // Override static values with real data when available
+  const liveMetrics = metrics ? [
+    { label: "Total Outstanding",      value: `₹${(metrics.total_outstanding/100000).toFixed(1)}L`, sub: `${metrics.total_customers} customers`,  icon: FiDollarSign,   accent: "#0066FF", glow: "rgba(0,102,255,0.15)",  pct: 72 },
+    { label: "Days Sales Outstanding", value: "42",      sub: "days — target <30",   icon: FiClock,        accent: "#F5A524", glow: "rgba(245,165,36,0.12)", pct: 58 },
+    { label: "Collection Rate",        value: `${metrics.avg_recovery_rate}%`, sub: "this period",  icon: FiPercent,      accent: "#10D98A", glow: "rgba(16,217,138,0.12)", pct: Number(metrics.avg_recovery_rate) },
+    { label: "Pending Invoices",       value: String(metrics.pending_invoices), sub: "awaiting payment", icon: FiAlertTriangle,accent: "#F5424D", glow: "rgba(245,66,77,0.12)",   pct: 45 },
+    { label: "Amount Collected",       value: `₹${(metrics.total_paid/100000).toFixed(1)}L`,  sub: "total recovered",icon: FiTarget,      accent: "#10D98A", glow: "rgba(16,217,138,0.12)", pct: 82 },
+    { label: "Calls Made",             value: String(metrics.calls_made),  sub: "total logged", icon: FiPhone,        accent: "#9B6DFF", glow: "rgba(155,109,255,0.12)", pct: 60 },
+  ] : METRICS;
 
   return (
     <DashboardLayout pageTitle="Dashboard">
@@ -87,7 +107,7 @@ export default function DashboardPage() {
 
         {/* Metric cards */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 stagger-children">
-          {METRICS.map(({ label, value, sub, icon: Icon, accent, glow, pct }) => (
+          {liveMetrics.map(({ label, value, sub, icon: Icon, accent, glow, pct }) => (
             <div key={label} className="card-metric p-5">
               <div className="flex items-start justify-between mb-3">
                 <p className="section-label">{label}</p>

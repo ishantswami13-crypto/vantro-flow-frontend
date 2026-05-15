@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FiZap, FiUser, FiMail, FiArrowRight } from "react-icons/fi";
 import Button from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Input";
+import { api, saveAuth } from "@/lib/api";
 
 const businessTypes = [
   { value: "", label: "Select business type" },
@@ -43,24 +44,17 @@ function SignupForm() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      const data = await api.auth.signup({
+        email: form.email,
+        phone: form.phone,
+        business_name: form.business_name,
+        password: form.password || form.phone, // fallback to phone as temp password
       });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.message || "Registration failed");
-      }
-      const data = await res.json();
-      localStorage.setItem("vantro_token", data.token || "demo");
-      localStorage.setItem("vantro_user", JSON.stringify(data.user || { ...form }));
+      saveAuth(data.token, data.user);
+      document.cookie = `vantro_token=${data.token}; path=/; max-age=${30 * 24 * 3600}; SameSite=Lax`;
       router.push("/onboarding");
     } catch (err: unknown) {
-      // Allow demo access if backend is unavailable
-      localStorage.setItem("vantro_token", "demo");
-      localStorage.setItem("vantro_user", JSON.stringify({ name: form.name || "User", business_name: form.business_name || "My Business" }));
-      router.push("/onboarding");
+      setError(err instanceof Error ? err.message : "Signup failed");
     } finally {
       setLoading(false);
     }

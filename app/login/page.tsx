@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { FiZap, FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { api, saveAuth } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,21 +20,13 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) throw new Error("Invalid credentials");
-      const data = await res.json();
-      localStorage.setItem("vantro_token", data.token || "demo");
-      localStorage.setItem("vantro_user", JSON.stringify(data.user || { name: "User", business_name: "My Business" }));
+      const data = await api.auth.login(form);
+      saveAuth(data.token, data.user);
+      // Also set cookie so middleware can read it
+      document.cookie = `vantro_token=${data.token}; path=/; max-age=${30 * 24 * 3600}; SameSite=Lax`;
       router.push("/dashboard");
-    } catch {
-      // Allow demo access
-      localStorage.setItem("vantro_token", "demo");
-      localStorage.setItem("vantro_user", JSON.stringify({ name: "Rajesh Kumar", business_name: "Kumar Traders" }));
-      router.push("/dashboard");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
     }

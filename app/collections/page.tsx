@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { api, getUser, type Invoice } from "@/lib/api";
 import { Badge } from "@/components/ui/Badge";
 import {
   FiSearch, FiMessageSquare, FiCheckSquare, FiFileText,
@@ -47,11 +48,34 @@ export default function CollectionsPage() {
   const [filterStatus, setFilter]     = useState("all");
   const [filterIndustry, setIndustry] = useState("all");
   const [selected, setSelected]       = useState<number[]>([]);
+  const [liveData, setLiveData]       = useState<Customer[] | null>(null);
 
-  const industries = useMemo(() => ["all", ...Array.from(new Set(DATA.map((c) => c.industry)))], []);
+  useEffect(() => {
+    const user = getUser();
+    if (!user?.id) return;
+    api.invoices.list(user.id).then(d => {
+      const mapped: Customer[] = d.invoices.map((inv: Invoice, i: number) => ({
+        id: i + 1,
+        name: inv.customer_name,
+        contact: inv.customer_phone || "",
+        industry: "Business",
+        outstanding: inv.invoice_amount,
+        daysOverdue: inv.days_overdue,
+        score: Math.max(10, Math.min(99, 90 - inv.days_overdue)),
+        lastContact: inv.invoice_date,
+        lastPayment: inv.payment_date || "—",
+        status: inv.days_overdue > 30 ? "overdue" : inv.days_overdue > 0 ? "due" : "promised",
+      }));
+      setLiveData(mapped);
+    }).catch(() => {});
+  }, []);
+
+  const tableData = liveData ?? DATA;
+
+  const industries = useMemo(() => ["all", ...Array.from(new Set(tableData.map((c) => c.industry)))], [tableData]);
 
   const rows = useMemo(() => {
-    let r = DATA;
+    let r = tableData;
     if (search)          r = r.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.contact.includes(search));
     if (filterStatus !== "all")   r = r.filter((c) => c.status === filterStatus);
     if (filterIndustry !== "all") r = r.filter((c) => c.industry === filterIndustry);
