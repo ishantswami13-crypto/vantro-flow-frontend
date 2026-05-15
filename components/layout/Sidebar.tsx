@@ -5,17 +5,30 @@ import { usePathname } from "next/navigation";
 import {
   FiGrid, FiList, FiTrendingUp, FiSettings, FiLogOut, FiX, FiZap,
   FiMessageSquare, FiPackage, FiUsers, FiBarChart2,
+  FiCamera, FiFileText, FiCreditCard, FiRepeat,
 } from "react-icons/fi";
 
 const NAV = [
-  { href: "/dashboard",   label: "Dashboard",     icon: FiGrid,          badge: null },
-  { href: "/collections", label: "Collections",   icon: FiList,          badge: "12" },
-  { href: "/forecast",    label: "Cash Forecast", icon: FiTrendingUp,    badge: null },
-  { href: "/analytics",   label: "Analytics",     icon: FiBarChart2,     badge: null },
-  { href: "/inventory",   label: "Inventory",     icon: FiPackage,       badge: null },
-  { href: "/crm",         label: "CRM",           icon: FiUsers,         badge: null },
-  { href: "/ai-chat",     label: "AI Assistant",  icon: FiMessageSquare, badge: "AI" },
-  { href: "/settings",    label: "Settings",      icon: FiSettings,      badge: null },
+  { href: "/dashboard",   label: "Dashboard",       icon: FiGrid,          badge: null,  group: "main" },
+  { href: "/collections", label: "Collections",     icon: FiList,          badge: "12",  group: "main" },
+  { href: "/whatsapp",    label: "WhatsApp",         icon: FiMessageSquare, badge: null,  group: "main" },
+  { href: "/dunning",     label: "Auto Follow-Up",   icon: FiRepeat,        badge: null,  group: "main" },
+  { href: "/forecast",    label: "Cash Forecast",   icon: FiTrendingUp,    badge: null,  group: "insights" },
+  { href: "/analytics",   label: "Analytics",       icon: FiBarChart2,     badge: null,  group: "insights" },
+  { href: "/reports",     label: "Reports",         icon: FiFileText,      badge: null,  group: "insights" },
+  { href: "/inventory",   label: "Inventory",       icon: FiPackage,       badge: null,  group: "tools" },
+  { href: "/crm",         label: "CRM",             icon: FiUsers,         badge: null,  group: "tools" },
+  { href: "/scanner",     label: "Invoice Scanner", icon: FiCamera,        badge: null,  group: "tools" },
+  { href: "/ai-chat",     label: "AI Assistant",    icon: FiZap,           badge: "AI",  group: "tools" },
+  { href: "/billing",     label: "Billing",         icon: FiCreditCard,    badge: null,  group: "account" },
+  { href: "/settings",    label: "Settings",        icon: FiSettings,      badge: null,  group: "account" },
+];
+
+const GROUPS = [
+  { key: "main",    label: "Collections" },
+  { key: "insights",label: "Insights" },
+  { key: "tools",   label: "Tools" },
+  { key: "account", label: "Account" },
 ];
 
 interface SidebarProps { open: boolean; onClose: () => void; }
@@ -56,38 +69,52 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
-          <p className="px-2.5 mb-3 section-label">Navigation</p>
-          {NAV.map(({ href, label, icon: Icon, badge }) => {
-            const active = pathname === href || pathname.startsWith(href + "/");
+        <nav className="flex-1 px-3 py-4 overflow-y-auto">
+          {GROUPS.map(({ key, label }) => {
+            const items = NAV.filter(n => n.group === key);
             return (
-              <Link
-                key={href}
-                href={href}
-                onClick={onClose}
-                className={[
-                  "group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 focus-ring relative overflow-hidden",
-                  active
-                    ? "bg-accent-dim text-accent"
-                    : "text-secondary hover:text-primary hover:bg-surface-2",
-                ].join(" ")}
-              >
-                {active && (
-                  <span className="absolute left-0 top-2.5 bottom-2.5 w-0.5 bg-accent rounded-r-full" />
-                )}
-                <Icon
-                  size={17}
-                  className={["shrink-0 transition-all duration-200",
-                    active ? "text-accent drop-shadow-[0_0_6px_rgba(0,102,255,0.7)]" : "text-muted group-hover:text-secondary",
-                  ].join(" ")}
-                />
-                <span className="flex-1">{label}</span>
-                {badge && (
-                  <span className="text-2xs font-bold font-mono min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-danger-dim text-danger border border-danger/20">
-                    {badge}
-                  </span>
-                )}
-              </Link>
+              <div key={key} className="mb-4">
+                <p className="px-2.5 mb-1.5 section-label">{label}</p>
+                <div className="space-y-0.5">
+                  {items.map(({ href, label: itemLabel, icon: Icon, badge }) => {
+                    const active = pathname === href || pathname.startsWith(href + "/");
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={onClose}
+                        className={[
+                          "group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 focus-ring relative overflow-hidden",
+                          active
+                            ? "bg-accent-dim text-accent"
+                            : "text-secondary hover:text-primary hover:bg-surface-2",
+                        ].join(" ")}
+                      >
+                        {active && (
+                          <span className="absolute left-0 top-2.5 bottom-2.5 w-0.5 bg-accent rounded-r-full" />
+                        )}
+                        <Icon
+                          size={17}
+                          className={["shrink-0 transition-all duration-200",
+                            active ? "text-accent drop-shadow-[0_0_6px_rgba(0,102,255,0.7)]" : "text-muted group-hover:text-secondary",
+                          ].join(" ")}
+                        />
+                        <span className="flex-1">{itemLabel}</span>
+                        {badge && (
+                          <span className={[
+                            "text-2xs font-bold font-mono min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full",
+                            badge === "AI"
+                              ? "bg-accent-dim text-accent border border-accent/20"
+                              : "bg-danger-dim text-danger border border-danger/20",
+                          ].join(" ")}>
+                            {badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </nav>
