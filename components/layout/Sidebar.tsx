@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   FiGrid, FiList, FiTrendingUp, FiSettings, FiLogOut, FiX, FiZap,
   FiMessageSquare, FiPackage, FiUsers, FiBarChart2,
   FiCamera, FiFileText, FiCreditCard, FiRepeat,
 } from "react-icons/fi";
+import { getUser, clearAuth } from "@/lib/api";
 
 const NAV = [
   { href: "/dashboard",   label: "Dashboard",       icon: FiGrid,          badge: null,  group: "main" },
@@ -35,6 +37,22 @@ interface SidebarProps { open: boolean; onClose: () => void; }
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const [userName, setUserName] = useState("User");
+  const [bizName, setBizName]   = useState("My Business");
+
+  useEffect(() => {
+    const u = getUser();
+    if (u) {
+      setUserName(u.business_name || u.email?.split("@")[0] || "User");
+      setBizName(u.business_name || "My Business");
+    }
+  }, []);
+
+  const handleLogout = () => {
+    clearAuth();
+    document.cookie = "vantro_token=; path=/; max-age=0";
+    window.location.href = "/login";
+  };
 
   return (
     <>
@@ -121,22 +139,23 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
         {/* User + Logout */}
         <div className="px-3 py-4 border-t border-white/5 shrink-0 space-y-1">
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-surface-2 transition-colors">
+          <Link href="/settings" onClick={onClose}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-surface-2 transition-colors">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent to-success flex items-center justify-center text-xs font-bold text-white shrink-0">
-              R
+              {userName.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-primary truncate">Rajesh Kumar</p>
-              <p className="text-2xs text-muted truncate">Kumar Traders</p>
+              <p className="text-xs font-semibold text-primary truncate">{userName}</p>
+              <p className="text-2xs text-muted truncate">{bizName}</p>
             </div>
-          </div>
-          <Link
-            href="/login"
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-muted hover:text-danger hover:bg-danger-dim transition-all focus-ring"
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-muted hover:text-danger hover:bg-danger-dim transition-all focus-ring w-full"
           >
             <FiLogOut size={15} className="shrink-0" />
             Sign Out
-          </Link>
+          </button>
         </div>
       </aside>
     </>
