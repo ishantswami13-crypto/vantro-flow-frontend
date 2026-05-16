@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { FiMessageSquare, FiSend, FiUsers, FiCheck, FiClock, FiZap, FiFilter } from "react-icons/fi";
 import { api, getUser, type Invoice } from "@/lib/api";
+import { posthog } from "@/lib/posthog";
 
 const TEMPLATES = [
   {
@@ -112,6 +113,10 @@ export default function WhatsAppPage() {
         if (opened === selected.filter(x => x.phone).length) {
           setSending(false);
           setSentCount(selected.length);
+          posthog.capture("whatsapp_sent", {
+            count:    selected.length,
+            template: template.id,
+          });
         }
       }, i * 300);
     });

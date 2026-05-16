@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type Invoice } from "@/lib/api";
+import { posthog } from "@/lib/posthog";
 import { Badge } from "@/components/ui/Badge";
 import {
   FiSearch, FiMessageSquare, FiCheckSquare,
@@ -97,6 +98,7 @@ export default function CollectionsPage() {
         payment_date: new Date().toISOString().split("T")[0],
         payment_method: "manual",
       });
+      posthog.capture("invoice_marked_paid");
       const user = getUser();
       if (user?.id) loadInvoices(user.id);
     } catch {
@@ -114,6 +116,7 @@ export default function CollectionsPage() {
       const res = await api.invoices.upload(user.id, file);
       if (res.error) throw new Error(res.error);
       setUploadMsg(`✓ ${res.count} invoices uploaded successfully`);
+      posthog.capture("csv_uploaded", { invoice_count: res.count });
       loadInvoices(user.id);
     } catch (err: any) {
       setUploadMsg(`✗ ${err.message || "Upload failed"}`);
@@ -136,6 +139,10 @@ export default function CollectionsPage() {
         promised_payment_date: callForm.promised_date || null,
         notes: callForm.notes || null,
         invoice_id: invoiceIds[logModal.id] || null,
+      });
+      posthog.capture("call_logged", {
+        did_pick_up: callForm.did_pick_up,
+        has_promise: !!callForm.promised_date,
       });
       setLogModal(null);
       setCallForm({ did_pick_up: true, promised_date: "", notes: "" });

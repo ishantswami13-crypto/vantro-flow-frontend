@@ -7,6 +7,7 @@ import { FiZap, FiUser, FiMail, FiArrowRight } from "react-icons/fi";
 import Button from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Input";
 import { api, saveAuth } from "@/lib/api";
+import { posthog } from "@/lib/posthog";
 
 const businessTypes = [
   { value: "", label: "Select business type" },
@@ -52,6 +53,18 @@ function SignupForm() {
       });
       saveAuth(data.token, data.user);
       document.cookie = `vantro_token=${data.token}; path=/; max-age=${30 * 24 * 3600}; SameSite=Lax`;
+      posthog.identify(data.user.id, {
+        email:         data.user.email,
+        name:          data.user.business_name,
+        plan:          data.user.plan,
+        phone:         data.user.phone,
+        business_type: form.business_type,
+        amount_stuck:  form.amount_stuck,
+      });
+      posthog.capture("user_signed_up", {
+        plan:          form.plan,
+        business_type: form.business_type,
+      });
       router.push("/onboarding");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Signup failed");

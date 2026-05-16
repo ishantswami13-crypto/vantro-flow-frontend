@@ -7,6 +7,7 @@ import { FiZap, FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import Button from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { api, saveAuth } from "@/lib/api";
+import { posthog } from "@/lib/posthog";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,8 +23,14 @@ export default function LoginPage() {
     try {
       const data = await api.auth.login(form);
       saveAuth(data.token, data.user);
-      // Also set cookie so middleware can read it
       document.cookie = `vantro_token=${data.token}; path=/; max-age=${30 * 24 * 3600}; SameSite=Lax`;
+      posthog.identify(data.user.id, {
+        email: data.user.email,
+        name:  data.user.business_name,
+        plan:  data.user.plan,
+        phone: data.user.phone,
+      });
+      posthog.capture("user_logged_in");
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");

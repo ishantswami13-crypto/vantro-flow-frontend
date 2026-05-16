@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { FiSend, FiZap, FiUser, FiMessageSquare } from "react-icons/fi";
 import { api, getUser, type ChatMessage } from "@/lib/api";
+import { posthog } from "@/lib/posthog";
 
 type Message = { role: "user" | "assistant"; content: string; time: string };
 
@@ -78,6 +79,7 @@ export default function AIChatPage() {
         .map(m => ({ role: m.role, content: m.content }));
       history.push({ role: "user", content: msg });
 
+      posthog.capture("ai_chat_message", { message_length: msg.length });
       const data = await api.aiChat(userId, history, businessName);
       let reply = data.message || "I couldn't process that. Please try again.";
       if (data.actions?.length) reply += "\n\n" + data.actions.join("\n");
