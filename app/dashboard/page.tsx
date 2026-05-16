@@ -14,6 +14,7 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
 import { api, getUser, type Metrics } from "@/lib/api";
+import { FiUpload } from "react-icons/fi";
 
 const CUSTOMERS = [
   { id: 1, name: "Mehta Fabrics Pvt Ltd", outstanding: 840000,  days: 62, score: 82, lastPayment: "12 Jan", contact: "9876543210" },
@@ -54,13 +55,20 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function DashboardPage() {
   const cashRunway = 12;
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [metrics, setMetrics]   = useState<Metrics | null>(null);
+  const [promises, setPromises] = useState<{ customer_name: string; promised_payment_date: string; amount: number }[]>([]);
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     const user = getUser();
-    if (user?.id) {
-      api.metrics(user.id).then(d => setMetrics(d.metrics)).catch(() => {});
-    }
+    if (!user?.id) return;
+    api.metrics(user.id).then(d => setMetrics(d.metrics)).catch(() => {});
+    api.calls.list(user.id).then(d => {
+      const todayPromises = (d.calls || []).filter(
+        (c: any) => c.promised_payment_date && c.promised_payment_date >= today
+      );
+      setPromises(todayPromises);
+    }).catch(() => {});
   }, []);
 
   // Override static values with real data when available
@@ -129,6 +137,23 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* Empty state — shown when user has no real invoice data */}
+        {metrics && metrics.total_customers === 0 && (
+          <div className="card-premium p-8 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 bg-accent-dim border border-accent/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <FiUpload size={28} className="text-accent" />
+            </div>
+            <h3 className="text-lg font-bold text-primary mb-2">Upload your invoices to get started</h3>
+            <p className="text-sm text-secondary mb-6 max-w-sm">
+              Go to Collections and upload a CSV with your outstanding invoices. Vantro will prioritize who to call and generate WhatsApp messages automatically.
+            </p>
+            <Link href="/collections"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-all">
+              <FiUpload size={15} /> Upload Invoices
+            </Link>
+          </div>
+        )}
 
         {/* Mid row: trend + quick actions */}
         <div className="grid lg:grid-cols-3 gap-4">
@@ -268,6 +293,35 @@ export default function DashboardPage() {
             </table>
           </div>
         </div>
+
+        {/* Promise Tracker */}
+        {promises.length > 0 && (
+          <div className="card-premium overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div>
+                <p className="text-sm font-bold text-primary">Follow-ups Due</p>
+                <p className="text-xs text-secondary mt-0.5">{promises.length} customers promised payment — check in today</p>
+              </div>
+            </div>
+            <div className="divide-y divide-border/50">
+              {promises.slice(0, 5).map((p, i) => (
+                <div key={i} className="flex items-center justify-between px-5 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-primary">{p.customer_name}</p>
+                    <p className="text-xs text-muted">Promised by {p.promised_payment_date}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {p.amount > 0 && <span className="text-sm font-bold text-accent">₹{Number(p.amount).toLocaleString("en-IN")}</span>}
+                    <a href={`/collections`}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-semibold rounded-lg bg-accent-dim text-accent border border-accent/20 hover:bg-accent hover:text-white transition-all">
+                      <FiPhone size={10}/> Call
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Bottom nav cards */}
         <div className="grid sm:grid-cols-3 gap-3">

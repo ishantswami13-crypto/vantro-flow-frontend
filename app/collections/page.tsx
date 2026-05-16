@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type Invoice } from "@/lib/api";
 import { Badge } from "@/components/ui/Badge";
 import {
-  FiSearch, FiMessageSquare, FiCheckSquare, FiFileText,
-  FiDownload, FiFilter, FiArrowUp, FiArrowDown, FiPhone,
+  FiSearch, FiMessageSquare, FiCheckSquare,
+  FiDownload, FiArrowUp, FiArrowDown, FiPhone,
+  FiUpload, FiX, FiCheck,
 } from "react-icons/fi";
 
 interface Customer {
@@ -51,6 +52,12 @@ export default function CollectionsPage() {
   const [liveData, setLiveData]       = useState<Customer[] | null>(null);
   const [invoiceIds, setInvoiceIds]   = useState<Record<number, string>>({});
   const [markingPaid, setMarkingPaid] = useState<number | null>(null);
+  const [uploading, setUploading]     = useState(false);
+  const [uploadMsg, setUploadMsg]     = useState("");
+  const fileRef                       = useRef<HTMLInputElement>(null);
+  const [logModal, setLogModal]       = useState<Customer | null>(null);
+  const [callForm, setCallForm]       = useState({ did_pick_up: true, promised_date: "", notes: "" });
+  const [loggingCall, setLoggingCall] = useState(false);
 
   const loadInvoices = (userId: string) => {
     api.invoices.list(userId).then(d => {
@@ -93,9 +100,49 @@ export default function CollectionsPage() {
       const user = getUser();
       if (user?.id) loadInvoices(user.id);
     } catch {
-      // silently fail — UI doesn't break
+      // silently fail
     } finally {
       setMarkingPaid(null);
+    }
+  };
+
+  const handleUpload = async (file: File) => {
+    const user = getUser();
+    if (!user?.id) return;
+    setUploading(true); setUploadMsg("");
+    try {
+      const res = await api.invoices.upload(user.id, file);
+      if (res.error) throw new Error(res.error);
+      setUploadMsg(`✓ ${res.count} invoices uploaded successfully`);
+      loadInvoices(user.id);
+    } catch (err: any) {
+      setUploadMsg(`✗ ${err.message || "Upload failed"}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleLogCall = async () => {
+    const user = getUser();
+    if (!user?.id || !logModal) return;
+    setLoggingCall(true);
+    try {
+      await api.calls.log({
+        user_id: user.id,
+        customer_name: logModal.name,
+        customer_phone: logModal.contact,
+        amount: logModal.outstanding,
+        did_pick_up: callForm.did_pick_up,
+        promised_payment_date: callForm.promised_date || null,
+        notes: callForm.notes || null,
+        invoice_id: invoiceIds[logModal.id] || null,
+      });
+      setLogModal(null);
+      setCallForm({ did_pick_up: true, promised_date: "", notes: "" });
+    } catch {
+      // fail silently
+    } finally {
+      setLoggingCall(false);
     }
   };
 
@@ -134,27 +181,99 @@ export default function CollectionsPage() {
   return (
     <DashboardLayout pageTitle="Collections">
       <div className="space-y-4 page-enter">
+
+        {/* Log Call Modal */}
+        {logModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => setLogModal(null)}>
+            <div className="bg-surface border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <p className="font-bold text-primary text-sm">Log Call — {logModal.name}</p>
+                <button onClick={() => setLogModal(null)}><FiX size={16} className="text-muted hover:text-primary" /></button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-medium text-secondary mb-2">Did they pick up?</p>
+                  <div className="flex gap-2">
+                    {[true, false].map(v => (
+                      <button key={String(v)} onClick={() => setCallForm(f => ({ ...f, did_pick_up: v }))}
+                        className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-all ${callForm.did_pick_up === v ? "bg-accent text-white border-accent" : "bg-surface-2 text-secondary border-border"}`}>
+                        {v ? "Yes ✓" : "No ✗"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {callForm.did_pick_up && (
+                  <div>
+                    <label className="text-xs font-medium text-secondary block mb-1">Promised payment date</label>
+                    <input type="date" value={callForm.promised_date}
+                      onChange={e => setCallForm(f => ({ ...f, promised_date: e.target.value }))}
+                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2 focus:outline-none focus:border-accent" />
+                  </div>
+                )}
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1">Notes</label>
+                  <textarea value={callForm.notes} onChange={e => setCallForm(f => ({ ...f, notes: e.target.value }))}
+                    rows={3} placeholder="What did they say..."
+                    className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2 focus:outline-none focus:border-accent resize-none" />
+                </div>
+                <button onClick={handleLogCall} disabled={loggingCall}
+                  className="w-full py-2.5 rounded-lg text-sm font-semibold bg-accent text-white hover:bg-accent/90 transition-all disabled:opacity-60">
+                  {loggingCall ? "Saving..." : "Save Call Log"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
             <h2 className="text-2xl font-black text-primary tracking-tight">Collections</h2>
             <p className="text-sm text-secondary mt-0.5">
-              {rows.length} customers &mdash; <span className="metric-value text-accent text-xs">₹45.2L</span> outstanding
+              {rows.length} customers &mdash; outstanding receivables
             </p>
           </div>
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 flex-wrap">
             {totalSelected > 0 && (
               <button className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-success-dim text-success border border-success/25 hover:bg-success hover:text-white transition-all">
                 <FiMessageSquare size={13} />
                 Message ({totalSelected})
               </button>
             )}
+            {/* CSV Upload */}
+            <div className="relative">
+              <input ref={fileRef} type="file" accept=".csv" className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }} />
+              <button onClick={() => fileRef.current?.click()} disabled={uploading}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-accent text-white hover:bg-accent/90 transition-all disabled:opacity-60">
+                <FiUpload size={13} />
+                {uploading ? "Uploading..." : "Upload CSV"}
+              </button>
+            </div>
             <button className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-surface-2 text-secondary border border-border hover:bg-surface-3 hover:text-primary transition-all">
               <FiDownload size={13} />
-              Export CSV
+              Export
             </button>
           </div>
         </div>
+
+        {/* Upload result message */}
+        {uploadMsg && (
+          <div className={`px-4 py-2.5 rounded-lg text-xs font-medium ${uploadMsg.startsWith("✓") ? "bg-success-dim text-success border border-success/20" : "bg-danger-dim text-danger border border-danger/20"}`}>
+            {uploadMsg}
+            {" "}<a href="#" onClick={() => setUploadMsg("")} className="underline ml-2">Dismiss</a>
+          </div>
+        )}
+
+        {/* CSV format hint when no live data */}
+        {!liveData && (
+          <div className="bg-surface-2 border border-border rounded-lg px-4 py-3 text-xs text-secondary">
+            <span className="font-semibold text-primary">CSV format:</span> customer_name, invoice_amount, invoice_date, payment_status
+            {" "}—{" "}
+            <a href="data:text/csv;charset=utf-8,customer_name%2Cinvoice_amount%2Cinvoice_date%2Cpayment_status%0AMehta%20Fabrics%2C840000%2C2025-03-01%2CPending"
+              download="vantro-sample.csv" className="text-accent underline">Download sample</a>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-2">
@@ -269,14 +388,12 @@ export default function CollectionsPage() {
                           className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-success hover:text-white hover:border-success transition-all disabled:opacity-50">
                           <FiCheckSquare size={11} />
                         </button>
-                        <a
-                          href={`https://wa.me/91${c.contact}?text=${encodeURIComponent(`Namaste ${c.name} ji 🙏\n\nAapka ₹${c.outstanding.toLocaleString("en-IN")} payment ${c.daysOverdue} din se pending hai.\n\nKya aap is hafte settle kar sakte hain?\n\n- Vantro Collections`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={() => { setLogModal(c); setCallForm({ did_pick_up: true, promised_date: "", notes: "" }); }}
                           title="Log Call"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-surface-3 hover:text-primary transition-all">
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-accent hover:text-white hover:border-accent transition-all">
                           <FiPhone size={11} />
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>
