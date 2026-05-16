@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FiZap, FiArrowRight, FiCheck, FiDatabase, FiEdit3 } from "react-icons/fi";
 import Button from "@/components/ui/Button";
 import { Select } from "@/components/ui/Input";
+import { api, getUser } from "@/lib/api";
 
 const STEPS = ["Welcome", "Import Customers", "Preferences", "Done"];
 
@@ -34,6 +35,8 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [importing, setImporting] = useState(false);
   const [importDone, setImportDone] = useState(false);
+  const [savingPrefs, setSavingPrefs] = useState(false);
+  const [goingToDash, setGoingToDash] = useState(false);
   const [prefs, setPrefs] = useState({
     industry: "trading",
     language: "hinglish",
@@ -46,6 +49,27 @@ export default function OnboardingPage() {
   const handleTallyImport = () => {
     setImporting(true);
     setTimeout(() => { setImporting(false); setImportDone(true); }, 2000);
+  };
+
+  const handleSavePrefs = async () => {
+    setSavingPrefs(true);
+    try {
+      await api.settings.update(prefs as any);
+    } catch {
+      // non-blocking — still advance
+    } finally {
+      setSavingPrefs(false);
+      setStep(3);
+    }
+  };
+
+  const handleGoToDashboard = async () => {
+    setGoingToDash(true);
+    const user = getUser();
+    if (user?.id) {
+      try { await api.seed(user.id); } catch { /* ignore — might already be seeded */ }
+    }
+    router.push("/dashboard");
   };
 
   return (
@@ -182,7 +206,7 @@ export default function OnboardingPage() {
 
               <div className="flex gap-3">
                 <Button variant="ghost" onClick={() => setStep(1)}>Back</Button>
-                <Button fullWidth onClick={() => setStep(3)} icon={<FiArrowRight size={15} />}>
+                <Button fullWidth loading={savingPrefs} onClick={handleSavePrefs} icon={<FiArrowRight size={15} />}>
                   Save Preferences
                 </Button>
               </div>
@@ -199,7 +223,7 @@ export default function OnboardingPage() {
               <p className="text-secondary text-sm leading-relaxed mb-8 max-w-sm mx-auto">
                 Your dashboard is ready. See who to call today to maximize cash collections.
               </p>
-              <Button fullWidth onClick={() => router.push("/dashboard")} icon={<FiArrowRight size={15} />}>
+              <Button fullWidth loading={goingToDash} onClick={handleGoToDashboard} icon={<FiArrowRight size={15} />}>
                 Go to Dashboard
               </Button>
             </div>

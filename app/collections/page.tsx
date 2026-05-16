@@ -6,7 +6,7 @@ import { api, getUser, type Invoice } from "@/lib/api";
 import { Badge } from "@/components/ui/Badge";
 import {
   FiSearch, FiMessageSquare, FiCheckSquare, FiFileText,
-  FiDownload, FiFilter, FiArrowUp, FiArrowDown,
+  FiDownload, FiFilter, FiArrowUp, FiArrowDown, FiPhone,
 } from "react-icons/fi";
 
 interface Customer {
@@ -49,26 +49,55 @@ export default function CollectionsPage() {
   const [filterIndustry, setIndustry] = useState("all");
   const [selected, setSelected]       = useState<number[]>([]);
   const [liveData, setLiveData]       = useState<Customer[] | null>(null);
+  const [invoiceIds, setInvoiceIds]   = useState<Record<number, string>>({});
+  const [markingPaid, setMarkingPaid] = useState<number | null>(null);
+
+  const loadInvoices = (userId: string) => {
+    api.invoices.list(userId).then(d => {
+      const ids: Record<number, string> = {};
+      const mapped: Customer[] = d.invoices.map((inv: Invoice, i: number) => {
+        ids[i + 1] = inv.id;
+        return {
+          id: i + 1,
+          name: inv.customer_name,
+          contact: inv.customer_phone || "",
+          industry: "Business",
+          outstanding: inv.invoice_amount,
+          daysOverdue: inv.days_overdue,
+          score: Math.max(10, Math.min(99, 90 - inv.days_overdue)),
+          lastContact: inv.invoice_date,
+          lastPayment: inv.payment_date || "—",
+          status: inv.days_overdue > 30 ? "overdue" : inv.days_overdue > 0 ? "due" : "promised",
+        };
+      });
+      setLiveData(mapped);
+      setInvoiceIds(ids);
+    }).catch(() => {});
+  };
 
   useEffect(() => {
     const user = getUser();
     if (!user?.id) return;
-    api.invoices.list(user.id).then(d => {
-      const mapped: Customer[] = d.invoices.map((inv: Invoice, i: number) => ({
-        id: i + 1,
-        name: inv.customer_name,
-        contact: inv.customer_phone || "",
-        industry: "Business",
-        outstanding: inv.invoice_amount,
-        daysOverdue: inv.days_overdue,
-        score: Math.max(10, Math.min(99, 90 - inv.days_overdue)),
-        lastContact: inv.invoice_date,
-        lastPayment: inv.payment_date || "—",
-        status: inv.days_overdue > 30 ? "overdue" : inv.days_overdue > 0 ? "due" : "promised",
-      }));
-      setLiveData(mapped);
-    }).catch(() => {});
+    loadInvoices(user.id);
   }, []);
+
+  const handleMarkPaid = async (customerId: number) => {
+    const invoiceId = invoiceIds[customerId];
+    if (!invoiceId) return;
+    setMarkingPaid(customerId);
+    try {
+      await api.invoices.markPaid(invoiceId, {
+        payment_date: new Date().toISOString().split("T")[0],
+        payment_method: "manual",
+      });
+      const user = getUser();
+      if (user?.id) loadInvoices(user.id);
+    } catch {
+      // silently fail — UI doesn't break
+    } finally {
+      setMarkingPaid(null);
+    }
+  };
 
   const tableData = liveData ?? DATA;
 
@@ -233,12 +262,21 @@ export default function CollectionsPage() {
                           <FiMessageSquare size={11} />
                           <span className="hidden sm:inline">WA</span>
                         </a>
-                        <button className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-surface-3 hover:text-primary transition-all">
+                        <button
+                          onClick={() => handleMarkPaid(c.id)}
+                          disabled={markingPaid === c.id}
+                          title="Mark as Paid"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-success hover:text-white hover:border-success transition-all disabled:opacity-50">
                           <FiCheckSquare size={11} />
                         </button>
-                        <button className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-surface-3 hover:text-primary transition-all">
-                          <FiFileText size={11} />
-                        </button>
+                        <a
+                          href={`https://wa.me/91${c.contact}?text=${encodeURIComponent(`Namaste ${c.name} ji 🙏\n\nAapka ₹${c.outstanding.toLocaleString("en-IN")} payment ${c.daysOverdue} din se pending hai.\n\nKya aap is hafte settle kar sakte hain?\n\n- Vantro Collections`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Log Call"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-surface-3 hover:text-primary transition-all">
+                          <FiPhone size={11} />
+                        </a>
                       </div>
                     </td>
                   </tr>

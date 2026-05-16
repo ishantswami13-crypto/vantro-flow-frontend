@@ -1,38 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { FiMessageSquare, FiSend, FiUsers, FiCheck, FiClock, FiZap, FiPlus, FiFilter } from "react-icons/fi";
-
-const CUSTOMERS = [
-  { id: 1, name: "Mehta Fabrics Pvt Ltd",  phone: "9876543210", amount: 840000, days: 62, selected: true  },
-  { id: 2, name: "Sharma Steel Works",     phone: "9765432109", amount: 520000, days: 45, selected: true  },
-  { id: 3, name: "Patel Agro Industries",  phone: "9654321098", amount: 310000, days: 38, selected: false },
-  { id: 4, name: "Gupta Construction Co",  phone: "9543210987", amount: 280000, days: 29, selected: false },
-  { id: 5, name: "Verma Chemicals Ltd",    phone: "9432109876", amount: 190000, days: 18, selected: false },
-  { id: 6, name: "Singh Distributors",     phone: "9321098765", amount: 450000, days: 51, selected: true  },
-];
+import { FiMessageSquare, FiSend, FiUsers, FiCheck, FiClock, FiZap, FiFilter } from "react-icons/fi";
+import { api, getUser, type Invoice } from "@/lib/api";
 
 const TEMPLATES = [
   {
     id: "gentle",
     label: "Gentle Reminder",
     tone: "gentle" as const,
-    text: "Namaste {name} ji 🙏\n\nHamare records mein aapka ₹{amount} payment {days} din se pending hai.\n\nKya aap is hafte payment arrange kar sakte hain?\n\nPayment link: {link}\n\nDhanyawad\nVantro Collections",
+    text: "Namaste {name} ji 🙏\n\nHamare records mein aapka ₹{amount} payment {days} din se pending hai.\n\nKya aap is hafte payment arrange kar sakte hain?\n\nDhanyawad\nVantro Collections",
   },
   {
     id: "firm",
     label: "Firm Follow-Up",
     tone: "firm" as const,
-    text: "Dear {name},\n\nYour payment of ₹{amount} is {days} days overdue.\n\nPlease clear the outstanding amount within 3 working days.\n\nPay securely here: {link}\n\nRegards\nCollections Team",
+    text: "Dear {name},\n\nYour payment of ₹{amount} is {days} days overdue.\n\nPlease clear the outstanding amount within 3 working days.\n\nRegards\nCollections Team",
   },
   {
     id: "urgent",
     label: "Urgent Notice",
     tone: "urgent" as const,
-    text: "URGENT: {name}\n\nAmount: ₹{amount} | Overdue: {days} days\n\nImmediate payment required to avoid further action.\n\nPay now: {link}",
+    text: "URGENT: {name}\n\nAmount: ₹{amount} | Overdue: {days} days\n\nImmediate payment required to avoid further action.",
   },
   {
     id: "custom",
@@ -42,45 +34,94 @@ const TEMPLATES = [
   },
 ];
 
-const TONE_BADGE: Record<string,"success"|"warning"|"danger"|"muted"> = {
+const TONE_BADGE: Record<string, "success" | "warning" | "danger" | "muted"> = {
   gentle: "success", firm: "warning", urgent: "danger", custom: "muted",
 };
 
-const SENT_LOG = [
-  { name: "Mehta Fabrics",  time: "Today 10:32 AM", status: "read",      response: "Will pay by Friday" },
-  { name: "Sharma Steel",   time: "Today 10:32 AM", status: "delivered", response: null },
-  { name: "Singh Dist.",    time: "Yesterday",       status: "read",      response: "Payment done" },
-  { name: "Verma Chem",     time: "2 days ago",      status: "read",      response: null },
-];
+interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  amount: number;
+  days: number;
+  selected: boolean;
+}
+
+function fmt(n: number) {
+  return n >= 100000 ? `${(n / 100000).toFixed(1)}L` : `${(n / 1000).toFixed(0)}K`;
+}
+
+function buildMessage(template: string, name: string, amount: number, days: number) {
+  return template
+    .replace("{name}", name)
+    .replace("{amount}", `₹${amount.toLocaleString("en-IN")}`)
+    .replace("{days}", String(days));
+}
 
 export default function WhatsAppPage() {
-  const [customers, setCustomers]     = useState(CUSTOMERS);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading]     = useState(true);
   const [selectedTemplate, setTemplate] = useState("gentle");
-  const [customMsg, setCustomMsg]     = useState("");
-  const [sending, setSending]         = useState(false);
-  const [sent, setSent]               = useState(false);
-  const [tab, setTab]                 = useState<"compose"|"history">("compose");
+  const [customMsg, setCustomMsg] = useState("");
+  const [sending, setSending]     = useState(false);
+  const [sentCount, setSentCount] = useState(0);
+  const [tab, setTab]             = useState<"compose" | "history">("compose");
 
-  const selected   = customers.filter(c => c.selected);
-  const template   = TEMPLATES.find(t => t.id === selectedTemplate)!;
+  useEffect(() => {
+    const user = getUser();
+    if (!user?.id) { setLoading(false); return; }
+    api.invoices.list(user.id)
+      .then(d => {
+        const mapped: Customer[] = d.invoices
+          .filter(inv => inv.payment_status === "Pending" && inv.days_overdue > 0)
+          .map(inv => ({
+            id: inv.id,
+            name: inv.customer_name,
+            phone: inv.customer_phone || "",
+            amount: inv.invoice_amount,
+            days: inv.days_overdue,
+            selected: inv.days_overdue >= 30,
+          }));
+        setCustomers(mapped);
+      })
+      .catch(() => setCustomers([]))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const toggleCustomer = (id: number) =>
+  const selected = customers.filter(c => c.selected);
+  const template = TEMPLATES.find(t => t.id === selectedTemplate)!;
+
+  const toggleCustomer = (id: string) =>
     setCustomers(c => c.map(x => x.id === id ? { ...x, selected: !x.selected } : x));
 
   const selectAll = () => setCustomers(c => c.map(x => ({ ...x, selected: true })));
+  const filterOverdue = () => setCustomers(c => c.map(x => ({ ...x, selected: x.days >= 30 })));
 
-  const handleSend = async () => {
+  const handleSend = () => {
+    if (selected.length === 0) return;
     setSending(true);
-    await new Promise(r => setTimeout(r, 2000));
-    setSending(false);
-    setSent(true);
+    const msgTemplate = template.id === "custom" ? customMsg : template.text;
+    let opened = 0;
+    selected.forEach((c, i) => {
+      const phone = c.phone.replace(/\D/g, "");
+      if (!phone) return;
+      const msg = buildMessage(msgTemplate, c.name, c.amount, c.days);
+      setTimeout(() => {
+        window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+        opened++;
+        if (opened === selected.filter(x => x.phone).length) {
+          setSending(false);
+          setSentCount(selected.length);
+        }
+      }, i * 300);
+    });
   };
 
+  const previewCustomer = selected[0] ?? customers[0];
   const previewText = (template.id === "custom" ? customMsg : template.text)
-    .replace("{name}", "Mehta ji")
-    .replace("{amount}", "8,40,000")
-    .replace("{days}", "62")
-    .replace("{link}", "pay.vantro.in/mf8470");
+    .replace("{name}", previewCustomer?.name ?? "Customer")
+    .replace("{amount}", `₹${(previewCustomer?.amount ?? 0).toLocaleString("en-IN")}`)
+    .replace("{days}", String(previewCustomer?.days ?? 0));
 
   return (
     <DashboardLayout>
@@ -90,10 +131,10 @@ export default function WhatsAppPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-primary">WhatsApp Campaigns</h1>
-            <p className="text-sm text-muted mt-0.5">Send bulk collection reminders with UPI payment links</p>
+            <p className="text-sm text-muted mt-0.5">Send bulk collection reminders — opens WhatsApp for each customer</p>
           </div>
           <div className="flex gap-1 p-1 bg-surface-2 rounded-xl border border-border">
-            {(["compose","history"] as const).map(t => (
+            {(["compose", "history"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={["px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all",
                   tab === t ? "bg-accent text-white" : "text-muted hover:text-primary",
@@ -116,31 +157,42 @@ export default function WhatsAppPage() {
                     <Badge variant="accent">{selected.length} selected</Badge>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="xs" icon={<FiFilter size={11}/>}>Overdue 30d+</Button>
+                    <Button variant="ghost" size="xs" icon={<FiFilter size={11} />} onClick={filterOverdue}>30d+</Button>
                     <Button variant="secondary" size="xs" onClick={selectAll}>Select All</Button>
                   </div>
                 </div>
-                <div className="divide-y divide-border/50">
-                  {customers.map(c => (
-                    <div key={c.id}
-                      onClick={() => toggleCustomer(c.id)}
-                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface-2/50 transition-colors">
-                      <div className={["w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all",
-                        c.selected ? "bg-accent border-accent" : "border-border",
-                      ].join(" ")}>
-                        {c.selected && <FiCheck size={10} className="text-white" />}
+
+                {loading ? (
+                  <div className="p-8 text-center text-sm text-muted animate-pulse">Loading customers...</div>
+                ) : customers.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <FiUsers size={28} className="mx-auto mb-3 text-muted opacity-40" />
+                    <p className="text-sm text-secondary">No overdue invoices found.</p>
+                    <p className="text-xs text-muted mt-1">Upload invoices from the Collections page first.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border/50 max-h-72 overflow-y-auto">
+                    {customers.map(c => (
+                      <div key={c.id}
+                        onClick={() => toggleCustomer(c.id)}
+                        className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface-2/50 transition-colors">
+                        <div className={["w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all",
+                          c.selected ? "bg-accent border-accent" : "border-border",
+                        ].join(" ")}>
+                          {c.selected && <FiCheck size={10} className="text-white" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-primary truncate">{c.name}</p>
+                          <p className="text-xs text-muted">{c.phone || "No phone"}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-bold text-primary">₹{fmt(c.amount)}</p>
+                          <p className="text-2xs text-warning">{c.days}d overdue</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-primary truncate">{c.name}</p>
-                        <p className="text-xs text-muted">{c.phone}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-bold text-primary">₹{(c.amount/100000).toFixed(1)}L</p>
-                        <p className="text-2xs text-warning">{c.days}d overdue</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Template Selection */}
@@ -168,7 +220,7 @@ export default function WhatsAppPage() {
                   <textarea
                     value={customMsg}
                     onChange={e => setCustomMsg(e.target.value)}
-                    placeholder="Type your custom message... Use {name}, {amount}, {days}, {link} as variables"
+                    placeholder="Type your custom message... Use {name}, {amount}, {days} as variables"
                     rows={5}
                     className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-3 py-2.5 focus:outline-none focus:border-accent resize-none"
                   />
@@ -204,8 +256,8 @@ export default function WhatsAppPage() {
                   {[
                     { label: "Recipients",    value: `${selected.length} customers` },
                     { label: "Template",      value: template.label },
-                    { label: "Payment Links", value: "Auto-generated (UPI)" },
-                    { label: "Estimated Time","value": `~${Math.ceil(selected.length * 0.5)} min` },
+                    { label: "Channel",       value: "WhatsApp (wa.me)" },
+                    { label: "No phone",      value: `${selected.filter(c => !c.phone).length} skipped` },
                   ].map(s => (
                     <div key={s.label} className="flex justify-between">
                       <p className="text-xs text-muted">{s.label}</p>
@@ -214,23 +266,23 @@ export default function WhatsAppPage() {
                   ))}
                 </div>
 
-                {sent ? (
+                {sentCount > 0 ? (
                   <div className="flex items-center gap-2 p-3 bg-success-dim rounded-xl border border-success/20">
                     <FiCheck size={14} className="text-success" />
                     <p className="text-sm font-semibold text-success">
-                      {selected.length} messages sent!
+                      Opened {sentCount} WhatsApp chats!
                     </p>
                   </div>
                 ) : (
-                  <Button fullWidth loading={sending} icon={<FiSend size={13}/>}
-                    onClick={handleSend} disabled={selected.length === 0}>
+                  <Button fullWidth loading={sending} icon={<FiSend size={13} />}
+                    onClick={handleSend} disabled={selected.length === 0 || (template.id === "custom" && !customMsg)}>
                     Send to {selected.length} Customers
                   </Button>
                 )}
 
                 <div className="flex items-center gap-1.5 mt-3">
                   <FiZap size={11} className="text-accent" />
-                  <p className="text-2xs text-muted">Messages sent via WhatsApp Business API · UPI links included</p>
+                  <p className="text-2xs text-muted">Opens WhatsApp with pre-filled message for each customer</p>
                 </div>
               </div>
             </div>
@@ -241,29 +293,12 @@ export default function WhatsAppPage() {
           <div className="card-premium overflow-hidden">
             <div className="p-4 border-b border-border">
               <p className="text-sm font-bold text-primary">Sent Message History</p>
+              <p className="text-xs text-muted mt-0.5">Message history tracked when WhatsApp Business API is connected</p>
             </div>
-            <div className="divide-y divide-border/50">
-              {SENT_LOG.map((msg, i) => (
-                <div key={i} className="flex items-center gap-4 px-4 py-3 hover:bg-surface-2/50 transition-colors">
-                  <div className="w-9 h-9 rounded-xl bg-[#25D366]/15 flex items-center justify-center shrink-0">
-                    <FiMessageSquare size={15} className="text-[#25D366]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-primary">{msg.name}</p>
-                    {msg.response && (
-                      <p className="text-xs text-success truncate">"{msg.response}"</p>
-                    )}
-                  </div>
-                  <div className="text-right shrink-0">
-                    <Badge variant={msg.status === "read" ? "success" : "muted"}>
-                      {msg.status === "read" ? "Read ✓✓" : "Delivered ✓"}
-                    </Badge>
-                    <p className="text-2xs text-muted mt-1 flex items-center gap-1 justify-end">
-                      <FiClock size={9}/> {msg.time}
-                    </p>
-                  </div>
-                </div>
-              ))}
+            <div className="p-8 text-center">
+              <FiClock size={28} className="mx-auto mb-3 text-muted opacity-40" />
+              <p className="text-sm text-secondary">No history yet.</p>
+              <p className="text-xs text-muted mt-1">Messages sent via wa.me links are not tracked automatically.</p>
             </div>
           </div>
         )}
