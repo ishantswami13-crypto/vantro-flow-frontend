@@ -101,7 +101,7 @@ export default function DashboardPage() {
             <h2 className="text-2xl font-black text-primary tracking-tight">Collections Dashboard</h2>
             <p className="text-sm text-secondary mt-0.5 flex items-center gap-2">
               <span className="status-live text-xs text-success">Live</span>
-              Thursday, 15 May 2024 · Updated just now
+              {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · Updated just now
             </p>
           </div>
           <div className="flex items-center gap-3">

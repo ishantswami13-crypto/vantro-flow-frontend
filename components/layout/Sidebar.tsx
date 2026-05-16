@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   FiGrid, FiList, FiTrendingUp, FiSettings, FiLogOut, FiX, FiZap,
   FiMessageSquare, FiPackage, FiUsers, FiBarChart2,
-  FiCamera, FiFileText, FiCreditCard, FiRepeat,
+  FiCamera, FiFileText, FiCreditCard, FiRepeat, FiShield,
 } from "react-icons/fi";
 import { getUser, clearAuth } from "@/lib/api";
 
@@ -39,12 +39,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [userName, setUserName] = useState("User");
   const [bizName, setBizName]   = useState("My Business");
+  const [isAdmin, setIsAdmin]   = useState(false);
 
   useEffect(() => {
     const u = getUser();
     if (u) {
       setUserName(u.business_name || u.email?.split("@")[0] || "User");
       setBizName(u.business_name || "My Business");
+      setIsAdmin(u.email === "ishantswami13@gmail.com");
     }
   }, []);
 
@@ -136,6 +138,17 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             );
           })}
         </nav>
+
+        {/* Admin link */}
+        {isAdmin && (
+          <div className="px-3 pb-2">
+            <Link href="/admin" onClick={onClose}
+              className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-muted hover:text-accent hover:bg-accent-dim transition-all w-full">
+              <FiShield size={13} className="shrink-0" />
+              Admin
+            </Link>
+          </div>
+        )}
 
         {/* User + Logout */}
         <div className="px-3 py-4 border-t border-white/5 shrink-0 space-y-1">

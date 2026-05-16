@@ -139,7 +139,7 @@ export default function LandingPage() {
 
             {/* Trust */}
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-muted">
-              {["No credit card required", "Free for 14 days", "Cancel anytime", "SOC 2 compliant"].map((t) => (
+              {["No credit card required", "Free for 14 days", "Cancel anytime", "256-bit encrypted"].map((t) => (
                 <span key={t} className="flex items-center gap-1.5">
                   <FiCheck size={11} className="text-success" />
                   {t}
@@ -368,7 +368,7 @@ export default function LandingPage() {
               <span className="font-bold text-sm text-secondary">Vantro Flow</span>
             </div>
             <p className="text-xs text-muted order-last sm:order-none">
-              © 2024 Vantro Technologies Pvt. Ltd. · CIN: U74999MH2024PTC000001
+              © 2025 Vantro Technologies Pvt. Ltd.
             </p>
             <div className="flex gap-5 text-xs text-muted">
               {["Privacy Policy", "Terms of Service", "Contact Us", "Security"].map((l) => (
