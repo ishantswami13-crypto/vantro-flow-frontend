@@ -7,31 +7,40 @@ import {
   FiGrid, FiList, FiTrendingUp, FiSettings, FiLogOut, FiX, FiZap,
   FiMessageSquare, FiPackage, FiUsers, FiBarChart2,
   FiCamera, FiFileText, FiCreditCard, FiRepeat, FiShield,
+  FiBrain, FiGlobe,
 } from "react-icons/fi";
 import { getUser, clearAuth } from "@/lib/api";
 
 const NAV = [
-  { href: "/dashboard",   label: "Dashboard",       icon: FiGrid,          badge: null,  group: "main" },
-  { href: "/collections", label: "Collections",     icon: FiList,          badge: "12",  group: "main" },
-  { href: "/whatsapp",    label: "WhatsApp",         icon: FiMessageSquare, badge: null,  group: "main" },
-  { href: "/dunning",     label: "Auto Follow-Up",   icon: FiRepeat,        badge: null,  group: "main" },
-  { href: "/forecast",    label: "Cash Forecast",   icon: FiTrendingUp,    badge: null,  group: "insights" },
-  { href: "/analytics",   label: "Analytics",       icon: FiBarChart2,     badge: null,  group: "insights" },
-  { href: "/reports",     label: "Reports",         icon: FiFileText,      badge: null,  group: "insights" },
-  { href: "/inventory",   label: "Inventory",       icon: FiPackage,       badge: null,  group: "tools" },
-  { href: "/crm",         label: "CRM",             icon: FiUsers,         badge: null,  group: "tools" },
-  { href: "/scanner",     label: "Invoice Scanner", icon: FiCamera,        badge: null,  group: "tools" },
-  { href: "/ai-chat",     label: "AI Founder",      icon: FiZap,           badge: "AI",  group: "tools" },
-  { href: "/my-id",        label: "My Vantro ID",    icon: FiShield,        badge: null,  group: "account" },
-  { href: "/billing",     label: "Billing",         icon: FiCreditCard,    badge: null,  group: "account" },
-  { href: "/settings",    label: "Settings",        icon: FiSettings,      badge: null,  group: "account" },
+  // ── Command Center
+  { href: "/dashboard",      label: "Dashboard",       icon: FiGrid,          badge: null,   group: "core" },
+  { href: "/collections",    label: "Collections",     icon: FiList,          badge: "12",   group: "core" },
+  { href: "/whatsapp",       label: "WhatsApp",        icon: FiMessageSquare, badge: null,   group: "core" },
+  { href: "/dunning",        label: "Auto Follow-Up",  icon: FiRepeat,        badge: null,   group: "core" },
+  // ── Intelligence
+  { href: "/ai-chat",        label: "AI Founder",      icon: FiBrain,         badge: "AI",   group: "intelligence" },
+  { href: "/neural-engine",  label: "Neural Engine",   icon: FiZap,           badge: null,   group: "intelligence" },
+  { href: "/forecast",       label: "Cash Forecast",   icon: FiTrendingUp,    badge: null,   group: "intelligence" },
+  { href: "/analytics",      label: "Analytics",       icon: FiBarChart2,     badge: null,   group: "intelligence" },
+  { href: "/reports",        label: "Reports",         icon: FiFileText,      badge: null,   group: "intelligence" },
+  // ── Network
+  { href: "/network",        label: "Vantro Network",  icon: FiGlobe,         badge: "NEW",  group: "network" },
+  { href: "/crm",            label: "CRM",             icon: FiUsers,         badge: null,   group: "network" },
+  // ── Operations
+  { href: "/inventory",      label: "Inventory",       icon: FiPackage,       badge: null,   group: "ops" },
+  { href: "/scanner",        label: "Invoice Scanner", icon: FiCamera,        badge: null,   group: "ops" },
+  // ── Account
+  { href: "/my-id",          label: "My Vantro ID",    icon: FiShield,        badge: null,   group: "account" },
+  { href: "/billing",        label: "Billing",         icon: FiCreditCard,    badge: null,   group: "account" },
+  { href: "/settings",       label: "Settings",        icon: FiSettings,      badge: null,   group: "account" },
 ];
 
 const GROUPS = [
-  { key: "main",    label: "Collections" },
-  { key: "insights",label: "Insights" },
-  { key: "tools",   label: "Tools" },
-  { key: "account", label: "Account" },
+  { key: "core",         label: "Collections" },
+  { key: "intelligence", label: "AI Intelligence" },
+  { key: "network",      label: "Network" },
+  { key: "ops",          label: "Operations" },
+  { key: "account",      label: "Account" },
 ];
 
 interface SidebarProps { open: boolean; onClose: () => void; }
@@ -60,10 +69,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <>
       {open && (
-        <div
-          className="fixed inset-0 z-20 bg-black/70 backdrop-blur-sm lg:hidden"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 z-20 bg-black/70 backdrop-blur-sm lg:hidden" onClick={onClose} />
       )}
 
       <aside className={[
@@ -80,8 +86,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               <FiZap size={15} className="text-white" />
             </div>
             <div>
-              <p className="font-bold text-sm text-primary tracking-tight leading-none">Vantro Flow</p>
-              <p className="text-2xs text-muted mt-0.5">Collections OS</p>
+              <p className="font-bold text-sm text-primary tracking-tight leading-none">Vantro</p>
+              <p className="text-2xs text-muted mt-0.5">Business OS</p>
             </div>
           </div>
           <button onClick={onClose} className="lg:hidden p-1 text-muted hover:text-primary rounded focus-ring">
@@ -100,33 +106,23 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                   {items.map(({ href, label: itemLabel, icon: Icon, badge }) => {
                     const active = pathname === href || pathname.startsWith(href + "/");
                     return (
-                      <Link
-                        key={href}
-                        href={href}
-                        onClick={onClose}
+                      <Link key={href} href={href} onClick={onClose}
                         className={[
                           "group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 focus-ring relative overflow-hidden",
-                          active
-                            ? "bg-accent-dim text-accent"
-                            : "text-secondary hover:text-primary hover:bg-surface-2",
-                        ].join(" ")}
-                      >
-                        {active && (
-                          <span className="absolute left-0 top-2.5 bottom-2.5 w-0.5 bg-accent rounded-r-full" />
-                        )}
-                        <Icon
-                          size={17}
-                          className={["shrink-0 transition-all duration-200",
-                            active ? "text-accent drop-shadow-[0_0_6px_rgba(0,102,255,0.7)]" : "text-muted group-hover:text-secondary",
-                          ].join(" ")}
-                        />
+                          active ? "bg-accent-dim text-accent" : "text-secondary hover:text-primary hover:bg-surface-2",
+                        ].join(" ")}>
+                        {active && <span className="absolute left-0 top-2.5 bottom-2.5 w-0.5 bg-accent rounded-r-full" />}
+                        <Icon size={17} className={[
+                          "shrink-0 transition-all duration-200",
+                          active ? "text-accent drop-shadow-[0_0_6px_rgba(0,102,255,0.7)]" : "text-muted group-hover:text-secondary",
+                        ].join(" ")} />
                         <span className="flex-1">{itemLabel}</span>
                         {badge && (
                           <span className={[
                             "text-2xs font-bold font-mono min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full",
-                            badge === "AI"
-                              ? "bg-accent-dim text-accent border border-accent/20"
-                              : "bg-danger-dim text-danger border border-danger/20",
+                            badge === "AI"  ? "bg-accent-dim text-accent border border-accent/20"
+                            : badge === "NEW" ? "bg-success-dim text-success border border-success/20"
+                            : "bg-danger-dim text-danger border border-danger/20",
                           ].join(" ")}>
                             {badge}
                           </span>
@@ -163,10 +159,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               <p className="text-2xs text-muted truncate">{bizName}</p>
             </div>
           </Link>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-muted hover:text-danger hover:bg-danger-dim transition-all focus-ring w-full"
-          >
+          <button onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-muted hover:text-danger hover:bg-danger-dim transition-all focus-ring w-full">
             <FiLogOut size={15} className="shrink-0" />
             Sign Out
           </button>
