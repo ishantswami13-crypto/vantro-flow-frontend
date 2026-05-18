@@ -57,11 +57,13 @@ export default function DashboardPage() {
   const cashRunway = 12;
   const [metrics, setMetrics]   = useState<Metrics | null>(null);
   const [promises, setPromises] = useState<{ customer_name: string; promised_payment_date: string; amount: number }[]>([]);
+  const [userPlan, setUserPlan] = useState<string>("free");
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     const user = getUser();
     if (!user?.id) return;
+    setUserPlan(user.plan || "free");
     api.metrics(user.id).then(d => setMetrics(d.metrics)).catch(() => {});
     api.calls.list(user.id).then(d => {
       const todayPromises = (d.calls || []).filter(
@@ -93,6 +95,23 @@ export default function DashboardPage() {
               See priority list
             </Link>
           </Alert>
+        )}
+
+        {/* Free plan upgrade nudge */}
+        {userPlan === "free" && metrics && metrics.total_customers > 0 && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-accent/10 to-success/10 border border-accent/20">
+            <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center shrink-0 shadow-button-accent">
+              <FiZap size={14} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-primary">You're on the free plan</p>
+              <p className="text-xs text-muted">Unlock WhatsApp automation, unlimited customers & Tally sync. Businesses recover 3× more on Pro.</p>
+            </div>
+            <Link href="/billing"
+              className="shrink-0 px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-all shadow-button-accent whitespace-nowrap">
+              Upgrade →
+            </Link>
+          </div>
         )}
 
         {/* Page header */}

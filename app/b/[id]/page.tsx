@@ -100,7 +100,7 @@ export default function PublicProfilePage() {
             </div>
             <span className="font-bold text-sm text-primary">Vantro Flow</span>
           </div>
-          <Link href="/signup" className="text-xs px-3 py-1.5 rounded-lg bg-accent text-white font-semibold hover:bg-accent/90 transition-all">
+          <Link href={`/signup?ref=${id}`} className="text-xs px-3 py-1.5 rounded-lg bg-accent text-white font-semibold hover:bg-accent/90 transition-all">
             Get Your Free ID →
           </Link>
         </div>
@@ -185,7 +185,7 @@ export default function PublicProfilePage() {
           <p className="text-xs text-muted mb-4">
             Join thousands of Indian businesses building verified financial identities. Free to start.
           </p>
-          <Link href="/signup"
+          <Link href={`/signup?ref=${id}`}
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 transition-all shadow-button-accent">
             Create Free Account →
           </Link>

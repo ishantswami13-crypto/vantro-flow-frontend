@@ -24,6 +24,7 @@ function SignupForm() {
   const router = useRouter();
   const params = useSearchParams();
   const defaultPlan = params.get("plan") === "hybrid" ? "hybrid" : "saas";
+  const referredBy = params.get("ref") || "";
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -50,6 +51,7 @@ function SignupForm() {
         phone: form.phone,
         business_name: form.business_name,
         password: form.password || form.phone, // fallback to phone as temp password
+        ...(referredBy ? { referred_by: referredBy } : {}),
       });
       saveAuth(data.token, data.user);
       document.cookie = `vantro_token=${data.token}; path=/; max-age=${30 * 24 * 3600}; SameSite=Lax`;
@@ -75,6 +77,12 @@ function SignupForm() {
 
   return (
     <div className="card-premium p-6">
+      {referredBy && (
+        <div className="mb-4 px-3 py-2.5 bg-success-dim border border-success/30 rounded-lg text-sm text-success flex items-center gap-2">
+          <span>🎉</span>
+          <span>You were invited! Join free — your contact gets credit too.</span>
+        </div>
+      )}
       <h1 className="text-xl font-bold text-primary mb-1">Start your free trial</h1>
       <p className="text-sm text-secondary mb-6">14 days free. No credit card required.</p>
 

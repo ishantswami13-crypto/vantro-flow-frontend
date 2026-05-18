@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser } from "@/lib/api";
-import { FiZap, FiShield, FiTrendingUp, FiUsers, FiCopy, FiShare2, FiCheckCircle, FiAward, FiLock } from "react-icons/fi";
+import { FiZap, FiShield, FiTrendingUp, FiUsers, FiCopy, FiShare2, FiCheckCircle, FiAward, FiLock, FiGift } from "react-icons/fi";
+import Link from "next/link";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -50,18 +51,21 @@ function fmt(n: number) {
 }
 
 export default function MyIdPage() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [copied, setCopied]   = useState(false);
+  const [profile, setProfile]           = useState<Profile | null>(null);
+  const [loading, setLoading]           = useState(true);
+  const [copied, setCopied]             = useState(false);
+  const [referralCount, setReferralCount] = useState<number>(0);
   const user = getUser();
 
   useEffect(() => {
     if (!user?.id) { setLoading(false); return; }
-    fetch(`${BASE}/api/public/profile/${user.id}`)
-      .then(r => r.json())
-      .then(d => { if (d.profile) setProfile(d.profile); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch(`${BASE}/api/public/profile/${user.id}`).then(r => r.json()),
+      fetch(`${BASE}/api/public/referrals/${user.id}`).then(r => r.json()),
+    ]).then(([profileData, refData]) => {
+      if (profileData.profile) setProfile(profileData.profile);
+      if (refData.referral_count !== undefined) setReferralCount(refData.referral_count);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const profileUrl = typeof window !== "undefined"
@@ -202,6 +206,36 @@ export default function MyIdPage() {
               Share
             </button>
           </div>
+        </div>
+
+        {/* Referral widget */}
+        <div className="card-premium p-5">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <p className="text-sm font-bold text-primary">Invite & Earn</p>
+              <p className="text-xs text-muted mt-0.5">Share your ID — when someone signs up through your link, you both win.</p>
+            </div>
+            <div className="w-9 h-9 rounded-xl bg-success-dim border border-success/20 flex items-center justify-center shrink-0">
+              <FiGift size={15} className="text-success" />
+            </div>
+          </div>
+          <div className="flex items-center gap-4 py-3 px-4 bg-surface-2 rounded-xl border border-border mb-3">
+            <div className="text-center">
+              <p className="text-3xl font-black text-primary">{referralCount}</p>
+              <p className="text-2xs text-muted mt-0.5">Businesses referred</p>
+            </div>
+            <div className="flex-1 text-xs text-secondary">
+              {referralCount === 0
+                ? "Share your Vantro ID link — every signup through it counts as your referral."
+                : `You've helped ${referralCount} business${referralCount > 1 ? "es" : ""} build their financial identity. Keep sharing!`}
+            </div>
+          </div>
+          {profile?.plan === "free" && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-accent-dim border border-accent/20 rounded-lg">
+              <FiZap size={12} className="text-accent shrink-0" />
+              <p className="text-xs text-accent">Refer 3 businesses and get 1 month Pro free. <Link href="/billing" className="font-bold underline">Upgrade now →</Link></p>
+            </div>
+          )}
         </div>
 
         {/* How trust score works */}
