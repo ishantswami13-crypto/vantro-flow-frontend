@@ -21,7 +21,7 @@ const NAV = [
   { href: "/inventory",   label: "Inventory",       icon: FiPackage,       badge: null,  group: "tools" },
   { href: "/crm",         label: "CRM",             icon: FiUsers,         badge: null,  group: "tools" },
   { href: "/scanner",     label: "Invoice Scanner", icon: FiCamera,        badge: null,  group: "tools" },
-  { href: "/ai-chat",     label: "AI Assistant",    icon: FiZap,           badge: "AI",  group: "tools" },
+  { href: "/ai-chat",     label: "AI Founder",      icon: FiZap,           badge: "AI",  group: "tools" },
   { href: "/my-id",        label: "My Vantro ID",    icon: FiShield,        badge: null,  group: "account" },
   { href: "/billing",     label: "Billing",         icon: FiCreditCard,    badge: null,  group: "account" },
   { href: "/settings",    label: "Settings",        icon: FiSettings,      badge: null,  group: "account" },
