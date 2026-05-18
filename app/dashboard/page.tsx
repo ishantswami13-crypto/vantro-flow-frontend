@@ -8,7 +8,7 @@ import Link from "next/link";
 import {
   FiDollarSign, FiClock, FiPercent, FiAlertTriangle, FiTrendingDown,
   FiTarget, FiMessageSquare, FiCheckSquare, FiArrowRight,
-  FiList, FiTrendingUp, FiSettings, FiPhone,
+  FiList, FiTrendingUp, FiSettings, FiPhone, FiShield, FiZap,
 } from "react-icons/fi";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -322,6 +322,25 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Vantro ID mini-card */}
+        <Link href="/my-id">
+          <div className="card-premium p-5 flex items-center gap-4 group cursor-pointer hover:border-accent/30 transition-all">
+            <div className="w-12 h-12 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent shrink-0">
+              <FiZap size={20} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="text-sm font-bold text-primary">Your Vantro Business ID</p>
+                <span className="text-2xs font-bold text-accent bg-accent-dim border border-accent/20 px-1.5 py-0.5 rounded font-mono">
+                  VAN-ID
+                </span>
+              </div>
+              <p className="text-xs text-muted">Share your verified financial identity — build instant trust with customers & suppliers</p>
+            </div>
+            <FiArrowRight size={16} className="text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all shrink-0" />
+          </div>
+        </Link>
 
         {/* Bottom nav cards */}
         <div className="grid sm:grid-cols-3 gap-3">
