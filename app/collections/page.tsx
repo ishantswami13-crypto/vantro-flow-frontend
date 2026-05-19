@@ -123,11 +123,11 @@ export default function CollectionsPage() {
     try {
       const res = await api.invoices.upload(user.id, file);
       if (res.error) throw new Error(res.error);
-      setUploadMsg(`✓ ${res.count} invoices uploaded successfully`);
+      setUploadMsg(`${res.count} invoices uploaded successfully`);
       posthog.capture("csv_uploaded", { invoice_count: res.count });
       loadInvoices(user.id);
     } catch (err: any) {
-      setUploadMsg(`✗ ${err.message || "Upload failed"}`);
+      setUploadMsg(`${err.message || "Upload failed"}`);
     } finally {
       setUploading(false);
     }
@@ -181,12 +181,12 @@ export default function CollectionsPage() {
       });
       const d = await r.json();
       if (d.success) {
-        setImportMsg(`✅ ${d.imported} invoices imported!`);
+        setImportMsg(`${d.imported} invoices imported successfully!`);
         setTimeout(() => { setShowImport(false); setImportMsg(""); fetchInvoices(); }, 2000);
       } else {
-        setImportMsg(`❌ ${d.error || "Import failed"}${d.hint ? " — " + d.hint : ""}`);
+        setImportMsg(`${d.error || "Import failed"}${d.hint ? " — " + d.hint : ""}`);
       }
-    } catch { setImportMsg("❌ Upload failed. Try again."); }
+    } catch { setImportMsg("Upload failed. Please try again."); }
     finally { setImporting(false); }
   };
 

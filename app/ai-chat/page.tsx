@@ -10,6 +10,7 @@ import {
   FiPhone, FiAlertTriangle, FiCheckCircle, FiActivity,
   FiTarget, FiRefreshCw, FiMic, FiMicOff,
   FiMessageSquare, FiCopy, FiPlay, FiX, FiSettings,
+  FiShield, FiBarChart2, FiInfo,
 } from "react-icons/fi";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -78,7 +79,7 @@ const tierColor: Record<string, string> = {
 
 const INITIAL_MESSAGES: Message[] = [{
   role: "assistant",
-  content: "Namaste! Main aapka AI Founder hoon — aapka business data dekh sakta hoon, invoices mark kar sakta hoon, WhatsApp messages likh sakta hoon, call scripts generate kar sakta hoon, aur strategic advice de sakta hoon.\n\nKya poochna hai? Aap bolke bhi pooch sakte hain — mic button press karein! 🎤",
+  content: "Namaste! Main aapka AI Founder hoon — aapka business data dekh sakta hoon, invoices mark kar sakta hoon, WhatsApp messages likh sakta hoon, call scripts generate kar sakta hoon, aur strategic advice de sakta hoon.\n\nKya poochna hai? Aap bolke bhi pooch sakte hain — mic button press karein.",
 }];
 
 const QUICK_PROMPTS = [
@@ -157,15 +158,15 @@ function CallScriptModal({ debtor, script, onClose }: {
         {/* Script sections */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {[
-            { key: "opening", label: "Opening (Greeting)", icon: "👋", text: script.opening, color: "#0066FF" },
-            { key: "main_ask", label: "Main Ask", icon: "💬", text: script.main_ask, color: "#9B6DFF" },
-            { key: "objection_handler", label: "If They Hesitate", icon: "🛡️", text: script.objection_handler, color: "#F5A524" },
-            { key: "closing", label: "Closing", icon: "✅", text: script.closing, color: "#10D98A" },
-          ].map(({ key, label, icon, text, color }) => (
+            { key: "opening",           label: "Opening (Greeting)", Icon: FiPhone,       text: script.opening,           color: "#0066FF" },
+            { key: "main_ask",          label: "Main Ask",           Icon: FiMessageSquare, text: script.main_ask,        color: "#9B6DFF" },
+            { key: "objection_handler", label: "If They Hesitate",   Icon: FiShield,      text: script.objection_handler, color: "#F5A524" },
+            { key: "closing",           label: "Closing",            Icon: FiCheckCircle, text: script.closing,           color: "#10D98A" },
+          ].map(({ key, label, Icon, text, color }) => (
             <div key={key} className="bg-surface-2 rounded-xl p-3.5 border border-border">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
-                  <span>{icon}</span>
+                  <Icon size={13} style={{ color }} />
                   <p className="text-xs font-bold" style={{ color }}>{label}</p>
                 </div>
                 <CopyBtn text={text} id={key} />
@@ -696,7 +697,7 @@ export default function AIFounderPage() {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendChat()}
-                  placeholder="Kuch bhi poochein... ya mic button dabayein 🎤"
+                  placeholder="Kuch bhi poochein... ya mic button dabayein"
                   className="flex-1 bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-4 py-3 focus:outline-none focus:border-accent transition-colors"
                 />
 
@@ -723,7 +724,7 @@ export default function AIFounderPage() {
                 </Button>
               </div>
               {voiceSupported && (
-                <p className="text-2xs text-muted mt-1.5 text-center">💡 Mic button dabakar Hindi/Hinglish mein bolein — AI samajh lega</p>
+                <p className="text-2xs text-muted mt-1.5 text-center">Mic button dabakar Hindi/Hinglish mein bolein — AI samajh lega</p>
               )}
             </div>
           </div>
@@ -864,15 +865,17 @@ export default function AIFounderPage() {
               <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-3">What AI Founder Can Do</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
-                  { icon: "🎯", label: "Priority Scoring", desc: "ML ranks debtors by pay probability" },
-                  { icon: "📞", label: "Call Scripts", desc: "Hinglish scripts per debtor, any tone" },
-                  { icon: "💬", label: "WhatsApp Drafts", desc: "Personalized messages in seconds" },
-                  { icon: "📊", label: "Cash Forecasting", desc: "Predict ₹ inflow for next 7/30 days" },
-                  { icon: "🎙️", label: "Voice Input", desc: "Ask questions by speaking in Hindi" },
-                  { icon: "🧠", label: "Business Strategy", desc: "LLaMA 70B — your AI co-founder" },
-                ].map(({ icon, label, desc }) => (
+                  { Icon: FiTarget,       label: "Priority Scoring", desc: "ML ranks debtors by pay probability",  color: "#0066FF" },
+                  { Icon: FiPhone,        label: "Call Scripts",     desc: "Hinglish scripts per debtor, any tone", color: "#10D98A" },
+                  { Icon: FiMessageSquare,label: "WhatsApp Drafts",  desc: "Personalized messages in seconds",      color: "#9B6DFF" },
+                  { Icon: FiBarChart2,    label: "Cash Forecasting", desc: "Predict inflow for next 7/30 days",     color: "#F5A524" },
+                  { Icon: FiMic,          label: "Voice Input",      desc: "Ask questions by speaking in Hindi",    color: "#F5424D" },
+                  { Icon: FiCpu,          label: "Business Strategy",desc: "LLaMA 70B — your AI co-founder",        color: "#10D98A" },
+                ].map(({ Icon, label, desc, color }) => (
                   <div key={label} className="flex items-start gap-2.5 p-3 bg-surface-2 rounded-xl border border-border">
-                    <span className="text-lg shrink-0">{icon}</span>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}18`, border: `1px solid ${color}25` }}>
+                      <Icon size={13} style={{ color }} />
+                    </div>
                     <div>
                       <p className="text-xs font-bold text-primary">{label}</p>
                       <p className="text-2xs text-muted mt-0.5">{desc}</p>

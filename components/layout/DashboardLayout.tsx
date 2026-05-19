@@ -102,14 +102,14 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
 
         {/* Push notification permission banner */}
         {showNotifBanner && (
-          <div className="bg-brand-primary/10 border-b border-brand-primary/20 px-4 py-2 flex items-center justify-between gap-3 text-sm">
-            <span className="text-brand-primary font-medium">
-              🔔 Payment milte hi notification aayega — abhi enable karein
+          <div className="bg-accent/10 border-b border-accent/20 px-4 py-2 flex items-center justify-between gap-3 text-sm">
+            <span className="text-accent font-medium">
+              Payment milte hi notification aayega — abhi enable karein
             </span>
             <div className="flex gap-2 shrink-0">
               <button
                 onClick={handleEnableNotifications}
-                className="bg-brand-primary text-white px-3 py-1 rounded-lg text-xs font-semibold hover:opacity-90"
+                className="bg-accent text-white px-3 py-1 rounded-lg text-xs font-semibold hover:opacity-90"
               >
                 Enable
               </button>

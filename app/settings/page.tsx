@@ -11,6 +11,7 @@ import {
   FiUser, FiBriefcase, FiSliders, FiLink, FiCreditCard,
   FiLogOut, FiCheck, FiRefreshCw, FiCpu, FiMic,
   FiCheckCircle, FiZap, FiTrash2,
+  FiMessageSquare, FiPhone, FiPackage,
 } from "react-icons/fi";
 import { api, getUser, clearAuth } from "@/lib/api";
 
@@ -424,13 +425,15 @@ export default function SettingsPage() {
                   <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-3">How It Works</p>
                   <div className="space-y-3">
                     {[
-                      { icon: "💬", title: "WhatsApp Messages", desc: "Every message AI drafts sounds like YOU wrote it — not a robot" },
-                      { icon: "📞", title: "Call Scripts", desc: "Opening lines, objection handling in YOUR Hinglish style" },
-                      { icon: "🧠", title: "AI Chat", desc: "Briefings and advice use your name and match your communication style" },
-                      { icon: "📦", title: "Bulk Messages", desc: "Even bulk sends feel personal because they match your voice" },
-                    ].map(({ icon, title, desc }) => (
+                      { Icon: FiMessageSquare, title: "WhatsApp Messages", desc: "Every message AI drafts sounds like YOU wrote it — not a robot",     color: "#10D98A" },
+                      { Icon: FiPhone,         title: "Call Scripts",      desc: "Opening lines, objection handling in YOUR Hinglish style",            color: "#0066FF" },
+                      { Icon: FiCpu,           title: "AI Chat",           desc: "Briefings and advice use your name and match your communication style", color: "#9B6DFF" },
+                      { Icon: FiPackage,       title: "Bulk Messages",     desc: "Even bulk sends feel personal because they match your voice",           color: "#F5A524" },
+                    ].map(({ Icon, title, desc, color }) => (
                       <div key={title} className="flex items-start gap-3">
-                        <span className="text-lg shrink-0">{icon}</span>
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}18`, border: `1px solid ${color}25` }}>
+                          <Icon size={13} style={{ color }} />
+                        </div>
                         <div>
                           <p className="text-xs font-bold text-primary">{title}</p>
                           <p className="text-2xs text-muted mt-0.5">{desc}</p>
