@@ -127,6 +127,18 @@ export const api = {
 
   // ─── Seed ────────────────────────────────────────────────
   seed: (userId: string) => request<{ seeded: object }>(`/api/seed/${userId}`, { method: 'POST' }),
+
+  // ─── Bank Ledger / Transactions ──────────────────────────
+  transactions: {
+    list: (userId: string) =>
+      request<{ transactions: Transaction[]; summary: LedgerSummary }>(`/api/transactions/${userId}`),
+    create: (body: {
+      user_id: string; type: string; category: string; amount: string;
+      party_name?: string; description?: string; transaction_date: string;
+      payment_method?: string; reference?: string;
+    }) => request<{ transaction: Transaction }>('/api/transactions', { method: 'POST', body: JSON.stringify(body) }),
+    migrate: () => request<{ success: boolean }>('/api/transactions/migrate', { method: 'POST' }),
+  },
 };
 
 // ─── Auth helpers ─────────────────────────────────────────
@@ -313,4 +325,28 @@ export interface WaLink {
   phone: string;
   message: string;
   url: string;
+}
+
+export interface Transaction {
+  id: string;
+  user_id: string;
+  type: 'in' | 'out';
+  category: string;
+  amount: number;
+  party_name?: string;
+  description?: string;
+  notes?: string;
+  transaction_date: string;
+  payment_method?: string;
+  reference?: string;
+  created_at?: string;
+}
+
+export interface LedgerSummary {
+  totalIn: number;
+  totalOut: number;
+  balance: number;
+  monthIn: number;
+  monthOut: number;
+  monthBalance: number;
 }

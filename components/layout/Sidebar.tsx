@@ -7,7 +7,7 @@ import {
   FiGrid, FiList, FiTrendingUp, FiSettings, FiLogOut, FiX, FiZap,
   FiMessageSquare, FiPackage, FiUsers, FiBarChart2,
   FiCamera, FiFileText, FiCreditCard, FiRepeat, FiShield,
-  FiCpu, FiGlobe,
+  FiCpu, FiGlobe, FiBook,
 } from "react-icons/fi";
 import { getUser, clearAuth } from "@/lib/api";
 
@@ -21,6 +21,7 @@ const NAV = [
   { href: "/ai-chat",        label: "AI Founder",      icon: FiCpu,           badge: "AI",   group: "intelligence" },
   { href: "/neural-engine",  label: "Neural Engine",   icon: FiZap,           badge: null,   group: "intelligence" },
   { href: "/forecast",       label: "Cash Forecast",   icon: FiTrendingUp,    badge: null,   group: "intelligence" },
+  { href: "/ledger",         label: "Bank Ledger",     icon: FiBook,          badge: null,   group: "intelligence" },
   { href: "/analytics",      label: "Analytics",       icon: FiBarChart2,     badge: null,   group: "intelligence" },
   { href: "/reports",        label: "Reports",         icon: FiFileText,      badge: null,   group: "intelligence" },
   // ── Network
