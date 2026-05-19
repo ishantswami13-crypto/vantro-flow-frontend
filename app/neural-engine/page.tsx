@@ -5,7 +5,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Link from "next/link";
 import {
   FiCpu, FiZap, FiActivity, FiTrendingUp, FiTarget,
-  FiShield, FiCpu, FiDatabase, FiLayers, FiArrowRight,
+  FiShield, FiDatabase, FiLayers, FiArrowRight,
 } from "react-icons/fi";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
