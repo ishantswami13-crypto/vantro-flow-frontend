@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/Badge";
 import {
   FiSearch, FiMessageSquare, FiCheckSquare,
   FiDownload, FiArrowUp, FiArrowDown, FiPhone,
-  FiUpload, FiX, FiCheck,
+  FiUpload, FiX, FiCheck, FiCopy,
 } from "react-icons/fi";
+
+const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
 interface Customer {
   id: number; name: string; contact: string; industry: string;
@@ -59,6 +61,12 @@ export default function CollectionsPage() {
   const [logModal, setLogModal]       = useState<Customer | null>(null);
   const [callForm, setCallForm]       = useState({ did_pick_up: true, promised_date: "", notes: "" });
   const [loggingCall, setLoggingCall] = useState(false);
+  const [importing, setImporting]     = useState(false);
+  const [importMsg, setImportMsg]     = useState("");
+  const [showImport, setShowImport]   = useState(false);
+  const [payLinkMsg, setPayLinkMsg]   = useState<{text: string; phone?: string} | null>(null);
+  const [payLinkLoading, setPayLinkLoading] = useState<string | null>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   const loadInvoices = (userId: string) => {
     api.invoices.list(userId).then(d => {
@@ -151,6 +159,57 @@ export default function CollectionsPage() {
     } finally {
       setLoggingCall(false);
     }
+  };
+
+  const fetchInvoices = () => {
+    const user = getUser();
+    if (user?.id) loadInvoices(user.id);
+  };
+
+  const handleImportFile = async (file: File) => {
+    if (!file) return;
+    setImporting(true);
+    setImportMsg("");
+    try {
+      const token = localStorage.getItem("vantro_token") || "";
+      const form = new FormData();
+      form.append("file", file);
+      const r = await fetch(`${BASE}/api/import/excel`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      const d = await r.json();
+      if (d.success) {
+        setImportMsg(`✅ ${d.imported} invoices imported!`);
+        setTimeout(() => { setShowImport(false); setImportMsg(""); fetchInvoices(); }, 2000);
+      } else {
+        setImportMsg(`❌ ${d.error || "Import failed"}${d.hint ? " — " + d.hint : ""}`);
+      }
+    } catch { setImportMsg("❌ Upload failed. Try again."); }
+    finally { setImporting(false); }
+  };
+
+  const handlePayLink = async (c: Customer) => {
+    const invoiceId = invoiceIds[c.id];
+    if (!invoiceId) return;
+    setPayLinkLoading(invoiceId);
+    try {
+      const token = localStorage.getItem("vantro_token") || "";
+      const r = await fetch(`${BASE}/api/payments/create-link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          invoice_id: invoiceId,
+          customer_name: c.name,
+          amount: c.outstanding,
+          description: `Invoice payment — ${c.name}`,
+        }),
+      });
+      const d = await r.json();
+      if (d.success) setPayLinkMsg({ text: d.whatsapp_text, phone: c.contact });
+    } catch { /* noop */ }
+    finally { setPayLinkLoading(null); }
   };
 
   const tableData = liveData ?? DATA;
@@ -247,6 +306,11 @@ export default function CollectionsPage() {
                 Message ({totalSelected})
               </button>
             )}
+            {/* Import Excel/CSV button */}
+            <button onClick={() => setShowImport(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-2 border border-border text-secondary text-xs font-semibold hover:text-primary hover:border-accent/30 transition-all">
+              <FiUpload size={13} /> Import Excel
+            </button>
             {/* CSV Upload */}
             <div className="relative">
               <input ref={fileRef} type="file" accept=".csv" className="hidden"
@@ -401,6 +465,11 @@ export default function CollectionsPage() {
                           className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-accent hover:text-white hover:border-accent transition-all">
                           <FiPhone size={11} />
                         </button>
+                        <button onClick={() => handlePayLink(c)}
+                          disabled={payLinkLoading === invoiceIds[c.id]}
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-success-dim border border-success/20 text-success text-2xs font-bold hover:bg-success hover:text-white transition-all disabled:opacity-50">
+                          {payLinkLoading === invoiceIds[c.id] ? <span className="w-3 h-3 border border-success border-t-transparent rounded-full animate-spin" /> : "₹"} Pay Link
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -418,6 +487,62 @@ export default function CollectionsPage() {
           )}
         </div>
       </div>
+
+      {/* Import modal */}
+      {showImport && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-surface-1 border border-border rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-primary">Import Excel / CSV</p>
+              <button onClick={() => { setShowImport(false); setImportMsg(""); }} className="text-muted hover:text-primary">
+                <FiX size={16} />
+              </button>
+            </div>
+            <div
+              onClick={() => importFileRef.current?.click()}
+              className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-accent/50 hover:bg-surface-2 transition-all">
+              {importing
+                ? <><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-2" /><p className="text-sm text-muted">Importing...</p></>
+                : <><FiUpload size={22} className="mx-auto mb-2 text-muted" /><p className="text-sm font-semibold text-primary mb-1">Drop Excel or CSV here</p><p className="text-xs text-muted">Columns: Customer Name, Amount, Date, Phone</p></>
+              }
+              <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
+                onChange={e => e.target.files?.[0] && handleImportFile(e.target.files[0])} />
+            </div>
+            {importMsg && (
+              <p className={`text-sm text-center font-medium ${importMsg.startsWith("✅") ? "text-success" : "text-danger"}`}>{importMsg}</p>
+            )}
+            <p className="text-2xs text-muted text-center">Works with Tally exports, Excel sheets, any CSV format</p>
+          </div>
+        </div>
+      )}
+
+      {/* Pay Link modal */}
+      {payLinkMsg && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-surface-1 border border-border rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-primary">WhatsApp Payment Request</p>
+              <button onClick={() => setPayLinkMsg(null)} className="text-muted hover:text-primary"><FiX size={16} /></button>
+            </div>
+            <div className="p-3 bg-[#128C7E]/10 border border-[#128C7E]/30 rounded-xl">
+              <p className="text-sm text-secondary leading-relaxed whitespace-pre-wrap">{payLinkMsg.text}</p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => navigator.clipboard.writeText(payLinkMsg.text).then(() => setPayLinkMsg(null))}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-surface-2 border border-border text-secondary text-xs font-bold hover:text-primary transition-all">
+                <FiCopy size={12} /> Copy Message
+              </button>
+              {payLinkMsg.phone && (
+                <a href={`https://wa.me/91${payLinkMsg.phone}?text=${encodeURIComponent(payLinkMsg.text)}`}
+                  target="_blank" rel="noopener noreferrer" onClick={() => setPayLinkMsg(null)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#25D366] text-white text-xs font-bold hover:opacity-90 transition-all">
+                  <FiMessageSquare size={12} /> Send on WhatsApp
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

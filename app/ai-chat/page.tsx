@@ -9,8 +9,7 @@ import {
   FiSend, FiZap, FiUser, FiCpu, FiTrendingUp,
   FiPhone, FiAlertTriangle, FiCheckCircle, FiActivity,
   FiTarget, FiRefreshCw, FiMic, FiMicOff,
-  FiMessageSquare, FiCopy, FiChevronDown, FiChevronUp,
-  FiPlay, FiX, FiStar,
+  FiMessageSquare, FiCopy, FiPlay, FiX, FiSettings,
 } from "react-icons/fi";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -214,10 +213,12 @@ function CallScriptModal({ debtor, script, onClose }: {
 }
 
 // ─── Debtor Call Card ─────────────────────────────────────────────────────────
-function DebtorCallCard({ d, rank, token }: { d: Debtor; rank: number; token: string }) {
-  const [script, setScript]     = useState<CallScript | null>(null);
-  const [loading, setLoading]   = useState(false);
-  const [tone, setTone]         = useState<"soft" | "firm" | "urgent">("soft");
+function DebtorCallCard({ d, rank, token, twilioReady }: { d: Debtor; rank: number; token: string; twilioReady: boolean }) {
+  const [script, setScript]       = useState<CallScript | null>(null);
+  const [loading, setLoading]     = useState(false);
+  const [calling, setCalling]     = useState(false);
+  const [callDone, setCallDone]   = useState(false);
+  const [tone, setTone]           = useState<"soft" | "firm" | "urgent">("soft");
   const [showModal, setShowModal] = useState(false);
 
   const generateScript = async () => {
@@ -226,19 +227,29 @@ function DebtorCallCard({ d, rank, token }: { d: Debtor; rank: number; token: st
       const r = await fetch(`${BASE}/api/ai/call-script`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          customer_name: d.customer_name,
-          invoice_amount: d.invoice_amount,
-          days_overdue: d.days_overdue,
-          call_count: d.callCount,
-          has_promise: d.hasPromise,
-          tone,
-        }),
+        body: JSON.stringify({ customer_name: d.customer_name, invoice_amount: d.invoice_amount,
+          days_overdue: d.days_overdue, call_count: d.callCount, has_promise: d.hasPromise, tone }),
       });
       const data = await r.json();
       if (data.success) { setScript(data.script); setShowModal(true); }
     } catch { /* noop */ }
     finally { setLoading(false); }
+  };
+
+  const initiateAICall = async () => {
+    if (!d.customer_phone) return;
+    setCalling(true);
+    try {
+      const r = await fetch(`${BASE}/api/voice/call`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ customer_name: d.customer_name, customer_phone: d.customer_phone,
+          invoice_amount: d.invoice_amount, days_overdue: d.days_overdue, tone }),
+      });
+      const data = await r.json();
+      if (data.success) setCallDone(true);
+    } catch { /* noop */ }
+    finally { setCalling(false); }
   };
 
   const color = tierColor[d.tier];
@@ -279,11 +290,22 @@ function DebtorCallCard({ d, rank, token }: { d: Debtor; rank: number; token: st
             {loading ? "AI..." : "Script"}
           </button>
 
+          {/* AI Call button — uses Twilio if configured, else manual dial */}
           {d.customer_phone && (
-            <a href={`tel:+91${d.customer_phone}`}
-              className="w-7 h-7 rounded-lg bg-success-dim border border-success/20 flex items-center justify-center hover:bg-success hover:text-white transition-all text-success">
-              <FiPhone size={11} />
-            </a>
+            twilioReady ? (
+              <button onClick={initiateAICall} disabled={calling || callDone}
+                title="AI calls this debtor automatically"
+                className={["w-7 h-7 rounded-lg flex items-center justify-center transition-all text-xs font-black",
+                  callDone ? "bg-success text-white" : calling ? "bg-surface-2 border border-border text-muted" : "bg-success-dim border border-success/20 text-success hover:bg-success hover:text-white",
+                ].join(" ")}>
+                {callDone ? <FiCheckCircle size={11} /> : calling ? <FiRefreshCw size={10} className="animate-spin" /> : <FiPhone size={11} />}
+              </button>
+            ) : (
+              <a href={`tel:+91${d.customer_phone}`}
+                className="w-7 h-7 rounded-lg bg-success-dim border border-success/20 flex items-center justify-center hover:bg-success hover:text-white transition-all text-success">
+                <FiPhone size={11} />
+              </a>
+            )
           )}
         </div>
       </div>
@@ -310,6 +332,8 @@ export default function AIFounderPage() {
   const [copiedBulk, setCopiedBulk]   = useState<number | null>(null);
   const [ownerVoiceActive, setOwnerVoiceActive] = useState(false);
   const [ownerName, setOwnerName]     = useState("");
+  const [twilioReady, setTwilioReady] = useState(false);
+  const [twilioMissing, setTwilioMissing] = useState<string[]>([]);
   const bottomRef  = useRef<HTMLDivElement>(null);
   const recogRef   = useRef<SpeechRecognition | null>(null);
   const user = getUser();
@@ -337,17 +361,18 @@ export default function AIFounderPage() {
 
   useEffect(() => { fetchBriefing(); }, [fetchBriefing]);
 
-  // Load voice profile status
+  // Load voice profile + Twilio config
   useEffect(() => {
     if (!token) return;
-    fetch(`${BASE}/api/settings`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then(r => r.json()).then(d => {
-      if (d.settings?.owner_name) {
-        setOwnerName(d.settings.owner_name);
-        setOwnerVoiceActive(!!(d.settings.owner_name && d.settings.ai_persona));
-      }
-    }).catch(() => {});
+    fetch(`${BASE}/api/settings`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(d => {
+        if (d.settings?.owner_name) { setOwnerName(d.settings.owner_name); setOwnerVoiceActive(!!(d.settings.owner_name && d.settings.ai_persona)); }
+      }).catch(() => {});
+    fetch(`${BASE}/api/voice/config`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(d => {
+        setTwilioReady(d.configured || false);
+        setTwilioMissing(d.missing || []);
+      }).catch(() => {});
   }, [token]);
 
   useEffect(() => {
@@ -746,8 +771,30 @@ export default function AIFounderPage() {
                     <span className="text-2xs text-success font-semibold">ML Scored</span>
                   </div>
                 </div>
+                {/* Twilio setup nudge */}
+                {!twilioReady && twilioMissing.length > 0 && (
+                  <div className="flex items-center gap-3 p-3 bg-surface-2 rounded-xl border border-border">
+                    <span className="text-lg shrink-0">📞</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-primary">Activate AI Calling</p>
+                      <p className="text-2xs text-muted">Add Twilio keys to Railway → AI will auto-call debtors in your voice</p>
+                    </div>
+                    <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer"
+                      className="shrink-0 flex items-center gap-1 text-2xs px-2.5 py-1.5 rounded-lg bg-accent-dim border border-accent/20 text-accent font-bold hover:bg-accent hover:text-white transition-all">
+                      <FiSettings size={10} /> Setup
+                    </a>
+                  </div>
+                )}
+
+                {twilioReady && (
+                  <div className="flex items-center gap-2 p-2.5 bg-success/5 border border-success/20 rounded-xl">
+                    <span className="w-2 h-2 rounded-full bg-success animate-pulse shrink-0" />
+                    <p className="text-2xs text-success font-semibold">AI Calling active — phone button will auto-call debtors in your voice</p>
+                  </div>
+                )}
+
                 {briefing.debtors.slice(0, 12).map((d, i) => (
-                  <DebtorCallCard key={i} d={d} rank={i + 1} token={token} />
+                  <DebtorCallCard key={i} d={d} rank={i + 1} token={token} twilioReady={twilioReady} />
                 ))}
               </div>
             )}
