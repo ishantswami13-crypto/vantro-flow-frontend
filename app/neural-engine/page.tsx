@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Link from "next/link";
 import {
-  FiBrain, FiZap, FiActivity, FiTrendingUp, FiTarget,
+  FiCpu, FiZap, FiActivity, FiTrendingUp, FiTarget,
   FiShield, FiCpu, FiDatabase, FiLayers, FiArrowRight,
 } from "react-icons/fi";
 
@@ -38,7 +38,7 @@ const MODELS = [
     description: "70 billion parameter transformer neural network. Generates Hinglish messages, interprets business questions, produces morning briefings.",
     features: ["Hinglish generation", "Intent classification", "Cash flow analysis", "Strategic advice", "WhatsApp drafting"],
     accuracy: "92%",
-    icon: FiBrain,
+    icon: FiCpu,
     color: "#9B6DFF",
     latency: "<800ms",
   },
@@ -67,7 +67,7 @@ const MODELS = [
 ];
 
 const TECH_STACK = [
-  { label: "LLaMA 3.3 70B", sub: "Language model inference", icon: FiBrain, color: "#9B6DFF" },
+  { label: "LLaMA 3.3 70B", sub: "Language model inference", icon: FiCpu, color: "#9B6DFF" },
   { label: "Groq LPU", sub: "Ultra-low latency AI chip", icon: FiCpu, color: "#0066FF" },
   { label: "Feature Store", sub: "Real-time ML features from Supabase", icon: FiDatabase, color: "#10D98A" },
   { label: "Ensemble Engine", sub: "Gradient boosting + neural scoring", icon: FiLayers, color: "#F5A524" },
@@ -115,7 +115,7 @@ export default function NeuralEnginePage() {
           <div className="relative">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent">
-                <FiBrain size={18} className="text-white" />
+                <FiCpu size={18} className="text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -275,7 +275,7 @@ export default function NeuralEnginePage() {
         <Link href="/ai-chat">
           <div className="card-premium p-5 flex items-center gap-4 hover:border-accent/30 transition-all cursor-pointer group">
             <div className="w-10 h-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent shrink-0">
-              <FiBrain size={18} className="text-white" />
+              <FiCpu size={18} className="text-white" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold text-primary">Talk to the Neural Engine</p>

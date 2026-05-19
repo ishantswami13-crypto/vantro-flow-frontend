@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiGrid, FiList, FiBrain, FiUsers, FiZap } from "react-icons/fi";
+import { FiGrid, FiList, FiCpu, FiUsers, FiZap } from "react-icons/fi";
 
 const TABS = [
   { href: "/dashboard",   icon: FiGrid,   label: "Home"     },
   { href: "/collections", icon: FiList,   label: "Collect"  },
-  { href: "/ai-chat",     icon: FiBrain,  label: "AI"       },
+  { href: "/ai-chat",     icon: FiCpu,    label: "AI"       },
   { href: "/network",     icon: FiUsers,  label: "Network"  },
   { href: "/my-id",       icon: FiZap,    label: "My ID"    },
 ];

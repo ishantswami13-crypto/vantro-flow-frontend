@@ -6,7 +6,7 @@ import Button from "@/components/ui/Button";
 import { api, getUser, type ChatMessage } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import {
-  FiSend, FiZap, FiUser, FiBrain, FiTrendingUp,
+  FiSend, FiZap, FiUser, FiCpu, FiTrendingUp,
   FiPhone, FiAlertTriangle, FiCheckCircle, FiActivity,
   FiTarget, FiClock, FiRefreshCw,
 } from "react-icons/fi";
@@ -165,7 +165,7 @@ export default function AIFounderPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-8 h-8 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent">
-                <FiBrain size={15} className="text-white" />
+                <FiCpu size={15} className="text-white" />
               </div>
               <h2 className="text-2xl font-black text-primary tracking-tight">AI Founder</h2>
               <span className="text-2xs font-bold text-success bg-success-dim border border-success/20 px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -208,7 +208,7 @@ export default function AIFounderPage() {
             {mlLoading ? (
               <div className="card-premium p-8 flex flex-col items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-accent-dim border border-accent/20 flex items-center justify-center">
-                  <FiBrain size={20} className="text-accent animate-pulse" />
+                  <FiCpu size={20} className="text-accent animate-pulse" />
                 </div>
                 <p className="text-sm text-muted animate-pulse">Neural network is analyzing your business...</p>
               </div>
@@ -225,7 +225,7 @@ export default function AIFounderPage() {
                     <HealthRing score={briefing.health_score} />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <FiBrain size={13} className="text-accent" />
+                        <FiCpu size={13} className="text-accent" />
                         <p className="text-xs font-bold text-accent uppercase tracking-wider">AI Morning Briefing</p>
                       </div>
                       <p className="text-sm text-secondary leading-relaxed">{briefing.briefing}</p>
@@ -362,7 +362,7 @@ export default function AIFounderPage() {
                   ].join(" ")}>
                     {m.role === "user"
                       ? <FiUser size={13} className="text-white" />
-                      : <FiBrain size={13} className="text-white" />}
+                      : <FiCpu size={13} className="text-white" />}
                   </div>
                   <div className={[
                     "max-w-[80%] rounded-2xl px-4 py-3",
@@ -380,7 +380,7 @@ export default function AIFounderPage() {
               {chatLoading && (
                 <div className="flex gap-3">
                   <div className="w-8 h-8 rounded-xl bg-gradient-accent shadow-button-accent flex items-center justify-center shrink-0">
-                    <FiBrain size={13} className="text-white" />
+                    <FiCpu size={13} className="text-white" />
                   </div>
                   <div className="card-premium rounded-tl-sm px-4 py-3 flex items-center gap-1.5">
                     {[0, 1, 2].map(i => (
