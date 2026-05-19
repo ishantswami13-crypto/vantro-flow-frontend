@@ -308,6 +308,8 @@ export default function AIFounderPage() {
   const [bulkMsgs, setBulkMsgs]       = useState<BulkMsg[]>([]);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [copiedBulk, setCopiedBulk]   = useState<number | null>(null);
+  const [ownerVoiceActive, setOwnerVoiceActive] = useState(false);
+  const [ownerName, setOwnerName]     = useState("");
   const bottomRef  = useRef<HTMLDivElement>(null);
   const recogRef   = useRef<SpeechRecognition | null>(null);
   const user = getUser();
@@ -334,6 +336,19 @@ export default function AIFounderPage() {
   }, [user?.id, token]);
 
   useEffect(() => { fetchBriefing(); }, [fetchBriefing]);
+
+  // Load voice profile status
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${BASE}/api/settings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then(r => r.json()).then(d => {
+      if (d.settings?.owner_name) {
+        setOwnerName(d.settings.owner_name);
+        setOwnerVoiceActive(!!(d.settings.owner_name && d.settings.ai_persona));
+      }
+    }).catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -444,7 +459,19 @@ export default function AIFounderPage() {
                 LLaMA 70B
               </span>
             </div>
-            <p className="text-sm text-muted">Sees your data · generates scripts · advises strategy · speaks Hinglish</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm text-muted">Sees your data · generates scripts · advises strategy</p>
+              {ownerVoiceActive ? (
+                <span className="flex items-center gap-1 text-2xs font-bold text-success bg-success-dim border border-success/20 px-2 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" />
+                  Speaking as {ownerName}
+                </span>
+              ) : (
+                <a href="/settings" className="text-2xs text-accent underline underline-offset-2 hover:no-underline">
+                  Set up voice profile →
+                </a>
+              )}
+            </div>
           </div>
           <button onClick={fetchBriefing}
             className="p-2 rounded-xl bg-surface-2 border border-border text-muted hover:text-primary hover:border-accent/30 transition-all">
