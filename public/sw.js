@@ -50,19 +50,36 @@ self.addEventListener('fetch', e => {
 
 // Push notifications
 self.addEventListener('push', e => {
-  const data = e.data?.json() || {};
+  const payload = e.data?.json() || {};
+  const { title, body, data = {} } = payload;
+
+  // Determine destination URL based on notification type
+  let targetUrl = '/dashboard';
+  if (data.type === 'payment_received') targetUrl = '/collections';
+  if (data.type === 'morning_briefing') targetUrl = '/ai-chat';
+
   e.waitUntil(
-    self.registration.showNotification(data.title || 'Vantro Flow', {
-      body: data.body || 'You have a new update',
+    self.registration.showNotification(title || 'Vantro Flow', {
+      body: body || 'You have a new update',
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       vibrate: [200, 100, 200],
-      data: { url: data.url || '/dashboard' },
+      tag: data.type || 'general',       // replaces old notif of same type
+      renotify: data.type === 'payment_received', // payment alerts always ring
+      data: { url: targetUrl, ...data },
     })
   );
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(clients.openWindow(e.notification.data.url || '/dashboard'));
+  const url = e.notification.data?.url || '/dashboard';
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(wins => {
+      // Focus existing window if open, else open new
+      const existing = wins.find(w => w.url.includes(url));
+      if (existing) return existing.focus();
+      return clients.openWindow(url);
+    })
+  );
 });
