@@ -8,6 +8,7 @@ import {
   FiMessageSquare, FiPackage, FiUsers, FiBarChart2,
   FiCamera, FiFileText, FiCreditCard, FiRepeat, FiShield,
   FiCpu, FiGlobe, FiBook, FiShoppingBag, FiUserCheck,
+  FiSun, FiActivity,
 } from "react-icons/fi";
 import { getUser, clearAuth } from "@/lib/api";
 
@@ -18,7 +19,9 @@ const NAV = [
   { href: "/whatsapp",       label: "WhatsApp",        icon: FiMessageSquare, badge: null,   group: "core" },
   { href: "/dunning",        label: "Auto Follow-Up",  icon: FiRepeat,        badge: null,   group: "core" },
   // ── Intelligence
-  { href: "/ai-chat",        label: "AI Founder",      icon: FiCpu,           badge: "AI",   group: "intelligence" },
+  { href: "/today",          label: "Today's P&L",     icon: FiSun,           badge: "NEW",  group: "intelligence" },
+  { href: "/brain",          label: "Vantro Brain",    icon: FiActivity,      badge: "AI",   group: "intelligence" },
+  { href: "/ai-chat",        label: "AI Founder",      icon: FiCpu,           badge: null,   group: "intelligence" },
   { href: "/neural-engine",  label: "Neural Engine",   icon: FiZap,           badge: null,   group: "intelligence" },
   { href: "/forecast",       label: "Cash Forecast",   icon: FiTrendingUp,    badge: null,   group: "intelligence" },
   { href: "/ledger",         label: "Bank Ledger",     icon: FiBook,          badge: null,   group: "intelligence" },
