@@ -13,12 +13,21 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-pro
 interface ManualEntry { name: string; amount: string; days: string; phone: string }
 
 const BUSINESS_TYPES = [
-  { value: "distributor",  emoji: "📦", label: "Distributor / Wholesaler",       desc: "I sell goods to retailers and collect from them" },
-  { value: "manufacturer", emoji: "🏭", label: "Manufacturer",                    desc: "I make products and invoice buyers" },
-  { value: "service",      emoji: "💼", label: "Service / Agency / Freelancer",  desc: "I bill clients for services or projects" },
-  { value: "retailer",     emoji: "🏪", label: "Retailer / Shop Owner",          desc: "I run a shop and manage supplier payments" },
-  { value: "trader",       emoji: "📊", label: "Trader / Broker",                desc: "I buy and sell, managing receivables from many parties" },
-  { value: "startup",      emoji: "🚀", label: "Startup / Tech Business",        desc: "I invoice clients or track subscriptions" },
+  { value: "distributor",  emoji: "📦", label: "Distributor / Wholesaler",      desc: "I sell goods to retailers and collect from them" },
+  { value: "manufacturer", emoji: "🏭", label: "Manufacturer",                   desc: "I make products and invoice buyers" },
+  { value: "service",      emoji: "💼", label: "Service / Agency / Freelancer", desc: "I bill clients for services or projects" },
+  { value: "retailer",     emoji: "🏪", label: "Retailer / Shop Owner",         desc: "I run a shop and manage supplier payments" },
+  { value: "trader",       emoji: "📊", label: "Trader / Broker",               desc: "I buy and sell, managing receivables from many parties" },
+  { value: "startup",      emoji: "🚀", label: "Startup / Tech Business",       desc: "I invoice clients or track subscriptions" },
+];
+
+const INDUSTRIES = [
+  { value: "construction", emoji: "🏗️", label: "Construction / Building Material", desc: "Cement, rod, sand, tiles, bricks" },
+  { value: "textile",      emoji: "👗", label: "Textile / Garments / Fashion",     desc: "Fabric, readymade, wholesale clothing" },
+  { value: "grocery",      emoji: "🛒", label: "Grocery / FMCG / Food",            desc: "Atta, dal, oil, packaged food, beverages" },
+  { value: "pharma",       emoji: "💊", label: "Pharma / Medical / Healthcare",    desc: "Medicines, surgical, medical supplies" },
+  { value: "restaurant",   emoji: "🍽️", label: "Restaurant / Dhaba / Hotel",       desc: "Food & beverage service business" },
+  { value: "general",      emoji: "🏢", label: "Other / General Business",         desc: "Doesn't fit above categories" },
 ];
 
 const CITIES = [
@@ -44,10 +53,28 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
   );
 }
 
+function OptionCard({ selected, onClick, emoji, label, desc }: { selected: boolean; onClick: () => void; emoji: string; label: string; desc: string }) {
+  return (
+    <button onClick={onClick}
+      className={[
+        "w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all",
+        selected ? "border-accent/50 bg-accent-dim" : "border-border bg-surface-2 hover:border-border/60 hover:bg-surface-3",
+      ].join(" ")}>
+      <span className="text-2xl shrink-0">{emoji}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-primary">{label}</p>
+        <p className="text-2xs text-muted mt-0.5">{desc}</p>
+      </div>
+      {selected && <FiCheck size={16} className="text-accent shrink-0" />}
+    </button>
+  );
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
   const token  = typeof window !== "undefined" ? localStorage.getItem("vantro_token") || "" : "";
 
+  const TOTAL_STEPS = 6;
   const [step, setStep]           = useState(0);
   const [loading, setLoading]     = useState(false);
   const [importMsg, setImportMsg] = useState("");
@@ -55,12 +82,18 @@ export default function OnboardingPage() {
   const [scored, setScored]       = useState<any[]>([]);
   const [briefing, setBriefing]   = useState("");
 
-  // Step 0
+  // Step 0 — Name + City
   const [ownerName, setOwnerName] = useState("");
   const [city, setCity]           = useState("");
-  // Step 1
+  // Step 1 — Business type
   const [bizType, setBizType]     = useState("");
-  // Step 2
+  // Step 2 — Industry + Operational questions
+  const [industry, setIndustry]   = useState("");
+  const [bizSize, setBizSize]     = useState<"micro" | "small" | "medium" | "">("");
+  const [gstReg, setGstReg]       = useState<boolean | null>(null);
+  const [sellsCredit, setSellsCredit] = useState<boolean | null>(null);
+  const [hasWorkers, setHasWorkers]   = useState<boolean | null>(null);
+  // Step 3 — Data import
   const [mode, setMode]           = useState<"import" | "manual">("import");
   const [dragOver, setDragOver]   = useState(false);
   const [manualRows, setManualRows] = useState<ManualEntry[]>([
@@ -75,10 +108,33 @@ export default function OnboardingPage() {
       await fetch(`${BASE}/api/settings`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ owner_name: ownerName, city, industry: bizType }),
+        body: JSON.stringify({ owner_name: ownerName, city, industry }),
       });
     } catch { /* non-blocking */ }
-  }, [ownerName, city, bizType, token]);
+  }, [ownerName, city, industry, token]);
+
+  const setupOnboarding = useCallback(async () => {
+    try {
+      const r = await fetch(`${BASE}/api/onboarding/setup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          industry,
+          business_size: bizSize,
+          gst_registered: gstReg,
+          sells_on_credit: sellsCredit,
+          has_workers: hasWorkers,
+        }),
+      });
+      const d = await r.json();
+      if (d.success && d.feature_flags) {
+        // Store feature flags in localStorage for sidebar
+        localStorage.setItem("vantro_features", JSON.stringify(d.feature_flags));
+        // Also store industry for AI vocabulary seeding
+        localStorage.setItem("vantro_industry", industry);
+      }
+    } catch { /* non-blocking */ }
+  }, [industry, bizSize, gstReg, sellsCredit, hasWorkers, token]);
 
   const handleFile = useCallback(async (file: File) => {
     setLoading(true); setImportMsg("");
@@ -118,7 +174,7 @@ export default function OnboardingPage() {
   }, [manualRows, token]);
 
   const runScoring = useCallback(async () => {
-    setStep(3);
+    setStep(4);
     try {
       const r = await fetch(`${BASE}/api/ml/briefing`, {
         method: "POST",
@@ -127,25 +183,33 @@ export default function OnboardingPage() {
       const d = await r.json();
       if (d.success) { setScored(d.debtors?.slice(0, 5) || []); setBriefing(d.briefing || ""); }
     } catch { /* show empty */ }
-    setStep(4);
+    setStep(5);
   }, [token]);
+
+  const step2Valid = industry && bizSize && gstReg !== null && sellsCredit !== null && hasWorkers !== null;
 
   const proceed = useCallback(async () => {
     if (step === 0) { if (!ownerName.trim()) return; setStep(1); }
     else if (step === 1) { if (!bizType) return; setStep(2); }
     else if (step === 2) {
+      if (!step2Valid) return;
+      await setupOnboarding();
+      setStep(3);
+    }
+    else if (step === 3) {
       await saveSettings();
       if (mode === "manual") { const ok = await submitManual(); if (!ok && !importOk) return; }
       runScoring();
     }
-  }, [step, ownerName, bizType, mode, saveSettings, submitManual, importOk, runScoring]);
+  }, [step, ownerName, bizType, step2Valid, mode, saveSettings, setupOnboarding, submitManual, importOk, runScoring]);
 
   const useDemoData = useCallback(async () => {
+    await setupOnboarding();
     await saveSettings();
     const user = getUser();
     if (user?.id) try { await api.seed(user.id); } catch { /* ignore */ }
     runScoring();
-  }, [saveSettings, runScoring]);
+  }, [saveSettings, setupOnboarding, runScoring]);
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center px-4 py-8">
@@ -159,14 +223,14 @@ export default function OnboardingPage() {
           <span className="font-bold text-primary text-lg tracking-tight">Vantro</span>
         </div>
 
-        <ProgressBar step={step} total={5} />
+        <ProgressBar step={step} total={TOTAL_STEPS} />
 
-        {/* ── STEP 0: Name + City ──────────────────────────────────────────── */}
+        {/* ── STEP 0: Name + City ──────────────────────────────────────── */}
         {step === 0 && (
           <div className="space-y-6">
             <div>
               <h1 className="text-2xl font-black text-primary">Namaste! 👋</h1>
-              <p className="text-sm text-secondary mt-1">Let's set up your AI co-founder. 3 minutes.</p>
+              <p className="text-sm text-secondary mt-1">Let's set up your AI business OS. 3 minutes.</p>
             </div>
             <div className="space-y-4">
               <div>
@@ -198,7 +262,7 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* ── STEP 1: Business type ─────────────────────────────────────────── */}
+        {/* ── STEP 1: Business type ─────────────────────────────────────── */}
         {step === 1 && (
           <div className="space-y-5">
             <div>
@@ -207,18 +271,8 @@ export default function OnboardingPage() {
             </div>
             <div className="space-y-2">
               {BUSINESS_TYPES.map(bt => (
-                <button key={bt.value} onClick={() => setBizType(bt.value)}
-                  className={[
-                    "w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all",
-                    bizType === bt.value ? "border-accent/50 bg-accent-dim" : "border-border bg-surface-2 hover:border-border/60 hover:bg-surface-3",
-                  ].join(" ")}>
-                  <span className="text-2xl shrink-0">{bt.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-primary">{bt.label}</p>
-                    <p className="text-2xs text-muted mt-0.5">{bt.desc}</p>
-                  </div>
-                  {bizType === bt.value && <FiCheck size={16} className="text-accent shrink-0" />}
-                </button>
+                <OptionCard key={bt.value} selected={bizType === bt.value} onClick={() => setBizType(bt.value)}
+                  emoji={bt.emoji} label={bt.label} desc={bt.desc} />
               ))}
             </div>
             <button onClick={proceed} disabled={!bizType}
@@ -228,8 +282,95 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* ── STEP 2: Data ──────────────────────────────────────────────────── */}
+        {/* ── STEP 2: Industry + Operational Questions ─────────────────── */}
         {step === 2 && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-2xl font-black text-primary">Tell us more 🎯</h1>
+              <p className="text-sm text-secondary mt-1">We'll activate only the features you'll actually use.</p>
+            </div>
+
+            {/* Industry */}
+            <div>
+              <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-3">What industry are you in?</p>
+              <div className="grid grid-cols-2 gap-2">
+                {INDUSTRIES.map(ind => (
+                  <button key={ind.value} onClick={() => setIndustry(ind.value)}
+                    className={`p-3 rounded-xl border text-left transition-all ${industry === ind.value ? "border-accent/50 bg-accent-dim" : "border-border bg-surface-2 hover:border-border/60"}`}>
+                    <span className="text-xl block mb-1">{ind.emoji}</span>
+                    <p className="text-xs font-bold text-primary leading-tight">{ind.label}</p>
+                    {industry === ind.value && <FiCheck size={12} className="text-accent mt-1" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Business size */}
+            <div>
+              <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-3">Annual turnover?</p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { v: "micro",  emoji: "🌱", label: "Under ₹50L",   desc: "Micro" },
+                  { v: "small",  emoji: "📈", label: "₹50L – ₹5Cr",  desc: "Small" },
+                  { v: "medium", emoji: "🏢", label: "₹5Cr+",         desc: "Medium" },
+                ].map(s => (
+                  <button key={s.v} onClick={() => setBizSize(s.v as any)}
+                    className={`p-3 rounded-xl border text-center transition-all ${bizSize === s.v ? "border-accent/50 bg-accent-dim" : "border-border bg-surface-2 hover:border-border/60"}`}>
+                    <span className="text-xl block mb-1">{s.emoji}</span>
+                    <p className="text-xs font-bold text-primary">{s.label}</p>
+                    <p className="text-2xs text-muted">{s.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Yes/No questions */}
+            <div className="space-y-4">
+              {[
+                {
+                  q: "Are you GST registered?",
+                  val: gstReg, set: setGstReg,
+                  yes: "✅ Yes, I have GSTIN",
+                  no: "❌ No / Not yet",
+                },
+                {
+                  q: "Do you sell on credit (udhaar)?",
+                  val: sellsCredit, set: setSellsCredit,
+                  yes: "✅ Yes, most sales on credit",
+                  no: "💰 No, mostly cash/UPI",
+                },
+                {
+                  q: "Do you have employees or workers?",
+                  val: hasWorkers, set: setHasWorkers,
+                  yes: "👥 Yes, I have a team",
+                  no: "🙋 No, just me",
+                },
+              ].map(({ q, val, set, yes, no }) => (
+                <div key={q}>
+                  <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-2">{q}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={() => set(true)}
+                      className={`py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all ${val === true ? "border-accent/50 bg-accent-dim text-accent" : "border-border bg-surface-2 text-secondary hover:border-border/60"}`}>
+                      {yes}
+                    </button>
+                    <button onClick={() => set(false)}
+                      className={`py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all ${val === false ? "border-accent/50 bg-accent-dim text-accent" : "border-border bg-surface-2 text-secondary hover:border-border/60"}`}>
+                      {no}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={proceed} disabled={!step2Valid}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-accent text-white font-bold text-sm shadow-button-accent hover:opacity-90 transition-all disabled:opacity-40">
+              Activate My Features <FiArrowRight size={15} />
+            </button>
+          </div>
+        )}
+
+        {/* ── STEP 3: Data import ───────────────────────────────────────── */}
+        {step === 3 && (
           <div className="space-y-5">
             <div>
               <h1 className="text-2xl font-black text-primary">Add your customers</h1>
@@ -247,7 +388,6 @@ export default function OnboardingPage() {
               ))}
             </div>
 
-            {/* IMPORT mode */}
             {mode === "import" && (
               <div className="space-y-3">
                 <div onDragOver={e => { e.preventDefault(); setDragOver(true); }}
@@ -264,23 +404,18 @@ export default function OnboardingPage() {
                   <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
                     onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
                 </div>
-
                 <div className="p-3 bg-surface-2 rounded-xl border border-border">
                   <p className="text-2xs font-bold text-muted uppercase tracking-wider mb-2">Your file just needs:</p>
                   <div className="grid grid-cols-2 gap-1.5">
-                    {[["Customer Name","Ramesh Traders, Gupta & Co"],["Amount","45000, 28500, 72000"],["Date","15/03/2025, 2025-01-20"],["Phone (optional)","9876543210"]].map(([col, ex]) => (
+                    {[["Customer Name","Ramesh Traders"],["Amount","45000, 28500"],["Date","15/03/2025"],["Phone (optional)","9876543210"]].map(([col, ex]) => (
                       <div key={col} className="text-2xs"><span className="font-bold text-secondary">{col}</span><span className="text-muted"> — {ex}</span></div>
                     ))}
                   </div>
                 </div>
-
-                {importMsg && (
-                  <p className={`text-sm font-medium whitespace-pre-wrap ${importOk ? "text-success" : "text-danger"}`}>{importMsg}</p>
-                )}
+                {importMsg && <p className={`text-sm font-medium whitespace-pre-wrap ${importOk ? "text-success" : "text-danger"}`}>{importMsg}</p>}
               </div>
             )}
 
-            {/* MANUAL mode */}
             {mode === "manual" && (
               <div className="space-y-3">
                 <div className="grid grid-cols-12 gap-1.5 px-1">
@@ -332,18 +467,18 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* ── STEP 3: Scoring animation ─────────────────────────────────────── */}
-        {step === 3 && (
+        {/* ── STEP 4: Scoring animation ─────────────────────────────────── */}
+        {step === 4 && (
           <div className="text-center space-y-6 py-8">
             <div className="w-16 h-16 rounded-2xl bg-gradient-accent flex items-center justify-center shadow-button-accent mx-auto animate-pulse">
               <FiZap size={28} className="text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-primary">AI is scoring your customers...</h2>
-              <p className="text-sm text-muted mt-2">Running ML model · calculating payment probabilities</p>
+              <h2 className="text-xl font-black text-primary">Setting up your workspace...</h2>
+              <p className="text-sm text-muted mt-2">Activating features · Running AI model · Building your dashboard</p>
             </div>
             <div className="space-y-2 max-w-xs mx-auto text-left">
-              {["Running gradient boosting model...","Calculating payment probabilities...","Generating your morning briefing...","Building priority call list..."].map((msg, i) => (
+              {["Activating features based on your industry...","Running AI scoring model...","Building your priority call list...","Generating morning briefing..."].map((msg, i) => (
                 <div key={i} className="flex items-center gap-2.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shrink-0" style={{ animationDelay: `${i * 0.3}s` }} />
                   <p className="text-xs text-secondary">{msg}</p>
@@ -353,8 +488,8 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* ── STEP 4: Results ────────────────────────────────────────────────── */}
-        {step === 4 && (
+        {/* ── STEP 5: Results ─────────────────────────────────────────────── */}
+        {step === 5 && (
           <div className="space-y-5">
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-full bg-success flex items-center justify-center shrink-0">
@@ -362,7 +497,31 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <h1 className="text-xl font-black text-primary">Ready, {ownerName}! 🎉</h1>
-                <p className="text-sm text-secondary">Here's your first AI briefing:</p>
+                <p className="text-sm text-secondary">Your features are activated. Here's your first briefing:</p>
+              </div>
+            </div>
+
+            {/* Feature preview */}
+            <div className="p-4 bg-surface-2 border border-border rounded-xl">
+              <p className="text-2xs font-bold text-muted uppercase tracking-wider mb-3">Features Activated For You</p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {[
+                  { on: true,  label: "Collections & Receivables" },
+                  { on: true,  label: "WhatsApp Messaging" },
+                  { on: true,  label: "AI Brain & Chat" },
+                  { on: true,  label: "Today's P&L" },
+                  { on: Boolean(gstReg),        label: "GST Invoice Generator" },
+                  { on: Boolean(sellsCredit),   label: "Customer Khata / Udhaar" },
+                  { on: Boolean(hasWorkers),    label: "Staff Attendance & Salary" },
+                  { on: true,  label: "Cash Flow Forecast" },
+                ].map(f => (
+                  <div key={f.label} className={`flex items-center gap-2 ${f.on ? "text-primary" : "text-muted/40"}`}>
+                    <span className={`w-4 h-4 rounded flex items-center justify-center shrink-0 ${f.on ? "bg-success/20 text-success" : "bg-surface-3 text-muted/30"}`}>
+                      {f.on ? "✓" : "—"}
+                    </span>
+                    {f.label}
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -403,17 +562,17 @@ export default function OnboardingPage() {
 
             {scored.length === 0 && !briefing && (
               <div className="p-5 bg-surface-2 border border-border rounded-xl text-center">
-                <p className="text-sm text-secondary">Your AI Founder is ready. Add customers from Collections to see live scoring.</p>
+                <p className="text-sm text-secondary">Your workspace is ready. Explore your activated features in the sidebar.</p>
               </div>
             )}
 
-            <button onClick={() => router.push("/ai-chat")}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-accent text-white font-black text-base shadow-button-accent hover:opacity-90 transition-all">
-              Open AI Founder <FiArrowRight size={16} />
-            </button>
             <button onClick={() => router.push("/dashboard")}
+              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-accent text-white font-black text-base shadow-button-accent hover:opacity-90 transition-all">
+              Open Dashboard <FiArrowRight size={16} />
+            </button>
+            <button onClick={() => router.push("/ai-chat")}
               className="w-full text-center text-xs text-muted hover:text-secondary transition-colors py-1">
-              Go to Dashboard →
+              Talk to AI Founder →
             </button>
           </div>
         )}
