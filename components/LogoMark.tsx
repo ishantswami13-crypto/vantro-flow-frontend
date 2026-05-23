@@ -1,5 +1,3 @@
-"use client";
-
 interface LogoMarkProps {
   size?: number;
   className?: string;
@@ -15,35 +13,30 @@ export default function LogoMark({ size = 32, className = "" }: LogoMarkProps) {
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Background: pure black */}
+      {/* Background: pure black rounded square */}
       <rect width="100" height="100" rx="22" fill="#000000" />
 
-      {/* Inner border: subtle white edge */}
+      {/* Subtle inner border */}
       <rect
-        x="1" y="1" width="98" height="98" rx="21"
-        stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" fill="none"
+        x="0.75" y="0.75" width="98.5" height="98.5" rx="21.5"
+        stroke="rgba(255,255,255,0.10)" strokeWidth="1.5" fill="none"
       />
 
-      {/* LEFT ARM — bold calligraphic bezier, white */}
-      <path
-        d="M 18,19 C 10,40 28,64 50,81"
-        stroke="white"
-        strokeWidth="13.5"
-        strokeLinecap="round"
-        fill="none"
-      />
+      {/*
+        THE VANTRO FUNNEL MARK
+        Three bold rounded bars — wide → medium → narrow (top → bottom).
+        Reads as a funnel: many receivables (wide) collecting into cash (narrow).
+        Like Apple uses an apple, we use a funnel. Simple. Iconic. Meaningful.
+      */}
 
-      {/* RIGHT ARM — thinner, semi-white */}
-      <path
-        d="M 82,19 C 90,40 72,64 50,81"
-        stroke="rgba(255,255,255,0.75)"
-        strokeWidth="9"
-        strokeLinecap="round"
-        fill="none"
-      />
+      {/* Bar 1 — widest (top) */}
+      <rect x="15" y="23" width="70" height="13" rx="6.5" fill="white" />
 
-      {/* VERTEX — white dot */}
-      <circle cx="50" cy="81" r="3.5" fill="white" />
+      {/* Bar 2 — medium (middle) */}
+      <rect x="25" y="43" width="50" height="13" rx="6.5" fill="white" fillOpacity="0.85" />
+
+      {/* Bar 3 — narrowest (bottom) */}
+      <rect x="35" y="63" width="30" height="13" rx="6.5" fill="white" fillOpacity="0.60" />
     </svg>
   );
 }
