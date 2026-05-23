@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  FiGrid, FiList, FiTrendingUp, FiSettings, FiLogOut, FiX, FiZap,
+  FiGrid, FiList, FiTrendingUp, FiSettings, FiLogOut, FiX,
   FiMessageSquare, FiPackage, FiUsers, FiBarChart2,
   FiCamera, FiFileText, FiCreditCard, FiRepeat, FiShield,
   FiCpu, FiGlobe, FiBook, FiShoppingBag, FiUserCheck,
   FiSun, FiActivity, FiUser, FiSliders, FiDatabase,
-  FiArchive, FiFile, FiDollarSign,
+  FiArchive, FiFile, FiDollarSign, FiZap,
 } from "react-icons/fi";
+import LogoMark from "@/components/LogoMark";
 import { getUser, clearAuth } from "@/lib/api";
 
 // feature flag key → which sidebar items require that flag
@@ -96,9 +97,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         {/* Logo */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-white/5 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent shrink-0">
-              <FiZap size={15} className="text-white" />
-            </div>
+            <LogoMark size={32} />
             <div>
               <p className="font-bold text-sm text-primary tracking-tight leading-none">Vantro</p>
               <p className="text-2xs text-muted mt-0.5">Business OS</p>
