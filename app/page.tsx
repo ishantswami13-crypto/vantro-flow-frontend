@@ -177,7 +177,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ────────────────────────────────────────────── */}
-      <section className="relative min-h-[90vh] flex items-center bg-grid-pattern overflow-hidden">
+      <section className="relative min-h-[80vh] flex items-center bg-grid-pattern overflow-hidden">
         <div className="hero-glow w-[500px] h-[500px] bg-accent/10 top-[-100px] left-[-100px]" />
         <div className="hero-glow w-[400px] h-[400px] bg-accent/6 bottom-[-80px] right-[10%]" />
         <div className="hero-glow w-[300px] h-[300px] bg-success/5 top-[20%] right-[-50px]" />
@@ -329,9 +329,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────── */}
-      <section id="how-it-works" className="py-24 bg-bg">
+      <section id="how-it-works" className="py-16 bg-bg">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10">
             <p className="section-label mb-3">How it Works</p>
             <h2 className="text-3xl sm:text-4xl font-black text-primary mb-4 tracking-tight">
               Up and collecting in 3 steps
@@ -365,9 +365,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── FEATURES ────────────────────────────────────────── */}
-      <section id="features" className="py-24 bg-grid-pattern border-t border-border">
+      <section id="features" className="py-16 bg-grid-pattern border-t border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10">
             <p className="section-label mb-3">Platform</p>
             <h2 className="text-3xl sm:text-4xl font-black text-primary mb-4 tracking-tight">
               Built for the Indian MSME reality
@@ -397,9 +397,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── SOCIAL PROOF ────────────────────────────────────── */}
-      <section id="proof" className="py-24 bg-surface-1 border-y border-border">
+      <section id="proof" className="py-16 bg-surface-1 border-y border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-14">
+          <div className="text-center mb-10">
             <p className="section-label mb-3">Customer Stories</p>
             <h2 className="text-3xl font-black text-primary tracking-tight mb-3">
               Rajesh got paid. So can you.
@@ -435,9 +435,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ─────────────────────────────────────────── */}
-      <section id="pricing" className="py-24 bg-grid-pattern">
+      <section id="pricing" className="py-16 bg-grid-pattern">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-14">
+          <div className="text-center mb-10">
             <p className="section-label mb-3">Pricing</p>
             <h2 className="text-3xl sm:text-4xl font-black text-primary mb-3 tracking-tight">
               Simple. Transparent. No surprises.
@@ -503,9 +503,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── FAQ ─────────────────────────────────────────────── */}
-      <section id="faq" className="py-24 bg-surface-1 border-t border-border">
+      <section id="faq" className="py-16 bg-surface-1 border-t border-border">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-14">
+          <div className="text-center mb-10">
             <p className="section-label mb-3">FAQ</p>
             <h2 className="text-3xl font-black text-primary tracking-tight mb-3">Common questions</h2>
             <p className="text-sm text-muted">Still have doubts? WhatsApp us — we reply in minutes.</p>
@@ -530,7 +530,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FINAL CTA ───────────────────────────────────────── */}
-      <section className="py-24 bg-grid-pattern border-t border-border">
+      <section className="py-16 bg-grid-pattern border-t border-border">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <div className="w-14 h-14 rounded-2xl bg-gradient-accent flex items-center justify-center mx-auto mb-6 shadow-button-accent animate-float">
             <FiZap size={24} className="text-white" />
