@@ -70,8 +70,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   useEffect(() => {
     const u = getUser();
     if (u) {
-      setUserName(u.business_name || u.email?.split("@")[0] || "User");
-      setBizName(u.business_name || "My Business");
+      // Show email prefix as name if it's different from business name — avoid "BJB ENT / BJP ENT" repeat
+      const emailName = u.email?.split("@")[0] || "User";
+      setUserName(u.business_name || emailName);
+      setBizName(u.email || "");
       setIsAdmin(u.email === "ishantswami13@gmail.com");
     }
     // Load feature flags from localStorage (set during onboarding)
@@ -176,10 +178,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           </div>
         )}
 
-        {/* User + Logout */}
-        <div className="px-3 py-4 border-t border-white/5 shrink-0 space-y-1">
+        {/* User card + Sign Out */}
+        <div className="px-3 py-3 border-t border-white/5 shrink-0">
           <Link href="/settings" onClick={onClose}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-surface-2 transition-colors">
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-surface-2 transition-colors group">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent to-success flex items-center justify-center text-xs font-bold text-white shrink-0">
               {userName.charAt(0).toUpperCase()}
             </div>
@@ -187,12 +189,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               <p className="text-xs font-semibold text-primary truncate">{userName}</p>
               <p className="text-2xs text-muted truncate">{bizName}</p>
             </div>
+            <FiSettings size={12} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
           </Link>
-          <button onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-muted hover:text-danger hover:bg-danger-dim transition-all focus-ring w-full">
-            <FiLogOut size={15} className="shrink-0" />
-            Sign Out
-          </button>
+          {/* Sign Out — visually separated from nav */}
+          <div className="mt-1 px-3">
+            <button onClick={handleLogout}
+              className="flex items-center gap-2 py-1.5 text-2xs font-medium text-muted/60 hover:text-danger transition-colors focus-ring w-full">
+              <FiLogOut size={11} className="shrink-0" />
+              Sign out
+            </button>
+          </div>
         </div>
       </aside>
     </>

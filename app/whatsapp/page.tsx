@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { FiMessageSquare, FiSend, FiUsers, FiCheck, FiClock, FiZap, FiFilter } from "react-icons/fi";
+import Link from "next/link";
 import { api, getUser, type Invoice } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 
@@ -13,19 +14,19 @@ const TEMPLATES = [
     id: "gentle",
     label: "Gentle Reminder",
     tone: "gentle" as const,
-    text: "Namaste {name} ji 🙏\n\nHamare records mein aapka ₹{amount} payment {days} din se pending hai.\n\nKya aap is hafte payment arrange kar sakte hain?\n\nDhanyawad\nVantro Collections",
+    text: "Namaste {name} ji 🙏\n\nHamare records mein aapka {amount} payment {days} din se pending hai.\n\nKya aap is hafte payment arrange kar sakte hain?\n\nDhanyawad\nVantro Collections",
   },
   {
     id: "firm",
     label: "Firm Follow-Up",
     tone: "firm" as const,
-    text: "Dear {name},\n\nYour payment of ₹{amount} is {days} days overdue.\n\nPlease clear the outstanding amount within 3 working days.\n\nRegards\nCollections Team",
+    text: "Dear {name},\n\nYour payment of {amount} is {days} days overdue.\n\nPlease clear the outstanding amount within 3 working days.\n\nRegards\nCollections Team",
   },
   {
     id: "urgent",
     label: "Urgent Notice",
     tone: "urgent" as const,
-    text: "URGENT: {name}\n\nAmount: ₹{amount} | Overdue: {days} days\n\nImmediate payment required to avoid further action.",
+    text: "URGENT: {name}\n\nAmount: {amount} | Overdue: {days} days\n\nImmediate payment required to avoid further action.",
   },
   {
     id: "custom",
@@ -172,8 +173,12 @@ export default function WhatsAppPage() {
                 ) : customers.length === 0 ? (
                   <div className="p-8 text-center">
                     <FiUsers size={28} className="mx-auto mb-3 text-muted opacity-40" />
-                    <p className="text-sm text-secondary">No overdue invoices found.</p>
-                    <p className="text-xs text-muted mt-1">Upload invoices from the Collections page first.</p>
+                    <p className="text-sm font-semibold text-secondary mb-1">Koi overdue customer nahi mila</p>
+                    <p className="text-xs text-muted mb-4">Pehle Collections page pe invoices add karo — phir yahan customers dikhenge.</p>
+                    <Link href="/collections"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-colors">
+                      <FiFilter size={11} /> Go to Collections
+                    </Link>
                   </div>
                 ) : (
                   <div className="divide-y divide-border/50 max-h-72 overflow-y-auto">

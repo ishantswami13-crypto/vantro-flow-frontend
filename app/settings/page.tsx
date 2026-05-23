@@ -555,10 +555,19 @@ export default function SettingsPage() {
               </Card>
             )}
 
-            {/* Logout */}
-            <div className="mt-6 pt-4 border-t border-border">
-              <Button variant="danger" icon={<FiLogOut size={14} />} onClick={handleLogout}>Logout</Button>
-            </div>
+            {/* Logout — only on Profile tab */}
+            {tab === "profile" && (
+              <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-secondary">Sign out of Vantro</p>
+                  <p className="text-2xs text-muted">You can log back in anytime</p>
+                </div>
+                <button onClick={handleLogout}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-danger/30 text-danger text-xs font-semibold hover:bg-danger/10 transition-colors">
+                  <FiLogOut size={12} /> Sign Out
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
