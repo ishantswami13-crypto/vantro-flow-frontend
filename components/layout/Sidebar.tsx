@@ -8,7 +8,8 @@ import {
   FiMessageSquare, FiPackage, FiUsers, FiBarChart2,
   FiCamera, FiFileText, FiCreditCard, FiRepeat, FiShield,
   FiCpu, FiGlobe, FiBook, FiShoppingBag, FiUserCheck,
-  FiSun, FiActivity,
+  FiSun, FiActivity, FiUser, FiSliders, FiDatabase,
+  FiArchive, FiFile, FiDollarSign,
 } from "react-icons/fi";
 import { getUser, clearAuth } from "@/lib/api";
 
@@ -24,22 +25,24 @@ const NAV = [
   { href: "/today",          label: "Today's P&L",     icon: FiSun,           badge: "NEW",  group: "intelligence", flag: null },
   { href: "/brain",          label: "Vantro Brain",    icon: FiActivity,      badge: "AI",   group: "intelligence", flag: null },
   { href: "/ai-chat",        label: "AI Founder",      icon: FiCpu,           badge: null,   group: "intelligence", flag: null },
+  { href: "/ai-train",       label: "AI Training",     icon: FiSliders,       badge: "AI",   group: "intelligence", flag: null },
   { href: "/neural-engine",  label: "Neural Engine",   icon: FiZap,           badge: null,   group: "intelligence", flag: null },
   { href: "/forecast",       label: "Cash Forecast",   icon: FiTrendingUp,    badge: null,   group: "intelligence", flag: null },
-  { href: "/ledger",         label: "Bank Ledger",     icon: FiBook,          badge: null,   group: "intelligence", flag: null },
+  { href: "/ledger",         label: "Bank Ledger",     icon: FiDollarSign,    badge: null,   group: "intelligence", flag: null },
   { href: "/analytics",      label: "Analytics",       icon: FiBarChart2,     badge: null,   group: "intelligence", flag: null },
   { href: "/reports",        label: "Reports",         icon: FiFileText,      badge: null,   group: "intelligence", flag: null },
   // ── Network
   { href: "/network",        label: "Vantro Network",  icon: FiGlobe,         badge: "NEW",  group: "network",      flag: null },
   { href: "/crm",            label: "CRM",             icon: FiUsers,         badge: null,   group: "network",      flag: null },
   // ── Operations (feature-flagged)
-  { href: "/bills",          label: "GST Invoices",    icon: FiFileText,      badge: "NEW",  group: "ops",          flag: "gst_invoices" },
+  { href: "/bills",          label: "GST Invoices",    icon: FiFile,          badge: "NEW",  group: "ops",          flag: "gst_invoices" },
   { href: "/khata",          label: "Customer Khata",  icon: FiBook,          badge: null,   group: "ops",          flag: "khata" },
   { href: "/purchases",      label: "Purchases",       icon: FiPackage,       badge: null,   group: "ops",          flag: "purchases" },
   { href: "/orders",         label: "Today's Orders",  icon: FiShoppingBag,   badge: "NEW",  group: "ops",          flag: "orders" },
   { href: "/attendance",     label: "Staff Attendance",icon: FiUserCheck,     badge: null,   group: "ops",          flag: "attendance" },
-  { href: "/team",           label: "Team & AI Train", icon: FiUserCheck,     badge: null,   group: "ops",          flag: "workers" },
-  { href: "/inventory",      label: "Inventory",       icon: FiPackage,       badge: null,   group: "ops",          flag: "inventory" },
+  { href: "/team",           label: "Team",            icon: FiUser,          badge: null,   group: "ops",          flag: "workers" },
+  { href: "/bank",           label: "Bank Monitor",    icon: FiDatabase,      badge: "NEW",  group: "ops",          flag: null },
+  { href: "/inventory",      label: "Inventory",       icon: FiArchive,       badge: null,   group: "ops",          flag: "inventory" },
   { href: "/scanner",        label: "Invoice Scanner", icon: FiCamera,        badge: null,   group: "ops",          flag: null },
   // ── Account
   { href: "/my-id",          label: "My Vantro ID",    icon: FiShield,        badge: null,   group: "account",      flag: null },
