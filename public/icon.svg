@@ -1,27 +1,51 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
   <defs>
+    <!-- Background: deep navy -->
     <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#1A6FFF"/>
-      <stop offset="100%" stop-color="#7C3AED"/>
+      <stop offset="0%"   stop-color="#0E1830"/>
+      <stop offset="100%" stop-color="#06091A"/>
     </linearGradient>
-    <linearGradient id="shine" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.12)"/>
-      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+
+    <!-- Left arm: electric blue -->
+    <linearGradient id="la" x1="18" y1="19" x2="50" y2="81" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#5AABFF"/>
+      <stop offset="52%"  stop-color="#1A6FFF"/>
+      <stop offset="100%" stop-color="#1040CC"/>
     </linearGradient>
+
+    <!-- Right arm: violet-purple -->
+    <linearGradient id="ra" x1="82" y1="19" x2="50" y2="81" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#9D6FFF"/>
+      <stop offset="100%" stop-color="#5B10E0"/>
+    </linearGradient>
+
+    <!-- Vertex bloom -->
+    <radialGradient id="bloom" cx="50" cy="81" r="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#2563EB" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#1A6FFF" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
   <!-- Background -->
   <rect width="100" height="100" rx="22" fill="url(#bg)"/>
 
-  <!-- Inner shine overlay (top-left highlight) -->
-  <rect width="100" height="100" rx="22" fill="url(#shine)"/>
+  <!-- Glass inner border -->
+  <rect x="0.75" y="0.75" width="98.5" height="98.5" rx="21.5"
+        stroke="rgba(255,255,255,0.08)" stroke-width="1.5" fill="none"/>
 
-  <!-- Stylized V mark — thick left stroke (bold downstroke), thinner right (upstroke) -->
-  <!-- Left arm -->
-  <line x1="19" y1="24" x2="50" y2="76" stroke="white" stroke-width="13.5" stroke-linecap="round"/>
-  <!-- Right arm -->
-  <line x1="81" y1="24" x2="50" y2="76" stroke="rgba(255,255,255,0.88)" stroke-width="9.5" stroke-linecap="round"/>
+  <!-- Vertex bloom -->
+  <circle cx="50" cy="81" r="22" fill="url(#bloom)"/>
 
-  <!-- Small accent dot at the vertex — collection point -->
-  <circle cx="50" cy="76" r="4" fill="rgba(255,255,255,0.5)"/>
+  <!-- Left arm: bold calligraphic bezier -->
+  <path d="M 18,19 C 10,40 28,64 50,81"
+        stroke="url(#la)" stroke-width="13.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Right arm: thinner mirrored curve -->
+  <path d="M 82,19 C 90,40 72,64 50,81"
+        stroke="url(#ra)" stroke-width="9" stroke-linecap="round" fill="none"/>
+
+  <!-- Vertex: halo → blue → white core -->
+  <circle cx="50" cy="81" r="5"   fill="#1A6FFF" fill-opacity="0.35"/>
+  <circle cx="50" cy="81" r="3.2" fill="#60A5FA"/>
+  <circle cx="50" cy="81" r="1.6" fill="white"/>
 </svg>
