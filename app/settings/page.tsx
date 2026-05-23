@@ -14,6 +14,7 @@ import {
   FiMessageSquare, FiPhone, FiPackage,
 } from "react-icons/fi";
 import { api, getUser, clearAuth } from "@/lib/api";
+import { INDUSTRY_OPTIONS, setBusinessType } from "@/lib/businessTypes";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -28,14 +29,7 @@ const TABS: { key: Tab; label: string; icon: React.ElementType; badge?: string }
   { key: "billing",      label: "Billing",       icon: FiCreditCard },
 ];
 
-const industryOptions = [
-  { value: "trading",       label: "Trading / Distribution" },
-  { value: "manufacturing", label: "Manufacturing" },
-  { value: "services",      label: "Services" },
-  { value: "retail",        label: "Retail" },
-  { value: "construction",  label: "Construction" },
-  { value: "other",         label: "Other" },
-];
+const industryOptions = INDUSTRY_OPTIONS;
 
 const languageOptions = [
   { value: "hinglish", label: "Hinglish (Hindi + English)" },
@@ -101,7 +95,10 @@ export default function SettingsPage() {
       setBusiness(b => ({ ...b, business_name: user.business_name || "", gstin: user.gstin || "" }));
     }
     api.settings.get().then(({ settings }: any) => {
-      if (settings.industry)          setBusiness(b => ({ ...b, industry: settings.industry }));
+      if (settings.industry) {
+        setBusiness(b => ({ ...b, industry: settings.industry }));
+        setBusinessType(settings.industry); // keep localStorage in sync
+      }
       if (settings.business_address)  setBusiness(b => ({ ...b, business_address: settings.business_address }));
       if (settings.city)              setBusiness(b => ({ ...b, city: settings.city }));
       if (settings.upi_id)            setBusiness(b => ({ ...b, upi_id: settings.upi_id }));
@@ -135,7 +132,12 @@ export default function SettingsPage() {
   };
 
   const handleProfileSave  = (e: React.FormEvent) => { e.preventDefault(); const body: Record<string, string> = { business_name: profile.full_name, phone: profile.phone }; if (profile.password) body.password = profile.password; save(body); };
-  const handleBusinessSave = (e: React.FormEvent) => { e.preventDefault(); save({ business_name: business.business_name, gstin: business.gstin, industry: business.industry, business_address: business.business_address, city: business.city, upi_id: business.upi_id, invoice_prefix: business.invoice_prefix }); };
+  const handleBusinessSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Sync industry to localStorage so sidebar + industry page update immediately
+    setBusinessType(business.industry);
+    save({ business_name: business.business_name, gstin: business.gstin, industry: business.industry, business_address: business.business_address, city: business.city, upi_id: business.upi_id, invoice_prefix: business.invoice_prefix });
+  };
   const handlePrefsSave    = (e: React.FormEvent) => { e.preventDefault(); save({ language: prefs.language, contact_time: prefs.contact_time }); };
 
   const handleVoiceSave = async (e: React.FormEvent) => {

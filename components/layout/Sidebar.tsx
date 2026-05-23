@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 import LogoMark from "@/components/LogoMark";
 import { getUser, clearAuth } from "@/lib/api";
+import { getBusinessType, type BusinessTypeConfig } from "@/lib/businessTypes";
 
 // feature flag key → which sidebar items require that flag
 const NAV = [
@@ -33,6 +34,7 @@ const NAV = [
   { href: "/reports",        label: "Reports",         icon: FiFileText,      badge: null,   group: "intelligence" },
   // ── Network
   { href: "/network",        label: "Vantro Network",  icon: FiGlobe,         badge: "NEW",  group: "network" },
+  { href: "/industry",       label: "My Industry",     icon: FiShoppingBag,   badge: null,   group: "network" },
   { href: "/crm",            label: "CRM",             icon: FiUsers,         badge: null,   group: "network" },
   // ── Operations
   { href: "/bills",          label: "GST Invoices",    icon: FiFile,          badge: "NEW",  group: "ops" },
@@ -62,9 +64,11 @@ interface SidebarProps { open: boolean; onClose: () => void; }
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const [userName, setUserName]       = useState("User");
-  const [bizName, setBizName]         = useState("My Business");
-  const [isAdmin, setIsAdmin]         = useState(false);
+  const [userName, setUserName]           = useState("User");
+  const [bizName, setBizName]             = useState("My Business");
+  const [isAdmin, setIsAdmin]             = useState(false);
+  const [bizType, setBizType]             = useState<BusinessTypeConfig | null>(null);
+
   useEffect(() => {
     const u = getUser();
     if (u) {
@@ -73,6 +77,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       setBizName(u.email || "");
       setIsAdmin(u.email === "ishantswami13@gmail.com");
     }
+    setBizType(getBusinessType());
   }, []);
 
   const handleLogout = () => {
@@ -111,7 +116,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 overflow-y-auto">
           {GROUPS.map(({ key, label }) => {
-            const items = NAV.filter(n => n.group === key);
+            const items = NAV.filter(n => {
+              if (n.group !== key) return false;
+              // Hide routes not relevant to this business type
+              if (bizType && bizType.hiddenRoutes.includes(n.href)) return false;
+              return true;
+            });
             if (items.length === 0) return null;
             return (
               <div key={key} className="mb-4">
@@ -170,7 +180,9 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-primary truncate">{userName}</p>
-              <p className="text-2xs text-muted truncate">{bizName}</p>
+              <p className="text-2xs text-muted truncate">
+                {bizType ? `${bizType.emoji} ${bizType.label}` : bizName}
+              </p>
             </div>
             <FiSettings size={12} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
           </Link>
