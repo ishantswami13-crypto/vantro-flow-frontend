@@ -7,7 +7,7 @@ import {
   FiGrid, FiList, FiTrendingUp, FiSettings, FiLogOut, FiX, FiZap,
   FiMessageSquare, FiPackage, FiUsers, FiBarChart2,
   FiCamera, FiFileText, FiCreditCard, FiRepeat, FiShield,
-  FiCpu, FiGlobe, FiBook,
+  FiCpu, FiGlobe, FiBook, FiShoppingBag, FiUserCheck,
 } from "react-icons/fi";
 import { getUser, clearAuth } from "@/lib/api";
 
@@ -28,6 +28,8 @@ const NAV = [
   { href: "/network",        label: "Vantro Network",  icon: FiGlobe,         badge: "NEW",  group: "network" },
   { href: "/crm",            label: "CRM",             icon: FiUsers,         badge: null,   group: "network" },
   // ── Operations
+  { href: "/orders",         label: "Today's Orders",  icon: FiShoppingBag,   badge: "NEW",  group: "ops" },
+  { href: "/team",           label: "Team & AI Train", icon: FiUserCheck,     badge: null,   group: "ops" },
   { href: "/inventory",      label: "Inventory",       icon: FiPackage,       badge: null,   group: "ops" },
   { href: "/scanner",        label: "Invoice Scanner", icon: FiCamera,        badge: null,   group: "ops" },
   // ── Account

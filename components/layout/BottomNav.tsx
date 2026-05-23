@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiGrid, FiList, FiCpu, FiUsers, FiZap } from "react-icons/fi";
+import { FiGrid, FiList, FiCpu, FiShoppingBag, FiZap } from "react-icons/fi";
 
 const TABS = [
-  { href: "/dashboard",   icon: FiGrid,   label: "Home"     },
-  { href: "/collections", icon: FiList,   label: "Collect"  },
-  { href: "/ai-chat",     icon: FiCpu,    label: "AI"       },
-  { href: "/network",     icon: FiUsers,  label: "Network"  },
-  { href: "/my-id",       icon: FiZap,    label: "My ID"    },
+  { href: "/dashboard",   icon: FiGrid,         label: "Home"     },
+  { href: "/collections", icon: FiList,         label: "Collect"  },
+  { href: "/orders",      icon: FiShoppingBag,  label: "Orders"   },
+  { href: "/ai-chat",     icon: FiCpu,          label: "AI"       },
+  { href: "/my-id",       icon: FiZap,          label: "My ID"    },
 ];
 
 export default function BottomNav() {
