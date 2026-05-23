@@ -15,6 +15,7 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
 import { api, getUser, type Metrics } from "@/lib/api";
+import QuickSale from "@/components/QuickSale";
 import { FiUpload } from "react-icons/fi";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -58,6 +59,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function DashboardPage() {
   const cashRunway = 12;
+  const [showQuickSale, setShowQuickSale] = useState(false);
   const [metrics, setMetrics]   = useState<Metrics | null>(null);
   const [promises, setPromises] = useState<{ customer_name: string; promised_payment_date: string; amount: number }[]>([]);
   const [userPlan, setUserPlan] = useState<string>("free");
@@ -110,6 +112,12 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout pageTitle="Dashboard">
+      {showQuickSale && <QuickSale onClose={() => setShowQuickSale(false)} onSaved={() => { /* could refresh today P&L */ }} />}
+      {/* Floating Quick Sale button */}
+      <button onClick={() => setShowQuickSale(true)}
+        className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-40 flex items-center gap-2 px-4 py-3 rounded-2xl bg-gradient-accent text-white font-bold text-sm shadow-[0_4px_24px_rgba(0,102,255,0.5)] hover:scale-105 active:scale-95 transition-all">
+        <FiZap size={16} /> Quick Sale
+      </button>
       <div className="space-y-6 page-enter">
         {/* Alert banner */}
         {cashRunway < 15 && (

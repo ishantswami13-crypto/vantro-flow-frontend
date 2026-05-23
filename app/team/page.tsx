@@ -5,6 +5,7 @@ import {
   FiUser, FiPlus, FiTrash2, FiPhone, FiBriefcase,
   FiBook, FiMic, FiZap, FiCopy, FiCheck,
   FiSettings, FiRefreshCw, FiAlertCircle, FiToggleLeft, FiToggleRight,
+  FiEye, FiEyeOff, FiSave,
 } from "react-icons/fi";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -28,7 +29,11 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true);
   const [webhookUrl, setWebhookUrl] = useState("");
   const [twilioConfigured, setTwilioConfigured] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied]       = useState(false);
+  const [twilioForm, setTwilioForm] = useState({ account_sid: "", auth_token: "", phone_number: "" });
+  const [showToken, setShowToken]   = useState(false);
+  const [savingTwilio, setSavingTwilio] = useState(false);
+  const [twilioSaved, setTwilioSaved]   = useState(false);
 
   // Worker form
   const [wForm, setWForm] = useState({ name: "", phone: "", role: "delivery" });
@@ -55,6 +60,7 @@ export default function TeamPage() {
       setVocab(v.vocabulary || []);
       setWebhookUrl(u.webhook_url || "");
       setTwilioConfigured(u.twilio_configured || false);
+      if (u.twilio_account_sid) setTwilioForm(f => ({ ...f, account_sid: u.twilio_account_sid, phone_number: u.twilio_phone_number || "" }));
     } finally { setLoading(false); }
   };
 
@@ -123,6 +129,26 @@ export default function TeamPage() {
       setSeedDone(true);
       setTimeout(() => setSeedDone(false), 3000);
     } finally { setSeedLoading(false); }
+  };
+
+  const saveTwilio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!twilioForm.account_sid || !twilioForm.auth_token || !twilioForm.phone_number) return;
+    setSavingTwilio(true);
+    try {
+      const r = await fetch(`${API}/api/settings/twilio`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
+        body: JSON.stringify(twilioForm),
+      });
+      const d = await r.json();
+      if (d.success) {
+        setTwilioConfigured(true);
+        setTwilioSaved(true);
+        setTimeout(() => setTwilioSaved(false), 3000);
+        load(); // refresh webhook URL
+      }
+    } finally { setSavingTwilio(false); }
   };
 
   const copyWebhook = () => {
@@ -343,82 +369,95 @@ export default function TeamPage() {
             <div className="space-y-4">
               {/* Status card */}
               <div className={`card-base p-4 border ${twilioConfigured ? "border-success/30 bg-success/5" : "border-warning/30 bg-warning/5"}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  {twilioConfigured
-                    ? <FiCheck size={16} className="text-success" />
-                    : <FiAlertCircle size={16} className="text-warning" />
-                  }
+                <div className="flex items-center gap-2 mb-1">
+                  {twilioConfigured ? <FiCheck size={16} className="text-success" /> : <FiAlertCircle size={16} className="text-warning" />}
                   <p className={`font-semibold text-sm ${twilioConfigured ? "text-success" : "text-warning"}`}>
-                    {twilioConfigured ? "AI Calling Active ✅" : "Twilio Setup Required"}
+                    {twilioConfigured ? "✅ AI Calling Active" : "⚠ Twilio Setup Required"}
                   </p>
                 </div>
                 <p className="text-xs text-secondary">
                   {twilioConfigured
-                    ? "Inbound calls configured. Customers call → AI records → order extracted automatically."
-                    : "Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER in Railway environment variables."}
+                    ? "Customers call → AI records order → auto-call worker. Sab automatic!"
+                    : "Neeche apna Twilio account SID, token aur number daalo. Bas ek baar karna hai."}
                 </p>
               </div>
 
-              {/* Step by step setup */}
-              <div className="card-base p-4 space-y-4">
-                <p className="font-bold text-primary">Setup kaise karein — 3 steps</p>
-
-                <div className="space-y-4">
-                  {[
-                    {
-                      step: "1",
-                      title: "Twilio account banao",
-                      desc: "twilio.com pe free account. Phone number kharido (₹0 trial pe India number milta hai).",
-                      action: (
-                        <a href="https://www.twilio.com/try-twilio" target="_blank" rel="noopener noreferrer"
-                          className="text-xs btn-primary px-3 py-1.5 inline-flex items-center gap-1">
-                          Open Twilio →
-                        </a>
-                      ),
-                    },
-                    {
-                      step: "2",
-                      title: "Railway mein 3 env vars daalo",
-                      desc: "Railway dashboard → vantro-flow-backend → Variables → Add:",
-                      extra: (
-                        <div className="bg-surface-2 rounded-lg p-2 mt-1 text-xs font-mono space-y-0.5 text-muted">
-                          <p>TWILIO_ACCOUNT_SID = AC…</p>
-                          <p>TWILIO_AUTH_TOKEN = your_token</p>
-                          <p>TWILIO_PHONE_NUMBER = +1…</p>
-                        </div>
-                      ),
-                    },
-                    {
-                      step: "3",
-                      title: "Twilio mein webhook URL set karo",
-                      desc: "Twilio Console → Phone Numbers → Manage → Active Numbers → select number → Voice → 'A call comes in' → set to POST:",
-                      extra: webhookUrl ? (
-                        <div className="flex items-center gap-2 mt-1">
-                          <code className="flex-1 text-2xs bg-surface-2 rounded-lg px-3 py-2 text-brand-primary font-mono break-all">
-                            {webhookUrl}
-                          </code>
-                          <button onClick={copyWebhook}
-                            className="shrink-0 p-2 rounded-lg bg-surface-2 hover:bg-surface text-muted hover:text-primary transition-colors">
-                            {copied ? <FiCheck size={13} className="text-success" /> : <FiCopy size={13} />}
-                          </button>
-                        </div>
-                      ) : <p className="text-xs text-muted mt-1">Login to get your URL</p>,
-                    },
-                  ].map(({ step, title, desc, action, extra }) => (
-                    <div key={step} className="flex gap-3">
-                      <div className="w-7 h-7 rounded-full bg-brand-primary/15 text-brand-primary text-xs font-bold flex items-center justify-center shrink-0">
-                        {step}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-primary text-sm">{title}</p>
-                        <p className="text-xs text-muted mt-0.5">{desc}</p>
-                        {extra}
-                        {action && <div className="mt-2">{action}</div>}
-                      </div>
-                    </div>
-                  ))}
+              {/* ── TWILIO CREDENTIALS FORM ── */}
+              <div className="card-base p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-xl bg-red-500/15 flex items-center justify-center">
+                    <FiPhone size={15} className="text-red-400" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-primary text-sm">Twilio Credentials</p>
+                    <p className="text-2xs text-muted">
+                      <a href="https://www.twilio.com/try-twilio" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                        twilio.com
+                      </a> pe free account banao → Console mein SID aur token copy karo
+                    </p>
+                  </div>
                 </div>
+                <form onSubmit={saveTwilio} className="space-y-3">
+                  <div>
+                    <label className="text-2xs text-muted font-semibold uppercase tracking-wider block mb-1">Account SID</label>
+                    <input
+                      value={twilioForm.account_sid}
+                      onChange={e => setTwilioForm(f => ({ ...f, account_sid: e.target.value }))}
+                      placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary font-mono focus:outline-none focus:border-accent placeholder:text-muted/50"
+                    />
+                    <p className="text-2xs text-muted mt-0.5">Twilio Console → Dashboard pe milega (AC... se shuru)</p>
+                  </div>
+                  <div>
+                    <label className="text-2xs text-muted font-semibold uppercase tracking-wider block mb-1">Auth Token</label>
+                    <div className="relative">
+                      <input
+                        type={showToken ? "text" : "password"}
+                        value={twilioForm.auth_token}
+                        onChange={e => setTwilioForm(f => ({ ...f, auth_token: e.target.value }))}
+                        placeholder="your_auth_token_here"
+                        className="w-full bg-surface-2 border border-border rounded-xl px-3 pr-10 py-2.5 text-sm text-primary font-mono focus:outline-none focus:border-accent placeholder:text-muted/50"
+                      />
+                      <button type="button" onClick={() => setShowToken(t => !t)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary">
+                        {showToken ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+                      </button>
+                    </div>
+                    <p className="text-2xs text-muted mt-0.5">Console → Account Info → Auth Token (show karo aur copy karo)</p>
+                  </div>
+                  <div>
+                    <label className="text-2xs text-muted font-semibold uppercase tracking-wider block mb-1">Twilio Phone Number</label>
+                    <input
+                      value={twilioForm.phone_number}
+                      onChange={e => setTwilioForm(f => ({ ...f, phone_number: e.target.value }))}
+                      placeholder="+14155552671"
+                      className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary font-mono focus:outline-none focus:border-accent placeholder:text-muted/50"
+                    />
+                    <p className="text-2xs text-muted mt-0.5">Console → Phone Numbers → +E.164 format (e.g. +14155552671)</p>
+                  </div>
+                  <button type="submit" disabled={savingTwilio || !twilioForm.account_sid || !twilioForm.auth_token || !twilioForm.phone_number}
+                    className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40 ${twilioSaved ? "bg-success/20 text-success border border-success/30" : "bg-accent text-white shadow-button-accent hover:bg-accent/90"}`}>
+                    {twilioSaved ? <><FiCheck size={14} /> Saved! Calling Active ✅</> : savingTwilio ? <><FiRefreshCw size={13} className="animate-spin" /> Saving…</> : <><FiSave size={14} /> Save & Activate Calling</>}
+                  </button>
+                </form>
               </div>
+
+              {/* Webhook URL */}
+              {webhookUrl && (
+                <div className="card-base p-4">
+                  <p className="font-semibold text-primary text-sm mb-2">Step 2 — Webhook URL Twilio mein daalo</p>
+                  <p className="text-xs text-muted mb-2">Twilio Console → Phone Numbers → Active Numbers → select number → Voice → "A call comes in" → POST:</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 text-2xs bg-surface-2 rounded-xl px-3 py-2.5 text-accent font-mono break-all border border-white/5">
+                      {webhookUrl}
+                    </code>
+                    <button onClick={copyWebhook}
+                      className="shrink-0 p-2.5 rounded-xl bg-surface-2 hover:bg-surface text-muted hover:text-primary transition-colors border border-white/5">
+                      {copied ? <FiCheck size={14} className="text-success" /> : <FiCopy size={14} />}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* How it works */}
               <div className="card-base p-4">
