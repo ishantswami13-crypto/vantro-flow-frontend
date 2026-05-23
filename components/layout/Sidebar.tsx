@@ -14,40 +14,39 @@ import {
 import { getUser, clearAuth } from "@/lib/api";
 
 // feature flag key → which sidebar items require that flag
-// null = always show; string = only show if feature_flags[key] === true
 const NAV = [
   // ── Command Center
-  { href: "/dashboard",      label: "Dashboard",       icon: FiGrid,          badge: null,   group: "core",         flag: null },
-  { href: "/collections",    label: "Collections",     icon: FiList,          badge: "12",   group: "core",         flag: null },
-  { href: "/whatsapp",       label: "WhatsApp",        icon: FiMessageSquare, badge: null,   group: "core",         flag: null },
-  { href: "/dunning",        label: "Auto Follow-Up",  icon: FiRepeat,        badge: null,   group: "core",         flag: null },
+  { href: "/dashboard",      label: "Dashboard",       icon: FiGrid,          badge: null,   group: "core" },
+  { href: "/collections",    label: "Collections",     icon: FiList,          badge: "12",   group: "core" },
+  { href: "/whatsapp",       label: "WhatsApp",        icon: FiMessageSquare, badge: null,   group: "core" },
+  { href: "/dunning",        label: "Auto Follow-Up",  icon: FiRepeat,        badge: null,   group: "core" },
   // ── Intelligence
-  { href: "/today",          label: "Today's P&L",     icon: FiSun,           badge: "NEW",  group: "intelligence", flag: null },
-  { href: "/brain",          label: "Vantro Brain",    icon: FiActivity,      badge: "AI",   group: "intelligence", flag: null },
-  { href: "/ai-chat",        label: "AI Founder",      icon: FiCpu,           badge: null,   group: "intelligence", flag: null },
-  { href: "/ai-train",       label: "AI Training",     icon: FiSliders,       badge: "AI",   group: "intelligence", flag: null },
-  { href: "/neural-engine",  label: "Neural Engine",   icon: FiZap,           badge: null,   group: "intelligence", flag: null },
-  { href: "/forecast",       label: "Cash Forecast",   icon: FiTrendingUp,    badge: null,   group: "intelligence", flag: null },
-  { href: "/ledger",         label: "Bank Ledger",     icon: FiDollarSign,    badge: null,   group: "intelligence", flag: null },
-  { href: "/analytics",      label: "Analytics",       icon: FiBarChart2,     badge: null,   group: "intelligence", flag: null },
-  { href: "/reports",        label: "Reports",         icon: FiFileText,      badge: null,   group: "intelligence", flag: null },
+  { href: "/today",          label: "Today's P&L",     icon: FiSun,           badge: "NEW",  group: "intelligence" },
+  { href: "/brain",          label: "Vantro Brain",    icon: FiActivity,      badge: "AI",   group: "intelligence" },
+  { href: "/ai-chat",        label: "AI Founder",      icon: FiCpu,           badge: null,   group: "intelligence" },
+  { href: "/ai-train",       label: "AI Training",     icon: FiSliders,       badge: "AI",   group: "intelligence" },
+  { href: "/neural-engine",  label: "Neural Engine",   icon: FiZap,           badge: null,   group: "intelligence" },
+  { href: "/forecast",       label: "Cash Forecast",   icon: FiTrendingUp,    badge: null,   group: "intelligence" },
+  { href: "/ledger",         label: "Bank Ledger",     icon: FiDollarSign,    badge: null,   group: "intelligence" },
+  { href: "/analytics",      label: "Analytics",       icon: FiBarChart2,     badge: null,   group: "intelligence" },
+  { href: "/reports",        label: "Reports",         icon: FiFileText,      badge: null,   group: "intelligence" },
   // ── Network
-  { href: "/network",        label: "Vantro Network",  icon: FiGlobe,         badge: "NEW",  group: "network",      flag: null },
-  { href: "/crm",            label: "CRM",             icon: FiUsers,         badge: null,   group: "network",      flag: null },
-  // ── Operations (feature-flagged)
-  { href: "/bills",          label: "GST Invoices",    icon: FiFile,          badge: "NEW",  group: "ops",          flag: "gst_invoices" },
-  { href: "/khata",          label: "Customer Khata",  icon: FiBook,          badge: null,   group: "ops",          flag: "khata" },
-  { href: "/purchases",      label: "Purchases",       icon: FiPackage,       badge: null,   group: "ops",          flag: "purchases" },
-  { href: "/orders",         label: "Today's Orders",  icon: FiShoppingBag,   badge: "NEW",  group: "ops",          flag: "orders" },
-  { href: "/attendance",     label: "Staff Attendance",icon: FiUserCheck,     badge: null,   group: "ops",          flag: "attendance" },
-  { href: "/team",           label: "Team",            icon: FiUser,          badge: null,   group: "ops",          flag: "workers" },
-  { href: "/bank",           label: "Bank Monitor",    icon: FiDatabase,      badge: "NEW",  group: "ops",          flag: null },
-  { href: "/inventory",      label: "Inventory",       icon: FiArchive,       badge: null,   group: "ops",          flag: "inventory" },
-  { href: "/scanner",        label: "Invoice Scanner", icon: FiCamera,        badge: null,   group: "ops",          flag: null },
+  { href: "/network",        label: "Vantro Network",  icon: FiGlobe,         badge: "NEW",  group: "network" },
+  { href: "/crm",            label: "CRM",             icon: FiUsers,         badge: null,   group: "network" },
+  // ── Operations
+  { href: "/bills",          label: "GST Invoices",    icon: FiFile,          badge: "NEW",  group: "ops" },
+  { href: "/khata",          label: "Customer Khata",  icon: FiBook,          badge: null,   group: "ops" },
+  { href: "/purchases",      label: "Purchases",       icon: FiPackage,       badge: null,   group: "ops" },
+  { href: "/orders",         label: "Today's Orders",  icon: FiShoppingBag,   badge: "NEW",  group: "ops" },
+  { href: "/attendance",     label: "Staff Attendance",icon: FiUserCheck,     badge: null,   group: "ops" },
+  { href: "/team",           label: "Team",            icon: FiUser,          badge: null,   group: "ops" },
+  { href: "/bank",           label: "Bank Monitor",    icon: FiDatabase,      badge: "NEW",  group: "ops" },
+  { href: "/inventory",      label: "Inventory",       icon: FiArchive,       badge: null,   group: "ops" },
+  { href: "/scanner",        label: "Invoice Scanner", icon: FiCamera,        badge: null,   group: "ops" },
   // ── Account
-  { href: "/my-id",          label: "My Vantro ID",    icon: FiShield,        badge: null,   group: "account",      flag: null },
-  { href: "/billing",        label: "Billing",         icon: FiCreditCard,    badge: null,   group: "account",      flag: null },
-  { href: "/settings",       label: "Settings",        icon: FiSettings,      badge: null,   group: "account",      flag: null },
+  { href: "/my-id",          label: "My Vantro ID",    icon: FiShield,        badge: null,   group: "account" },
+  { href: "/billing",        label: "Billing",         icon: FiCreditCard,    badge: null,   group: "account" },
+  { href: "/settings",       label: "Settings",        icon: FiSettings,      badge: null,   group: "account" },
 ];
 
 const GROUPS = [
@@ -65,30 +64,15 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const [userName, setUserName]       = useState("User");
   const [bizName, setBizName]         = useState("My Business");
   const [isAdmin, setIsAdmin]         = useState(false);
-  const [features, setFeatures]       = useState<Record<string, boolean> | null>(null);
-
   useEffect(() => {
     const u = getUser();
     if (u) {
-      // Show email prefix as name if it's different from business name — avoid "BJB ENT / BJP ENT" repeat
       const emailName = u.email?.split("@")[0] || "User";
       setUserName(u.business_name || emailName);
       setBizName(u.email || "");
       setIsAdmin(u.email === "ishantswami13@gmail.com");
     }
-    // Load feature flags from localStorage (set during onboarding)
-    try {
-      const stored = localStorage.getItem("vantro_features");
-      if (stored) setFeatures(JSON.parse(stored));
-    } catch { /* ignore */ }
   }, []);
-
-  // Check if a nav item should be shown based on its flag
-  const isVisible = (flag: string | null) => {
-    if (!flag) return true;          // no flag = always show
-    if (!features) return true;      // not onboarded yet = show everything
-    return features[flag] === true;
-  };
 
   const handleLogout = () => {
     clearAuth();
@@ -128,7 +112,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 overflow-y-auto">
           {GROUPS.map(({ key, label }) => {
-            const items = NAV.filter(n => n.group === key && isVisible(n.flag));
+            const items = NAV.filter(n => n.group === key);
             if (items.length === 0) return null;
             return (
               <div key={key} className="mb-4">
