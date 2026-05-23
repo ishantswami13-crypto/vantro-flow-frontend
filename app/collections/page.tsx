@@ -5,6 +5,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type Invoice } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import { Badge } from "@/components/ui/Badge";
+import { isDemoMode } from "@/lib/demo";
+import { generateWhatsAppPaymentLink } from "@/lib/paymentLink";
 import {
   FiSearch, FiMessageSquare, FiCheckSquare,
   FiDownload, FiArrowUp, FiArrowDown, FiPhone,
@@ -191,6 +193,26 @@ export default function CollectionsPage() {
   };
 
   const handlePayLink = async (c: Customer) => {
+    // Demo mode: generate UPI link locally without hitting backend
+    if (isDemoMode()) {
+      const user = (() => { try { return JSON.parse(localStorage.getItem("vantro_user") || "{}"); } catch { return {}; } })();
+      const upiId = user.upi_id || "demo@upi";
+      const bizName = user.business_name || "Demo Business";
+      const text = generateWhatsAppPaymentLink({
+        upiId,
+        payeeName: bizName,
+        amount: c.outstanding,
+        note: `Invoice from ${bizName}`,
+        customerPhone: c.contact,
+        customerName: c.name.split(" ")[0],
+      });
+      // Extract just the message part from the wa.me URL
+      const msgMatch = text.match(/\?text=(.+)/);
+      const msg = msgMatch ? decodeURIComponent(msgMatch[1]) : text;
+      setPayLinkMsg({ text: msg, phone: c.contact });
+      return;
+    }
+
     const invoiceId = invoiceIds[c.id];
     if (!invoiceId) return;
     setPayLinkLoading(invoiceId);
@@ -466,9 +488,9 @@ export default function CollectionsPage() {
                           <FiPhone size={11} />
                         </button>
                         <button onClick={() => handlePayLink(c)}
-                          disabled={payLinkLoading === invoiceIds[c.id]}
+                          disabled={payLinkLoading === (invoiceIds[c.id] ?? `demo-${c.id}`)}
                           className="flex items-center gap-1 px-2 py-1 rounded-lg bg-success-dim border border-success/20 text-success text-2xs font-bold hover:bg-success hover:text-white transition-all disabled:opacity-50">
-                          {payLinkLoading === invoiceIds[c.id] ? <span className="w-3 h-3 border border-success border-t-transparent rounded-full animate-spin" /> : "₹"} Pay Link
+                          {payLinkLoading === (invoiceIds[c.id] ?? `demo-${c.id}`) ? <span className="w-3 h-3 border border-success border-t-transparent rounded-full animate-spin" /> : "₹"} Pay Link
                         </button>
                       </div>
                     </td>
