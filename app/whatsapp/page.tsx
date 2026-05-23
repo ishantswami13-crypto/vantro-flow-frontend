@@ -4,29 +4,30 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { FiMessageSquare, FiSend, FiUsers, FiCheck, FiClock, FiZap, FiFilter } from "react-icons/fi";
+import { FiMessageSquare, FiSend, FiUsers, FiCheck, FiClock, FiZap, FiFilter, FiLink, FiCopy } from "react-icons/fi";
 import Link from "next/link";
 import { api, getUser, type Invoice } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
+import { generateWhatsAppPaymentLink, generateUPILink } from "@/lib/paymentLink";
 
 const TEMPLATES = [
   {
     id: "gentle",
     label: "Gentle Reminder",
     tone: "gentle" as const,
-    text: "Namaste {name} ji 🙏\n\nHamare records mein aapka {amount} payment {days} din se pending hai.\n\nKya aap is hafte payment arrange kar sakte hain?\n\nDhanyawad\nVantro Collections",
+    text: "Namaste {name} ji 🙏\n\nHamare records mein aapka {amount} payment {days} din se pending hai.\n\nKya aap is hafte payment arrange kar sakte hain?\n{upi_link}\nDhanyawad\nVantro Collections",
   },
   {
     id: "firm",
     label: "Firm Follow-Up",
     tone: "firm" as const,
-    text: "Dear {name},\n\nYour payment of {amount} is {days} days overdue.\n\nPlease clear the outstanding amount within 3 working days.\n\nRegards\nCollections Team",
+    text: "Dear {name},\n\nYour payment of {amount} is {days} days overdue.\n\nPlease clear the outstanding amount within 3 working days:\n{upi_link}\nRegards\nCollections Team",
   },
   {
     id: "urgent",
     label: "Urgent Notice",
     tone: "urgent" as const,
-    text: "URGENT: {name}\n\nAmount: {amount} | Overdue: {days} days\n\nImmediate payment required to avoid further action.",
+    text: "URGENT: {name}\n\nAmount: {amount} | Overdue: {days} days\n\nPay now:\n{upi_link}\n\nImmediate payment required to avoid further action.",
   },
   {
     id: "custom",
@@ -53,11 +54,29 @@ function fmt(n: number) {
   return n >= 100000 ? `${(n / 100000).toFixed(1)}L` : `${(n / 1000).toFixed(0)}K`;
 }
 
-function buildMessage(template: string, name: string, amount: number, days: number) {
+function buildMessage(
+  template: string,
+  name: string,
+  amount: number,
+  days: number,
+  upiId?: string,
+  bizName?: string,
+  includeUPI?: boolean,
+) {
+  let upiLink = "";
+  if (includeUPI && upiId) {
+    upiLink = generateUPILink({
+      upiId,
+      payeeName: bizName || "Business",
+      amount,
+      note: `Payment from ${name}`,
+    });
+  }
   return template
     .replace("{name}", name)
     .replace("{amount}", `₹${amount.toLocaleString("en-IN")}`)
-    .replace("{days}", String(days));
+    .replace("{days}", String(days))
+    .replace("{upi_link}", upiLink ? `\n${upiLink}\n` : "");
 }
 
 export default function WhatsAppPage() {
@@ -68,6 +87,19 @@ export default function WhatsAppPage() {
   const [sending, setSending]     = useState(false);
   const [sentCount, setSentCount] = useState(0);
   const [tab, setTab]             = useState<"compose" | "history">("compose");
+  const [includeUPI, setIncludeUPI] = useState(true);
+  const [upiId, setUpiId]         = useState("");
+  const [bizName, setBizName]     = useState("My Business");
+  const [copyToast, setCopyToast] = useState("");
+
+  // Load UPI + business details from stored user
+  useEffect(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("vantro_user") || "{}");
+      if (u.upi_id)       setUpiId(u.upi_id);
+      if (u.business_name) setBizName(u.business_name);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const user = getUser();
@@ -107,7 +139,7 @@ export default function WhatsAppPage() {
     selected.forEach((c, i) => {
       const phone = c.phone.replace(/\D/g, "");
       if (!phone) return;
-      const msg = buildMessage(msgTemplate, c.name, c.amount, c.days);
+      const msg = buildMessage(msgTemplate, c.name, c.amount, c.days, upiId, bizName, includeUPI);
       setTimeout(() => {
         window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, "_blank");
         opened++;
@@ -117,17 +149,32 @@ export default function WhatsAppPage() {
           posthog.capture("whatsapp_sent", {
             count:    selected.length,
             template: template.id,
+            with_upi: includeUPI && !!upiId,
           });
         }
       }, i * 300);
     });
   };
 
+  const handleCopySingleLink = (c: Customer) => {
+    if (!upiId) return;
+    const link = generateUPILink({ upiId, payeeName: bizName, amount: c.amount, note: `Payment from ${c.name}` });
+    navigator.clipboard.writeText(link).then(() => {
+      setCopyToast(`UPI link copied for ${c.name}`);
+      setTimeout(() => setCopyToast(""), 2500);
+    });
+  };
+
   const previewCustomer = selected[0] ?? customers[0];
-  const previewText = (template.id === "custom" ? customMsg : template.text)
-    .replace("{name}", previewCustomer?.name ?? "Customer")
-    .replace("{amount}", `₹${(previewCustomer?.amount ?? 0).toLocaleString("en-IN")}`)
-    .replace("{days}", String(previewCustomer?.days ?? 0));
+  const previewText = buildMessage(
+    template.id === "custom" ? customMsg : template.text,
+    previewCustomer?.name ?? "Customer",
+    previewCustomer?.amount ?? 0,
+    previewCustomer?.days ?? 0,
+    upiId,
+    bizName,
+    includeUPI,
+  );
 
   return (
     <DashboardLayout>
@@ -195,12 +242,51 @@ export default function WhatsAppPage() {
                           <p className="text-sm font-medium text-primary truncate">{c.name}</p>
                           <p className="text-xs text-muted">{c.phone || "No phone"}</p>
                         </div>
-                        <div className="text-right shrink-0">
+                        <div className="text-right shrink-0 flex flex-col items-end gap-1">
                           <p className="text-sm font-bold text-primary">₹{fmt(c.amount)}</p>
                           <p className="text-2xs text-warning">{c.days}d overdue</p>
+                          {includeUPI && upiId && (
+                            <button
+                              onClick={e => { e.stopPropagation(); handleCopySingleLink(c); }}
+                              className="flex items-center gap-0.5 text-2xs text-accent hover:underline"
+                              title="Copy UPI link">
+                              <FiLink size={9} /> UPI link
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+
+              {/* UPI Payment Link Toggle */}
+              <div className="card-premium p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-sm font-bold text-primary">Include UPI Payment Link</p>
+                    <p className="text-xs text-muted mt-0.5">Customers can pay directly from the WhatsApp message</p>
+                  </div>
+                  <button
+                    onClick={() => setIncludeUPI(v => !v)}
+                    className={`relative w-10 h-5.5 rounded-full transition-colors ${includeUPI ? "bg-accent" : "bg-surface-2 border border-border"}`}>
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${includeUPI ? "left-5.5" : "left-0.5"}`} />
+                  </button>
+                </div>
+                {includeUPI && (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Your UPI ID (e.g. sharma@upi)"
+                      value={upiId}
+                      onChange={e => setUpiId(e.target.value)}
+                      className="flex-1 bg-surface-2 border border-border rounded-lg text-xs text-primary placeholder-muted px-3 py-2 focus:outline-none focus:border-accent"
+                    />
+                    {upiId && (
+                      <span className="px-2 py-1 text-2xs font-semibold text-success bg-success-dim border border-success/20 rounded-lg self-center">
+                        ✓ Set
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -296,6 +382,13 @@ export default function WhatsAppPage() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Copy toast */}
+        {copyToast && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-surface-1 border border-border rounded-xl px-4 py-2.5 text-xs font-semibold text-primary shadow-xl flex items-center gap-2 animate-fade-in">
+            <FiCopy size={12} className="text-accent" /> {copyToast}
           </div>
         )}
 

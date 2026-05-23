@@ -5,6 +5,8 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
 import InstallPrompt from "@/components/ui/InstallPrompt";
+import { isDemoMode, exitDemoMode } from "@/lib/demo";
+import Link from "next/link";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -61,6 +63,9 @@ async function subscribeToPush(token: string) {
 export default function DashboardLayout({ children, pageTitle }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNotifBanner, setShowNotifBanner] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
+
+  useEffect(() => { setIsDemo(isDemoMode()); }, []);
 
   // Register service worker for PWA / offline support
   useEffect(() => {
@@ -100,9 +105,29 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onMenuToggle={() => setSidebarOpen(true)} pageTitle={pageTitle} />
 
+        {/* Demo mode banner */}
+        {isDemo && (
+          <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-2 flex items-center justify-between gap-3 text-sm shrink-0">
+            <span className="text-yellow-400 font-medium text-xs">
+              👀 Demo Mode — You're exploring Vantro with sample data. Sign up to save real data.
+            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <Link href="/signup"
+                onClick={() => exitDemoMode()}
+                className="bg-yellow-500 text-black px-3 py-1 rounded-lg text-xs font-bold hover:bg-yellow-400 transition-colors">
+                Sign Up Free
+              </Link>
+              <button onClick={() => { exitDemoMode(); window.location.href = "/login"; }}
+                className="text-yellow-500/60 text-xs hover:text-yellow-400 transition-colors">
+                Exit
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Push notification permission banner */}
-        {showNotifBanner && (
-          <div className="bg-accent/10 border-b border-accent/20 px-4 py-2 flex items-center justify-between gap-3 text-sm">
+        {showNotifBanner && !isDemo && (
+          <div className="bg-accent/10 border-b border-accent/20 px-4 py-2 flex items-center justify-between gap-3 text-sm shrink-0">
             <span className="text-accent font-medium">
               Payment milte hi notification aayega — abhi enable karein
             </span>
