@@ -341,8 +341,8 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="grid sm:grid-cols-3 gap-6 relative">
-            {/* Connector line — desktop */}
-            <div className="hidden sm:block absolute top-10 left-[calc(16.67%+1.5rem)] right-[calc(16.67%+1.5rem)] h-px bg-gradient-to-r from-accent/30 via-accent/60 to-accent/30" />
+            {/* Connector line — passes through centre of the numbered badges */}
+            <div className="hidden sm:block absolute top-[28px] left-[calc(16.67%+14px)] right-[calc(16.67%+14px)] h-px bg-gradient-to-r from-accent/40 via-accent/70 to-accent/40" />
             {HOW_IT_WORKS.map(({ step, icon: Icon, title, desc, tag }, i) => (
               <div key={step} className="relative flex flex-col items-center text-center p-6">
                 <div className="relative mb-5">
