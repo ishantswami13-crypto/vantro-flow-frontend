@@ -136,6 +136,12 @@ export default function SettingsPage() {
     e.preventDefault();
     // Sync industry to localStorage so sidebar + industry page update immediately
     setBusinessType(business.industry);
+    // When industry changes in settings, update the vantro_biz_flags industry field
+    // but preserve the YES/NO answers from onboarding so sidebar stays smart-filtered
+    try {
+      const existing = JSON.parse(localStorage.getItem("vantro_biz_flags") || "{}");
+      localStorage.setItem("vantro_biz_flags", JSON.stringify({ ...existing, industry_override: business.industry }));
+    } catch {}
     save({ business_name: business.business_name, gstin: business.gstin, industry: business.industry, business_address: business.business_address, city: business.city, upi_id: business.upi_id, invoice_prefix: business.invoice_prefix });
   };
   const handlePrefsSave    = (e: React.FormEvent) => { e.preventDefault(); save({ language: prefs.language, contact_time: prefs.contact_time }); };

@@ -460,3 +460,56 @@ export function isRouteHidden(route: string, businessType: BusinessTypeConfig | 
   if (!businessType) return false; // no type set → show everything
   return businessType.hiddenRoutes.some(r => route === r || route.startsWith(r + "/"));
 }
+
+/**
+ * Smart route filtering — combines industry type + onboarding YES/NO answers.
+ * Returns a Set of routes to HIDE for the current user.
+ *
+ * Priority: industry hides (most specific) + flag-based hides (from onboarding answers)
+ */
+export function getSmartHiddenRoutes(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+
+  const industry = localStorage.getItem("vantro_industry") || "";
+  const flagsRaw = localStorage.getItem("vantro_biz_flags");
+  const flags: {
+    biz_type?: string;
+    sells_credit?: boolean | null;
+    has_workers?: boolean | null;
+    gst_registered?: boolean | null;
+    biz_size?: string;
+  } = flagsRaw ? JSON.parse(flagsRaw) : {};
+
+  // Start with industry-level hidden routes
+  const typeKey = INDUSTRY_TO_TYPE[industry] || null;
+  const typeConfig = typeKey ? BUSINESS_TYPES[typeKey] : null;
+  const hidden = new Set<string>(typeConfig?.hiddenRoutes ?? []);
+
+  // ── Flag-based rules ───────────────────────────────────────────────────────
+  // No credit sales → hide all collections/receivables tooling
+  if (flags.sells_credit === false) {
+    ["/collections", "/whatsapp", "/dunning", "/khata", "/crm", "/forecast"].forEach(r => hidden.add(r));
+  }
+
+  // No workers/employees → hide attendance
+  if (flags.has_workers === false) {
+    hidden.add("/attendance");
+  }
+
+  // Not GST registered → hide GST invoice generator
+  if (flags.gst_registered === false) {
+    hidden.add("/bills");
+  }
+
+  // Micro-business (under ₹50L) → hide network (B2B marketplace, not relevant yet)
+  if (flags.biz_size === "micro") {
+    hidden.add("/network");
+  }
+
+  return hidden;
+}
+
+/** Convenience: return hidden routes as array, for use in Sidebar */
+export function getHiddenRoutesArray(): string[] {
+  return Array.from(getSmartHiddenRoutes());
+}

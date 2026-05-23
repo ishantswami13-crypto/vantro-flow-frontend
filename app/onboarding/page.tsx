@@ -114,6 +114,16 @@ export default function OnboardingPage() {
   }, [ownerName, city, industry, token]);
 
   const setupOnboarding = useCallback(async () => {
+    // ── Save flags to localStorage IMMEDIATELY (no backend needed for sidebar) ──
+    localStorage.setItem("vantro_industry", industry);
+    localStorage.setItem("vantro_biz_flags", JSON.stringify({
+      biz_type:      bizType,
+      sells_credit:  sellsCredit,
+      has_workers:   hasWorkers,
+      gst_registered: gstReg,
+      biz_size:      bizSize,
+    }));
+
     try {
       const r = await fetch(`${BASE}/api/onboarding/setup`, {
         method: "POST",
@@ -128,13 +138,10 @@ export default function OnboardingPage() {
       });
       const d = await r.json();
       if (d.success && d.feature_flags) {
-        // Store feature flags in localStorage for sidebar
         localStorage.setItem("vantro_features", JSON.stringify(d.feature_flags));
-        // Also store industry for AI vocabulary seeding
-        localStorage.setItem("vantro_industry", industry);
       }
     } catch { /* non-blocking */ }
-  }, [industry, bizSize, gstReg, sellsCredit, hasWorkers, token]);
+  }, [industry, bizType, bizSize, gstReg, sellsCredit, hasWorkers, token]);
 
   const handleFile = useCallback(async (file: File) => {
     setLoading(true); setImportMsg("");

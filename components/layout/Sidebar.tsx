@@ -13,7 +13,7 @@ import {
 } from "react-icons/fi";
 import LogoMark from "@/components/LogoMark";
 import { getUser, clearAuth } from "@/lib/api";
-import { getBusinessType, type BusinessTypeConfig } from "@/lib/businessTypes";
+import { getBusinessType, getSmartHiddenRoutes, type BusinessTypeConfig } from "@/lib/businessTypes";
 
 // feature flag key → which sidebar items require that flag
 const NAV = [
@@ -68,6 +68,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const [bizName, setBizName]             = useState("My Business");
   const [isAdmin, setIsAdmin]             = useState(false);
   const [bizType, setBizType]             = useState<BusinessTypeConfig | null>(null);
+  const [hiddenRoutes, setHiddenRoutes]   = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const u = getUser();
@@ -78,6 +79,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       setIsAdmin(u.email === "ishantswami13@gmail.com");
     }
     setBizType(getBusinessType());
+    setHiddenRoutes(getSmartHiddenRoutes());
   }, []);
 
   const handleLogout = () => {
@@ -118,8 +120,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           {GROUPS.map(({ key, label }) => {
             const items = NAV.filter(n => {
               if (n.group !== key) return false;
-              // Hide routes not relevant to this business type
-              if (bizType && bizType.hiddenRoutes.includes(n.href)) return false;
+              // Smart filter: uses industry type + onboarding YES/NO answers combined
+              if (hiddenRoutes.size > 0 && hiddenRoutes.has(n.href)) return false;
               return true;
             });
             if (items.length === 0) return null;
