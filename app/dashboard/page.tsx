@@ -9,12 +9,15 @@ import {
   FiDollarSign, FiClock, FiPercent, FiAlertTriangle, FiTrendingDown,
   FiTarget, FiMessageSquare, FiCheckSquare, FiArrowRight,
   FiList, FiTrendingUp, FiSettings, FiPhone, FiShield, FiZap,
+  FiFileText, FiBook, FiPackage, FiUsers,
 } from "react-icons/fi";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
 import { api, getUser, type Metrics } from "@/lib/api";
 import { FiUpload } from "react-icons/fi";
+
+const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
 const CUSTOMERS = [
   { id: 1, name: "Mehta Fabrics Pvt Ltd", outstanding: 840000,  days: 62, score: 82, lastPayment: "12 Jan", contact: "9876543210" },
@@ -58,6 +61,7 @@ export default function DashboardPage() {
   const [metrics, setMetrics]   = useState<Metrics | null>(null);
   const [promises, setPromises] = useState<{ customer_name: string; promised_payment_date: string; amount: number }[]>([]);
   const [userPlan, setUserPlan] = useState<string>("free");
+  const [bizOverview, setBizOverview] = useState({ unpaidBills: 0, unpaidBillsAmt: 0, khataReceivable: 0, purchasesDue: 0, hasFeatures: false });
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
@@ -71,6 +75,27 @@ export default function DashboardPage() {
       );
       setPromises(todayPromises);
     }).catch(() => {});
+
+    // Load business overview data from new features
+    const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") : null;
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
+    Promise.all([
+      fetch(`${API}/api/bills`, { headers }).then(r => r.json()).catch(() => ({ bills: [] })),
+      fetch(`${API}/api/khata`, { headers }).then(r => r.json()).catch(() => ({ customers: [] })),
+      fetch(`${API}/api/purchases`, { headers }).then(r => r.json()).catch(() => ({ purchases: [] })),
+    ]).then(([billsD, khataD, purchasesD]) => {
+      const unpaidBills = (billsD.bills || []).filter((b: any) => b.status !== "paid");
+      const khataReceivable = (khataD.customers || []).reduce((s: number, c: any) => s + (c.balance > 0 ? c.balance : 0), 0);
+      const purchasesDue = (purchasesD.purchases || []).filter((p: any) => p.status !== "paid").reduce((s: number, p: any) => s + (p.total_amount - p.paid_amount), 0);
+      setBizOverview({
+        unpaidBills: unpaidBills.length,
+        unpaidBillsAmt: unpaidBills.reduce((s: number, b: any) => s + Number(b.total), 0),
+        khataReceivable,
+        purchasesDue,
+        hasFeatures: unpaidBills.length > 0 || khataReceivable > 0 || purchasesDue > 0,
+      });
+    });
   }, []);
 
   // Override static values with real data when available
@@ -156,6 +181,62 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* Business Overview — bills, khata, purchases quick-stats */}
+        {(bizOverview.hasFeatures || bizOverview.unpaidBills > 0) && (
+          <div>
+            <p className="text-xs font-bold text-muted uppercase tracking-wider mb-3">Business Overview</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Link href="/bills">
+                <div className="card-metric p-4 group cursor-pointer hover:border-accent/30 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
+                      <FiFileText size={15} className="text-accent" />
+                    </div>
+                    {bizOverview.unpaidBills > 0 && (
+                      <span className="text-2xs bg-danger/20 text-danger font-bold px-1.5 py-0.5 rounded-full">{bizOverview.unpaidBills}</span>
+                    )}
+                  </div>
+                  <p className="text-lg font-black text-primary">{bizOverview.unpaidBillsAmt > 0 ? (bizOverview.unpaidBillsAmt >= 100000 ? `₹${(bizOverview.unpaidBillsAmt/100000).toFixed(1)}L` : `₹${(bizOverview.unpaidBillsAmt/1000).toFixed(0)}K`) : "₹0"}</p>
+                  <p className="text-xs text-muted mt-0.5">Unpaid Invoices</p>
+                </div>
+              </Link>
+              <Link href="/khata">
+                <div className="card-metric p-4 group cursor-pointer hover:border-success/30 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-8 h-8 rounded-xl bg-success/10 flex items-center justify-center">
+                      <FiBook size={15} className="text-success" />
+                    </div>
+                  </div>
+                  <p className="text-lg font-black text-success">{bizOverview.khataReceivable >= 100000 ? `₹${(bizOverview.khataReceivable/100000).toFixed(1)}L` : `₹${Math.round(bizOverview.khataReceivable/1000)}K`}</p>
+                  <p className="text-xs text-muted mt-0.5">Khata Receivable</p>
+                </div>
+              </Link>
+              <Link href="/purchases">
+                <div className="card-metric p-4 group cursor-pointer hover:border-yellow-400/30 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-8 h-8 rounded-xl bg-yellow-400/10 flex items-center justify-center">
+                      <FiPackage size={15} className="text-yellow-400" />
+                    </div>
+                  </div>
+                  <p className="text-lg font-black text-yellow-400">{bizOverview.purchasesDue >= 100000 ? `₹${(bizOverview.purchasesDue/100000).toFixed(1)}L` : `₹${Math.round(bizOverview.purchasesDue/1000)}K`}</p>
+                  <p className="text-xs text-muted mt-0.5">Purchases Due</p>
+                </div>
+              </Link>
+              <Link href="/today">
+                <div className="card-metric p-4 group cursor-pointer hover:border-accent/30 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
+                      <FiUsers size={15} className="text-accent" />
+                    </div>
+                  </div>
+                  <p className="text-lg font-black text-primary">Today</p>
+                  <p className="text-xs text-muted mt-0.5">P&amp;L Summary</p>
+                </div>
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Empty state — shown when user has no real invoice data */}
         {metrics && metrics.total_customers === 0 && (

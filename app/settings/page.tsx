@@ -79,7 +79,7 @@ export default function SettingsPage() {
 
   // Form state
   const [profile, setProfile]   = useState({ full_name: "", email: "", phone: "", password: "" });
-  const [business, setBusiness] = useState({ business_name: "", gstin: "", industry: "trading", team_size: "6-20" });
+  const [business, setBusiness] = useState({ business_name: "", gstin: "", industry: "trading", team_size: "6-20", business_address: "", city: "", upi_id: "", invoice_prefix: "INV" });
   const [prefs, setPrefs]       = useState({ language: "hinglish", contact_time: "" });
 
   // Voice profile state
@@ -101,8 +101,12 @@ export default function SettingsPage() {
       setBusiness(b => ({ ...b, business_name: user.business_name || "", gstin: user.gstin || "" }));
     }
     api.settings.get().then(({ settings }: any) => {
-      if (settings.industry)     setBusiness(b => ({ ...b, industry: settings.industry }));
-      if (settings.language)     setPrefs(p => ({ ...p, language: settings.language }));
+      if (settings.industry)          setBusiness(b => ({ ...b, industry: settings.industry }));
+      if (settings.business_address)  setBusiness(b => ({ ...b, business_address: settings.business_address }));
+      if (settings.city)              setBusiness(b => ({ ...b, city: settings.city }));
+      if (settings.upi_id)            setBusiness(b => ({ ...b, upi_id: settings.upi_id }));
+      if (settings.invoice_prefix)    setBusiness(b => ({ ...b, invoice_prefix: settings.invoice_prefix }));
+      if (settings.language)          setPrefs(p => ({ ...p, language: settings.language }));
       if (settings.contact_time) setPrefs(p => ({ ...p, contact_time: settings.contact_time }));
       // Load voice profile
       if (settings.owner_name || settings.ai_persona) {
@@ -131,7 +135,7 @@ export default function SettingsPage() {
   };
 
   const handleProfileSave  = (e: React.FormEvent) => { e.preventDefault(); const body: Record<string, string> = { business_name: profile.full_name, phone: profile.phone }; if (profile.password) body.password = profile.password; save(body); };
-  const handleBusinessSave = (e: React.FormEvent) => { e.preventDefault(); save({ business_name: business.business_name, gstin: business.gstin, industry: business.industry }); };
+  const handleBusinessSave = (e: React.FormEvent) => { e.preventDefault(); save({ business_name: business.business_name, gstin: business.gstin, industry: business.industry, business_address: business.business_address, city: business.city, upi_id: business.upi_id, invoice_prefix: business.invoice_prefix }); };
   const handlePrefsSave    = (e: React.FormEvent) => { e.preventDefault(); save({ language: prefs.language, contact_time: prefs.contact_time }); };
 
   const handleVoiceSave = async (e: React.FormEvent) => {
@@ -250,22 +254,60 @@ export default function SettingsPage() {
 
             {/* ── Business ────────────────────────────── */}
             {tab === "business" && (
-              <Card>
-                <h3 className="text-sm font-semibold text-primary mb-5">Business Information</h3>
-                <form onSubmit={handleBusinessSave} className="space-y-4 max-w-lg">
-                  <Input label="Business Name" type="text" value={business.business_name}
-                    onChange={e => setBusiness(b => ({ ...b, business_name: e.target.value }))} />
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input label="GST Number" type="text" value={business.gstin}
-                      onChange={e => setBusiness(b => ({ ...b, gstin: e.target.value }))} />
-                    <Select label="Industry" options={industryOptions} value={business.industry}
-                      onChange={e => setBusiness(b => ({ ...b, industry: e.target.value }))} />
-                  </div>
-                  <Select label="Team Size" options={employeeOptions} value={business.team_size}
-                    onChange={e => setBusiness(b => ({ ...b, team_size: e.target.value }))} />
-                  <Button type="submit" icon={<FiCheck size={14} />} loading={saving}>Save Business Info</Button>
-                </form>
-              </Card>
+              <div className="space-y-4">
+                <Card>
+                  <h3 className="text-sm font-semibold text-primary mb-5">Business Information</h3>
+                  <form onSubmit={handleBusinessSave} className="space-y-4 max-w-lg">
+                    <Input label="Business / Company Name" type="text" value={business.business_name}
+                      onChange={e => setBusiness(b => ({ ...b, business_name: e.target.value }))} />
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input label="GST Number (GSTIN)" type="text" placeholder="22AAAAA0000A1Z5" value={business.gstin}
+                        onChange={e => setBusiness(b => ({ ...b, gstin: e.target.value.toUpperCase() }))} />
+                      <Select label="Industry" options={industryOptions} value={business.industry}
+                        onChange={e => setBusiness(b => ({ ...b, industry: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Business Address</label>
+                      <textarea value={business.business_address}
+                        onChange={e => setBusiness(b => ({ ...b, business_address: e.target.value }))}
+                        placeholder="Shop No. 12, Gandhi Nagar, Delhi - 110031"
+                        rows={2}
+                        className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
+                      <p className="text-2xs text-muted mt-1">Shown on GST invoices</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">City</label>
+                        <select value={business.city}
+                          onChange={e => setBusiness(b => ({ ...b, city: e.target.value }))}
+                          className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
+                          <option value="">Select city</option>
+                          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                      <Select label="Team Size" options={employeeOptions} value={business.team_size}
+                        onChange={e => setBusiness(b => ({ ...b, team_size: e.target.value }))} />
+                    </div>
+                    <div className="pt-2 border-t border-border">
+                      <p className="text-xs font-semibold text-secondary mb-3">Invoice Settings</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Invoice Prefix</label>
+                          <input value={business.invoice_prefix}
+                            onChange={e => setBusiness(b => ({ ...b, invoice_prefix: e.target.value.toUpperCase() }))}
+                            placeholder="INV" maxLength={6}
+                            className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors font-mono" />
+                          <p className="text-2xs text-muted mt-1">Bills will be INV-2025-0001</p>
+                        </div>
+                        <Input label="UPI ID (for invoices)" type="text" placeholder="yourname@upi"
+                          value={business.upi_id}
+                          onChange={e => setBusiness(b => ({ ...b, upi_id: e.target.value }))} />
+                      </div>
+                    </div>
+                    <Button type="submit" icon={<FiCheck size={14} />} loading={saving}>Save Business Info</Button>
+                  </form>
+                </Card>
+              </div>
             )}
 
             {/* ── AI VOICE PROFILE ─────────────────────── */}
