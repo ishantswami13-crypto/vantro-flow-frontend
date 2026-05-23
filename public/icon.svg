@@ -1,51 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <defs>
-    <!-- Background: deep navy -->
-    <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#0E1830"/>
-      <stop offset="100%" stop-color="#06091A"/>
-    </linearGradient>
+  <!-- Background: pure black -->
+  <rect width="100" height="100" rx="22" fill="#000000"/>
 
-    <!-- Left arm: electric blue -->
-    <linearGradient id="la" x1="18" y1="19" x2="50" y2="81" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#5AABFF"/>
-      <stop offset="52%"  stop-color="#1A6FFF"/>
-      <stop offset="100%" stop-color="#1040CC"/>
-    </linearGradient>
+  <!-- Inner border: subtle white edge -->
+  <rect x="1" y="1" width="98" height="98" rx="21"
+        stroke="rgba(255,255,255,0.12)" stroke-width="1.5" fill="none"/>
 
-    <!-- Right arm: violet-purple -->
-    <linearGradient id="ra" x1="82" y1="19" x2="50" y2="81" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#9D6FFF"/>
-      <stop offset="100%" stop-color="#5B10E0"/>
-    </linearGradient>
-
-    <!-- Vertex bloom -->
-    <radialGradient id="bloom" cx="50" cy="81" r="22" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#2563EB" stop-opacity="0.55"/>
-      <stop offset="100%" stop-color="#1A6FFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-
-  <!-- Background -->
-  <rect width="100" height="100" rx="22" fill="url(#bg)"/>
-
-  <!-- Glass inner border -->
-  <rect x="0.75" y="0.75" width="98.5" height="98.5" rx="21.5"
-        stroke="rgba(255,255,255,0.08)" stroke-width="1.5" fill="none"/>
-
-  <!-- Vertex bloom -->
-  <circle cx="50" cy="81" r="22" fill="url(#bloom)"/>
-
-  <!-- Left arm: bold calligraphic bezier -->
+  <!-- Left arm: bold calligraphic bezier, white -->
   <path d="M 18,19 C 10,40 28,64 50,81"
-        stroke="url(#la)" stroke-width="13.5" stroke-linecap="round" fill="none"/>
+        stroke="white" stroke-width="13.5" stroke-linecap="round" fill="none"/>
 
-  <!-- Right arm: thinner mirrored curve -->
+  <!-- Right arm: thinner, semi-white -->
   <path d="M 82,19 C 90,40 72,64 50,81"
-        stroke="url(#ra)" stroke-width="9" stroke-linecap="round" fill="none"/>
+        stroke="rgba(255,255,255,0.75)" stroke-width="9" stroke-linecap="round" fill="none"/>
 
-  <!-- Vertex: halo → blue → white core -->
-  <circle cx="50" cy="81" r="5"   fill="#1A6FFF" fill-opacity="0.35"/>
-  <circle cx="50" cy="81" r="3.2" fill="#60A5FA"/>
-  <circle cx="50" cy="81" r="1.6" fill="white"/>
+  <!-- Vertex dot -->
+  <circle cx="50" cy="81" r="3.5" fill="white"/>
 </svg>
