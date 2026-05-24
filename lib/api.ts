@@ -147,6 +147,14 @@ export const api = {
     get: () => request<{ settings: UserSettings }>('/api/settings'),
     update: (body: Partial<UserSettings>) =>
       request<{ settings: UserSettings }>('/api/settings', { method: 'PATCH', body: JSON.stringify(body) }),
+    saveWhatsApp: (body: { provider: string; interakt_api_key?: string; wati_api_url?: string; wati_token?: string }) =>
+      request<{ success: boolean; message: string }>('/api/settings/whatsapp', { method: 'POST', body: JSON.stringify(body) }),
+    testWhatsApp: () =>
+      request<{ success: boolean; provider: string; message: string }>('/api/settings/whatsapp/test', { method: 'POST' }),
+    saveRazorpay: (body: { key_id: string; key_secret: string }) =>
+      request<{ success: boolean; valid: boolean; message: string }>('/api/settings/razorpay', { method: 'POST', body: JSON.stringify(body) }),
+    toggleAutomation: (enabled: boolean) =>
+      request<{ success: boolean; automation_enabled: boolean }>('/api/settings/automation/toggle', { method: 'POST', body: JSON.stringify({ enabled }) }),
   },
 
   // ─── Seed ────────────────────────────────────────────────
@@ -208,6 +216,13 @@ export interface UserSettings extends User {
   logo_url?: string;
   whatsapp_phone?: string;
   whatsapp_token?: string;
+  // Integration fields
+  wa_provider?: 'interakt' | 'wati';
+  interakt_api_key?: string; // masked on GET
+  wati_api_url?: string;
+  wati_token?: string;       // masked on GET
+  razorpay_key_id?: string;
+  automation_enabled?: boolean;
 }
 
 export interface Invoice {

@@ -6,6 +6,7 @@ import Header from "./Header";
 import BottomNav from "./BottomNav";
 import InstallPrompt from "@/components/ui/InstallPrompt";
 import { isDemoMode, exitDemoMode } from "@/lib/demo";
+import { hydrateUserContext } from "@/lib/featureGating";
 import Link from "next/link";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -66,6 +67,23 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
   const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => { setIsDemo(isDemoMode()); }, []);
+
+  // Hydrate feature-gating context from DB on every app load
+  // This ensures cross-device correctness — localStorage may be stale or empty
+  useEffect(() => {
+    const token = localStorage.getItem("vantro_token");
+    if (!token) return;
+    fetch(`${API}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.user) {
+          // Persist updated user (plan may have changed on another device too)
+          localStorage.setItem("vantro_user", JSON.stringify(d.user));
+          hydrateUserContext(d.user);
+        }
+      })
+      .catch(() => {}); // silently fail — offline is fine
+  }, []);
 
   // Register service worker for PWA / offline support
   useEffect(() => {

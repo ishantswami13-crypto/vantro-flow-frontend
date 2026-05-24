@@ -9,11 +9,12 @@ import {
   FiCamera, FiFileText, FiCreditCard, FiRepeat, FiShield,
   FiCpu, FiGlobe, FiBook, FiShoppingBag, FiUserCheck,
   FiSun, FiActivity, FiUser, FiSliders, FiDatabase,
-  FiArchive, FiFile, FiDollarSign, FiZap,
+  FiArchive, FiFile, FiDollarSign, FiZap, FiLock, FiAlertTriangle,
 } from "react-icons/fi";
 import LogoMark from "@/components/LogoMark";
 import { getUser, clearAuth } from "@/lib/api";
 import { getBusinessType, getSmartHiddenRoutes, type BusinessTypeConfig } from "@/lib/businessTypes";
+import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
 
 // feature flag key → which sidebar items require that flag
 const NAV = [
@@ -46,6 +47,7 @@ const NAV = [
   { href: "/bank",           label: "Bank Monitor",    icon: FiDatabase,      badge: "NEW",  group: "ops" },
   { href: "/inventory",      label: "Inventory",       icon: FiArchive,       badge: null,   group: "ops" },
   { href: "/scanner",        label: "Invoice Scanner", icon: FiCamera,        badge: null,   group: "ops" },
+  { href: "/bad-debt",        label: "Bad Debt Radar",  icon: FiAlertTriangle, badge: null,   group: "ops" },
   // ── Account
   { href: "/my-id",          label: "My Vantro ID",    icon: FiShield,        badge: null,   group: "account" },
   { href: "/billing",        label: "Billing",         icon: FiCreditCard,    badge: null,   group: "account" },
@@ -66,14 +68,22 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [userName, setUserName]           = useState("User");
   const [bizName, setBizName]             = useState("My Business");
+  const [userPlan, setUserPlan]           = useState<string>("free");
   const [isAdmin, setIsAdmin]             = useState(false);
   const [bizType, setBizType]             = useState<BusinessTypeConfig | null>(null);
   const [hiddenRoutes, setHiddenRoutes]   = useState<Set<string>>(new Set());
+  const [grantedFeatures, setGrantedFeatures] = useState<Set<FeatureKey>>(new Set());
 
   useEffect(() => {
     const loadBizType = () => {
       setBizType(getBusinessType());
       setHiddenRoutes(getSmartHiddenRoutes());
+      // Plan-based feature gating
+      try {
+        const ctx = getUserContext();
+        setGrantedFeatures(getGrantedFeatures(ctx));
+        setUserPlan(ctx.plan);
+      } catch { /* fallback: all granted */ }
     };
 
     const u = getUser();
@@ -132,7 +142,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           {GROUPS.map(({ key, label }) => {
             const items = NAV.filter(n => {
               if (n.group !== key) return false;
-              // Smart filter: uses industry type + onboarding YES/NO answers combined
+              // Industry / onboarding filter (hide completely when not relevant)
               if (hiddenRoutes.size > 0 && hiddenRoutes.has(n.href)) return false;
               return true;
             });
@@ -143,6 +153,26 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 <div className="space-y-0.5">
                   {items.map(({ href, label: itemLabel, icon: Icon, badge }) => {
                     const active = pathname === href || pathname.startsWith(href + "/");
+
+                    // Plan-based lock check
+                    const featureKey = ROUTE_TO_FEATURE[href];
+                    const isLocked = featureKey
+                      ? grantedFeatures.size > 0 && !grantedFeatures.has(featureKey)
+                      : false;
+
+                    if (isLocked) {
+                      // Show locked item — grayed, non-navigable, shows upgrade hint
+                      return (
+                        <Link key={href} href="/billing" onClick={onClose}
+                          title={`Upgrade your plan to unlock ${itemLabel}`}
+                          className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-muted/40 hover:bg-surface-2 hover:text-muted/60 cursor-pointer relative">
+                          <Icon size={17} className="shrink-0 text-muted/30" />
+                          <span className="flex-1 line-through decoration-muted/20">{itemLabel}</span>
+                          <FiLock size={11} className="shrink-0 text-muted/40" />
+                        </Link>
+                      );
+                    }
+
                     return (
                       <Link key={href} href={href} onClick={onClose}
                         className={[
@@ -193,7 +223,18 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               {userName.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-primary truncate">{userName}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-semibold text-primary truncate">{userName}</p>
+                <span className={[
+                  "text-2xs font-bold px-1.5 py-0.5 rounded-full shrink-0",
+                  userPlan === "pro"     ? "bg-accent-dim text-accent border border-accent/20"
+                  : userPlan === "growth" ? "bg-success-dim text-success border border-success/20"
+                  : userPlan === "starter" ? "bg-warning/10 text-warning border border-warning/20"
+                  : "bg-surface-3 text-muted border border-border",
+                ].join(" ")}>
+                  {userPlan === "free" ? "Free" : userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
+                </span>
+              </div>
               <p className="text-2xs text-muted truncate">
                 {bizType ? `${bizType.emoji} ${bizType.label}` : bizName}
               </p>

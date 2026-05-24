@@ -6,6 +6,18 @@ import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { FiDownload, FiFileText, FiCalendar, FiFilter, FiTrendingUp, FiDollarSign, FiUsers, FiPhone } from "react-icons/fi";
 
+const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
+
+// Map date-range label → number of days back
+const DATE_RANGE_DAYS: Record<string, number> = {
+  "This Month":      30,
+  "Last Month":      60,
+  "Last 3 Months":   90,
+  "Last 6 Months":   180,
+  "Financial Year":  365,
+  "Custom":          30,
+};
+
 const REPORTS = [
   {
     id: "outstanding",
@@ -13,7 +25,7 @@ const REPORTS = [
     desc: "Full list of all unpaid invoices with customer details, days overdue, and AI collection score",
     icon: <FiDollarSign size={18}/>,
     color: "#F5424D",
-    formats: ["PDF", "Excel", "CSV"],
+    formats: ["Excel", "CSV"],
     lastGenerated: "Today 9:00 AM",
     pages: 4,
   },
@@ -23,7 +35,7 @@ const REPORTS = [
     desc: "Monthly recovery rates, call logs, WhatsApp delivery, payment trends over time",
     icon: <FiTrendingUp size={18}/>,
     color: "#10D98A",
-    formats: ["PDF", "Excel"],
+    formats: ["Excel", "CSV"],
     lastGenerated: "Yesterday",
     pages: 6,
   },
@@ -33,7 +45,7 @@ const REPORTS = [
     desc: "Individual customer account statement — all invoices, payments, and outstanding balance",
     icon: <FiUsers size={18}/>,
     color: "#0066FF",
-    formats: ["PDF", "Excel"],
+    formats: ["Excel", "CSV"],
     lastGenerated: "12 May 2025",
     pages: 2,
   },
@@ -43,7 +55,7 @@ const REPORTS = [
     desc: "30/60/90-day cash projection with optimistic, expected, and pessimistic scenarios",
     icon: <FiCalendar size={18}/>,
     color: "#F5A524",
-    formats: ["PDF"],
+    formats: ["Excel"],
     lastGenerated: "14 May 2025",
     pages: 3,
   },
@@ -63,7 +75,7 @@ const REPORTS = [
     desc: "GSTIN-wise breakdown of all sales and outstanding — ready for CA and filing",
     icon: <FiFileText size={18}/>,
     color: "#0066FF",
-    formats: ["PDF", "Excel"],
+    formats: ["Excel", "CSV"],
     lastGenerated: "1 May 2025",
     pages: 2,
   },
@@ -77,12 +89,41 @@ export default function ReportsPage() {
   const [downloaded, setDownloaded]   = useState<string[]>([]);
 
   const handleDownload = async (reportId: string, format: string) => {
+    // PDF not yet supported — prompt user to use Excel/CSV
+    if (format.toLowerCase() === "pdf") {
+      alert("PDF export coming soon. Please use Excel or CSV for now.");
+      return;
+    }
     const key = `${reportId}-${format}`;
     setDownloading(key);
-    await new Promise(r => setTimeout(r, 1500));
-    setDownloading(null);
-    setDownloaded(prev => [...prev, key]);
-    setTimeout(() => setDownloaded(prev => prev.filter(k => k !== key)), 3000);
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") : null;
+      const days = DATE_RANGE_DAYS[dateRange] || 30;
+      const toDate   = new Date().toISOString().split("T")[0];
+      const fromDate = new Date(Date.now() - days * 86400000).toISOString().split("T")[0];
+      const fmt = format.toLowerCase() === "excel" ? "xlsx" : "csv";
+      const url = `${BASE}/api/reports/export?report=${reportId}&format=${fmt}&from=${fromDate}&to=${toDate}`;
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Export failed" }));
+        alert(err.error || "Export failed");
+        return;
+      }
+      const blob = await res.blob();
+      const filename = res.headers.get("Content-Disposition")?.match(/filename="?([^"]+)"?/)?.[1]
+        || `vantro-${reportId}.${fmt}`;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setDownloaded(prev => [...prev, key]);
+      setTimeout(() => setDownloaded(prev => prev.filter(k => k !== key)), 4000);
+    } catch (e) {
+      alert("Download failed. Check your connection.");
+    } finally {
+      setDownloading(null);
+    }
   };
 
   return (
@@ -116,14 +157,14 @@ export default function ReportsPage() {
           </div>
           <div className="flex gap-2">
             <Button variant="secondary" size="sm" icon={<FiDownload size={12}/>}
-              onClick={() => handleDownload("all", "excel")}
-              loading={downloading === "all-excel"}>
-              Excel
+              onClick={() => handleDownload("outstanding", "CSV")}
+              loading={downloading === "outstanding-CSV"}>
+              CSV
             </Button>
             <Button size="sm" icon={<FiDownload size={12}/>}
-              onClick={() => handleDownload("all", "pdf")}
-              loading={downloading === "all-pdf"}>
-              Full PDF Report
+              onClick={() => handleDownload("outstanding", "Excel")}
+              loading={downloading === "outstanding-Excel"}>
+              Excel (Outstanding)
             </Button>
           </div>
         </div>

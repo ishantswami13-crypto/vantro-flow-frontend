@@ -174,7 +174,15 @@ export default function OnboardingPage() {
   }, [ownerName, city, industry, token]);
 
   const setupOnboarding = useCallback(async () => {
-    localStorage.setItem("vantro_industry", industry);
+    // Save keys that getUserContext() reads directly
+    localStorage.setItem("vantro_industry",      industry);
+    localStorage.setItem("vantro_business_type", industry);
+    localStorage.setItem("vantro_biz_size",      bizSize || "micro");
+    localStorage.setItem("vantro_has_gst",       String(!!gstReg));
+    localStorage.setItem("vantro_has_workers",   String(!!hasWorkers));
+    localStorage.setItem("vantro_has_salesmen",  String(!!hasWorkers)); // proxy: team = salesmen
+    localStorage.setItem("vantro_team_size",     hasWorkers ? "small" : "solo");
+    // Legacy blob (kept for backwards compat)
     localStorage.setItem("vantro_biz_flags", JSON.stringify({
       biz_type:       bizType,
       sells_credit:   sellsCredit,
