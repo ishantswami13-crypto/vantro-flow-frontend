@@ -1,5 +1,5 @@
 "use client";
-
+// v2 — paste-list import, Tally guide
 import { useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { api, getUser } from "@/lib/api";
