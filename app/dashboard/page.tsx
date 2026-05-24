@@ -17,6 +17,16 @@ import {
 import { api, getUser, type Metrics } from "@/lib/api";
 import QuickSale from "@/components/QuickSale";
 import { FiUpload } from "react-icons/fi";
+import { isDemoMode } from "@/lib/demo";
+
+const DEMO_BRIEFING = "Aaj 3 priority calls hain — Mehta Fabrics (₹8.4L, 62 din overdue) aaj sabse pehle. Sharma Steel ne last time uthaya tha — dobaara try karo. Cash runway 12 din ka hai, is hafte ₹5L+ zaroori hai.";
+
+function getGreeting(name: string): string {
+  const h = new Date().getHours();
+  const salutation = h < 12 ? "Shubh Prabhat" : h < 17 ? "Namaskar" : "Shubh Sandhya";
+  const first = name.split(" ")[0];
+  return `${salutation}, ${first}! ${h < 12 ? "☀️" : h < 17 ? "🙏" : "🌙"}`;
+}
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -64,12 +74,34 @@ export default function DashboardPage() {
   const [promises, setPromises] = useState<{ customer_name: string; promised_payment_date: string; amount: number }[]>([]);
   const [userPlan, setUserPlan] = useState<string>("free");
   const [bizOverview, setBizOverview] = useState({ unpaidBills: 0, unpaidBillsAmt: 0, khataReceivable: 0, purchasesDue: 0, hasFeatures: false });
+  const [ownerName, setOwnerName] = useState("User");
+  const [briefing, setBriefing] = useState("");
+  const [briefingLoading, setBriefingLoading] = useState(true);
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     const user = getUser();
     if (!user?.id) return;
     setUserPlan(user.plan || "free");
+
+    // Load owner name for greeting
+    const stored = (() => { try { return JSON.parse(localStorage.getItem("vantro_user") || "{}"); } catch { return {}; } })();
+    setOwnerName(stored.business_name || user.business_name || user.email?.split("@")[0] || "User");
+
+    // Fetch AI morning briefing (or use demo)
+    if (isDemoMode()) {
+      setBriefing(DEMO_BRIEFING);
+      setBriefingLoading(false);
+    } else {
+      const token = localStorage.getItem("vantro_token") || "";
+      fetch(`${API}/api/ml/briefing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      }).then(r => r.json()).then(d => {
+        if (d.success && d.briefing) setBriefing(d.briefing);
+      }).catch(() => {}).finally(() => setBriefingLoading(false));
+    }
+
     api.metrics(user.id).then(d => setMetrics(d.metrics)).catch(() => {});
     api.calls.list(user.id).then(d => {
       const todayPromises = (d.calls || []).filter(
@@ -147,21 +179,72 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Page header */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-          <div>
-            <h2 className="text-2xl font-black text-primary tracking-tight">Collections Dashboard</h2>
-            <p className="text-sm text-secondary mt-0.5 flex items-center gap-2">
-              <span className="status-live text-xs text-success">Live</span>
-              {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · Updated just now
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="section-label mb-0.5">Collections needed today</p>
-              <p className="metric-lg text-accent">₹14,20,000</p>
+        {/* Personalized greeting + AI Morning Briefing */}
+        <div className="card-premium p-5 bg-gradient-to-r from-surface-1 to-surface-2 border-accent/10">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-2xl font-black text-primary tracking-tight">
+                {getGreeting(ownerName)}
+              </h2>
+              <p className="text-xs text-muted mt-1 flex items-center gap-2">
+                <span className="status-live text-success">Live</span>
+                {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              </p>
+
+              {/* AI Briefing */}
+              <div className="mt-4">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <FiZap size={11} className="text-accent" />
+                  <p className="text-2xs font-bold text-accent uppercase tracking-wider">AI Morning Briefing</p>
+                </div>
+                {briefingLoading ? (
+                  <div className="flex gap-1.5 items-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "300ms" }} />
+                    <span className="text-xs text-muted ml-1">Briefing taiyar ho rahi hai...</span>
+                  </div>
+                ) : briefing ? (
+                  <p className="text-sm text-secondary leading-relaxed max-w-xl">{briefing}</p>
+                ) : (
+                  <p className="text-sm text-muted">
+                    Collections mein invoices upload karo — AI kal se briefing dega. 🎯
+                  </p>
+                )}
+              </div>
             </div>
-            <Badge variant="danger" className="self-end mb-1">Urgent</Badge>
+
+            {/* Today's key number */}
+            <div className="flex sm:flex-col items-center sm:items-end gap-3 shrink-0">
+              <div className="text-right">
+                <p className="section-label mb-0.5">Collections needed today</p>
+                <p className="metric-lg text-accent">₹14,20,000</p>
+              </div>
+              <Badge variant="danger">Urgent</Badge>
+              <Link href="/collections"
+                className="hidden sm:flex items-center gap-1.5 text-xs text-accent hover:underline font-semibold mt-1">
+                See priority list <FiArrowRight size={11} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Today's action items */}
+          <div className="mt-4 pt-4 border-t border-border/50 grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {[
+              { icon: FiPhone,        label: "5 calls to make",         href: "/collections", color: "#10D98A" },
+              { icon: FiMessageSquare,label: "3 WhatsApp to send",       href: "/whatsapp",    color: "#25D366" },
+              { icon: FiTarget,       label: "₹3.2L promised today",     href: "/collections", color: "#F5A524" },
+            ].map(({ icon: Icon, label, href, color }) => (
+              <Link key={label} href={href}
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-surface-2/50 border border-border hover:border-accent/30 hover:bg-surface-2 transition-all group">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: `${color}18`, border: `1px solid ${color}25` }}>
+                  <Icon size={13} style={{ color }} />
+                </div>
+                <p className="text-xs font-semibold text-secondary group-hover:text-primary transition-colors">{label}</p>
+                <FiArrowRight size={11} className="ml-auto text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            ))}
           </div>
         </div>
 

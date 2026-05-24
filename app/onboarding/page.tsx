@@ -141,6 +141,15 @@ export default function OnboardingPage() {
         localStorage.setItem("vantro_features", JSON.stringify(d.feature_flags));
       }
     } catch { /* non-blocking */ }
+    // Always save locally — sidebar filtering works even if API fails
+    localStorage.setItem("vantro_industry", industry);
+    localStorage.setItem("vantro_biz_flags", JSON.stringify({
+      biz_type:       bizType,
+      sells_credit:   sellsCredit,
+      has_workers:    hasWorkers,
+      gst_registered: gstReg,
+      biz_size:       bizSize,
+    }));
   }, [industry, bizType, bizSize, gstReg, sellsCredit, hasWorkers, token]);
 
   const handleFile = useCallback(async (file: File) => {

@@ -164,6 +164,20 @@ export default function BillsPage() {
                     <button onClick={() => window.open(`/invoice/${b.id}`, '_blank')} className="text-xs bg-brand-primary/10 text-brand-primary border border-brand-primary/20 px-2 py-1 rounded-lg flex items-center gap-1">
                       <FiEye size={11} /> View
                     </button>
+                    <button onClick={() => {
+                      const url = `${window.location.origin}/invoice/${b.id}`;
+                      navigator.clipboard.writeText(url).then(() => {
+                        const btn = document.getElementById(`copy-${b.id}`);
+                        if (btn) { btn.textContent = "✓ Copied!"; setTimeout(() => { if (btn) btn.textContent = "Copy Link"; }, 2000); }
+                      });
+                    }} id={`copy-${b.id}`}
+                      className="text-xs bg-surface-2 text-secondary border border-border px-2 py-1 rounded-lg flex items-center gap-1 hover:text-primary transition-colors">
+                      <FiShare2 size={11} /> Copy Link
+                    </button>
+                    <button onClick={() => { const win = window.open(`/invoice/${b.id}`, '_blank'); win?.addEventListener('load', () => win.print()); }}
+                      className="text-xs bg-surface-2 text-secondary border border-border px-2 py-1 rounded-lg flex items-center gap-1 hover:text-primary transition-colors">
+                      <FiPrinter size={11} /> Print
+                    </button>
                     {b.customer_phone && (
                       <a href={`https://wa.me/91${b.customer_phone.replace(/\D/g,"")}?text=${encodeURIComponent(`${b.customer_name} ji, aapka invoice ${b.bill_number} (₹${Number(b.total).toLocaleString("en-IN")}) ready hai. View karein: ${shareURL(b.id)}`)}`}
                         target="_blank" rel="noopener noreferrer"

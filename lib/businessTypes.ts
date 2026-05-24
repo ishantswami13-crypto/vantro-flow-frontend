@@ -410,13 +410,34 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Map legacy settings.industry values → BusinessTypeKey */
+/** Map all industry values (onboarding + settings) → BusinessTypeKey */
 export const INDUSTRY_TO_TYPE: Record<string, BusinessTypeKey> = {
-  trading:       "trading",
-  distribution:  "trading",
+  // Direct matches
+  construction:  "construction",
+  textile:       "textile",
+  pharma:        "pharma",
+  grocery:       "grocery",
+  restaurant:    "restaurant",
   manufacturing: "manufacturing",
+  real_estate:   "real_estate",
+  trading:       "trading",
+  // Aliases / legacy values
+  general:       "trading",
+  distribution:  "trading",
   services:      "trading",
+  service:       "trading",
   retail:        "grocery",
+  kirana:        "grocery",
+  fmcg:          "grocery",
+  medical:       "pharma",
+  healthcare:    "pharma",
+  garments:      "textile",
+  fashion:       "textile",
+  builder:       "construction",
+  contractor:    "construction",
+  realestate:    "real_estate",
+  hotel:         "restaurant",
+  food:          "restaurant",
   construction:  "construction",
   textile:       "textile",
   pharma:        "pharma",
@@ -424,6 +445,13 @@ export const INDUSTRY_TO_TYPE: Record<string, BusinessTypeKey> = {
   restaurant:    "restaurant",
   real_estate:   "real_estate",
   other:         "trading",
+  general:       "trading",   // onboarding "General Business" option
+  distributor:   "trading",
+  trader:        "trading",
+  service:       "trading",
+  retailer:      "grocery",
+  startup:       "trading",
+  manufacturer:  "manufacturing",
 };
 
 /** Expanded industry options for Settings → Business tab */

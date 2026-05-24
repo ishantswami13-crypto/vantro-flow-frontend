@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { FiMenu, FiBell, FiRefreshCw, FiCheck, FiAlertCircle, FiTrendingUp, FiX } from "react-icons/fi";
+import { FiMenu, FiBell, FiRefreshCw, FiCheck, FiAlertCircle, FiTrendingUp, FiX, FiDollarSign, FiClock } from "react-icons/fi";
 import Link from "next/link";
 import { getUser } from "@/lib/api";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
+import { isDemoMode } from "@/lib/demo";
 
 interface Notif {
   id: string;
@@ -15,6 +14,17 @@ interface Notif {
   time: string;
   read: boolean;
 }
+
+// Demo notifications shown when in demo mode or backend is unavailable
+const DEMO_NOTIFS: Notif[] = [
+  { id: "1", type: "overdue",  title: "Mehta Fabrics — 62 din overdue",    body: "₹8,40,000 abhi tak pending hai. Aaj call karo — high priority.",  time: new Date(Date.now() - 1000 * 60 * 30).toISOString(), read: false },
+  { id: "2", type: "overdue",  title: "Sharma Steel Works — 45 din overdue", body: "₹5,20,000 pending. Last attempt: 12 May. Try karo dobaara.",       time: new Date(Date.now() - 1000 * 60 * 90).toISOString(), read: false },
+  { id: "3", type: "payment",  title: "Joshi Electronics — Payment Received", body: "₹1,42,000 payment aaya! Invoice auto-marked paid.",                time: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), read: true  },
+  { id: "4", type: "forecast", title: "Cash Runway Alert",                   body: "Current forecast: 12 din ka cash. Is hafte ₹5L+ collections zaroori.", time: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), read: true  },
+  { id: "5", type: "system",   title: "AI Briefing Ready",                   body: "Aaj subah ki briefing ready hai — 5 priority calls identified.",    time: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), read: true  },
+];
+
+const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -65,6 +75,13 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
   }, [showNotifs]);
 
   const fetchNotifs = async () => {
+    // Demo mode: show demo notifications immediately
+    if (isDemoMode()) {
+      setNotifs(DEMO_NOTIFS);
+      setLoadingNotifs(false);
+      return;
+    }
+
     setLoadingNotifs(true);
     try {
       const token = localStorage.getItem("vantro_token") || "";
@@ -72,13 +89,52 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
         headers: { Authorization: `Bearer ${token}` },
       });
       const d = await r.json();
-      if (d.success && Array.isArray(d.notifications)) {
+      if (d.success && Array.isArray(d.notifications) && d.notifications.length > 0) {
         setNotifs(d.notifications);
+      } else {
+        // Backend returned nothing — generate from invoice data
+        generateLocalNotifs(token);
       }
     } catch {
-      // silently fail — use empty state
+      // Backend unavailable — generate from invoice data
+      const token = localStorage.getItem("vantro_token") || "";
+      generateLocalNotifs(token);
     } finally {
       setLoadingNotifs(false);
+    }
+  };
+
+  const generateLocalNotifs = async (token: string) => {
+    try {
+      const user = getUser();
+      if (!user?.id) return;
+      const r = await fetch(`${API}/api/invoices?user_id=${user.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const d = await r.json();
+      const invoices = d.invoices || [];
+      const generated: Notif[] = [];
+
+      // Top overdue invoices → overdue notifications
+      const overdue = invoices
+        .filter((inv: any) => inv.days_overdue > 0 && inv.payment_status === "Pending")
+        .sort((a: any, b: any) => b.days_overdue - a.days_overdue)
+        .slice(0, 3);
+
+      overdue.forEach((inv: any, i: number) => {
+        generated.push({
+          id: `inv-${i}`,
+          type: "overdue",
+          title: `${inv.customer_name} — ${inv.days_overdue} din overdue`,
+          body: `₹${Number(inv.invoice_amount).toLocaleString("en-IN")} pending. Call karo aaj.`,
+          time: new Date(Date.now() - 1000 * 60 * (30 + i * 60)).toISOString(),
+          read: i > 0,
+        });
+      });
+
+      if (generated.length > 0) setNotifs(generated);
+    } catch {
+      // truly silent — show empty state
     }
   };
 
@@ -137,10 +193,7 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
           >
             <FiBell size={15} />
             {unread > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-danger border-2 border-bg" />
-            )}
-            {unread === 0 && notifs.length === 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-danger border-2 border-bg" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-danger border-2 border-bg animate-pulse" />
             )}
           </button>
 
