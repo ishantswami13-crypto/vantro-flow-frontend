@@ -61,6 +61,20 @@ export const api = {
     },
   },
 
+  // ─── Collections (reminders + automation) ────────────────
+  collections: {
+    sendReminder: (invoiceId: string) =>
+      request<{ success: boolean; auto_sent: boolean; provider: string | null; payment_link: string | null; whatsapp_text: string; phone: string }>('/api/collections/send-reminder', {
+        method: 'POST',
+        body: JSON.stringify({ invoice_id: invoiceId }),
+      }),
+    bulkRemind: (minDays: number, tone: 'friendly' | 'firm' | 'urgent') =>
+      request<{ success: boolean; total: number; sent: number; results: { id: string; name: string; sent: boolean }[] }>('/api/collections/bulk-remind', {
+        method: 'POST',
+        body: JSON.stringify({ min_days: minDays, tone }),
+      }),
+  },
+
   // ─── Scanner ────────────────────────────────────────────
   scanner: {
     extract: (imageBase64: string) =>
@@ -210,6 +224,11 @@ export interface Invoice {
   payment_method?: string;
   priority_score?: number;
   urgency?: string;
+  // Reminder tracking
+  payment_link?: string;
+  payment_link_id?: string;
+  last_reminder_sent?: string;
+  reminder_count?: number;
 }
 
 export interface Metrics {
