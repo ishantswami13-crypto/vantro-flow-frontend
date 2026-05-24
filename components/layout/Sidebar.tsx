@@ -71,6 +71,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const [hiddenRoutes, setHiddenRoutes]   = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    const loadBizType = () => {
+      setBizType(getBusinessType());
+      setHiddenRoutes(getSmartHiddenRoutes());
+    };
+
     const u = getUser();
     if (u) {
       const emailName = u.email?.split("@")[0] || "User";
@@ -78,8 +83,15 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       setBizName(u.email || "");
       setIsAdmin(u.email === "ishantswami13@gmail.com");
     }
-    setBizType(getBusinessType());
-    setHiddenRoutes(getSmartHiddenRoutes());
+    loadBizType();
+
+    // Re-read when localStorage changes (e.g. after onboarding completes)
+    window.addEventListener("storage", loadBizType);
+    window.addEventListener("vantro:refresh", loadBizType);
+    return () => {
+      window.removeEventListener("storage", loadBizType);
+      window.removeEventListener("vantro:refresh", loadBizType);
+    };
   }, []);
 
   const handleLogout = () => {

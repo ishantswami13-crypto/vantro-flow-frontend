@@ -8,6 +8,7 @@ import {
   FiMapPin, FiRefreshCw, FiPlus, FiTrash2, FiPhone,
   FiAlertCircle,
 } from "react-icons/fi";
+import LogoMark from "@/components/LogoMark";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -293,9 +294,7 @@ export default function OnboardingPage() {
 
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-8 h-8 bg-gradient-accent rounded-xl flex items-center justify-center shadow-button-accent">
-            <FiZap size={15} className="text-white" />
-          </div>
+          <LogoMark size={36} />
           <span className="font-bold text-primary text-lg tracking-tight">Vantro</span>
         </div>
 

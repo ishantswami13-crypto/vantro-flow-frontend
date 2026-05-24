@@ -1,14 +1,22 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_PATHS = ['/', '/login', '/signup', '/onboarding'];
+const PUBLIC_PATHS = ['/login', '/signup', '/onboarding'];
+const ALWAYS_PUBLIC = ['/', '/login', '/signup', '/onboarding'];
+
+const PROTECTED = [
+  '/dashboard', '/collections', '/whatsapp', '/dunning', '/forecast',
+  '/analytics', '/reports', '/inventory', '/crm', '/scanner',
+  '/ai-chat', '/billing', '/settings', '/bills', '/khata', '/bank',
+  '/today', '/purchases', '/orders', '/attendance', '/team', '/brain',
+  '/neural-engine', '/network', '/ledger', '/my-id',
+];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public paths and static assets
+  // Always allow static assets
   if (
-    PUBLIC_PATHS.includes(pathname) ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.includes('.')
@@ -16,17 +24,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for token in cookie (set on login) or skip if no cookie (client-side auth handles it)
   const token = request.cookies.get('vantro_token')?.value;
 
-  // If accessing a protected route with no token cookie, redirect to login
-  if (!token && pathname.startsWith('/dashboard') || !token && pathname.startsWith('/collections') ||
-      !token && pathname.startsWith('/whatsapp') || !token && pathname.startsWith('/dunning') ||
-      !token && pathname.startsWith('/forecast') || !token && pathname.startsWith('/analytics') ||
-      !token && pathname.startsWith('/reports') || !token && pathname.startsWith('/inventory') ||
-      !token && pathname.startsWith('/crm') || !token && pathname.startsWith('/scanner') ||
-      !token && pathname.startsWith('/ai-chat') || !token && pathname.startsWith('/billing') ||
-      !token && pathname.startsWith('/settings')) {
+  // Logged-in users visiting landing page → send to dashboard
+  if (pathname === '/' && token) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // Logged-in users visiting login/signup → send to dashboard
+  if ((pathname === '/login' || pathname === '/signup') && token) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // Protected routes without token → send to login
+  if (!token && PROTECTED.some(p => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 

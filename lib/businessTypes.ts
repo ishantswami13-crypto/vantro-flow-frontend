@@ -137,7 +137,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "💊",
     color: "#10B981",
     description: "Pharma distributors, stockists, medical supply companies",
-    hiddenRoutes: ["/orders", "/network"],
+    hiddenRoutes: ["/orders", "/network", "/attendance", "/scanner", "/ledger"],
     terms: {
       customer:    "Retailer",
       invoice:     "Bill",

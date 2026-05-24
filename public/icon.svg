@@ -1,28 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <defs>
-    <linearGradient id="vbg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#1A6FFF"/>
-      <stop offset="100%" stop-color="#0047CC"/>
-    </linearGradient>
-    <linearGradient id="vglow" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#10D98A"/>
-      <stop offset="100%" stop-color="#1A6FFF"/>
-    </linearGradient>
-  </defs>
-
-  <!-- Background: Vantro blue gradient -->
-  <rect width="100" height="100" rx="22" fill="url(#vbg)"/>
+  <!-- Background: pure black rounded square -->
+  <rect width="100" height="100" rx="22" fill="#000000"/>
 
   <!-- Subtle inner border -->
   <rect x="0.75" y="0.75" width="98.5" height="98.5" rx="21.5"
-        stroke="rgba(255,255,255,0.18)" stroke-width="1.5" fill="none"/>
+        stroke="rgba(255,255,255,0.10)" stroke-width="1.5" fill="none"/>
 
-  <!-- Bar 1: widest (top) -->
-  <rect x="15" y="22" width="70" height="14" rx="7" fill="white"/>
+  <!-- Bar 1: widest -->
+  <rect x="15" y="23" width="70" height="13" rx="6.5" fill="white"/>
 
   <!-- Bar 2: medium -->
-  <rect x="25" y="43" width="50" height="14" rx="7" fill="white" fill-opacity="0.88"/>
+  <rect x="25" y="43" width="50" height="13" rx="6.5" fill="white" fill-opacity="0.85"/>
 
-  <!-- Bar 3: narrowest — green accent = cash collected -->
-  <rect x="35" y="64" width="30" height="14" rx="7" fill="url(#vglow)" fill-opacity="0.95"/>
+  <!-- Bar 3: narrowest -->
+  <rect x="35" y="63" width="30" height="13" rx="6.5" fill="white" fill-opacity="0.60"/>
 </svg>
