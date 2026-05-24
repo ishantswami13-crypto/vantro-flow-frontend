@@ -67,6 +67,55 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
+// ─── Psychology helpers ───────────────────────────────────────────────────────
+function getStreak(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const s = JSON.parse(localStorage.getItem("vantro_streak") || "{}");
+    const today = new Date().toDateString();
+    if (s.lastDay === today) return s.count || 1;
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (s.lastDay === yesterday) return s.count || 1;
+    return 0;
+  } catch { return 0; }
+}
+
+function updateStreak() {
+  if (typeof window === "undefined") return;
+  try {
+    const s = JSON.parse(localStorage.getItem("vantro_streak") || "{}");
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (s.lastDay === today) return;
+    const newCount = s.lastDay === yesterday ? (s.count || 1) + 1 : 1;
+    localStorage.setItem("vantro_streak", JSON.stringify({ count: newCount, lastDay: today }));
+  } catch {}
+}
+
+function getCollectedToday(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const d = JSON.parse(localStorage.getItem("vantro_today_collected") || "{}");
+    const today = new Date().toDateString();
+    return d.date === today ? (d.amount || 0) : 0;
+  } catch { return 0; }
+}
+
+function getBadge(streak: number, collected: number): { label: string; emoji: string; color: string } {
+  if (streak >= 180 || collected >= 5000000) return { label: "Recovery King",    emoji: "🏆", color: "#F59E0B" };
+  if (streak >= 90  || collected >= 2000000) return { label: "Power Collector",  emoji: "👑", color: "#8B5CF6" };
+  if (streak >= 30  || collected >= 500000)  return { label: "Chase Master",     emoji: "🎯", color: "#0066FF" };
+  if (streak >= 7   || collected >= 100000)  return { label: "Active Collector", emoji: "⚡", color: "#10D98A" };
+  return { label: "New Collector", emoji: "🌱", color: "#6B7280" };
+}
+
+// Demo risk customers (for loss aversion banner)
+const RISK_CUSTOMERS = [
+  { name: "Mehta Fabrics",   amount: 840000, daysLeft: 3 },
+  { name: "Sharma Steel",    amount: 250000, daysLeft: 5 },
+  { name: "Gupta Const.",    amount: 160000, daysLeft: 7 },
+];
+
 export default function DashboardPage() {
   const cashRunway = 12;
   const [showQuickSale, setShowQuickSale] = useState(false);
@@ -77,6 +126,11 @@ export default function DashboardPage() {
   const [ownerName, setOwnerName] = useState("User");
   const [briefing, setBriefing] = useState("");
   const [briefingLoading, setBriefingLoading] = useState(true);
+  const [streak, setStreak]           = useState(0);
+  const [collectedToday, setCollectedToday] = useState(0);
+  const [dailyGoal]                   = useState(400000); // ₹4L default goal
+  const [showPaymentCelebration, setShowPaymentCelebration] = useState<{ amount: number; name: string } | null>(null);
+  const [showRiskBanner, setShowRiskBanner] = useState(true);
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
@@ -87,6 +141,11 @@ export default function DashboardPage() {
     // Load owner name for greeting
     const stored = (() => { try { return JSON.parse(localStorage.getItem("vantro_user") || "{}"); } catch { return {}; } })();
     setOwnerName(stored.business_name || user.business_name || user.email?.split("@")[0] || "User");
+
+    // Streak + collected today
+    updateStreak();
+    setStreak(getStreak());
+    setCollectedToday(isDemoMode() ? 240000 : getCollectedToday());
 
     // Fetch AI morning briefing (or use demo)
     if (isDemoMode()) {
@@ -179,70 +238,192 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Personalized greeting + AI Morning Briefing */}
-        <div className="card-premium p-5 bg-gradient-to-r from-surface-1 to-surface-2 border-accent/10">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-2xl font-black text-primary tracking-tight">
-                {getGreeting(ownerName)}
-              </h2>
-              <p className="text-xs text-muted mt-1 flex items-center gap-2">
-                <span className="status-live text-success">Live</span>
-                {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-              </p>
-
-              {/* AI Briefing */}
-              <div className="mt-4">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <FiZap size={11} className="text-accent" />
-                  <p className="text-2xs font-bold text-accent uppercase tracking-wider">AI Morning Briefing</p>
-                </div>
-                {briefingLoading ? (
-                  <div className="flex gap-1.5 items-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "300ms" }} />
-                    <span className="text-xs text-muted ml-1">Briefing taiyar ho rahi hai...</span>
-                  </div>
-                ) : briefing ? (
-                  <p className="text-sm text-secondary leading-relaxed max-w-xl">{briefing}</p>
-                ) : (
-                  <p className="text-sm text-muted">
-                    Collections mein invoices upload karo — AI kal se briefing dega. 🎯
-                  </p>
-                )}
+        {/* ── PAYMENT CELEBRATION OVERLAY (Variable Reward) ─────────────── */}
+        {showPaymentCelebration && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+            onClick={() => setShowPaymentCelebration(null)}>
+            <div className="text-center px-8 py-12 rounded-3xl bg-surface-1 border border-success/30 shadow-2xl max-w-sm mx-4 animate-fade-in">
+              <div className="text-6xl mb-4">🎊</div>
+              <p className="text-lg font-black text-success mb-1">Wah {ownerName.split(" ")[0]} ji!</p>
+              <p className="text-4xl font-black text-white mb-2">{fmtAmt(showPaymentCelebration.amount)}</p>
+              <p className="text-sm text-muted mb-6">{showPaymentCelebration.name} ne pay kar diya! 💰</p>
+              <div className="flex gap-2 justify-center">
+                <button className="px-5 py-2.5 rounded-xl bg-success text-white text-sm font-bold">Share Karo 🎉</button>
+                <button onClick={() => setShowPaymentCelebration(null)} className="px-5 py-2.5 rounded-xl bg-surface-2 text-secondary text-sm font-medium">Dashboard</button>
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Today's key number */}
-            <div className="flex sm:flex-col items-center sm:items-end gap-3 shrink-0">
-              <div className="text-right">
-                <p className="section-label mb-0.5">Collections needed today</p>
-                <p className="metric-lg text-accent">₹14,20,000</p>
+        {/* ── LOSS AVERSION BANNER (Kahneman — loss 2x stronger than gain) ── */}
+        {showRiskBanner && (
+          <div className="rounded-xl border-2 p-4 relative overflow-hidden"
+            style={{ background: "rgba(245,66,77,0.08)", borderColor: "#F5424D" }}>
+            <div className="absolute inset-0 opacity-5"
+              style={{ background: "repeating-linear-gradient(45deg, #F5424D, #F5424D 2px, transparent 2px, transparent 12px)" }} />
+            <button onClick={() => setShowRiskBanner(false)}
+              className="absolute top-3 right-3 text-danger/50 hover:text-danger text-xs">✕</button>
+            <div className="flex items-start gap-3">
+              <div className="text-2xl shrink-0">🚨</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-black text-danger">
+                  ₹{((RISK_CUSTOMERS.reduce((s, c) => s + c.amount, 0)) / 100000).toFixed(1)}L KHATRE MEIN HAI
+                </p>
+                <p className="text-xs text-danger/70 mt-0.5 mb-3">
+                  {RISK_CUSTOMERS.length} customers 90-din limit cross karne waale hain — 90 din baad 60% chances recover nahi hoga
+                </p>
+                <div className="space-y-1.5 mb-3">
+                  {RISK_CUSTOMERS.map((c) => (
+                    <div key={c.name} className="flex items-center justify-between">
+                      <span className="text-xs text-danger/80 font-medium">{c.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-danger">{fmtAmt(c.amount)}</span>
+                        <span className="text-2xs bg-danger/20 text-danger px-1.5 py-0.5 rounded-full font-bold">
+                          {c.daysLeft} din ⏰
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Link href="/collections"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-danger text-white text-xs font-bold hover:bg-danger/90 transition-all">
+                  🔥 Abhi Call Karo <FiArrowRight size={11} />
+                </Link>
               </div>
-              <Badge variant="danger">Urgent</Badge>
-              <Link href="/collections"
-                className="hidden sm:flex items-center gap-1.5 text-xs text-accent hover:underline font-semibold mt-1">
-                See priority list <FiArrowRight size={11} />
-              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* ── DOPAMINE DASHBOARD HERO ──────────────────────────────────────── */}
+        <div className="card-premium overflow-hidden">
+          {/* Top row: Greeting + Streak */}
+          <div className="flex items-start justify-between p-5 pb-3">
+            <div>
+              <h2 className="text-xl font-black text-primary tracking-tight">
+                {getGreeting(ownerName)}
+              </h2>
+              <p className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
+                <span className="status-live text-success">Live</span>
+                {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+              </p>
+            </div>
+            {/* Streak badge */}
+            <div className="flex flex-col items-center px-3 py-2 rounded-xl bg-surface-2 border border-orange-500/20">
+              <span className="text-xl">🔥</span>
+              <span className="text-sm font-black text-orange-400 leading-none">{streak || 1}</span>
+              <span className="text-2xs text-muted">din</span>
             </div>
           </div>
 
-          {/* Today's action items */}
-          <div className="mt-4 pt-4 border-t border-border/50 grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {[
-              { icon: FiPhone,        label: "5 calls to make",         href: "/collections", color: "#10D98A" },
-              { icon: FiMessageSquare,label: "3 WhatsApp to send",       href: "/whatsapp",    color: "#25D366" },
-              { icon: FiTarget,       label: "₹3.2L promised today",     href: "/collections", color: "#F5A524" },
-            ].map(({ icon: Icon, label, href, color }) => (
-              <Link key={label} href={href}
-                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-surface-2/50 border border-border hover:border-accent/30 hover:bg-surface-2 transition-all group">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: `${color}18`, border: `1px solid ${color}25` }}>
-                  <Icon size={13} style={{ color }} />
+          {/* BIG collected number — Dopamine Counter */}
+          <div className="px-5 pb-4 text-center">
+            <p className="text-2xs font-bold text-muted uppercase tracking-widest mb-1">AAJ COLLECT HUA</p>
+            <p className="font-black text-5xl tracking-tight transition-all duration-700"
+              style={{ color: collectedToday > 0 ? "#10D98A" : "#334155" }}>
+              {collectedToday > 0 ? fmtAmt(collectedToday) : "₹0"}
+            </p>
+            {/* Daily goal progress bar */}
+            <div className="mt-3 mb-1">
+              <div className="flex items-center justify-between text-2xs text-muted mb-1.5">
+                <span>Aaj ka goal: {fmtAmt(dailyGoal)}</span>
+                <span className="font-semibold" style={{ color: collectedToday >= dailyGoal ? "#10D98A" : "#F5A524" }}>
+                  {Math.min(100, Math.round((collectedToday / dailyGoal) * 100))}%
+                </span>
+              </div>
+              <div className="h-2.5 rounded-full bg-surface-3 overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-1000"
+                  style={{
+                    width: `${Math.min(100, (collectedToday / dailyGoal) * 100)}%`,
+                    background: collectedToday >= dailyGoal
+                      ? "linear-gradient(90deg, #10D98A, #06D6A0)"
+                      : "linear-gradient(90deg, #0066FF, #1A6FFF)",
+                  }} />
+              </div>
+              <p className="text-2xs text-muted mt-1">
+                {collectedToday >= dailyGoal
+                  ? "🎉 Goal achieve ho gaya! Aaj ka din zabardast raha!"
+                  : `${fmtAmt(dailyGoal - collectedToday)} aur chahiye — ${Math.ceil((dailyGoal - collectedToday) / 50000)} calls mein ho sakta hai`}
+              </p>
+            </div>
+          </div>
+
+          {/* Identity badge */}
+          {(() => {
+            const badge = getBadge(streak, collectedToday + (metrics?.total_paid || 0));
+            return (
+              <div className="mx-5 mb-4 flex items-center gap-2 px-3 py-2 rounded-xl"
+                style={{ background: `${badge.color}12`, border: `1px solid ${badge.color}25` }}>
+                <span className="text-base">{badge.emoji}</span>
+                <div className="flex-1">
+                  <p className="text-xs font-bold" style={{ color: badge.color }}>{badge.label}</p>
+                  <p className="text-2xs text-muted">Aapki identity • Vantro community</p>
                 </div>
-                <p className="text-xs font-semibold text-secondary group-hover:text-primary transition-colors">{label}</p>
-                <FiArrowRight size={11} className="ml-auto text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Link href="/collections" className="text-2xs font-semibold" style={{ color: badge.color }}>
+                  Profile →
+                </Link>
+              </div>
+            );
+          })()}
+
+          {/* Social proof */}
+          <div className="mx-5 mb-4 flex items-center justify-between px-3 py-2.5 rounded-xl bg-surface-2/50 border border-border/50">
+            <div>
+              <p className="text-2xs text-muted">Delhi distributors avg (is hafte)</p>
+              <p className="text-sm font-bold text-secondary">₹3,20,000</p>
+            </div>
+            <div className="w-px h-8 bg-border" />
+            <div className="text-right">
+              <p className="text-2xs text-muted">Aapne collect kiya</p>
+              <p className="text-sm font-bold" style={{ color: collectedToday >= 320000 ? "#10D98A" : "#F5A524" }}>
+                {fmtAmt(collectedToday)}
+              </p>
+            </div>
+            <div className="text-right">
+              {collectedToday >= 320000
+                ? <span className="text-2xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">Top 15% 🏆</span>
+                : <span className="text-2xs bg-warning/20 text-warning px-2 py-1 rounded-full font-bold">Avg se neeche</span>}
+            </div>
+          </div>
+
+          {/* AI Morning Briefing */}
+          <div className="mx-5 mb-4 p-3 rounded-xl bg-accent/5 border border-accent/20">
+            <div className="flex items-center gap-1.5 mb-2">
+              <FiZap size={11} className="text-accent" />
+              <p className="text-2xs font-bold text-accent uppercase tracking-wider">AI Briefing</p>
+              {!briefingLoading && briefing && (
+                <span className="ml-auto text-2xs text-muted">{new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+              )}
+            </div>
+            {briefingLoading ? (
+              <div className="flex gap-1.5 items-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "300ms" }} />
+                <span className="text-xs text-muted ml-1">Briefing taiyar ho rahi hai...</span>
+              </div>
+            ) : briefing ? (
+              <p className="text-xs text-secondary leading-relaxed">{briefing}</p>
+            ) : (
+              <p className="text-xs text-muted">Collections mein invoices upload karo — AI kal se personal briefing dega. 🎯</p>
+            )}
+          </div>
+
+          {/* Today's action items — Zeigarnik incomplete tasks */}
+          <div className="px-5 pb-5 grid grid-cols-3 gap-2">
+            {[
+              { icon: FiPhone,         label: "5 Calls Baaki",      href: "/collections", color: "#F5424D", urgent: true },
+              { icon: FiMessageSquare, label: "3 WA Bhejo",          href: "/whatsapp",    color: "#25D366", urgent: false },
+              { icon: FiTarget,        label: "₹3.2L Promised",      href: "/collections", color: "#F5A524", urgent: false },
+            ].map(({ icon: Icon, label, href, color, urgent }) => (
+              <Link key={label} href={href}
+                className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border transition-all group text-center"
+                style={{ background: `${color}10`, borderColor: `${color}25` }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ background: `${color}20` }}>
+                  <Icon size={15} style={{ color }} />
+                  {urgent && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-danger" />}
+                </div>
+                <p className="text-2xs font-bold leading-tight" style={{ color }}>{label}</p>
               </Link>
             ))}
           </div>

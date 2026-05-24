@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { api, getUser } from "@/lib/api";
 import {
   FiZap, FiArrowRight, FiCheck, FiUpload, FiUser,
   FiMapPin, FiRefreshCw, FiPlus, FiTrash2, FiPhone,
+  FiClipboard, FiAlertCircle,
 } from "react-icons/fi";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -38,6 +39,57 @@ const CITIES = [
 
 const tierColor = (t: string) => t === "high" ? "#10D98A" : t === "medium" ? "#F5A524" : "#F5424D";
 const fmt = (n: number) => n >= 100000 ? `₹${(n/100000).toFixed(1)}L` : n >= 1000 ? `₹${(n/1000).toFixed(0)}K` : `₹${n}`;
+
+// ── Paste-text parser ─────────────────────────────────────────────────────────
+function parsePastedText(text: string): ManualEntry[] {
+  const lines = text.split(/[\n;]+/).map(l => l.trim()).filter(Boolean);
+  const results: ManualEntry[] = [];
+
+  for (const line of lines) {
+    // Extract 10-digit phone first
+    const phoneMatch = line.match(/\b(\d{10})\b/);
+    const phone = phoneMatch?.[1] || "";
+    const stripped = phone ? line.replace(phone, "") : line;
+
+    // Split by common separators
+    const parts = stripped.split(/[-,|:\t]+/).map(p => p.trim()).filter(Boolean);
+
+    // Name = first part containing letters
+    const namePart = parts.find(p => /[a-zA-Zऀ-ॿ]/.test(p)) || parts[0] || "";
+    const name = namePart.replace(/[₹]/g, "").trim();
+
+    let amount = "";
+    let days = "";
+
+    for (const p of parts) {
+      if (p.trim() === namePart.trim()) continue;
+      const cleaned = p.replace(/[₹,\s]/g, "");
+
+      // L suffix (lakhs)
+      const lMatch = cleaned.match(/^(\d+\.?\d*)L$/i);
+      if (lMatch) { amount = String(Math.round(parseFloat(lMatch[1]) * 100000)); continue; }
+
+      // K suffix (thousands)
+      const kMatch = cleaned.match(/^(\d+\.?\d*)K$/i);
+      if (kMatch) { amount = String(Math.round(parseFloat(kMatch[1]) * 1000)); continue; }
+
+      // "X days" or "X din" or "Xd"
+      const daysMatch = p.match(/(\d+)\s*(days?|din|d)\b/i);
+      if (daysMatch) { days = daysMatch[1]; continue; }
+
+      const num = parseFloat(cleaned);
+      if (!isNaN(num) && cleaned !== "") {
+        if (num >= 500 && !amount) { amount = String(Math.round(num)); }
+        else if (num < 500 && !days) { days = String(Math.round(num)); }
+      }
+    }
+
+    if (name && (amount || days)) {
+      results.push({ name, amount, days, phone });
+    }
+  }
+  return results;
+}
 
 function ProgressBar({ step, total }: { step: number; total: number }) {
   return (
@@ -82,26 +134,33 @@ export default function OnboardingPage() {
   const [scored, setScored]       = useState<any[]>([]);
   const [briefing, setBriefing]   = useState("");
 
-  // Step 0 — Name + City
+  // Step 0
   const [ownerName, setOwnerName] = useState("");
   const [city, setCity]           = useState("");
-  // Step 1 — Business type
+  // Step 1
   const [bizType, setBizType]     = useState("");
-  // Step 2 — Industry + Operational questions
+  // Step 2
   const [industry, setIndustry]   = useState("");
   const [bizSize, setBizSize]     = useState<"micro" | "small" | "medium" | "">("");
   const [gstReg, setGstReg]       = useState<boolean | null>(null);
   const [sellsCredit, setSellsCredit] = useState<boolean | null>(null);
   const [hasWorkers, setHasWorkers]   = useState<boolean | null>(null);
   // Step 3 — Data import
-  const [mode, setMode]           = useState<"import" | "manual">("import");
+  const [mode, setMode]           = useState<"paste" | "import" | "manual">("paste");
   const [dragOver, setDragOver]   = useState(false);
+  // Paste mode
+  const [pasteText, setPasteText] = useState("");
+  const [showTallyGuide, setShowTallyGuide] = useState(false);
+  // Manual mode
   const [manualRows, setManualRows] = useState<ManualEntry[]>([
     { name: "", amount: "", days: "", phone: "" },
     { name: "", amount: "", days: "", phone: "" },
     { name: "", amount: "", days: "", phone: "" },
   ]);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Live-parse paste text
+  const parsedEntries = useMemo(() => parsePastedText(pasteText), [pasteText]);
 
   const saveSettings = useCallback(async () => {
     try {
@@ -114,14 +173,13 @@ export default function OnboardingPage() {
   }, [ownerName, city, industry, token]);
 
   const setupOnboarding = useCallback(async () => {
-    // ── Save flags to localStorage IMMEDIATELY (no backend needed for sidebar) ──
     localStorage.setItem("vantro_industry", industry);
     localStorage.setItem("vantro_biz_flags", JSON.stringify({
-      biz_type:      bizType,
-      sells_credit:  sellsCredit,
-      has_workers:   hasWorkers,
+      biz_type:       bizType,
+      sells_credit:   sellsCredit,
+      has_workers:    hasWorkers,
       gst_registered: gstReg,
-      biz_size:      bizSize,
+      biz_size:       bizSize,
     }));
 
     try {
@@ -141,15 +199,6 @@ export default function OnboardingPage() {
         localStorage.setItem("vantro_features", JSON.stringify(d.feature_flags));
       }
     } catch { /* non-blocking */ }
-    // Always save locally — sidebar filtering works even if API fails
-    localStorage.setItem("vantro_industry", industry);
-    localStorage.setItem("vantro_biz_flags", JSON.stringify({
-      biz_type:       bizType,
-      sells_credit:   sellsCredit,
-      has_workers:    hasWorkers,
-      gst_registered: gstReg,
-      biz_size:       bizSize,
-    }));
   }, [industry, bizType, bizSize, gstReg, sellsCredit, hasWorkers, token]);
 
   const handleFile = useCallback(async (file: File) => {
@@ -167,15 +216,15 @@ export default function OnboardingPage() {
     finally { setLoading(false); }
   }, [token]);
 
-  const submitManual = useCallback(async () => {
-    const entries = manualRows.filter(r => r.name.trim() && r.amount.trim());
-    if (!entries.length) return false;
+  const submitManual = useCallback(async (entries: ManualEntry[]) => {
+    const valid = entries.filter(r => r.name.trim() && r.amount.trim());
+    if (!valid.length) return false;
     setLoading(true);
     try {
       const r = await fetch(`${BASE}/api/import/manual`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ entries: entries.map(e => ({
+        body: JSON.stringify({ entries: valid.map(e => ({
           customer_name: e.name,
           invoice_amount: parseFloat(e.amount.replace(/[₹,]/g, "")),
           days_overdue: parseInt(e.days) || 0,
@@ -187,7 +236,7 @@ export default function OnboardingPage() {
       else { setImportMsg(`❌ ${d.error}`); return false; }
     } catch { setImportMsg("❌ Failed."); return false; }
     finally { setLoading(false); }
-  }, [manualRows, token]);
+  }, [token]);
 
   const runScoring = useCallback(async () => {
     setStep(4);
@@ -214,10 +263,15 @@ export default function OnboardingPage() {
     }
     else if (step === 3) {
       await saveSettings();
-      if (mode === "manual") { const ok = await submitManual(); if (!ok && !importOk) return; }
+      if (mode === "paste" && parsedEntries.length > 0) {
+        await submitManual(parsedEntries);
+      } else if (mode === "manual") {
+        const ok = await submitManual(manualRows);
+        if (!ok && !importOk) return;
+      }
       runScoring();
     }
-  }, [step, ownerName, bizType, step2Valid, mode, saveSettings, setupOnboarding, submitManual, importOk, runScoring]);
+  }, [step, ownerName, bizType, step2Valid, mode, parsedEntries, manualRows, saveSettings, setupOnboarding, submitManual, importOk, runScoring]);
 
   const useDemoData = useCallback(async () => {
     await setupOnboarding();
@@ -226,6 +280,12 @@ export default function OnboardingPage() {
     if (user?.id) try { await api.seed(user.id); } catch { /* ignore */ }
     runScoring();
   }, [saveSettings, setupOnboarding, runScoring]);
+
+  const canProceedStep3 = mode === "paste"
+    ? (parsedEntries.length > 0 || importOk)
+    : mode === "import"
+    ? importOk
+    : manualRows.some(r => r.name && r.amount);
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center px-4 py-8">
@@ -306,7 +366,6 @@ export default function OnboardingPage() {
               <p className="text-sm text-secondary mt-1">We'll activate only the features you'll actually use.</p>
             </div>
 
-            {/* Industry */}
             <div>
               <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-3">What industry are you in?</p>
               <div className="grid grid-cols-2 gap-2">
@@ -321,7 +380,6 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            {/* Business size */}
             <div>
               <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-3">Annual turnover?</p>
               <div className="grid grid-cols-3 gap-2">
@@ -340,27 +398,11 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            {/* Yes/No questions */}
             <div className="space-y-4">
               {[
-                {
-                  q: "Are you GST registered?",
-                  val: gstReg, set: setGstReg,
-                  yes: "✅ Yes, I have GSTIN",
-                  no: "❌ No / Not yet",
-                },
-                {
-                  q: "Do you sell on credit (udhaar)?",
-                  val: sellsCredit, set: setSellsCredit,
-                  yes: "✅ Yes, most sales on credit",
-                  no: "💰 No, mostly cash/UPI",
-                },
-                {
-                  q: "Do you have employees or workers?",
-                  val: hasWorkers, set: setHasWorkers,
-                  yes: "👥 Yes, I have a team",
-                  no: "🙋 No, just me",
-                },
+                { q: "Are you GST registered?",              val: gstReg,       set: setGstReg,       yes: "✅ Yes, I have GSTIN",          no: "❌ No / Not yet" },
+                { q: "Do you sell on credit (udhaar)?",      val: sellsCredit,  set: setSellsCredit,  yes: "✅ Yes, most sales on credit",   no: "💰 No, mostly cash/UPI" },
+                { q: "Do you have employees or workers?",    val: hasWorkers,   set: setHasWorkers,   yes: "👥 Yes, I have a team",          no: "🙋 No, just me" },
               ].map(({ q, val, set, yes, no }) => (
                 <div key={q}>
                   <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-2">{q}</p>
@@ -393,17 +435,80 @@ export default function OnboardingPage() {
               <p className="text-sm text-secondary mt-1">Who owes you money? AI will score and prioritize instantly.</p>
             </div>
 
+            {/* Tabs */}
             <div className="flex gap-1 p-1 bg-surface-2 rounded-xl border border-border">
-              {(["import", "manual"] as const).map(m => (
-                <button key={m} onClick={() => setMode(m)}
+              {([
+                { id: "paste",  label: "📋 Paste List" },
+                { id: "import", label: "📁 Import Excel" },
+                { id: "manual", label: "✍️ Add Manually" },
+              ] as const).map(({ id, label }) => (
+                <button key={id} onClick={() => setMode(id)}
                   className={["flex-1 py-2 rounded-lg text-xs font-semibold transition-all",
-                    mode === m ? "bg-accent text-white shadow-button-accent" : "text-secondary hover:text-primary",
+                    mode === id ? "bg-accent text-white shadow-button-accent" : "text-secondary hover:text-primary",
                   ].join(" ")}>
-                  {m === "import" ? "📁 Import Excel / CSV" : "✍️ Add Manually"}
+                  {label}
                 </button>
               ))}
             </div>
 
+            {/* ── PASTE MODE ── */}
+            {mode === "paste" && (
+              <div className="space-y-3">
+                <div className="p-3 bg-accent/5 border border-accent/20 rounded-xl">
+                  <p className="text-xs font-bold text-accent mb-1">📝 Just type or paste your customer list</p>
+                  <p className="text-2xs text-muted leading-relaxed">
+                    Any format works — "Sharma - 45000 - 60 days", "Mehta, 82000, 30" or even "Gupta 1.2L 45d 9876543210"
+                  </p>
+                </div>
+
+                <textarea
+                  value={pasteText}
+                  onChange={e => setPasteText(e.target.value)}
+                  rows={6}
+                  placeholder={`Sharma Traders - 45000 - 60 days - 9876543210\nMehta Fabrics, 82000, 30\nGupta Steel 1.2L 45d\nPatel Agro - 28500 - 15 days - 9654321098`}
+                  className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-4 py-3 focus:outline-none focus:border-accent transition-colors resize-none font-mono placeholder-muted/50"
+                />
+
+                {/* Live preview */}
+                {parsedEntries.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <FiCheck size={12} className="text-success" />
+                      <p className="text-xs font-bold text-success">{parsedEntries.length} customers detected</p>
+                    </div>
+                    <div className="bg-surface-2 border border-border rounded-xl overflow-hidden">
+                      <div className="grid grid-cols-12 gap-2 px-3 py-2 border-b border-border bg-surface-3">
+                        {["Customer", "Amount", "Days", "Phone"].map((h, i) => (
+                          <p key={h} className={`text-2xs font-bold text-muted uppercase tracking-wider ${i === 0 ? "col-span-4" : i === 1 ? "col-span-3" : i === 2 ? "col-span-2" : "col-span-3"}`}>{h}</p>
+                        ))}
+                      </div>
+                      {parsedEntries.slice(0, 5).map((e, i) => (
+                        <div key={i} className="grid grid-cols-12 gap-2 px-3 py-2 border-b border-border/50 last:border-0">
+                          <p className="col-span-4 text-xs font-semibold text-primary truncate">{e.name}</p>
+                          <p className="col-span-3 text-xs text-success font-mono">{e.amount ? `₹${Number(e.amount).toLocaleString("en-IN")}` : "—"}</p>
+                          <p className="col-span-2 text-xs text-secondary">{e.days ? `${e.days}d` : "—"}</p>
+                          <p className="col-span-3 text-xs text-muted">{e.phone || "—"}</p>
+                        </div>
+                      ))}
+                      {parsedEntries.length > 5 && (
+                        <p className="px-3 py-2 text-2xs text-muted">+{parsedEntries.length - 5} more</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {pasteText && parsedEntries.length === 0 && (
+                  <div className="flex items-center gap-2 p-3 bg-warning/10 border border-warning/30 rounded-xl">
+                    <FiAlertCircle size={13} className="text-warning shrink-0" />
+                    <p className="text-xs text-warning">Couldn't parse yet — try adding a name and amount (e.g. "Sharma - 45000")</p>
+                  </div>
+                )}
+
+                {importMsg && <p className={`text-sm font-medium ${importOk ? "text-success" : "text-danger"}`}>{importMsg}</p>}
+              </div>
+            )}
+
+            {/* ── IMPORT MODE ── */}
             {mode === "import" && (
               <div className="space-y-3">
                 <div onDragOver={e => { e.preventDefault(); setDragOver(true); }}
@@ -428,10 +533,49 @@ export default function OnboardingPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Tally Guide */}
+                <button onClick={() => setShowTallyGuide(v => !v)}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-surface-2 border border-border hover:border-accent/30 transition-all text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🏦</span>
+                    <div>
+                      <p className="text-xs font-bold text-primary">Use Tally? Export in 3 steps</p>
+                      <p className="text-2xs text-muted">Tally Prime / ERP 9 → Outstanding Reports</p>
+                    </div>
+                  </div>
+                  <span className="text-muted text-xs">{showTallyGuide ? "▲" : "▼"}</span>
+                </button>
+
+                {showTallyGuide && (
+                  <div className="p-4 bg-surface-2 border border-border rounded-xl space-y-3">
+                    <p className="text-xs font-bold text-accent uppercase tracking-wider">Tally Export Guide</p>
+                    {[
+                      { step: "1", icon: "📂", title: "Go to Reports", desc: "In Tally: Gateway → Display → Statements of Accounts → Outstandings → Receivables" },
+                      { step: "2", icon: "📊", title: "Select All Parties", desc: "Set date range to current. Press Alt+E or click Export to get the Excel file." },
+                      { step: "3", icon: "⬆️", title: "Upload here", desc: "Drop that Excel file above. Vantro auto-detects columns — no formatting needed." },
+                    ].map(({ step, icon, title, desc }) => (
+                      <div key={step} className="flex gap-3">
+                        <div className="w-6 h-6 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0">
+                          <span className="text-2xs font-black text-accent">{step}</span>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-primary">{icon} {title}</p>
+                          <p className="text-2xs text-muted mt-0.5 leading-relaxed">{desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="p-2.5 bg-warning/10 border border-warning/30 rounded-lg">
+                      <p className="text-2xs text-warning font-medium">💡 Tip: Tally's "Ledger Outstanding" report works best. Any format is fine — Vantro reads it.</p>
+                    </div>
+                  </div>
+                )}
+
                 {importMsg && <p className={`text-sm font-medium whitespace-pre-wrap ${importOk ? "text-success" : "text-danger"}`}>{importMsg}</p>}
               </div>
             )}
 
+            {/* ── MANUAL MODE ── */}
             {mode === "manual" && (
               <div className="space-y-3">
                 <div className="grid grid-cols-12 gap-1.5 px-1">
@@ -471,10 +615,10 @@ export default function OnboardingPage() {
             )}
 
             <button onClick={proceed}
-              disabled={loading || (mode === "manual" && !manualRows.some(r => r.name && r.amount))}
+              disabled={loading || !canProceedStep3}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-accent text-white font-bold text-sm shadow-button-accent hover:opacity-90 transition-all disabled:opacity-40">
               {loading ? <FiRefreshCw size={15} className="animate-spin" /> : null}
-              {loading ? "Processing..." : "Score My Customers →"}
+              {loading ? "Processing..." : mode === "paste" && parsedEntries.length > 0 ? `Import ${parsedEntries.length} Customers →` : "Score My Customers →"}
             </button>
 
             <button onClick={useDemoData} className="w-full text-center text-xs text-muted hover:text-secondary transition-colors py-1">
@@ -517,19 +661,18 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            {/* Feature preview */}
             <div className="p-4 bg-surface-2 border border-border rounded-xl">
               <p className="text-2xs font-bold text-muted uppercase tracking-wider mb-3">Features Activated For You</p>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {[
-                  { on: true,  label: "Collections & Receivables" },
-                  { on: true,  label: "WhatsApp Messaging" },
-                  { on: true,  label: "AI Brain & Chat" },
-                  { on: true,  label: "Today's P&L" },
-                  { on: Boolean(gstReg),        label: "GST Invoice Generator" },
-                  { on: Boolean(sellsCredit),   label: "Customer Khata / Udhaar" },
-                  { on: Boolean(hasWorkers),    label: "Staff Attendance & Salary" },
-                  { on: true,  label: "Cash Flow Forecast" },
+                  { on: true,                     label: "Collections & Receivables" },
+                  { on: true,                     label: "WhatsApp Messaging" },
+                  { on: true,                     label: "AI Brain & Chat" },
+                  { on: true,                     label: "Today's P&L" },
+                  { on: Boolean(gstReg),          label: "GST Invoice Generator" },
+                  { on: Boolean(sellsCredit),     label: "Customer Khata / Udhaar" },
+                  { on: Boolean(hasWorkers),      label: "Staff Attendance & Salary" },
+                  { on: true,                     label: "Cash Flow Forecast" },
                 ].map(f => (
                   <div key={f.label} className={`flex items-center gap-2 ${f.on ? "text-primary" : "text-muted/40"}`}>
                     <span className={`w-4 h-4 rounded flex items-center justify-center shrink-0 ${f.on ? "bg-success/20 text-success" : "bg-surface-3 text-muted/30"}`}>
