@@ -5,7 +5,7 @@ function getToken(): string | null {
   return localStorage.getItem('vantro_token');
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -13,10 +13,20 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE}${path}`, { ...options, headers });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
-  return data;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(`${BASE}${path}`, { ...options, headers, signal: controller.signal });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'AbortError') throw new Error('Request timed out — please check your connection');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ─── Auth ────────────────────────────────────────────────
@@ -145,6 +155,9 @@ export const api = {
 export function saveAuth(token: string, user: User) {
   localStorage.setItem('vantro_token', token);
   localStorage.setItem('vantro_user', JSON.stringify(user));
+  // Also set a cookie so Next.js middleware can read it (localStorage is client-only)
+  const maxAge = 7 * 24 * 60 * 60; // 7 days — match JWT expiry
+  document.cookie = `vantro_token=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
 }
 
 export function getUser(): User | null {
@@ -157,6 +170,8 @@ export function getUser(): User | null {
 export function clearAuth() {
   localStorage.removeItem('vantro_token');
   localStorage.removeItem('vantro_user');
+  // Clear cookie too
+  document.cookie = 'vantro_token=; path=/; max-age=0; SameSite=Lax';
 }
 
 export function isLoggedIn(): boolean {

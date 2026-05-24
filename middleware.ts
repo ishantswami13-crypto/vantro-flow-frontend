@@ -9,7 +9,8 @@ const PROTECTED = [
   '/analytics', '/reports', '/inventory', '/crm', '/scanner',
   '/ai-chat', '/billing', '/settings', '/bills', '/khata', '/bank',
   '/today', '/purchases', '/orders', '/attendance', '/team', '/brain',
-  '/neural-engine', '/network', '/ledger', '/my-id',
+  '/neural-engine', '/network', '/ledger', '/my-id', '/admin',
+  '/ai-train', '/industry',
 ];
 
 export function middleware(request: NextRequest) {

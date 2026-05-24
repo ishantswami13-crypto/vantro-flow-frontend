@@ -11,7 +11,15 @@ export type BusinessTypeKey =
   | "restaurant"
   | "manufacturing"
   | "real_estate"
-  | "trading";
+  | "trading"
+  | "education"
+  | "healthcare"
+  | "steel_metals"
+  | "auto_parts"
+  | "it_services"
+  | "logistics"
+  | "jewellery"
+  | "agriculture";
 
 export interface BusinessTypeConfig {
   key: BusinessTypeKey;
@@ -406,6 +414,290 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
       "Monthly Analytics shows which customers are slow payers — tighten their credit terms",
     ],
   },
+
+  // ── EDUCATION ──────────────────────────────────────────────────────────────
+  education: {
+    key: "education",
+    label: "Education",
+    emoji: "🎓",
+    color: "#0EA5E9",
+    description: "Schools, coaching centers, tuition institutes, ed-tech",
+    hiddenRoutes: ["/inventory", "/scanner", "/network", "/orders"],
+    terms: {
+      customer:    "Student / Parent",
+      invoice:     "Fee Receipt",
+      outstanding: "Fee Dues",
+      collection:  "Fee Collection",
+    },
+    coreFeatures: [
+      { icon: "📚", title: "Student Fee Tracker",       desc: "Track fee dues student-wise. See who's paid, who's pending, and whose cheque bounced — batch-wise." },
+      { icon: "📅", title: "Installment Fee Plans",     desc: "Set quarterly / monthly fee plans per student. Auto-remind parents 5 days before due date." },
+      { icon: "📱", title: "Parent WhatsApp Reminder",  desc: "Soft, professional WhatsApp reminders to parents in Hindi/English. Doesn't damage relationship." },
+      { icon: "📊", title: "Batch-wise Analytics",      desc: "See which batch or standard has most defaults. Identify patterns early." },
+      { icon: "💰", title: "Cash Flow Forecast",        desc: "Predict monthly fee inflows. Plan teacher salaries and operating expenses confidently." },
+      { icon: "🏦", title: "Bank Reconciliation",       desc: "Match fee payments (online + cash + cheque) with your bank automatically." },
+    ],
+    notNeeded: ["Inventory management", "B2B collections", "Job work tracking", "Vantro Network"],
+    waTemplates: [
+      { label: "Fee Due Reminder", message: "Namaskar {name} ji, {student_name} ki {month} ki fees Rs.{amount} abhi bhi pending hai. Kripya {due_date} tak jama karein. Online transfer ya cash dono chalega. Dhanyavaad." },
+      { label: "Fee Overdue", message: "Namaskar {name} ji, {student_name} ki fees Rs.{amount} {days} din se overdue hai. Kripya aaj hi school mein contact karein ya neeche diye account mein transfer karein." },
+      { label: "Exam Fee Notice", message: "{name} ji, {student_name} ki exam fees Rs.{amount} ki last date {date} hai. Time par jama na hone par admit card hold ho sakta hai. Please urgently arrange karein." },
+    ],
+    tips: [
+      "Create a batch per class/standard — group students for bulk fee reminders",
+      "Set installment plans per student in Payment Plans module — reduces defaults by 40%",
+      "Send reminders 5 days before due date, not on the day — parents need time to arrange",
+      "Use Analytics to see which months have most defaults — plan accordingly",
+    ],
+  },
+
+  // ── HEALTHCARE ─────────────────────────────────────────────────────────────
+  healthcare: {
+    key: "healthcare",
+    label: "Healthcare",
+    emoji: "🏥",
+    color: "#06B6D4",
+    description: "Clinics, hospitals, diagnostic centers, medical suppliers",
+    hiddenRoutes: ["/orders", "/network", "/scanner"],
+    terms: {
+      customer:    "Patient / TPA",
+      invoice:     "Bill / Invoice",
+      outstanding: "TPA Dues / Patient Dues",
+      collection:  "Reimbursement",
+    },
+    coreFeatures: [
+      { icon: "🏥", title: "TPA Reimbursement Tracker",  desc: "Track insurance company (TPA) claim status — submitted, under review, approved, paid. Know your stuck money." },
+      { icon: "👤", title: "Patient Dues",               desc: "Track patient outstanding separately from TPA — co-payments, room upgrades, non-covered items." },
+      { icon: "📋", title: "Claim Aging Report",          desc: "See how long each TPA claim has been pending. Claims >45 days get flagged for escalation." },
+      { icon: "💰", title: "Cash Flow Forecast",          desc: "Predict when insurance reimbursements will arrive — avoid cash crunch for salaries and supplies." },
+      { icon: "📱", title: "Patient Follow-Up",           desc: "Gentle WhatsApp follow-up for patient balances — maintains dignity while collecting." },
+      { icon: "📊", title: "Revenue by TPA",              desc: "Which insurance company gives you most business — and which delays payments most." },
+    ],
+    notNeeded: ["Inventory (use dedicated medical software)", "Job work", "Vantro Network"],
+    waTemplates: [
+      { label: "Patient Balance", message: "Namaskar {name} ji, aapka {date} ka balance Rs.{amount} abhi bhi pending hai (insurance ke baad). Kripya reception se contact karein ya UPI se settle karein. Hospital number: {phone}" },
+      { label: "TPA Claim Follow-Up", message: "Dear {tpa_name} team, Claim ID {claim_id} for patient {patient_name} (admission: {date}, amount: Rs.{amount}) is pending for {days} days. Request urgent processing. Contact: {contact}" },
+    ],
+    tips: [
+      "Create one 'customer' per TPA company — track all claims under that party",
+      "Use Dunning Rules with 15-day intervals for TPA follow-ups — they respond to persistence",
+      "Patient balance collection works best with payment links — they pay on phone in 2 minutes",
+      "Cash Forecast helps plan staff salaries even when TPA payments are delayed",
+    ],
+  },
+
+  // ── STEEL / METALS ─────────────────────────────────────────────────────────
+  steel_metals: {
+    key: "steel_metals",
+    label: "Steel & Metals",
+    emoji: "⚙️",
+    color: "#64748B",
+    description: "Steel traders, TMT dealers, metal distributors, scrap dealers",
+    hiddenRoutes: ["/network", "/attendance"],
+    terms: {
+      customer:    "Buyer / Contractor",
+      invoice:     "Invoice / Challan",
+      outstanding: "Party Dues",
+      collection:  "Recovery",
+    },
+    coreFeatures: [
+      { icon: "📋", title: "Party-wise Ledger",          desc: "Track what each contractor/builder owes across multiple deliveries. Running balance view." },
+      { icon: "📄", title: "PDC Tracker",                desc: "Post-dated cheque management — know which cheques are due for deposit when." },
+      { icon: "📦", title: "Stock + Dues Combined",      desc: "See current TMT / MS / structural stock and who owes money for last dispatches — together." },
+      { icon: "🔄", title: "Price Variation Tracking",   desc: "Tag invoices with the steel price on that date. Track disputes due to price changes." },
+      { icon: "📊", title: "Risk by Party",              desc: "Which contractor has taken maximum credit? Flag parties crossing your credit limit." },
+      { icon: "📱", title: "WhatsApp Follow-Up",         desc: "Firm, professional reminders in contractor language. Works for both small and large buyers." },
+    ],
+    notNeeded: ["Restaurant features", "Education fee tracking", "Retail POS"],
+    waTemplates: [
+      { label: "Invoice Due", message: "{name} bhai, Invoice #{inv_no} (Rs.{amount}) ka {days} din ho gaye hain. PDC hoga toh date batao, RTGS chahiye toh account details deta hoon." },
+      { label: "PDC Due for Deposit", message: "{name} bhai, aapka cheque no. {cheque_no} (Rs.{amount}, date: {date}) kal deposit karna hai. Ensure karein account mein funds hain." },
+      { label: "Credit Limit Warning", message: "{name} bhai, aapka total outstanding Rs.{outstanding} ho gaya hai — credit limit Rs.{limit} hai. Next delivery ke pehle kuch settle karo please." },
+    ],
+    tips: [
+      "Create PDC entry in Khata for every post-dated cheque — get alerts 3 days before deposit date",
+      "Tag large orders with price-of-the-day — protects you in price-change disputes",
+      "Auto Follow-Up with 7-day intervals works well for steel — contractors need reminders",
+      "Use Risk Analytics to see which contractors have been stretching credit",
+    ],
+  },
+
+  // ── AUTO PARTS ─────────────────────────────────────────────────────────────
+  auto_parts: {
+    key: "auto_parts",
+    label: "Auto Parts",
+    emoji: "🔧",
+    color: "#DC2626",
+    description: "Auto parts distributors, spare parts dealers, garage suppliers",
+    hiddenRoutes: ["/network", "/forecast"],
+    terms: {
+      customer:    "Garage / Retailer",
+      invoice:     "Bill",
+      outstanding: "Party Balance",
+      collection:  "Collection",
+    },
+    coreFeatures: [
+      { icon: "🔧", title: "Garage-wise Ledger",         desc: "Track what each garage owes across all parts supplied. Running balance view per party." },
+      { icon: "📦", title: "Part-wise Inventory",        desc: "Track stock of each SKU — filter by brand, part number, vehicle type. Low stock alerts." },
+      { icon: "🚗", title: "Route-wise Collection",      desc: "Group garages by route/area. See total outstanding per route before sending salesman." },
+      { icon: "🔄", title: "Return & Replacement",       desc: "Track parts returned or replaced — adjust outstanding accordingly." },
+      { icon: "📱", title: "WhatsApp Reminder",          desc: "Quick reminders to garage owners — they respond fast to WhatsApp." },
+      { icon: "📊", title: "Salesman Performance",       desc: "Which salesman collected how much this week? Target vs actual tracking." },
+    ],
+    notNeeded: ["Cash Flow Forecast (daily settlement works better)", "CRM (not B2B complex sales)"],
+    waTemplates: [
+      { label: "Payment Due", message: "{name} bhai, aapka Rs.{amount} ka maal pending hai {days} din se. Kal salesman aa raha hai, ready rakhna. Ya UPI pe bhej dena: {upi_id}" },
+      { label: "Collection Day", message: "{name} bhai, kal {salesman_name} collection ke liye aayenge. Rs.{amount} ready rakhein. UPI bhi accept karte hain." },
+    ],
+    tips: [
+      "Group customers by route/area — salesman can do 1 route per day efficiently",
+      "Scanner can photograph part invoices from companies — auto-import into Purchases",
+      "Set credit limits per garage in CRM — stop supply when limit breached",
+      "Auto Follow-Up every 3 days works well for garage owners",
+    ],
+  },
+
+  // ── IT SERVICES ────────────────────────────────────────────────────────────
+  it_services: {
+    key: "it_services",
+    label: "IT / Software",
+    emoji: "💻",
+    color: "#7C3AED",
+    description: "IT agencies, software companies, web developers, SaaS businesses",
+    hiddenRoutes: ["/inventory", "/scanner", "/orders", "/attendance", "/network"],
+    terms: {
+      customer:    "Client",
+      invoice:     "Invoice",
+      outstanding: "Client Dues",
+      collection:  "Payment",
+    },
+    coreFeatures: [
+      { icon: "📋", title: "Project Milestone Billing",  desc: "Create invoices tied to project milestones — design done, dev done, delivery. Track which milestone triggers payment." },
+      { icon: "🔄", title: "Retainer Tracking",         desc: "Monthly retainer clients — see who's paid this month, who's late, send auto-reminder." },
+      { icon: "⚠️", title: "Dispute Management",        desc: "Client says deliverable isn't done? Raise dispute, pause invoice, track resolution without damaging relationship." },
+      { icon: "💰", title: "Revenue Forecast",           desc: "Upcoming milestone invoices + retainer renewals — predict next 3 months revenue." },
+      { icon: "📱", title: "Professional Follow-Up",     desc: "Formal, English WhatsApp follow-ups that suit IT client relationships." },
+      { icon: "📊", title: "Client Risk Score",          desc: "Which clients delay most? Use data to tighten terms for slow payers on next project." },
+    ],
+    notNeeded: ["Inventory management", "Cash register / POS", "Daily orders", "Route management"],
+    waTemplates: [
+      { label: "Milestone Invoice", message: "Hi {name}, sharing invoice #{inv_no} for the {milestone} milestone completion (Rs.{amount}). Payment due by {date}. Let me know if you have any questions." },
+      { label: "Retainer Reminder", message: "Hi {name}, your monthly retainer for {month} (Rs.{amount}) is due. Please transfer to the usual account or use the payment link: {link}. Thanks!" },
+      { label: "Overdue Follow-Up", message: "Hi {name}, following up on invoice #{inv_no} (Rs.{amount}) which was due {days} days ago. Could you share an ETA? Happy to discuss if there are any concerns." },
+    ],
+    tips: [
+      "Tag every invoice with the project name and milestone — makes client disputes instant to resolve",
+      "Raise invoices immediately on milestone completion — don't wait for client approval to invoice",
+      "Use Dispute Management to formally track any client objection — protects you legally",
+      "Retainer clients should be on Auto Follow-Up starting Day 1 of each month",
+    ],
+  },
+
+  // ── LOGISTICS / TRANSPORT ──────────────────────────────────────────────────
+  logistics: {
+    key: "logistics",
+    label: "Logistics",
+    emoji: "🚛",
+    color: "#EA580C",
+    description: "Transport companies, logistics providers, courier aggregators",
+    hiddenRoutes: ["/scanner", "/network"],
+    terms: {
+      customer:    "Shipper / Client",
+      invoice:     "LR / Invoice",
+      outstanding: "Freight Dues",
+      collection:  "Freight Collection",
+    },
+    coreFeatures: [
+      { icon: "🚛", title: "LR-wise Collections",        desc: "Track payment per Lorry Receipt number. Know which consignment's freight is pending." },
+      { icon: "📋", title: "Client-wise Ledger",         desc: "All LRs under one client in one view. Total outstanding per shipper." },
+      { icon: "📄", title: "POD-linked Payment",         desc: "Mark invoice as billable only after Proof of Delivery — no disputes on incomplete deliveries." },
+      { icon: "📦", title: "Vehicle & Route Tracking",   desc: "Which route/vehicle is generating most outstanding? Identify problem areas." },
+      { icon: "📱", title: "WhatsApp Follow-Up",         desc: "Follow up with logistics managers and accounts teams professionally." },
+      { icon: "💰", title: "Cash Flow Forecast",         desc: "Predict freight income based on credit terms per client. Plan diesel and driver expenses." },
+    ],
+    notNeeded: ["Retail inventory", "Restaurant features", "Student fee tracking"],
+    waTemplates: [
+      { label: "Freight Due", message: "{name} bhai, LR #{lr_no} ({route}, Rs.{amount}) ka {days} din ho gaye hain. POD deliver ho gaya hai. Kab tak payment process hoga?" },
+      { label: "Monthly Statement", message: "Namaskar {name} ji, {month} ka freight statement: Total dues Rs.{amount} ({count} LRs). Detailed statement WhatsApp pe bhej raha hoon. Kripya is hafte settle karein." },
+    ],
+    tips: [
+      "Tag every invoice with LR number and route — makes follow-up super specific",
+      "Mark POD received date in Notes — protects you if client disputes delivery",
+      "Send monthly statements to regular clients — they pay when they see the full picture",
+      "Use Credit Limit per shipper — flag when they exceed before taking more loads",
+    ],
+  },
+
+  // ── JEWELLERY ──────────────────────────────────────────────────────────────
+  jewellery: {
+    key: "jewellery",
+    label: "Jewellery",
+    emoji: "💍",
+    color: "#D97706",
+    description: "Jewellers, gold traders, diamond dealers, jewellery manufacturers",
+    hiddenRoutes: ["/orders", "/network", "/attendance"],
+    terms: {
+      customer:    "Party / Retailer",
+      invoice:     "Bill",
+      outstanding: "Party Balance",
+      collection:  "Recovery",
+    },
+    coreFeatures: [
+      { icon: "💍", title: "Consignment Tracker",        desc: "Gold/jewellery given on consignment — track which party has what, at what rate, since when." },
+      { icon: "📋", title: "Party-wise Ledger",          desc: "All transactions per jeweller/retailer — purchases, returns, payments — in one ledger." },
+      { icon: "📄", title: "Gold Rate-linked Billing",   desc: "Tag invoices with gold rate on billing date — prevents disputes on rate fluctuation." },
+      { icon: "📦", title: "Stock on Consignment",       desc: "Track pieces sent on approval — pieces returned, pieces sold, outstanding on sold pieces." },
+      { icon: "📱", title: "Discreet Follow-Up",         desc: "Subtle WhatsApp messages appropriate for the jewellery trade relationship." },
+      { icon: "📊", title: "Party Risk Analytics",       desc: "Which party has held stock too long without settling? Time to recall or collect." },
+    ],
+    notNeeded: ["Restaurant features", "Education fee tracking", "Logistics tracking"],
+    waTemplates: [
+      { label: "Consignment Due", message: "Namaskar {name} ji, jo maal {date} ko consignment pe diya tha — abhi tak Rs.{amount} ka hisaab baaki hai. Please settle karein ya maal wapas karein." },
+      { label: "Payment Reminder", message: "{name} bhai, aapka Rs.{amount} pending hai. {days} din ho gaye hain. Sona wapas le lenge ya aaj settlement karein? Batao." },
+    ],
+    tips: [
+      "Create one ledger entry per consignment lot — track return vs sold separately",
+      "Always note gold rate on invoice date — saves disputes when gold price moves",
+      "Consignment recovery before 90 days — use Auto Follow-Up from day 45",
+      "Risk Analytics shows you who's sitting on stock longest — prioritize those calls",
+    ],
+  },
+
+  // ── AGRICULTURE ────────────────────────────────────────────────────────────
+  agriculture: {
+    key: "agriculture",
+    label: "Agriculture",
+    emoji: "🌾",
+    color: "#16A34A",
+    description: "Seed distributors, fertilizer dealers, agri input companies, mandis",
+    hiddenRoutes: ["/network", "/attendance"],
+    terms: {
+      customer:    "Farmer / Dealer",
+      invoice:     "Bill",
+      outstanding: "Party Dues",
+      collection:  "Recovery",
+    },
+    coreFeatures: [
+      { icon: "🌾", title: "Seasonal Payment Tracking",  desc: "Farmers pay after harvest — track who owes from which season (Kharif/Rabi). Seasonal aging." },
+      { icon: "📋", title: "Farmer-wise Ledger",         desc: "All purchases, payments, credit history per farmer/dealer. Know who is reliable." },
+      { icon: "📦", title: "Input Stock Tracker",        desc: "Seeds, fertilizer, pesticide inventory — know what's in stock, what's sold on credit." },
+      { icon: "📅", title: "Harvest Season Reminders",   desc: "Auto-reminders triggered by harvest calendar — right time to collect, not random." },
+      { icon: "📱", title: "Hindi WhatsApp",             desc: "Simple Hindi messages that farmers and rural dealers understand and respond to." },
+      { icon: "📊", title: "Dealer Risk Score",           desc: "Which dealer gives credit to farmers and passes that delay to you? Identify the chain." },
+    ],
+    notNeeded: ["IT milestone billing", "TPA reimbursement", "Restaurant POS"],
+    waTemplates: [
+      { label: "Post-Harvest Reminder", message: "{name} bhai, is saal ki Kharif/Rabi fasal ho gayi. Aapka Rs.{amount} ka hisaab baaki hai. Jab bhi suvidha ho, mil ke hisaab kar lete hain." },
+      { label: "Dealer Due", message: "{name} ji, aapka Rs.{amount} pending hai {days} din se. Kripya is hafte aake settle karein ya phone pe batayein kab tak sambhav hai." },
+      { label: "Season Credit Notice", message: "{name} bhai, agla season shuru hone wala hai. Pichhle season ka Rs.{amount} abhi bhi baaki hai. Pehle purana hisaab clear karein phir nayi supply milegi." },
+    ],
+    tips: [
+      "Tag every invoice with season name (Kharif2025, Rabi2025) — seasonal analysis becomes easy",
+      "Set dunning to start 30 days AFTER harvest month — not before, farmers can't pay before harvest",
+      "Dealer who delays means their farmers delayed them — track the chain",
+      "Use Cash Forecast to predict post-harvest collection and plan next season's stock purchase",
+    ],
+  },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -421,16 +713,26 @@ export const INDUSTRY_TO_TYPE: Record<string, BusinessTypeKey> = {
   manufacturing: "manufacturing",
   real_estate:   "real_estate",
   trading:       "trading",
+  education:     "education",
+  healthcare:    "healthcare",
+  steel_metals:  "steel_metals",
+  auto_parts:    "auto_parts",
+  it_services:   "it_services",
+  logistics:     "logistics",
+  jewellery:     "jewellery",
+  agriculture:   "agriculture",
   // Aliases / legacy values
   general:       "trading",
   distribution:  "trading",
-  services:      "trading",
-  service:       "trading",
+  services:      "it_services",
+  service:       "it_services",
   retail:        "grocery",
   kirana:        "grocery",
   fmcg:          "grocery",
-  medical:       "pharma",
-  healthcare:    "pharma",
+  medical:       "healthcare",
+  clinic:        "healthcare",
+  hospital:      "healthcare",
+  diagnostic:    "healthcare",
   garments:      "textile",
   fashion:       "textile",
   builder:       "construction",
@@ -438,20 +740,36 @@ export const INDUSTRY_TO_TYPE: Record<string, BusinessTypeKey> = {
   realestate:    "real_estate",
   hotel:         "restaurant",
   food:          "restaurant",
-  construction:  "construction",
-  textile:       "textile",
-  pharma:        "pharma",
-  grocery:       "grocery",
-  restaurant:    "restaurant",
-  real_estate:   "real_estate",
   other:         "trading",
-  general:       "trading",   // onboarding "General Business" option
   distributor:   "trading",
   trader:        "trading",
-  service:       "trading",
   retailer:      "grocery",
   startup:       "trading",
   manufacturer:  "manufacturing",
+  school:        "education",
+  college:       "education",
+  coaching:      "education",
+  tuition:       "education",
+  steel:         "steel_metals",
+  metals:        "steel_metals",
+  iron:          "steel_metals",
+  tmt:           "steel_metals",
+  auto:          "auto_parts",
+  spare_parts:   "auto_parts",
+  transport:     "logistics",
+  courier:       "logistics",
+  freight:       "logistics",
+  gold:          "jewellery",
+  jewelry:       "jewellery",
+  diamond:       "jewellery",
+  seeds:         "agriculture",
+  fertilizer:    "agriculture",
+  agri:          "agriculture",
+  mandi:         "agriculture",
+  it:            "it_services",
+  software:      "it_services",
+  tech:          "it_services",
+  digital:       "it_services",
 };
 
 /** Expanded industry options for Settings → Business tab */
@@ -464,7 +782,14 @@ export const INDUSTRY_OPTIONS = [
   { value: "grocery",       label: "Grocery / FMCG" },
   { value: "restaurant",    label: "Restaurant / F&B" },
   { value: "real_estate",   label: "Real Estate & Builders" },
-  { value: "services",      label: "Services" },
+  { value: "education",     label: "Education & Coaching" },
+  { value: "healthcare",    label: "Healthcare / Clinic / Hospital" },
+  { value: "steel_metals",  label: "Steel & Metals" },
+  { value: "auto_parts",    label: "Auto Parts & Spare Parts" },
+  { value: "it_services",   label: "IT / Software / Digital Agency" },
+  { value: "logistics",     label: "Logistics & Transport" },
+  { value: "jewellery",     label: "Jewellery & Gold" },
+  { value: "agriculture",   label: "Agriculture / Seeds / Fertilizer" },
   { value: "other",         label: "Other" },
 ];
 

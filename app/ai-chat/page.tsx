@@ -64,11 +64,15 @@ function fmt(n: number) {
 }
 
 function formatMsg(text: string) {
+  // Render **bold** safely without dangerouslySetInnerHTML — split on bold markers
   return text.split("\n").map((line, i) => {
-    const html = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    const parts = line.split(/\*\*(.*?)\*\*/g);
     return (
-      <p key={i} className={`text-sm leading-relaxed ${line === "" ? "mt-2" : ""}`}
-        dangerouslySetInnerHTML={{ __html: html }} />
+      <p key={i} className={`text-sm leading-relaxed ${line === "" ? "mt-2" : ""}`}>
+        {parts.map((part, j) =>
+          j % 2 === 1 ? <strong key={j}>{part}</strong> : part
+        )}
+      </p>
     );
   });
 }
