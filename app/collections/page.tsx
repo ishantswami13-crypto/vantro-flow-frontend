@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type Invoice } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
@@ -10,7 +10,7 @@ import { generateWhatsAppPaymentLink } from "@/lib/paymentLink";
 import {
   FiSearch, FiMessageSquare, FiCheckSquare,
   FiDownload, FiArrowUp, FiArrowDown, FiPhone,
-  FiUpload, FiX, FiCheck, FiCopy,
+  FiUpload, FiX, FiCopy, FiMessageCircle,
 } from "react-icons/fi";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -19,6 +19,20 @@ interface Customer {
   id: number; name: string; contact: string; industry: string;
   outstanding: number; daysOverdue: number; score: number;
   lastContact: string; lastPayment: string; status: "overdue" | "due" | "promised";
+}
+
+interface ReplyLog {
+  intent: "promised" | "uncertain" | "paid" | "no_response";
+  label: string;
+  color: string;
+  text: string;
+  date: string;
+}
+
+interface PromiseRecord {
+  date: string;
+  amount: number;
+  name: string;
 }
 
 const DATA: Customer[] = [
@@ -38,6 +52,21 @@ const DATA: Customer[] = [
 
 function fmt(n: number) {
   return n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${(n / 1000).toFixed(0)}K`;
+}
+
+// ── Intent Classifier (client-side) ──────────────────────────────────────────
+function classifyIntent(text: string): ReplyLog {
+  const t = text.toLowerCase();
+  if (!t.trim()) return { intent: "no_response", label: "⚫ No Reply", color: "#6B7280", text, date: new Date().toISOString() };
+
+  const paidKw = ["paid", "kar diya", "bhej diya", "done", "ho gaya", "send kar", "transferred", "upi kar", "payment kiya", "de diya", "diya"];
+  const promisedKw = ["kal", "parso", "pakka", "promise", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "next week", "agli", "agle", "de dunga", "dunga", "sure", "zaroor", "confirm", "by", "tak", "shaam tak", "dopahar", "subah"];
+  const uncertainKw = ["dekhunga", "dekhta", "pata nahi", "maybe", "try", "mushkil", "problem", "baad mein", "later", "soch", "nahi pata", "abhi nahi", "thodi der", "wait"];
+
+  if (paidKw.some(k => t.includes(k))) return { intent: "paid", label: "🟢 Paid", color: "#10D98A", text, date: new Date().toISOString() };
+  if (promisedKw.some(k => t.includes(k))) return { intent: "promised", label: "🟡 Promised", color: "#F5A524", text, date: new Date().toISOString() };
+  if (uncertainKw.some(k => t.includes(k))) return { intent: "uncertain", label: "🔴 Uncertain", color: "#F5424D", text, date: new Date().toISOString() };
+  return { intent: "uncertain", label: "🔴 Uncertain", color: "#F5424D", text, date: new Date().toISOString() };
 }
 
 type SortKey = "outstanding" | "daysOverdue" | "score";
@@ -66,9 +95,28 @@ export default function CollectionsPage() {
   const [importing, setImporting]     = useState(false);
   const [importMsg, setImportMsg]     = useState("");
   const [showImport, setShowImport]   = useState(false);
+  const [showTallyGuide, setShowTallyGuide] = useState(false);
   const [payLinkMsg, setPayLinkMsg]   = useState<{text: string; phone?: string} | null>(null);
   const [payLinkLoading, setPayLinkLoading] = useState<string | null>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
+
+  // Feature 2: Reply logger
+  const [replyModal, setReplyModal]   = useState<Customer | null>(null);
+  const [replyText, setReplyText]     = useState("");
+  const [replyLogs, setReplyLogs]     = useState<Record<number, ReplyLog>>({});
+
+  // Feature 3: Promise tracker
+  const [promises, setPromises]       = useState<Record<number, PromiseRecord>>({});
+
+  // Feature 4: Payment toast
+  const [paidToast, setPaidToast]     = useState<{name: string; amount: number} | null>(null);
+
+  // Auto-dismiss toast after 3.5s
+  useEffect(() => {
+    if (!paidToast) return;
+    const t = setTimeout(() => setPaidToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [paidToast]);
 
   const loadInvoices = (userId: string) => {
     api.invoices.list(userId).then(d => {
@@ -99,16 +147,19 @@ export default function CollectionsPage() {
     loadInvoices(user.id);
   }, []);
 
-  const handleMarkPaid = async (customerId: number) => {
-    const invoiceId = invoiceIds[customerId];
+  // Feature 4: Mark paid with celebration toast
+  const handleMarkPaid = async (c: Customer) => {
+    const invoiceId = invoiceIds[c.id];
     if (!invoiceId) return;
-    setMarkingPaid(customerId);
+    setMarkingPaid(c.id);
     try {
       await api.invoices.markPaid(invoiceId, {
         payment_date: new Date().toISOString().split("T")[0],
         payment_method: "manual",
       });
       posthog.capture("invoice_marked_paid");
+      // Show celebration toast
+      setPaidToast({ name: c.name.split(" ")[0], amount: c.outstanding });
       const user = getUser();
       if (user?.id) loadInvoices(user.id);
     } catch {
@@ -154,6 +205,13 @@ export default function CollectionsPage() {
         did_pick_up: callForm.did_pick_up,
         has_promise: !!callForm.promised_date,
       });
+      // Save promise record if promised date given
+      if (callForm.promised_date && logModal) {
+        setPromises(prev => ({
+          ...prev,
+          [logModal.id]: { date: callForm.promised_date, amount: logModal.outstanding, name: logModal.name },
+        }));
+      }
       setLogModal(null);
       setCallForm({ did_pick_up: true, promised_date: "", notes: "" });
     } catch {
@@ -161,6 +219,30 @@ export default function CollectionsPage() {
     } finally {
       setLoggingCall(false);
     }
+  };
+
+  // Feature 2: Log reply with AI intent
+  const handleLogReply = useCallback(() => {
+    if (!replyModal || !replyText.trim()) return;
+    const log = classifyIntent(replyText);
+    setReplyLogs(prev => ({ ...prev, [replyModal.id]: log }));
+    posthog.capture("reply_logged", { intent: log.intent });
+    setReplyModal(null);
+    setReplyText("");
+  }, [replyModal, replyText]);
+
+  // Feature 3: Generate promise-broken WA nudge
+  const getPromiseNudgeMsg = (c: Customer) => {
+    const p = promises[c.id];
+    if (!p) return "";
+    const name = c.name.split(" ")[0];
+    return `${name} bhai, aapne ${p.date} ko payment ka promise kiya tha — ₹${p.amount.toLocaleString("en-IN")} abhi tak nahi aaya. Kya aaj settle kar sakte hain? 🙏`;
+  };
+
+  const isPromiseBroken = (id: number) => {
+    const p = promises[id];
+    if (!p) return false;
+    return new Date(p.date) < new Date(new Date().toDateString());
   };
 
   const fetchInvoices = () => {
@@ -193,7 +275,6 @@ export default function CollectionsPage() {
   };
 
   const handlePayLink = async (c: Customer) => {
-    // Demo mode: generate UPI link locally without hitting backend
     if (isDemoMode()) {
       const user = (() => { try { return JSON.parse(localStorage.getItem("vantro_user") || "{}"); } catch { return {}; } })();
       const upiId = user.upi_id || "demo@upi";
@@ -206,7 +287,6 @@ export default function CollectionsPage() {
         customerPhone: c.contact,
         customerName: c.name.split(" ")[0],
       });
-      // Extract just the message part from the wa.me URL
       const msgMatch = text.match(/\?text=(.+)/);
       const msg = msgMatch ? decodeURIComponent(msgMatch[1]) : text;
       setPayLinkMsg({ text: msg, phone: c.contact });
@@ -235,19 +315,18 @@ export default function CollectionsPage() {
   };
 
   const tableData = liveData ?? DATA;
-
   const industries = useMemo(() => ["all", ...Array.from(new Set(tableData.map((c) => c.industry)))], [tableData]);
 
   const rows = useMemo(() => {
     let r = tableData;
-    if (search)          r = r.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.contact.includes(search));
-    if (filterStatus !== "all")   r = r.filter((c) => c.status === filterStatus);
+    if (search)                r = r.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.contact.includes(search));
+    if (filterStatus !== "all") r = r.filter((c) => c.status === filterStatus);
     if (filterIndustry !== "all") r = r.filter((c) => c.industry === filterIndustry);
     return [...r].sort((a, b) => {
       const d = a[sortKey] - b[sortKey];
       return sortDir === "desc" ? -d : d;
     });
-  }, [search, sortKey, sortDir, filterStatus, filterIndustry]);
+  }, [search, sortKey, sortDir, filterStatus, filterIndustry, tableData]);
 
   const toggleSort = (k: SortKey) => {
     if (k === sortKey) setSortDir((d) => (d === "desc" ? "asc" : "desc"));
@@ -270,7 +349,84 @@ export default function CollectionsPage() {
     <DashboardLayout pageTitle="Collections">
       <div className="space-y-4 page-enter">
 
-        {/* Log Call Modal */}
+        {/* ── Feature 4: Payment celebration toast ── */}
+        {paidToast && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-fade-in">
+            <div className="flex items-center gap-3 px-5 py-3.5 bg-success rounded-2xl shadow-2xl text-white font-bold text-sm">
+              <span className="text-xl">🎉</span>
+              <div>
+                <p>{paidToast.name} ne payment kiya!</p>
+                <p className="text-xs font-normal opacity-90">₹{paidToast.amount.toLocaleString("en-IN")} received</p>
+              </div>
+              <button onClick={() => setPaidToast(null)} className="ml-2 opacity-70 hover:opacity-100">
+                <FiX size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Feature 2: Log Reply Modal ── */}
+        {replyModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => { setReplyModal(null); setReplyText(""); }}>
+            <div className="bg-surface border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="font-bold text-primary text-sm">Log Customer Reply</p>
+                  <p className="text-2xs text-muted mt-0.5">{replyModal.name}</p>
+                </div>
+                <button onClick={() => { setReplyModal(null); setReplyText(""); }}><FiX size={16} className="text-muted hover:text-primary" /></button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-secondary block mb-1.5">What did they say? (paste their exact reply)</label>
+                  <textarea
+                    value={replyText}
+                    onChange={e => setReplyText(e.target.value)}
+                    autoFocus
+                    rows={3}
+                    placeholder={'e.g. "Kal pakka de dunga bhai" or "Abhi mushkil hai, next week try karunga"'}
+                    className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2 focus:outline-none focus:border-accent resize-none placeholder-muted/50"
+                  />
+                </div>
+
+                {/* Live intent preview */}
+                {replyText.trim() && (() => {
+                  const preview = classifyIntent(replyText);
+                  return (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ background: `${preview.color}10`, borderColor: `${preview.color}30` }}>
+                      <span className="text-sm">{preview.label.split(" ")[0]}</span>
+                      <div>
+                        <p className="text-xs font-bold" style={{ color: preview.color }}>{preview.label.slice(2)}</p>
+                        <p className="text-2xs text-muted">AI classified intent</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="grid grid-cols-2 gap-2 text-2xs text-muted">
+                  <div>🟢 "Kal pakka dunga" → Promised</div>
+                  <div>🟡 "Try karunga" → Uncertain</div>
+                  <div>🔴 "Mushkil hai" → Uncertain</div>
+                  <div>⚫ No reply → No Response</div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button onClick={() => { setReplyLogs(prev => ({ ...prev, [replyModal.id]: { intent: "no_response", label: "⚫ No Reply", color: "#6B7280", text: "", date: new Date().toISOString() } })); setReplyModal(null); setReplyText(""); }}
+                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-surface-2 border border-border text-secondary hover:text-primary transition-all">
+                    ⚫ No Response
+                  </button>
+                  <button onClick={handleLogReply} disabled={!replyText.trim()}
+                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-accent text-white hover:bg-accent/90 transition-all disabled:opacity-50">
+                    Save Reply
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Existing Log Call Modal ── */}
         {logModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => setLogModal(null)}>
             <div className="bg-surface border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -328,12 +484,10 @@ export default function CollectionsPage() {
                 Message ({totalSelected})
               </button>
             )}
-            {/* Import Excel/CSV button */}
             <button onClick={() => setShowImport(true)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-2 border border-border text-secondary text-xs font-semibold hover:text-primary hover:border-accent/30 transition-all">
               <FiUpload size={13} /> Import Excel
             </button>
-            {/* CSV Upload */}
             <div className="relative">
               <input ref={fileRef} type="file" accept=".csv" className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }} />
@@ -350,15 +504,13 @@ export default function CollectionsPage() {
           </div>
         </div>
 
-        {/* Upload result message */}
         {uploadMsg && (
           <div className={`px-4 py-2.5 rounded-lg text-xs font-medium ${uploadMsg.startsWith("✓") ? "bg-success-dim text-success border border-success/20" : "bg-danger-dim text-danger border border-danger/20"}`}>
             {uploadMsg}
-            {" "}<a href="#" onClick={() => setUploadMsg("")} className="underline ml-2">Dismiss</a>
+            {" "}<button onClick={() => setUploadMsg("")} className="underline ml-2">Dismiss</button>
           </div>
         )}
 
-        {/* CSV format hint when no live data */}
         {!liveData && (
           <div className="bg-surface-2 border border-border rounded-lg px-4 py-3 text-xs text-secondary">
             <span className="font-semibold text-primary">CSV format:</span> customer_name, invoice_amount, invoice_date, payment_status
@@ -427,75 +579,111 @@ export default function CollectionsPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((c, i) => (
-                  <tr key={c.id} style={{ animationDelay: `${i * 30}ms` }} className="animate-row-in">
-                    <td className="px-5 py-3.5">
-                      <input type="checkbox" className="accent-accent"
-                        checked={selected.includes(c.id)}
-                        onChange={() => setSelected((s) => s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id])} />
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-surface-2 border border-border flex items-center justify-center text-xs font-bold text-secondary shrink-0">
-                          {c.name.charAt(0)}
+                {rows.map((c, i) => {
+                  const reply = replyLogs[c.id];
+                  const broken = isPromiseBroken(c.id);
+                  const nudgeMsg = broken ? getPromiseNudgeMsg(c) : "";
+                  return (
+                    <tr key={c.id} style={{ animationDelay: `${i * 30}ms` }} className="animate-row-in">
+                      <td className="px-5 py-3.5">
+                        <input type="checkbox" className="accent-accent"
+                          checked={selected.includes(c.id)}
+                          onChange={() => setSelected((s) => s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id])} />
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-surface-2 border border-border flex items-center justify-center text-xs font-bold text-secondary shrink-0">
+                            {c.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-primary text-xs">{c.name}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              <p className="text-2xs text-muted">{c.industry} · {c.contact}</p>
+                              {/* Feature 2: Reply intent badge */}
+                              {reply && (
+                                <span className="text-2xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: `${reply.color}20`, color: reply.color }}>
+                                  {reply.label}
+                                </span>
+                              )}
+                              {/* Feature 3: Promise broken badge */}
+                              {broken && (
+                                <span className="text-2xs font-bold px-1.5 py-0.5 rounded-full bg-danger/15 text-danger">
+                                  ⚠️ Promise Broken
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold text-primary text-xs">{c.name}</p>
-                          <p className="text-2xs text-muted">{c.industry} · {c.contact}</p>
+                      </td>
+                      <td className="px-4 py-3.5 text-right">
+                        <span className="metric-value text-sm text-primary">{fmt(c.outstanding)}</span>
+                      </td>
+                      <td className="px-4 py-3.5 text-right hidden sm:table-cell">
+                        <Badge variant={c.daysOverdue > 45 ? "danger" : c.daysOverdue > 30 ? "warning" : "default"}>
+                          {c.daysOverdue}d
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3.5 hidden md:table-cell">
+                        <div className="flex items-center gap-2">
+                          <div className="score-bar-track">
+                            <div className="score-bar-fill" style={{ width: `${c.score}%`, background: SCORE_COLOR(c.score) }} />
+                          </div>
+                          <span className="metric-value text-xs font-semibold" style={{ color: SCORE_COLOR(c.score) }}>
+                            {c.score}%
+                          </span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 text-right">
-                      <span className="metric-value text-sm text-primary">{fmt(c.outstanding)}</span>
-                    </td>
-                    <td className="px-4 py-3.5 text-right hidden sm:table-cell">
-                      <Badge variant={c.daysOverdue > 45 ? "danger" : c.daysOverdue > 30 ? "warning" : "default"}>
-                        {c.daysOverdue}d
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3.5 hidden md:table-cell">
-                      <div className="flex items-center gap-2">
-                        <div className="score-bar-track">
-                          <div className="score-bar-fill" style={{ width: `${c.score}%`, background: SCORE_COLOR(c.score) }} />
+                      </td>
+                      <td className="px-4 py-3.5 text-center hidden lg:table-cell">
+                        <Badge variant={STATUS_VARIANT[c.status]}>{c.status}</Badge>
+                      </td>
+                      <td className="px-4 py-3.5 text-right text-xs text-muted hidden xl:table-cell">{c.lastContact}</td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-1 justify-end flex-wrap">
+                          {/* Feature 3: Promise broken → WA nudge button */}
+                          {broken ? (
+                            <a
+                              href={`https://wa.me/91${c.contact}?text=${encodeURIComponent(nudgeMsg)}`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2 py-1.5 text-2xs font-bold rounded-lg bg-danger/15 text-danger border border-danger/30 hover:bg-danger hover:text-white transition-all">
+                              ⚠️ Nudge
+                            </a>
+                          ) : (
+                            <a href={`https://wa.me/91${c.contact}`} target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-semibold rounded-lg bg-success-dim text-success border border-success/25 hover:bg-success hover:text-white transition-all">
+                              <FiMessageSquare size={11} />
+                              <span className="hidden sm:inline">WA</span>
+                            </a>
+                          )}
+                          <button
+                            onClick={() => handleMarkPaid(c)}
+                            disabled={markingPaid === c.id}
+                            title="Mark as Paid"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-success hover:text-white hover:border-success transition-all disabled:opacity-50">
+                            {markingPaid === c.id ? <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> : <FiCheckSquare size={11} />}
+                          </button>
+                          <button
+                            onClick={() => { setLogModal(c); setCallForm({ did_pick_up: true, promised_date: "", notes: "" }); }}
+                            title="Log Call"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-accent hover:text-white hover:border-accent transition-all">
+                            <FiPhone size={11} />
+                          </button>
+                          {/* Feature 2: Log Reply button */}
+                          <button
+                            onClick={() => { setReplyModal(c); setReplyText(""); }}
+                            title="Log customer reply"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-surface-3 hover:text-primary transition-all">
+                            <FiMessageCircle size={11} />
+                          </button>
+                          <button onClick={() => handlePayLink(c)}
+                            disabled={payLinkLoading === (invoiceIds[c.id] ?? `demo-${c.id}`)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-success-dim border border-success/20 text-success text-2xs font-bold hover:bg-success hover:text-white transition-all disabled:opacity-50">
+                            {payLinkLoading === (invoiceIds[c.id] ?? `demo-${c.id}`) ? <span className="w-3 h-3 border border-success border-t-transparent rounded-full animate-spin" /> : "₹"} Pay Link
+                          </button>
                         </div>
-                        <span className="metric-value text-xs font-semibold" style={{ color: SCORE_COLOR(c.score) }}>
-                          {c.score}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 text-center hidden lg:table-cell">
-                      <Badge variant={STATUS_VARIANT[c.status]}>{c.status}</Badge>
-                    </td>
-                    <td className="px-4 py-3.5 text-right text-xs text-muted hidden xl:table-cell">{c.lastContact}</td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-1.5 justify-end">
-                        <a href={`https://wa.me/91${c.contact}`} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-semibold rounded-lg bg-success-dim text-success border border-success/25 hover:bg-success hover:text-white transition-all">
-                          <FiMessageSquare size={11} />
-                          <span className="hidden sm:inline">WA</span>
-                        </a>
-                        <button
-                          onClick={() => handleMarkPaid(c.id)}
-                          disabled={markingPaid === c.id}
-                          title="Mark as Paid"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-success hover:text-white hover:border-success transition-all disabled:opacity-50">
-                          <FiCheckSquare size={11} />
-                        </button>
-                        <button
-                          onClick={() => { setLogModal(c); setCallForm({ did_pick_up: true, promised_date: "", notes: "" }); }}
-                          title="Log Call"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-accent hover:text-white hover:border-accent transition-all">
-                          <FiPhone size={11} />
-                        </button>
-                        <button onClick={() => handlePayLink(c)}
-                          disabled={payLinkLoading === (invoiceIds[c.id] ?? `demo-${c.id}`)}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-success-dim border border-success/20 text-success text-2xs font-bold hover:bg-success hover:text-white transition-all disabled:opacity-50">
-                          {payLinkLoading === (invoiceIds[c.id] ?? `demo-${c.id}`) ? <span className="w-3 h-3 border border-success border-t-transparent rounded-full animate-spin" /> : "₹"} Pay Link
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -510,13 +698,13 @@ export default function CollectionsPage() {
         </div>
       </div>
 
-      {/* Import modal */}
+      {/* ── Feature 5: Import modal with Tally guide ── */}
       {showImport && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md bg-surface-1 border border-border rounded-2xl p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between">
               <p className="text-sm font-bold text-primary">Import Excel / CSV</p>
-              <button onClick={() => { setShowImport(false); setImportMsg(""); }} className="text-muted hover:text-primary">
+              <button onClick={() => { setShowImport(false); setImportMsg(""); setShowTallyGuide(false); }} className="text-muted hover:text-primary">
                 <FiX size={16} />
               </button>
             </div>
@@ -530,8 +718,46 @@ export default function CollectionsPage() {
               <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
                 onChange={e => e.target.files?.[0] && handleImportFile(e.target.files[0])} />
             </div>
+
+            {/* Tally Guide toggle */}
+            <button onClick={() => setShowTallyGuide(v => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-surface-2 border border-border hover:border-accent/30 transition-all text-left">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🏦</span>
+                <div>
+                  <p className="text-xs font-bold text-primary">Using Tally? Export in 3 steps</p>
+                  <p className="text-2xs text-muted">Tally Prime / ERP 9 → Outstanding Reports</p>
+                </div>
+              </div>
+              <span className="text-muted text-xs">{showTallyGuide ? "▲" : "▼"}</span>
+            </button>
+
+            {showTallyGuide && (
+              <div className="p-4 bg-surface-2 border border-border rounded-xl space-y-3">
+                <p className="text-xs font-bold text-accent uppercase tracking-wider">Tally Export Guide</p>
+                {[
+                  { step: "1", icon: "📂", title: "Go to Reports", desc: "Gateway → Display → Statements of Accounts → Outstandings → Receivables" },
+                  { step: "2", icon: "📊", title: "Export to Excel", desc: "Set date range to current. Press Alt+E or click Export button. Choose Excel format." },
+                  { step: "3", icon: "⬆️", title: "Upload above", desc: "Drop that Excel file in the box above. Vantro auto-detects columns — no formatting needed." },
+                ].map(({ step, icon, title, desc }) => (
+                  <div key={step} className="flex gap-3">
+                    <div className="w-6 h-6 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-2xs font-black text-accent">{step}</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-primary">{icon} {title}</p>
+                      <p className="text-2xs text-muted mt-0.5 leading-relaxed">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+                <div className="p-2.5 bg-warning/10 border border-warning/30 rounded-lg">
+                  <p className="text-2xs text-warning font-medium">💡 Tip: "Ledger Outstanding" report works best. Any format is accepted — Vantro reads it all.</p>
+                </div>
+              </div>
+            )}
+
             {importMsg && (
-              <p className={`text-sm text-center font-medium ${importMsg.startsWith("✅") ? "text-success" : "text-danger"}`}>{importMsg}</p>
+              <p className={`text-sm text-center font-medium ${importMsg.includes("success") ? "text-success" : "text-danger"}`}>{importMsg}</p>
             )}
             <p className="text-2xs text-muted text-center">Works with Tally exports, Excel sheets, any CSV format</p>
           </div>

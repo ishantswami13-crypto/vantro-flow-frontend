@@ -6,7 +6,7 @@ import { api, getUser } from "@/lib/api";
 import {
   FiZap, FiArrowRight, FiCheck, FiUpload, FiUser,
   FiMapPin, FiRefreshCw, FiPlus, FiTrash2, FiPhone,
-  FiClipboard, FiAlertCircle,
+  FiAlertCircle,
 } from "react-icons/fi";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
