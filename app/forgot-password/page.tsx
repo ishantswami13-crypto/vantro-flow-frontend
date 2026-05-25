@@ -130,8 +130,8 @@ export default function ForgotPasswordPage() {
 
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent">
-            <FiZap size={17} className="text-white" />
+          <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm">
+            <FiZap size={17} className="text-black" />
           </div>
           <div>
             <p className="font-bold text-base text-primary leading-none tracking-tight">Vantro</p>

@@ -500,8 +500,8 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent">
-            <FiZap size={17} className="text-white" />
+          <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm">
+            <FiZap size={17} className="text-black" />
           </div>
           <span className="font-bold text-lg tracking-tight">Vantro Flow</span>
         </div>

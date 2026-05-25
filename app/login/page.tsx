@@ -72,8 +72,8 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-9 h-9 bg-gradient-accent rounded-xl flex items-center justify-center shadow-button-accent">
-            <FiZap size={17} className="text-white" />
+          <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm">
+            <FiZap size={17} className="text-black" />
           </div>
           <div>
             <p className="font-bold text-base text-primary leading-none tracking-tight">Vantro</p>
