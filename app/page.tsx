@@ -75,7 +75,7 @@ const HOW_IT_WORKS = [
 
 const FAQS = [
   {
-    q: "What counts as 'collected via Vantro' in Model B?",
+    q: "What counts as 'collected via Vantro' in the Success plan?",
     a: "Any payment where the customer clicked a UPI/Razorpay link sent from Vantro, or confirmed payment after a Vantro WhatsApp reminder. Manual payments you track yourself are not counted.",
   },
   {

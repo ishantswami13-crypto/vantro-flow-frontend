@@ -136,7 +136,7 @@ export default function CRMPage() {
             <p className="text-sm text-secondary mt-0.5">Track leads, trials, and customer conversions</p>
           </div>
           <button onClick={openAdd}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-accent-hover transition-all shadow-button-accent self-start sm:self-auto">
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-all shadow-button-accent self-start sm:self-auto">
             <FiPlus size={14} /> Add Prospect
           </button>
         </div>
@@ -279,7 +279,7 @@ export default function CRMPage() {
             </p>
             {prospects.length === 0 && (
               <button onClick={openAdd}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-xs font-semibold hover:bg-accent-hover transition-all">
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-xs font-semibold hover:bg-white/90 transition-all">
                 <FiPlus size={13} /> Add First Prospect
               </button>
             )}
@@ -359,7 +359,7 @@ export default function CRMPage() {
                     Cancel
                   </button>
                   <button type="submit" disabled={saving}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-white text-black hover:bg-accent-hover disabled:opacity-60 transition-all shadow-button-accent flex items-center justify-center gap-2">
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-white text-black hover:bg-white/90 disabled:opacity-60 transition-all shadow-button-accent flex items-center justify-center gap-2">
                     {saving ? <><FiLoader size={13} className="animate-spin" /> Saving…</> : <><FiCheck size={13} /> {editId ? "Update" : "Add Prospect"}</>}
                   </button>
                 </div>

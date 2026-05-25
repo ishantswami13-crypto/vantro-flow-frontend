@@ -299,7 +299,7 @@ export default function BankPage() {
               <FiPlus size={14} /> Add Transaction
             </button>
             <button onClick={() => setShowAddAccount(true)}
-              className="flex items-center gap-1.5 bg-white text-black px-4 py-2.5 rounded-xl text-sm font-bold shadow-button-accent hover:bg-accent/90 transition-colors">
+              className="flex items-center gap-1.5 bg-white text-black px-4 py-2.5 rounded-xl text-sm font-bold shadow-button-accent hover:bg-white/90 transition-colors">
               <FiLink size={14} /> Connect Account
             </button>
           </div>
@@ -402,7 +402,7 @@ export default function BankPage() {
               <button onClick={() => { setParsedRows([]); setImportAcct(null); }}
                 className="flex-1 py-2.5 rounded-xl bg-surface-2 text-secondary text-sm font-semibold">Cancel</button>
               <button onClick={importRows} disabled={importing || parsedRows.filter(r => r.selected).length === 0}
-                className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-accent/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-white/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                 {importing ? <><FiRefreshCw size={13} className="animate-spin" /> Importing...</> : <><FiUpload size={13} /> Import {parsedRows.filter(r => r.selected).length} Transactions</>}
               </button>
             </div>
@@ -593,7 +593,7 @@ export default function BankPage() {
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowAddAccount(false)} className="flex-1 py-2.5 rounded-xl bg-surface-2 text-secondary text-sm font-semibold">Cancel</button>
                 <button type="submit" disabled={addingAcct || !acctForm.bank_name}
-                  className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-accent/90 disabled:opacity-50 transition-colors">
+                  className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-white/90 disabled:opacity-50 transition-colors">
                   {addingAcct ? "Saving..." : "Connect Account"}
                 </button>
               </div>
@@ -651,7 +651,7 @@ export default function BankPage() {
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowAdd(false)} className="flex-1 py-2.5 rounded-xl bg-surface-2 text-secondary text-sm font-semibold">Cancel</button>
                 <button type="submit" disabled={saving || !addForm.amount}
-                  className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-accent/90 disabled:opacity-50 transition-colors">
+                  className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-white/90 disabled:opacity-50 transition-colors">
                   {saving ? "Saving..." : "Add"}
                 </button>
               </div>

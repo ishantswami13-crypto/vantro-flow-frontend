@@ -61,7 +61,7 @@ const config: Config = {
         "glow-success":"0 0 20px rgba(16,217,138,0.15)",
         "inner-top":   "inset 0 1px 0 rgba(255,255,255,0.06)",
         "button":      "0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
-        "button-accent":"0 1px 3px rgba(0,66,255,0.5), 0 4px 16px rgba(0,102,255,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+        "button-accent":"0 1px 3px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08)",
       },
       keyframes: {
         "fade-in": {

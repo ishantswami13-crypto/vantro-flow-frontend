@@ -201,7 +201,7 @@ export default function MyIdPage() {
               {copied ? "Copied!" : "Copy"}
             </button>
             <button onClick={shareLink}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white text-black text-xs font-semibold hover:bg-accent/90 transition-all shrink-0 shadow-button-accent">
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white text-black text-xs font-semibold hover:bg-white/90 transition-all shrink-0 shadow-button-accent">
               <FiShare2 size={13} />
               Share
             </button>

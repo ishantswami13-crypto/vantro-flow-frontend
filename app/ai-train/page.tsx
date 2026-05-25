@@ -180,7 +180,7 @@ export default function AITrainPage() {
                         className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent/50" />
                     </div>
                     <button type="submit" disabled={addingVocab}
-                      className="flex items-center gap-1.5 bg-white text-black px-4 py-2 rounded-xl text-sm font-bold hover:bg-accent/90 disabled:opacity-50 transition-colors">
+                      className="flex items-center gap-1.5 bg-white text-black px-4 py-2 rounded-xl text-sm font-bold hover:bg-white/90 disabled:opacity-50 transition-colors">
                       {addingVocab ? <FiRefreshCw className="animate-spin" size={12} /> : <FiPlus size={12} />} Add Term
                     </button>
                   </form>
@@ -285,7 +285,7 @@ export default function AITrainPage() {
                       <p className="text-2xs text-muted mt-0.5">+E.164 format — e.g. +14155552671</p>
                     </div>
                     <button type="submit" disabled={savingTwilio || !twilioForm.account_sid || !twilioForm.auth_token || !twilioForm.phone_number}
-                      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40 ${twilioSaved ? "bg-success/20 text-success border border-success/30" : "bg-white text-black shadow-button-accent hover:bg-accent/90"}`}>
+                      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40 ${twilioSaved ? "bg-success/20 text-success border border-success/30" : "bg-white text-black shadow-button-accent hover:bg-white/90"}`}>
                       {twilioSaved ? <><FiCheck size={14} /> Saved! Calling Active</> : savingTwilio ? <><FiRefreshCw size={13} className="animate-spin" /> Saving…</> : <><FiSave size={14} /> Save & Activate</>}
                     </button>
                   </form>
