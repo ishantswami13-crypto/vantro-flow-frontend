@@ -177,7 +177,7 @@ export default function DashboardPage() {
     api.settings.get().then(d => {
       const s = d.settings;
       setGuideData({
-        waConnected: !!(s.interakt_api_key || s.wati_api_url),
+        waConnected: true, // Vantro AutoPilot — always active via Twilio
         autoEnabled: !!s.automation_enabled,
       });
     }).catch(() => {});
