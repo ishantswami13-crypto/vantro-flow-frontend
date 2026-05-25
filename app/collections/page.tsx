@@ -11,8 +11,9 @@ import {
   FiSearch, FiMessageSquare, FiCheckSquare,
   FiDownload, FiArrowUp, FiArrowDown, FiPhone,
   FiUpload, FiX, FiCopy, FiMessageCircle, FiSend,
-  FiZap, FiPlus,
+  FiZap, FiPlus, FiEye,
 } from "react-icons/fi";
+import { useRouter } from "next/navigation";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -97,6 +98,7 @@ const STATUS_VARIANT: Record<string, "danger" | "warning" | "default"> = {
 };
 
 export default function CollectionsPage() {
+  const router = useRouter();
   const [search, setSearch]           = useState("");
   const [sortKey, setSortKey]         = useState<SortKey>("daysOverdue");
   const [sortDir, setSortDir]         = useState<"asc" | "desc">("desc");
@@ -849,6 +851,16 @@ export default function CollectionsPage() {
                               <FiMessageSquare size={11} />
                               <span className="hidden sm:inline">WA</span>
                             </a>
+                          )}
+
+                          {/* ── View Invoice ── */}
+                          {c.invoiceId && (
+                            <button
+                              onClick={() => router.push(`/invoice/${c.invoiceId}`)}
+                              title="View & print invoice"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-surface-3 hover:text-primary transition-all">
+                              <FiEye size={11} />
+                            </button>
                           )}
 
                           {/* ── One-click send reminder ── */}

@@ -51,7 +51,7 @@ export default function NewInvoicePage() {
 
   // UI state
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState<{ invoice_number: string; wa_sent?: boolean } | null>(null);
+  const [success, setSuccess] = useState<{ invoice_number: string; invoice_id?: string; wa_sent?: boolean } | null>(null);
   const [error, setError] = useState("");
   const [autoEnabled, setAutoEnabled] = useState(false);
 
@@ -105,7 +105,7 @@ export default function NewInvoicePage() {
       });
       const d = await res.json();
       if (!res.ok || !d.success) throw new Error(d.error || "Failed to create invoice");
-      setSuccess({ invoice_number: d.invoice_number });
+      setSuccess({ invoice_number: d.invoice_number, invoice_id: d.invoice?.id });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -132,6 +132,13 @@ export default function NewInvoicePage() {
                 : "Invoice saved. Go to Collections to send a reminder manually."}
             </p>
             <div className="flex flex-col gap-3">
+              {success.invoice_id && (
+                <button
+                  onClick={() => router.push(`/invoice/${success.invoice_id}`)}
+                  className="w-full py-3 rounded-xl bg-surface-2 border border-accent/30 text-accent font-bold text-sm hover:bg-accent hover:text-white transition-all flex items-center justify-center gap-2">
+                  👁 View &amp; Print Invoice
+                </button>
+              )}
               <button
                 onClick={() => { setSuccess(null); setCustomerName(""); setCustomerPhone(""); setCustomerEmail(""); setNotes(""); setItems([{ id: uid(), name: "", qty: "1", unit: "unit", rate: "" }]); }}
                 className="w-full py-3 rounded-xl bg-accent text-white font-bold text-sm hover:bg-accent/90 transition-all">

@@ -46,15 +46,18 @@ export const api = {
   // ─── Invoices / Collections ─────────────────────────────
   invoices: {
     list: (userId: string) => request<{ invoices: Invoice[]; summary: Summary }>(`/api/invoices/${userId}`),
+    get: (invoiceId: string) => request<{ success: boolean; invoice: InvoiceDetail; business: BusinessProfile }>(`/api/invoice/${invoiceId}`),
     create: (body: {
       customer_name: string;
       customer_phone?: string;
-      invoice_amount: number;
+      customer_email?: string;
+      invoice_amount?: number;
+      items?: { name: string; qty: number; unit: string; rate: number }[];
       invoice_date: string;
       due_date?: string;
       invoice_number?: string;
       notes?: string;
-    }) => request<{ success: boolean; invoice: Invoice }>('/api/invoices/create', { method: 'POST', body: JSON.stringify(body) }),
+    }) => request<{ success: boolean; invoice: Invoice; invoice_number: string }>('/api/invoices/create', { method: 'POST', body: JSON.stringify(body) }),
     markPaid: (invoiceId: string, body: object) =>
       request<{ invoice: Invoice }>('/api/mark-paid', { method: 'POST', body: JSON.stringify({ invoice_id: invoiceId, ...body }) }),
     migrate: () => request<{ success: boolean; message: string }>('/api/invoices/migrate', { method: 'POST' }),
@@ -240,21 +243,46 @@ export interface Invoice {
   user_id: string;
   customer_name: string;
   customer_phone?: string;
+  customer_email?: string;
   invoice_amount: number;
+  invoice_number?: string;
   payment_status: 'Pending' | 'Paid';
   days_overdue: number;
   invoice_date: string;
+  due_date?: string;
   payment_date?: string;
   payment_amount?: number;
   payment_method?: string;
   priority_score?: number;
   urgency?: string;
+  notes?: string;
   // Reminder tracking
   payment_link?: string;
   payment_link_id?: string;
   last_reminder_sent?: string;
   reminder_count?: number;
   snooze_until?: string;
+}
+
+export interface InvoiceLineItem {
+  name: string;
+  qty: number;
+  unit: string;
+  rate: number;
+  amount: number;
+}
+
+export interface InvoiceDetail extends Invoice {
+  items?: InvoiceLineItem[] | null;
+}
+
+export interface BusinessProfile {
+  business_name?: string;
+  gstin?: string;
+  business_address?: string;
+  city?: string;
+  upi_id?: string;
+  invoice_prefix?: string;
 }
 
 export interface Metrics {
