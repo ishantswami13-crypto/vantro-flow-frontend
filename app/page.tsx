@@ -102,8 +102,9 @@ const SOCIAL_PROOF = [
   { name: "Amit Gupta",    title: "MD, Gupta Construction · Pune",              quote: "Finally something built for Indian business reality. The Tally sync works perfectly and the cash forecast saved us from a serious crunch.",                             avatar: "AG" },
 ];
 
-const MODEL_A = ["14-day free trial", "Up to 500 customers", "WhatsApp messaging", "AI priority scoring", "Cash flow forecast", "Tally sync", "Email & chat support"];
-const MODEL_B = ["Everything in Model A", "Unlimited customers", "Dedicated account manager", "Custom WhatsApp templates", "Team management", "API access", "Priority 24/7 support"];
+const PLAN_FREE    = ["5 invoices/month", "Manual WhatsApp messages", "Basic collections dashboard", "CSV import"];
+const PLAN_PRO     = ["Unlimited invoices", "WhatsApp auto-reminders", "Razorpay payment links", "AI priority scoring", "Cash flow forecast", "Tally ERP sync", "Auto dunning & snooze"];
+const PLAN_SUCCESS = ["Everything in Pro", "No monthly fee — ever", "1.5% only on what Vantro collects", "Auto-calls (Twilio AI voice)", "Dedicated account manager", "API access + webhooks", "Priority 24/7 support"];
 
 const WA_NUMBER = "919911164055";
 
@@ -444,72 +445,72 @@ export default function LandingPage() {
 
       {/* ── PRICING ─────────────────────────────────────────── */}
       <section id="pricing" className="py-20 bg-surface-1 border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
 
           {/* Header */}
           <div className="text-center mb-14">
             <span className="inline-block text-2xs font-bold tracking-[0.15em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">Pricing</span>
             <h2 className="text-4xl sm:text-5xl font-black text-primary mb-4 tracking-tight leading-tight">
-              Pay for what you collect.<br className="hidden sm:block" />
-              <span className="text-secondary font-light"> Or pay flat. Your call.</span>
+              Start free. Scale on results.<br className="hidden sm:block" />
+              <span className="text-secondary font-light"> Pay only when you get paid.</span>
             </h2>
-            <p className="text-secondary text-base max-w-xl mx-auto">Both plans include every feature. Zero hidden fees. Cancel anytime.</p>
+            <p className="text-secondary text-base max-w-xl mx-auto">Three tiers. Every feature included. Zero hidden fees. No lock-in.</p>
           </div>
 
-          {/* Cards */}
-          <div className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+          {/* Cards — 3 tiers */}
+          <div className="grid sm:grid-cols-3 gap-4 max-w-5xl mx-auto">
 
-            {/* Model A — SaaS */}
-            <div className="relative rounded-2xl border border-border bg-bg p-8 flex flex-col hover:border-white/20 transition-all duration-300">
-              <div className="mb-8">
-                <p className="text-2xs font-bold tracking-[0.12em] uppercase text-muted mb-4">Model A — SaaS</p>
+            {/* Free */}
+            <div className="relative rounded-2xl border border-border bg-bg p-7 flex flex-col hover:border-white/15 transition-all duration-300">
+              <div className="mb-7">
+                <p className="text-2xs font-bold tracking-[0.12em] uppercase text-muted mb-3">Free</p>
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-5xl font-black text-primary tracking-tight">₹1,999</span>
-                  <span className="text-muted text-sm ml-1">/month</span>
+                  <span className="text-5xl font-black text-primary tracking-tight">₹0</span>
+                  <span className="text-muted text-sm ml-1">/forever</span>
                 </div>
-                <p className="text-xs text-muted mt-2">Flat fee. Budget it once. Zero surprises.</p>
+                <p className="text-xs text-muted mt-2">Start tracking. No credit card.</p>
               </div>
 
-              <div className="h-px bg-border mb-7" />
+              <div className="h-px bg-border mb-6" />
 
-              <ul className="space-y-3.5 mb-8 flex-1">
-                {MODEL_A.map((f) => (
+              <ul className="space-y-3 mb-7 flex-1">
+                {PLAN_FREE.map((f) => (
                   <li key={f} className="flex items-center gap-3 text-sm text-secondary">
-                    <span className="w-4 h-4 rounded-full border border-success/40 bg-success/10 flex items-center justify-center shrink-0">
-                      <FiCheck size={10} className="text-success" />
+                    <span className="w-4 h-4 rounded-full border border-white/15 flex items-center justify-center shrink-0">
+                      <FiCheck size={10} className="text-white/60" />
                     </span>
                     {f}
                   </li>
                 ))}
               </ul>
 
-              <Link href="/signup?plan=saas"
-                className="block text-center py-3.5 rounded-xl text-sm font-bold text-primary bg-surface-2 border border-border hover:bg-surface-3 hover:border-white/20 transition-all">
-                Start 14-Day Free Trial
+              <Link href="/signup?plan=free"
+                className="block text-center py-3 rounded-xl text-sm font-bold text-secondary bg-surface-2 border border-border hover:border-white/20 hover:text-primary transition-all">
+                Get Started Free
               </Link>
             </div>
 
-            {/* Model B — Hybrid (highlighted) */}
-            <div className="relative rounded-2xl bg-white p-8 flex flex-col shadow-2xl">
+            {/* Pro — highlighted (white card) */}
+            <div className="relative rounded-2xl bg-white p-7 flex flex-col shadow-2xl">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                 <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-2xs font-black tracking-widest uppercase text-white bg-black shadow-lg">
                   ★ Most Popular
                 </span>
               </div>
 
-              <div className="mb-8">
-                <p className="text-2xs font-bold tracking-[0.12em] uppercase text-black/40 mb-4">Model B — Hybrid</p>
+              <div className="mb-7">
+                <p className="text-2xs font-bold tracking-[0.12em] uppercase text-black/40 mb-3">Pro</p>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-5xl font-black text-black tracking-tight">₹999</span>
-                  <span className="text-black/50 text-sm ml-1">/mo + 1%</span>
+                  <span className="text-black/50 text-sm ml-1">/month</span>
                 </div>
-                <p className="text-xs text-black/50 mt-2">Low base. 1% only on what Vantro actually collects.</p>
+                <p className="text-xs text-black/50 mt-2">Full automation. Flat fee. Zero surprises.</p>
               </div>
 
-              <div className="h-px bg-black/10 mb-7" />
+              <div className="h-px bg-black/10 mb-6" />
 
-              <ul className="space-y-3.5 mb-8 flex-1">
-                {MODEL_B.map((f) => (
+              <ul className="space-y-3 mb-7 flex-1">
+                {PLAN_PRO.map((f) => (
                   <li key={f} className="flex items-center gap-3 text-sm text-black/70">
                     <span className="w-4 h-4 rounded-full bg-black flex items-center justify-center shrink-0">
                       <FiCheck size={9} className="text-white" />
@@ -519,17 +520,47 @@ export default function LandingPage() {
                 ))}
               </ul>
 
-              <Link href="/signup?plan=hybrid"
-                className="block text-center py-3.5 rounded-xl text-sm font-black text-white bg-black hover:bg-black/85 transition-all">
+              <Link href="/signup?plan=pro"
+                className="block text-center py-3 rounded-xl text-sm font-black text-white bg-black hover:bg-black/85 transition-all">
                 Start 14-Day Free Trial
+              </Link>
+            </div>
+
+            {/* Success — dark card */}
+            <div className="relative rounded-2xl border border-white/10 bg-surface-1 p-7 flex flex-col hover:border-white/20 transition-all duration-300">
+              <div className="mb-7">
+                <p className="text-2xs font-bold tracking-[0.12em] uppercase text-muted mb-3">Success</p>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-5xl font-black text-primary tracking-tight">₹0</span>
+                  <span className="text-muted text-sm ml-1">/mo + 1.5%</span>
+                </div>
+                <p className="text-xs text-muted mt-2">Pay only when Vantro collects for you.</p>
+              </div>
+
+              <div className="h-px bg-border mb-6" />
+
+              <ul className="space-y-3 mb-7 flex-1">
+                {PLAN_SUCCESS.map((f) => (
+                  <li key={f} className="flex items-center gap-3 text-sm text-secondary">
+                    <span className="w-4 h-4 rounded-full border border-white/20 flex items-center justify-center shrink-0">
+                      <FiCheck size={10} className="text-white/70" />
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <Link href="/signup?plan=success"
+                className="block text-center py-3 rounded-xl text-sm font-bold text-primary border border-white/20 hover:bg-white/5 hover:border-white/30 transition-all">
+                Start for Free → Pay from Results
               </Link>
             </div>
           </div>
 
           {/* Bottom note */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10 text-xs text-muted">
-            <span className="flex items-center gap-1.5"><FiCheck size={12} className="text-success" /> No credit card required</span>
-            <span className="flex items-center gap-1.5"><FiCheck size={12} className="text-success" /> 14-day free trial on both plans</span>
+            <span className="flex items-center gap-1.5"><FiCheck size={12} className="text-success" /> No credit card ever required on Free &amp; Success</span>
+            <span className="flex items-center gap-1.5"><FiCheck size={12} className="text-success" /> 14-day free trial on Pro</span>
             <span className="flex items-center gap-1.5"><FiCheck size={12} className="text-success" /> Cancel anytime, no lock-in</span>
           </div>
         </div>
