@@ -16,6 +16,8 @@ export function enableDemoMode() {
     gstin: "07AABCU9603R1ZX",
   }));
   localStorage.setItem("vantro_industry", "trading");
+  // Set cookie so middleware lets demo users through to protected routes
+  document.cookie = `vantro_token=${DEMO_TOKEN}; path=/; max-age=3600; SameSite=Lax`;
 }
 
 export function isDemoMode(): boolean {
@@ -28,4 +30,6 @@ export function exitDemoMode() {
   localStorage.removeItem("vantro_demo");
   localStorage.removeItem("vantro_token");
   localStorage.removeItem("vantro_user");
+  // Clear the demo cookie
+  document.cookie = "vantro_token=; path=/; max-age=0; SameSite=Lax";
 }
