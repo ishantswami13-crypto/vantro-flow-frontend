@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_PATHS = ['/login', '/signup', '/onboarding'];
 const ALWAYS_PUBLIC = ['/', '/login', '/signup', '/onboarding'];
 
 const PROTECTED = [
