@@ -294,7 +294,7 @@ function SignupForm() {
       amount_stuck:  form.amount_stuck,
     });
     posthog.capture("user_signed_up", { plan: form.plan, business_type: form.business_type });
-    router.push("/onboarding");
+    router.push("/dashboard");
   };
 
   // Show OTP step
