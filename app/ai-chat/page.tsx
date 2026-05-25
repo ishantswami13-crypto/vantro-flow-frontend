@@ -515,11 +515,11 @@ export default function AIFounderPage() {
             <button key={key} onClick={() => setTab(key)}
               className={[
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-                tab === key ? "bg-accent text-white shadow-button-accent" : "text-secondary hover:text-primary",
+                tab === key ? "bg-white text-black" : "text-secondary hover:text-primary",
               ].join(" ")}>
               <Icon size={12} /> {label}
               {key === "callcenter" && (
-                <span className="ml-0.5 text-2xs px-1 py-0 rounded-full bg-white/20 font-mono">
+                <span className="ml-0.5 text-2xs px-1 py-0 rounded-full bg-black/10 font-mono">
                   AI
                 </span>
               )}

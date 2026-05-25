@@ -141,7 +141,7 @@ export default function NewInvoicePage() {
               )}
               <button
                 onClick={() => { setSuccess(null); setCustomerName(""); setCustomerPhone(""); setCustomerEmail(""); setNotes(""); setItems([{ id: uid(), name: "", qty: "1", unit: "unit", rate: "" }]); }}
-                className="w-full py-3 rounded-xl bg-accent text-white font-bold text-sm hover:bg-accent/90 transition-all">
+                className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 transition-all shadow-sm">
                 Create Another Invoice
               </button>
               <button
@@ -356,7 +356,7 @@ export default function NewInvoicePage() {
           <button
             type="submit"
             disabled={loading || !customerName.trim() || !hasValidItems}
-            className="w-full py-4 rounded-xl bg-accent text-white font-black text-base hover:bg-accent/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-button-accent">
+            className="w-full py-4 rounded-xl bg-white text-black font-black text-base hover:bg-white/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
             {loading ? (
               <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Creating Invoice...</>
             ) : (

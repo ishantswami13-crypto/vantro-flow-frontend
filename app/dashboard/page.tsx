@@ -614,7 +614,7 @@ export default function DashboardPage() {
               Go to Collections and upload a CSV with your outstanding invoices. Vantro will prioritize who to call and generate WhatsApp messages automatically.
             </p>
             <Link href="/collections"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-all">
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-all shadow-sm">
               <FiUpload size={15} /> Upload Invoices
             </Link>
           </div>

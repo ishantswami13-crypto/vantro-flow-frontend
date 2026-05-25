@@ -339,7 +339,7 @@ export default function OnboardingPage() {
               </div>
             </div>
             <button onClick={proceed} disabled={!ownerName.trim()}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-accent text-white font-bold text-sm shadow-button-accent hover:opacity-90 transition-all disabled:opacity-40">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-bold text-sm shadow-sm hover:bg-white/90 transition-all disabled:opacity-40">
               Continue <FiArrowRight size={15} />
             </button>
           </div>
@@ -359,7 +359,7 @@ export default function OnboardingPage() {
               ))}
             </div>
             <button onClick={proceed} disabled={!bizType}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-accent text-white font-bold text-sm shadow-button-accent hover:opacity-90 transition-all disabled:opacity-40">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-bold text-sm shadow-sm hover:bg-white/90 transition-all disabled:opacity-40">
               Continue <FiArrowRight size={15} />
             </button>
           </div>
@@ -428,7 +428,7 @@ export default function OnboardingPage() {
             </div>
 
             <button onClick={proceed} disabled={!step2Valid}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-accent text-white font-bold text-sm shadow-button-accent hover:opacity-90 transition-all disabled:opacity-40">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-bold text-sm shadow-sm hover:bg-white/90 transition-all disabled:opacity-40">
               Activate My Features <FiArrowRight size={15} />
             </button>
           </div>
@@ -451,7 +451,7 @@ export default function OnboardingPage() {
               ] as const).map(({ id, label }) => (
                 <button key={id} onClick={() => setMode(id)}
                   className={["flex-1 py-2 rounded-lg text-xs font-semibold transition-all",
-                    mode === id ? "bg-accent text-white shadow-button-accent" : "text-secondary hover:text-primary",
+                    mode === id ? "bg-white text-black" : "text-secondary hover:text-primary",
                   ].join(" ")}>
                   {label}
                 </button>
@@ -623,7 +623,7 @@ export default function OnboardingPage() {
 
             <button onClick={proceed}
               disabled={loading || !canProceedStep3}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-accent text-white font-bold text-sm shadow-button-accent hover:opacity-90 transition-all disabled:opacity-40">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-bold text-sm shadow-sm hover:bg-white/90 transition-all disabled:opacity-40">
               {loading ? <FiRefreshCw size={15} className="animate-spin" /> : null}
               {loading ? "Processing..." : mode === "paste" && parsedEntries.length > 0 ? `Import ${parsedEntries.length} Customers →` : "Score My Customers →"}
             </button>
@@ -733,7 +733,7 @@ export default function OnboardingPage() {
             )}
 
             <button onClick={() => router.push("/dashboard")}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-accent text-white font-black text-base shadow-button-accent hover:opacity-90 transition-all">
+              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-white text-black font-black text-base shadow-sm hover:bg-white/90 transition-all">
               Open Dashboard <FiArrowRight size={16} />
             </button>
             <button onClick={() => router.push("/ai-chat")}

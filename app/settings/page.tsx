@@ -697,7 +697,7 @@ export default function SettingsPage() {
                       <p className="text-2xs text-muted">Set when and how reminders go out. Cron fires daily at 9 AM IST.</p>
                     </div>
                     <button onClick={() => setShowAddRule(v => !v)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent text-white text-xs font-bold hover:opacity-90 transition-all">
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 transition-all shadow-sm">
                       <FiPlus size={12} /> Add Rule
                     </button>
                   </div>
@@ -744,7 +744,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex gap-2">
                         <button onClick={handleAddRule} disabled={addingRule}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-white text-xs font-bold hover:opacity-90 transition-all disabled:opacity-60">
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 transition-all disabled:opacity-60 shadow-sm">
                           {addingRule ? <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" /> : <FiCheck size={12} />}
                           Save Rule
                         </button>

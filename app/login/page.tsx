@@ -118,7 +118,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <button type="submit" disabled={!emailValid}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-white font-bold text-sm shadow-button-accent hover:bg-accent/90 transition-all disabled:opacity-40">
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-black font-bold text-sm shadow-sm hover:bg-white/90 transition-all disabled:opacity-40">
                 Continue <FiArrowRight size={14} />
               </button>
             </form>
@@ -173,9 +173,9 @@ export default function LoginPage() {
               </label>
 
               <button type="submit" disabled={loading || !form.password}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-white font-bold text-sm shadow-button-accent hover:bg-accent/90 transition-all disabled:opacity-40">
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-black font-bold text-sm shadow-sm hover:bg-white/90 transition-all disabled:opacity-40">
                 {loading ? (
-                  <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Signing in…</>
+                  <><div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Signing in…</>
                 ) : (
                   <><FiZap size={14} /> Sign In</>
                 )}

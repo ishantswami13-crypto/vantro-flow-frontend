@@ -134,7 +134,7 @@ export default function DunningPage() {
             <p className="text-sm text-secondary mt-0.5">Auto-send reminders based on days overdue — set it and forget it</p>
           </div>
           <button onClick={() => { setForm({ ...EMPTY_FORM }); setError(""); setShowModal(true); }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent-hover transition-all shadow-button-accent self-start sm:self-auto">
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-all shadow-sm self-start sm:self-auto">
             <FiPlus size={14} /> New Rule
           </button>
         </div>
@@ -253,7 +253,7 @@ export default function DunningPage() {
               {(["gentle","firm","urgent"] as ToneType[]).map(t => (
                 <button key={t} onClick={() => setPreview(t)}
                   className={["px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all",
-                    preview === t ? "bg-accent text-white" : "text-muted hover:text-primary",
+                    preview === t ? "bg-white text-black" : "text-muted hover:text-primary",
                   ].join(" ")}>{t}</button>
               ))}
             </div>
@@ -323,7 +323,7 @@ export default function DunningPage() {
                     {(["gentle","firm","urgent"] as ToneType[]).map(t => (
                       <button key={t} type="button" onClick={() => setForm(f => ({ ...f, tone: t }))}
                         className={["flex-1 py-2 rounded-xl text-xs font-semibold capitalize border transition-all",
-                          form.tone === t ? "bg-accent text-white border-accent" : "text-muted border-border hover:text-primary",
+                          form.tone === t ? "bg-white text-black border-white/20" : "text-muted border-border hover:text-primary",
                         ].join(" ")}>{t}</button>
                     ))}
                   </div>
@@ -334,7 +334,7 @@ export default function DunningPage() {
                     Cancel
                   </button>
                   <button type="submit" disabled={saving}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-accent text-white hover:bg-accent-hover disabled:opacity-60 transition-all shadow-button-accent flex items-center justify-center gap-2">
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-white text-black hover:bg-white/90 disabled:opacity-60 transition-all shadow-sm flex items-center justify-center gap-2">
                     {saving ? <><FiLoader size={13} className="animate-spin" /> Saving…</> : <><FiCheck size={13} /> Create Rule</>}
                   </button>
                 </div>

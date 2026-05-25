@@ -152,7 +152,7 @@ export default function ForgotPasswordPage() {
               </p>
               <button
                 onClick={() => router.push("/login")}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-white font-bold text-sm shadow-button-accent hover:bg-accent/90 transition-all"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-black font-bold text-sm shadow-button-accent hover:bg-accent/90 transition-all"
               >
                 Go to Sign In <FiArrowRight size={14} />
               </button>
@@ -192,7 +192,7 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 <button type="submit" disabled={loading || !email}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-white font-bold text-sm shadow-button-accent hover:bg-accent/90 transition-all disabled:opacity-40">
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-black font-bold text-sm shadow-button-accent hover:bg-accent/90 transition-all disabled:opacity-40">
                   {loading
                     ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Sending…</>
                     : <>Send OTP <FiArrowRight size={14} /></>}
@@ -305,7 +305,7 @@ export default function ForgotPasswordPage() {
 
                 <button type="submit"
                   disabled={loading || otp.join("").length < 6 || newPass.length < 8 || newPass !== confirm}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-white font-bold text-sm shadow-button-accent hover:bg-accent/90 transition-all disabled:opacity-40">
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-black font-bold text-sm shadow-button-accent hover:bg-accent/90 transition-all disabled:opacity-40">
                   {loading
                     ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Resetting…</>
                     : <>Reset Password <FiArrowRight size={14} /></>}

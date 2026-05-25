@@ -207,7 +207,7 @@ export default function TodayPage() {
           {/* Jump to today */}
           {!isToday && (
             <button onClick={() => changeDate(todayStr())}
-              className="px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-all">
+              className="px-3 py-1.5 rounded-lg bg-white text-black text-xs font-bold hover:bg-white/90 transition-all">
               Aaj
             </button>
           )}
@@ -216,7 +216,7 @@ export default function TodayPage() {
         {/* Action buttons */}
         <div className="flex gap-2 shrink-0">
           <button onClick={() => setShowSaleForm(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-all shadow-[0_2px_12px_rgba(0,102,255,0.35)]">
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 transition-all shadow-sm">
             <FiPlus size={13} /> Sale
           </button>
           <button onClick={() => setShowExpForm(true)}
@@ -370,7 +370,7 @@ export default function TodayPage() {
                   <p className="text-sm text-muted mb-4">Sale ya expense add karo upar se</p>
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => setShowSaleForm(true)}
-                      className="px-4 py-2 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-all">
+                      className="px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 transition-all">
                       + Add Sale
                     </button>
                     <button onClick={() => setShowExpForm(true)}
@@ -391,7 +391,7 @@ export default function TodayPage() {
                   <FiShoppingBag size={32} className="text-muted mx-auto mb-3 opacity-40" />
                   <p className="font-bold text-primary mb-1">Koi sale nahi aaj</p>
                   <button onClick={() => setShowSaleForm(true)}
-                    className="mt-3 px-4 py-2 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-all flex items-center gap-1.5 mx-auto">
+                    className="mt-3 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 transition-all flex items-center gap-1.5 mx-auto">
                     <FiPlus size={13} /> Add Sale
                   </button>
                 </div>
@@ -562,7 +562,7 @@ export default function TodayPage() {
                   placeholder="5 truck bajri, 2 bag cement, cloth…" />
               </div>
               <button type="submit" disabled={submitting}
-                className="w-full bg-accent text-white py-3 rounded-xl font-bold text-sm hover:bg-accent/90 transition-all shadow-[0_2px_12px_rgba(0,102,255,0.35)] flex items-center justify-center gap-2">
+                className="w-full bg-white text-black py-3 rounded-xl font-bold text-sm hover:bg-white/90 transition-all shadow-sm flex items-center justify-center gap-2">
                 {submitting ? <FiRefreshCw className="animate-spin" size={14} /> : <FiPlus size={14} />}
                 {submitting ? "Saving…" : "Add Sale"}
               </button>

@@ -190,7 +190,7 @@ export default function WhatsAppPage() {
             {(["compose", "history"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={["px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all",
-                  tab === t ? "bg-accent text-white" : "text-muted hover:text-primary",
+                  tab === t ? "bg-white text-black" : "text-muted hover:text-primary",
                 ].join(" ")}>{t}</button>
             ))}
           </div>
@@ -223,7 +223,7 @@ export default function WhatsAppPage() {
                     <p className="text-sm font-semibold text-secondary mb-1">Koi overdue customer nahi mila</p>
                     <p className="text-xs text-muted mb-4">Pehle Collections page pe invoices add karo — phir yahan customers dikhenge.</p>
                     <Link href="/collections"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-colors">
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 transition-colors">
                       <FiFilter size={11} /> Go to Collections
                     </Link>
                   </div>
