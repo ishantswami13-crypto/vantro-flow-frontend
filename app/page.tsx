@@ -435,70 +435,96 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ─────────────────────────────────────────── */}
-      <section id="pricing" className="py-16 bg-grid-pattern">
+      <section id="pricing" className="py-20 bg-bg border-t border-border">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10">
-            <p className="section-label mb-3">Pricing</p>
-            <h2 className="text-3xl sm:text-4xl font-black text-primary mb-3 tracking-tight">
-              Simple. Transparent. No surprises.
+
+          {/* Header */}
+          <div className="text-center mb-14">
+            <span className="inline-block text-2xs font-bold tracking-[0.15em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">Pricing</span>
+            <h2 className="text-4xl sm:text-5xl font-black text-primary mb-4 tracking-tight leading-tight">
+              Pay for what you collect.<br className="hidden sm:block" />
+              <span className="text-secondary font-light"> Or pay flat. Your call.</span>
             </h2>
-            <p className="text-secondary text-sm">Two models. One for predictability. One that pays for itself.</p>
+            <p className="text-secondary text-base max-w-xl mx-auto">Both plans include every feature. Zero hidden fees. Cancel anytime.</p>
           </div>
-          <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
-            {/* Model A */}
-            <div className="card-premium p-7 flex flex-col">
-              <div className="mb-6">
-                <p className="section-label mb-2">Model A — SaaS</p>
-                <div className="flex items-end gap-1.5 mb-2">
-                  <span className="metric-xl text-primary">₹1,999</span>
-                  <span className="text-secondary text-sm mb-1">/month</span>
+
+          {/* Cards */}
+          <div className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+
+            {/* Model A — SaaS */}
+            <div className="relative rounded-2xl border border-border bg-surface-1 p-8 flex flex-col group hover:border-white/20 transition-all duration-300">
+              <div className="mb-8">
+                <p className="text-2xs font-bold tracking-[0.12em] uppercase text-muted mb-4">Model A — SaaS</p>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-5xl font-black text-primary tracking-tight">₹1,999</span>
+                  <span className="text-muted text-sm ml-1">/month</span>
                 </div>
-                <p className="text-xs text-muted">Flat fee. Predictable cost. Budget it once.</p>
+                <p className="text-xs text-muted mt-2">Flat fee. Budget it once. Zero surprises.</p>
               </div>
-              <ul className="space-y-3 mb-7 flex-1">
+
+              <div className="h-px bg-border mb-7" />
+
+              <ul className="space-y-3.5 mb-8 flex-1">
                 {MODEL_A.map((f) => (
-                  <li key={f} className="flex items-center gap-2.5 text-sm text-secondary">
-                    <FiCheck size={14} className="text-success shrink-0" />
+                  <li key={f} className="flex items-center gap-3 text-sm text-secondary">
+                    <span className="w-4 h-4 rounded-full border border-success/40 bg-success/10 flex items-center justify-center shrink-0">
+                      <FiCheck size={10} className="text-success" />
+                    </span>
                     {f}
                   </li>
                 ))}
               </ul>
+
               <Link href="/signup?plan=saas"
-                className="block text-center py-3 rounded-xl text-sm font-semibold text-primary bg-surface-2 border border-border hover:border-accent/40 hover:bg-surface-3 transition-all">
-                Start Free Trial
+                className="block text-center py-3.5 rounded-xl text-sm font-bold text-primary bg-surface-2 border border-border hover:bg-surface-3 hover:border-white/20 transition-all">
+                Start 14-Day Free Trial
               </Link>
             </div>
-            {/* Model B */}
-            <div className="relative border-gradient-accent rounded-xl p-7 flex flex-col" style={{ background: "linear-gradient(145deg, #101A30, #0C1428)" }}>
-              <div className="absolute -top-3.5 left-6">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-2xs font-bold text-white bg-gradient-accent shadow-button-accent">
-                  <FiZap size={10} /> RECOMMENDED
+
+            {/* Model B — Hybrid (highlighted) */}
+            <div className="relative rounded-2xl bg-white p-8 flex flex-col shadow-2xl">
+              {/* Recommended badge */}
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-2xs font-black tracking-widest uppercase text-white bg-black shadow-lg">
+                  ★ Most Popular
                 </span>
               </div>
-              <div className="mb-6">
-                <p className="section-label mb-2">Model B — Hybrid</p>
-                <div className="flex items-end gap-1.5 mb-2">
-                  <span className="metric-xl text-primary">₹999</span>
-                  <span className="text-secondary text-sm mb-1">/mo + 1%</span>
+
+              <div className="mb-8">
+                <p className="text-2xs font-bold tracking-[0.12em] uppercase text-black/40 mb-4">Model B — Hybrid</p>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-5xl font-black text-black tracking-tight">₹999</span>
+                  <span className="text-black/50 text-sm ml-1">/mo + 1%</span>
                 </div>
-                <p className="text-xs text-muted">Low base. 1% only on amounts collected via Vantro.</p>
+                <p className="text-xs text-black/50 mt-2">Low base. 1% only on what Vantro actually collects.</p>
               </div>
-              <ul className="space-y-3 mb-7 flex-1">
+
+              <div className="h-px bg-black/10 mb-7" />
+
+              <ul className="space-y-3.5 mb-8 flex-1">
                 {MODEL_B.map((f) => (
-                  <li key={f} className="flex items-center gap-2.5 text-sm text-secondary">
-                    <FiCheck size={14} className="text-success shrink-0" />
+                  <li key={f} className="flex items-center gap-3 text-sm text-black/70">
+                    <span className="w-4 h-4 rounded-full bg-black flex items-center justify-center shrink-0">
+                      <FiCheck size={9} className="text-white" />
+                    </span>
                     {f}
                   </li>
                 ))}
               </ul>
-              <Link href="/signup?plan=hybrid" className="btn-primary block text-center py-3 rounded-xl text-sm font-bold text-white">
-                Start Free Trial
+
+              <Link href="/signup?plan=hybrid"
+                className="block text-center py-3.5 rounded-xl text-sm font-black text-white bg-black hover:bg-black/85 transition-all">
+                Start 14-Day Free Trial
               </Link>
             </div>
           </div>
-          <p className="text-center text-xs text-muted mt-8">
-            Both plans include 14-day free trial. No credit card required. Cancel anytime.
-          </p>
+
+          {/* Bottom note */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10 text-xs text-muted">
+            <span className="flex items-center gap-1.5"><FiCheck size={12} className="text-success" /> No credit card required</span>
+            <span className="flex items-center gap-1.5"><FiCheck size={12} className="text-success" /> 14-day free trial on both plans</span>
+            <span className="flex items-center gap-1.5"><FiCheck size={12} className="text-success" /> Cancel anytime, no lock-in</span>
+          </div>
         </div>
       </section>
 
@@ -532,8 +558,8 @@ export default function LandingPage() {
       {/* ── FINAL CTA ───────────────────────────────────────── */}
       <section className="py-16 bg-grid-pattern border-t border-border">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-accent flex items-center justify-center mx-auto mb-6 shadow-button-accent animate-float">
-            <FiZap size={24} className="text-white" />
+          <div className="flex justify-center mb-6">
+            <LogoMark size={56} />
           </div>
           <h2 className="text-4xl sm:text-5xl font-black text-primary mb-4 tracking-tight">
             Your cash is waiting.

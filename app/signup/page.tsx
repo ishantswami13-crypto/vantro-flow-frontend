@@ -273,7 +273,7 @@ function SignupForm() {
         saveAuth(data.token, data.user);
         document.cookie = `vantro_token=${data.token}; path=/; max-age=${30 * 24 * 3600}; SameSite=Lax`;
         posthog.identify(data.user.id, { email: data.user.email, plan: data.user.plan });
-        router.push("/onboarding");
+        router.push("/dashboard");
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Signup failed");
