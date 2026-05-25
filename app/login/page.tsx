@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiCheck } from "react-icons/fi";
+import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiCheck, FiZap } from "react-icons/fi";
 import LogoMark from "@/components/LogoMark";
 import { api, saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
