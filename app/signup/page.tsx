@@ -4,9 +4,10 @@ import { useState, Suspense, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  FiZap, FiUser, FiMail, FiArrowRight, FiLock,
+  FiUser, FiMail, FiArrowRight, FiLock,
   FiEye, FiEyeOff, FiPhone, FiRefreshCw, FiCheckCircle,
 } from "react-icons/fi";
+import LogoMark from "@/components/LogoMark";
 import Button from "@/components/ui/Button";
 import { Input, Select } from "@/components/ui/Input";
 import { saveAuth } from "@/lib/api";
@@ -500,9 +501,7 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm">
-            <FiZap size={17} className="text-black" />
-          </div>
+          <LogoMark size={36} />
           <span className="font-bold text-lg tracking-tight">Vantro Flow</span>
         </div>
 

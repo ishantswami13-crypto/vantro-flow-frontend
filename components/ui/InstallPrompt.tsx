@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FiDownload, FiX, FiZap } from "react-icons/fi";
+import { FiDownload, FiX } from "react-icons/fi";
+import LogoMark from "@/components/LogoMark";
 
 export default function InstallPrompt() {
   const [prompt, setPrompt] = useState<any>(null);
@@ -48,9 +49,7 @@ export default function InstallPrompt() {
     <div className="fixed bottom-20 lg:bottom-6 left-4 right-4 lg:left-auto lg:right-6 lg:w-80 z-50 animate-slide-up">
       <div className="card-premium p-4 border border-accent/30 shadow-2xl">
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent shrink-0">
-            <FiZap size={15} className="text-white" />
-          </div>
+          <LogoMark size={36} className="shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-primary">Install Vantro App</p>
             <p className="text-xs text-muted mt-0.5">Add to home screen for instant access, offline support &amp; push notifications.</p>

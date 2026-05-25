@@ -4,9 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  FiZap, FiMail, FiLock, FiEye, FiEyeOff,
+  FiMail, FiLock, FiEye, FiEyeOff,
   FiArrowRight, FiCheckCircle, FiRefreshCw,
 } from "react-icons/fi";
+import LogoMark from "@/components/LogoMark";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -130,9 +131,7 @@ export default function ForgotPasswordPage() {
 
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm">
-            <FiZap size={17} className="text-black" />
-          </div>
+          <LogoMark size={36} />
           <div>
             <p className="font-bold text-base text-primary leading-none tracking-tight">Vantro</p>
             <p className="text-2xs text-muted">Business OS</p>

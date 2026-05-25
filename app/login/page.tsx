@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FiZap, FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiCheck } from "react-icons/fi";
+import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiCheck } from "react-icons/fi";
+import LogoMark from "@/components/LogoMark";
 import { api, saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 
@@ -72,9 +73,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
-          <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm">
-            <FiZap size={17} className="text-black" />
-          </div>
+          <LogoMark size={36} />
           <div>
             <p className="font-bold text-base text-primary leading-none tracking-tight">Vantro</p>
             <p className="text-2xs text-muted">Business OS</p>

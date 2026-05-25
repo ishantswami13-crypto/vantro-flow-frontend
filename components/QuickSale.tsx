@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { FiX, FiMic, FiMicOff, FiZap, FiPlus, FiCheck } from "react-icons/fi";
+import { FiX, FiMic, FiMicOff, FiPlus, FiCheck } from "react-icons/fi";
+import LogoMark from "@/components/LogoMark";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -127,9 +128,7 @@ export default function QuickSale({ onClose, onSaved }: QuickSaleProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-gradient-to-r from-accent/10 to-success/5">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent">
-              <FiZap size={16} className="text-white" />
-            </div>
+            <LogoMark size={36} />
             <div>
               <h3 className="font-bold text-primary text-sm">Quick Sale</h3>
               <p className="text-2xs text-muted">Type ya bolo — sale instant save ho jaayegi</p>
