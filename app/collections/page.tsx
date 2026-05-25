@@ -655,24 +655,48 @@ export default function CollectionsPage() {
           </div>
         )}
 
-        {/* Header */}
+        {/* ── Stats strip ──────────────────────────────────────── */}
+        {(() => {
+          const data = liveData ?? DATA;
+          const totalOut = data.reduce((s, c) => s + c.outstanding, 0);
+          const overdueCount = data.filter(c => c.daysOverdue > 0).length;
+          const criticalCount = data.filter(c => c.daysOverdue >= 60).length;
+          return (
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-xl border border-border bg-surface-1 px-4 py-3">
+                <p className="text-2xs text-muted mb-0.5">Total Outstanding</p>
+                <p className="text-xl font-black text-primary">
+                  ₹{totalOut >= 100000 ? `${(totalOut / 100000).toFixed(1)}L` : `${(totalOut / 1000).toFixed(0)}K`}
+                </p>
+              </div>
+              <div className="rounded-xl border border-danger/25 bg-danger/5 px-4 py-3">
+                <p className="text-2xs text-muted mb-0.5">Overdue</p>
+                <p className="text-xl font-black text-danger">{overdueCount}</p>
+              </div>
+              <div className="rounded-xl border border-warning/20 bg-warning/5 px-4 py-3">
+                <p className="text-2xs text-muted mb-0.5">Critical (&gt;60d)</p>
+                <p className="text-xl font-black text-warning">{criticalCount}</p>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── Header + Actions ─────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-black text-primary tracking-tight">Collections</h2>
-            <p className="text-sm text-secondary mt-0.5">
-              {rows.length} customers &mdash; outstanding receivables
+            <h2 className="text-xl font-black text-primary tracking-tight">Collections</h2>
+            <p className="text-xs text-muted mt-0.5">
+              {rows.length} customers · sorted by priority
             </p>
           </div>
           <div className="flex gap-2 shrink-0 flex-wrap">
-            {/* Bulk remind all overdue */}
             {liveData && liveData.some(c => c.daysOverdue > 0) && (
               <div className="flex flex-col items-end gap-1">
                 <button onClick={handleBulkRemind} disabled={bulkLoading}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-all disabled:opacity-60">
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 transition-all disabled:opacity-60">
                   {bulkLoading
-                    ? <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
-                    : <FiZap size={13} />
-                  }
+                    ? <span className="w-3 h-3 border border-black/30 border-t-black rounded-full animate-spin" />
+                    : <FiZap size={13} />}
                   {bulkLoading ? "Sending..." : "Remind All"}
                 </button>
                 {bulkResult && (
@@ -683,18 +707,18 @@ export default function CollectionsPage() {
               </div>
             )}
             {totalSelected > 0 && (
-              <button className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-success-dim text-success border border-success/25 hover:bg-success hover:text-white transition-all">
+              <button className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-success/10 text-success border border-success/25 hover:bg-success hover:text-white transition-all">
                 <FiMessageSquare size={13} />
                 Message ({totalSelected})
               </button>
             )}
             <button onClick={() => { setShowAddInvoice(true); setAddError(""); }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-all">
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 transition-all">
               <FiPlus size={13} /> Add Invoice
             </button>
             <button onClick={() => setShowImport(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-2 border border-border text-secondary text-xs font-semibold hover:text-primary hover:border-accent/30 transition-all">
-              <FiUpload size={13} /> Import Excel
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-2 border border-border text-secondary text-xs font-semibold hover:text-primary hover:border-white/20 transition-all">
+              <FiUpload size={13} /> Import
             </button>
             <div className="relative">
               <input ref={fileRef} type="file" accept=".csv" className="hidden"
@@ -702,10 +726,10 @@ export default function CollectionsPage() {
               <button onClick={() => fileRef.current?.click()} disabled={uploading}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-surface-2 border border-border text-secondary hover:text-primary transition-all disabled:opacity-60">
                 <FiUpload size={13} />
-                {uploading ? "Uploading..." : "Upload CSV"}
+                {uploading ? "Uploading..." : "CSV"}
               </button>
             </div>
-            <button className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-surface-2 text-secondary border border-border hover:bg-surface-3 hover:text-primary transition-all">
+            <button className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-surface-2 text-secondary border border-border hover:text-primary transition-all">
               <FiDownload size={13} /> Export
             </button>
           </div>
