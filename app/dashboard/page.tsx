@@ -50,7 +50,7 @@ function fmtAmt(n: number) {
 }
 
 const METRICS = [
-  { label: "Total Outstanding",      value: "₹45.2L", sub: "42 customers",       icon: FiDollarSign,   accent: "#0066FF", glow: "rgba(0,102,255,0.15)",   pct: 72 },
+  { label: "Total Outstanding",      value: "₹45.2L", sub: "42 customers",       icon: FiDollarSign,   accent: "#4F6EF7", glow: "rgba(79,110,247,0.15)",   pct: 72 },
   { label: "Days Sales Outstanding", value: "42",      sub: "days — ↓3d MoM",    icon: FiClock,        accent: "#F5A524", glow: "rgba(245,165,36,0.12)",   pct: 58 },
   { label: "Collection Rate",        value: "68%",     sub: "↑4pp this month",   icon: FiPercent,      accent: "#10D98A", glow: "rgba(16,217,138,0.12)",   pct: 68 },
   { label: "Cash Runway",            value: "12d",     sub: "critical — act now",icon: FiTrendingDown, accent: "#F5424D", glow: "rgba(245,66,77,0.15)",    pct: 20 },
@@ -243,7 +243,7 @@ export default function DashboardPage() {
 
   // ── Override static values with real data when available ─────────────────
   const liveMetrics = metrics ? [
-    { label: "Total Outstanding",      value: `₹${(metrics.total_outstanding/100000).toFixed(1)}L`, sub: `${metrics.total_customers} customers`,  icon: FiDollarSign,   accent: "#0066FF", glow: "rgba(0,102,255,0.15)",  pct: 72 },
+    { label: "Total Outstanding",      value: `₹${(metrics.total_outstanding/100000).toFixed(1)}L`, sub: `${metrics.total_customers} customers`,  icon: FiDollarSign,   accent: "#4F6EF7", glow: "rgba(79,110,247,0.15)",  pct: 72 },
     { label: "Days Sales Outstanding", value: "42",      sub: "days — target <30",   icon: FiClock,        accent: "#F5A524", glow: "rgba(245,165,36,0.12)", pct: 58 },
     { label: "Collection Rate",        value: `${metrics.avg_recovery_rate}%`, sub: "this period",  icon: FiPercent,      accent: "#10D98A", glow: "rgba(16,217,138,0.12)", pct: Number(metrics.avg_recovery_rate) },
     { label: "Pending Invoices",       value: String(metrics.pending_invoices), sub: "awaiting payment", icon: FiAlertTriangle,accent: "#F5424D", glow: "rgba(245,66,77,0.12)",   pct: 45 },
@@ -256,7 +256,8 @@ export default function DashboardPage() {
       {showQuickSale && <QuickSale onClose={() => setShowQuickSale(false)} onSaved={() => { /* could refresh today P&L */ }} />}
       {/* Floating Quick Sale button */}
       <button onClick={() => setShowQuickSale(true)}
-        className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-40 flex items-center gap-2 px-4 py-3 rounded-2xl bg-gradient-accent text-white font-bold text-sm shadow-[0_4px_24px_rgba(0,102,255,0.5)] hover:scale-105 active:scale-95 transition-all">
+        className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-40 hidden lg:flex items-center gap-2 px-4 py-3 rounded-2xl text-white font-bold text-sm transition-all hover:scale-105 active:scale-95"
+        style={{ background: "linear-gradient(135deg, #FF6B35 0%, #F55A22 100%)", boxShadow: "0 4px 20px rgba(255,107,53,0.5)" }}>
         <FiZap size={16} /> Quick Sale
       </button>
       <div className="space-y-6 page-enter">
@@ -360,7 +361,7 @@ export default function DashboardPage() {
                     ))}
                   </div>
                   <Link href="/collections"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-danger text-white text-xs font-bold hover:bg-danger/90 transition-all">
+                    className="btn-cta inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs">
                     🔥 Abhi Call Karo <FiArrowRight size={11} />
                   </Link>
                 </div>
@@ -369,126 +370,109 @@ export default function DashboardPage() {
           );
         })()}
 
-        {/* ── DOPAMINE DASHBOARD HERO ──────────────────────────────────────── */}
-        <div className="card-premium overflow-hidden">
-          {/* Top row: Greeting + Streak */}
-          <div className="flex items-start justify-between p-5 pb-3">
+        {/* ══════════════════════════════════════════════════
+            AAJ KA SCORE — The morning hook card
+            Answers in 3 seconds: expected · received · baaki
+            ══════════════════════════════════════════════════ */}
+        <div className="rounded-2xl overflow-hidden border border-border/60"
+          style={{ background: "linear-gradient(160deg, #1A1F2E 0%, #161A24 100%)" }}>
+
+          {/* Top bar: greeting + streak */}
+          <div className="flex items-center justify-between px-5 pt-5 pb-3">
             <div>
-              <h2 className="text-xl font-black text-primary tracking-tight">
+              <p className="text-xs text-muted font-medium flex items-center gap-1.5">
+                <span className="status-live text-success">Live</span>
+                {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+              </p>
+              <h2 className="text-lg font-black text-primary tracking-tight leading-tight">
                 {getGreeting(ownerName)}
               </h2>
-              <p className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
-                <span className="status-live text-success">Live</span>
-                {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-              </p>
             </div>
-            {/* Streak badge */}
-            <div className="flex flex-col items-center px-3 py-2 rounded-xl bg-surface-2 border border-orange-500/20">
-              <span className="text-xl">🔥</span>
-              <span className="text-sm font-black text-orange-400 leading-none">{streak || 1}</span>
-              <span className="text-2xs text-muted">din</span>
+            <div className="flex flex-col items-center px-3 py-2 rounded-xl border border-orange-500/20"
+              style={{ background: "rgba(249,115,22,0.08)" }}>
+              <span className="text-lg leading-none">🔥</span>
+              <span className="text-base font-black text-orange-400 leading-tight">{streak || 1}</span>
+              <span className="text-2xs text-muted leading-none">din</span>
             </div>
           </div>
 
-          {/* BIG collected number — Dopamine Counter */}
-          <div className="px-5 pb-4 text-center">
-            <p className="text-2xs font-bold text-muted uppercase tracking-widest mb-1">AAJ COLLECT HUA</p>
-            <p className="font-black text-5xl tracking-tight transition-all duration-700"
-              style={{ color: collectedToday > 0 ? "#10D98A" : "#334155" }}>
+          {/* THE NUMBER — biggest element on the screen */}
+          <div className="px-5 pt-1 pb-4 text-center">
+            <p className="text-2xs font-bold text-muted uppercase tracking-[0.15em] mb-2">
+              AAJ COLLECT HUA
+            </p>
+            <p
+              className="font-black leading-none tracking-tight transition-all duration-700"
+              style={{
+                fontSize: "clamp(2.8rem, 10vw, 4rem)",
+                color: collectedToday > 0 ? "#10D98A" : "#2A3349",
+                textShadow: collectedToday > 0 ? "0 0 40px rgba(16,217,138,0.3)" : "none",
+              }}
+            >
               {collectedToday > 0 ? fmtAmt(collectedToday) : "₹0"}
             </p>
-            {/* Daily goal progress bar */}
-            <div className="mt-3 mb-1">
-              <div className="flex items-center justify-between text-2xs text-muted mb-1.5">
-                <span>Aaj ka goal: {fmtAmt(dailyGoal)}</span>
-                <span className="font-semibold" style={{ color: collectedToday >= dailyGoal ? "#10D98A" : "#F5A524" }}>
+
+            {/* Goal progress bar */}
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-2xs text-muted mb-2">
+                <span>Goal: {fmtAmt(dailyGoal)}</span>
+                <span className="font-bold" style={{ color: collectedToday >= dailyGoal ? "#10D98A" : "#FF6B35" }}>
                   {Math.min(100, Math.round((collectedToday / dailyGoal) * 100))}%
                 </span>
               </div>
-              <div className="h-2.5 rounded-full bg-surface-3 overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-1000"
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: "#2A3349" }}>
+                <div
+                  className="h-full rounded-full transition-all duration-1000"
                   style={{
                     width: `${Math.min(100, (collectedToday / dailyGoal) * 100)}%`,
                     background: collectedToday >= dailyGoal
                       ? "linear-gradient(90deg, #10D98A, #06D6A0)"
-                      : "linear-gradient(90deg, #0066FF, #1A6FFF)",
-                  }} />
+                      : "linear-gradient(90deg, #FF6B35, #F5A524)",
+                  }}
+                />
               </div>
-              <p className="text-2xs text-muted mt-1">
+              <p className="text-2xs text-muted mt-1.5 text-center">
                 {collectedToday >= dailyGoal
-                  ? "🎉 Goal achieve ho gaya! Aaj ka din zabardast raha!"
-                  : `${fmtAmt(dailyGoal - collectedToday)} aur chahiye — ${Math.ceil((dailyGoal - collectedToday) / 50000)} calls mein ho sakta hai`}
+                  ? "🎉 Goal achieve ho gaya! Zabardast din!"
+                  : `${fmtAmt(dailyGoal - collectedToday)} aur chahiye`}
               </p>
             </div>
           </div>
 
-          {/* Identity badge */}
-          {(() => {
-            const badge = getBadge(streak, collectedToday + (metrics?.total_paid || 0));
-            return (
-              <div className="mx-5 mb-4 flex items-center gap-2 px-3 py-2 rounded-xl"
-                style={{ background: `${badge.color}12`, border: `1px solid ${badge.color}25` }}>
-                <span className="text-base">{badge.emoji}</span>
-                <div className="flex-1">
-                  <p className="text-xs font-bold" style={{ color: badge.color }}>{badge.label}</p>
-                  <p className="text-2xs text-muted">Aapki identity • Vantro community</p>
-                </div>
-                <Link href="/collections" className="text-2xs font-semibold" style={{ color: badge.color }}>
-                  Profile →
-                </Link>
-              </div>
-            );
-          })()}
+          {/* Divider */}
+          <div className="mx-5 h-px bg-border/50" />
 
-          {/* Social proof */}
-          <div className="mx-5 mb-4 flex items-center justify-between px-3 py-2.5 rounded-xl bg-surface-2/50 border border-border/50">
-            <div>
-              <p className="text-2xs text-muted">Delhi distributors avg (is hafte)</p>
-              <p className="text-sm font-bold text-secondary">₹3,20,000</p>
-            </div>
-            <div className="w-px h-8 bg-border" />
-            <div className="text-right">
-              <p className="text-2xs text-muted">Aapne collect kiya</p>
-              <p className="text-sm font-bold" style={{ color: collectedToday >= 320000 ? "#10D98A" : "#F5A524" }}>
-                {fmtAmt(collectedToday)}
-              </p>
-            </div>
-            <div className="text-right">
-              {collectedToday >= 320000
-                ? <span className="text-2xs bg-success/20 text-success px-2 py-1 rounded-full font-bold">Top 15% 🏆</span>
-                : <span className="text-2xs bg-warning/20 text-warning px-2 py-1 rounded-full font-bold">Avg se neeche</span>}
-            </div>
-          </div>
-
-          {/* AI Morning Briefing */}
-          <div className="mx-5 mb-4 p-3 rounded-xl bg-accent/5 border border-accent/20">
-            <div className="flex items-center gap-1.5 mb-2">
+          {/* AI Briefing */}
+          <div className="mx-5 my-4 p-3 rounded-xl" style={{ background: "rgba(79,110,247,0.06)", border: "1px solid rgba(79,110,247,0.18)" }}>
+            <div className="flex items-center gap-1.5 mb-1.5">
               <FiZap size={11} className="text-accent" />
               <p className="text-2xs font-bold text-accent uppercase tracking-wider">AI Briefing</p>
               {!briefingLoading && briefing && (
-                <span className="ml-auto text-2xs text-muted">{new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+                <span className="ml-auto text-2xs text-muted">
+                  {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                </span>
               )}
             </div>
             {briefingLoading ? (
               <div className="flex gap-1.5 items-center">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "0ms" }} />
-                <div className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "150ms" }} />
-                <div className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "300ms" }} />
-                <span className="text-xs text-muted ml-1">Briefing taiyar ho rahi hai...</span>
+                {[0, 150, 300].map(d => (
+                  <div key={d} className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                ))}
+                <span className="text-xs text-muted ml-1">Taiyar ho rahi hai...</span>
               </div>
             ) : briefing ? (
               <p className="text-xs text-secondary leading-relaxed">{briefing}</p>
             ) : (
-              <p className="text-xs text-muted">Collections mein invoices upload karo — AI kal se personal briefing dega. 🎯</p>
+              <p className="text-xs text-muted">Invoices upload karo — AI kal se briefing dega 🎯</p>
             )}
           </div>
 
-          {/* Today's action items — Zeigarnik incomplete tasks (live data) */}
+          {/* 3 action chips — Zeigarnik Effect */}
           <div className="px-5 pb-5 grid grid-cols-3 gap-2">
-            {([
+            {[
               {
                 Icon: FiPhone,
-                label: callsLeft > 0 ? `${callsLeft} Call${callsLeft === 1 ? "" : "s"} Baaki` : "Calls Done ✓",
+                label: callsLeft > 0 ? `${callsLeft} Call${callsLeft !== 1 ? "s" : ""} Baaki` : "Calls Done ✓",
                 href: "/collections",
                 color: callsLeft > 0 ? "#F5424D" : "#10D98A",
                 urgent: callsLeft > 0,
@@ -502,17 +486,16 @@ export default function DashboardPage() {
               },
               {
                 Icon: FiTarget,
-                label: promisedAmt > 0 ? `${fmtAmt(promisedAmt)} Promised` : promises.length > 0 ? `${promises.length} Promises` : "No Promises",
+                label: promisedAmt > 0 ? `${fmtAmt(promisedAmt)} Promised` : "No Promises",
                 href: "/collections",
                 color: "#F5A524",
                 urgent: false,
               },
-            ]).map(({ Icon, label, href, color, urgent }) => (
+            ].map(({ Icon, label, href, color, urgent }) => (
               <Link key={label} href={href}
-                className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border transition-all group text-center"
-                style={{ background: `${color}10`, borderColor: `${color}25` }}>
-                <div className="relative w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ background: `${color}20` }}>
+                className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border transition-all text-center active:scale-95"
+                style={{ background: `${color}10`, borderColor: `${color}28` }}>
+                <div className="relative w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${color}20` }}>
                   <Icon size={15} style={{ color }} />
                   {urgent && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-danger animate-pulse" />}
                 </div>
@@ -520,6 +503,24 @@ export default function DashboardPage() {
               </Link>
             ))}
           </div>
+
+          {/* Identity badge */}
+          {(() => {
+            const badge = getBadge(streak, collectedToday + (metrics?.total_paid || 0));
+            return (
+              <div className="mx-5 mb-5 flex items-center gap-2 px-3 py-2.5 rounded-xl"
+                style={{ background: `${badge.color}0E`, border: `1px solid ${badge.color}22` }}>
+                <span className="text-lg">{badge.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-black" style={{ color: badge.color }}>{badge.label}</p>
+                  <p className="text-2xs text-muted">Aapki identity — Vantro community</p>
+                </div>
+                <Link href="/collections" className="text-2xs font-bold shrink-0" style={{ color: badge.color }}>
+                  Dekho →
+                </Link>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Metric cards */}
@@ -637,15 +638,15 @@ export default function DashboardPage() {
               <AreaChart data={SPARKLINE} margin={{ top: 2, right: 2, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor="#0066FF" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#0066FF" stopOpacity={0} />
+                    <stop offset="0%"   stopColor="#4F6EF7" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#4F6EF7" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1E2D4A" vertical={false} />
                 <XAxis dataKey="d" tick={{ fill: "#556070", fontSize: 9 }} axisLine={false} tickLine={false} />
                 <YAxis hide />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="v" stroke="#0066FF" strokeWidth={2} fill="url(#areaGrad)" dot={false} />
+                <Area type="monotone" dataKey="v" stroke="#4F6EF7" strokeWidth={2} fill="url(#areaGrad)" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -710,7 +711,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-3">
                         <div
                           className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-                          style={{ background: i === 0 ? "rgba(0,102,255,0.15)" : "#14203A", color: i === 0 ? "#0066FF" : "#8899AA", border: `1px solid ${i === 0 ? "rgba(0,102,255,0.3)" : "#1E2D4A"}` }}
+                          style={{ background: i === 0 ? "rgba(79,110,247,0.15)" : "#1F2538", color: i === 0 ? "#4F6EF7" : "#8899BB", border: `1px solid ${i === 0 ? "rgba(79,110,247,0.3)" : "#2A3349"}` }}
                         >
                           {c.name.charAt(0)}
                         </div>
