@@ -25,7 +25,7 @@ export default function BottomNav() {
         borderTop: "1px solid rgba(255,255,255,0.06)",
       }}
     >
-      <div className="flex items-end px-2">
+      <div className="flex items-end px-1">
         {TABS.map(({ href, icon: Icon, label, key }) => {
           // ── Centre FAB — Add Invoice ─────────────────────────
           if (key === "add") {
@@ -33,13 +33,13 @@ export default function BottomNav() {
               <div key="add" className="flex-1 flex justify-center">
                 <Link
                   href="/invoice/new"
-                  className="relative -top-4 flex flex-col items-center justify-center w-14 h-14 rounded-2xl text-white transition-all active:scale-95"
+                  className="relative -top-5 flex flex-col items-center justify-center w-[60px] h-[60px] rounded-2xl text-white transition-all active:scale-95"
                   style={{
                     background: "linear-gradient(135deg, #FF6B35 0%, #F55A22 100%)",
                     boxShadow: "0 4px 20px rgba(255,107,53,0.55), 0 2px 8px rgba(0,0,0,0.4)",
                   }}
                 >
-                  <Icon size={22} strokeWidth={2.5} />
+                  <Icon size={24} strokeWidth={2.5} />
                 </Link>
               </div>
             );
@@ -52,20 +52,20 @@ export default function BottomNav() {
               key={key}
               href={href!}
               className={[
-                "flex-1 flex flex-col items-center justify-center gap-1 py-3 relative transition-all",
+                "flex-1 flex flex-col items-center justify-center gap-1.5 py-3.5 min-h-[56px] relative transition-all active:scale-95",
                 active ? "text-accent" : "text-muted hover:text-secondary",
               ].join(" ")}
             >
               {/* Active top indicator */}
               {active && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-b-full bg-accent" />
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b-full bg-accent" />
               )}
               <Icon
-                size={20}
+                size={22}
                 strokeWidth={active ? 2.5 : 2}
                 className={active ? "drop-shadow-[0_0_8px_rgba(79,110,247,0.9)]" : ""}
               />
-              <span className={`text-2xs font-bold ${active ? "text-accent" : "text-muted"}`}>
+              <span className={`text-[10px] font-bold tracking-tight ${active ? "text-accent" : "text-muted"}`}>
                 {label}
               </span>
             </Link>

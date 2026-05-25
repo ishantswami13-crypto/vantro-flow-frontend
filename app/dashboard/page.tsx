@@ -12,7 +12,7 @@ import {
   FiFileText, FiBook, FiPackage, FiUsers,
 } from "react-icons/fi";
 import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine,
 } from "recharts";
 import { api, getUser, type Metrics, type Invoice } from "@/lib/api";
 import QuickSale from "@/components/QuickSale";
@@ -690,6 +690,14 @@ export default function DashboardPage() {
                 <XAxis dataKey="d" tick={{ fill: "#556070", fontSize: 9 }} axisLine={false} tickLine={false} />
                 <YAxis hide />
                 <Tooltip content={<CustomTooltip />} />
+                {/* Goal line — target ₹30L outstanding */}
+                <ReferenceLine
+                  y={3000000}
+                  stroke="#10D98A"
+                  strokeDasharray="5 4"
+                  strokeWidth={1.5}
+                  label={{ value: "Goal", position: "insideTopRight", fill: "#10D98A", fontSize: 9, fontWeight: 700, dy: -4 }}
+                />
                 <Area type="monotone" dataKey="v" stroke="#4F6EF7" strokeWidth={2} fill="url(#areaGrad)" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
