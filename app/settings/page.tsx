@@ -9,11 +9,11 @@ import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import {
   FiUser, FiBriefcase, FiSliders, FiLink, FiCreditCard,
-  FiLogOut, FiCheck, FiRefreshCw, FiCpu, FiMic,
+  FiLogOut, FiCheck, FiRefreshCw, FiCpu,
   FiCheckCircle, FiZap, FiTrash2,
-  FiMessageSquare, FiPhone, FiPackage,
+  FiMessageSquare, FiPhone,
   FiToggleLeft, FiToggleRight, FiPlus, FiSend,
-  FiKey, FiAlertCircle, FiCopy, FiInfo,
+  FiAlertCircle, FiCopy, FiInfo,
 } from "react-icons/fi";
 import { api, getUser, clearAuth, type DunningRule } from "@/lib/api";
 import { INDUSTRY_OPTIONS, setBusinessType } from "@/lib/businessTypes";
@@ -95,22 +95,9 @@ export default function SettingsPage() {
   const [extractResult, setExtractResult] = useState<{ style_description: string; sample_phrase: string } | null>(null);
   const [voiceActive, setVoiceActive] = useState(false);
 
-  // ── Integrations state ──────────────────────────────────
-  const [waProvider, setWaProvider]       = useState<"interakt" | "wati">("interakt");
-  const [waConnected, setWaConnected]     = useState(false);
-  const [interaktKey, setInteraktKey]     = useState("");
-  const [watiUrl, setWatiUrl]             = useState("");
-  const [watiToken, setWatiToken]         = useState("");
-  const [waLoading, setWaLoading]         = useState(false);
-  const [waResult, setWaResult]           = useState<{ ok: boolean; msg: string } | null>(null);
+  // ── Integrations state (test WhatsApp only — rest is Vantro-managed) ──
   const [testLoading, setTestLoading]     = useState(false);
   const [testResult, setTestResult]       = useState<{ ok: boolean; msg: string } | null>(null);
-
-  const [rzpKeyId, setRzpKeyId]           = useState("");
-  const [rzpSecret, setRzpSecret]         = useState("");
-  const [rzpConnected, setRzpConnected]   = useState(false);
-  const [rzpLoading, setRzpLoading]       = useState(false);
-  const [rzpResult, setRzpResult]         = useState<{ ok: boolean; msg: string } | null>(null);
 
   // ── Automation state ────────────────────────────────────
   const [autoEnabled, setAutoEnabled]     = useState(false);
@@ -139,11 +126,6 @@ export default function SettingsPage() {
         setVoice({ owner_name: settings.owner_name || "", city: settings.city || "", voice_style: settings.voice_style || "casual_hinglish", ai_persona: settings.ai_persona || "" });
         setVoiceActive(!!(settings.owner_name && settings.ai_persona));
       }
-      // Integration fields
-      if (settings.wa_provider)       setWaProvider(settings.wa_provider);
-      if (settings.interakt_api_key)  setWaConnected(true);  // masked = key exists
-      if (settings.wati_token)        setWaConnected(true);
-      if (settings.razorpay_key_id)   { setRzpKeyId(settings.razorpay_key_id); setRzpConnected(true); }
       if (settings.automation_enabled !== undefined) setAutoEnabled(!!settings.automation_enabled);
     }).catch(() => {});
   }, []);
@@ -191,22 +173,6 @@ export default function SettingsPage() {
   };
 
   // ── Integration handlers ────────────────────────────────
-  const handleSaveWhatsApp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setWaLoading(true); setWaResult(null);
-    try {
-      const body: any = { provider: waProvider };
-      if (waProvider === "interakt") body.interakt_api_key = interaktKey;
-      else { body.wati_api_url = watiUrl; body.wati_token = watiToken; }
-      await api.settings.saveWhatsApp(body);
-      setWaConnected(true);
-      setWaResult({ ok: true, msg: "WhatsApp credentials saved ✅" });
-      setInteraktKey(""); setWatiToken(""); // clear secrets from state
-    } catch (e: any) {
-      setWaResult({ ok: false, msg: e.message || "Save failed" });
-    } finally { setWaLoading(false); }
-  };
-
   const handleTestWhatsApp = async () => {
     setTestLoading(true); setTestResult(null);
     try {
@@ -215,19 +181,6 @@ export default function SettingsPage() {
     } catch (e: any) {
       setTestResult({ ok: false, msg: e.message || "Test failed" });
     } finally { setTestLoading(false); }
-  };
-
-  const handleSaveRazorpay = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setRzpLoading(true); setRzpResult(null);
-    try {
-      const r = await api.settings.saveRazorpay({ key_id: rzpKeyId, key_secret: rzpSecret });
-      setRzpConnected(true);
-      setRzpResult({ ok: true, msg: r.message });
-      setRzpSecret(""); // clear secret from state
-    } catch (e: any) {
-      setRzpResult({ ok: false, msg: e.message || "Save failed" });
-    } finally { setRzpLoading(false); }
   };
 
   // ── Automation handlers ─────────────────────────────────
@@ -471,164 +424,130 @@ export default function SettingsPage() {
               </Card>
             )}
 
-            {/* ── INTEGRATIONS ─────────────────────────────── */}
+            {/* ── INTEGRATIONS — Vantro AutoPilot ────────── */}
             {tab === "integrations" && (
               <div className="space-y-5">
 
-                {/* WhatsApp */}
-                <Card>
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-[#25D366]/15 border border-[#25D366]/30 flex items-center justify-center">
-                        <FiMessageSquare size={15} className="text-[#25D366]" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-primary">WhatsApp Business</p>
-                        <p className="text-2xs text-muted">Auto-send payment reminders & updates</p>
-                      </div>
+                {/* AutoPilot Hero */}
+                <div className="relative overflow-hidden rounded-2xl p-6"
+                  style={{ background: "linear-gradient(135deg, #1A1F2E 0%, #161A24 100%)", border: "1px solid rgba(79,110,247,0.25)", boxShadow: "0 0 60px rgba(79,110,247,0.08)" }}>
+                  <div className="absolute -top-8 -right-8 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-cta/5 rounded-full blur-3xl pointer-events-none" />
+                  <div className="relative flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-xl"
+                      style={{ background: "linear-gradient(135deg, #4F6EF7, #3D5CF5)", boxShadow: "0 4px 20px rgba(79,110,247,0.4)" }}>
+                      ⚡
                     </div>
-                    <Badge variant={waConnected ? "success" : "muted"}>{waConnected ? "Connected" : "Not connected"}</Badge>
-                  </div>
-
-                  <form onSubmit={handleSaveWhatsApp} className="space-y-4 max-w-lg">
-                    {/* Provider selector */}
                     <div>
-                      <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-2">WhatsApp Provider</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {(["interakt", "wati"] as const).map(p => (
-                          <button key={p} type="button" onClick={() => setWaProvider(p)}
-                            className={["p-3 rounded-xl border text-sm font-semibold transition-all text-left", waProvider === p ? "border-accent/50 bg-accent-dim text-accent" : "border-border bg-surface-2 text-secondary hover:border-accent/30"].join(" ")}>
-                            <p className="font-bold">{p === "interakt" ? "Interakt" : "WATI"}</p>
-                            <p className="text-2xs font-normal opacity-70 mt-0.5">{p === "interakt" ? "interakt.ai — Popular in India" : "wati.io — WhatsApp BSP"}</p>
-                          </button>
-                        ))}
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-base font-black text-primary">Vantro AutoPilot</p>
+                        <span className="flex items-center gap-1 text-2xs font-bold text-success bg-success/10 border border-success/20 px-2 py-0.5 rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" /> Active
+                        </span>
+                      </div>
+                      <p className="text-sm text-secondary leading-relaxed">
+                        WhatsApp, Razorpay, aur daily dunning — sab Vantro handle karta hai.<br />
+                        <span className="text-muted text-xs">Koi API key dene ki zaroorat nahi. Bas apna business chalao.</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status rows */}
+                <Card>
+                  <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">What Vantro Manages For You</p>
+                  <div className="space-y-4">
+                    {/* WhatsApp */}
+                    <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
+                      <div className="w-10 h-10 rounded-xl bg-[#25D366]/10 border border-[#25D366]/25 flex items-center justify-center shrink-0">
+                        <FiMessageSquare size={16} className="text-[#25D366]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-primary">WhatsApp Reminders</p>
+                        <p className="text-2xs text-muted">Powered by Vantro's Twilio account · Sent from verified WhatsApp number</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
+                        style={{ background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" }}>
+                        <FiCheckCircle size={11} /> Active
                       </div>
                     </div>
 
-                    {waProvider === "interakt" && (
-                      <div>
-                        <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Interakt API Key</label>
-                        <input type="password" value={interaktKey} onChange={e => setInteraktKey(e.target.value)} placeholder={waConnected ? "••••••••  (already saved — paste new to update)" : "Paste your Interakt API Key"}
-                          className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors font-mono" />
-                        <p className="text-2xs text-muted mt-1">Find it in <span className="text-accent">app.interakt.ai → Settings → API Key</span></p>
+                    {/* Razorpay */}
+                    <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center shrink-0">
+                        <FiCreditCard size={16} className="text-blue-400" />
                       </div>
-                    )}
-
-                    {waProvider === "wati" && (
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">WATI API URL</label>
-                          <input type="text" value={watiUrl} onChange={e => setWatiUrl(e.target.value)} placeholder="https://live-server-XXXXX.wati.io"
-                            className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors font-mono" />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">WATI Token</label>
-                          <input type="password" value={watiToken} onChange={e => setWatiToken(e.target.value)} placeholder={waConnected ? "••••••••  (already saved — paste new to update)" : "Paste your WATI access token"}
-                            className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors font-mono" />
-                          <p className="text-2xs text-muted mt-1">Find it in <span className="text-accent">WATI Dashboard → API → Access Token</span></p>
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-primary">Payment Links (Razorpay)</p>
+                        <p className="text-2xs text-muted">Powered by Vantro's Razorpay · UPI, card, netbanking sab accepted</p>
                       </div>
-                    )}
-
-                    {waResult && (
-                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium ${waResult.ok ? "bg-success/10 text-success border border-success/20" : "bg-danger/10 text-danger border border-danger/20"}`}>
-                        {waResult.ok ? <FiCheckCircle size={12} /> : <FiAlertCircle size={12} />} {waResult.msg}
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
+                        style={{ background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" }}>
+                        <FiCheckCircle size={11} /> Active
                       </div>
-                    )}
-
-                    <div className="flex gap-2">
-                      <Button type="submit" icon={<FiKey size={13} />} loading={waLoading}>
-                        {waConnected ? "Update Keys" : "Connect WhatsApp"}
-                      </Button>
-                      {waConnected && (
-                        <button type="button" onClick={handleTestWhatsApp} disabled={testLoading}
-                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-surface-2 text-secondary text-xs font-semibold hover:text-primary hover:border-accent/30 transition-all disabled:opacity-60">
-                          {testLoading ? <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> : <FiSend size={12} />}
-                          {testLoading ? "Sending..." : "Send Test Message"}
-                        </button>
-                      )}
                     </div>
+
+                    {/* Daily Dunning */}
+                    <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
+                      <div className="w-10 h-10 rounded-xl bg-cta-dim border border-cta/20 flex items-center justify-center shrink-0">
+                        <FiZap size={16} className="text-cta" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-primary">Daily Auto-Dunning</p>
+                        <p className="text-2xs text-muted">Cron runs at 9 AM IST every day · Reminders fire per your rules automatically</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
+                        style={{ background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" }}>
+                        <FiCheckCircle size={11} /> Auto
+                      </div>
+                    </div>
+
+                    {/* Push Notifications */}
+                    <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
+                      <div className="w-10 h-10 rounded-xl bg-accent-dim border border-accent/20 flex items-center justify-center shrink-0">
+                        <FiPhone size={16} className="text-accent" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-primary">Payment Received Alerts</p>
+                        <p className="text-2xs text-muted">Push notification + WhatsApp to you when a customer pays</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
+                        style={{ background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" }}>
+                        <FiCheckCircle size={11} /> Active
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Test WhatsApp */}
+                <Card>
+                  <p className="text-sm font-bold text-primary mb-1">Test WhatsApp Delivery</p>
+                  <p className="text-2xs text-muted mb-4">Apne registered number pe ek test message bhejo to confirm karein sab theek hai.</p>
+                  <div className="flex gap-2 items-center flex-wrap">
+                    <button onClick={handleTestWhatsApp} disabled={testLoading}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-60"
+                      style={{ background: "linear-gradient(135deg, #25D366, #1da851)", color: "#fff", boxShadow: "0 2px 12px rgba(37,211,102,0.3)" }}>
+                      {testLoading ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend size={13} />}
+                      {testLoading ? "Sending..." : "Send Test WhatsApp"}
+                    </button>
                     {testResult && (
                       <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium ${testResult.ok ? "bg-success/10 text-success border border-success/20" : "bg-danger/10 text-danger border border-danger/20"}`}>
                         {testResult.ok ? <FiCheckCircle size={12} /> : <FiAlertCircle size={12} />} {testResult.msg}
                       </div>
                     )}
-                    {/* WA Inbound Webhook URL */}
-                    <div className="p-3 bg-surface-2 border border-border rounded-xl mt-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-semibold text-secondary">Reply-Pause Webhook (copy into your provider)</p>
-                        <CopyButton text={WA_WEBHOOK_URL} />
-                      </div>
-                      <p className="text-xs font-mono text-muted break-all">{WA_WEBHOOK_URL}</p>
-                      <p className="text-2xs text-muted mt-1.5">
-                        When customers reply "kal", "2 din", "next week" etc., dunning auto-pauses for that invoice.
-                        Interakt → Settings → Developer → Webhook URL. WATI → Configuration → Webhook.
-                      </p>
-                    </div>
-                  </form>
-                </Card>
-
-                {/* Razorpay */}
-                <Card>
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
-                        <FiCreditCard size={15} className="text-blue-500" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-primary">Razorpay</p>
-                        <p className="text-2xs text-muted">Accept UPI, card & netbanking via payment links</p>
-                      </div>
-                    </div>
-                    <Badge variant={rzpConnected ? "success" : "muted"}>{rzpConnected ? "Connected" : "Not connected"}</Badge>
                   </div>
-
-                  <form onSubmit={handleSaveRazorpay} className="space-y-4 max-w-lg">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Key ID (Public)</label>
-                        <input type="text" value={rzpKeyId} onChange={e => setRzpKeyId(e.target.value)} placeholder="rzp_live_..."
-                          className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors font-mono" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Key Secret</label>
-                        <input type="password" value={rzpSecret} onChange={e => setRzpSecret(e.target.value)} placeholder={rzpConnected ? "••••••••" : "Your secret key"}
-                          className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors font-mono" />
-                      </div>
-                    </div>
-                    <p className="text-2xs text-muted">Find both in <span className="text-accent">dashboard.razorpay.com → Settings → API Keys</span></p>
-
-                    {/* Webhook URL */}
-                    <div className="p-3 bg-surface-2 border border-border rounded-xl">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-semibold text-secondary">Webhook URL (copy this into Razorpay)</p>
-                        <CopyButton text={WEBHOOK_URL} />
-                      </div>
-                      <p className="text-xs font-mono text-muted break-all">{WEBHOOK_URL}</p>
-                      <p className="text-2xs text-muted mt-1.5">Razorpay → Settings → Webhooks → Add URL. Select event: <span className="font-mono">payment_link.paid</span></p>
-                    </div>
-
-                    {rzpResult && (
-                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium ${rzpResult.ok ? "bg-success/10 text-success border border-success/20" : "bg-danger/10 text-danger border border-danger/20"}`}>
-                        {rzpResult.ok ? <FiCheckCircle size={12} /> : <FiAlertCircle size={12} />} {rzpResult.msg}
-                      </div>
-                    )}
-                    <Button type="submit" icon={<FiKey size={13} />} loading={rzpLoading} disabled={!rzpKeyId || !rzpSecret}>
-                      {rzpConnected ? "Update Razorpay Keys" : "Connect Razorpay"}
-                    </Button>
-                  </form>
                 </Card>
 
-                {/* Info card */}
+                {/* How it works */}
                 <div className="p-4 bg-accent/5 border border-accent/20 rounded-xl flex gap-3">
                   <FiInfo size={14} className="text-accent shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs font-semibold text-accent mb-1">How it works after connecting</p>
+                    <p className="text-xs font-semibold text-accent mb-1.5">Full automation loop</p>
                     <ul className="text-2xs text-secondary space-y-1">
-                      <li>• WhatsApp → Reminders auto-send to customers via your API</li>
-                      <li>• Razorpay → Payment link included in every reminder message</li>
-                      <li>• Customer pays → Invoice auto-closes → You get a push notification</li>
-                      <li>• Customer gets a thank-you WhatsApp automatically</li>
+                      <li>📄 Invoice create → Customer ko WhatsApp (payment link ke saath)</li>
+                      <li>⏰ Daily 9 AM → Overdue invoices pe auto-reminder (aapke rules ke hisaab se)</li>
+                      <li>💰 Customer pays → Invoice auto-close → Aapko push + WhatsApp notification</li>
+                      <li>🙏 Customer ko thank-you WhatsApp automatic</li>
                     </ul>
                   </div>
                 </div>
