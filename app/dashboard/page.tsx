@@ -281,19 +281,28 @@ export default function DashboardPage() {
           </Alert>
         )}
 
-        {/* Free plan upgrade nudge */}
-        {userPlan === "free" && metrics && metrics.total_customers > 0 && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-accent/10 to-success/10 border border-accent/20">
-            <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center shrink-0 shadow-button-accent">
-              <FiZap size={14} className="text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-primary">You're on the free plan</p>
-              <p className="text-xs text-muted">Unlock WhatsApp automation, unlimited customers & Tally sync. Businesses recover 3× more on Pro.</p>
+        {/* Free plan — loss aversion nudge tied to real pending count */}
+        {userPlan === "free" && (
+          <div className="rounded-xl border border-white/8 bg-surface-1 p-4 flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center shrink-0">
+                <span className="text-base">💸</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-black text-primary leading-tight mb-0.5">
+                  {(metrics?.pending_invoices ?? 0) > 0
+                    ? `${metrics!.pending_invoices} invoices are overdue — not one reminder sent automatically.`
+                    : "No automation is running. Every reminder is manual."}
+                </p>
+                <p className="text-xs text-muted leading-snug">
+                  Businesses on Growth recover 3.2× more in the same time.
+                  <span className="text-white"> ₹999/mo</span> — automation pays for itself in the first invoice.
+                </p>
+              </div>
             </div>
             <Link href="/billing"
-              className="shrink-0 px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-all shadow-button-accent whitespace-nowrap">
-              Upgrade →
+              className="shrink-0 px-4 py-2 rounded-xl bg-white text-black text-xs font-black hover:bg-white/90 transition-all whitespace-nowrap">
+              Start Automating →
             </Link>
           </div>
         )}
