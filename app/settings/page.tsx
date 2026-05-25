@@ -63,7 +63,8 @@ const CITIES = [
 ];
 const timezoneOptions = [{ value: "Asia/Kolkata", label: "IST — Asia/Kolkata (UTC+5:30)" }];
 
-const WEBHOOK_URL = `${BASE}/api/razorpay/webhook`;
+const WEBHOOK_URL    = `${BASE}/api/payments/webhook`;
+const WA_WEBHOOK_URL = `${BASE}/api/webhooks/whatsapp-inbound`;
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -552,6 +553,18 @@ export default function SettingsPage() {
                         {testResult.ok ? <FiCheckCircle size={12} /> : <FiAlertCircle size={12} />} {testResult.msg}
                       </div>
                     )}
+                    {/* WA Inbound Webhook URL */}
+                    <div className="p-3 bg-surface-2 border border-border rounded-xl mt-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-semibold text-secondary">Reply-Pause Webhook (copy into your provider)</p>
+                        <CopyButton text={WA_WEBHOOK_URL} />
+                      </div>
+                      <p className="text-xs font-mono text-muted break-all">{WA_WEBHOOK_URL}</p>
+                      <p className="text-2xs text-muted mt-1.5">
+                        When customers reply "kal", "2 din", "next week" etc., dunning auto-pauses for that invoice.
+                        Interakt → Settings → Developer → Webhook URL. WATI → Configuration → Webhook.
+                      </p>
+                    </div>
                   </form>
                 </Card>
 

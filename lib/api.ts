@@ -48,6 +48,7 @@ export const api = {
     list: (userId: string) => request<{ invoices: Invoice[]; summary: Summary }>(`/api/invoices/${userId}`),
     markPaid: (invoiceId: string, body: object) =>
       request<{ invoice: Invoice }>('/api/mark-paid', { method: 'POST', body: JSON.stringify({ invoice_id: invoiceId, ...body }) }),
+    migrate: () => request<{ success: boolean; message: string }>('/api/invoices/migrate', { method: 'POST' }),
     upload: (userId: string, file: File) => {
       const fd = new FormData();
       fd.append('file', file);
@@ -244,6 +245,7 @@ export interface Invoice {
   payment_link_id?: string;
   last_reminder_sent?: string;
   reminder_count?: number;
+  snooze_until?: string;
 }
 
 export interface Metrics {
