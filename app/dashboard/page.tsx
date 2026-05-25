@@ -14,7 +14,7 @@ import {
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
-import { api, getUser, type Metrics } from "@/lib/api";
+import { api, getUser, type Metrics, type Invoice } from "@/lib/api";
 import QuickSale from "@/components/QuickSale";
 import { FiUpload } from "react-icons/fi";
 import { isDemoMode } from "@/lib/demo";
@@ -132,6 +132,7 @@ export default function DashboardPage() {
   const [showPaymentCelebration, setShowPaymentCelebration] = useState<{ amount: number; name: string } | null>(null);
   const [showRiskBanner, setShowRiskBanner] = useState(true);
   const [liveCustomers, setLiveCustomers] = useState<typeof CUSTOMERS>([]);
+  const [rawInvoices, setRawInvoices]       = useState<Invoice[]>([]);
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
@@ -166,19 +167,18 @@ export default function DashboardPage() {
 
     // Fetch top 5 priority customers (live, overdue first)
     api.invoices.list(user.id).then(d => {
-      const mapped = (d.invoices || [])
-        .filter(inv => inv.payment_status === "Pending")
-        .sort((a, b) => b.days_overdue - a.days_overdue)
-        .slice(0, 5)
-        .map((inv, i) => ({
-          id: i + 1,
-          name: inv.customer_name,
-          outstanding: inv.invoice_amount,
-          days: inv.days_overdue,
-          score: Math.max(10, Math.min(99, 90 - inv.days_overdue)),
-          lastPayment: inv.payment_date || "—",
-          contact: inv.customer_phone || "",
-        }));
+      const pending = (d.invoices || []).filter(inv => inv.payment_status === "Pending");
+      setRawInvoices(pending);
+      const sorted = [...pending].sort((a, b) => b.days_overdue - a.days_overdue);
+      const mapped = sorted.slice(0, 5).map((inv, i) => ({
+        id: i + 1,
+        name: inv.customer_name,
+        outstanding: inv.invoice_amount,
+        days: inv.days_overdue,
+        score: Math.max(10, Math.min(99, 90 - inv.days_overdue)),
+        lastPayment: inv.payment_date || "—",
+        contact: inv.customer_phone || "",
+      }));
       if (mapped.length > 0) setLiveCustomers(mapped);
     }).catch(() => {});
     api.calls.list(user.id).then(d => {
@@ -210,7 +210,21 @@ export default function DashboardPage() {
     });
   }, []);
 
-  // Override static values with real data when available
+  // ── Live computed values for Today's Actions ─────────────────────────────
+  const now = Date.now();
+  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+  const callsLeft    = rawInvoices.length; // pending invoices = calls still to chase
+  const waToSend     = rawInvoices.filter(inv =>
+    !inv.last_reminder_sent || (now - new Date(inv.last_reminder_sent).getTime()) > THREE_DAYS_MS
+  ).length;
+  const promisedAmt  = promises.reduce((s, p) => s + ((p as any).amount || 0), 0);
+
+  // ── Live risk customers (60–89 days — approaching the 90-day uncollectable cliff) ──
+  const liveRiskCustomers = liveCustomers.filter(c => c.days >= 60 && c.days < 90).slice(0, 3);
+  const riskTotal         = liveRiskCustomers.reduce((s, c) => s + c.outstanding, 0);
+  const showLiveRisk      = liveRiskCustomers.length > 0;
+
+  // ── Override static values with real data when available ─────────────────
   const liveMetrics = metrics ? [
     { label: "Total Outstanding",      value: `₹${(metrics.total_outstanding/100000).toFixed(1)}L`, sub: `${metrics.total_customers} customers`,  icon: FiDollarSign,   accent: "#0066FF", glow: "rgba(0,102,255,0.15)",  pct: 72 },
     { label: "Days Sales Outstanding", value: "42",      sub: "days — target <30",   icon: FiClock,        accent: "#F5A524", glow: "rgba(245,165,36,0.12)", pct: 58 },
@@ -275,43 +289,49 @@ export default function DashboardPage() {
         )}
 
         {/* ── LOSS AVERSION BANNER (Kahneman — loss 2x stronger than gain) ── */}
-        {showRiskBanner && (
-          <div className="rounded-xl border-2 p-4 relative overflow-hidden"
-            style={{ background: "rgba(245,66,77,0.08)", borderColor: "#F5424D" }}>
-            <div className="absolute inset-0 opacity-5"
-              style={{ background: "repeating-linear-gradient(45deg, #F5424D, #F5424D 2px, transparent 2px, transparent 12px)" }} />
-            <button onClick={() => setShowRiskBanner(false)}
-              className="absolute top-3 right-3 text-danger/50 hover:text-danger text-xs">✕</button>
-            <div className="flex items-start gap-3">
-              <div className="text-2xl shrink-0">🚨</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-black text-danger">
-                  ₹{((RISK_CUSTOMERS.reduce((s, c) => s + c.amount, 0)) / 100000).toFixed(1)}L KHATRE MEIN HAI
-                </p>
-                <p className="text-xs text-danger/70 mt-0.5 mb-3">
-                  {RISK_CUSTOMERS.length} customers 90-din limit cross karne waale hain — 90 din baad 60% chances recover nahi hoga
-                </p>
-                <div className="space-y-1.5 mb-3">
-                  {RISK_CUSTOMERS.map((c) => (
-                    <div key={c.name} className="flex items-center justify-between">
-                      <span className="text-xs text-danger/80 font-medium">{c.name}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-danger">{fmtAmt(c.amount)}</span>
-                        <span className="text-2xs bg-danger/20 text-danger px-1.5 py-0.5 rounded-full font-bold">
-                          {c.daysLeft} din ⏰
-                        </span>
+        {showRiskBanner && (showLiveRisk || !metrics) && (() => {
+          const riskList = showLiveRisk
+            ? liveRiskCustomers.map(c => ({ name: c.name, amount: c.outstanding, daysLeft: 90 - c.days }))
+            : RISK_CUSTOMERS;
+          const total = showLiveRisk ? riskTotal : RISK_CUSTOMERS.reduce((s, c) => s + c.amount, 0);
+          return (
+            <div className="rounded-xl border-2 p-4 relative overflow-hidden"
+              style={{ background: "rgba(245,66,77,0.08)", borderColor: "#F5424D" }}>
+              <div className="absolute inset-0 opacity-5"
+                style={{ background: "repeating-linear-gradient(45deg, #F5424D, #F5424D 2px, transparent 2px, transparent 12px)" }} />
+              <button onClick={() => setShowRiskBanner(false)}
+                className="absolute top-3 right-3 text-danger/50 hover:text-danger text-xs">✕</button>
+              <div className="flex items-start gap-3">
+                <div className="text-2xl shrink-0">🚨</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-black text-danger">
+                    ₹{(total / 100000).toFixed(1)}L KHATRE MEIN HAI
+                  </p>
+                  <p className="text-xs text-danger/70 mt-0.5 mb-3">
+                    {riskList.length} customers 90-din limit cross karne waale hain — 90 din baad 60% chances recover nahi hoga
+                  </p>
+                  <div className="space-y-1.5 mb-3">
+                    {riskList.map((c) => (
+                      <div key={c.name} className="flex items-center justify-between">
+                        <span className="text-xs text-danger/80 font-medium">{c.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-danger">{fmtAmt(c.amount)}</span>
+                          <span className="text-2xs bg-danger/20 text-danger px-1.5 py-0.5 rounded-full font-bold">
+                            {c.daysLeft} din ⏰
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  <Link href="/collections"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-danger text-white text-xs font-bold hover:bg-danger/90 transition-all">
+                    🔥 Abhi Call Karo <FiArrowRight size={11} />
+                  </Link>
                 </div>
-                <Link href="/collections"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-danger text-white text-xs font-bold hover:bg-danger/90 transition-all">
-                  🔥 Abhi Call Karo <FiArrowRight size={11} />
-                </Link>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ── DOPAMINE DASHBOARD HERO ──────────────────────────────────────── */}
         <div className="card-premium overflow-hidden">
@@ -427,20 +447,38 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Today's action items — Zeigarnik incomplete tasks */}
+          {/* Today's action items — Zeigarnik incomplete tasks (live data) */}
           <div className="px-5 pb-5 grid grid-cols-3 gap-2">
-            {[
-              { icon: FiPhone,         label: "5 Calls Baaki",      href: "/collections", color: "#F5424D", urgent: true },
-              { icon: FiMessageSquare, label: "3 WA Bhejo",          href: "/whatsapp",    color: "#25D366", urgent: false },
-              { icon: FiTarget,        label: "₹3.2L Promised",      href: "/collections", color: "#F5A524", urgent: false },
-            ].map(({ icon: Icon, label, href, color, urgent }) => (
+            {([
+              {
+                Icon: FiPhone,
+                label: callsLeft > 0 ? `${callsLeft} Call${callsLeft === 1 ? "" : "s"} Baaki` : "Calls Done ✓",
+                href: "/collections",
+                color: callsLeft > 0 ? "#F5424D" : "#10D98A",
+                urgent: callsLeft > 0,
+              },
+              {
+                Icon: FiMessageSquare,
+                label: waToSend > 0 ? `${waToSend} WA Bhejo` : "WA Done ✓",
+                href: "/whatsapp",
+                color: waToSend > 0 ? "#25D366" : "#10D98A",
+                urgent: false,
+              },
+              {
+                Icon: FiTarget,
+                label: promisedAmt > 0 ? `${fmtAmt(promisedAmt)} Promised` : promises.length > 0 ? `${promises.length} Promises` : "No Promises",
+                href: "/collections",
+                color: "#F5A524",
+                urgent: false,
+              },
+            ]).map(({ Icon, label, href, color, urgent }) => (
               <Link key={label} href={href}
                 className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border transition-all group text-center"
                 style={{ background: `${color}10`, borderColor: `${color}25` }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                <div className="relative w-8 h-8 rounded-lg flex items-center justify-center"
                   style={{ background: `${color}20` }}>
                   <Icon size={15} style={{ color }} />
-                  {urgent && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-danger" />}
+                  {urgent && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-danger animate-pulse" />}
                 </div>
                 <p className="text-2xs font-bold leading-tight" style={{ color }}>{label}</p>
               </Link>
@@ -555,7 +593,9 @@ export default function DashboardPage() {
                 <p className="text-sm font-bold text-primary">Outstanding Trend</p>
                 <p className="text-xs text-secondary mt-0.5">Last 7 weeks</p>
               </div>
-              <span className="metric-value text-base text-accent">₹45.2L</span>
+              <span className="metric-value text-base text-accent">
+                {metrics ? fmtAmt(metrics.total_outstanding) : "₹—"}
+              </span>
             </div>
             <ResponsiveContainer width="100%" height={110}>
               <AreaChart data={SPARKLINE} margin={{ top: 2, right: 2, left: 0, bottom: 0 }}>
@@ -574,23 +614,33 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           </div>
 
-          {/* Quick KPIs */}
+          {/* Quick KPIs — live data */}
           <div className="space-y-3">
-            {[
-              { label: "Collected this month", value: "₹8.4L",  pct: 68, color: "#10D98A" },
-              { label: "Promised to pay",       value: "₹3.2L",  pct: 26, color: "#F5A524" },
-              { label: "Unreachable",            value: "₹4.1L",  pct: 33, color: "#F5424D" },
-            ].map(({ label, value, pct, color }) => (
-              <div key={label} className="card-premium px-4 py-3">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs text-secondary">{label}</p>
-                  <span className="metric-value text-sm" style={{ color }}>{value}</span>
+            {(() => {
+              const totalOut  = metrics?.total_outstanding || 0;
+              const collected = metrics?.total_paid || 0;
+              const promised  = promisedAmt;
+              // "unreachable" = outstanding minus collected minus promised (approximate)
+              const unreachable = Math.max(0, totalOut - promised);
+              const collectedPct  = totalOut > 0 ? Math.min(100, Math.round((collected / (collected + totalOut)) * 100)) : 0;
+              const promisedPct   = totalOut > 0 ? Math.min(100, Math.round((promised / totalOut) * 100)) : 0;
+              const unreachPct    = totalOut > 0 ? Math.min(100, Math.round((unreachable / totalOut) * 100)) : 0;
+              return [
+                { label: "Total collected",  value: collected > 0 ? fmtAmt(collected) : "—", pct: collectedPct, color: "#10D98A" },
+                { label: "Promised to pay",  value: promised  > 0 ? fmtAmt(promised)  : "—", pct: promisedPct,  color: "#F5A524" },
+                { label: "Still outstanding",value: totalOut  > 0 ? fmtAmt(unreachable): "—", pct: unreachPct,  color: "#F5424D" },
+              ].map(({ label, value, pct, color }) => (
+                <div key={label} className="card-premium px-4 py-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-secondary">{label}</p>
+                    <span className="metric-value text-sm" style={{ color }}>{value}</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${pct}%`, background: color }} />
+                  </div>
                 </div>
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${pct}%`, background: color }} />
-                </div>
-              </div>
-            ))}
+              ));
+            })()}
           </div>
         </div>
 
