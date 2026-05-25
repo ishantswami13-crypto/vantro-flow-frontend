@@ -170,9 +170,6 @@ export const api = {
       request<{ success: boolean; automation_enabled: boolean }>('/api/settings/automation/toggle', { method: 'POST', body: JSON.stringify({ enabled }) }),
   },
 
-  // ─── Seed ────────────────────────────────────────────────
-  seed: (userId: string) => request<{ seeded: object }>(`/api/seed/${userId}`, { method: 'POST' }),
-
   // ─── Bank Ledger / Transactions ──────────────────────────
   transactions: {
     list: (userId: string) =>
