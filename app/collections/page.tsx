@@ -11,7 +11,7 @@ import {
   FiSearch, FiMessageSquare, FiCheckSquare,
   FiDownload, FiArrowUp, FiArrowDown, FiPhone,
   FiUpload, FiX, FiCopy, FiMessageCircle, FiSend,
-  FiZap,
+  FiZap, FiPlus,
 } from "react-icons/fi";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -136,6 +136,16 @@ export default function CollectionsPage() {
   // Bulk remind
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkResult, setBulkResult]   = useState<string | null>(null);
+
+  // Add Invoice modal
+  const [showAddInvoice, setShowAddInvoice] = useState(false);
+  const [addForm, setAddForm] = useState({
+    customer_name: "", customer_phone: "", invoice_amount: "",
+    invoice_date: new Date().toISOString().split("T")[0],
+    invoice_number: "", notes: "",
+  });
+  const [addSaving, setAddSaving] = useState(false);
+  const [addError, setAddError]   = useState("");
 
   useEffect(() => {
     if (!paidToast) return;
@@ -329,6 +339,33 @@ export default function CollectionsPage() {
     finally { setImporting(false); }
   };
 
+  const handleAddInvoice = async () => {
+    const user = getUser();
+    if (!user?.id) return;
+    if (!addForm.customer_name.trim()) { setAddError("Customer name is required"); return; }
+    const amount = parseFloat(addForm.invoice_amount);
+    if (isNaN(amount) || amount <= 0) { setAddError("Enter a valid amount"); return; }
+    setAddSaving(true); setAddError("");
+    try {
+      await api.invoices.create({
+        customer_name: addForm.customer_name.trim(),
+        customer_phone: addForm.customer_phone.trim() || undefined,
+        invoice_amount: amount,
+        invoice_date: addForm.invoice_date,
+        invoice_number: addForm.invoice_number.trim() || undefined,
+        notes: addForm.notes.trim() || undefined,
+      });
+      posthog.capture("invoice_added_manually");
+      setShowAddInvoice(false);
+      setAddForm({ customer_name: "", customer_phone: "", invoice_amount: "", invoice_date: new Date().toISOString().split("T")[0], invoice_number: "", notes: "" });
+      loadInvoices(user.id);
+    } catch (err: unknown) {
+      setAddError(err instanceof Error ? err.message : "Failed to add invoice");
+    } finally {
+      setAddSaving(false);
+    }
+  };
+
   const tableData = liveData ?? DATA;
   const industries = useMemo(() => ["all", ...Array.from(new Set(tableData.map((c) => c.industry)))], [tableData]);
   const rows = useMemo(() => {
@@ -493,6 +530,129 @@ export default function CollectionsPage() {
           </div>
         )}
 
+        {/* ── Add Invoice Modal ── */}
+        {showAddInvoice && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowAddInvoice(false)}>
+            <div className="w-full max-w-md bg-surface-1 border border-border rounded-2xl shadow-2xl"
+              onClick={e => e.stopPropagation()}>
+
+              {/* Modal header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border/60">
+                <div>
+                  <p className="text-sm font-bold text-primary">Add Invoice</p>
+                  <p className="text-2xs text-muted mt-0.5">Add a single customer invoice manually</p>
+                </div>
+                <button onClick={() => setShowAddInvoice(false)} className="text-muted hover:text-primary transition-colors">
+                  <FiX size={16} />
+                </button>
+              </div>
+
+              {/* Form */}
+              <div className="px-6 py-5 space-y-4">
+                {/* Customer Name */}
+                <div>
+                  <label className="text-xs font-semibold text-secondary block mb-1.5">
+                    Customer Name <span className="text-danger">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    autoFocus
+                    value={addForm.customer_name}
+                    onChange={e => setAddForm(f => ({ ...f, customer_name: e.target.value }))}
+                    placeholder="e.g. Mehta Fabrics Pvt Ltd"
+                    className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors placeholder-muted/50"
+                  />
+                </div>
+
+                {/* Amount + Phone in a row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-secondary block mb-1.5">
+                      Amount (₹) <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={addForm.invoice_amount}
+                      onChange={e => setAddForm(f => ({ ...f, invoice_amount: e.target.value }))}
+                      placeholder="e.g. 50000"
+                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors placeholder-muted/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-secondary block mb-1.5">Phone</label>
+                    <input
+                      type="tel"
+                      value={addForm.customer_phone}
+                      onChange={e => setAddForm(f => ({ ...f, customer_phone: e.target.value }))}
+                      placeholder="10-digit"
+                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors placeholder-muted/50"
+                    />
+                  </div>
+                </div>
+
+                {/* Invoice Date + Invoice Number */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-secondary block mb-1.5">
+                      Invoice Date <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={addForm.invoice_date}
+                      onChange={e => setAddForm(f => ({ ...f, invoice_date: e.target.value }))}
+                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-secondary block mb-1.5">Invoice #</label>
+                    <input
+                      type="text"
+                      value={addForm.invoice_number}
+                      onChange={e => setAddForm(f => ({ ...f, invoice_number: e.target.value }))}
+                      placeholder="e.g. INV-001"
+                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors placeholder-muted/50"
+                    />
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="text-xs font-semibold text-secondary block mb-1.5">Notes</label>
+                  <textarea
+                    value={addForm.notes}
+                    onChange={e => setAddForm(f => ({ ...f, notes: e.target.value }))}
+                    rows={2}
+                    placeholder="What goods or services? Any context..."
+                    className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none placeholder-muted/50"
+                  />
+                </div>
+
+                {/* Error */}
+                {addError && (
+                  <p className="text-xs text-danger bg-danger/10 border border-danger/20 px-3 py-2 rounded-lg">{addError}</p>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex gap-2 px-6 pb-5">
+                <button onClick={() => setShowAddInvoice(false)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-surface-2 border border-border text-secondary hover:text-primary transition-all">
+                  Cancel
+                </button>
+                <button onClick={handleAddInvoice} disabled={addSaving}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent/90 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                  {addSaving
+                    ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+                    : <><FiPlus size={14} /> Add Invoice</>
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
@@ -526,6 +686,10 @@ export default function CollectionsPage() {
                 Message ({totalSelected})
               </button>
             )}
+            <button onClick={() => { setShowAddInvoice(true); setAddError(""); }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-all">
+              <FiPlus size={13} /> Add Invoice
+            </button>
             <button onClick={() => setShowImport(true)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-2 border border-border text-secondary text-xs font-semibold hover:text-primary hover:border-accent/30 transition-all">
               <FiUpload size={13} /> Import Excel

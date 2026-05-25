@@ -46,6 +46,15 @@ export const api = {
   // ─── Invoices / Collections ─────────────────────────────
   invoices: {
     list: (userId: string) => request<{ invoices: Invoice[]; summary: Summary }>(`/api/invoices/${userId}`),
+    create: (body: {
+      customer_name: string;
+      customer_phone?: string;
+      invoice_amount: number;
+      invoice_date: string;
+      due_date?: string;
+      invoice_number?: string;
+      notes?: string;
+    }) => request<{ success: boolean; invoice: Invoice }>('/api/invoices/create', { method: 'POST', body: JSON.stringify(body) }),
     markPaid: (invoiceId: string, body: object) =>
       request<{ invoice: Invoice }>('/api/mark-paid', { method: 'POST', body: JSON.stringify({ invoice_id: invoiceId, ...body }) }),
     migrate: () => request<{ success: boolean; message: string }>('/api/invoices/migrate', { method: 'POST' }),
