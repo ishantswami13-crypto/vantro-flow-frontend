@@ -12,7 +12,7 @@ import {
   FiArchive, FiFile, FiDollarSign, FiZap, FiLock, FiAlertTriangle,
 } from "react-icons/fi";
 import LogoMark from "@/components/LogoMark";
-import { getUser, clearAuth } from "@/lib/api";
+import { api, getUser, clearAuth } from "@/lib/api";
 import { getBusinessType, getSmartHiddenRoutes, type BusinessTypeConfig } from "@/lib/businessTypes";
 import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
 
@@ -20,7 +20,7 @@ import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey }
 const NAV = [
   // ── Command Center
   { href: "/dashboard",      label: "Dashboard",       icon: FiGrid,          badge: null,   group: "core" },
-  { href: "/collections",    label: "Collections",     icon: FiList,          badge: "12",   group: "core" },
+  { href: "/collections",    label: "Collections",     icon: FiList,          badge: null,   group: "core" },
   { href: "/whatsapp",       label: "WhatsApp",        icon: FiMessageSquare, badge: null,   group: "core" },
   { href: "/dunning",        label: "Auto Follow-Up",  icon: FiRepeat,        badge: null,   group: "core" },
   // ── Intelligence
@@ -73,6 +73,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const [bizType, setBizType]             = useState<BusinessTypeConfig | null>(null);
   const [hiddenRoutes, setHiddenRoutes]   = useState<Set<string>>(new Set());
   const [grantedFeatures, setGrantedFeatures] = useState<Set<FeatureKey>>(new Set());
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
 
   useEffect(() => {
     const loadBizType = () => {
@@ -92,6 +93,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       setUserName(u.business_name || emailName);
       setBizName(u.email || "");
       setIsAdmin(u.email === "ishantswami13@gmail.com");
+      // Fetch live pending invoice count for the Collections badge
+      api.metrics(u.id).then(d => {
+        const count = d.metrics?.pending_invoices;
+        if (typeof count === "number") setPendingCount(count);
+      }).catch(() => {});
     }
     loadBizType();
 
@@ -153,6 +159,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 <div className="space-y-0.5">
                   {items.map(({ href, label: itemLabel, icon: Icon, badge }) => {
                     const active = pathname === href || pathname.startsWith(href + "/");
+                    // Live badge: override hardcoded "12" on /collections with real pending count
+                    const liveBadge = href === "/collections"
+                      ? (pendingCount !== null && pendingCount > 0 ? String(pendingCount) : null)
+                      : badge;
 
                     // Plan-based lock check
                     const featureKey = ROUTE_TO_FEATURE[href];
@@ -185,14 +195,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                           active ? "text-accent drop-shadow-[0_0_6px_rgba(0,102,255,0.7)]" : "text-muted group-hover:text-secondary",
                         ].join(" ")} />
                         <span className="flex-1">{itemLabel}</span>
-                        {badge && (
+                        {liveBadge && (
                           <span className={[
                             "text-2xs font-bold font-mono min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full",
-                            badge === "AI"  ? "bg-accent-dim text-accent border border-accent/20"
-                            : badge === "NEW" ? "bg-success-dim text-success border border-success/20"
+                            liveBadge === "AI"  ? "bg-accent-dim text-accent border border-accent/20"
+                            : liveBadge === "NEW" ? "bg-success-dim text-success border border-success/20"
                             : "bg-danger-dim text-danger border border-danger/20",
                           ].join(" ")}>
-                            {badge}
+                            {liveBadge}
                           </span>
                         )}
                       </Link>

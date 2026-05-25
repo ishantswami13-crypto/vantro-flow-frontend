@@ -25,7 +25,7 @@ const REPORTS = [
     desc: "Full list of all unpaid invoices with customer details, days overdue, and AI collection score",
     icon: <FiDollarSign size={18}/>,
     color: "#F5424D",
-    formats: ["Excel", "CSV"],
+    formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "Today 9:00 AM",
     pages: 4,
   },
@@ -35,7 +35,7 @@ const REPORTS = [
     desc: "Monthly recovery rates, call logs, WhatsApp delivery, payment trends over time",
     icon: <FiTrendingUp size={18}/>,
     color: "#10D98A",
-    formats: ["Excel", "CSV"],
+    formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "Yesterday",
     pages: 6,
   },
@@ -45,7 +45,7 @@ const REPORTS = [
     desc: "Individual customer account statement — all invoices, payments, and outstanding balance",
     icon: <FiUsers size={18}/>,
     color: "#0066FF",
-    formats: ["Excel", "CSV"],
+    formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "12 May 2025",
     pages: 2,
   },
@@ -55,7 +55,7 @@ const REPORTS = [
     desc: "30/60/90-day cash projection with optimistic, expected, and pessimistic scenarios",
     icon: <FiCalendar size={18}/>,
     color: "#F5A524",
-    formats: ["Excel"],
+    formats: ["Excel", "PDF"],
     lastGenerated: "14 May 2025",
     pages: 3,
   },
@@ -65,7 +65,7 @@ const REPORTS = [
     desc: "All collection calls — duration, outcome, promises made, follow-up status",
     icon: <FiPhone size={18}/>,
     color: "#9B6DFF",
-    formats: ["Excel", "CSV"],
+    formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "13 May 2025",
     pages: 5,
   },
@@ -75,7 +75,7 @@ const REPORTS = [
     desc: "GSTIN-wise breakdown of all sales and outstanding — ready for CA and filing",
     icon: <FiFileText size={18}/>,
     color: "#0066FF",
-    formats: ["Excel", "CSV"],
+    formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "1 May 2025",
     pages: 2,
   },
@@ -89,11 +89,6 @@ export default function ReportsPage() {
   const [downloaded, setDownloaded]   = useState<string[]>([]);
 
   const handleDownload = async (reportId: string, format: string) => {
-    // PDF not yet supported — prompt user to use Excel/CSV
-    if (format.toLowerCase() === "pdf") {
-      alert("PDF export coming soon. Please use Excel or CSV for now.");
-      return;
-    }
     const key = `${reportId}-${format}`;
     setDownloading(key);
     try {
@@ -101,6 +96,23 @@ export default function ReportsPage() {
       const days = DATE_RANGE_DAYS[dateRange] || 30;
       const toDate   = new Date().toISOString().split("T")[0];
       const fromDate = new Date(Date.now() - days * 86400000).toISOString().split("T")[0];
+
+      // PDF: fetch the backend HTML report and open in a new print tab
+      if (format.toLowerCase() === "pdf") {
+        const url = `${BASE}/api/reports/export?report=${reportId}&format=html&from=${fromDate}&to=${toDate}`;
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) { alert("Export failed"); return; }
+        const html = await res.text();
+        const blob = new Blob([html], { type: "text/html" });
+        const blobUrl = URL.createObjectURL(blob);
+        const win = window.open(blobUrl, "_blank");
+        if (!win) alert("Pop-up blocked — please allow pop-ups for this site and try again.");
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 8000);
+        setDownloaded(prev => [...prev, key]);
+        setTimeout(() => setDownloaded(prev => prev.filter(k => k !== key)), 4000);
+        return;
+      }
+
       const fmt = format.toLowerCase() === "excel" ? "xlsx" : "csv";
       const url = `${BASE}/api/reports/export?report=${reportId}&format=${fmt}&from=${fromDate}&to=${toDate}`;
       const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -119,7 +131,7 @@ export default function ReportsPage() {
       URL.revokeObjectURL(a.href);
       setDownloaded(prev => [...prev, key]);
       setTimeout(() => setDownloaded(prev => prev.filter(k => k !== key)), 4000);
-    } catch (e) {
+    } catch {
       alert("Download failed. Check your connection.");
     } finally {
       setDownloading(null);

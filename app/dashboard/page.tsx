@@ -131,6 +131,7 @@ export default function DashboardPage() {
   const [dailyGoal]                   = useState(400000); // ₹4L default goal
   const [showPaymentCelebration, setShowPaymentCelebration] = useState<{ amount: number; name: string } | null>(null);
   const [showRiskBanner, setShowRiskBanner] = useState(true);
+  const [liveCustomers, setLiveCustomers] = useState<typeof CUSTOMERS>([]);
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
@@ -162,6 +163,24 @@ export default function DashboardPage() {
     }
 
     api.metrics(user.id).then(d => setMetrics(d.metrics)).catch(() => {});
+
+    // Fetch top 5 priority customers (live, overdue first)
+    api.invoices.list(user.id).then(d => {
+      const mapped = (d.invoices || [])
+        .filter(inv => inv.payment_status === "Pending")
+        .sort((a, b) => b.days_overdue - a.days_overdue)
+        .slice(0, 5)
+        .map((inv, i) => ({
+          id: i + 1,
+          name: inv.customer_name,
+          outstanding: inv.invoice_amount,
+          days: inv.days_overdue,
+          score: Math.max(10, Math.min(99, 90 - inv.days_overdue)),
+          lastPayment: inv.payment_date || "—",
+          contact: inv.customer_phone || "",
+        }));
+      if (mapped.length > 0) setLiveCustomers(mapped);
+    }).catch(() => {});
     api.calls.list(user.id).then(d => {
       const todayPromises = (d.calls || []).filter(
         (c: any) => c.promised_payment_date && c.promised_payment_date >= today
@@ -583,7 +602,7 @@ export default function DashboardPage() {
               <p className="text-xs text-secondary mt-0.5">Sorted by AI collection priority score</p>
             </div>
             <Link href="/collections" className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline font-medium">
-              View all 42 <FiArrowRight size={12} />
+              View all {metrics?.pending_invoices ?? "—"} <FiArrowRight size={12} />
             </Link>
           </div>
           <div className="overflow-x-auto">
@@ -599,7 +618,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {CUSTOMERS.map((c, i) => (
+                {(liveCustomers.length > 0 ? liveCustomers : CUSTOMERS).map((c, i) => (
                   <tr key={c.id} style={{ animationDelay: `${i * 40}ms` }} className="animate-row-in">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
