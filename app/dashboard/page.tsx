@@ -271,6 +271,42 @@ export default function DashboardPage() {
           />
         )}
 
+        {/* ── PROMISES DUE TODAY — highest-urgency banner ── */}
+        {promises.length > 0 && (() => {
+          const today = new Date().toISOString().split("T")[0];
+          const dueToday = promises.filter(p => p.promised_payment_date <= today);
+          if (dueToday.length === 0) return null;
+          const total = dueToday.reduce((s, p) => s + ((p as any).amount || 0), 0);
+          return (
+            <div className="rounded-xl overflow-hidden"
+              style={{ background: "rgba(245,165,36,0.08)", border: "1px solid rgba(245,165,36,0.3)" }}>
+              <div className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">🤝</span>
+                  <div>
+                    <p className="text-sm font-black text-warning leading-tight">
+                      {dueToday.length} promise{dueToday.length > 1 ? "s" : ""} aaj due —{" "}
+                      {total > 0 && `₹${(total / 100000).toFixed(1)}L`}
+                    </p>
+                    <p className="text-2xs text-muted mt-0.5">
+                      {dueToday.map(p => p.customer_name).slice(0, 2).join(", ")}
+                      {dueToday.length > 2 ? ` +${dueToday.length - 2} aur` : ""}
+                    </p>
+                  </div>
+                </div>
+                <Link href="/collections"
+                  className="shrink-0 px-4 py-2 rounded-xl text-xs font-black text-black transition-all active:scale-95"
+                  style={{
+                    background: "linear-gradient(135deg, #FF6B35, #F55A22)",
+                    boxShadow: "0 2px 10px rgba(255,107,53,0.4)",
+                  }}>
+                  Follow Up →
+                </Link>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Alert banner */}
         {cashRunway < 15 && (
           <Alert variant="danger" title="Critical: Cash Runway 12 Days">

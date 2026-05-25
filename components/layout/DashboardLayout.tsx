@@ -5,6 +5,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
 import InstallPrompt from "@/components/ui/InstallPrompt";
+import PaymentCelebration from "@/components/PaymentCelebration";
 import { isDemoMode, exitDemoMode } from "@/lib/demo";
 import { hydrateUserContext } from "@/lib/featureGating";
 import Link from "next/link";
@@ -174,6 +175,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
 
       <BottomNav />
       <InstallPrompt />
+      {!isDemo && <PaymentCelebration />}
     </div>
   );
 }
