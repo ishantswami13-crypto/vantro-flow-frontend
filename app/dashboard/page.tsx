@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { api, getUser, type Metrics, type Invoice } from "@/lib/api";
 import QuickSale from "@/components/QuickSale";
+import WelcomeGuide from "@/components/WelcomeGuide";
 import { FiUpload } from "react-icons/fi";
 import { isDemoMode } from "@/lib/demo";
 
@@ -131,6 +132,11 @@ export default function DashboardPage() {
   const [dailyGoal]                   = useState(400000); // ₹4L default goal
   const [showPaymentCelebration, setShowPaymentCelebration] = useState<{ amount: number; name: string } | null>(null);
   const [showRiskBanner, setShowRiskBanner] = useState(true);
+  const [showGuide, setShowGuide] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("vantro_guide_dismissed") !== "1";
+  });
+  const [guideData, setGuideData] = useState({ waConnected: false, autoEnabled: false });
   const [liveCustomers, setLiveCustomers] = useState<typeof CUSTOMERS>([]);
   const [rawInvoices, setRawInvoices]       = useState<Invoice[]>([]);
   const today = new Date().toISOString().split("T")[0];
@@ -164,6 +170,15 @@ export default function DashboardPage() {
     }
 
     api.metrics(user.id).then(d => setMetrics(d.metrics)).catch(() => {});
+
+    // Load guide state (settings check)
+    api.settings.get().then(d => {
+      const s = d.settings;
+      setGuideData({
+        waConnected: !!(s.interakt_api_key || s.wati_api_url),
+        autoEnabled: !!s.automation_enabled,
+      });
+    }).catch(() => {});
 
     // Fetch top 5 priority customers (live, overdue first)
     api.invoices.list(user.id).then(d => {
@@ -243,6 +258,16 @@ export default function DashboardPage() {
         <FiZap size={16} /> Quick Sale
       </button>
       <div className="space-y-6 page-enter">
+        {/* Welcome guide — shows for new users until dismissed */}
+        {showGuide && (
+          <WelcomeGuide
+            waConnected={guideData.waConnected}
+            hasInvoices={(metrics?.pending_invoices ?? 0) > 0 || (rawInvoices.length > 0)}
+            autoEnabled={guideData.autoEnabled}
+            onDismiss={() => setShowGuide(false)}
+          />
+        )}
+
         {/* Alert banner */}
         {cashRunway < 15 && (
           <Alert variant="danger" title="Critical: Cash Runway 12 Days">
