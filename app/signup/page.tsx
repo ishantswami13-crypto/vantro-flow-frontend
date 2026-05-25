@@ -268,8 +268,7 @@ function SignupForm() {
         setVerifiedUser({ email: data.user.email, phone: data.user.phone });
         setOtpStep(true);
       } else {
-        saveAuth(data.token, data.user);
-        document.cookie = `vantro_token=${data.token}; path=/; max-age=${30 * 24 * 3600}; SameSite=Lax`;
+        saveAuth(data.token, data.user); // defaults to rememberMe=true (30 days)
         posthog.identify(data.user.id, { email: data.user.email, plan: data.user.plan });
         router.push("/dashboard");
       }
@@ -281,8 +280,7 @@ function SignupForm() {
   };
 
   const handleOTPVerified = (token: string, user: any) => {
-    saveAuth(token, user);
-    document.cookie = `vantro_token=${token}; path=/; max-age=${30 * 24 * 3600}; SameSite=Lax`;
+    saveAuth(token, user); // rememberMe=true by default — 30 days
     posthog.identify(user.id, {
       email:         user.email,
       name:          user.business_name,

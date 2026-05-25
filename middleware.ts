@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const ALWAYS_PUBLIC = ['/', '/login', '/signup', '/onboarding', '/forgot-password'];
-
 const PROTECTED = [
   '/dashboard', '/collections', '/whatsapp', '/dunning', '/forecast',
   '/analytics', '/reports', '/inventory', '/crm', '/scanner',

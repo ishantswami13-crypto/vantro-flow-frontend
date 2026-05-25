@@ -47,17 +47,16 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const data = await api.auth.login(form);
-      // Remember me — save email, token duration
+      // Remember me — save email preference
       if (rememberMe) {
         localStorage.setItem("vantro_saved_email", form.email);
         localStorage.setItem("vantro_remember", "1");
-        document.cookie = `vantro_token=${data.token}; path=/; max-age=${30 * 24 * 3600}; SameSite=Lax`;
       } else {
         localStorage.removeItem("vantro_saved_email");
         localStorage.removeItem("vantro_remember");
-        document.cookie = `vantro_token=${data.token}; path=/; SameSite=Lax`; // session cookie
       }
-      saveAuth(data.token, data.user);
+      // saveAuth sets both localStorage AND the cookie with the right duration
+      saveAuth(data.token, data.user, rememberMe);
       posthog.identify(data.user.id, { email: data.user.email, name: data.user.business_name, plan: data.user.plan });
       posthog.capture("user_logged_in");
       router.push("/dashboard");

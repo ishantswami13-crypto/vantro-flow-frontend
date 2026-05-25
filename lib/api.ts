@@ -184,12 +184,13 @@ export const api = {
 };
 
 // ─── Auth helpers ─────────────────────────────────────────
-export function saveAuth(token: string, user: User) {
+export function saveAuth(token: string, user: User, rememberMe = true) {
   localStorage.setItem('vantro_token', token);
   localStorage.setItem('vantro_user', JSON.stringify(user));
-  // Also set a cookie so Next.js middleware can read it (localStorage is client-only)
-  const maxAge = 7 * 24 * 60 * 60; // 7 days — match JWT expiry
-  document.cookie = `vantro_token=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  // Cookie so Next.js middleware can read it (localStorage is client-only, middleware can't touch it)
+  // rememberMe=true → 30-day persistent cookie; false → session cookie (gone on browser close)
+  const maxAgePart = rememberMe ? `; max-age=${30 * 24 * 60 * 60}` : '';
+  document.cookie = `vantro_token=${token}; path=/${maxAgePart}; SameSite=Lax`;
 }
 
 export function getUser(): User | null {
