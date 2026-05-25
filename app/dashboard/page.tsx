@@ -132,14 +132,16 @@ export default function DashboardPage() {
   const [dailyGoal]                   = useState(400000); // ₹4L default goal
   const [showPaymentCelebration, setShowPaymentCelebration] = useState<{ amount: number; name: string } | null>(null);
   const [showRiskBanner, setShowRiskBanner] = useState(true);
-  const [showGuide, setShowGuide] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("vantro_guide_dismissed") !== "1";
-  });
+  const [showGuide, setShowGuide] = useState(false); // always false on SSR; useEffect sets real value
   const [guideData, setGuideData] = useState({ waConnected: false, autoEnabled: false });
   const [liveCustomers, setLiveCustomers] = useState<typeof CUSTOMERS>([]);
   const [rawInvoices, setRawInvoices]       = useState<Invoice[]>([]);
   const today = new Date().toISOString().split("T")[0];
+
+  // Hydration-safe: read localStorage only after mount (never on the server)
+  useEffect(() => {
+    setShowGuide(localStorage.getItem("vantro_guide_dismissed") !== "1");
+  }, []);
 
   useEffect(() => {
     const user = getUser();
