@@ -424,3 +424,60 @@
 input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
 }
+
+/* ============================================================
+   LANDING PAGE — MARQUEE
+   ============================================================ */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 22s linear infinite;
+  will-change: transform;
+}
+.animate-marquee:hover { animation-play-state: paused; }
+
+/* ============================================================
+   LANDING PAGE — FLOAT
+   ============================================================ */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+.animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
+
+/* ============================================================
+   LANDING PAGE — FADE IN SCALE (hero cards)
+   ============================================================ */
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+.animate-fade-in-scale {
+  animation: fade-in-scale 0.5s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-in-scale {
+  from { opacity: 0; transform: scale(0.94) translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   LANDING PAGE — NOISE OVERLAY
+   ============================================================ */
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+/* ============================================================
+   PAGE FADE (used in DashboardLayout)
+   ============================================================ */
+.page-fade { animation: fade-in 0.25s ease-out both; }

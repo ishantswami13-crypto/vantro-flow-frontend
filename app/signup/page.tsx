@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   FiUser, FiMail, FiArrowRight, FiLock,
   FiEye, FiEyeOff, FiPhone, FiRefreshCw, FiCheckCircle,
+  FiZap, FiTrendingUp, FiMessageCircle, FiBarChart2, FiCheck,
 } from "react-icons/fi";
 import LogoMark from "@/components/LogoMark";
 import Button from "@/components/ui/Button";
@@ -41,7 +42,6 @@ function OTPStep({
   const [countdown, setCountdown] = useState(30);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Countdown for resend
   useEffect(() => {
     if (countdown <= 0) return;
     const t = setTimeout(() => setCountdown(c => c - 1), 1000);
@@ -123,17 +123,18 @@ function OTPStep({
   }
 
   return (
-    <div className="card-premium p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+          style={{ background: "rgba(79,110,247,0.1)", border: "1px solid rgba(79,110,247,0.2)" }}>
           <FiPhone size={22} className="text-accent" />
         </div>
-        <h1 className="text-xl font-bold text-primary">Verify your account</h1>
-        <p className="text-sm text-secondary mt-1.5 leading-relaxed">
-          We sent a 6-digit code to
-          {maskedPhone && <><br /><span className="font-semibold text-primary">{maskedPhone}</span> (WhatsApp)</>}
-          {maskedEmail && <><br /><span className="font-semibold text-primary">{maskedEmail}</span> (Email)</>}
+        <h1 className="text-2xl font-black text-primary tracking-tight">Verify your account</h1>
+        <p className="text-sm text-secondary mt-2 leading-relaxed">
+          6-digit code sent to
+          {maskedPhone && <><br /><span className="font-semibold text-primary">{maskedPhone}</span> <span className="text-muted">(WhatsApp)</span></>}
+          {maskedEmail && <><br /><span className="font-semibold text-primary">{maskedEmail}</span> <span className="text-muted">(Email)</span></>}
         </p>
       </div>
 
@@ -150,24 +151,25 @@ function OTPStep({
             autoFocus={i === 0}
             onChange={e => handleDigit(i, e.target.value)}
             onKeyDown={e => handleKeyDown(i, e)}
-            className={[
-              "w-11 h-14 text-center text-xl font-bold rounded-xl border transition-all",
-              "bg-surface-2 text-primary focus:outline-none",
-              digit ? "border-accent bg-accent-dim" : "border-border focus:border-accent",
-              loading ? "opacity-50 pointer-events-none" : "",
-            ].join(" ")}
+            className="w-11 h-14 text-center text-xl font-bold rounded-xl focus:outline-none transition-all"
+            style={{
+              background: digit ? "rgba(79,110,247,0.08)" : "#0D0F14",
+              border: `1px solid ${digit ? "rgba(79,110,247,0.4)" : "rgba(255,255,255,0.1)"}`,
+              color: "#F2F4F7",
+              opacity: loading ? 0.5 : 1,
+              pointerEvents: loading ? "none" : "auto",
+            }}
           />
         ))}
       </div>
 
-      {/* Error */}
       {error && (
-        <div className="px-3 py-2.5 bg-danger-dim border border-danger/30 rounded-lg text-sm text-danger text-center">
+        <div className="px-3.5 py-2.5 rounded-xl text-sm text-danger text-center"
+          style={{ background: "rgba(245,66,77,0.08)", border: "1px solid rgba(245,66,77,0.25)" }}>
           {error}
         </div>
       )}
 
-      {/* Resent confirmation */}
       {resent && (
         <div className="flex items-center justify-center gap-2 text-sm text-success">
           <FiCheckCircle size={14} />
@@ -175,18 +177,17 @@ function OTPStep({
         </div>
       )}
 
-      {/* Verify button */}
-      <Button
-        fullWidth
-        loading={loading}
-        disabled={otp.join("").length < 6}
+      <button
+        disabled={loading || otp.join("").length < 6}
         onClick={() => handleVerify()}
-        icon={<FiArrowRight size={15} />}
+        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40"
+        style={{ background: "#fff", color: "#000" }}
       >
-        Verify & Enter Dashboard
-      </Button>
+        {loading
+          ? <><div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Verifying…</>
+          : <><FiArrowRight size={14} /> Verify & Enter Dashboard</>}
+      </button>
 
-      {/* Resend */}
       <div className="text-center">
         {countdown > 0 ? (
           <p className="text-xs text-muted">Resend OTP in {countdown}s</p>
@@ -203,8 +204,8 @@ function OTPStep({
         )}
       </div>
 
-      <p className="text-center text-2xs text-muted">
-        OTP expires in 10 minutes · Check WhatsApp & spam folder
+      <p className="text-center text-xs text-muted">
+        OTP expires in 10 minutes · Check WhatsApp &amp; spam folder
       </p>
     </div>
   );
@@ -222,7 +223,6 @@ function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm]   = useState(false);
 
-  // OTP step state
   const [otpStep, setOtpStep]   = useState(false);
   const [preToken, setPreToken] = useState("");
   const [verifiedUser, setVerifiedUser] = useState<{ email: string; phone: string } | null>(null);
@@ -264,12 +264,10 @@ function SignupForm() {
       if (!res.ok || !data.success) throw new Error(data.error || "Signup failed");
 
       if (data.needs_otp) {
-        // Store pre-token and go to OTP step
         setPreToken(data.pre_token);
         setVerifiedUser({ email: data.user.email, phone: data.user.phone });
         setOtpStep(true);
       } else {
-        // Fallback: direct login (OTP skipped)
         saveAuth(data.token, data.user);
         document.cookie = `vantro_token=${data.token}; path=/; max-age=${30 * 24 * 3600}; SameSite=Lax`;
         posthog.identify(data.user.id, { email: data.user.email, plan: data.user.plan });
@@ -297,7 +295,10 @@ function SignupForm() {
     router.push("/dashboard");
   };
 
-  // Show OTP step
+  // ── Shared input style ──
+  const inputCls = "w-full border rounded-xl text-sm text-primary py-3 px-3.5 focus:outline-none transition-colors placeholder:text-muted";
+  const inputStyle = { background: "#0D0F14", borderColor: "rgba(255,255,255,0.1)" };
+
   if (otpStep && preToken && verifiedUser) {
     return (
       <OTPStep
@@ -309,20 +310,24 @@ function SignupForm() {
     );
   }
 
-  // ── Signup form ──
   return (
-    <div className="card-premium p-6">
+    <>
       {referredBy && (
-        <div className="mb-4 px-3 py-2.5 bg-success-dim border border-success/30 rounded-lg text-sm text-success flex items-center gap-2">
+        <div className="mb-5 px-3.5 py-2.5 rounded-xl text-sm text-success flex items-center gap-2"
+          style={{ background: "rgba(16,217,138,0.08)", border: "1px solid rgba(16,217,138,0.25)" }}>
           <span>🎉</span>
           <span>You were invited! Join free — your contact gets credit too.</span>
         </div>
       )}
-      <h1 className="text-xl font-bold text-primary mb-1">Start your free trial</h1>
-      <p className="text-sm text-secondary mb-6">14 days free · No credit card required.</p>
+
+      <div className="mb-6">
+        <h1 className="text-2xl font-black text-primary tracking-tight">Start your free trial</h1>
+        <p className="text-sm text-secondary mt-1">14 days free · No credit card required</p>
+      </div>
 
       {error && (
-        <div className="mb-4 px-3 py-2.5 bg-danger-dim border border-danger/30 rounded-lg text-sm text-danger">
+        <div className="mb-5 px-3.5 py-2.5 rounded-xl text-sm text-danger"
+          style={{ background: "rgba(245,66,77,0.08)", border: "1px solid rgba(245,66,77,0.25)" }}>
           {error}
         </div>
       )}
@@ -331,188 +336,285 @@ function SignupForm() {
 
         {/* Name + Business */}
         <div className="grid grid-cols-2 gap-3">
-          <Input label="Full Name" type="text" icon={<FiUser size={15} />}
-            placeholder="Rajesh Kumar"
-            value={form.name} onChange={set("name")} required />
-          <Input label="Business Name" type="text" placeholder="Kumar Traders"
-            value={form.business_name} onChange={set("business_name")} required />
+          <div>
+            <label className="text-[10px] font-bold text-secondary uppercase tracking-[0.12em] block mb-2">Full Name</label>
+            <div className="relative">
+              <FiUser size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+              <input type="text" placeholder="Rajesh Kumar" value={form.name}
+                onChange={set("name")} required
+                className={inputCls + " pl-9"} style={inputStyle} />
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-secondary uppercase tracking-[0.12em] block mb-2">Business Name</label>
+            <input type="text" placeholder="Kumar Traders" value={form.business_name}
+              onChange={set("business_name")} required
+              className={inputCls} style={inputStyle} />
+          </div>
         </div>
 
         {/* Email */}
-        <Input label="Email" type="email" icon={<FiMail size={15} />}
-          placeholder="rajesh@kumartraders.com"
-          value={form.email} onChange={set("email")} required />
+        <div>
+          <label className="text-[10px] font-bold text-secondary uppercase tracking-[0.12em] block mb-2">Email</label>
+          <div className="relative">
+            <FiMail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+            <input type="email" placeholder="rajesh@kumartraders.com" value={form.email}
+              onChange={set("email")} required autoComplete="email"
+              className={inputCls + " pl-9"} style={inputStyle} />
+          </div>
+        </div>
 
         {/* Phone */}
-        <div className="flex flex-col gap-1.5">
-          <label className="section-label">Phone (WhatsApp — OTP will be sent here)</label>
+        <div>
+          <label className="text-[10px] font-bold text-secondary uppercase tracking-[0.12em] block mb-2">
+            Phone <span className="normal-case font-normal text-muted">(WhatsApp — OTP sent here)</span>
+          </label>
           <div className="flex">
-            <span className="flex items-center px-3 bg-surface-2 border border-r-0 border-border rounded-l-xl text-secondary text-sm font-mono">+91</span>
-            <input
-              type="tel"
-              placeholder="9876543210"
-              value={form.phone}
-              onChange={set("phone")}
-              required
-              maxLength={10}
-              pattern="\d{10}"
+            <span className="flex items-center px-3.5 rounded-l-xl text-secondary text-sm font-mono shrink-0"
+              style={{ background: "#0D0F14", border: "1px solid rgba(255,255,255,0.1)", borderRight: "none" }}>+91</span>
+            <input type="tel" placeholder="9876543210" value={form.phone}
+              onChange={set("phone")} required maxLength={10} pattern="\d{10}"
               title="Enter 10-digit mobile number"
-              className="flex-1 bg-surface-2 border border-border rounded-r-xl text-sm text-primary placeholder-muted px-3 py-2.5 focus:outline-none focus:border-accent transition-colors"
-            />
+              className="flex-1 text-sm text-primary placeholder:text-muted py-3 px-3.5 focus:outline-none transition-colors"
+              style={{ background: "#0D0F14", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0 12px 12px 0" }} />
           </div>
         </div>
 
         {/* Password */}
-        <div className="flex flex-col gap-1.5">
-          <label className="section-label">Password</label>
+        <div>
+          <label className="text-[10px] font-bold text-secondary uppercase tracking-[0.12em] block mb-2">Password</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"><FiLock size={15} /></span>
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Min 8 characters"
-              value={form.password}
-              onChange={set("password")}
-              required
-              minLength={8}
-              className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted pl-9 pr-10 py-2.5 focus:outline-none focus:border-accent transition-colors"
-            />
+            <FiLock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+            <input type={showPassword ? "text" : "password"} placeholder="Min 8 characters"
+              value={form.password} onChange={set("password")} required minLength={8}
+              className={inputCls + " pl-9 pr-10"} style={inputStyle} />
             <button type="button" onClick={() => setShowPassword(v => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-secondary transition-colors">
-              {showPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors">
+              {showPassword ? <FiEyeOff size={14} /> : <FiEye size={14} />}
             </button>
           </div>
           {form.password.length > 0 && form.password.length < 8 && (
-            <p className="text-2xs text-danger">Password must be at least 8 characters</p>
+            <p className="text-xs text-danger mt-1">At least 8 characters</p>
           )}
         </div>
 
         {/* Confirm Password */}
-        <div className="flex flex-col gap-1.5">
-          <label className="section-label">Confirm Password</label>
+        <div>
+          <label className="text-[10px] font-bold text-secondary uppercase tracking-[0.12em] block mb-2">Confirm Password</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"><FiLock size={15} /></span>
-            <input
-              type={showConfirm ? "text" : "password"}
-              placeholder="Re-enter password"
-              value={form.confirm_password}
-              onChange={set("confirm_password")}
-              required
-              className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted pl-9 pr-10 py-2.5 focus:outline-none focus:border-accent transition-colors"
-            />
+            <FiLock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+            <input type={showConfirm ? "text" : "password"} placeholder="Re-enter password"
+              value={form.confirm_password} onChange={set("confirm_password")} required
+              className={inputCls + " pl-9 pr-10"} style={inputStyle} />
             <button type="button" onClick={() => setShowConfirm(v => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-secondary transition-colors">
-              {showConfirm ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors">
+              {showConfirm ? <FiEyeOff size={14} /> : <FiEye size={14} />}
             </button>
           </div>
           {form.confirm_password.length > 0 && form.password !== form.confirm_password && (
-            <p className="text-2xs text-danger">Passwords do not match</p>
+            <p className="text-xs text-danger mt-1">Passwords do not match</p>
           )}
           {form.confirm_password.length > 0 && form.password === form.confirm_password && form.password.length >= 8 && (
-            <p className="text-2xs text-success">✓ Passwords match</p>
+            <p className="text-xs text-success mt-1">✓ Passwords match</p>
           )}
         </div>
 
         {/* Industry */}
-        <Select label="Industry / Business Type" options={businessTypes}
-          value={form.business_type} onChange={set("business_type")} required />
+        <div>
+          <label className="text-[10px] font-bold text-secondary uppercase tracking-[0.12em] block mb-2">Industry / Business Type</label>
+          <select value={form.business_type} onChange={set("business_type")} required
+            className={inputCls} style={{ ...inputStyle, appearance: "none" as const }}>
+            {businessTypes.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
 
         {/* Amount */}
-        <Input
-          label="Amount Stuck in Receivables (INR)"
-          type="number"
-          prefix="₹"
-          placeholder="2500000"
-          value={form.amount_stuck}
-          onChange={set("amount_stuck")}
-          required
-          hint="Approximate total outstanding from customers"
-        />
+        <div>
+          <label className="text-[10px] font-bold text-secondary uppercase tracking-[0.12em] block mb-2">Amount Stuck in Receivables</label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted text-sm font-mono">₹</span>
+            <input type="number" placeholder="2500000" value={form.amount_stuck}
+              onChange={set("amount_stuck")} required
+              className={inputCls + " pl-7"} style={inputStyle} />
+          </div>
+          <p className="text-xs text-muted mt-1">Approximate outstanding from customers</p>
+        </div>
 
         {/* Plan selection */}
-        <div className="flex flex-col gap-2">
-          <label className="section-label">Preferred Plan</label>
+        <div>
+          <label className="text-[10px] font-bold text-secondary uppercase tracking-[0.12em] block mb-2">Preferred Plan</label>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { value: "saas",   label: "Model A — SaaS",   sub: "₹1,999/mo flat" },
-              { value: "hybrid", label: "Model B — Hybrid",  sub: "₹999/mo + 1%" },
+              { value: "saas",   label: "Model A — SaaS",  sub: "₹1,999/mo flat" },
+              { value: "hybrid", label: "Model B — Hybrid", sub: "₹999/mo + 1%" },
             ].map(p => (
               <button key={p.value} type="button"
                 onClick={() => setForm(f => ({ ...f, plan: p.value }))}
-                className={[
-                  "text-left p-3 rounded-xl border transition-all",
-                  form.plan === p.value
-                    ? "border-accent bg-accent-dim shadow-accent-sm"
-                    : "border-border bg-surface-2 hover:border-border-2",
-                ].join(" ")}>
-                <p className={["text-xs font-semibold", form.plan === p.value ? "text-accent" : "text-primary"].join(" ")}>
+                className="text-left p-3 rounded-xl transition-all"
+                style={{
+                  border: `1px solid ${form.plan === p.value ? "rgba(79,110,247,0.5)" : "rgba(255,255,255,0.08)"}`,
+                  background: form.plan === p.value ? "rgba(79,110,247,0.08)" : "#0D0F14",
+                }}>
+                <p className="text-xs font-semibold" style={{ color: form.plan === p.value ? "#4F6EF7" : "#F2F4F7" }}>
                   {p.label}
                 </p>
-                <p className="text-2xs text-muted mt-0.5">{p.sub}</p>
+                <p className="text-[10px] text-muted mt-0.5">{p.sub}</p>
               </button>
             ))}
           </div>
         </div>
 
         {/* OTP notice */}
-        <div className="flex items-start gap-2.5 p-3 bg-accent/5 border border-accent/20 rounded-xl">
-          <FiPhone size={14} className="text-accent shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2.5 p-3 rounded-xl"
+          style={{ background: "rgba(79,110,247,0.05)", border: "1px solid rgba(79,110,247,0.15)" }}>
+          <FiPhone size={13} className="text-accent shrink-0 mt-0.5" />
           <p className="text-xs text-secondary leading-relaxed">
-            After signup, we'll send a <span className="font-semibold text-primary">6-digit OTP</span> to your WhatsApp and email to verify your account.
+            We'll send a <span className="font-semibold text-primary">6-digit OTP</span> to your WhatsApp &amp; email to verify your account.
           </p>
         </div>
 
-        <Button type="submit" fullWidth loading={loading} icon={<FiArrowRight size={15} />} className="mt-2">
-          Continue — Send OTP
-        </Button>
+        <button type="submit" disabled={loading}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40 mt-2"
+          style={{ background: "#fff", color: "#000" }}>
+          {loading
+            ? <><div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Creating account…</>
+            : <><FiZap size={14} /> Continue — Send OTP</>}
+        </button>
       </form>
 
-      <p className="mt-4 text-center text-xs text-muted">
-        No credit card required. Cancel anytime.
-      </p>
+      <p className="mt-4 text-center text-xs text-muted">No credit card required · Cancel anytime</p>
 
-      <div className="mt-4 pt-4 border-t border-border text-center">
+      <div className="mt-5 pt-5 border-t border-border text-center">
         <p className="text-sm text-secondary">
           Already have an account?{" "}
-          <Link href="/login" className="text-accent hover:underline font-medium">Sign in</Link>
+          <Link href="/login" className="text-accent hover:underline font-semibold">Sign in</Link>
         </p>
       </div>
-    </div>
+    </>
   );
 }
 
 // Skeleton fallback
 function SignupSkeleton() {
   return (
-    <div className="card-premium p-6 space-y-4">
-      <div className="skeleton h-7 w-48" />
-      <div className="skeleton h-4 w-64" />
-      <div className="skeleton h-10 w-full" />
-      <div className="skeleton h-10 w-full" />
-      <div className="skeleton h-10 w-full" />
-      <div className="skeleton h-12 w-full" />
+    <div className="space-y-4">
+      <div className="h-7 w-48 rounded-lg animate-pulse" style={{ background: "rgba(255,255,255,0.06)" }} />
+      <div className="h-4 w-64 rounded-lg animate-pulse" style={{ background: "rgba(255,255,255,0.04)" }} />
+      <div className="h-10 w-full rounded-xl animate-pulse" style={{ background: "rgba(255,255,255,0.04)" }} />
+      <div className="h-10 w-full rounded-xl animate-pulse" style={{ background: "rgba(255,255,255,0.04)" }} />
+      <div className="h-10 w-full rounded-xl animate-pulse" style={{ background: "rgba(255,255,255,0.04)" }} />
+      <div className="h-12 w-full rounded-xl animate-pulse" style={{ background: "rgba(255,255,255,0.06)" }} />
     </div>
   );
 }
 
+// ─── Left panel benefit bullets ───────────────────────────────────────────────
+const BENEFITS = [
+  { icon: FiMessageCircle, label: "Hinglish WhatsApp reminders auto-sent", color: "#10D98A" },
+  { icon: FiTrendingUp,    label: "AI scores which customers to call first", color: "#4F6EF7" },
+  { icon: FiBarChart2,     label: "Cash flow forecast for next 30/60/90 days", color: "#FF6B35" },
+  { icon: FiZap,           label: "Daily dunning runs at 9 AM — hands-free", color: "#F5CE3E" },
+];
+
+const TRUST_BADGES = ["14 days free", "No credit card", "Cancel anytime"];
+
 // Page export
 export default function SignupPage() {
   return (
-    <div className="min-h-screen bg-bg bg-grid-pattern flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex"
+      style={{
+        backgroundImage: "linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px)",
+        backgroundSize: "54px 54px",
+        backgroundColor: "#0D0F14",
+      }}>
+
+      {/* ── LEFT PANEL — desktop only ─────────────────────── */}
+      <div className="hidden lg:flex flex-col justify-between w-[420px] xl:w-[460px] shrink-0 p-12 relative overflow-hidden"
+        style={{ background: "linear-gradient(145deg, #161A24 0%, #1A1F2E 100%)", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+
+        {/* Glow */}
+        <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(16,217,138,0.08), transparent 70%)" }} />
+
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2.5 mb-8">
-          <LogoMark size={36} />
-          <span className="font-bold text-lg tracking-tight">Vantro Flow</span>
+        <Link href="/" className="flex items-center gap-2.5 relative z-10">
+          <LogoMark size={28} />
+          <span className="font-bold text-primary">Vantro</span>
+        </Link>
+
+        {/* Headline + benefits */}
+        <div className="relative z-10">
+          <h2 className="text-3xl font-black text-primary tracking-tighter leading-tight mb-3">
+            Join 200+ MSMEs<br />
+            <span style={{ color: "#10D98A" }}>collecting smarter.</span>
+          </h2>
+          <p className="text-sm text-secondary leading-relaxed mb-8">
+            Stop manually chasing payments. Vantro AutoPilot sends reminders, tracks promises, and forecasts your cash — automatically.
+          </p>
+
+          <div className="space-y-3 mb-8">
+            {BENEFITS.map(({ icon: Icon, label, color }) => (
+              <div key={label} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
+                  <Icon size={15} style={{ color }} />
+                </div>
+                <span className="text-sm text-secondary">{label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Trust badges */}
+          <div className="flex flex-wrap gap-2">
+            {TRUST_BADGES.map(b => (
+              <div key={b} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                style={{ background: "rgba(16,217,138,0.08)", border: "1px solid rgba(16,217,138,0.2)" }}>
+                <FiCheck size={10} className="text-success" />
+                <span className="text-xs text-success font-medium">{b}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <Suspense fallback={<SignupSkeleton />}>
-          <SignupForm />
-        </Suspense>
+        {/* Bottom stat */}
+        <div className="relative z-10 p-4 rounded-2xl"
+          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <p className="text-sm text-secondary leading-relaxed mb-3 italic">
+            &ldquo;₹22 lakh collected in 6 weeks that was stuck for 8 months. Setup took 10 minutes.&rdquo;
+          </p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+              style={{ background: "rgba(16,217,138,0.12)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" }}>VM</div>
+            <div>
+              <p className="text-xs font-bold text-primary">Vikram Mehta</p>
+              <p className="text-[10px] text-muted">Mehta Fabrics, Surat</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <p className="mt-6 text-center text-xs text-muted">
-          <Link href="/" className="hover:text-secondary transition-colors">Vantro Flow</Link>
-          {" "}— Collections OS for Indian MSMEs
-        </p>
+      {/* ── RIGHT PANEL — form ───────────────────────────── */}
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-sm">
+
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-8">
+            <LogoMark size={32} />
+            <span className="font-bold text-base text-primary tracking-tight">Vantro</span>
+          </div>
+
+          {/* Form card */}
+          <div className="rounded-2xl p-7"
+            style={{ background: "#161A24", border: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }}>
+            <Suspense fallback={<SignupSkeleton />}>
+              <SignupForm />
+            </Suspense>
+          </div>
+
+          <p className="mt-5 text-center text-xs text-muted">
+            <Link href="/" className="hover:text-secondary transition-colors">← Back to Vantro</Link>
+          </p>
+        </div>
       </div>
     </div>
   );
