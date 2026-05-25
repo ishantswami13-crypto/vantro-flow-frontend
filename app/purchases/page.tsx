@@ -109,7 +109,7 @@ export default function PurchasesPage() {
           <p className="text-xs text-muted">Supplier ko kya dena hai</p>
         </div>
         <button onClick={() => { setForm(emptyForm); setEditId(null); setShowAdd(true); }}
-          className="flex items-center gap-1.5 bg-accent text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-button-accent hover:bg-accent/90 transition-colors">
+          className="flex items-center gap-1.5 bg-white text-black px-4 py-2.5 rounded-xl text-sm font-bold shadow-button-accent hover:bg-accent/90 transition-colors">
           <FiPlus size={15} /> Add Purchase
         </button>
       </div>
@@ -146,7 +146,7 @@ export default function PurchasesPage() {
       <div className="flex gap-2 mb-4">
         {["all", "unpaid", "partial", "paid"].map(s => (
           <button key={s} onClick={() => setFilterStatus(s)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${filterStatus === s ? "bg-accent text-white" : "bg-surface-2 text-muted hover:text-primary"}`}>
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${filterStatus === s ? "bg-white text-black" : "bg-surface-2 text-muted hover:text-primary"}`}>
             {s === "all" ? "All" : statusConfig[s as keyof typeof statusConfig]?.label}
             {s !== "all" && <span className="ml-1 opacity-60">({purchases.filter(p => p.status === s).length})</span>}
           </button>
@@ -295,7 +295,7 @@ export default function PurchasesPage() {
               <button onClick={() => { setShowAdd(false); setEditId(null); setForm(emptyForm); }}
                 className="flex-1 py-2.5 rounded-xl bg-surface-2 text-secondary text-sm font-semibold">Cancel</button>
               <button onClick={save} disabled={saving || !form.supplier_name || !form.total_amount}
-                className="flex-1 py-2.5 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 disabled:opacity-50 transition-colors">
+                className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-accent/90 disabled:opacity-50 transition-colors">
                 {saving ? "Saving..." : editId ? "Update" : "Add Purchase"}
               </button>
             </div>

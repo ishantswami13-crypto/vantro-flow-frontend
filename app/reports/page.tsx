@@ -154,7 +154,7 @@ export default function ReportsPage() {
               {DATE_RANGES.map(r => (
                 <button key={r} onClick={() => setDateRange(r)}
                   className={["px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
-                    dateRange === r ? "bg-accent text-white" : "text-muted hover:text-primary",
+                    dateRange === r ? "bg-white text-black" : "text-muted hover:text-primary",
                   ].join(" ")}>{r}</button>
               ))}
             </div>

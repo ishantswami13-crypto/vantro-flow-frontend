@@ -450,7 +450,7 @@ export default function CollectionsPage() {
                     ⚫ No Response
                   </button>
                   <button onClick={handleLogReply} disabled={!replyText.trim()}
-                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-accent text-white hover:bg-accent/90 transition-all disabled:opacity-50">
+                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-white text-black hover:bg-white/90 transition-all disabled:opacity-50">
                     Save Reply
                   </button>
                 </div>
@@ -473,7 +473,7 @@ export default function CollectionsPage() {
                   <div className="flex gap-2">
                     {[true, false].map(v => (
                       <button key={String(v)} onClick={() => setCallForm(f => ({ ...f, did_pick_up: v }))}
-                        className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-all ${callForm.did_pick_up === v ? "bg-accent text-white border-accent" : "bg-surface-2 text-secondary border-border"}`}>
+                        className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-all ${callForm.did_pick_up === v ? "bg-white text-black border-white/20" : "bg-surface-2 text-secondary border-border"}`}>
                         {v ? "Yes ✓" : "No ✗"}
                       </button>
                     ))}
@@ -493,7 +493,7 @@ export default function CollectionsPage() {
                     className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2 focus:outline-none focus:border-accent resize-none" />
                 </div>
                 <button onClick={handleLogCall} disabled={loggingCall}
-                  className="w-full py-2.5 rounded-lg text-sm font-semibold bg-accent text-white hover:bg-accent/90 transition-all disabled:opacity-60">
+                  className="w-full py-2.5 rounded-lg text-sm font-semibold bg-white text-black hover:bg-white/90 transition-all disabled:opacity-60">
                   {loggingCall ? "Saving..." : "Save Call Log"}
                 </button>
               </div>
@@ -644,9 +644,9 @@ export default function CollectionsPage() {
                   Cancel
                 </button>
                 <button onClick={handleAddInvoice} disabled={addSaving}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent/90 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-white text-black hover:bg-white/90 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                   {addSaving
-                    ? <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+                    ? <><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Saving...</>
                     : <><FiPlus size={14} /> Add Invoice</>
                   }
                 </button>

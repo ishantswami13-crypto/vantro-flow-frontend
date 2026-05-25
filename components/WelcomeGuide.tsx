@@ -150,7 +150,7 @@ export default function WelcomeGuide({ waConnected, hasInvoices, autoEnabled, on
       {allDone && (
         <button
           onClick={handleDismiss}
-          className="w-full mt-4 py-2.5 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-all flex items-center justify-center gap-2">
+          className="w-full mt-4 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 transition-all flex items-center justify-center gap-2 shadow-sm">
           Got it — dismiss guide <FiArrowRight size={12} />
         </button>
       )}

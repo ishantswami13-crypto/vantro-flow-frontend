@@ -225,11 +225,11 @@ export default function QuickSale({ onClose, onSaved }: QuickSaleProps) {
           {/* Save button */}
           <button onClick={saveSale}
             disabled={saving || items.length === 0 || saved}
-            className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${saved ? "bg-success/20 text-success border border-success/30" : "bg-accent text-white shadow-button-accent hover:bg-accent/90 disabled:opacity-40"}`}>
+            className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${saved ? "bg-success/20 text-success border border-success/30" : "bg-white text-black shadow-sm hover:bg-white/90 disabled:opacity-40"}`}>
             {saved ? (
               <><FiCheck size={15} /> Sale saved! ✓</>
             ) : saving ? (
-              <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> Saving…</>
+              <><div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Saving…</>
             ) : (
               <><FiZap size={14} /> Save Sale — ₹{total.toLocaleString("en-IN")}</>
             )}

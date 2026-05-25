@@ -148,7 +148,7 @@ export default function TeamPage() {
               {twilioActive ? "✓ Calling Active" : "⚙️ Call Setup"}
             </button>
             <button onClick={() => setShowAdd(true)}
-              className="flex items-center gap-1.5 bg-accent text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-button-accent hover:bg-accent/90 transition-colors">
+              className="flex items-center gap-1.5 bg-white text-black px-4 py-2.5 rounded-xl text-sm font-bold shadow-button-accent hover:bg-accent/90 transition-colors">
               <FiPlus size={15} /> Add Worker
             </button>
           </div>
@@ -226,7 +226,7 @@ export default function TeamPage() {
               <button
                 onClick={saveTwilio}
                 disabled={saving || !sid || !token || !phone}
-                className="w-full py-3 rounded-xl bg-accent text-white font-bold text-sm hover:bg-accent/90 disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
+                className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-accent/90 disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
                 {saving ? (
                   <><FiRefreshCw size={14} className="animate-spin" /> Saving...</>
                 ) : saveStatus === "saved" ? (
@@ -268,7 +268,7 @@ export default function TeamPage() {
             <FiUser size={40} className="mx-auto mb-3 text-muted opacity-30" />
             <p className="font-semibold text-primary mb-1">Koi worker nahi abhi tak</p>
             <p className="text-sm text-muted mb-4">Delivery boy, driver, helper — sab add karo</p>
-            <button onClick={() => setShowAdd(true)} className="bg-accent text-white px-4 py-2 rounded-xl text-sm font-bold">
+            <button onClick={() => setShowAdd(true)} className="bg-white text-black px-4 py-2 rounded-xl text-sm font-bold">
               <FiPlus size={14} className="inline mr-1.5" /> Add First Worker
             </button>
           </div>
@@ -353,7 +353,7 @@ export default function TeamPage() {
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowAdd(false)} className="flex-1 py-2.5 rounded-xl bg-surface-2 text-secondary text-sm font-semibold">Cancel</button>
                 <button type="submit" disabled={addingWorker}
-                  className="flex-1 py-2.5 rounded-xl bg-accent text-white text-sm font-bold hover:bg-accent/90 disabled:opacity-50 transition-colors">
+                  className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-accent/90 disabled:opacity-50 transition-colors">
                   {addingWorker ? "Adding..." : "Add Worker"}
                 </button>
               </div>

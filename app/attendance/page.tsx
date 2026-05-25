@@ -130,7 +130,7 @@ export default function AttendancePage() {
       <div className="flex gap-2 mb-4">
         {[{ k: "attendance", l: "📅 Attendance", i: FiCalendar }, { k: "salary", l: "💰 Salary", i: FiDollarSign }].map(t => (
           <button key={t.k} onClick={() => setTab(t.k as any)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${tab === t.k ? "bg-accent text-white" : "bg-surface-2 text-muted hover:text-primary"}`}>
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${tab === t.k ? "bg-white text-black" : "bg-surface-2 text-muted hover:text-primary"}`}>
             {t.l}
           </button>
         ))}

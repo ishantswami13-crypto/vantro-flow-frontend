@@ -130,7 +130,7 @@ export default function AnalyticsPage() {
             {(["1m", "3m", "6m"] as const).map(r => (
               <button key={r} onClick={() => setRange(r)}
                 className={["px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-                  range === r ? "bg-accent text-white shadow-accent-sm" : "text-muted hover:text-primary",
+                  range === r ? "bg-white text-black shadow-accent-sm" : "text-muted hover:text-primary",
                 ].join(" ")}>
                 {r}
               </button>
@@ -168,7 +168,7 @@ export default function AnalyticsPage() {
             </div>
             <p className="text-sm font-bold text-primary mb-1">No analytics data yet</p>
             <p className="text-xs text-muted mb-4 max-w-xs">Upload your invoices and log some calls — analytics will populate automatically as you collect.</p>
-            <Link href="/collections" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-white text-xs font-semibold hover:bg-accent-hover transition-all">
+            <Link href="/collections" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-xs font-semibold hover:bg-accent-hover transition-all">
               <FiUpload size={13} /> Upload Invoices <FiArrowRight size={12} />
             </Link>
           </div>

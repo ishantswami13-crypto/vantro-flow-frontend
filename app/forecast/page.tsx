@@ -137,7 +137,7 @@ export default function ForecastPage() {
             {([30, 60, 90] as const).map(r => (
               <button key={r} onClick={() => setRange(r)}
                 className={["px-5 py-2 text-xs font-bold rounded-lg transition-all",
-                  range === r ? "bg-accent text-white shadow-accent-sm" : "text-secondary hover:text-primary",
+                  range === r ? "bg-white text-black" : "text-secondary hover:text-primary",
                 ].join(" ")}>
                 {r}d
               </button>
@@ -190,7 +190,7 @@ export default function ForecastPage() {
             <p className="text-xs text-muted mb-4 max-w-xs">
               Upload your invoices and mark some payments as received — the forecast model needs at least a few data points to project scenarios.
             </p>
-            <Link href="/collections" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-white text-xs font-semibold hover:bg-accent-hover transition-all">
+            <Link href="/collections" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-xs font-semibold hover:bg-white/90 transition-all shadow-sm">
               <FiUpload size={13} /> Upload Invoices <FiArrowRight size={12} />
             </Link>
           </div>

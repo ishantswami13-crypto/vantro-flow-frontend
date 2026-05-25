@@ -99,7 +99,7 @@ function AIMonitor({ userId }: { userId: string }) {
         <button
           onClick={run}
           disabled={loading}
-          className="px-4 py-2 rounded-xl bg-accent text-white text-xs font-semibold hover:bg-accent-hover disabled:opacity-60 transition-all shadow-button-accent"
+          className="px-4 py-2 rounded-xl bg-white text-black text-xs font-semibold hover:bg-accent-hover disabled:opacity-60 transition-all shadow-button-accent"
         >
           {loading ? "Analysing…" : expanded ? "Re-analyse" : "Run Analysis"}
         </button>
@@ -306,7 +306,7 @@ export default function LedgerPage() {
             </div>
             <button
               onClick={() => { setShowForm(f => !f); setError(""); }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent-hover transition-all shadow-button-accent"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-accent-hover transition-all shadow-button-accent"
             >
               {showForm ? <><FiX size={14} /> Cancel</> : <><FiPlus size={14} /> Add Transaction</>}
             </button>
@@ -473,7 +473,7 @@ export default function LedgerPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 rounded-xl text-sm font-semibold bg-accent text-white hover:bg-accent-hover disabled:opacity-60 transition-all shadow-button-accent"
+                  className="px-5 py-2 rounded-xl text-sm font-semibold bg-white text-black hover:bg-accent-hover disabled:opacity-60 transition-all shadow-button-accent"
                 >
                   {saving ? "Saving…" : "Save Transaction"}
                 </button>

@@ -55,7 +55,7 @@ export default function InstallPrompt() {
             <p className="text-xs text-muted mt-0.5">Add to home screen for instant access, offline support &amp; push notifications.</p>
             <div className="flex gap-2 mt-3">
               <button onClick={install}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-semibold hover:bg-accent/90 transition-all shadow-button-accent">
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-white/90 transition-all shadow-sm">
                 <FiDownload size={11} /> Install Free
               </button>
               <button onClick={dismiss}

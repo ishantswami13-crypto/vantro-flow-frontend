@@ -334,7 +334,7 @@ export default function KhataPage() {
                 <div className="grid grid-cols-4 gap-2">
                   {["cash", "upi", "bank", "cheque"].map(m => (
                     <button key={m} onClick={() => setForm(f => ({ ...f, payment_mode: m }))}
-                      className={`py-2 rounded-xl text-xs font-semibold capitalize transition-colors ${form.payment_mode === m ? "bg-accent text-white" : "bg-surface-2 text-muted hover:text-primary"}`}>
+                      className={`py-2 rounded-xl text-xs font-semibold capitalize transition-colors ${form.payment_mode === m ? "bg-white text-black" : "bg-surface-2 text-muted hover:text-primary"}`}>
                       {m === "upi" ? "UPI" : m.charAt(0).toUpperCase() + m.slice(1)}
                     </button>
                   ))}

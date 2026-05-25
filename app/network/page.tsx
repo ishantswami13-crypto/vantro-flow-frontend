@@ -183,7 +183,7 @@ export default function NetworkPage() {
               />
             </div>
             <button onClick={search} disabled={loading}
-              className="px-4 py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-all shadow-button-accent disabled:opacity-50 shrink-0">
+              className="px-4 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-accent/90 transition-all shadow-button-accent disabled:opacity-50 shrink-0">
               {loading ? <FiLoader size={14} className="animate-spin" /> : "Search"}
             </button>
           </div>
@@ -195,7 +195,7 @@ export default function NetworkPage() {
                 className={[
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0",
                   filter === key
-                    ? "bg-accent text-white border-accent shadow-button-accent"
+                    ? "bg-white text-black border-accent shadow-button-accent"
                     : "bg-surface-2 text-secondary border-border hover:border-accent/30 hover:text-accent",
                 ].join(" ")}>
                 <Icon size={11} />
@@ -250,7 +250,7 @@ export default function NetworkPage() {
             <p className="text-xs text-muted">Invite your suppliers, retailers, and customers to get verified. The more businesses on Vantro, the more powerful the trust graph.</p>
           </div>
           <Link href="/my-id"
-            className="shrink-0 px-4 py-2 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent/90 transition-all shadow-button-accent whitespace-nowrap">
+            className="shrink-0 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold hover:bg-accent/90 transition-all shadow-button-accent whitespace-nowrap">
             Share My ID →
           </Link>
         </div>

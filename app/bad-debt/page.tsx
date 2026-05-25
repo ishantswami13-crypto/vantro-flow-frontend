@@ -112,7 +112,7 @@ export default function BadDebtPage() {
           {(["all", "critical", "high", "medium"] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
               className={["px-3 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize",
-                filter === f ? "bg-accent text-white" : "text-muted hover:text-primary",
+                filter === f ? "bg-white text-black" : "text-muted hover:text-primary",
               ].join(" ")}>
               {f === "all" ? `All (${accounts.length})` : `${f} (${accounts.filter(a => a.risk_level === f).length})`}
             </button>

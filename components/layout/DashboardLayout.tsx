@@ -152,7 +152,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
             <div className="flex gap-2 shrink-0">
               <button
                 onClick={handleEnableNotifications}
-                className="bg-accent text-white px-3 py-1 rounded-lg text-xs font-semibold hover:opacity-90"
+                className="bg-white text-black px-3 py-1 rounded-lg text-xs font-semibold hover:bg-white/90"
               >
                 Enable
               </button>
