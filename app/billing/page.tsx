@@ -94,8 +94,8 @@ const FAQS = [
     a: "If you don't recover more than the plan cost in your first 30 days, we refund. No questions asked.",
   },
   {
-    q: "Does WhatsApp automation work without Interakt/WATI?",
-    a: "You need Interakt or WATI (both have free tiers). Setup takes 10 minutes. We walk you through it.",
+    q: "Do I need to set up any WhatsApp API or account?",
+    a: "No. Vantro AutoPilot handles everything — WhatsApp reminders are sent via Vantro's managed system. Zero setup. Works the moment you upgrade.",
   },
 ];
 
@@ -326,19 +326,27 @@ export default function BillingPage() {
             }
 
             /* Dark cards for Starter + Pro */
+            const isPro = plan.id === "pro";
             return (
               <div key={plan.id}
                 className={[
                   "relative rounded-2xl border p-7 flex flex-col transition-all duration-200",
                   isCurrent
                     ? "border-success/30 bg-success/5"
+                    : isPro
+                    ? "border-accent/40 bg-surface-1 hover:border-accent/60"
                     : "border-border bg-surface-1 hover:border-white/15",
-                ].join(" ")}>
+                ].join(" ")}
+                style={isPro && !isCurrent ? { boxShadow: "0 0 30px rgba(79,110,247,0.12)" } : {}}>
 
                 {plan.badge && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-2xs font-black tracking-widest uppercase text-muted bg-surface-3 border border-border">
-                      {plan.badge}
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-2xs font-black tracking-widest uppercase ${
+                      isPro
+                        ? "text-accent bg-accent/10 border border-accent/30"
+                        : "text-muted bg-surface-3 border border-border"
+                    }`}>
+                      {isPro ? "⚡ " : ""}{plan.badge}
                     </span>
                   </div>
                 )}

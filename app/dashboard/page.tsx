@@ -248,18 +248,20 @@ export default function DashboardPage() {
     { label: "Collection Rate",        value: `${metrics.avg_recovery_rate}%`, sub: "this period",  icon: FiPercent,      accent: "#10D98A", glow: "rgba(16,217,138,0.12)", pct: Number(metrics.avg_recovery_rate) },
     { label: "Pending Invoices",       value: String(metrics.pending_invoices), sub: "awaiting payment", icon: FiAlertTriangle,accent: "#F5424D", glow: "rgba(245,66,77,0.12)",   pct: 45 },
     { label: "Amount Collected",       value: `₹${(metrics.total_paid/100000).toFixed(1)}L`,  sub: "total recovered",icon: FiTarget,      accent: "#10D98A", glow: "rgba(16,217,138,0.12)", pct: 82 },
-    { label: "Calls Made",             value: String(metrics.calls_made),  sub: "total logged", icon: FiPhone,        accent: "#9B6DFF", glow: "rgba(155,109,255,0.12)", pct: 60 },
+    { label: "Calls Made",             value: String(metrics.calls_made),  sub: "total logged", icon: FiPhone,        accent: "#4F6EF7", glow: "rgba(79,110,247,0.12)",  pct: 60 },
   ] : METRICS;
 
   return (
     <DashboardLayout pageTitle="Dashboard">
       {showQuickSale && <QuickSale onClose={() => setShowQuickSale(false)} onSaved={() => { /* could refresh today P&L */ }} />}
-      {/* Floating Quick Sale button */}
-      <button onClick={() => setShowQuickSale(true)}
-        className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-40 hidden lg:flex items-center gap-2 px-4 py-3 rounded-2xl text-white font-bold text-sm transition-all hover:scale-105 active:scale-95"
-        style={{ background: "linear-gradient(135deg, #FF6B35 0%, #F55A22 100%)", boxShadow: "0 4px 20px rgba(255,107,53,0.5)" }}>
-        <FiZap size={16} /> Quick Sale
-      </button>
+      {/* Floating Quick Sale button — hide when critical risk banner is visible */}
+      {!(showRiskBanner && (showLiveRisk || !metrics)) && (
+        <button onClick={() => setShowQuickSale(true)}
+          className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-40 hidden lg:flex items-center gap-2 px-4 py-3 rounded-2xl text-white font-bold text-sm transition-all hover:scale-105 active:scale-95"
+          style={{ background: "linear-gradient(135deg, #FF6B35 0%, #F55A22 100%)", boxShadow: "0 4px 20px rgba(255,107,53,0.5)" }}>
+          <FiZap size={16} /> Quick Sale
+        </button>
+      )}
       <div className="space-y-6 page-enter">
         {/* Welcome guide — shows for new users until dismissed */}
         {showGuide && (
@@ -561,27 +563,33 @@ export default function DashboardPage() {
 
         {/* Metric cards */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 stagger-children">
-          {liveMetrics.map(({ label, value, sub, icon: Icon, accent, glow, pct }) => (
-            <div key={label} className="card-metric p-5">
-              <div className="flex items-start justify-between mb-3">
-                <p className="section-label">{label}</p>
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: glow, border: `1px solid ${accent}30` }}
-                >
-                  <Icon size={15} style={{ color: accent }} />
+          {liveMetrics.map(({ label, value, sub, icon: Icon, accent, glow, pct }) => {
+            const isCritical = pct <= 25 && accent === "#F5424D";
+            return (
+              <div key={label} className={`card-metric p-5 ${isCritical ? "card-metric-critical" : ""}`}>
+                <div className="flex items-start justify-between mb-3">
+                  <p className="section-label">{label}</p>
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isCritical ? "animate-pulse" : ""}`}
+                    style={{ background: glow, border: `1px solid ${accent}30` }}
+                  >
+                    <Icon size={15} style={{ color: accent }} />
+                  </div>
+                </div>
+                <p className={`mb-1 font-black tracking-tight ${isCritical ? "text-3xl" : "metric-lg"}`} style={{ color: accent }}>
+                  {value}
+                  {isCritical && <span className="text-xs font-semibold ml-1.5 opacity-70">⚠ critical</span>}
+                </p>
+                <p className="text-2xs text-muted mb-3">{sub}</p>
+                <div className="progress-bar">
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${pct}%`, background: accent, opacity: isCritical ? 1 : 0.7 }}
+                  />
                 </div>
               </div>
-              <p className="metric-lg mb-1" style={{ color: accent }}>{value}</p>
-              <p className="text-2xs text-muted mb-3">{sub}</p>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{ width: `${pct}%`, background: accent, opacity: 0.7 }}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Business Overview — bills, khata, purchases quick-stats */}

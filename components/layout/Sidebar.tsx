@@ -57,7 +57,7 @@ const NAV = [
 
 const GROUPS = [
   { key: "core",         label: "Collections" },
-  { key: "intelligence", label: "AI Intelligence" },
+  { key: "intelligence", label: "AI Tools" },
   { key: "network",      label: "Network" },
   { key: "ops",          label: "Operations" },
   { key: "account",      label: "Account" },
@@ -177,7 +177,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                         <Link key={href} href="/billing" onClick={onClose}
                           title={`Upgrade your plan to unlock ${itemLabel}`}
                           className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-muted/40 hover:bg-surface-2 hover:text-muted/60 cursor-pointer relative">
-                          <Icon size={17} className="shrink-0 text-muted/30" />
+                          <Icon size={16} className="shrink-0 text-muted/30" />
                           <span className="flex-1 line-through decoration-muted/20">{itemLabel}</span>
                           <FiLock size={11} className="shrink-0 text-muted/40" />
                         </Link>
@@ -191,9 +191,9 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                           active ? "bg-accent-dim text-accent" : "text-secondary hover:text-primary hover:bg-surface-2",
                         ].join(" ")}>
                         {active && <span className="absolute left-0 top-2.5 bottom-2.5 w-0.5 bg-accent rounded-r-full" />}
-                        <Icon size={17} className={[
+                        <Icon size={16} className={[
                           "shrink-0 transition-all duration-200",
-                          active ? "text-accent drop-shadow-[0_0_6px_rgba(0,102,255,0.7)]" : "text-muted group-hover:text-secondary",
+                          active ? "text-accent drop-shadow-[0_0_6px_rgba(79,110,247,0.8)]" : "text-muted group-hover:text-secondary",
                         ].join(" ")} />
                         <span className="flex-1">{itemLabel}</span>
                         {liveBadge && (

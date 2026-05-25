@@ -326,21 +326,66 @@ export default function WhatsAppPage() {
 
             {/* Right — Preview + Send */}
             <div className="space-y-5">
-              {/* WhatsApp Preview */}
-              <div className="card-premium overflow-hidden">
-                <div className="bg-[#1F2C34] px-4 py-3 flex items-center gap-3 border-b border-[#1E2D4A]">
-                  <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
-                    <FiMessageSquare size={14} className="text-white" />
+              {/* WhatsApp Preview — real bubble UI */}
+              <div className="rounded-2xl overflow-hidden border border-[#1F2C34]" style={{ background: "#111B21" }}>
+                {/* WhatsApp top bar */}
+                <div className="flex items-center gap-3 px-4 py-3" style={{ background: "#1F2C34" }}>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm" style={{ background: "#25D366" }}>
+                    VC
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-xs font-semibold text-white">Vantro Collections</p>
-                    <p className="text-2xs text-[#8696A0]">Business · Preview</p>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#25D366]" />
+                      <p className="text-[10px] text-[#8696A0]">Business Account · Online</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#8696A0"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#8696A0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
                   </div>
                 </div>
-                <div className="bg-[#0B1418] p-4 min-h-[200px]">
-                  <div className="bg-[#1E2D4A] rounded-xl rounded-tl-sm px-3 py-2.5 max-w-[85%] text-xs text-[#E9EDF0] whitespace-pre-line leading-relaxed">
-                    {previewText || "Select a template to preview..."}
-                    <p className="text-2xs text-[#8696A0] text-right mt-2">10:30 AM ✓✓</p>
+
+                {/* Chat wallpaper + bubble */}
+                <div className="wa-bubble-bg p-4 min-h-[220px] flex flex-col justify-end gap-2">
+                  {/* Date chip */}
+                  <div className="flex justify-center mb-1">
+                    <span className="text-[10px] text-[#8696A0] px-3 py-1 rounded-full" style={{ background: "rgba(255,255,255,0.05)" }}>
+                      Today
+                    </span>
+                  </div>
+
+                  {/* Incoming bubble from business */}
+                  <div className="max-w-[88%]">
+                    <div className="relative rounded-xl rounded-tl-sm px-3 py-2.5 text-xs leading-relaxed whitespace-pre-line"
+                      style={{ background: "#1F2C34", color: "#E9EDF0" }}>
+                      {/* Tail */}
+                      <div className="absolute -left-1.5 top-0 w-0 h-0"
+                        style={{ borderRight: "8px solid #1F2C34", borderBottom: "8px solid transparent" }} />
+                      {previewText || "Select a template to see the preview..."}
+                      <div className="flex items-center justify-end gap-1 mt-1.5">
+                        <span className="text-[10px] text-[#8696A0]">
+                          {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })}
+                        </span>
+                        {/* Double tick (delivered) */}
+                        <svg width="14" height="10" viewBox="0 0 14 10" fill="#8696A0">
+                          <path d="M1 5l3 3 9-8" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M5 5l3 3 5-4" strokeWidth="1.5" stroke="#25D366" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom bar */}
+                <div className="flex items-center gap-2 px-3 py-2.5" style={{ background: "#1F2C34" }}>
+                  <div className="flex-1 rounded-full px-3 py-1.5 text-xs text-[#8696A0]" style={{ background: "#2A3942" }}>
+                    Type a message
+                  </div>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#25D366" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+                      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
                   </div>
                 </div>
               </div>
