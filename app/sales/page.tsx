@@ -13,6 +13,7 @@ type Sale = {
   id: number;
   customer_name: string;
   customer_phone?: string;
+  customer_gstin?: string;
   invoice_number?: string;
   sale_date: string;
   due_date?: string;
@@ -95,7 +96,7 @@ export default function SalesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const emptyForm = {
-    customer_name: "", customer_phone: "", invoice_number: "",
+    customer_name: "", customer_phone: "", customer_gstin: "", invoice_number: "",
     sale_date: new Date().toISOString().split("T")[0],
     due_date: "", total_amount: "", paid_amount: "0", notes: "",
   };
@@ -128,8 +129,9 @@ export default function SalesPage() {
     try {
       const body: Record<string, unknown> = {
         ...form,
-        total_amount: parseFloat(form.total_amount),
-        paid_amount:  parseFloat(form.paid_amount || "0"),
+        total_amount:    parseFloat(form.total_amount),
+        paid_amount:     parseFloat(form.paid_amount || "0"),
+        customer_gstin:  form.customer_gstin || null,
       };
       if (scannedGst) {
         body.gst_type   = scannedGst.type;
@@ -179,6 +181,7 @@ export default function SalesPage() {
   const openEdit = (s: Sale) => {
     setForm({
       customer_name: s.customer_name, customer_phone: s.customer_phone || "",
+      customer_gstin: s.customer_gstin || "",
       invoice_number: s.invoice_number || "", sale_date: s.sale_date.split("T")[0],
       due_date: s.due_date?.split("T")[0] || "", total_amount: String(s.total_amount),
       paid_amount: String(s.paid_amount), notes: s.notes || "",
@@ -279,6 +282,7 @@ export default function SalesPage() {
         setForm(f => ({
           ...f,
           customer_name:  ex.customer_name  || "",
+          customer_gstin: ex.customer_gstin || "",
           invoice_number: ex.invoice_number || "",
           sale_date:      ex.sale_date      || new Date().toISOString().split("T")[0],
           due_date:       ex.due_date       || "",
@@ -479,6 +483,7 @@ export default function SalesPage() {
                         {isOverdue && <span className="text-2xs text-yellow-400 font-semibold">OVERDUE</span>}
                       </div>
                       {s.invoice_number && <p className="text-xs text-muted">Invoice #{s.invoice_number}</p>}
+                      {s.customer_gstin && <p className="text-xs text-muted font-mono">GST: {s.customer_gstin}</p>}
                       {s.gst_type && s.gst_amount && (
                         <p className="text-xs mt-0.5" style={{ color: "#F5A524" }}>
                           {s.gst_type}{s.gst_rate ? ` @${s.gst_rate}%` : ""}: {fmtINR(s.gst_amount)}
@@ -672,6 +677,16 @@ export default function SalesPage() {
                           className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
                         />
                       </div>
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted mb-1 block">Buyer GSTIN</label>
+                      <input
+                        value={form.customer_gstin}
+                        onChange={e => setForm(f => ({ ...f, customer_gstin: e.target.value.toUpperCase() }))}
+                        placeholder="22AAAAA0000A1Z5"
+                        maxLength={15}
+                        className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50 font-mono tracking-wide"
+                      />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>

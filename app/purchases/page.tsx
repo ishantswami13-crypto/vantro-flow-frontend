@@ -12,6 +12,7 @@ type Purchase = {
   id: number;
   supplier_name: string;
   supplier_phone?: string;
+  supplier_gstin?: string;
   bill_number?: string;
   purchase_date: string;
   due_date?: string;
@@ -88,7 +89,7 @@ export default function PurchasesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const emptyForm = {
-    supplier_name: "", supplier_phone: "", bill_number: "",
+    supplier_name: "", supplier_phone: "", supplier_gstin: "", bill_number: "",
     purchase_date: new Date().toISOString().split("T")[0],
     due_date: "", total_amount: "", paid_amount: "0", notes: "",
   };
@@ -163,6 +164,7 @@ export default function PurchasesPage() {
   const openEdit = (p: Purchase) => {
     setForm({
       supplier_name: p.supplier_name, supplier_phone: p.supplier_phone || "",
+      supplier_gstin: p.supplier_gstin || "",
       bill_number: p.bill_number || "", purchase_date: p.purchase_date.split("T")[0],
       due_date: p.due_date?.split("T")[0] || "", total_amount: String(p.total_amount),
       paid_amount: String(p.paid_amount), notes: p.notes || "",
@@ -262,6 +264,7 @@ export default function PurchasesPage() {
         setForm(f => ({
           ...f,
           supplier_name:  ex.supplier_name  || "",
+          supplier_gstin: ex.supplier_gstin || "",
           bill_number:    ex.bill_number    || "",
           purchase_date:  ex.purchase_date  || new Date().toISOString().split("T")[0],
           due_date:       ex.due_date       || "",
@@ -458,6 +461,7 @@ export default function PurchasesPage() {
                       {isOverdue && <span className="text-2xs text-yellow-400 font-semibold">OVERDUE</span>}
                     </div>
                     {p.bill_number && <p className="text-xs text-muted">Bill #{p.bill_number}</p>}
+                    {p.supplier_gstin && <p className="text-xs text-muted font-mono">GST: {p.supplier_gstin}</p>}
                     <div className="flex gap-3 mt-1">
                       <p className="text-xs text-muted">Purchase: {fmtDate(p.purchase_date)}</p>
                       {p.due_date && (
@@ -658,6 +662,16 @@ export default function PurchasesPage() {
                         className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
                       />
                     </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted mb-1 block">Seller GSTIN</label>
+                    <input
+                      value={form.supplier_gstin}
+                      onChange={e => setForm(f => ({ ...f, supplier_gstin: e.target.value.toUpperCase() }))}
+                      placeholder="22AAAAA0000A1Z5"
+                      maxLength={15}
+                      className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50 font-mono tracking-wide"
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
