@@ -11,6 +11,7 @@ import {
   FiSun, FiActivity, FiUser, FiSliders, FiDatabase,
   FiArchive, FiFile, FiDollarSign, FiZap, FiLock, FiAlertTriangle, FiPlus,
 } from "react-icons/fi";
+import LogoMark from "@/components/LogoMark";
 import { api, getUser, clearAuth } from "@/lib/api";
 import { getBusinessType, getSmartHiddenRoutes, type BusinessTypeConfig } from "@/lib/businessTypes";
 import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
@@ -136,12 +137,15 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         {/* Logo — wordmark only, no icon */}
         <div className="flex items-center justify-between px-5 h-14 shrink-0"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <span
-            className="font-bold tracking-tight"
-            style={{ fontSize: "15px", color: "#ffffff", letterSpacing: "-0.02em" }}
-          >
-            Vantro
-          </span>
+          <div className="flex items-center gap-2">
+            <LogoMark size={22} />
+            <span
+              className="font-semibold tracking-tight"
+              style={{ fontSize: "14px", color: "rgba(255,255,255,0.85)", letterSpacing: "-0.01em" }}
+            >
+              Vantro
+            </span>
+          </div>
           <button
             onClick={onClose}
             className="lg:hidden p-1.5 rounded-lg transition-colors"
