@@ -326,36 +326,56 @@ export default function SalesPage() {
         {/* Hidden file input */}
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
 
-        {/* ══════════ CAMERA MODAL ══════════ */}
+        {/* ══════════ CAMERA MODAL — FULLSCREEN ══════════ */}
         {showCamera && (
-          <div className="fixed inset-0 z-[60] bg-black flex flex-col">
-            <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
-              <p className="text-white/60 text-sm">Align invoice inside the frame</p>
-              <button onClick={stopCamera} className="p-2 rounded-full bg-white/10 text-white">
+          <div className="fixed inset-0 z-[60] bg-black">
+            {/* Video fills entire screen */}
+            <video ref={videoRef} autoPlay playsInline muted
+              className="absolute inset-0 w-full h-full object-cover" />
+
+            {/* Loading spinner */}
+            {!cameraReady && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+                <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              </div>
+            )}
+
+            {/* Frame guide */}
+            {cameraReady && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+                   style={{ paddingBottom: "20%" }}>
+                <div className="rounded-2xl" style={{
+                  width: "88%", height: "55%",
+                  border: "2px solid rgba(255,255,255,0.7)",
+                  boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)",
+                }} />
+              </div>
+            )}
+
+            {/* Top hint + close */}
+            <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-12 pb-4"
+                 style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)" }}>
+              <p className="text-white/80 text-sm font-medium">Invoice ko frame ke andar rakho</p>
+              <button onClick={stopCamera}
+                className="p-2.5 rounded-full bg-black/40 backdrop-blur-sm text-white border border-white/20">
                 <FiX size={18} />
               </button>
             </div>
-            <div className="flex-1 relative overflow-hidden">
-              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-              {!cameraReady && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black">
-                  <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                </div>
-              )}
-              {cameraReady && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="rounded-2xl" style={{ width: "85%", height: "65%", border: "2px solid rgba(255,255,255,0.5)", boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }} />
-                </div>
-              )}
-            </div>
-            <div className="shrink-0 pb-12 pt-6 flex flex-col items-center gap-4" style={{ background: "#080808" }}>
+
+            {/* Bottom shutter + upload */}
+            <div className="absolute bottom-0 left-0 right-0 z-20 flex flex-col items-center gap-4 pb-16 pt-8"
+                 style={{ background: "linear-gradient(to top, rgba(0,0,0,0.75), transparent)" }}>
               <button onClick={captureFromCamera} disabled={!cameraReady}
-                className="w-18 h-18 rounded-full bg-white flex items-center justify-center disabled:opacity-30 shadow-xl"
-                style={{ width: 72, height: 72 }}>
-                <FiCamera size={28} className="text-black" />
+                className="flex items-center justify-center disabled:opacity-30 transition-transform active:scale-95"
+                style={{
+                  width: 80, height: 80, borderRadius: "50%",
+                  background: "#ffffff",
+                  boxShadow: "0 0 0 5px rgba(255,255,255,0.25), 0 8px 32px rgba(0,0,0,0.5)",
+                }}>
+                <FiCamera size={32} className="text-black" />
               </button>
               <button onClick={() => { stopCamera(); fileInputRef.current?.click(); }}
-                className="flex items-center gap-1.5 text-white/40 text-xs">
+                className="flex items-center gap-1.5 text-white/50 text-xs mt-1">
                 <FiUpload size={12} /> Upload photo instead
               </button>
             </div>
