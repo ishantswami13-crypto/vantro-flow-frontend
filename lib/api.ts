@@ -90,11 +90,11 @@ export const api = {
 
   // ─── Scanner ────────────────────────────────────────────
   scanner: {
-    extract: (imageBase64: string) =>
+    extract: (imageBase64: string, mimeType = 'image/jpeg') =>
       request<{ extracted: ExtractedInvoice }>('/api/scan-document', {
         method: 'POST',
-        body: JSON.stringify({ image_base64: imageBase64, scan_type: 'invoice' }),
-      }),
+        body: JSON.stringify({ image_base64: imageBase64, mimeType, scan_type: 'invoice' }),
+      }, 60_000),
   },
 
   // ─── AI Chat ─────────────────────────────────────────────
@@ -398,9 +398,16 @@ export interface ForecastResponse {
 export interface ExtractedInvoice {
   customer_name: string;
   customer_phone?: string;
+  customer_gstin?: string;
+  supplier_name?: string;
+  seller_gstin?: string;
+  invoice_number?: string;
+  total_amount?: number;
   invoice_amount?: number;
   invoice_date?: string;
-  items?: string;
+  due_date?: string;
+  notes?: string;
+  items?: string | { description?: string; qty?: number; unit?: string; price?: number; amount?: number }[];
 }
 
 export interface ChatMessage {

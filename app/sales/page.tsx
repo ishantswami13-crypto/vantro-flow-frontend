@@ -56,8 +56,36 @@ const statusConfig = {
   unpaid:  { label: "Unpaid",  color: "text-danger",     bg: "bg-danger/10",     icon: FiAlertCircle },
 };
 
+const scanText = (ex: Record<string, unknown>, keys: string[]) => {
+  for (const key of keys) {
+    const value = ex[key];
+    if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
+  }
+  return "";
+};
+
+const scanNumber = (ex: Record<string, unknown>, keys: string[]) => {
+  for (const key of keys) {
+    const value = ex[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim()) {
+      const cleaned = value.replace(/,/g, "").replace(/[^\d.-]/g, "");
+      if (!cleaned) continue;
+      const parsed = Number(cleaned);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return 0;
+};
+
+const scanDate = (ex: Record<string, unknown>, keys: string[]) =>
+  scanText(ex, keys) || new Date().toISOString().split("T")[0];
+
+const scanItems = (ex: Record<string, unknown>): SaleItem[] =>
+  Array.isArray(ex.items) ? (ex.items as SaleItem[]) : [];
+
 function resizeImage(file: File, maxWidth = 1024): Promise<{ base64: string; mimeType: string }> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
@@ -69,6 +97,10 @@ function resizeImage(file: File, maxWidth = 1024): Promise<{ base64: string; mim
       canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
       resolve({ base64: dataUrl.split(",")[1], mimeType: "image/jpeg" });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read image"));
     };
     img.src = url;
   });
@@ -261,45 +293,51 @@ export default function SalesPage() {
         if (d.error === 'rate_limit') { failed += (fileArray.length - i); break; }
         if (!d.success || !d.data) { failed++; continue; }
 
-        const ex = d.data;
+        const ex = d.data as Record<string, unknown>;
+        const amount = scanNumber(ex, ["total_amount", "invoice_amount", "grand_total", "net_amount", "amount", "bill_amount"]);
+        const invNum = scanText(ex, ["invoice_number", "bill_number", "invoice_no", "bill_no"]) || null;
+        const saleDate = scanDate(ex, ["sale_date", "invoice_date", "bill_date", "date"]);
         // Need at least total_amount or invoice_number to be useful
-        if (!ex.total_amount && !ex.invoice_number) { failed++; continue; }
+        if (!amount && !invNum) { failed++; continue; }
 
-        const invNum      = ex.invoice_number || null;
-        const customerName = ex.customer_name || ex.party_name || (invNum ? `Invoice ${invNum}` : `Sale ${i + 1}`);
+        const customerName = scanText(ex, ["customer_name", "party_name", "buyer_name", "bill_to"]) || (invNum ? `Invoice ${invNum}` : `Sale ${i + 1}`);
 
         // Duplicate by invoice_number
         if (invNum && (existingNums.has(invNum) || batchNums.has(invNum))) { skipped++; continue; }
 
         // Duplicate by amount + date (when no invoice_number)
-        if (!invNum && ex.total_amount) {
+        if (!invNum && amount) {
           const isDupe = sales.some(s =>
-            Math.abs(s.total_amount - Number(ex.total_amount)) < 1 &&
-            s.sale_date?.slice(0, 10) === (ex.sale_date || "").slice(0, 10)
+            Math.abs(s.total_amount - amount) < 1 &&
+            s.sale_date?.slice(0, 10) === saleDate.slice(0, 10)
           );
           if (isDupe) { skipped++; continue; }
         }
 
-        const gstType = ex.cgst_amount ? "CGST+SGST" : ex.igst_amount ? "IGST" : (ex.gst_amount ? "GST" : null);
+        const cgst = scanNumber(ex, ["cgst_amount", "cgst"]);
+        const sgst = scanNumber(ex, ["sgst_amount", "sgst"]);
+        const igst = scanNumber(ex, ["igst_amount", "igst"]);
+        const gstAmount = scanNumber(ex, ["gst_amount", "tax_amount", "total_tax"]);
+        const gstType = cgst || sgst ? "CGST+SGST" : igst ? "IGST" : (gstAmount ? "GST" : null);
         const saveR = await fetch(`${API}/api/sales`, {
           method: "POST",
           headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             customer_name:  customerName,
-            customer_gstin: ex.customer_gstin || null,
+            customer_gstin: scanText(ex, ["customer_gstin", "buyer_gstin", "party_gstin"]) || null,
             invoice_number: invNum,
-            sale_date:      ex.sale_date || new Date().toISOString().split("T")[0],
-            total_amount:   Number(ex.total_amount) || 0,
+            sale_date:      saleDate,
+            total_amount:   amount,
             paid_amount:    0,
-            notes:          ex.notes || null,
-            items:          ex.items?.length > 0 ? ex.items : null,
+            notes:          scanText(ex, ["notes", "summary", "description"]) || null,
+            items:          scanItems(ex).length > 0 ? scanItems(ex) : null,
             gst_type:       gstType,
-            gst_rate:       ex.gst_rate || null,
-            gst_amount:     ex.gst_amount || null,
-            cgst_amount:    ex.cgst_amount || null,
-            sgst_amount:    ex.sgst_amount || null,
-            igst_amount:    ex.igst_amount || null,
-            subtotal:       ex.subtotal || null,
+            gst_rate:       scanNumber(ex, ["gst_rate", "tax_rate"]) || null,
+            gst_amount:     gstAmount || null,
+            cgst_amount:    cgst || null,
+            sgst_amount:    sgst || null,
+            igst_amount:    igst || null,
+            subtotal:       scanNumber(ex, ["subtotal", "taxable_amount", "taxable_value"]) || null,
           }),
         });
         if (saveR.ok) {
@@ -409,21 +447,22 @@ export default function SalesPage() {
         return;
       }
       if (d.success && d.data) {
-        const ex = d.data;
-        const items: SaleItem[] = ex.items || [];
+        const ex = d.data as Record<string, unknown>;
+        const items = scanItems(ex);
+        const gstAmount = scanNumber(ex, ["gst_amount", "tax_amount", "total_tax"]);
 
         // Detect GST type
         let gstInfo: ScanGst | null = null;
-        if (ex.gst_amount && ex.gst_amount > 0) {
-          const igst = ex.igst_amount || (ex.igst_rate ? ex.gst_amount : 0);
-          const cgst = ex.cgst_amount || 0;
-          const sgst = ex.sgst_amount || 0;
-          const gstType = (igst > 0 || ex.igst_rate) ? "IGST"
+        if (gstAmount > 0) {
+          const igst = scanNumber(ex, ["igst_amount", "igst"]) || (scanNumber(ex, ["igst_rate"]) ? gstAmount : 0);
+          const cgst = scanNumber(ex, ["cgst_amount", "cgst"]);
+          const sgst = scanNumber(ex, ["sgst_amount", "sgst"]);
+          const gstType = (igst > 0 || scanNumber(ex, ["igst_rate"])) ? "IGST"
                         : (cgst > 0 || sgst > 0)      ? "CGST + SGST"
                         : "GST";
           gstInfo = {
-            amount: ex.gst_amount,
-            rate: ex.gst_rate ? String(ex.gst_rate) : "",
+            amount: gstAmount,
+            rate: scanNumber(ex, ["gst_rate", "tax_rate"]) ? String(scanNumber(ex, ["gst_rate", "tax_rate"])) : "",
             type: gstType,
             igst: igst || undefined,
             cgst: cgst || undefined,
@@ -442,17 +481,18 @@ export default function SalesPage() {
           : "";
 
         // If scan found seller GSTIN and user hasn't set one in settings, use it
-        if (ex.seller_gstin && !myGstin) setMyGstin(ex.seller_gstin);
+        const sellerGstin = scanText(ex, ["seller_gstin", "supplier_gstin", "vendor_gstin"]);
+        if (sellerGstin && !myGstin) setMyGstin(sellerGstin);
 
         setScannedItems(items);
         setForm(f => ({
           ...f,
-          customer_name:  ex.customer_name  || "",
-          customer_gstin: ex.customer_gstin || "",
-          invoice_number: ex.invoice_number || "",
-          sale_date:      ex.sale_date      || new Date().toISOString().split("T")[0],
-          due_date:       ex.due_date       || "",
-          total_amount:   ex.total_amount   ? String(ex.total_amount) : "",
+          customer_name:  scanText(ex, ["customer_name", "party_name", "buyer_name", "bill_to"]) || "",
+          customer_gstin: scanText(ex, ["customer_gstin", "buyer_gstin", "party_gstin"]) || "",
+          invoice_number: scanText(ex, ["invoice_number", "bill_number", "invoice_no", "bill_no"]) || "",
+          sale_date:      scanDate(ex, ["sale_date", "invoice_date", "bill_date", "date"]),
+          due_date:       scanText(ex, ["due_date", "payment_due_date"]) || "",
+          total_amount:   scanNumber(ex, ["total_amount", "invoice_amount", "grand_total", "net_amount", "amount", "bill_amount"]) ? String(scanNumber(ex, ["total_amount", "invoice_amount", "grand_total", "net_amount", "amount", "bill_amount"])) : "",
           notes:          itemNotes + gstNote,
           paid_amount:    "0",
         }));

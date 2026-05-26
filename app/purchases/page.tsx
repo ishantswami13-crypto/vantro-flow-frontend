@@ -49,8 +49,36 @@ const statusConfig = {
   unpaid:  { label: "Unpaid",  color: "text-danger",     bg: "bg-danger/10",     icon: FiAlertCircle },
 };
 
+const scanText = (ex: Record<string, unknown>, keys: string[]) => {
+  for (const key of keys) {
+    const value = ex[key];
+    if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
+  }
+  return "";
+};
+
+const scanNumber = (ex: Record<string, unknown>, keys: string[]) => {
+  for (const key of keys) {
+    const value = ex[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim()) {
+      const cleaned = value.replace(/,/g, "").replace(/[^\d.-]/g, "");
+      if (!cleaned) continue;
+      const parsed = Number(cleaned);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return 0;
+};
+
+const scanDate = (ex: Record<string, unknown>, keys: string[]) =>
+  scanText(ex, keys) || new Date().toISOString().split("T")[0];
+
+const scanItems = (ex: Record<string, unknown>): BillItem[] =>
+  Array.isArray(ex.items) ? (ex.items as BillItem[]) : [];
+
 function resizeImage(file: File, maxWidth = 1024): Promise<{ base64: string; mimeType: string }> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
@@ -62,6 +90,10 @@ function resizeImage(file: File, maxWidth = 1024): Promise<{ base64: string; mim
       canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
       resolve({ base64: dataUrl.split(",")[1], mimeType: "image/jpeg" });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read image"));
     };
     img.src = url;
   });
@@ -140,14 +172,21 @@ export default function PurchasesPage() {
     try {
       const url    = editId ? `${API}/api/purchases/${editId}` : `${API}/api/purchases`;
       const method = editId ? "PATCH" : "POST";
+      const body: Record<string, unknown> = {
+        ...form,
+        total_amount: parseFloat(form.total_amount),
+        paid_amount:  parseFloat(form.paid_amount || "0"),
+      };
+      if (scannedItems.length > 0) body.items = scannedItems;
+      if (scannedGst) {
+        body.gst_type = scannedGst.type;
+        body.gst_rate = scannedGst.rate;
+        body.gst_amount = scannedGst.amount;
+      }
       const r = await fetch(url, {
         method,
         headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          total_amount: parseFloat(form.total_amount),
-          paid_amount:  parseFloat(form.paid_amount || "0"),
-        }),
+        body: JSON.stringify(body),
       });
       if (r.ok) {
         setShowAdd(false); setEditId(null); setForm(emptyForm);
@@ -239,41 +278,47 @@ export default function PurchasesPage() {
         if (d.error === 'rate_limit') { failed += (fileArray.length - i); break; }
         if (!d.success || !d.data) { failed++; continue; }
 
-        const ex = d.data;
-        if (!ex.total_amount && !ex.bill_number) { failed++; continue; }
+        const ex = d.data as Record<string, unknown>;
+        const amount = scanNumber(ex, ["total_amount", "invoice_amount", "grand_total", "net_amount", "amount", "bill_amount"]);
+        const billNum = scanText(ex, ["bill_number", "invoice_number", "invoice_no", "bill_no"]) || null;
+        const purchaseDate = scanDate(ex, ["purchase_date", "invoice_date", "bill_date", "date"]);
+        if (!amount && !billNum) { failed++; continue; }
 
-        const billNum      = ex.bill_number || null;
-        const supplierName = ex.supplier_name || (billNum ? `Bill ${billNum}` : `Purchase ${i + 1}`);
+        const supplierName = scanText(ex, ["supplier_name", "seller_name", "vendor_name", "party_name"]) || (billNum ? `Bill ${billNum}` : `Purchase ${i + 1}`);
 
         if (billNum && (existingNums.has(billNum) || batchNums.has(billNum))) { skipped++; continue; }
-        if (!billNum && ex.total_amount) {
+        if (!billNum && amount) {
           const isDupe = purchases.some(p =>
-            Math.abs(p.total_amount - Number(ex.total_amount)) < 1 &&
-            p.purchase_date?.slice(0, 10) === (ex.purchase_date || "").slice(0, 10)
+            Math.abs(p.total_amount - amount) < 1 &&
+            p.purchase_date?.slice(0, 10) === purchaseDate.slice(0, 10)
           );
           if (isDupe) { skipped++; continue; }
         }
 
-        const gstType = ex.cgst_amount ? "CGST+SGST" : ex.igst_amount ? "IGST" : (ex.gst_amount ? "GST" : null);
+        const cgst = scanNumber(ex, ["cgst_amount", "cgst"]);
+        const sgst = scanNumber(ex, ["sgst_amount", "sgst"]);
+        const igst = scanNumber(ex, ["igst_amount", "igst"]);
+        const gstAmount = scanNumber(ex, ["gst_amount", "tax_amount", "total_tax"]);
+        const gstType = cgst || sgst ? "CGST+SGST" : igst ? "IGST" : (gstAmount ? "GST" : null);
         const saveR = await fetch(`${API}/api/purchases`, {
           method: "POST",
           headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             supplier_name:  supplierName,
-            supplier_gstin: ex.supplier_gstin || null,
+            supplier_gstin: scanText(ex, ["supplier_gstin", "seller_gstin", "vendor_gstin"]) || null,
             bill_number:    billNum,
-            purchase_date:  ex.purchase_date || new Date().toISOString().split("T")[0],
-            total_amount:   Number(ex.total_amount) || 0,
+            purchase_date:  purchaseDate,
+            total_amount:   amount,
             paid_amount:    0,
-            notes:          ex.notes || null,
-            items:          ex.items?.length > 0 ? ex.items : null,
+            notes:          scanText(ex, ["notes", "summary", "description"]) || null,
+            items:          scanItems(ex).length > 0 ? scanItems(ex) : null,
             gst_type:       gstType,
-            gst_rate:       ex.gst_rate || null,
-            gst_amount:     ex.gst_amount || null,
-            cgst_amount:    ex.cgst_amount || null,
-            sgst_amount:    ex.sgst_amount || null,
-            igst_amount:    ex.igst_amount || null,
-            subtotal:       ex.subtotal || null,
+            gst_rate:       scanNumber(ex, ["gst_rate", "tax_rate"]) || null,
+            gst_amount:     gstAmount || null,
+            cgst_amount:    cgst || null,
+            sgst_amount:    sgst || null,
+            igst_amount:    igst || null,
+            subtotal:       scanNumber(ex, ["subtotal", "taxable_amount", "taxable_value"]) || null,
           }),
         });
         if (saveR.ok) {
@@ -382,19 +427,20 @@ export default function PurchasesPage() {
         return;
       }
       if (d.success && d.data) {
-        const ex        = d.data;
-        const items: BillItem[] = ex.items || [];
+        const ex = d.data as Record<string, unknown>;
+        const items = scanItems(ex);
+        const gstAmount = scanNumber(ex, ["gst_amount", "tax_amount", "total_tax"]);
 
         // Detect GST type from bill (IGST = interstate, CGST+SGST = intrastate)
         let gstInfo: ScanGst | null = null;
-        if (ex.gst_amount && ex.gst_amount > 0) {
-          const igst  = ex.igst_amount  || (ex.igst_rate  ? ex.gst_amount : 0);
-          const cgst  = ex.cgst_amount  || 0;
-          const sgst  = ex.sgst_amount  || 0;
-          const gstType = (igst > 0 || ex.igst_rate)  ? "IGST"
+        if (gstAmount > 0) {
+          const igst  = scanNumber(ex, ["igst_amount", "igst"]) || (scanNumber(ex, ["igst_rate"]) ? gstAmount : 0);
+          const cgst  = scanNumber(ex, ["cgst_amount", "cgst"]);
+          const sgst  = scanNumber(ex, ["sgst_amount", "sgst"]);
+          const gstType = (igst > 0 || scanNumber(ex, ["igst_rate"]))  ? "IGST"
                         : (cgst > 0 || sgst > 0)        ? "CGST + SGST"
                         : "GST";
-          gstInfo = { amount: ex.gst_amount, rate: ex.gst_rate || "", type: gstType };
+          gstInfo = { amount: gstAmount, rate: String(scanNumber(ex, ["gst_rate", "tax_rate"]) || ""), type: gstType };
         }
         setScannedGst(gstInfo);
 
@@ -409,12 +455,12 @@ export default function PurchasesPage() {
         setScannedItems(items);
         setForm(f => ({
           ...f,
-          supplier_name:  ex.supplier_name  || "",
-          supplier_gstin: ex.supplier_gstin || "",
-          bill_number:    ex.bill_number    || "",
-          purchase_date:  ex.purchase_date  || new Date().toISOString().split("T")[0],
-          due_date:       ex.due_date       || "",
-          total_amount:   ex.total_amount   ? String(ex.total_amount) : "",
+          supplier_name:  scanText(ex, ["supplier_name", "seller_name", "vendor_name"]) || "",
+          supplier_gstin: scanText(ex, ["supplier_gstin", "seller_gstin", "vendor_gstin"]) || "",
+          bill_number:    scanText(ex, ["bill_number", "invoice_number", "invoice_no", "bill_no"]) || "",
+          purchase_date:  scanDate(ex, ["purchase_date", "invoice_date", "bill_date", "date"]),
+          due_date:       scanText(ex, ["due_date", "payment_due_date"]) || "",
+          total_amount:   scanNumber(ex, ["total_amount", "invoice_amount", "grand_total", "net_amount", "amount", "bill_amount"]) ? String(scanNumber(ex, ["total_amount", "invoice_amount", "grand_total", "net_amount", "amount", "bill_amount"])) : "",
           notes:          itemNotes + gstNote,
           paid_amount:    "0",
         }));

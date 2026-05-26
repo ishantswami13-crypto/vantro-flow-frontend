@@ -9,70 +9,102 @@ import { Badge } from "@/components/ui/Badge";
 
 interface Extracted {
   customerName: string;
+  customerPhone?: string;
   gstin: string;
   invoiceNo: string;
   amount: string;
+  amountValue: number;
   date: string;
   dueDate: string;
+  supplierName?: string;
+  notes?: string;
   items: { desc: string; qty: number; rate: number; total: number }[];
 }
 
-const DEMO_RESULT: Extracted = {
-  customerName: "Mehta Fabrics Pvt Ltd",
-  gstin:        "27AABCM1234F1Z5",
-  invoiceNo:    "INV-2025-0847",
-  amount:       "8,40,000",
-  date:         "01 May 2025",
-  dueDate:      "31 May 2025",
-  items: [
-    { desc: "Cotton Fabric Roll (Grade A)", qty: 200, rate: 3500,  total: 700000 },
-    { desc: "Processing Charges",           qty: 1,   rate: 75000, total: 75000  },
-    { desc: "GST 18%",                      qty: 1,   rate: 63000, total: 63000  },
-  ],
+type Stage = "idle" | "uploading" | "scanning" | "done";
+
+const fmtAmount = (n: number) => Number(n || 0).toLocaleString("en-IN");
+
+const addDays = (date: string, days: number) => {
+  const d = date ? new Date(date) : new Date();
+  if (Number.isNaN(d.getTime())) return new Date().toISOString().split("T")[0];
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0];
 };
 
-type Stage = "idle" | "uploading" | "scanning" | "done";
+function resizeImage(file: File, maxWidth = 1200): Promise<{ dataUrl: string; mimeType: string }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve({ dataUrl: canvas.toDataURL("image/jpeg", 0.86), mimeType: "image/jpeg" });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read image"));
+    };
+    img.src = url;
+  });
+}
 
 export default function ScannerPage() {
   const [stage, setStage]       = useState<Stage>("idle");
   const [result, setResult]     = useState<Extracted | null>(null);
   const [preview, setPreview]   = useState<string | null>(null);
   const [saved, setSaved]       = useState(false);
+  const [saving, setSaving]     = useState(false);
+  const [error, setError]       = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setError("Please upload a JPG or PNG invoice photo.");
+      return;
+    }
     const url = URL.createObjectURL(file);
     setPreview(url);
+    setSaved(false);
+    setError(null);
     setStage("uploading");
-
-    // Convert file to base64 data URL for Groq Vision
-    const base64 = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
 
     setStage("scanning");
     try {
-      const data = await api.scanner.extract(base64);
+      const { dataUrl, mimeType } = await resizeImage(file);
+      const data = await api.scanner.extract(dataUrl, mimeType);
       const ext = data.extracted;
+      const amountValue = Number(ext.total_amount || ext.invoice_amount || 0);
+      const invoiceDate = ext.invoice_date || new Date().toISOString().split("T")[0];
+      const rows = Array.isArray(ext.items) && ext.items.length > 0
+        ? ext.items.map((item) => ({
+            desc: item.description || ext.notes || "Invoice item",
+            qty: Number(item.qty || 1),
+            rate: Number(item.price || item.amount || 0),
+            total: Number(item.amount || item.price || 0),
+          }))
+        : [{ desc: ext.notes || "Invoice items", qty: 1, rate: amountValue, total: amountValue }];
+
       setResult({
-        customerName: ext.customer_name || "Unknown Customer",
-        gstin:        "27AABCM1234F1Z5", // OCR often misses GSTIN formatting
-        invoiceNo:    `INV-${Date.now().toString().slice(-6)}`,
-        amount:       ext.invoice_amount ? ext.invoice_amount.toLocaleString("en-IN") : "0",
-        date:         ext.invoice_date || new Date().toISOString().split("T")[0],
-        dueDate:      ext.invoice_date
-          ? new Date(new Date(ext.invoice_date).getTime() + 30 * 86400000).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
-        items: [
-          { desc: ext.items || "Invoice items", qty: 1, rate: ext.invoice_amount || 0, total: ext.invoice_amount || 0 },
-        ],
+        customerName:  ext.customer_name || "Unknown Customer",
+        customerPhone: ext.customer_phone,
+        gstin:         ext.customer_gstin || ext.seller_gstin || "",
+        invoiceNo:     ext.invoice_number || "",
+        amount:        fmtAmount(amountValue),
+        amountValue,
+        date:          invoiceDate,
+        dueDate:       ext.due_date || addDays(invoiceDate, 30),
+        supplierName:  ext.supplier_name,
+        notes:         ext.notes,
+        items:         rows,
       });
-    } catch {
-      // Fallback to demo data if AI scan fails
-      setResult(DEMO_RESULT);
+    } catch (err) {
+      setResult(null);
+      setError(err instanceof Error ? err.message : "AI scan failed. Please try a clearer photo.");
     }
     setStage("done");
   };
@@ -88,11 +120,32 @@ export default function ScannerPage() {
     if (f) handleFile(f);
   };
 
-  const reset = () => { setStage("idle"); setResult(null); setPreview(null); setSaved(false); };
+  const reset = () => { setStage("idle"); setResult(null); setPreview(null); setSaved(false); setError(null); };
 
   const saveInvoice = async () => {
-    await new Promise(r => setTimeout(r, 600));
-    setSaved(true);
+    if (!result) return;
+    if (!result.customerName || !result.amountValue) {
+      setError("Customer name and amount are required before saving.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await api.invoices.create({
+        customer_name: result.customerName,
+        customer_phone: result.customerPhone,
+        invoice_amount: result.amountValue,
+        invoice_date: result.date,
+        due_date: result.dueDate,
+        invoice_number: result.invoiceNo || undefined,
+        notes: result.notes || result.items.map(i => `${i.qty} x ${i.desc}`).join("; "),
+      });
+      setSaved(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save invoice.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -116,7 +169,7 @@ export default function ScannerPage() {
               ].join(" ")}
               onClick={() => stage === "idle" && fileRef.current?.click()}
             >
-              <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={onFileChange} />
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
 
               {stage === "idle" && (
                 <>
@@ -124,7 +177,7 @@ export default function ScannerPage() {
                     <FiCamera size={24} className="text-muted" />
                   </div>
                   <p className="text-sm font-semibold text-primary mb-1">Drop invoice image here</p>
-                  <p className="text-xs text-muted mb-4">or click to browse · JPG, PNG, PDF supported</p>
+                  <p className="text-xs text-muted mb-4">or click to browse · JPG or PNG</p>
                   <Button size="sm" icon={<FiUpload size={13}/>} variant="secondary">Choose File</Button>
                 </>
               )}
@@ -150,10 +203,14 @@ export default function ScannerPage() {
               {stage === "done" && (
                 <>
                   {preview && <img src={preview} alt="Invoice" className="max-h-48 rounded-xl mb-3 object-contain" />}
-                  <div className="flex items-center gap-2 text-success">
-                    <FiCheck size={14} />
-                    <p className="text-xs font-semibold">Scan complete!</p>
-                  </div>
+                  {error ? (
+                    <p className="text-xs font-semibold text-danger max-w-xs">{error}</p>
+                  ) : (
+                    <div className="flex items-center gap-2 text-success">
+                      <FiCheck size={14} />
+                      <p className="text-xs font-semibold">Scan complete!</p>
+                    </div>
+                  )}
                   <button onClick={e => { e.stopPropagation(); reset(); }} className="mt-2 text-2xs text-muted hover:text-primary underline flex items-center gap-1">
                     <FiRefreshCw size={10}/> Scan another
                   </button>
@@ -166,7 +223,7 @@ export default function ScannerPage() {
               <p className="text-xs font-bold text-primary mb-3">How it works</p>
               <div className="space-y-2.5">
                 {[
-                  { step: "1", text: "Take a photo of any GST invoice or upload PDF" },
+                  { step: "1", text: "Take a clear photo of any GST invoice" },
                   { step: "2", text: "Groq AI reads and extracts all invoice details" },
                   { step: "3", text: "Review extracted data and save to collections" },
                 ].map(s => (
@@ -199,8 +256,8 @@ export default function ScannerPage() {
                 <div className="p-4 space-y-3">
                   {[
                     { label: "Customer Name", value: result.customerName },
-                    { label: "GSTIN",         value: result.gstin },
-                    { label: "Invoice No",    value: result.invoiceNo },
+                    { label: "GSTIN",         value: result.gstin || "Not found" },
+                    { label: "Invoice No",    value: result.invoiceNo || "Not found" },
                     { label: "Amount",        value: `₹${result.amount}` },
                     { label: "Invoice Date",  value: result.date },
                     { label: "Due Date",      value: result.dueDate },
@@ -236,11 +293,18 @@ export default function ScannerPage() {
                     </div>
                   ) : (
                     <>
-                      <Button fullWidth onClick={saveInvoice} icon={<FiCheck size={13}/>}>Save to Collections</Button>
+                      <Button fullWidth onClick={saveInvoice} disabled={saving} icon={<FiCheck size={13}/>}>
+                        {saving ? "Saving..." : "Save to Collections"}
+                      </Button>
                       <Button variant="secondary" size="md" icon={<FiRefreshCw size={13}/>} onClick={reset} />
                     </>
                   )}
                 </div>
+                {error && (
+                  <div className="px-4 pb-4">
+                    <p className="text-xs text-danger">{error}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
