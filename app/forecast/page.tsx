@@ -64,6 +64,7 @@ export default function ForecastPage() {
     const currentCash = cash !== undefined ? cash : openingCash;
     setLoading(true);
     try {
+      let usedForecastTopImpact = false;
       const [forecastRes, invoicesRes] = await Promise.allSettled([
         api.forecast(user.id, { days, current_cash: Number(currentCash) || 0 }),
         api.invoices.list(user.id),
@@ -72,6 +73,15 @@ export default function ForecastPage() {
       if (forecastRes.status === "fulfilled") {
         const f = forecastRes.value;
         const s = f.scenarios;
+        if (Array.isArray((f as any).topOutstanding)) {
+          usedForecastTopImpact = true;
+          setTopImpact((f as any).topOutstanding.slice(0, 5).map((inv: any) => ({
+            name: inv.name || inv.customer_name,
+            amount: inv.amount || inv.outstanding_amount || 0,
+            days_overdue: inv.days_overdue || 0,
+            priority_score: inv.priority_score,
+          })));
+        }
 
         // Build chart data: align by day index across scenarios
         const optCurve  = s?.optimistic?.curve  || [];
@@ -107,7 +117,7 @@ export default function ForecastPage() {
         setNoData(true);
       }
 
-      if (invoicesRes.status === "fulfilled") {
+      if (invoicesRes.status === "fulfilled" && !usedForecastTopImpact) {
         const overdue = (invoicesRes.value.invoices || [])
           .filter((inv: any) => inv.payment_status === "Pending" && inv.days_overdue > 0)
           .sort((a: any, b: any) => (b.invoice_amount - a.invoice_amount))

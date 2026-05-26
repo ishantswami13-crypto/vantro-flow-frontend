@@ -9,7 +9,7 @@ import {
   FiCamera, FiFileText, FiCreditCard, FiRepeat, FiShield,
   FiCpu, FiGlobe, FiBook, FiShoppingBag, FiUserCheck,
   FiSun, FiActivity, FiUser, FiSliders, FiDatabase,
-  FiArchive, FiFile, FiDollarSign, FiZap, FiLock, FiAlertTriangle, FiPlus,
+  FiArchive, FiFile, FiDollarSign, FiZap, FiLock, FiAlertTriangle, FiPlus, FiTruck,
 } from "react-icons/fi";
 import LogoMark from "@/components/LogoMark";
 import { api, getUser, clearAuth } from "@/lib/api";
@@ -42,6 +42,7 @@ const NAV = [
   { href: "/khata",          label: "Customer Khata",  icon: FiBook,          badge: null,   group: "ops" },
   { href: "/sales",          label: "Sales",           icon: FiTrendingUp,    badge: null,   group: "ops" },
   { href: "/purchases",      label: "Purchases",       icon: FiPackage,       badge: null,   group: "ops" },
+  { href: "/suppliers",      label: "Suppliers",       icon: FiTruck,         badge: null,   group: "ops" },
   { href: "/orders",         label: "Today's Orders",  icon: FiShoppingBag,   badge: "NEW",  group: "ops" },
   { href: "/attendance",     label: "Staff Attendance",icon: FiUserCheck,     badge: null,   group: "ops" },
   { href: "/team",           label: "Team",            icon: FiUser,          badge: null,   group: "ops" },
