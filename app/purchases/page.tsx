@@ -49,7 +49,7 @@ const statusConfig = {
   unpaid:  { label: "Unpaid",  color: "text-danger",     bg: "bg-danger/10",     icon: FiAlertCircle },
 };
 
-function resizeImage(file: File, maxWidth = 1024): Promise<{ base64: string; mimeType: string }> {
+function resizeImage(file: File, maxWidth = 512): Promise<{ base64: string; mimeType: string }> {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -83,6 +83,7 @@ export default function PurchasesPage() {
   const [scannedItems, setScannedItems] = useState<BillItem[]>([]);
   const [scannedGst, setScannedGst]     = useState<ScanGst | null>(null);
   const [scanError, setScanError]       = useState<string | null>(null);
+  const [scanCountdown, setScanCountdown] = useState<number | null>(null);
   const [showCamera, setShowCamera]     = useState(false);
   const [cameraReady, setCameraReady]   = useState(false);
 
@@ -101,6 +102,7 @@ export default function PurchasesPage() {
   const [bulkDone,     setBulkDone]     = useState(0);
   const [bulkCurrent,  setBulkCurrent]  = useState("");
   const [bulkResults,  setBulkResults]  = useState<{ added: number; skipped: number; failed: number } | null>(null);
+  const [bulkWaiting,  setBulkWaiting]  = useState(false);
 
   const emptyForm = {
     supplier_name: "", supplier_phone: "", supplier_gstin: "", bill_number: "",
@@ -215,7 +217,12 @@ export default function PurchasesPage() {
       setBulkDone(i);
       setBulkCurrent(fileArray[i].name);
 
-      if (i > 0) await new Promise(r => setTimeout(r, 1200));
+      // GROQ free tier: ~3 scans/min with 512px images — 22s gap keeps us safe
+      if (i > 0) {
+        setBulkWaiting(true);
+        await new Promise(r => setTimeout(r, 22000));
+        setBulkWaiting(false);
+      }
       if (bulkCancelRef.current) break;
 
       try {
@@ -344,16 +351,28 @@ export default function PurchasesPage() {
 
     try {
       const { base64, mimeType } = await resizeImage(file);
-      const r = await fetch(`${API}/api/purchases/scan`, {
-        method: "POST",
+      const fetchOpts = {
+        method: "POST" as const,
         headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
         body: JSON.stringify({ image: base64, mimeType }),
-      });
+      };
+      let r = await fetch(`${API}/api/purchases/scan`, fetchOpts);
+
+      // Auto-retry once on rate limit — 22s countdown then retry
+      if (r.status === 429) {
+        for (let cd = 22; cd > 0; cd--) {
+          setScanCountdown(cd);
+          await new Promise(res => setTimeout(res, 1000));
+        }
+        setScanCountdown(null);
+        r = await fetch(`${API}/api/purchases/scan`, fetchOpts);
+      }
+
       const d = await r.json();
       console.log('[SCAN DEBUG]', { status: r.status, success: d.success, error: d.error, details: d.details });
 
       if (r.status === 429 || d.error === 'rate_limit') {
-        setScanError("⚡ AI scan limit reached. Try again in a few minutes, or fill in manually.");
+        setScanError("⚡ AI scan busy. Please wait 1 minute and try again.");
         setScanning(false);
         return;
       }
@@ -436,7 +455,11 @@ export default function PurchasesPage() {
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 360 }}>
             <p className="font-bold text-primary text-base mb-1">Scanning Bills…</p>
-            <p className="text-xs text-muted mb-4">{bulkDone} / {bulkTotal} done{bulkCurrent ? ` — ${bulkCurrent}` : ""}</p>
+            <p className="text-xs text-muted mb-4">
+              {bulkWaiting
+                ? `Cooling down between scans…`
+                : `${bulkDone} / ${bulkTotal} done${bulkCurrent ? ` — ${bulkCurrent}` : ""}`}
+            </p>
             <div className="w-full bg-white/5 rounded-full h-2 mb-5">
               <div className="bg-white h-2 rounded-full transition-all duration-300"
                 style={{ width: bulkTotal > 0 ? `${Math.round((bulkDone / bulkTotal) * 100)}%` : "0%" }} />
@@ -752,7 +775,11 @@ export default function PurchasesPage() {
                   {scanning && (
                     <div className="absolute inset-0 bg-black/65 flex flex-col items-center justify-center gap-2">
                       <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      <p className="text-xs text-white font-semibold">AI reading bill…</p>
+                      <p className="text-xs text-white font-semibold">
+                        {scanCountdown !== null
+                          ? `Rate limit hit — retrying in ${scanCountdown}s…`
+                          : "AI reading bill…"}
+                      </p>
                     </div>
                   )}
                   {!scanning && (
