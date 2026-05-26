@@ -306,6 +306,9 @@ export default function SalesPage() {
           ? ` | ${gstInfo.type}${gstInfo.rate ? " @" + gstInfo.rate + "%" : ""}: ₹${Number(gstInfo.amount).toLocaleString("en-IN")}`
           : "";
 
+        // If scan found seller GSTIN and user hasn't set one in settings, use it
+        if (ex.seller_gstin && !myGstin) setMyGstin(ex.seller_gstin);
+
         setScannedItems(items);
         setForm(f => ({
           ...f,
