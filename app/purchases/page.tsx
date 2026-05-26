@@ -49,7 +49,7 @@ const statusConfig = {
   unpaid:  { label: "Unpaid",  color: "text-danger",     bg: "bg-danger/10",     icon: FiAlertCircle },
 };
 
-function resizeImage(file: File, maxWidth = 2400): Promise<{ base64: string; mimeType: string }> {
+function resizeImage(file: File, maxWidth = 1024): Promise<{ base64: string; mimeType: string }> {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -60,7 +60,7 @@ function resizeImage(file: File, maxWidth = 2400): Promise<{ base64: string; mim
       canvas.width  = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
       canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
       resolve({ base64: dataUrl.split(",")[1], mimeType: "image/jpeg" });
     };
     img.src = url;
@@ -82,6 +82,7 @@ export default function PurchasesPage() {
   const [scanPreview, setScanPreview]   = useState<string | null>(null);
   const [scannedItems, setScannedItems] = useState<BillItem[]>([]);
   const [scannedGst, setScannedGst]     = useState<ScanGst | null>(null);
+  const [scanError, setScanError]       = useState<string | null>(null);
   const [showCamera, setShowCamera]     = useState(false);
   const [cameraReady, setCameraReady]   = useState(false);
 
@@ -189,8 +190,97 @@ export default function PurchasesPage() {
 
   const closeModal = () => {
     setShowAdd(false); setEditId(null); setForm(emptyForm);
-    setScanPreview(null); setScannedItems([]); setScannedGst(null); setScanning(false);
+    setScanPreview(null); setScannedItems([]); setScannedGst(null); setScanning(false); setScanError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // ── Bulk Scan ─────────────────────────────────────────────────────
+  const handleBulkScan = async (files: FileList) => {
+    const fileArray = Array.from(files).filter(f => f.type.startsWith("image/"));
+    if (fileArray.length === 0) return;
+
+    bulkCancelRef.current = false;
+    setBulkTotal(fileArray.length);
+    setBulkDone(0);
+    setBulkCurrent("");
+    setBulkResults(null);
+    setBulkScanning(true);
+
+    let added = 0, skipped = 0, failed = 0;
+    const existingNums = new Set(purchases.map(p => p.bill_number).filter(Boolean) as string[]);
+    const batchNums    = new Set<string>();
+
+    for (let i = 0; i < fileArray.length; i++) {
+      if (bulkCancelRef.current) break;
+      setBulkDone(i);
+      setBulkCurrent(fileArray[i].name);
+
+      if (i > 0) await new Promise(r => setTimeout(r, 1200));
+      if (bulkCancelRef.current) break;
+
+      try {
+        const { base64, mimeType } = await resizeImage(fileArray[i]);
+        const r = await fetch(`${API}/api/purchases/scan`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64, mimeType }),
+        });
+
+        if (r.status === 429) { failed += (fileArray.length - i); break; }
+        if (!r.ok) { failed++; continue; }
+        const d = await r.json();
+        if (d.error === 'rate_limit') { failed += (fileArray.length - i); break; }
+        if (!d.success || !d.data) { failed++; continue; }
+
+        const ex = d.data;
+        if (!ex.total_amount && !ex.bill_number) { failed++; continue; }
+
+        const billNum      = ex.bill_number || null;
+        const supplierName = ex.supplier_name || (billNum ? `Bill ${billNum}` : `Purchase ${i + 1}`);
+
+        if (billNum && (existingNums.has(billNum) || batchNums.has(billNum))) { skipped++; continue; }
+        if (!billNum && ex.total_amount) {
+          const isDupe = purchases.some(p =>
+            Math.abs(p.total_amount - Number(ex.total_amount)) < 1 &&
+            p.purchase_date?.slice(0, 10) === (ex.purchase_date || "").slice(0, 10)
+          );
+          if (isDupe) { skipped++; continue; }
+        }
+
+        const gstType = ex.cgst_amount ? "CGST+SGST" : ex.igst_amount ? "IGST" : (ex.gst_amount ? "GST" : null);
+        const saveR = await fetch(`${API}/api/purchases`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            supplier_name:  supplierName,
+            supplier_gstin: ex.supplier_gstin || null,
+            bill_number:    billNum,
+            purchase_date:  ex.purchase_date || new Date().toISOString().split("T")[0],
+            total_amount:   Number(ex.total_amount) || 0,
+            paid_amount:    0,
+            notes:          ex.notes || null,
+            items:          ex.items?.length > 0 ? ex.items : null,
+            gst_type:       gstType,
+            gst_rate:       ex.gst_rate || null,
+            gst_amount:     ex.gst_amount || null,
+            cgst_amount:    ex.cgst_amount || null,
+            sgst_amount:    ex.sgst_amount || null,
+            igst_amount:    ex.igst_amount || null,
+            subtotal:       ex.subtotal || null,
+          }),
+        });
+        if (saveR.ok) {
+          added++;
+          if (billNum) { existingNums.add(billNum); batchNums.add(billNum); }
+        } else { failed++; }
+      } catch { failed++; }
+    }
+
+    setBulkDone(fileArray.length);
+    setBulkScanning(false);
+    setBulkResults({ added, skipped, failed });
+    if (bulkInputRef.current) bulkInputRef.current.value = "";
+    await load();
   };
 
   // ── Camera ──────────────────────────────────────────────────────
@@ -246,7 +336,7 @@ export default function PurchasesPage() {
   const processFile = async (file: File) => {
     const previewUrl = URL.createObjectURL(file);
     setScanPreview(previewUrl);
-    setScannedItems([]);
+    setScannedItems([]); setScannedGst(null); setScanError(null);
     setForm(emptyForm);
     setEditId(null);
     setScanning(true);
@@ -260,6 +350,18 @@ export default function PurchasesPage() {
         body: JSON.stringify({ image: base64, mimeType }),
       });
       const d = await r.json();
+      console.log('[SCAN DEBUG]', { status: r.status, success: d.success, error: d.error, details: d.details });
+
+      if (r.status === 429 || d.error === 'rate_limit') {
+        setScanError("⚡ AI quota used up for today. Try again tomorrow, or fill in manually.");
+        setScanning(false);
+        return;
+      }
+      if (!r.ok || !d.success) {
+        setScanError("AI scan failed. Please fill in manually.");
+        setScanning(false);
+        return;
+      }
       if (d.success && d.data) {
         const ex        = d.data;
         const items: BillItem[] = ex.items || [];
@@ -300,6 +402,7 @@ export default function PurchasesPage() {
       }
     } catch (err) {
       console.error("Scan failed:", err);
+      setScanError("AI scan failed. Please fill in manually.");
     } finally {
       setScanning(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -327,6 +430,54 @@ export default function PurchasesPage() {
         className="hidden"
         onChange={handleFileSelect}
       />
+
+      {/* ══════════ BULK SCAN PROGRESS MODAL ══════════ */}
+      {mounted && bulkScanning && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 360 }}>
+            <p className="font-bold text-primary text-base mb-1">Scanning Bills…</p>
+            <p className="text-xs text-muted mb-4">{bulkDone} / {bulkTotal} done{bulkCurrent ? ` — ${bulkCurrent}` : ""}</p>
+            <div className="w-full bg-white/5 rounded-full h-2 mb-5">
+              <div className="bg-white h-2 rounded-full transition-all duration-300"
+                style={{ width: bulkTotal > 0 ? `${Math.round((bulkDone / bulkTotal) * 100)}%` : "0%" }} />
+            </div>
+            <button onClick={() => { bulkCancelRef.current = true; }}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold transition-colors"
+              style={{ background: "rgba(245,66,77,0.12)", border: "1px solid rgba(245,66,77,0.25)", color: "rgba(255,120,128,1)" }}>
+              Cancel
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ══════════ BULK RESULTS MODAL ══════════ */}
+      {mounted && bulkResults && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 360 }}>
+            <p className="font-bold text-primary text-base mb-4">Bulk Scan Complete</p>
+            <div className="space-y-2.5 mb-5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted">Added</span>
+                <span className="text-sm font-bold text-success">{bulkResults.added}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted">Duplicates skipped</span>
+                <span className="text-sm font-bold text-yellow-400">{bulkResults.skipped}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted">Failed</span>
+                <span className="text-sm font-bold text-danger">{bulkResults.failed}</span>
+              </div>
+            </div>
+            <button onClick={() => setBulkResults(null)}
+              className="w-full py-2.5 rounded-xl text-sm font-bold bg-white text-black">
+              Done
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* ══════════ CAMERA MODAL — FULLSCREEN (portaled to body) ══════════ */}
       {mounted && showCamera && createPortal(
@@ -402,12 +553,30 @@ export default function PurchasesPage() {
       )}
 
       {/* ══════════ PAGE HEADER ══════════ */}
+      {/* Bulk scan hidden file input */}
+      <input
+        ref={bulkInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={e => { if (e.target.files?.length) handleBulkScan(e.target.files); }}
+      />
+
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-xl font-bold text-primary">Purchases / Payables</h1>
           <p className="text-xs text-muted">Supplier ko kya dena hai</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => bulkInputRef.current?.click()}
+            className="flex items-center gap-1.5 border border-white/10 text-white/40 px-3 py-2.5 rounded-xl text-sm font-semibold hover:border-white/25 hover:text-white/70 transition-colors"
+            title="Scan folder of bills"
+          >
+            <FiUpload size={13} />
+            <span className="hidden sm:inline">Bulk Scan</span>
+          </button>
           <button
             onClick={openCamera}
             className="flex items-center gap-1.5 border border-white/10 text-white/70 px-3 py-2.5 rounded-xl text-sm font-semibold hover:border-white/25 hover:text-white transition-colors"
@@ -604,6 +773,14 @@ export default function PurchasesPage() {
                   <div key={i} className="h-9 bg-white/5 rounded-xl animate-pulse"
                        style={{ width: i % 2 === 0 ? "75%" : "100%" }} />
                 ))}
+              </div>
+            )}
+
+            {/* Scan error banner */}
+            {!scanning && scanError && (
+              <div className="mx-5 mt-4 px-4 py-3 rounded-xl text-sm"
+                style={{ background: "rgba(245,66,77,0.12)", border: "1px solid rgba(245,66,77,0.25)", color: "rgba(255,120,128,1)" }}>
+                {scanError}
               </div>
             )}
 

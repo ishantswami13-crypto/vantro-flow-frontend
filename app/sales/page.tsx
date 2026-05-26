@@ -56,7 +56,7 @@ const statusConfig = {
   unpaid:  { label: "Unpaid",  color: "text-danger",     bg: "bg-danger/10",     icon: FiAlertCircle },
 };
 
-function resizeImage(file: File, maxWidth = 2400): Promise<{ base64: string; mimeType: string }> {
+function resizeImage(file: File, maxWidth = 1024): Promise<{ base64: string; mimeType: string }> {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -67,7 +67,7 @@ function resizeImage(file: File, maxWidth = 2400): Promise<{ base64: string; mim
       canvas.width  = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
       canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
       resolve({ base64: dataUrl.split(",")[1], mimeType: "image/jpeg" });
     };
     img.src = url;
@@ -96,6 +96,7 @@ export default function SalesPage() {
   const [scanPreview, setScanPreview]   = useState<string | null>(null);
   const [scannedItems, setScannedItems] = useState<SaleItem[]>([]);
   const [scannedGst, setScannedGst]     = useState<ScanGst | null>(null);
+  const [scanError, setScanError]       = useState<string | null>(null);
   const [showCamera, setShowCamera]     = useState(false);
   const [cameraReady, setCameraReady]   = useState(false);
 
@@ -209,7 +210,7 @@ export default function SalesPage() {
 
   const closeModal = () => {
     setShowAdd(false); setEditId(null); setForm(emptyForm);
-    setScanPreview(null); setScannedItems([]); setScannedGst(null); setScanning(false);
+    setScanPreview(null); setScannedItems([]); setScannedGst(null); setScanning(false); setScanError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -248,8 +249,10 @@ export default function SalesPage() {
           body: JSON.stringify({ image: base64, mimeType }),
         });
 
-        if (!r.ok) { failed++; continue; }   // HTTP error (rate-limit, etc.)
+        if (r.status === 429) { failed += (fileArray.length - i); break; }  // Stop on rate limit
+        if (!r.ok) { failed++; continue; }
         const d = await r.json();
+        if (d.error === 'rate_limit') { failed += (fileArray.length - i); break; }
         if (!d.success || !d.data) { failed++; continue; }
 
         const ex = d.data;
@@ -363,7 +366,7 @@ export default function SalesPage() {
   const processFile = async (file: File) => {
     const previewUrl = URL.createObjectURL(file);
     setScanPreview(previewUrl);
-    setScannedItems([]); setScannedGst(null);
+    setScannedItems([]); setScannedGst(null); setScanError(null);
     setForm(emptyForm); setEditId(null);
     setScanning(true); setShowAdd(true);
 
@@ -375,7 +378,18 @@ export default function SalesPage() {
         body: JSON.stringify({ image: base64, mimeType }),
       });
       const d = await r.json();
-      console.log('[SCAN DEBUG]', { success: d.success, keys: Object.keys(d.data || {}), _debug: d._debug, error: d.error, details: d.details });
+      console.log('[SCAN DEBUG]', { status: r.status, success: d.success, keys: Object.keys(d.data || {}), _debug: d._debug, error: d.error, details: d.details });
+
+      if (r.status === 429 || d.error === 'rate_limit') {
+        setScanError("⚡ AI quota used up for today. Try again tomorrow, or fill in manually.");
+        setScanning(false);
+        return;
+      }
+      if (!r.ok || !d.success) {
+        setScanError("AI scan failed. Please fill in manually.");
+        setScanning(false);
+        return;
+      }
       if (d.success && d.data) {
         const ex = d.data;
         const items: SaleItem[] = ex.items || [];
@@ -427,6 +441,7 @@ export default function SalesPage() {
       }
     } catch (err) {
       console.error("Sale scan failed:", err);
+      setScanError("AI scan failed. Please fill in manually.");
     } finally {
       setScanning(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -807,6 +822,14 @@ export default function SalesPage() {
                     <div key={i} className="h-9 bg-white/5 rounded-xl animate-pulse"
                          style={{ width: i % 2 === 0 ? "75%" : "100%" }} />
                   ))}
+                </div>
+              )}
+
+              {/* Scan error banner */}
+              {!scanning && scanError && (
+                <div className="mx-5 mt-4 px-4 py-3 rounded-xl text-sm"
+                  style={{ background: "rgba(245,66,77,0.12)", border: "1px solid rgba(245,66,77,0.25)", color: "rgba(255,120,128,1)" }}>
+                  {scanError}
                 </div>
               )}
 
