@@ -56,7 +56,7 @@ const statusConfig = {
   unpaid:  { label: "Unpaid",  color: "text-danger",     bg: "bg-danger/10",     icon: FiAlertCircle },
 };
 
-function resizeImage(file: File, maxWidth = 1400): Promise<{ base64: string; mimeType: string }> {
+function resizeImage(file: File, maxWidth = 2400): Promise<{ base64: string; mimeType: string }> {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -67,7 +67,7 @@ function resizeImage(file: File, maxWidth = 1400): Promise<{ base64: string; mim
       canvas.width  = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
       canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
       resolve({ base64: dataUrl.split(",")[1], mimeType: "image/jpeg" });
     };
     img.src = url;
@@ -214,10 +214,13 @@ export default function SalesPage() {
   };
 
   // ── Bulk Scan ─────────────────────────────────────────────────────
+  const bulkCancelRef = useRef(false);
+
   const handleBulkScan = async (files: FileList) => {
     const fileArray = Array.from(files).filter(f => f.type.startsWith("image/"));
     if (fileArray.length === 0) return;
 
+    bulkCancelRef.current = false;
     setBulkTotal(fileArray.length);
     setBulkDone(0);
     setBulkCurrent("");
@@ -225,44 +228,55 @@ export default function SalesPage() {
     setBulkScanning(true);
 
     let added = 0, skipped = 0, failed = 0;
-    // Existing invoice numbers for duplicate check
     const existingNums = new Set(sales.map(s => s.invoice_number).filter(Boolean) as string[]);
-    // Track invoice numbers added in this batch
-    const batchNums = new Set<string>();
+    const batchNums    = new Set<string>();
 
     for (let i = 0; i < fileArray.length; i++) {
+      if (bulkCancelRef.current) break;
       setBulkDone(i);
       setBulkCurrent(fileArray[i].name);
+
+      // Rate-limit buffer — GROQ allows ~20 req/min on free tier
+      if (i > 0) await new Promise(r => setTimeout(r, 1200));
+      if (bulkCancelRef.current) break;
+
       try {
-        const { base64, mimeType } = await resizeImage(fileArray[i], 1400);
+        const { base64, mimeType } = await resizeImage(fileArray[i]);
         const r = await fetch(`${API}/api/sales/scan`, {
           method: "POST",
           headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
           body: JSON.stringify({ image: base64, mimeType }),
         });
+
+        if (!r.ok) { failed++; continue; }   // HTTP error (rate-limit, etc.)
         const d = await r.json();
-        if (!d.success || !d.data?.customer_name) { failed++; continue; }
+        if (!d.success || !d.data) { failed++; continue; }
 
         const ex = d.data;
-        const invNum = ex.invoice_number || null;
+        // Need at least total_amount or invoice_number to be useful
+        if (!ex.total_amount && !ex.invoice_number) { failed++; continue; }
+
+        const invNum      = ex.invoice_number || null;
+        const customerName = ex.customer_name || ex.party_name || (invNum ? `Invoice ${invNum}` : `Sale ${i + 1}`);
 
         // Duplicate by invoice_number
         if (invNum && (existingNums.has(invNum) || batchNums.has(invNum))) { skipped++; continue; }
 
-        // Duplicate by customer + amount + date
-        const isDupe = sales.some(s =>
-          s.customer_name?.toLowerCase() === (ex.customer_name || "").toLowerCase() &&
-          Math.abs(s.total_amount - (Number(ex.total_amount) || 0)) < 1 &&
-          (s.sale_date?.slice(0, 10) === (ex.sale_date || "").slice(0, 10))
-        );
-        if (isDupe) { skipped++; continue; }
+        // Duplicate by amount + date (when no invoice_number)
+        if (!invNum && ex.total_amount) {
+          const isDupe = sales.some(s =>
+            Math.abs(s.total_amount - Number(ex.total_amount)) < 1 &&
+            s.sale_date?.slice(0, 10) === (ex.sale_date || "").slice(0, 10)
+          );
+          if (isDupe) { skipped++; continue; }
+        }
 
         const gstType = ex.cgst_amount ? "CGST+SGST" : ex.igst_amount ? "IGST" : (ex.gst_amount ? "GST" : null);
         const saveR = await fetch(`${API}/api/sales`, {
           method: "POST",
           headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            customer_name:  ex.customer_name,
+            customer_name:  customerName,
             customer_gstin: ex.customer_gstin || null,
             invoice_number: invNum,
             sale_date:      ex.sale_date || new Date().toISOString().split("T")[0],
@@ -354,7 +368,7 @@ export default function SalesPage() {
     setScanning(true); setShowAdd(true);
 
     try {
-      const { base64, mimeType } = await resizeImage(file, 1400);
+      const { base64, mimeType } = await resizeImage(file);
       const r = await fetch(`${API}/api/sales/scan`, {
         method: "POST",
         headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
@@ -462,7 +476,12 @@ export default function SalesPage() {
                 <div className="h-full bg-accent rounded-full transition-all duration-300"
                      style={{ width: `${bulkTotal > 0 ? (bulkDone / bulkTotal) * 100 : 0}%` }} />
               </div>
-              <p className="text-xs text-muted mt-3">Please wait — do not close the app</p>
+              <p className="text-xs text-muted mt-3">~1.2s per invoice to avoid rate limits</p>
+              <button
+                onClick={() => { bulkCancelRef.current = true; }}
+                className="mt-4 text-xs text-muted hover:text-danger transition-colors underline">
+                Cancel
+              </button>
             </div>
           </div>,
           document.body

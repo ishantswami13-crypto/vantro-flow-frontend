@@ -49,7 +49,7 @@ const statusConfig = {
   unpaid:  { label: "Unpaid",  color: "text-danger",     bg: "bg-danger/10",     icon: FiAlertCircle },
 };
 
-function resizeImage(file: File, maxWidth = 1400): Promise<{ base64: string; mimeType: string }> {
+function resizeImage(file: File, maxWidth = 2400): Promise<{ base64: string; mimeType: string }> {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -57,10 +57,10 @@ function resizeImage(file: File, maxWidth = 1400): Promise<{ base64: string; mim
       URL.revokeObjectURL(url);
       const scale = Math.min(1, maxWidth / img.width);
       const canvas = document.createElement("canvas");
-      canvas.width = Math.round(img.width * scale);
+      canvas.width  = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
       canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
       resolve({ base64: dataUrl.split(",")[1], mimeType: "image/jpeg" });
     };
     img.src = url;
@@ -88,9 +88,18 @@ export default function PurchasesPage() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const videoRef    = useRef<HTMLVideoElement>(null);
-  const streamRef   = useRef<MediaStream | null>(null);
+  const videoRef     = useRef<HTMLVideoElement>(null);
+  const streamRef    = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bulkInputRef = useRef<HTMLInputElement>(null);
+  const bulkCancelRef = useRef(false);
+
+  // Bulk scan states
+  const [bulkScanning, setBulkScanning] = useState(false);
+  const [bulkTotal,    setBulkTotal]    = useState(0);
+  const [bulkDone,     setBulkDone]     = useState(0);
+  const [bulkCurrent,  setBulkCurrent]  = useState("");
+  const [bulkResults,  setBulkResults]  = useState<{ added: number; skipped: number; failed: number } | null>(null);
 
   const emptyForm = {
     supplier_name: "", supplier_phone: "", supplier_gstin: "", bill_number: "",
@@ -244,7 +253,7 @@ export default function PurchasesPage() {
     setShowAdd(true);
 
     try {
-      const { base64, mimeType } = await resizeImage(file, 1400);
+      const { base64, mimeType } = await resizeImage(file);
       const r = await fetch(`${API}/api/purchases/scan`, {
         method: "POST",
         headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
