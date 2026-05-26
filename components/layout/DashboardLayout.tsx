@@ -97,8 +97,8 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
   useEffect(() => {
     if (!("Notification" in window)) return;
     if (Notification.permission === "default") {
-      // Wait 3 seconds before nudging — don't interrupt on first load
-      const t = setTimeout(() => setShowNotifBanner(true), 3000);
+      // Wait 45 seconds before nudging — let user settle in first
+      const t = setTimeout(() => setShowNotifBanner(true), 45000);
       return () => clearTimeout(t);
     }
     if (Notification.permission === "granted") {

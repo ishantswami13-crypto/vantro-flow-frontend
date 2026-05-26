@@ -714,9 +714,9 @@ export default function LandingPage() {
           <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-muted">© 2025 Vantro Technologies Pvt. Ltd.</p>
             <div className="flex gap-5 text-xs text-muted">
-              {["Privacy Policy", "Terms of Service", "Security"].map(l => (
-                <a key={l} href="#" className="hover:text-secondary transition-colors">{l}</a>
-              ))}
+              <Link href="/privacy" className="hover:text-secondary transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-secondary transition-colors">Terms of Service</Link>
+              <a href="mailto:ishantswami13@gmail.com?subject=Vantro Security" className="hover:text-secondary transition-colors">Security</a>
             </div>
           </div>
         </div>

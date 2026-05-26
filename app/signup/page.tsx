@@ -9,8 +9,6 @@ import {
   FiZap, FiTrendingUp, FiMessageCircle, FiBarChart2, FiCheck,
 } from "react-icons/fi";
 import LogoMark from "@/components/LogoMark";
-import Button from "@/components/ui/Button";
-import { Input, Select } from "@/components/ui/Input";
 import { saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import { INDUSTRY_OPTIONS } from "@/lib/businessTypes";
@@ -215,7 +213,6 @@ function OTPStep({
 function SignupForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const defaultPlan = params.get("plan") === "hybrid" ? "hybrid" : "saas";
   const referredBy  = params.get("ref") || "";
 
   const [loading, setLoading]       = useState(false);
@@ -236,7 +233,6 @@ function SignupForm() {
     amount_stuck:     "",
     password:         "",
     confirm_password: "",
-    plan:             defaultPlan,
   });
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -289,7 +285,7 @@ function SignupForm() {
       business_type: form.business_type,
       amount_stuck:  form.amount_stuck,
     });
-    posthog.capture("user_signed_up", { plan: form.plan, business_type: form.business_type });
+    posthog.capture("user_signed_up", { business_type: form.business_type });
     router.push("/dashboard");
   };
 
@@ -436,30 +432,6 @@ function SignupForm() {
               className={inputCls + " pl-7"} style={inputStyle} />
           </div>
           <p className="text-xs text-muted mt-1">Approximate outstanding from customers</p>
-        </div>
-
-        {/* Plan selection */}
-        <div>
-          <label className="text-[10px] font-bold text-secondary uppercase tracking-[0.12em] block mb-2">Preferred Plan</label>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { value: "saas",   label: "Model A — SaaS",  sub: "₹1,999/mo flat" },
-              { value: "hybrid", label: "Model B — Hybrid", sub: "₹999/mo + 1%" },
-            ].map(p => (
-              <button key={p.value} type="button"
-                onClick={() => setForm(f => ({ ...f, plan: p.value }))}
-                className="text-left p-3 rounded-xl transition-all"
-                style={{
-                  border: `1px solid ${form.plan === p.value ? "rgba(79,110,247,0.5)" : "rgba(255,255,255,0.08)"}`,
-                  background: form.plan === p.value ? "rgba(79,110,247,0.08)" : "#0D0F14",
-                }}>
-                <p className="text-xs font-semibold" style={{ color: form.plan === p.value ? "#4F6EF7" : "#F2F4F7" }}>
-                  {p.label}
-                </p>
-                <p className="text-[10px] text-muted mt-0.5">{p.sub}</p>
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* OTP notice */}

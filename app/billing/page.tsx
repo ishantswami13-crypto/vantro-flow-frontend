@@ -39,7 +39,7 @@ const PLANS = [
     annual: 1999,
     badge: "Most Popular",
     highlight: true,
-    proof: "847 Indian MSMEs using this right now",
+    proof: "200+ MSMEs automating right now",
     outcomes: [
       "WhatsApp fires automatically at Day 7, 14, 30",
       "Customer gets UPI link — one tap to pay",
@@ -222,7 +222,7 @@ export default function BillingPage() {
         <div className="grid grid-cols-3 gap-3">
           {[
             { num: "₹3.8L", label: "avg extra collected in 60 days on Growth", icon: FiTrendingUp },
-            { num: "847",   label: "Indian MSMEs automating collections right now", icon: FiUsers },
+            { num: "200+",  label: "Indian MSMEs automating collections right now", icon: FiUsers },
             { num: "5 min", label: "to set up and start your first automation", icon: FiZap },
           ].map(({ num, label, icon: Icon }) => (
             <div key={num} className="rounded-xl border border-border bg-surface-1 p-4 text-center">
