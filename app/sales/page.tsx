@@ -201,7 +201,20 @@ export default function SalesPage() {
   };
 
   // ── Camera ──────────────────────────────────────────────────────
+  const isMobile = () => typeof navigator !== "undefined" &&
+    (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1);
+
   const openCamera = async () => {
+    // On mobile: use native camera app via file input (always fullscreen, most reliable)
+    if (isMobile()) {
+      if (fileInputRef.current) {
+        fileInputRef.current.setAttribute("capture", "environment");
+        fileInputRef.current.accept = "image/*";
+        fileInputRef.current.click();
+      }
+      return;
+    }
+    // Desktop: use in-browser getUserMedia viewfinder
     setShowCamera(true); setCameraReady(false);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({

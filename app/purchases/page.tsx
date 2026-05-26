@@ -185,7 +185,20 @@ export default function PurchasesPage() {
   };
 
   // ── Camera ──────────────────────────────────────────────────────
+  const isMobile = () => typeof navigator !== "undefined" &&
+    (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1);
+
   const openCamera = async () => {
+    // On mobile: use native camera app via file input (always fullscreen, most reliable)
+    if (isMobile()) {
+      if (fileInputRef.current) {
+        fileInputRef.current.setAttribute("capture", "environment");
+        fileInputRef.current.accept = "image/*";
+        fileInputRef.current.click();
+      }
+      return;
+    }
+    // Desktop: use in-browser getUserMedia viewfinder
     setShowCamera(true);
     setCameraReady(false);
     try {
@@ -193,12 +206,6 @@ export default function PurchasesPage() {
         video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
       streamRef.current = stream;
-      // Request fullscreen to hide browser chrome (address bar, nav bar)
-      try {
-        const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
-        if (el.requestFullscreen) await el.requestFullscreen();
-        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-      } catch { /* fullscreen denied — continue without it */ }
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -208,7 +215,6 @@ export default function PurchasesPage() {
         }
       }, 80);
     } catch {
-      // Camera not available — fall back to file picker
       setShowCamera(false);
       fileInputRef.current?.click();
     }
