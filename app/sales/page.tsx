@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
   FiPlus, FiEdit2, FiTrash2, FiAlertCircle, FiCheckCircle, FiClock,
@@ -82,6 +83,8 @@ export default function SalesPage() {
   const [payAmount, setPayAmount]       = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [saving, setSaving]             = useState(false);
+  const [mounted, setMounted]           = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Scan / camera states
   const [scanning, setScanning]         = useState(false);
@@ -337,8 +340,8 @@ export default function SalesPage() {
         {/* Hidden file input */}
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
 
-        {/* ══════════ CAMERA MODAL — FULLSCREEN ══════════ */}
-        {showCamera && (
+        {/* ══════════ CAMERA MODAL — FULLSCREEN (portaled to body) ══════════ */}
+        {mounted && showCamera && createPortal(
           <div style={{
             position: "fixed", top: 0, left: 0,
             width: "100vw", height: "100dvh",
@@ -395,7 +398,8 @@ export default function SalesPage() {
                 <FiUpload size={12} /> Upload photo instead
               </button>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* ══════════ PAGE HEADER ══════════ */}
@@ -550,9 +554,10 @@ export default function SalesPage() {
           </div>
         )}
 
-        {/* ══════════ ADD / EDIT / SCAN MODAL ══════════ */}
-        {showAdd && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+        {/* ══════════ ADD / EDIT / SCAN MODAL (portaled) ══════════ */}
+        {mounted && showAdd && createPortal(
+          <div style={{ position: "fixed", inset: 0, zIndex: 99998 }}
+               className="flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
             <div className="w-full max-w-lg bg-surface-1 rounded-2xl border border-white/10 overflow-hidden"
                  style={{ maxHeight: "92vh", overflowY: "auto" }}>
 
@@ -776,12 +781,14 @@ export default function SalesPage() {
                 </>
               )}
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
-        {/* Quick Collect Modal */}
-        {payModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        {/* Quick Collect Modal (portaled) */}
+        {mounted && payModal && createPortal(
+          <div style={{ position: "fixed", inset: 0, zIndex: 99998 }}
+               className="flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-white/10 p-5">
               <h3 className="font-bold text-primary mb-1">Collect Payment</h3>
               <p className="text-xs text-muted mb-4">
@@ -808,7 +815,8 @@ export default function SalesPage() {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </DashboardLayout>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   FiPlus, FiEdit2, FiTrash2, FiAlertCircle, FiCheckCircle, FiClock,
   FiCamera, FiX, FiZap, FiUpload,
@@ -83,6 +84,9 @@ export default function PurchasesPage() {
   const [scannedGst, setScannedGst]     = useState<ScanGst | null>(null);
   const [showCamera, setShowCamera]     = useState(false);
   const [cameraReady, setCameraReady]   = useState(false);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const videoRef    = useRef<HTMLVideoElement>(null);
   const streamRef   = useRef<MediaStream | null>(null);
@@ -309,13 +313,12 @@ export default function PurchasesPage() {
         onChange={handleFileSelect}
       />
 
-      {/* ══════════ CAMERA MODAL — FULLSCREEN ══════════ */}
-      {showCamera && (
+      {/* ══════════ CAMERA MODAL — FULLSCREEN (portaled to body) ══════════ */}
+      {mounted && showCamera && createPortal(
         <div style={{
           position: "fixed", top: 0, left: 0,
           width: "100vw", height: "100dvh",
           zIndex: 99999, background: "#000",
-          // iOS Safari fallback
           minHeight: "-webkit-fill-available",
         }}>
           {/* Video fills entire screen */}
@@ -379,7 +382,8 @@ export default function PurchasesPage() {
               <FiUpload size={12} /> Upload photo instead
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ══════════ PAGE HEADER ══════════ */}
@@ -527,9 +531,10 @@ export default function PurchasesPage() {
         </div>
       )}
 
-      {/* ══════════ ADD / EDIT / SCAN MODAL ══════════ */}
-      {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+      {/* ══════════ ADD / EDIT / SCAN MODAL (portaled to body) ══════════ */}
+      {mounted && showAdd && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 99998 }}
+             className="flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
           <div className="w-full max-w-lg bg-surface-1 rounded-2xl border border-white/10 overflow-hidden"
                style={{ maxHeight: "92vh", overflowY: "auto" }}>
 
@@ -762,12 +767,14 @@ export default function PurchasesPage() {
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Quick Pay Modal */}
-      {payModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      {/* Quick Pay Modal (portaled) */}
+      {mounted && payModal && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 99998 }}
+             className="flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-white/10 p-5">
             <h3 className="font-bold text-primary mb-1">Record Payment</h3>
             <p className="text-xs text-muted mb-4">
@@ -794,7 +801,8 @@ export default function PurchasesPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
