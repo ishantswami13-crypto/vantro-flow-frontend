@@ -6,7 +6,7 @@ import {
   FiPlus, FiEdit2, FiTrash2, FiAlertCircle, FiCheckCircle, FiClock,
   FiCamera, FiX, FiZap, FiUpload, FiTrendingUp, FiPackage,
 } from "react-icons/fi";
-import { getToken } from "@/lib/api";
+import { getToken, getUser } from "@/lib/api";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -84,7 +84,12 @@ export default function SalesPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [saving, setSaving]             = useState(false);
   const [mounted, setMounted]           = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [myGstin, setMyGstin]           = useState("");
+  useEffect(() => {
+    setMounted(true);
+    const u = getUser();
+    if (u?.gstin) setMyGstin(u.gstin);
+  }, []);
 
   // Scan / camera states
   const [scanning, setScanning]         = useState(false);
@@ -512,7 +517,12 @@ export default function SalesPage() {
                         {isOverdue && <span className="text-2xs text-yellow-400 font-semibold">OVERDUE</span>}
                       </div>
                       {s.invoice_number && <p className="text-xs text-muted">Invoice #{s.invoice_number}</p>}
-                      {s.customer_gstin && <p className="text-xs text-muted font-mono">GST: {s.customer_gstin}</p>}
+                      {(myGstin || s.customer_gstin) && (
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
+                          {myGstin && <p className="text-xs text-muted font-mono">Seller: {myGstin}</p>}
+                          {s.customer_gstin && <p className="text-xs text-muted font-mono">Buyer: {s.customer_gstin}</p>}
+                        </div>
+                      )}
                       {s.gst_type && s.gst_amount && (
                         <p className="text-xs mt-0.5" style={{ color: "#F5A524" }}>
                           {s.gst_type}{s.gst_rate ? ` @${s.gst_rate}%` : ""}: {fmtINR(s.gst_amount)}
@@ -708,15 +718,24 @@ export default function SalesPage() {
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="text-xs text-muted mb-1 block">Buyer GSTIN</label>
-                      <input
-                        value={form.customer_gstin}
-                        onChange={e => setForm(f => ({ ...f, customer_gstin: e.target.value.toUpperCase() }))}
-                        placeholder="22AAAAA0000A1Z5"
-                        maxLength={15}
-                        className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50 font-mono tracking-wide"
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-muted mb-1 block">Seller GSTIN (Yours)</label>
+                        <div className="w-full bg-surface-2/60 border border-white/5 rounded-xl px-3 py-2.5 text-sm font-mono tracking-wide"
+                          style={{ color: myGstin ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.2)" }}>
+                          {myGstin || <span className="text-xs not-italic" style={{ fontFamily: "inherit", letterSpacing: 0 }}>Set in Settings</span>}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted mb-1 block">Buyer GSTIN</label>
+                        <input
+                          value={form.customer_gstin}
+                          onChange={e => setForm(f => ({ ...f, customer_gstin: e.target.value.toUpperCase() }))}
+                          placeholder="22AAAAA0000A1Z5"
+                          maxLength={15}
+                          className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50 font-mono tracking-wide"
+                        />
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
