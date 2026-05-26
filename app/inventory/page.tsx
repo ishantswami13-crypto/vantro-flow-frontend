@@ -1,71 +1,123 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { FiPackage, FiAlertTriangle, FiTrendingUp, FiPlus, FiSearch, FiTruck } from "react-icons/fi";
+import { FiPackage, FiAlertTriangle, FiTrendingUp, FiPlus, FiSearch, FiTruck, FiBox } from "react-icons/fi";
+import { api, getUser } from "@/lib/api";
 
-const products = [
-  { id: 1, name: "Cotton Fabric Roll",    sku: "CFR-001", category: "Fabric",    stock: 45,  alert: 20, price: 850,   unit: "roll",  status: "ok" },
-  { id: 2, name: "Polyester Thread",      sku: "PT-102",  category: "Thread",    stock: 8,   alert: 15, price: 120,   unit: "spool", status: "low" },
-  { id: 3, name: "Steel Pipe 2\"",        sku: "SP-201",  category: "Steel",     stock: 120, alert: 50, price: 2400,  unit: "piece", status: "ok" },
-  { id: 4, name: "Cement Bag 50kg",       sku: "CB-301",  category: "Building",  stock: 3,   alert: 25, price: 380,   unit: "bag",   status: "critical" },
-  { id: 5, name: "Industrial Lubricant",  sku: "IL-401",  category: "Chemical",  stock: 32,  alert: 10, price: 650,   unit: "litre", status: "ok" },
-  { id: 6, name: "Wiring Harness 10m",    sku: "WH-501",  category: "Electrical",stock: 18,  alert: 10, price: 1200,  unit: "piece", status: "ok" },
-];
+type Product = {
+  id: string;
+  name: string;
+  sku?: string;
+  category?: string;
+  current_stock: number;
+  low_stock_alert: number;
+  unit_price: number;
+  unit: string;
+};
 
-const movements = [
-  { date: "Today 2:30 PM",   product: "Cotton Fabric Roll",   type: "in",    qty: 20, ref: "PO-2024-112" },
-  { date: "Today 11:00 AM",  product: "Cement Bag 50kg",      type: "out",   qty: 15, ref: "SO-2024-089" },
-  { date: "Yesterday",       product: "Polyester Thread",     type: "out",   qty: 12, ref: "SO-2024-088" },
-  { date: "Yesterday",       product: "Steel Pipe 2\"",       type: "in",    qty: 50, ref: "PO-2024-110" },
-  { date: "14 May",          product: "Industrial Lubricant", type: "in",    qty: 10, ref: "PO-2024-108" },
-];
+type Movement = {
+  id: string;
+  product_name?: string;
+  movement_type?: string;
+  type?: string;
+  quantity?: number;
+  qty?: number;
+  reference?: string;
+  ref?: string;
+  moved_at?: string;
+  created_at?: string;
+};
 
-const suppliers = [
-  { name: "Ramesh Textile Suppliers",  phone: "9876543201", terms: "Net 30", category: "Fabric" },
-  { name: "Agarwal Steel Depot",       phone: "9765432108", terms: "Net 15", category: "Steel" },
-  { name: "Mumbai Building Supplies",  phone: "9654321097", terms: "Advance", category: "Building" },
-  { name: "Chem Solutions Pvt Ltd",    phone: "9543210986", terms: "Net 45", category: "Chemical" },
-];
+type Summary = {
+  total_products: number;
+  total_value: number;
+  low_stock_count: number;
+  out_of_stock_count: number;
+};
+
+function getStatus(p: Product): "ok" | "low" | "critical" {
+  if (p.current_stock === 0) return "critical";
+  if (p.current_stock <= p.low_stock_alert) return "low";
+  return "ok";
+}
 
 const STATUS_BADGE: Record<string, "success" | "warning" | "danger"> = {
   ok: "success", low: "warning", critical: "danger",
 };
 
+function fmtDate(d?: string) {
+  if (!d) return "—";
+  const date = new Date(d);
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - date.getTime()) / 86400000);
+  if (diff === 0) return `Today ${date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`;
+  if (diff === 1) return "Yesterday";
+  return date.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
 export default function InventoryPage() {
-  const [tab, setTab] = useState<"products" | "movements" | "suppliers">("products");
-  const [search, setSearch] = useState("");
+  const [tab, setTab]         = useState<"products" | "movements" | "suppliers">("products");
+  const [search, setSearch]   = useState("");
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts]   = useState<Product[]>([]);
+  const [movements, setMovements] = useState<Movement[]>([]);
+  const [summary, setSummary]     = useState<Summary>({ total_products: 0, total_value: 0, low_stock_count: 0, out_of_stock_count: 0 });
+
+  useEffect(() => {
+    const user = getUser();
+    if (!user?.id) return;
+    setLoading(true);
+    api.inventory(user.id)
+      .then(d => {
+        setProducts(d.products || []);
+        setMovements(d.movements || []);
+        setSummary(d.summary || { total_products: 0, total_value: 0, low_stock_count: 0, out_of_stock_count: 0 });
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.sku.toLowerCase().includes(search.toLowerCase())
+    (p.sku || "").toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalValue = products.reduce((s, p) => s + p.stock * p.price, 0);
-  const lowCount   = products.filter(p => p.status !== "ok").length;
+  const fmtVal = (v: number) => v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : `₹${(v / 1000).toFixed(0)}k`;
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-6 max-w-7xl mx-auto">
+      <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto pb-24">
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-primary">Inventory</h1>
-            <p className="text-sm text-muted mt-0.5">Products, stock levels & supplier management</p>
+            <p className="text-sm text-muted mt-0.5">Products, stock levels &amp; movements</p>
           </div>
-          <Button icon={<FiPlus size={14} />} size="sm">Add Product</Button>
+          <button
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors"
+            style={{ background: "rgba(255,255,255,0.08)", color: "#fff" }}
+          >
+            <FiPlus size={13} /> Add Product
+          </button>
         </div>
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: "Total Products",   value: products.length.toString(), icon: <FiPackage size={16}/>,      color: "#0066FF" },
-            { label: "Total Stock Value",value: `₹${(totalValue/100000).toFixed(1)}L`,icon: <FiTrendingUp size={16}/>, color: "#10D98A" },
-            { label: "Low Stock Alerts", value: lowCount.toString(),         icon: <FiAlertTriangle size={16}/>,color: "#F5A524" },
-            { label: "Suppliers",        value: suppliers.length.toString(), icon: <FiTruck size={16}/>,        color: "#9B6DFF" },
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {loading ? (
+            [0,1,2,3].map(i => (
+              <div key={i} className="card-metric p-5 animate-pulse">
+                <div className="h-3 w-20 bg-surface-3 rounded mb-4" />
+                <div className="h-7 w-12 bg-surface-3 rounded" />
+              </div>
+            ))
+          ) : [
+            { label: "Total Products",   value: summary.total_products.toString(), icon: <FiPackage size={15}/>,      color: "#0066FF" },
+            { label: "Stock Value",      value: fmtVal(summary.total_value),       icon: <FiTrendingUp size={15}/>,   color: "#10D98A" },
+            { label: "Low Stock",        value: summary.low_stock_count.toString(), icon: <FiAlertTriangle size={15}/>,color: "#F5A524" },
+            { label: "Out of Stock",     value: summary.out_of_stock_count.toString(), icon: <FiBox size={15}/>,     color: "#F5424D" },
           ].map(k => (
             <div key={k.label} className="card-metric p-5">
               <div className="flex items-center justify-between mb-3">
@@ -93,8 +145,8 @@ export default function InventoryPage() {
         {/* Products Tab */}
         {tab === "products" && (
           <div className="card-premium overflow-hidden">
-            <div className="p-4 border-b border-border flex items-center gap-3">
-              <div className="relative flex-1 max-w-xs">
+            <div className="p-4 border-b border-border">
+              <div className="relative max-w-xs">
                 <FiSearch size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                 <input
                   value={search} onChange={e => setSearch(e.target.value)}
@@ -103,41 +155,64 @@ export default function InventoryPage() {
                 />
               </div>
             </div>
-            <table className="w-full table-premium">
-              <thead>
-                <tr className="text-left">
-                  <th className="px-4 py-3 section-label">Product</th>
-                  <th className="px-4 py-3 section-label">SKU</th>
-                  <th className="px-4 py-3 section-label">Category</th>
-                  <th className="px-4 py-3 section-label text-right">Stock</th>
-                  <th className="px-4 py-3 section-label text-right">Value</th>
-                  <th className="px-4 py-3 section-label">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {filtered.map(p => (
-                  <tr key={p.id} className="hover:bg-surface-2/50 transition-colors">
-                    <td className="px-4 py-3 text-sm font-medium text-primary">{p.name}</td>
-                    <td className="px-4 py-3 text-xs font-mono text-muted">{p.sku}</td>
-                    <td className="px-4 py-3 text-xs text-secondary">{p.category}</td>
-                    <td className="px-4 py-3 text-right">
-                      <span className={["text-sm font-bold",
-                        p.status === "critical" ? "text-danger" : p.status === "low" ? "text-warning" : "text-primary",
-                      ].join(" ")}>{p.stock}</span>
-                      <span className="text-2xs text-muted ml-1">{p.unit}</span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-primary text-right font-mono">
-                      ₹{(p.stock * p.price / 1000).toFixed(0)}k
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={STATUS_BADGE[p.status]}>
-                        {p.status === "critical" ? "Critical" : p.status === "low" ? "Low Stock" : "In Stock"}
-                      </Badge>
-                    </td>
+
+            {loading ? (
+              <div className="p-6 space-y-3">
+                {[1,2,3].map(i => <div key={i} className="h-10 bg-surface-2 rounded-xl animate-pulse" />)}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+                  style={{ background: "rgba(255,255,255,0.05)" }}>
+                  <FiPackage size={22} style={{ color: "rgba(255,255,255,0.2)" }} />
+                </div>
+                <p className="text-sm font-semibold text-primary mb-1">No products yet</p>
+                <p className="text-xs text-muted mb-4">Add your first product to start tracking stock</p>
+                <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
+                  style={{ background: "rgba(255,255,255,0.08)", color: "#fff" }}>
+                  <FiPlus size={12} /> Add Product
+                </button>
+              </div>
+            ) : (
+              <table className="w-full table-premium">
+                <thead>
+                  <tr className="text-left">
+                    <th className="px-4 py-3 section-label">Product</th>
+                    <th className="px-4 py-3 section-label hidden md:table-cell">SKU</th>
+                    <th className="px-4 py-3 section-label hidden md:table-cell">Category</th>
+                    <th className="px-4 py-3 section-label text-right">Stock</th>
+                    <th className="px-4 py-3 section-label text-right hidden sm:table-cell">Value</th>
+                    <th className="px-4 py-3 section-label">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {filtered.map(p => {
+                    const status = getStatus(p);
+                    return (
+                      <tr key={p.id} className="hover:bg-surface-2/50 transition-colors">
+                        <td className="px-4 py-3 text-sm font-medium text-primary">{p.name}</td>
+                        <td className="px-4 py-3 text-xs font-mono text-muted hidden md:table-cell">{p.sku || "—"}</td>
+                        <td className="px-4 py-3 text-xs text-secondary hidden md:table-cell">{p.category || "—"}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={["text-sm font-bold",
+                            status === "critical" ? "text-danger" : status === "low" ? "text-warning" : "text-primary",
+                          ].join(" ")}>{p.current_stock}</span>
+                          <span className="text-2xs text-muted ml-1">{p.unit}</span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-primary text-right font-mono hidden sm:table-cell">
+                          {fmtVal(p.current_stock * p.unit_price)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant={STATUS_BADGE[status]}>
+                            {status === "critical" ? "Critical" : status === "low" ? "Low Stock" : "In Stock"}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 
@@ -147,22 +222,40 @@ export default function InventoryPage() {
             <div className="p-4 border-b border-border">
               <p className="text-sm font-semibold text-primary">Recent Stock Movements</p>
             </div>
-            <div className="divide-y divide-border/50">
-              {movements.map((m, i) => (
-                <div key={i} className="flex items-center gap-4 px-4 py-3 hover:bg-surface-2/50 transition-colors">
-                  <div className={["w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-xs font-bold",
-                    m.type === "in" ? "bg-success-dim text-success" : "bg-danger-dim text-danger",
-                  ].join(" ")}>{m.type === "in" ? "IN" : "OUT"}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-primary truncate">{m.product}</p>
-                    <p className="text-2xs text-muted">{m.ref} · {m.date}</p>
-                  </div>
-                  <span className={["text-sm font-bold font-mono",
-                    m.type === "in" ? "text-success" : "text-danger",
-                  ].join(" ")}>{m.type === "in" ? "+" : "-"}{m.qty} units</span>
+            {loading ? (
+              <div className="p-6 space-y-3">
+                {[1,2,3].map(i => <div key={i} className="h-12 bg-surface-2 rounded-xl animate-pulse" />)}
+              </div>
+            ) : movements.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+                  style={{ background: "rgba(255,255,255,0.05)" }}>
+                  <FiTrendingUp size={22} style={{ color: "rgba(255,255,255,0.2)" }} />
                 </div>
-              ))}
-            </div>
+                <p className="text-sm font-semibold text-primary mb-1">No movements yet</p>
+                <p className="text-xs text-muted">Stock movements will appear here as you record purchases and sales</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border/50">
+                {movements.map((m, i) => {
+                  const isIn = (m.movement_type || m.type || "").toLowerCase() === "in";
+                  return (
+                    <div key={m.id || i} className="flex items-center gap-4 px-4 py-3 hover:bg-surface-2/50 transition-colors">
+                      <div className={["w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-xs font-bold",
+                        isIn ? "bg-success-dim text-success" : "bg-danger-dim text-danger",
+                      ].join(" ")}>{isIn ? "IN" : "OUT"}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-primary truncate">{m.product_name || "—"}</p>
+                        <p className="text-2xs text-muted">{m.reference || m.ref || "—"} · {fmtDate(m.moved_at || m.created_at)}</p>
+                      </div>
+                      <span className={["text-sm font-bold font-mono",
+                        isIn ? "text-success" : "text-danger",
+                      ].join(" ")}>{isIn ? "+" : "-"}{m.quantity || m.qty || 0} units</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -171,27 +264,22 @@ export default function InventoryPage() {
           <div className="card-premium overflow-hidden">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <p className="text-sm font-semibold text-primary">Suppliers</p>
-              <Button variant="secondary" size="sm" icon={<FiPlus size={12}/>}>Add Supplier</Button>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
+                style={{ background: "rgba(255,255,255,0.08)", color: "#fff" }}>
+                <FiPlus size={12} /> Add Supplier
+              </button>
             </div>
-            <div className="divide-y divide-border/50">
-              {suppliers.map((s, i) => (
-                <div key={i} className="flex items-center gap-4 px-4 py-3 hover:bg-surface-2/50 transition-colors">
-                  <div className="w-9 h-9 rounded-xl bg-surface-3 flex items-center justify-center text-xs font-bold text-accent shrink-0">
-                    {s.name[0]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-primary truncate">{s.name}</p>
-                    <p className="text-xs text-muted">{s.phone} · {s.category}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <Badge variant="default">{s.terms}</Badge>
-                  </div>
-                  <Button variant="whatsapp" size="xs"
-                    onClick={() => window.open(`https://wa.me/91${s.phone}`)}>
-                    WhatsApp
-                  </Button>
-                </div>
-              ))}
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+                style={{ background: "rgba(255,255,255,0.05)" }}>
+                <FiTruck size={22} style={{ color: "rgba(255,255,255,0.2)" }} />
+              </div>
+              <p className="text-sm font-semibold text-primary mb-1">No suppliers yet</p>
+              <p className="text-xs text-muted mb-4">Add your suppliers to track payment terms and contacts</p>
+              <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
+                style={{ background: "rgba(255,255,255,0.08)", color: "#fff" }}>
+                <FiPlus size={12} /> Add Supplier
+              </button>
             </div>
           </div>
         )}
