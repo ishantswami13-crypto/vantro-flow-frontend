@@ -102,6 +102,14 @@ export default function SalesPage() {
   const videoRef     = useRef<HTMLVideoElement>(null);
   const streamRef    = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bulkInputRef = useRef<HTMLInputElement>(null);
+
+  // Bulk scan states
+  const [bulkScanning, setBulkScanning] = useState(false);
+  const [bulkTotal,    setBulkTotal]    = useState(0);
+  const [bulkDone,     setBulkDone]     = useState(0);
+  const [bulkCurrent,  setBulkCurrent]  = useState("");
+  const [bulkResults,  setBulkResults]  = useState<{ added: number; skipped: number; failed: number } | null>(null);
 
   const emptyForm = {
     customer_name: "", customer_phone: "", customer_gstin: "", invoice_number: "",
@@ -203,6 +211,86 @@ export default function SalesPage() {
     setShowAdd(false); setEditId(null); setForm(emptyForm);
     setScanPreview(null); setScannedItems([]); setScannedGst(null); setScanning(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // ── Bulk Scan ─────────────────────────────────────────────────────
+  const handleBulkScan = async (files: FileList) => {
+    const fileArray = Array.from(files).filter(f => f.type.startsWith("image/"));
+    if (fileArray.length === 0) return;
+
+    setBulkTotal(fileArray.length);
+    setBulkDone(0);
+    setBulkCurrent("");
+    setBulkResults(null);
+    setBulkScanning(true);
+
+    let added = 0, skipped = 0, failed = 0;
+    // Existing invoice numbers for duplicate check
+    const existingNums = new Set(sales.map(s => s.invoice_number).filter(Boolean) as string[]);
+    // Track invoice numbers added in this batch
+    const batchNums = new Set<string>();
+
+    for (let i = 0; i < fileArray.length; i++) {
+      setBulkDone(i);
+      setBulkCurrent(fileArray[i].name);
+      try {
+        const { base64, mimeType } = await resizeImage(fileArray[i], 1400);
+        const r = await fetch(`${API}/api/sales/scan`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64, mimeType }),
+        });
+        const d = await r.json();
+        if (!d.success || !d.data?.customer_name) { failed++; continue; }
+
+        const ex = d.data;
+        const invNum = ex.invoice_number || null;
+
+        // Duplicate by invoice_number
+        if (invNum && (existingNums.has(invNum) || batchNums.has(invNum))) { skipped++; continue; }
+
+        // Duplicate by customer + amount + date
+        const isDupe = sales.some(s =>
+          s.customer_name?.toLowerCase() === (ex.customer_name || "").toLowerCase() &&
+          Math.abs(s.total_amount - (Number(ex.total_amount) || 0)) < 1 &&
+          (s.sale_date?.slice(0, 10) === (ex.sale_date || "").slice(0, 10))
+        );
+        if (isDupe) { skipped++; continue; }
+
+        const gstType = ex.cgst_amount ? "CGST+SGST" : ex.igst_amount ? "IGST" : (ex.gst_amount ? "GST" : null);
+        const saveR = await fetch(`${API}/api/sales`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customer_name:  ex.customer_name,
+            customer_gstin: ex.customer_gstin || null,
+            invoice_number: invNum,
+            sale_date:      ex.sale_date || new Date().toISOString().split("T")[0],
+            total_amount:   Number(ex.total_amount) || 0,
+            paid_amount:    0,
+            notes:          ex.notes || null,
+            items:          ex.items?.length > 0 ? ex.items : null,
+            gst_type:       gstType,
+            gst_rate:       ex.gst_rate || null,
+            gst_amount:     ex.gst_amount || null,
+            cgst_amount:    ex.cgst_amount || null,
+            sgst_amount:    ex.sgst_amount || null,
+            igst_amount:    ex.igst_amount || null,
+            subtotal:       ex.subtotal || null,
+          }),
+        });
+        if (saveR.ok) {
+          added++;
+          if (invNum) { existingNums.add(invNum); batchNums.add(invNum); }
+        } else { failed++; }
+      } catch { failed++; }
+    }
+
+    setBulkDone(fileArray.length);
+    setBulkScanning(false);
+    setBulkResults({ added, skipped, failed });
+    if (bulkInputRef.current) bulkInputRef.current.value = "";
+    await load();
   };
 
   // ── Camera ──────────────────────────────────────────────────────
@@ -361,6 +449,62 @@ export default function SalesPage() {
         {/* Hidden file input */}
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
 
+        {/* ══════════ BULK SCAN — PROGRESS ══════════ */}
+        {mounted && bulkScanning && createPortal(
+          <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.75)" }}
+               className="flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-white/10 p-6 text-center">
+              <div className="w-10 h-10 border-2 border-white/15 border-t-white rounded-full animate-spin mx-auto mb-4" />
+              <p className="font-bold text-primary text-lg mb-1">Scanning Invoices…</p>
+              <p className="text-3xl font-bold text-accent my-3">{bulkDone} <span className="text-lg text-muted font-normal">/ {bulkTotal}</span></p>
+              {bulkCurrent && <p className="text-xs text-muted truncate mb-3">{bulkCurrent}</p>}
+              <div className="w-full h-2 bg-surface-2 rounded-full overflow-hidden">
+                <div className="h-full bg-accent rounded-full transition-all duration-300"
+                     style={{ width: `${bulkTotal > 0 ? (bulkDone / bulkTotal) * 100 : 0}%` }} />
+              </div>
+              <p className="text-xs text-muted mt-3">Please wait — do not close the app</p>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* ══════════ BULK SCAN — RESULTS ══════════ */}
+        {mounted && bulkResults && !bulkScanning && createPortal(
+          <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.75)" }}
+               className="flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-white/10 p-6">
+              <div className="text-center mb-5">
+                <div className="w-12 h-12 bg-success/15 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <FiCheckCircle size={22} className="text-success" />
+                </div>
+                <h3 className="font-bold text-primary text-xl">Bulk Scan Done!</h3>
+                <p className="text-xs text-muted mt-1">{bulkTotal} files processed</p>
+              </div>
+              <div className="space-y-2 mb-5">
+                <div className="flex items-center justify-between p-3.5 bg-success/10 rounded-xl border border-success/15">
+                  <span className="text-sm font-semibold text-success">✓ Added</span>
+                  <span className="text-2xl font-bold text-success">{bulkResults.added}</span>
+                </div>
+                <div className="flex items-center justify-between p-3.5 bg-yellow-400/10 rounded-xl border border-yellow-400/15">
+                  <span className="text-sm font-semibold text-yellow-400">⟳ Duplicates Skipped</span>
+                  <span className="text-2xl font-bold text-yellow-400">{bulkResults.skipped}</span>
+                </div>
+                {bulkResults.failed > 0 && (
+                  <div className="flex items-center justify-between p-3.5 bg-danger/10 rounded-xl border border-danger/15">
+                    <span className="text-sm font-semibold text-danger">✗ Failed / Unreadable</span>
+                    <span className="text-2xl font-bold text-danger">{bulkResults.failed}</span>
+                  </div>
+                )}
+              </div>
+              <button onClick={() => setBulkResults(null)}
+                className="w-full bg-white text-black py-3 rounded-xl font-bold text-sm hover:bg-white/90 transition-colors">
+                Done
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+
         {/* ══════════ CAMERA MODAL — FULLSCREEN (portaled to body) ══════════ */}
         {mounted && showCamera && createPortal(
           <div style={{
@@ -430,14 +574,27 @@ export default function SalesPage() {
             <p className="text-xs text-muted">Customer se kya lena hai</p>
           </div>
           <div className="flex items-center gap-2">
+            {/* Hidden bulk file input */}
+            <input
+              ref={bulkInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              className="hidden"
+              onChange={e => { if (e.target.files?.length) handleBulkScan(e.target.files); }}
+            />
+            <button onClick={() => bulkInputRef.current?.click()}
+              className="flex items-center gap-1.5 border border-white/10 text-white/70 px-3 py-2.5 rounded-xl text-sm font-semibold hover:border-white/25 hover:text-white transition-colors">
+              <FiUpload size={14} /> Bulk Upload
+            </button>
             <button onClick={openCamera}
               className="flex items-center gap-1.5 border border-white/10 text-white/70 px-3 py-2.5 rounded-xl text-sm font-semibold hover:border-white/25 hover:text-white transition-colors">
-              <FiCamera size={14} /> Scan Invoice
+              <FiCamera size={14} /> Scan
             </button>
             <button
               onClick={() => { setForm(emptyForm); setEditId(null); setScanPreview(null); setScannedItems([]); setScannedGst(null); setShowAdd(true); }}
               className="flex items-center gap-1.5 bg-white text-black px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-white/90 transition-colors">
-              <FiPlus size={15} /> Add Sale
+              <FiPlus size={15} /> Add
             </button>
           </div>
         </div>
