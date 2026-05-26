@@ -45,6 +45,24 @@ type ScanGst = {
   igst?: number;
 };
 
+type BulkFileResult = {
+  fileName: string;
+  status: "added" | "skipped" | "failed" | "not_processed";
+  title: string;
+  reason?: string;
+  amount?: number;
+  docNo?: string | null;
+};
+
+type BulkScanResults = {
+  added: number;
+  skipped: number;
+  failed: number;
+  notProcessed: number;
+  stoppedReason?: string;
+  details: BulkFileResult[];
+};
+
 const fmtINR = (n: number) =>
   "₹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 0 });
 const fmtDate = (d?: string) =>
@@ -143,7 +161,7 @@ export default function SalesPage() {
   const [bulkTotal,    setBulkTotal]    = useState(0);
   const [bulkDone,     setBulkDone]     = useState(0);
   const [bulkCurrent,  setBulkCurrent]  = useState("");
-  const [bulkResults,  setBulkResults]  = useState<{ added: number; skipped: number; failed: number } | null>(null);
+  const [bulkResults,  setBulkResults]  = useState<BulkScanResults | null>(null);
   const [bulkWaiting,  setBulkWaiting]  = useState(false);
 
   const emptyForm = {
@@ -262,7 +280,9 @@ export default function SalesPage() {
     setBulkResults(null);
     setBulkScanning(true);
 
-    let added = 0, skipped = 0, failed = 0;
+    let added = 0, skipped = 0, failed = 0, notProcessed = 0;
+    let stoppedReason: string | undefined;
+    const details: BulkFileResult[] = [];
     const existingNums = new Set(sales.map(s => s.invoice_number).filter(Boolean) as string[]);
     const batchNums    = new Set<string>();
 
@@ -287,23 +307,61 @@ export default function SalesPage() {
           body: JSON.stringify({ image: base64, mimeType }),
         });
 
-        if (r.status === 429) { failed += (fileArray.length - i); break; }  // Stop on rate limit
-        if (!r.ok) { failed++; continue; }
+        if (r.status === 429) {
+          stoppedReason = "AI scan limit hit. Remaining files were not processed.";
+          const remaining = fileArray.slice(i);
+          notProcessed += remaining.length;
+          remaining.forEach(file => details.push({
+            fileName: file.name,
+            status: "not_processed",
+            title: "Not processed",
+            reason: "AI scan limit hit. Try these again after a minute.",
+          }));
+          break;
+        }
+        if (!r.ok) {
+          failed++;
+          details.push({ fileName: fileArray[i].name, status: "failed", title: "Scan failed", reason: "AI scan API rejected this file." });
+          continue;
+        }
         const d = await r.json();
-        if (d.error === 'rate_limit') { failed += (fileArray.length - i); break; }
-        if (!d.success || !d.data) { failed++; continue; }
+        if (d.error === 'rate_limit') {
+          stoppedReason = "AI scan limit hit. Remaining files were not processed.";
+          const remaining = fileArray.slice(i);
+          notProcessed += remaining.length;
+          remaining.forEach(file => details.push({
+            fileName: file.name,
+            status: "not_processed",
+            title: "Not processed",
+            reason: "AI scan limit hit. Try these again after a minute.",
+          }));
+          break;
+        }
+        if (!d.success || !d.data) {
+          failed++;
+          details.push({ fileName: fileArray[i].name, status: "failed", title: "No scan data", reason: "AI did not return readable invoice data." });
+          continue;
+        }
 
         const ex = d.data as Record<string, unknown>;
         const amount = scanNumber(ex, ["total_amount", "invoice_amount", "grand_total", "net_amount", "amount", "bill_amount"]);
         const invNum = scanText(ex, ["invoice_number", "bill_number", "invoice_no", "bill_no"]) || null;
         const saleDate = scanDate(ex, ["sale_date", "invoice_date", "bill_date", "date"]);
         // Need at least total_amount or invoice_number to be useful
-        if (!amount && !invNum) { failed++; continue; }
+        if (!amount && !invNum) {
+          failed++;
+          details.push({ fileName: fileArray[i].name, status: "failed", title: "Missing amount/invoice no.", reason: "Could not extract a usable amount or invoice number." });
+          continue;
+        }
 
         const customerName = scanText(ex, ["customer_name", "party_name", "buyer_name", "bill_to"]) || (invNum ? `Invoice ${invNum}` : `Sale ${i + 1}`);
 
         // Duplicate by invoice_number
-        if (invNum && (existingNums.has(invNum) || batchNums.has(invNum))) { skipped++; continue; }
+        if (invNum && (existingNums.has(invNum) || batchNums.has(invNum))) {
+          skipped++;
+          details.push({ fileName: fileArray[i].name, status: "skipped", title: customerName, reason: `Duplicate invoice ${invNum}`, amount, docNo: invNum });
+          continue;
+        }
 
         // Duplicate by amount + date (when no invoice_number)
         if (!invNum && amount) {
@@ -311,7 +369,11 @@ export default function SalesPage() {
             Math.abs(s.total_amount - amount) < 1 &&
             s.sale_date?.slice(0, 10) === saleDate.slice(0, 10)
           );
-          if (isDupe) { skipped++; continue; }
+          if (isDupe) {
+            skipped++;
+            details.push({ fileName: fileArray[i].name, status: "skipped", title: customerName, reason: "Duplicate amount and date", amount, docNo: invNum });
+            continue;
+          }
         }
 
         const cgst = scanNumber(ex, ["cgst_amount", "cgst"]);
@@ -342,14 +404,22 @@ export default function SalesPage() {
         });
         if (saveR.ok) {
           added++;
+          details.push({ fileName: fileArray[i].name, status: "added", title: customerName, amount, docNo: invNum });
           if (invNum) { existingNums.add(invNum); batchNums.add(invNum); }
-        } else { failed++; }
-      } catch { failed++; }
+        } else {
+          failed++;
+          const err = await saveR.json().catch(() => ({}));
+          details.push({ fileName: fileArray[i].name, status: "failed", title: customerName, reason: err.error || "Could not save this invoice.", amount, docNo: invNum });
+        }
+      } catch (err) {
+        failed++;
+        details.push({ fileName: fileArray[i].name, status: "failed", title: "Unreadable file", reason: err instanceof Error ? err.message : "Could not read or scan this image." });
+      }
     }
 
     setBulkDone(fileArray.length);
     setBulkScanning(false);
-    setBulkResults({ added, skipped, failed });
+    setBulkResults({ added, skipped, failed, notProcessed, stoppedReason, details });
     if (bulkInputRef.current) bulkInputRef.current.value = "";
     await load();
   };
@@ -567,7 +637,7 @@ export default function SalesPage() {
         {mounted && bulkResults && !bulkScanning && createPortal(
           <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.75)" }}
                className="flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-white/10 p-6">
+            <div className="w-full max-w-lg bg-surface-1 rounded-2xl border border-white/10 p-6">
               <div className="text-center mb-5">
                 <div className="w-12 h-12 bg-success/15 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <FiCheckCircle size={22} className="text-success" />
@@ -584,6 +654,12 @@ export default function SalesPage() {
                   <span className="text-sm font-semibold text-yellow-400">⟳ Duplicates Skipped</span>
                   <span className="text-2xl font-bold text-yellow-400">{bulkResults.skipped}</span>
                 </div>
+                {bulkResults.notProcessed > 0 && (
+                  <div className="flex items-center justify-between p-3.5 bg-accent/10 rounded-xl border border-accent/15">
+                    <span className="text-sm font-semibold text-accent">Paused by AI Limit</span>
+                    <span className="text-2xl font-bold text-accent">{bulkResults.notProcessed}</span>
+                  </div>
+                )}
                 {bulkResults.failed > 0 && (
                   <div className="flex items-center justify-between p-3.5 bg-danger/10 rounded-xl border border-danger/15">
                     <span className="text-sm font-semibold text-danger">✗ Failed / Unreadable</span>
@@ -591,6 +667,41 @@ export default function SalesPage() {
                   </div>
                 )}
               </div>
+              {bulkResults.stoppedReason && (
+                <p className="text-xs text-accent bg-accent/10 border border-accent/15 rounded-xl px-3 py-2 mb-4">
+                  {bulkResults.stoppedReason}
+                </p>
+              )}
+              {bulkResults.details.length > 0 && (
+                <div className="max-h-60 overflow-y-auto space-y-2 mb-5 pr-1">
+                  {bulkResults.details.map((item, index) => {
+                    const color = item.status === "added" ? "text-success"
+                      : item.status === "skipped" ? "text-yellow-400"
+                      : item.status === "not_processed" ? "text-accent"
+                      : "text-danger";
+                    const badge = item.status === "added" ? "Added"
+                      : item.status === "skipped" ? "Skipped"
+                      : item.status === "not_processed" ? "Not processed"
+                      : "Failed";
+                    return (
+                      <div key={`${item.fileName}-${index}`} className="p-3 rounded-xl bg-surface-2/70 border border-white/5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-primary truncate">{item.title}</p>
+                            <p className="text-2xs text-muted truncate">{item.fileName}</p>
+                            {item.docNo && <p className="text-2xs text-muted">Invoice #{item.docNo}</p>}
+                            {item.reason && <p className="text-2xs text-muted mt-1">{item.reason}</p>}
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className={`text-2xs font-bold ${color}`}>{badge}</p>
+                            {item.amount ? <p className="text-2xs text-primary mt-1">{fmtINR(item.amount)}</p> : null}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               <button onClick={() => setBulkResults(null)}
                 className="w-full bg-white text-black py-3 rounded-xl font-bold text-sm hover:bg-white/90 transition-colors">
                 Done

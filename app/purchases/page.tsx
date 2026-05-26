@@ -38,6 +38,24 @@ type ScanGst = {
   type: string; // "IGST" | "CGST+SGST" | "GST"
 };
 
+type BulkFileResult = {
+  fileName: string;
+  status: "added" | "skipped" | "failed" | "not_processed";
+  title: string;
+  reason?: string;
+  amount?: number;
+  docNo?: string | null;
+};
+
+type BulkScanResults = {
+  added: number;
+  skipped: number;
+  failed: number;
+  notProcessed: number;
+  stoppedReason?: string;
+  details: BulkFileResult[];
+};
+
 const fmtINR = (n: number) =>
   "₹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 0 });
 const fmtDate = (d?: string) =>
@@ -133,7 +151,7 @@ export default function PurchasesPage() {
   const [bulkTotal,    setBulkTotal]    = useState(0);
   const [bulkDone,     setBulkDone]     = useState(0);
   const [bulkCurrent,  setBulkCurrent]  = useState("");
-  const [bulkResults,  setBulkResults]  = useState<{ added: number; skipped: number; failed: number } | null>(null);
+  const [bulkResults,  setBulkResults]  = useState<BulkScanResults | null>(null);
   const [bulkWaiting,  setBulkWaiting]  = useState(false);
 
   const emptyForm = {
@@ -247,7 +265,9 @@ export default function PurchasesPage() {
     setBulkResults(null);
     setBulkScanning(true);
 
-    let added = 0, skipped = 0, failed = 0;
+    let added = 0, skipped = 0, failed = 0, notProcessed = 0;
+    let stoppedReason: string | undefined;
+    const details: BulkFileResult[] = [];
     const existingNums = new Set(purchases.map(p => p.bill_number).filter(Boolean) as string[]);
     const batchNums    = new Set<string>();
 
@@ -272,27 +292,69 @@ export default function PurchasesPage() {
           body: JSON.stringify({ image: base64, mimeType }),
         });
 
-        if (r.status === 429) { failed += (fileArray.length - i); break; }
-        if (!r.ok) { failed++; continue; }
+        if (r.status === 429) {
+          stoppedReason = "AI scan limit hit. Remaining files were not processed.";
+          const remaining = fileArray.slice(i);
+          notProcessed += remaining.length;
+          remaining.forEach(file => details.push({
+            fileName: file.name,
+            status: "not_processed",
+            title: "Not processed",
+            reason: "AI scan limit hit. Try these again after a minute.",
+          }));
+          break;
+        }
+        if (!r.ok) {
+          failed++;
+          details.push({ fileName: fileArray[i].name, status: "failed", title: "Scan failed", reason: "AI scan API rejected this file." });
+          continue;
+        }
         const d = await r.json();
-        if (d.error === 'rate_limit') { failed += (fileArray.length - i); break; }
-        if (!d.success || !d.data) { failed++; continue; }
+        if (d.error === 'rate_limit') {
+          stoppedReason = "AI scan limit hit. Remaining files were not processed.";
+          const remaining = fileArray.slice(i);
+          notProcessed += remaining.length;
+          remaining.forEach(file => details.push({
+            fileName: file.name,
+            status: "not_processed",
+            title: "Not processed",
+            reason: "AI scan limit hit. Try these again after a minute.",
+          }));
+          break;
+        }
+        if (!d.success || !d.data) {
+          failed++;
+          details.push({ fileName: fileArray[i].name, status: "failed", title: "No scan data", reason: "AI did not return readable bill data." });
+          continue;
+        }
 
         const ex = d.data as Record<string, unknown>;
         const amount = scanNumber(ex, ["total_amount", "invoice_amount", "grand_total", "net_amount", "amount", "bill_amount"]);
         const billNum = scanText(ex, ["bill_number", "invoice_number", "invoice_no", "bill_no"]) || null;
         const purchaseDate = scanDate(ex, ["purchase_date", "invoice_date", "bill_date", "date"]);
-        if (!amount && !billNum) { failed++; continue; }
+        if (!amount && !billNum) {
+          failed++;
+          details.push({ fileName: fileArray[i].name, status: "failed", title: "Missing amount/bill no.", reason: "Could not extract a usable amount or bill number." });
+          continue;
+        }
 
         const supplierName = scanText(ex, ["supplier_name", "seller_name", "vendor_name", "party_name"]) || (billNum ? `Bill ${billNum}` : `Purchase ${i + 1}`);
 
-        if (billNum && (existingNums.has(billNum) || batchNums.has(billNum))) { skipped++; continue; }
+        if (billNum && (existingNums.has(billNum) || batchNums.has(billNum))) {
+          skipped++;
+          details.push({ fileName: fileArray[i].name, status: "skipped", title: supplierName, reason: `Duplicate bill ${billNum}`, amount, docNo: billNum });
+          continue;
+        }
         if (!billNum && amount) {
           const isDupe = purchases.some(p =>
             Math.abs(p.total_amount - amount) < 1 &&
             p.purchase_date?.slice(0, 10) === purchaseDate.slice(0, 10)
           );
-          if (isDupe) { skipped++; continue; }
+          if (isDupe) {
+            skipped++;
+            details.push({ fileName: fileArray[i].name, status: "skipped", title: supplierName, reason: "Duplicate amount and date", amount, docNo: billNum });
+            continue;
+          }
         }
 
         const cgst = scanNumber(ex, ["cgst_amount", "cgst"]);
@@ -323,14 +385,22 @@ export default function PurchasesPage() {
         });
         if (saveR.ok) {
           added++;
+          details.push({ fileName: fileArray[i].name, status: "added", title: supplierName, amount, docNo: billNum });
           if (billNum) { existingNums.add(billNum); batchNums.add(billNum); }
-        } else { failed++; }
-      } catch { failed++; }
+        } else {
+          failed++;
+          const err = await saveR.json().catch(() => ({}));
+          details.push({ fileName: fileArray[i].name, status: "failed", title: supplierName, reason: err.error || "Could not save this bill.", amount, docNo: billNum });
+        }
+      } catch (err) {
+        failed++;
+        details.push({ fileName: fileArray[i].name, status: "failed", title: "Unreadable file", reason: err instanceof Error ? err.message : "Could not read or scan this image." });
+      }
     }
 
     setBulkDone(fileArray.length);
     setBulkScanning(false);
-    setBulkResults({ added, skipped, failed });
+    setBulkResults({ added, skipped, failed, notProcessed, stoppedReason, details });
     if (bulkInputRef.current) bulkInputRef.current.value = "";
     await load();
   };
@@ -523,7 +593,7 @@ export default function PurchasesPage() {
       {/* ══════════ BULK RESULTS MODAL ══════════ */}
       {mounted && bulkResults && createPortal(
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 360 }}>
+          <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 520 }}>
             <p className="font-bold text-primary text-base mb-4">Bulk Scan Complete</p>
             <div className="space-y-2.5 mb-5">
               <div className="flex items-center justify-between">
@@ -538,7 +608,48 @@ export default function PurchasesPage() {
                 <span className="text-sm text-muted">Failed</span>
                 <span className="text-sm font-bold text-danger">{bulkResults.failed}</span>
               </div>
+              {bulkResults.notProcessed > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted">Not processed</span>
+                  <span className="text-sm font-bold text-accent">{bulkResults.notProcessed}</span>
+                </div>
+              )}
             </div>
+            {bulkResults.stoppedReason && (
+              <p className="text-xs text-accent bg-accent/10 border border-accent/15 rounded-xl px-3 py-2 mb-4">
+                {bulkResults.stoppedReason}
+              </p>
+            )}
+            {bulkResults.details.length > 0 && (
+              <div className="max-h-60 overflow-y-auto space-y-2 mb-5 pr-1">
+                {bulkResults.details.map((item, index) => {
+                  const color = item.status === "added" ? "text-success"
+                    : item.status === "skipped" ? "text-yellow-400"
+                    : item.status === "not_processed" ? "text-accent"
+                    : "text-danger";
+                  const badge = item.status === "added" ? "Added"
+                    : item.status === "skipped" ? "Skipped"
+                    : item.status === "not_processed" ? "Not processed"
+                    : "Failed";
+                  return (
+                    <div key={`${item.fileName}-${index}`} className="p-3 rounded-xl bg-surface-2/70 border border-white/5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-primary truncate">{item.title}</p>
+                          <p className="text-2xs text-muted truncate">{item.fileName}</p>
+                          {item.docNo && <p className="text-2xs text-muted">Bill #{item.docNo}</p>}
+                          {item.reason && <p className="text-2xs text-muted mt-1">{item.reason}</p>}
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className={`text-2xs font-bold ${color}`}>{badge}</p>
+                          {item.amount ? <p className="text-2xs text-primary mt-1">{fmtINR(item.amount)}</p> : null}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <button onClick={() => setBulkResults(null)}
               className="w-full py-2.5 rounded-xl text-sm font-bold bg-white text-black">
               Done
