@@ -21,6 +21,8 @@ const NAV = [
   { href: "/dashboard",      label: "Dashboard",       icon: FiGrid,          badge: null,   group: "core" },
   { href: "/invoice/new",    label: "New Invoice",     icon: FiPlus,          badge: null,   group: "core" },
   { href: "/collections",    label: "Collections",     icon: FiList,          badge: null,   group: "core" },
+  { href: "/customers",      label: "Customers",       icon: FiUsers,         badge: null,   group: "core" },
+  { href: "/suppliers",      label: "Suppliers",       icon: FiTruck,         badge: null,   group: "core" },
   { href: "/whatsapp",       label: "WhatsApp",        icon: FiMessageSquare, badge: null,   group: "core" },
   { href: "/dunning",        label: "Auto Follow-Up",  icon: FiRepeat,        badge: null,   group: "core" },
   // ── Intelligence
@@ -42,7 +44,6 @@ const NAV = [
   { href: "/khata",          label: "Customer Khata",  icon: FiBook,          badge: null,   group: "ops" },
   { href: "/sales",          label: "Sales",           icon: FiTrendingUp,    badge: null,   group: "ops" },
   { href: "/purchases",      label: "Purchases",       icon: FiPackage,       badge: null,   group: "ops" },
-  { href: "/suppliers",      label: "Suppliers",       icon: FiTruck,         badge: null,   group: "ops" },
   { href: "/orders",         label: "Today's Orders",  icon: FiShoppingBag,   badge: "NEW",  group: "ops" },
   { href: "/attendance",     label: "Staff Attendance",icon: FiUserCheck,     badge: null,   group: "ops" },
   { href: "/team",           label: "Team",            icon: FiUser,          badge: null,   group: "ops" },

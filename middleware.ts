@@ -5,7 +5,7 @@ const PROTECTED = [
   '/dashboard', '/collections', '/whatsapp', '/dunning', '/forecast',
   '/analytics', '/reports', '/inventory', '/crm', '/scanner',
   '/ai-chat', '/billing', '/settings', '/bills', '/khata', '/bank',
-  '/today', '/purchases', '/orders', '/attendance', '/team', '/brain',
+  '/today', '/customers', '/suppliers', '/purchases', '/orders', '/attendance', '/team', '/brain',
   '/neural-engine', '/network', '/ledger', '/my-id', '/admin',
   '/ai-train', '/industry', '/invoice',
   '/bad-debt', '/disputes', '/referrals', '/ca-portal', '/payment-plans',

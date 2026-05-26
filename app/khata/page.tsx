@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { FiPlus, FiUser, FiArrowUp, FiArrowDown, FiMessageSquare, FiSearch, FiTrash2, FiChevronRight } from "react-icons/fi";
 import { getToken } from "@/lib/api";
 
@@ -60,6 +61,12 @@ export default function KhataPage() {
 
   useEffect(() => { loadCustomers(); }, []);
 
+  useEffect(() => {
+    const customer = new URLSearchParams(window.location.search).get("customer");
+    if (customer) selectCustomer(customer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const selectCustomer = (name: string) => {
     setSelected(name);
     loadEntries(name);
@@ -112,7 +119,8 @@ export default function KhataPage() {
   const selectedCustomer = customers.find(c => c.customer_name === selected);
 
   return (
-    <div className="p-4 max-w-5xl mx-auto pb-24">
+    <DashboardLayout pageTitle="Customer Khata">
+      <div className="max-w-5xl mx-auto pb-24">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -351,6 +359,7 @@ export default function KhataPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
