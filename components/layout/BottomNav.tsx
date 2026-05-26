@@ -19,10 +19,8 @@ export default function BottomNav() {
     <nav
       className="lg:hidden fixed bottom-0 left-0 right-0 z-40"
       style={{
-        background: "rgba(13,15,20,0.97)",
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
+        background: "#080808",
+        borderTop: "1px solid rgba(255,255,255,0.07)",
       }}
     >
       <div className="flex items-end px-1">

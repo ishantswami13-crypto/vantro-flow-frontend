@@ -58,10 +58,10 @@
   }
 
   /* Scrollbar */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #2A3349; border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: #303D56; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
 }
 
 /* ============================================================
@@ -89,17 +89,13 @@
    GLASSMORPHISM
    ============================================================ */
 .glass {
-  background: rgba(12, 20, 40, 0.7);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: #080808;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
 .glass-surface {
-  background: rgba(16, 26, 48, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.05);
+  background: #0e0e0e;
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
 /* ============================================================
@@ -184,8 +180,8 @@
 }
 
 .card-premium:hover {
-  border-color: rgba(var(--accent-rgb), 0.3);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(var(--accent-rgb), 0.15), inset 0 1px 0 rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
 .card-metric {
@@ -205,7 +201,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(var(--accent-rgb), 0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -213,8 +209,8 @@
 .card-metric:hover::after { opacity: 1; }
 .card-metric:hover {
   transform: translateY(-1px);
-  border-color: rgba(var(--accent-rgb), 0.25);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 0 1px rgba(var(--accent-rgb), 0.1);
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
 }
 
 /* ============================================================
@@ -241,17 +237,15 @@
 }
 .table-premium tbody tr:last-child { border-bottom: none; }
 .table-premium tbody tr:hover {
-  background: rgba(var(--accent-rgb), 0.04);
+  background: rgba(255,255,255,0.025);
 }
 
 /* ============================================================
    SIDEBAR
    ============================================================ */
 .sidebar-glass {
-  background: rgba(13, 15, 20, 0.97);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255,255,255,0.05);
+  background: #080808;
+  border-right: 1px solid rgba(255,255,255,0.06);
 }
 
 /* ============================================================

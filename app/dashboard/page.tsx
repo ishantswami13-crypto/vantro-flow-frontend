@@ -105,7 +105,7 @@ function getCollectedToday(): number {
 function getBadge(streak: number, collected: number): { label: string; emoji: string; color: string } {
   if (streak >= 180 || collected >= 5000000) return { label: "Recovery King",    emoji: "🏆", color: "#F59E0B" };
   if (streak >= 90  || collected >= 2000000) return { label: "Power Collector",  emoji: "👑", color: "#8B5CF6" };
-  if (streak >= 30  || collected >= 500000)  return { label: "Chase Master",     emoji: "🎯", color: "#0066FF" };
+  if (streak >= 30  || collected >= 500000)  return { label: "Chase Master",     emoji: "🎯", color: "#4F6EF7" };
   if (streak >= 7   || collected >= 100000)  return { label: "Active Collector", emoji: "⚡", color: "#10D98A" };
   return { label: "New Collector", emoji: "🌱", color: "#6B7280" };
 }
@@ -412,8 +412,8 @@ export default function DashboardPage() {
             AAJ KA SCORE — The morning hook card
             Answers in 3 seconds: expected · received · baaki
             ══════════════════════════════════════════════════ */}
-        <div className="rounded-2xl overflow-hidden border border-border/60"
-          style={{ background: "linear-gradient(160deg, #1A1F2E 0%, #161A24 100%)" }}>
+        <div className="rounded-2xl overflow-hidden"
+          style={{ background: "#0e0e0e", border: "1px solid rgba(255,255,255,0.07)" }}>
 
           {/* Top bar: greeting + streak */}
           <div className="flex items-center justify-between px-5 pt-5 pb-3">
@@ -443,7 +443,7 @@ export default function DashboardPage() {
               className="font-black leading-none tracking-tight transition-all duration-700"
               style={{
                 fontSize: "clamp(2.8rem, 10vw, 4rem)",
-                color: collectedToday > 0 ? "#10D98A" : "#2A3349",
+                color: collectedToday > 0 ? "#10D98A" : "rgba(255,255,255,0.08)",
                 textShadow: collectedToday > 0 ? "0 0 40px rgba(16,217,138,0.3)" : "none",
               }}
             >
@@ -458,7 +458,7 @@ export default function DashboardPage() {
                   {Math.min(100, Math.round((collectedToday / dailyGoal) * 100))}%
                 </span>
               </div>
-              <div className="h-2 rounded-full overflow-hidden" style={{ background: "#2A3349" }}>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
                 <div
                   className="h-full rounded-full transition-all duration-1000"
                   style={{
@@ -481,7 +481,7 @@ export default function DashboardPage() {
           <div className="mx-5 h-px bg-border/50" />
 
           {/* AI Briefing */}
-          <div className="mx-5 my-4 p-3 rounded-xl" style={{ background: "rgba(79,110,247,0.06)", border: "1px solid rgba(79,110,247,0.18)" }}>
+          <div className="mx-5 my-4 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
             <div className="flex items-center gap-1.5 mb-1.5">
               <FiZap size={11} className="text-accent" />
               <p className="text-2xs font-bold text-accent uppercase tracking-wider">AI Briefing</p>
@@ -686,7 +686,7 @@ export default function DashboardPage() {
                     <stop offset="100%" stopColor="#4F6EF7" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E2D4A" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis dataKey="d" tick={{ fill: "#556070", fontSize: 9 }} axisLine={false} tickLine={false} />
                 <YAxis hide />
                 <Tooltip content={<CustomTooltip />} />
@@ -763,7 +763,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-3">
                         <div
                           className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-                          style={{ background: i === 0 ? "rgba(79,110,247,0.15)" : "#1F2538", color: i === 0 ? "#4F6EF7" : "#8899BB", border: `1px solid ${i === 0 ? "rgba(79,110,247,0.3)" : "#2A3349"}` }}
+                          style={{ background: i === 0 ? "rgba(79,110,247,0.12)" : "rgba(255,255,255,0.05)", color: i === 0 ? "#4F6EF7" : "rgba(255,255,255,0.4)", border: `1px solid ${i === 0 ? "rgba(79,110,247,0.25)" : "rgba(255,255,255,0.07)"}` }}
                         >
                           {c.name.charAt(0)}
                         </div>
@@ -875,7 +875,7 @@ export default function DashboardPage() {
         {/* Bottom nav cards */}
         <div className="grid sm:grid-cols-3 gap-3">
           {[
-            { href: "/collections", Icon: FiList,       label: "Full Collections",   sub: "42 active · Sort by priority", color: "#0066FF" },
+            { href: "/collections", Icon: FiList,       label: "Full Collections",   sub: "42 active · Sort by priority", color: "#4F6EF7" },
             { href: "/forecast",    Icon: FiTrendingUp,  label: "Cash Forecast",      sub: "12d runway · Act now",         color: "#F5424D" },
             { href: "/settings",    Icon: FiSettings,   label: "Settings",           sub: "Tally sync · Preferences",     color: "#10D98A" },
           ].map(({ href, Icon, label, sub, color }) => (

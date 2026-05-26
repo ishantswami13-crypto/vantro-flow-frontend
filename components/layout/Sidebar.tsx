@@ -11,12 +11,10 @@ import {
   FiSun, FiActivity, FiUser, FiSliders, FiDatabase,
   FiArchive, FiFile, FiDollarSign, FiZap, FiLock, FiAlertTriangle, FiPlus,
 } from "react-icons/fi";
-import LogoMark from "@/components/LogoMark";
 import { api, getUser, clearAuth } from "@/lib/api";
 import { getBusinessType, getSmartHiddenRoutes, type BusinessTypeConfig } from "@/lib/businessTypes";
 import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
 
-// feature flag key → which sidebar items require that flag
 const NAV = [
   // ── Command Center
   { href: "/dashboard",      label: "Dashboard",       icon: FiGrid,          badge: null,   group: "core" },
@@ -48,7 +46,7 @@ const NAV = [
   { href: "/bank",           label: "Bank Monitor",    icon: FiDatabase,      badge: "NEW",  group: "ops" },
   { href: "/inventory",      label: "Inventory",       icon: FiArchive,       badge: null,   group: "ops" },
   { href: "/scanner",        label: "Invoice Scanner", icon: FiCamera,        badge: null,   group: "ops" },
-  { href: "/bad-debt",        label: "Bad Debt Radar",  icon: FiAlertTriangle, badge: null,   group: "ops" },
+  { href: "/bad-debt",       label: "Bad Debt Radar",  icon: FiAlertTriangle, badge: null,   group: "ops" },
   // ── Account
   { href: "/my-id",          label: "My Vantro ID",    icon: FiShield,        badge: null,   group: "account" },
   { href: "/billing",        label: "Billing",         icon: FiCreditCard,    badge: null,   group: "account" },
@@ -56,8 +54,8 @@ const NAV = [
 ];
 
 const GROUPS = [
-  { key: "core",         label: "Collections" },
-  { key: "intelligence", label: "AI Tools" },
+  { key: "core",         label: "Core" },
+  { key: "intelligence", label: "AI" },
   { key: "network",      label: "Network" },
   { key: "ops",          label: "Operations" },
   { key: "account",      label: "Account" },
@@ -74,13 +72,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const [bizType, setBizType]             = useState<BusinessTypeConfig | null>(null);
   const [hiddenRoutes, setHiddenRoutes]   = useState<Set<string>>(new Set());
   const [grantedFeatures, setGrantedFeatures] = useState<Set<FeatureKey>>(new Set());
-  const [pendingCount, setPendingCount] = useState<number | null>(null);
+  const [pendingCount, setPendingCount]   = useState<number | null>(null);
 
   useEffect(() => {
     const loadBizType = () => {
       setBizType(getBusinessType());
       setHiddenRoutes(getSmartHiddenRoutes());
-      // Plan-based feature gating
       try {
         const ctx = getUserContext();
         setGrantedFeatures(getGrantedFeatures(ctx));
@@ -94,7 +91,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       setUserName(u.business_name || emailName);
       setBizName(u.email || "");
       setIsAdmin(u.email === "ishantswami13@gmail.com");
-      // Fetch live pending invoice count for the Collections badge
       api.metrics(u.id).then(d => {
         const count = d.metrics?.pending_invoices;
         if (typeof count === "number") setPendingCount(count);
@@ -102,7 +98,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     }
     loadBizType();
 
-    // Re-read when localStorage changes (e.g. after onboarding completes)
     window.addEventListener("storage", loadBizType);
     window.addEventListener("vantro:refresh", loadBizType);
     return () => {
@@ -120,89 +115,137 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <>
       {open && (
-        <div className="fixed inset-0 z-20 bg-black/70 backdrop-blur-sm lg:hidden" onClick={onClose} />
+        <div
+          className="fixed inset-0 z-20 lg:hidden"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+          onClick={onClose}
+        />
       )}
 
       <aside className={[
-        "fixed top-0 left-0 z-30 h-full w-60 flex flex-col sidebar-glass",
+        "fixed top-0 left-0 z-30 h-full w-56 flex flex-col",
         "transition-transform duration-300 ease-out",
         "lg:translate-x-0 lg:static lg:z-auto",
         open ? "translate-x-0" : "-translate-x-full",
-      ].join(" ")}>
-
-        {/* Logo */}
-        <div className="flex items-center justify-between px-5 h-16 border-b border-white/5 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <LogoMark size={32} />
-            <div>
-              <p className="font-bold text-sm text-primary tracking-tight leading-none">Vantro</p>
-              <p className="text-2xs text-muted mt-0.5">Business OS</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="lg:hidden p-1 text-muted hover:text-primary rounded focus-ring">
-            <FiX size={17} />
+      ].join(" ")}
+        style={{
+          background: "#080808",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        {/* Logo — wordmark only, no icon */}
+        <div className="flex items-center justify-between px-5 h-14 shrink-0"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <span
+            className="font-bold tracking-tight"
+            style={{ fontSize: "15px", color: "#ffffff", letterSpacing: "-0.02em" }}
+          >
+            Vantro
+          </span>
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1.5 rounded-lg transition-colors"
+            style={{ color: "rgba(255,255,255,0.35)" }}
+          >
+            <FiX size={15} />
           </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        <nav className="flex-1 px-2.5 py-3 overflow-y-auto">
           {GROUPS.map(({ key, label }) => {
             const items = NAV.filter(n => {
               if (n.group !== key) return false;
-              // Industry / onboarding filter (hide completely when not relevant)
               if (hiddenRoutes.size > 0 && hiddenRoutes.has(n.href)) return false;
               return true;
             });
             if (items.length === 0) return null;
             return (
-              <div key={key} className="mb-4">
-                <p className="px-2.5 mb-1.5 section-label">{label}</p>
-                <div className="space-y-0.5">
+              <div key={key} className="mb-3">
+                <p
+                  className="px-2 mb-1"
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.25)",
+                  }}
+                >
+                  {label}
+                </p>
+                <div className="space-y-px">
                   {items.map(({ href, label: itemLabel, icon: Icon, badge }) => {
                     const active = pathname === href || pathname.startsWith(href + "/");
-                    // Live badge: override hardcoded "12" on /collections with real pending count
                     const liveBadge = href === "/collections"
                       ? (pendingCount !== null && pendingCount > 0 ? String(pendingCount) : null)
                       : badge;
 
-                    // Plan-based lock check
                     const featureKey = ROUTE_TO_FEATURE[href];
                     const isLocked = featureKey
                       ? grantedFeatures.size > 0 && !grantedFeatures.has(featureKey)
                       : false;
 
                     if (isLocked) {
-                      // Show locked item — grayed, non-navigable, shows upgrade hint
                       return (
-                        <Link key={href} href="/billing" onClick={onClose}
-                          title={`Upgrade your plan to unlock ${itemLabel}`}
-                          className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-muted/40 hover:bg-surface-2 hover:text-muted/60 cursor-pointer relative">
-                          <Icon size={16} className="shrink-0 text-muted/30" />
-                          <span className="flex-1 line-through decoration-muted/20">{itemLabel}</span>
-                          <FiLock size={11} className="shrink-0 text-muted/40" />
+                        <Link
+                          key={href}
+                          href="/billing"
+                          onClick={onClose}
+                          title={`Upgrade to unlock ${itemLabel}`}
+                          className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150"
+                          style={{ color: "rgba(255,255,255,0.2)" }}
+                        >
+                          <Icon size={14} className="shrink-0" style={{ color: "rgba(255,255,255,0.15)" }} />
+                          <span className="flex-1 line-through">{itemLabel}</span>
+                          <FiLock size={10} className="shrink-0" />
                         </Link>
                       );
                     }
 
                     return (
-                      <Link key={href} href={href} onClick={onClose}
-                        className={[
-                          "group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 focus-ring relative overflow-hidden",
-                          active ? "bg-accent-dim text-accent" : "text-secondary hover:text-primary hover:bg-surface-2",
-                        ].join(" ")}>
-                        {active && <span className="absolute left-0 top-2.5 bottom-2.5 w-0.5 bg-accent rounded-r-full" />}
-                        <Icon size={16} className={[
-                          "shrink-0 transition-all duration-200",
-                          active ? "text-accent drop-shadow-[0_0_6px_rgba(79,110,247,0.8)]" : "text-muted group-hover:text-secondary",
-                        ].join(" ")} />
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={onClose}
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 relative"
+                        style={{
+                          background: active ? "rgba(255,255,255,0.07)" : "transparent",
+                          color: active ? "#ffffff" : "rgba(255,255,255,0.45)",
+                        }}
+                        onMouseEnter={e => {
+                          if (!active) {
+                            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
+                            (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)";
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (!active) {
+                            (e.currentTarget as HTMLElement).style.background = "transparent";
+                            (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)";
+                          }
+                        }}
+                      >
+                        {active && (
+                          <span
+                            className="absolute left-0 top-2 bottom-2 w-0.5 rounded-r-full"
+                            style={{ background: "rgba(255,255,255,0.6)" }}
+                          />
+                        )}
+                        <Icon
+                          size={14}
+                          className="shrink-0"
+                          style={{ color: active ? "#ffffff" : "rgba(255,255,255,0.35)" }}
+                        />
                         <span className="flex-1">{itemLabel}</span>
                         {liveBadge && (
-                          <span className={[
-                            "text-2xs font-bold font-mono min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full",
-                            liveBadge === "AI"  ? "bg-accent-dim text-accent border border-accent/20"
-                            : liveBadge === "NEW" ? "bg-success-dim text-success border border-success/20"
-                            : "bg-danger-dim text-danger border border-danger/20",
-                          ].join(" ")}>
+                          <span
+                            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                            style={{
+                              background: "rgba(255,255,255,0.08)",
+                              color: "rgba(255,255,255,0.45)",
+                            }}
+                          >
                             {liveBadge}
                           </span>
                         )}
@@ -217,49 +260,78 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
         {/* Admin link */}
         {isAdmin && (
-          <div className="px-3 pb-2">
-            <Link href="/admin" onClick={onClose}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-muted hover:text-accent hover:bg-accent-dim transition-all w-full">
+          <div className="px-2.5 pb-1">
+            <Link
+              href="/admin"
+              onClick={onClose}
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12px] font-medium transition-all duration-150"
+              style={{ color: "rgba(255,255,255,0.3)" }}
+            >
               <FiShield size={13} className="shrink-0" />
               Admin
             </Link>
           </div>
         )}
 
-        {/* User card + Sign Out */}
-        <div className="px-3 py-3 border-t border-white/5 shrink-0">
-          <Link href="/settings" onClick={onClose}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-surface-2 transition-colors group">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent to-success flex items-center justify-center text-xs font-bold text-white shrink-0">
+        {/* User card */}
+        <div
+          className="px-2.5 py-3 shrink-0"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          <Link
+            href="/settings"
+            onClick={onClose}
+            className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg transition-all duration-150"
+            style={{ color: "rgba(255,255,255,0.55)" }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
+              (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.8)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = "transparent";
+              (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)";
+            }}
+          >
+            {/* Flat monogram avatar */}
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-semibold shrink-0"
+              style={{
+                background: "rgba(255,255,255,0.1)",
+                color: "#ffffff",
+              }}
+            >
               {userName.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <p className="text-xs font-semibold text-primary truncate">{userName}</p>
-                <span className={[
-                  "text-2xs font-bold px-1.5 py-0.5 rounded-full shrink-0",
-                  userPlan === "pro"     ? "bg-accent-dim text-accent border border-accent/20"
-                  : userPlan === "growth" ? "bg-success-dim text-success border border-success/20"
-                  : userPlan === "starter" ? "bg-warning/10 text-warning border border-warning/20"
-                  : "bg-surface-3 text-muted border border-border",
-                ].join(" ")}>
-                  {userPlan === "free" ? "Free" : userPlan.charAt(0).toUpperCase() + userPlan.slice(1)}
-                </span>
-              </div>
-              <p className="text-2xs text-muted truncate">
-                {bizType ? `${bizType.emoji} ${bizType.label}` : bizName}
+              <p
+                className="text-[12px] font-semibold truncate leading-none"
+                style={{ color: "#ffffff" }}
+              >
+                {userName}
+              </p>
+              <p
+                className="text-[10px] mt-0.5 truncate"
+                style={{ color: "rgba(255,255,255,0.3)" }}
+              >
+                {bizType ? `${bizType.label}` : (userPlan === "free" ? "Free plan" : userPlan.charAt(0).toUpperCase() + userPlan.slice(1) + " plan")}
               </p>
             </div>
-            <FiSettings size={12} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
           </Link>
-          {/* Sign Out — visually separated from nav */}
-          <div className="mt-1 px-3">
-            <button onClick={handleLogout}
-              className="flex items-center gap-2 py-1.5 text-2xs font-medium text-muted/60 hover:text-danger transition-colors focus-ring w-full">
-              <FiLogOut size={11} className="shrink-0" />
-              Sign out
-            </button>
-          </div>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-2.5 py-1.5 mt-0.5 w-full rounded-lg text-[11px] font-medium transition-all duration-150"
+            style={{ color: "rgba(255,255,255,0.25)" }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.color = "rgba(245,66,77,0.7)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.25)";
+            }}
+          >
+            <FiLogOut size={11} className="shrink-0" />
+            Sign out
+          </button>
         </div>
       </aside>
     </>

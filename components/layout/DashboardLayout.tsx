@@ -168,7 +168,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
         )}
 
         {/* pb-20 on mobile to clear bottom nav */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-24 lg:pb-6 page-fade">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-5 pb-24 lg:pb-5 page-fade">
           {children}
         </main>
       </div>

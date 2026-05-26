@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { FiMenu, FiBell, FiRefreshCw, FiCheck, FiAlertCircle, FiTrendingUp, FiX, FiDollarSign, FiClock } from "react-icons/fi";
+import { FiMenu, FiBell, FiRefreshCw, FiCheck, FiAlertCircle, FiTrendingUp, FiX } from "react-icons/fi";
 import Link from "next/link";
 import { getUser } from "@/lib/api";
 import { isDemoMode } from "@/lib/demo";
@@ -15,13 +15,12 @@ interface Notif {
   read: boolean;
 }
 
-// Demo notifications shown when in demo mode or backend is unavailable
 const DEMO_NOTIFS: Notif[] = [
-  { id: "1", type: "overdue",  title: "Mehta Fabrics — 62 din overdue",    body: "₹8,40,000 abhi tak pending hai. Aaj call karo — high priority.",  time: new Date(Date.now() - 1000 * 60 * 30).toISOString(), read: false },
-  { id: "2", type: "overdue",  title: "Sharma Steel Works — 45 din overdue", body: "₹5,20,000 pending. Last attempt: 12 May. Try karo dobaara.",       time: new Date(Date.now() - 1000 * 60 * 90).toISOString(), read: false },
-  { id: "3", type: "payment",  title: "Joshi Electronics — Payment Received", body: "₹1,42,000 payment aaya! Invoice auto-marked paid.",                time: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), read: true  },
-  { id: "4", type: "forecast", title: "Cash Runway Alert",                   body: "Current forecast: 12 din ka cash. Is hafte ₹5L+ collections zaroori.", time: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), read: true  },
-  { id: "5", type: "system",   title: "AI Briefing Ready",                   body: "Aaj subah ki briefing ready hai — 5 priority calls identified.",    time: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), read: true  },
+  { id: "1", type: "overdue",  title: "Mehta Fabrics — 62 days overdue",      body: "₹8,40,000 still pending. High priority — call today.",           time: new Date(Date.now() - 1000 * 60 * 30).toISOString(),          read: false },
+  { id: "2", type: "overdue",  title: "Sharma Steel — 45 days overdue",        body: "₹5,20,000 pending. Last attempt: 12 May.",                       time: new Date(Date.now() - 1000 * 60 * 90).toISOString(),          read: false },
+  { id: "3", type: "payment",  title: "Joshi Electronics — Payment Received",  body: "₹1,42,000 received. Invoice auto-marked paid.",                  time: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),     read: true  },
+  { id: "4", type: "forecast", title: "Cash Runway Alert",                     body: "Current runway: 12 days. ₹5L+ collections needed this week.",    time: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),     read: true  },
+  { id: "5", type: "system",   title: "AI Briefing Ready",                     body: "5 priority calls identified for today.",                         time: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),     read: true  },
 ];
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -39,8 +38,8 @@ function timeAgo(iso: string): string {
 const NOTIF_ICON: Record<string, { icon: typeof FiCheck; color: string }> = {
   payment:  { icon: FiCheck,       color: "#10D98A" },
   overdue:  { icon: FiAlertCircle, color: "#F5424D" },
-  forecast: { icon: FiTrendingUp,  color: "#1A6FFF" },
-  system:   { icon: FiBell,        color: "#F5A524" },
+  forecast: { icon: FiTrendingUp,  color: "#ffffff" },
+  system:   { icon: FiBell,        color: "rgba(255,255,255,0.5)" },
 };
 
 interface HeaderProps { onMenuToggle: () => void; pageTitle?: string; }
@@ -62,7 +61,6 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
     }
   }, []);
 
-  // Close panel on outside click
   useEffect(() => {
     if (!showNotifs) return;
     const handler = (e: MouseEvent) => {
@@ -75,7 +73,6 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
   }, [showNotifs]);
 
   const fetchNotifs = async () => {
-    // Demo mode: show demo notifications immediately
     if (isDemoMode()) {
       setNotifs(DEMO_NOTIFS);
       setLoadingNotifs(false);
@@ -92,11 +89,9 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
       if (d.success && Array.isArray(d.notifications) && d.notifications.length > 0) {
         setNotifs(d.notifications);
       } else {
-        // Backend returned nothing — generate from invoice data
         generateLocalNotifs(token);
       }
     } catch {
-      // Backend unavailable — generate from invoice data
       const token = localStorage.getItem("vantro_token") || "";
       generateLocalNotifs(token);
     } finally {
@@ -115,7 +110,6 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
       const invoices = d.invoices || [];
       const generated: Notif[] = [];
 
-      // Top overdue invoices → overdue notifications
       const overdue = invoices
         .filter((inv: any) => inv.days_overdue > 0 && inv.payment_status === "Pending")
         .sort((a: any, b: any) => b.days_overdue - a.days_overdue)
@@ -125,8 +119,8 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
         generated.push({
           id: `inv-${i}`,
           type: "overdue",
-          title: `${inv.customer_name} — ${inv.days_overdue} din overdue`,
-          body: `₹${Number(inv.invoice_amount).toLocaleString("en-IN")} pending. Call karo aaj.`,
+          title: `${inv.customer_name} — ${inv.days_overdue} days overdue`,
+          body: `₹${Number(inv.invoice_amount).toLocaleString("en-IN")} pending.`,
           time: new Date(Date.now() - 1000 * 60 * (30 + i * 60)).toISOString(),
           read: i > 0,
         });
@@ -134,7 +128,7 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
 
       if (generated.length > 0) setNotifs(generated);
     } catch {
-      // truly silent — show empty state
+      // silent
     }
   };
 
@@ -145,7 +139,6 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    // Trigger a full page data refresh via custom event
     window.dispatchEvent(new CustomEvent("vantro:refresh"));
     setTimeout(() => setRefreshing(false), 800);
   };
@@ -153,99 +146,148 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
   const unread = notifs.filter(n => !n.read).length;
 
   return (
-    <header className="h-16 glass border-b border-white/5 flex items-center justify-between px-4 lg:px-6 shrink-0 z-10">
+    <header
+      className="h-12 flex items-center justify-between px-4 lg:px-5 shrink-0 z-10"
+      style={{
+        background: "#080808",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+      }}
+    >
+      {/* Left */}
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuToggle}
-          className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-surface-2 border border-border text-secondary hover:text-primary hover:bg-surface-3 transition-all focus-ring"
+          className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+          style={{ color: "rgba(255,255,255,0.45)" }}
           aria-label="Open menu"
         >
-          <FiMenu size={17} />
+          <FiMenu size={16} />
         </button>
         {pageTitle && (
-          <div className="hidden sm:flex items-center gap-2.5">
-            <h1 className="text-sm font-bold text-primary tracking-tight">{pageTitle}</h1>
-            <span className="status-live text-xs text-success">Live</span>
-          </div>
+          <h1
+            className="text-[13px] font-semibold tracking-tight hidden sm:block"
+            style={{ color: "rgba(255,255,255,0.75)", letterSpacing: "-0.01em" }}
+          >
+            {pageTitle}
+          </h1>
         )}
       </div>
 
-      <div className="flex items-center gap-1.5">
+      {/* Right */}
+      <div className="flex items-center gap-1">
+        {/* Refresh */}
         <button
           onClick={handleRefresh}
-          className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-surface-2 border border-border text-secondary hover:text-primary hover:bg-surface-3 transition-all focus-ring"
+          className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+          style={{ color: "rgba(255,255,255,0.35)" }}
           aria-label="Sync data"
-          title="Refresh data"
+          title="Refresh"
+          onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.7)")}
+          onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)")}
         >
-          <FiRefreshCw size={15} className={refreshing ? "animate-spin text-accent" : ""} />
+          <FiRefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
         </button>
 
-        {/* Bell + Notifications panel */}
+        {/* Bell + panel */}
         <div className="relative" ref={panelRef}>
           <button
             onClick={handleBellClick}
-            className={`relative w-9 h-9 flex items-center justify-center rounded-xl border transition-all focus-ring ${
-              showNotifs
-                ? "bg-accent-dim border-accent/40 text-accent"
-                : "bg-surface-2 border-border text-secondary hover:text-primary hover:bg-surface-3"
-            }`}
+            className="relative w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+            style={{ color: showNotifs ? "#ffffff" : "rgba(255,255,255,0.35)" }}
             aria-label="Notifications"
+            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.7)")}
+            onMouseLeave={e => { if (!showNotifs) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)"; }}
           >
-            <FiBell size={15} />
+            <FiBell size={14} />
             {unread > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-danger border-2 border-bg animate-pulse" />
+              <span
+                className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full border border-[#080808]"
+                style={{ background: "#F5424D" }}
+              />
             )}
           </button>
 
           {showNotifs && (
-            <div className="absolute right-0 top-11 w-80 bg-surface-1 border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-fade-in">
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <div
+              className="absolute right-0 top-10 w-80 rounded-xl overflow-hidden animate-fade-in"
+              style={{
+                background: "#111111",
+                border: "1px solid rgba(255,255,255,0.08)",
+                boxShadow: "0 16px 48px rgba(0,0,0,0.7)",
+              }}
+            >
+              {/* Panel header */}
+              <div
+                className="flex items-center justify-between px-4 py-3"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+              >
                 <div className="flex items-center gap-2">
-                  <FiBell size={13} className="text-accent" />
-                  <p className="text-xs font-bold text-primary">Notifications</p>
+                  <p className="text-[12px] font-semibold" style={{ color: "#ffffff" }}>Notifications</p>
                   {unread > 0 && (
-                    <span className="text-2xs font-bold bg-danger text-white px-1.5 py-0.5 rounded-full">{unread}</span>
+                    <span
+                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                      style={{ background: "#F5424D", color: "#fff" }}
+                    >
+                      {unread}
+                    </span>
                   )}
                 </div>
-                <button onClick={() => setShowNotifs(false)} className="text-muted hover:text-primary">
-                  <FiX size={14} />
+                <button
+                  onClick={() => setShowNotifs(false)}
+                  style={{ color: "rgba(255,255,255,0.35)" }}
+                >
+                  <FiX size={13} />
                 </button>
               </div>
 
-              {/* Body */}
-              <div className="max-h-80 overflow-y-auto">
+              {/* Panel body */}
+              <div className="max-h-72 overflow-y-auto">
                 {loadingNotifs ? (
                   <div className="py-8 text-center">
-                    <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                    <p className="text-xs text-muted">Loading...</p>
+                    <div
+                      className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-2"
+                      style={{ borderColor: "rgba(255,255,255,0.2)", borderTopColor: "transparent" }}
+                    />
+                    <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.3)" }}>Loading…</p>
                   </div>
                 ) : notifs.length === 0 ? (
                   <div className="py-8 text-center px-4">
-                    <div className="w-10 h-10 rounded-xl bg-surface-2 border border-border flex items-center justify-center mx-auto mb-3">
-                      <FiBell size={18} className="text-muted opacity-50" />
-                    </div>
-                    <p className="text-sm font-semibold text-secondary mb-1">Koi notification nahi abhi</p>
-                    <p className="text-xs text-muted leading-relaxed">
-                      Payment milte hi yahan dikhega. Enable karein notifications taaki instantly pata chale.
+                    <FiBell size={20} className="mx-auto mb-3" style={{ color: "rgba(255,255,255,0.15)" }} />
+                    <p className="text-[12px] font-medium mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>No notifications</p>
+                    <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>
+                      Payments and alerts will appear here.
                     </p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-border/50">
-                    {notifs.map(n => {
+                  <div>
+                    {notifs.map((n, i) => {
                       const { icon: Icon, color } = NOTIF_ICON[n.type] ?? NOTIF_ICON.system;
                       return (
-                        <div key={n.id} className={`flex gap-3 px-4 py-3 hover:bg-surface-2 transition-colors ${!n.read ? "bg-accent/3" : ""}`}>
-                          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-                            style={{ background: `${color}18`, border: `1px solid ${color}25` }}>
-                            <Icon size={13} style={{ color }} />
+                        <div
+                          key={n.id}
+                          className="flex gap-3 px-4 py-3 transition-colors"
+                          style={{
+                            borderBottom: i < notifs.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                            background: !n.read ? "rgba(255,255,255,0.02)" : "transparent",
+                          }}
+                        >
+                          <div
+                            className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                            style={{ background: `${color}14` }}
+                          >
+                            <Icon size={12} style={{ color }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-primary leading-tight">{n.title}</p>
-                            <p className="text-2xs text-muted mt-0.5 leading-relaxed">{n.body}</p>
-                            <p className="text-2xs text-muted/60 mt-1">{timeAgo(n.time)}</p>
+                            <p className="text-[11px] font-semibold leading-tight" style={{ color: "#ffffff" }}>{n.title}</p>
+                            <p className="text-[10px] mt-0.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>{n.body}</p>
+                            <p className="text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.25)" }}>{timeAgo(n.time)}</p>
                           </div>
-                          {!n.read && <div className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 mt-1.5" />}
+                          {!n.read && (
+                            <div
+                              className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5"
+                              style={{ background: "#4F6EF7" }}
+                            />
+                          )}
                         </div>
                       );
                     })}
@@ -253,26 +295,59 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
                 )}
               </div>
 
-              {/* Footer */}
-              <div className="px-4 py-2.5 border-t border-border flex items-center justify-between">
-                <button onClick={fetchNotifs} className="text-2xs text-accent hover:underline">
+              {/* Panel footer */}
+              <div
+                className="px-4 py-2.5 flex items-center justify-between"
+                style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <button
+                  onClick={fetchNotifs}
+                  className="text-[11px] transition-colors"
+                  style={{ color: "rgba(255,255,255,0.35)" }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = "#ffffff")}
+                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)")}
+                >
                   Refresh
                 </button>
-                <Link href="/settings" onClick={() => setShowNotifs(false)} className="text-2xs text-muted hover:text-primary transition-colors">
-                  Notification settings →
+                <Link
+                  href="/settings"
+                  onClick={() => setShowNotifs(false)}
+                  className="text-[11px] transition-colors"
+                  style={{ color: "rgba(255,255,255,0.35)" }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = "#ffffff")}
+                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)")}
+                >
+                  Settings →
                 </Link>
               </div>
             </div>
           )}
         </div>
 
-        <Link href="/settings" className="ml-1 flex items-center gap-2 px-2 py-1.5 rounded-xl bg-surface-2 border border-border hover:bg-surface-3 transition-all cursor-pointer">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-accent to-success flex items-center justify-center text-xs font-bold text-white shrink-0">
+        {/* User chip */}
+        <Link
+          href="/settings"
+          className="ml-1 flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors"
+          style={{ color: "rgba(255,255,255,0.55)" }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
+            (e.currentTarget as HTMLElement).style.color = "#ffffff";
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLElement).style.background = "transparent";
+            (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)";
+          }}
+        >
+          <div
+            className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-semibold shrink-0"
+            style={{ background: "rgba(255,255,255,0.1)", color: "#ffffff" }}
+          >
             {displayName.charAt(0).toUpperCase()}
           </div>
           <div className="hidden sm:block">
-            <p className="text-xs font-semibold text-primary leading-none truncate max-w-[80px]">{displayName}</p>
-            {bizName && <p className="text-2xs text-muted mt-0.5 truncate max-w-[80px]">{bizName}</p>}
+            <p className="text-[11px] font-semibold leading-none truncate max-w-[80px]" style={{ color: "#ffffff" }}>
+              {displayName}
+            </p>
           </div>
         </Link>
       </div>
