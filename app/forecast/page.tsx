@@ -51,14 +51,21 @@ export default function ForecastPage() {
   const [kpis, setKpis]         = useState({ cashStart: 0, burnRate: 0, avgCollections: 0, runwayDays: 0 });
   const [topImpact, setTopImpact] = useState<{ name: string; amount: number; days_overdue: number; priority_score?: number }[]>([]);
   const [noData, setNoData]     = useState(false);
+  const [openingCash, setOpeningCash] = useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("vantro_opening_cash") || "";
+    return "";
+  });
+  const [cashInput, setCashInput] = useState("");
+  const [showCashInput, setShowCashInput] = useState(false);
 
-  const loadForecast = useCallback(async (days: 30 | 60 | 90) => {
+  const loadForecast = useCallback(async (days: 30 | 60 | 90, cash?: string) => {
     const user = getUser();
     if (!user?.id) return;
+    const currentCash = cash !== undefined ? cash : openingCash;
     setLoading(true);
     try {
       const [forecastRes, invoicesRes] = await Promise.allSettled([
-        api.forecast(user.id, { days }),
+        api.forecast(user.id, { days, current_cash: Number(currentCash) || 0 }),
         api.invoices.list(user.id),
       ]);
 
@@ -117,11 +124,20 @@ export default function ForecastPage() {
       setNoData(true);
     }
     setLoading(false);
-  }, []);
+  }, [openingCash]);
 
   useEffect(() => { loadForecast(range); }, [range, loadForecast]);
 
   const isRunwayDanger = kpis.runwayDays > 0 && kpis.runwayDays < 15;
+
+  const saveCash = () => {
+    const val = cashInput.trim();
+    localStorage.setItem("vantro_opening_cash", val);
+    setOpeningCash(val);
+    setShowCashInput(false);
+    setCashInput("");
+    loadForecast(range, val);
+  };
 
   return (
     <DashboardLayout pageTitle="Cash Flow Forecast">
@@ -131,7 +147,7 @@ export default function ForecastPage() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
             <h2 className="text-2xl font-black text-primary tracking-tight">Cash Flow Forecast</h2>
-            <p className="text-sm text-secondary mt-0.5">3-scenario projection based on your real collection history</p>
+            <p className="text-sm text-secondary mt-0.5">3-scenario projection based on your real purchases &amp; collections</p>
           </div>
           <div className="flex gap-1 p-1 bg-surface-2 border border-border rounded-xl">
             {([30, 60, 90] as const).map(r => (
@@ -153,6 +169,39 @@ export default function ForecastPage() {
           </Alert>
         )}
 
+        {/* Opening Cash input prompt */}
+        {!loading && !openingCash && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
+            style={{ background: "rgba(0,102,255,0.08)", border: "1px solid rgba(0,102,255,0.2)" }}>
+            <FiDollarSign size={15} style={{ color: "#0066FF", flexShrink: 0 }} />
+            <p className="text-sm flex-1" style={{ color: "rgba(255,255,255,0.7)" }}>
+              Set your current cash balance to get an accurate forecast
+            </p>
+            {showCashInput ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>₹</span>
+                <input
+                  type="number"
+                  value={cashInput}
+                  onChange={e => setCashInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && saveCash()}
+                  placeholder="e.g. 50000"
+                  autoFocus
+                  className="w-28 px-2 py-1 text-sm rounded-lg outline-none"
+                  style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}
+                />
+                <button onClick={saveCash}
+                  className="px-3 py-1 rounded-lg text-xs font-semibold"
+                  style={{ background: "#0066FF", color: "#fff" }}>Save</button>
+              </div>
+            ) : (
+              <button onClick={() => setShowCashInput(true)}
+                className="px-3 py-1 rounded-lg text-xs font-semibold"
+                style={{ background: "#0066FF", color: "#fff" }}>Set Cash</button>
+            )}
+          </div>
+        )}
+
         {/* KPI row */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -161,12 +210,14 @@ export default function ForecastPage() {
         ) : !noData ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 stagger-children">
             {[
-              { label: "Opening Cash",         value: fmt(kpis.cashStart),      sub: "as of today",            icon: FiDollarSign,    color: "#0066FF" },
-              { label: "Daily Burn Rate",       value: fmt(kpis.burnRate),       sub: "last 30d average",       icon: FiTrendingDown,  color: "#F5424D" },
-              { label: "Avg Daily Collections", value: fmt(kpis.avgCollections), sub: "based on history",       icon: FiDollarSign,    color: "#10D98A" },
-              { label: "Cash Runway",           value: kpis.runwayDays > 0 ? `${kpis.runwayDays}d` : "—", sub: "pessimistic case", icon: FiAlertTriangle, color: kpis.runwayDays < 15 ? "#F5424D" : "#F5A524" },
-            ].map(({ label, value, sub, icon: Icon, color }) => (
-              <div key={label} className="card-metric p-5">
+              { label: "Opening Cash",         value: openingCash ? fmt(kpis.cashStart) : "Set →", sub: openingCash ? "tap to update" : "not set yet", icon: FiDollarSign,    color: "#0066FF", clickable: true },
+              { label: "Daily Burn Rate",       value: fmt(kpis.burnRate),       sub: "from your purchases",    icon: FiTrendingDown,  color: "#F5424D", clickable: false },
+              { label: "Avg Daily Collections", value: fmt(kpis.avgCollections), sub: "based on history",       icon: FiDollarSign,    color: "#10D98A", clickable: false },
+              { label: "Cash Runway",           value: kpis.runwayDays > 0 ? `${kpis.runwayDays}d` : "—", sub: "pessimistic case", icon: FiAlertTriangle, color: kpis.runwayDays < 15 ? "#F5424D" : "#F5A524", clickable: false },
+            ].map(({ label, value, sub, icon: Icon, color, clickable }) => (
+              <div key={label} className="card-metric p-5"
+                onClick={() => clickable && setShowCashInput(true)}
+                style={{ cursor: clickable ? "pointer" : "default" }}>
                 <div className="flex items-start justify-between mb-3">
                   <p className="section-label">{label}</p>
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
