@@ -107,6 +107,7 @@ export default function SalesPage() {
     streamRef.current = null;
     setShowCamera(false);
     setCameraReady(false);
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch {}
   }, []);
 
   useEffect(() => () => { streamRef.current?.getTracks().forEach(t => t.stop()); }, []);
@@ -204,6 +205,12 @@ export default function SalesPage() {
         video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
       streamRef.current = stream;
+      // Request fullscreen to hide browser chrome
+      try {
+        const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+      } catch { /* fullscreen denied — continue without it */ }
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -332,7 +339,12 @@ export default function SalesPage() {
 
         {/* ══════════ CAMERA MODAL — FULLSCREEN ══════════ */}
         {showCamera && (
-          <div className="fixed inset-0 z-[60] bg-black">
+          <div style={{
+            position: "fixed", top: 0, left: 0,
+            width: "100vw", height: "100dvh",
+            zIndex: 99999, background: "#000",
+            minHeight: "-webkit-fill-available",
+          }}>
             {/* Video fills entire screen */}
             <video ref={videoRef} autoPlay playsInline muted
               className="absolute inset-0 w-full h-full object-cover" />

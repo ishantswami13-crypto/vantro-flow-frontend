@@ -95,12 +95,13 @@ export default function PurchasesPage() {
   };
   const [form, setForm] = useState(emptyForm);
 
-  // Stop camera stream + cleanup
+  // Stop camera stream + cleanup + exit fullscreen
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach(t => t.stop());
     streamRef.current = null;
     setShowCamera(false);
     setCameraReady(false);
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch {}
   }, []);
 
   useEffect(() => () => { streamRef.current?.getTracks().forEach(t => t.stop()); }, []);
@@ -188,7 +189,12 @@ export default function PurchasesPage() {
         video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
       streamRef.current = stream;
-      // slight delay so the modal renders first
+      // Request fullscreen to hide browser chrome (address bar, nav bar)
+      try {
+        const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+      } catch { /* fullscreen denied — continue without it */ }
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -305,7 +311,13 @@ export default function PurchasesPage() {
 
       {/* ══════════ CAMERA MODAL — FULLSCREEN ══════════ */}
       {showCamera && (
-        <div className="fixed inset-0 z-[60] bg-black">
+        <div style={{
+          position: "fixed", top: 0, left: 0,
+          width: "100vw", height: "100dvh",
+          zIndex: 99999, background: "#000",
+          // iOS Safari fallback
+          minHeight: "-webkit-fill-available",
+        }}>
           {/* Video fills entire screen */}
           <video
             ref={videoRef}
