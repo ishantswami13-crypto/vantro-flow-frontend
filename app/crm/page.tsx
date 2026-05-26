@@ -31,6 +31,9 @@ interface Prospect {
   amount_stuck?: number;
   location?: string;
   notes?: string;
+  source_type?: string;
+  source_label?: string;
+  invoices_count?: number;
 }
 
 const EMPTY_FORM = { name: "", phone: "", business_type: "", location: "", amount_stuck: "", status: "lead" as Status, notes: "" };
@@ -67,6 +70,7 @@ export default function CRMPage() {
   };
 
   const openEdit = (p: Prospect) => {
+    if (p.source_type === "customer") return;
     setEditId(p.id);
     setForm({
       name:         p.name || "",
@@ -105,6 +109,7 @@ export default function CRMPage() {
   };
 
   const updateStatus = async (p: Prospect, newStatus: Status) => {
+    if (p.source_type === "customer") return;
     try {
       await api.prospects.update(p.id, { status: newStatus });
       setProspects(prev => prev.map(x => x.id === p.id ? { ...x, status: newStatus } : x));
@@ -199,6 +204,7 @@ export default function CRMPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {filtered.map((p, i) => {
               const cfg = STATUS_CONFIG[p.status] || STATUS_CONFIG.lead;
+              const autoCustomer = p.source_type === "customer";
               return (
                 <div key={p.id} className="card-premium p-4 hover:border-border-2 transition-all animate-row-in" style={{ animationDelay: `${i * 40}ms` }}>
                   <div className="flex items-start justify-between mb-3">
@@ -215,18 +221,26 @@ export default function CRMPage() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Badge variant={cfg.variant}>{cfg.label}</Badge>
-                      <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-surface-2 transition-all">
-                        <FiEdit2 size={12} />
-                      </button>
+                      {autoCustomer && <Badge variant="accent">Auto</Badge>}
+                      {!autoCustomer && (
+                        <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-surface-2 transition-all">
+                          <FiEdit2 size={12} />
+                        </button>
+                      )}
                     </div>
                   </div>
 
                   {p.amount_stuck != null && (
                     <div className="mb-3">
-                      <p className="section-label mb-0.5">Pipeline Value</p>
+                      <p className="section-label mb-0.5">{autoCustomer ? "Outstanding" : "Pipeline Value"}</p>
                       <p className="text-sm font-bold text-warning">
                         {p.amount_stuck >= 100000 ? `₹${(p.amount_stuck/100000).toFixed(1)}L` : `₹${p.amount_stuck.toLocaleString("en-IN")}`}
                       </p>
+                      {autoCustomer && (
+                        <p className="text-2xs text-muted mt-1">
+                          {(p.invoices_count || 0).toLocaleString("en-IN")} invoice/s from Sales and Khata
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -234,19 +248,24 @@ export default function CRMPage() {
                     <p className="text-xs text-muted bg-surface-2 rounded-lg px-3 py-2 mb-3">{(p as any).notes}</p>
                   )}
 
-                  {/* Quick status updater */}
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {(["lead","contacted","trial","customer","lost"] as Status[]).map(s => (
-                      <button key={s} onClick={() => updateStatus(p, s)}
-                        className={["px-2 py-1 rounded-lg text-2xs font-semibold capitalize transition-all border",
-                          p.status === s
-                            ? "bg-white text-black border-accent"
-                            : "text-muted border-border hover:text-primary hover:border-border-2",
-                        ].join(" ")}>
-                        {s}
-                      </button>
-                    ))}
-                  </div>
+                  {autoCustomer ? (
+                    <p className="text-2xs text-muted bg-surface-2 rounded-lg px-3 py-2 mb-3">
+                      Managed automatically from Sales, Collections and Khata.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {(["lead","contacted","trial","customer","lost"] as Status[]).map(s => (
+                        <button key={s} onClick={() => updateStatus(p, s)}
+                          className={["px-2 py-1 rounded-lg text-2xs font-semibold capitalize transition-all border",
+                            p.status === s
+                              ? "bg-white text-black border-accent"
+                              : "text-muted border-border hover:text-primary hover:border-border-2",
+                          ].join(" ")}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="flex gap-2">
                     {p.phone && (

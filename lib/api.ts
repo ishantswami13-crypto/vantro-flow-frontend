@@ -287,9 +287,11 @@ export interface BusinessProfile {
 
 export interface Metrics {
   total_outstanding: number;
+  total_payable?: number;
   total_paid: number;
   pending_invoices: number;
   total_customers: number;
+  total_suppliers?: number;
   calls_made: number;
   avg_recovery_rate: number;
 }

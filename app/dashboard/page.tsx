@@ -197,7 +197,13 @@ export default function DashboardPage() {
     ]).then(([billsD, khataD, purchasesD]) => {
       const unpaidBills = (billsD.bills || []).filter((b: any) => b.status !== "paid");
       const khataReceivable = (khataD.customers || []).reduce((s: number, c: any) => s + (c.balance > 0 ? c.balance : 0), 0);
-      const purchasesDue = (purchasesD.purchases || []).filter((p: any) => p.status !== "paid").reduce((s: number, p: any) => s + (p.total_amount - p.paid_amount), 0);
+      const purchasesDue = (purchasesD.purchases || [])
+        .filter((p: any) => p.status !== "paid")
+        .reduce((s: number, p: any) => {
+          const amount = Number(p.amount ?? p.total_amount ?? 0);
+          const paid = Number(p.paid_amount ?? 0);
+          return s + Math.max(amount - paid, 0);
+        }, 0);
       setBizOverview({
         unpaidBills: unpaidBills.length,
         unpaidBillsAmt: unpaidBills.reduce((s: number, b: any) => s + Number(b.total), 0),
@@ -229,7 +235,7 @@ export default function DashboardPage() {
     { label: "Collection Rate",        value: `${metrics.avg_recovery_rate}%`, sub: "this period",  icon: FiPercent,      accent: "#10D98A", glow: "rgba(16,217,138,0.12)", pct: Number(metrics.avg_recovery_rate) },
     { label: "Pending Invoices",       value: String(metrics.pending_invoices), sub: "awaiting payment", icon: FiAlertTriangle,accent: "#F5424D", glow: "rgba(245,66,77,0.12)",   pct: 45 },
     { label: "Amount Collected",       value: `₹${(metrics.total_paid/100000).toFixed(1)}L`,  sub: "total recovered",icon: FiTarget,      accent: "#10D98A", glow: "rgba(16,217,138,0.12)", pct: 82 },
-    { label: "Calls Made",             value: String(metrics.calls_made),  sub: "total logged", icon: FiPhone,        accent: "#4F6EF7", glow: "rgba(79,110,247,0.12)",  pct: 60 },
+    { label: "Supplier Payables",      value: `₹${((metrics.total_payable || 0)/100000).toFixed(1)}L`, sub: `${metrics.total_suppliers || 0} suppliers`, icon: FiPackage, accent: "#F5A524", glow: "rgba(245,165,36,0.12)", pct: 45 },
   ] : [];
 
   return (
