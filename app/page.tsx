@@ -90,7 +90,7 @@ export default function LandingPage() {
 
       {/* ═══════════════════════ NAV ═══════════════════════════ */}
       <nav className="fixed top-0 inset-x-0 z-50"
-        style={{ background: "rgba(13,15,20,0.82)", backdropFilter: "blur(24px) saturate(180%)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        style={{ background: "rgba(8,8,8,0.85)", backdropFilter: "blur(24px) saturate(180%)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[60px] flex items-center justify-between">
 
           <div className="flex items-center gap-2.5">
@@ -118,7 +118,7 @@ export default function LandingPage() {
         </div>
 
         {mobileOpen && (
-          <div className="md:hidden border-t border-white/5 px-4 py-4 space-y-1" style={{ background: "rgba(13,15,20,0.98)" }}>
+          <div className="md:hidden border-t border-white/5 px-4 py-4 space-y-1" style={{ background: "rgba(8,8,8,0.98)" }}>
             {[["#features","Features"],["#how-it-works","How it Works"],["#pricing","Pricing"],["#faq","FAQ"]].map(([href, label]) => (
               <a key={href} href={href} onClick={() => setMobileOpen(false)}
                 className="block px-3 py-3 rounded-xl text-sm font-medium text-secondary hover:text-primary hover:bg-surface-2 transition-colors">{label}</a>
@@ -220,7 +220,7 @@ export default function LandingPage() {
           <div className="animate-marquee">
             {[...INTEGRATIONS, ...INTEGRATIONS, ...INTEGRATIONS].map((name, i) => (
               <div key={i} className="mx-4 px-4 py-2 rounded-xl border text-sm font-semibold text-secondary shrink-0 whitespace-nowrap"
-                style={{ background: "#1A1F2E", borderColor: "rgba(255,255,255,0.07)" }}>
+                style={{ background: "#111111", borderColor: "rgba(255,255,255,0.07)" }}>
                 {name}
               </div>
             ))}
@@ -229,7 +229,7 @@ export default function LandingPage() {
       </div>
 
       {/* ═══════════════════ STATS BAR ═══════════════════════ */}
-      <section ref={statRef} className="border-b border-border" style={{ background: "#161A24" }}>
+      <section ref={statRef} className="border-b border-border" style={{ background: "#0e0e0e" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
             {[
@@ -265,7 +265,7 @@ export default function LandingPage() {
               style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.08) 70%, transparent)" }} />
 
             {HOW_IT_WORKS.map(({ step, icon: Icon, title, desc, tag }, i) => (
-              <div key={step} style={{ ...rv(stepVis, i * 100), background: "linear-gradient(145deg, #1A1F2E, #161A24)" }}
+              <div key={step} style={{ ...rv(stepVis, i * 100), background: "linear-gradient(145deg, #141414, #0e0e0e)" }}
                 className="relative rounded-2xl border border-border p-7 flex flex-col group hover:border-accent/30 transition-all duration-300">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all group-hover:scale-110 duration-300"
@@ -287,7 +287,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════ WHAT VANTRO AUTOMATES ══════════════════ */}
-      <section className="py-20 border-b border-border" style={{ background: "#0D0F14" }}>
+      <section className="py-20 border-b border-border" style={{ background: "#080808" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">Automation Modules</span>
@@ -345,7 +345,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════ FEATURES ════════════════════════ */}
-      <section id="features" className="py-24 border-b border-border" style={{ background: "#161A24" }}>
+      <section id="features" className="py-24 border-b border-border" style={{ background: "#0e0e0e" }}>
         <div ref={featRef} className="max-w-7xl mx-auto px-4 sm:px-6">
           <div style={rv(featVis)} className="text-center mb-16">
             <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">Platform</span>
@@ -359,7 +359,7 @@ export default function LandingPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map(({ icon: Icon, title, desc, stat, statLabel, accent }, i) => (
-              <div key={title} style={{ ...rv(featVis, i * 60), background: "#0D0F14" }}
+              <div key={title} style={{ ...rv(featVis, i * 60), background: "#080808" }}
                 className="group relative rounded-2xl border border-border p-6 hover:border-white/15 transition-all duration-300 overflow-hidden cursor-default">
                 {/* Hover glow */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl"
@@ -394,7 +394,7 @@ export default function LandingPage() {
 
           <div className="grid sm:grid-cols-3 gap-5">
             {SOCIAL_PROOF.map(({ name, co, quote, avatar, result }, i) => (
-              <div key={name} style={{ ...rv(testVis, i * 100), background: "linear-gradient(145deg, #1A1F2E, #161A24)" }}
+              <div key={name} style={{ ...rv(testVis, i * 100), background: "linear-gradient(145deg, #141414, #0e0e0e)" }}
                 className="rounded-2xl border border-border p-7 flex flex-col hover:border-white/15 transition-all duration-300">
                 {/* Result badge */}
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold mb-5 self-start"
@@ -429,7 +429,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════ PRICING ═════════════════════════ */}
-      <section id="pricing" className="py-24 border-b border-border" style={{ background: "#161A24" }}>
+      <section id="pricing" className="py-24 border-b border-border" style={{ background: "#0e0e0e" }}>
         <div ref={planRef} className="max-w-7xl mx-auto px-4 sm:px-6">
           <div style={rv(planVis)} className="text-center mb-16">
             <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">Pricing</span>
@@ -442,7 +442,7 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-3 gap-5 max-w-5xl mx-auto">
 
             {/* Free */}
-            <div style={{ ...rv(planVis, 0), background: "#0D0F14" }}
+            <div style={{ ...rv(planVis, 0), background: "#080808" }}
               className="rounded-2xl border border-border p-7 flex flex-col hover:border-white/15 transition-all duration-300">
               <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-muted mb-4">Free</p>
               <div className="mb-1">
@@ -498,7 +498,7 @@ export default function LandingPage() {
             </div>
 
             {/* Success */}
-            <div style={{ ...rv(planVis, 160), background: "linear-gradient(145deg, #1A1F2E, #161A24)", borderColor: "rgba(16,217,138,0.2)" }}
+            <div style={{ ...rv(planVis, 160), background: "linear-gradient(145deg, #141414, #0e0e0e)", borderColor: "rgba(16,217,138,0.2)" }}
               className="rounded-2xl border p-7 flex flex-col hover:border-success/30 transition-all duration-300">
               <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-muted mb-4">Success</p>
               <div className="mb-1">
@@ -543,7 +543,7 @@ export default function LandingPage() {
           </div>
           <div className="space-y-2">
             {FAQS.map(({ q, a }, i) => (
-              <div key={i} style={{ ...rv(faqVis, i * 50), background: "#161A24" }}
+              <div key={i} style={{ ...rv(faqVis, i * 50), background: "#0e0e0e" }}
                 className="rounded-2xl border border-border overflow-hidden hover:border-white/12 transition-all">
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="w-full flex items-center justify-between px-6 py-4 text-left gap-4 hover:bg-white/[0.02] transition-colors">
@@ -562,7 +562,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═════════════════ FINAL CTA ═════════════════════════ */}
-      <section className="py-28 relative overflow-hidden" style={{ background: "#161A24" }}>
+      <section className="py-28 relative overflow-hidden" style={{ background: "#0e0e0e" }}>
         <div className="absolute inset-0 pointer-events-none"
           style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(79,110,247,0.06) 0%, transparent 60%)" }} />
 
@@ -599,7 +599,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════ FOOTER ══════════════════════════ */}
-      <footer className="border-t border-border" style={{ background: "#0D0F14" }}>
+      <footer className="border-t border-border" style={{ background: "#080808" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
           <div className="grid sm:grid-cols-4 gap-10 mb-10">
             <div className="sm:col-span-2">
