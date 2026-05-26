@@ -375,6 +375,7 @@ export default function SalesPage() {
         body: JSON.stringify({ image: base64, mimeType }),
       });
       const d = await r.json();
+      console.log('[SCAN DEBUG]', { success: d.success, keys: Object.keys(d.data || {}), _debug: d._debug, error: d.error, details: d.details });
       if (d.success && d.data) {
         const ex = d.data;
         const items: SaleItem[] = ex.items || [];
