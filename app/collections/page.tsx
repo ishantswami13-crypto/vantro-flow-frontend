@@ -447,7 +447,7 @@ export default function CollectionsPage() {
     }
   };
 
-  const tableData = liveData ?? DATA;
+  const tableData = liveData ?? [];
   const industries = useMemo(() => ["all", ...Array.from(new Set(tableData.map((c) => c.industry)))], [tableData]);
   const rows = useMemo(() => {
     let r = tableData;
@@ -839,7 +839,7 @@ export default function CollectionsPage() {
 
         {/* ── Stats strip ──────────────────────────────────────── */}
         {(() => {
-          const data = liveData ?? DATA;
+          const data = liveData ?? [];
           const totalOut = data.reduce((s, c) => s + c.outstanding, 0);
           const overdueCount = data.filter(c => c.daysOverdue > 0).length;
           const criticalCount = data.filter(c => c.daysOverdue >= 60).length;

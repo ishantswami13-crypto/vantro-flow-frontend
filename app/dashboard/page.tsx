@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Alert } from "@/components/ui/Alert";
-import { Badge, ScoreBadge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import Link from "next/link";
 import {
   FiDollarSign, FiClock, FiPercent, FiAlertTriangle, FiTrendingDown,
@@ -11,9 +10,6 @@ import {
   FiList, FiTrendingUp, FiSettings, FiPhone, FiShield, FiZap,
   FiFileText, FiBook, FiPackage, FiUsers,
 } from "react-icons/fi";
-import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine,
-} from "recharts";
 import { api, getUser, type Metrics, type Invoice } from "@/lib/api";
 import QuickSale from "@/components/QuickSale";
 import WelcomeGuide from "@/components/WelcomeGuide";
@@ -39,11 +35,6 @@ const CUSTOMERS = [
   { id: 5, name: "Verma Chemicals Ltd",   outstanding: 195000,  days: 18, score: 45, lastPayment: "22 Feb", contact: "9432109876" },
 ];
 
-const SPARKLINE = [
-  { d: "1 Apr", v: 3800000 }, { d: "8 Apr",  v: 3600000 }, { d: "15 Apr", v: 3900000 },
-  { d: "22 Apr", v: 3500000 },{ d: "1 May",  v: 3750000 }, { d: "8 May",  v: 4200000 },
-  { d: "15 May", v: 4520000 },
-];
 
 function fmtAmt(n: number) {
   return n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${(n / 1000).toFixed(0)}K`;
@@ -58,15 +49,6 @@ const METRICS = [
   { label: "Top Collection Prob.",   value: "82%",     sub: "Mehta Fabrics",     icon: FiTarget,       accent: "#10D98A", glow: "rgba(16,217,138,0.12)",   pct: 82 },
 ];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-surface-2 border border-border rounded-lg px-3 py-2.5 text-xs shadow-card">
-      <p className="text-secondary mb-1">{label}</p>
-      <p className="metric-value text-accent">{fmtAmt(payload[0].value)}</p>
-    </div>
-  );
-};
 
 // ─── Psychology helpers ───────────────────────────────────────────────────────
 function getStreak(): number {
@@ -118,7 +100,6 @@ const RISK_CUSTOMERS = [
 ];
 
 export default function DashboardPage() {
-  const cashRunway = 12;
   const [showQuickSale, setShowQuickSale] = useState(false);
   const [metrics, setMetrics]   = useState<Metrics | null>(null);
   const [promises, setPromises] = useState<{ customer_name: string; promised_payment_date: string; amount: number }[]>([]);
@@ -249,13 +230,13 @@ export default function DashboardPage() {
     { label: "Pending Invoices",       value: String(metrics.pending_invoices), sub: "awaiting payment", icon: FiAlertTriangle,accent: "#F5424D", glow: "rgba(245,66,77,0.12)",   pct: 45 },
     { label: "Amount Collected",       value: `₹${(metrics.total_paid/100000).toFixed(1)}L`,  sub: "total recovered",icon: FiTarget,      accent: "#10D98A", glow: "rgba(16,217,138,0.12)", pct: 82 },
     { label: "Calls Made",             value: String(metrics.calls_made),  sub: "total logged", icon: FiPhone,        accent: "#4F6EF7", glow: "rgba(79,110,247,0.12)",  pct: 60 },
-  ] : METRICS;
+  ] : [];
 
   return (
     <DashboardLayout pageTitle="Dashboard">
       {showQuickSale && <QuickSale onClose={() => setShowQuickSale(false)} onSaved={() => { /* could refresh today P&L */ }} />}
       {/* Floating Quick Sale button — hide when critical risk banner is visible */}
-      {!(showRiskBanner && (showLiveRisk || !metrics)) && (
+      {!(showRiskBanner && showLiveRisk) && (
         <button onClick={() => setShowQuickSale(true)}
           className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-40 hidden lg:flex items-center gap-2 px-4 py-3 rounded-2xl text-white font-bold text-sm transition-all hover:scale-105 active:scale-95"
           style={{ background: "linear-gradient(135deg, #FF6B35 0%, #F55A22 100%)", boxShadow: "0 4px 20px rgba(255,107,53,0.5)" }}>
@@ -309,16 +290,6 @@ export default function DashboardPage() {
           );
         })()}
 
-        {/* Alert banner */}
-        {cashRunway < 15 && (
-          <Alert variant="danger" title="Critical: Cash Runway 12 Days">
-            At current burn, cash runs out in 12 days under the pessimistic scenario.
-            Collections of ₹8L+ this week are needed to stabilize.{" "}
-            <Link href="/collections" className="font-bold underline underline-offset-2 hover:no-underline">
-              See priority list
-            </Link>
-          </Alert>
-        )}
 
         {/* Free plan — loss aversion nudge tied to real pending count */}
         {userPlan === "free" && (
@@ -364,11 +335,9 @@ export default function DashboardPage() {
         )}
 
         {/* ── LOSS AVERSION BANNER (Kahneman — loss 2x stronger than gain) ── */}
-        {showRiskBanner && (showLiveRisk || !metrics) && (() => {
-          const riskList = showLiveRisk
-            ? liveRiskCustomers.map(c => ({ name: c.name, amount: c.outstanding, daysLeft: 90 - c.days }))
-            : RISK_CUSTOMERS;
-          const total = showLiveRisk ? riskTotal : RISK_CUSTOMERS.reduce((s, c) => s + c.amount, 0);
+        {showRiskBanner && showLiveRisk && (() => {
+          const riskList = liveRiskCustomers.map(c => ({ name: c.name, amount: c.outstanding, daysLeft: 90 - c.days }));
+          const total = riskTotal;
           return (
             <div className="rounded-xl border-2 p-4 relative overflow-hidden"
               style={{ background: "rgba(245,66,77,0.08)", borderColor: "#F5424D" }}>
@@ -678,29 +647,12 @@ export default function DashboardPage() {
                 {metrics ? fmtAmt(metrics.total_outstanding) : "₹—"}
               </span>
             </div>
-            <ResponsiveContainer width="100%" height={110}>
-              <AreaChart data={SPARKLINE} margin={{ top: 2, right: 2, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor="#4F6EF7" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#4F6EF7" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="d" tick={{ fill: "#556070", fontSize: 9 }} axisLine={false} tickLine={false} />
-                <YAxis hide />
-                <Tooltip content={<CustomTooltip />} />
-                {/* Goal line — target ₹30L outstanding */}
-                <ReferenceLine
-                  y={3000000}
-                  stroke="#10D98A"
-                  strokeDasharray="5 4"
-                  strokeWidth={1.5}
-                  label={{ value: "Goal", position: "insideTopRight", fill: "#10D98A", fontSize: 9, fontWeight: 700, dy: -4 }}
-                />
-                <Area type="monotone" dataKey="v" stroke="#4F6EF7" strokeWidth={2} fill="url(#areaGrad)" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div className="flex items-center justify-center h-[110px] rounded-xl"
+              style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.07)" }}>
+              <p className="text-xs text-muted text-center">
+                Trend will appear after invoices are added
+              </p>
+            </div>
           </div>
 
           {/* Quick KPIs — live data */}
@@ -757,7 +709,14 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {(liveCustomers.length > 0 ? liveCustomers : CUSTOMERS).map((c, i) => (
+                {liveCustomers.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted">
+                      No outstanding invoices yet. <Link href="/collections" className="text-accent underline">Add your first invoice →</Link>
+                    </td>
+                  </tr>
+                )}
+                {liveCustomers.map((c, i) => (
                   <tr key={c.id} style={{ animationDelay: `${i * 40}ms` }} className="animate-row-in">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
