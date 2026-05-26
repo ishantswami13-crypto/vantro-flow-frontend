@@ -68,9 +68,9 @@ export default function LoginPage() {
   };
 
   const SIDE_STATS = [
-    { v: "₹45Cr+",    l: "Receivables managed" },
-    { v: "18 days",   l: "Avg DSO reduction" },
-    { v: "200+ MSMEs", l: "Collecting smarter" },
+    { v: "₹45Cr+",    l: "Automated & collected" },
+    { v: "6 hrs/wk",  l: "Saved per business" },
+    { v: "200+ MSMEs", l: "On autopilot" },
   ];
 
   return (
@@ -91,13 +91,16 @@ export default function LoginPage() {
 
         {/* Headline */}
         <div className="relative z-10">
+          <p className="text-xs font-semibold mb-3" style={{ color: "#10D98A", fontStyle: "italic" }}>
+            "Your business, on autopilot."
+          </p>
           <h2 className="text-3xl font-black text-primary tracking-tighter leading-tight mb-4">
             Welcome back.<br />
-            <span style={{ color: "#10D98A" }}>Your collections</span><br />
-            are waiting.
+            <span style={{ color: "#10D98A" }}>Vantro's been</span><br />
+            working for you.
           </h2>
           <p className="text-sm text-secondary leading-relaxed mb-8">
-            Log in to see your outstanding invoices, AI priority list, and daily collections dashboard.
+            Your reminders went out. Payments came in. Log in to see what Vantro automated while you were away.
           </p>
           <div className="space-y-2.5">
             {SIDE_STATS.map(({ v, l }) => (

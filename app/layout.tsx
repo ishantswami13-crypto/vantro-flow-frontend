@@ -8,16 +8,17 @@ const APP_URL = "https://vantro-flow-frontend.vercel.app";
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Vantro — AI-powered Business OS for Indian MSMEs",
+    default: "Vantro — Your Business, On Autopilot",
     template: "%s | Vantro",
   },
   description:
-    "Stop chasing payments. Vantro is an AI-powered Collections OS for Indian MSMEs — WhatsApp follow-ups in Hinglish, UPI payment links, cash flow forecasting, and Tally sync. Get paid faster.",
+    "Vantro automates your business — collections, invoicing, WhatsApp follow-ups, payment links, and cash flow — so Indian MSME founders can focus on growing, not managing. Set up in 5 minutes.",
   keywords: [
-    "collections software India", "receivables management India", "MSME collections",
-    "WhatsApp payment reminder", "Hinglish collection", "Tally ERP collections",
-    "Indian business software", "B2B collections India", "invoice follow-up software",
-    "cash flow forecast India", "distributor software India", "vyapar alternative",
+    "business automation India", "MSME automation software", "collections automation India",
+    "WhatsApp business automation", "invoice automation India", "Hinglish WhatsApp reminders",
+    "Tally ERP sync", "cash flow automation India", "Indian business OS",
+    "autopilot business software", "distributor automation India", "vyapar alternative",
+    "receivables management India", "B2B collections India",
   ],
   authors: [{ name: "Vantro Technologies", url: APP_URL }],
   creator: "Vantro Technologies",
@@ -28,9 +29,9 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: APP_URL,
     siteName: "Vantro",
-    title: "Vantro — Stop Chasing Payments. Start Collecting.",
+    title: "Vantro — Your Business, On Autopilot",
     description:
-      "AI-powered Collections OS for Indian MSMEs. WhatsApp Hinglish reminders, UPI payment links, cash flow forecasting. 200+ MSMEs trust Vantro.",
+      "Vantro automates collections, invoicing, WhatsApp reminders, and cash flow for Indian MSMEs. Set up once. Runs forever. 200+ businesses trust Vantro.",
     images: [
       {
         url: "/opengraph-image",
@@ -43,9 +44,9 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "Vantro — Stop Chasing Payments. Start Collecting.",
+    title: "Vantro — Your Business, On Autopilot",
     description:
-      "AI-powered Collections OS for Indian MSMEs. WhatsApp Hinglish reminders, UPI payment links, cash flow forecasting.",
+      "Vantro automates collections, invoicing, WhatsApp reminders, and cash flow for Indian MSMEs. Set up once. Runs forever.",
     images: ["/opengraph-image"],
     creator: "@vantro_in",
   },
@@ -104,7 +105,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 priceValidUntil: "2026-12-31",
               },
               description:
-                "AI-powered collections and cash flow OS for Indian MSMEs. WhatsApp follow-ups, payment links, Tally sync.",
+                "Business automation OS for Indian MSMEs. Automate collections, invoicing, WhatsApp reminders, payments, and cash flow. Your business, on autopilot.",
               url: APP_URL,
               inLanguage: ["en", "hi"],
               audience: {

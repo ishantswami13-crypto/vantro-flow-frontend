@@ -34,18 +34,18 @@ const rv = (vis: boolean, delay = 0): React.CSSProperties => ({
 
 // ── Static data ────────────────────────────────────────────────
 const FEATURES = [
-  { icon: FiTarget,        title: "AI Priority Engine",           desc: "Every debtor scored by payment probability, behavior & history. Highest-impact call is always first.",              stat: "3.2×", statLabel: "collection lift",  accent: "#4F6EF7" },
-  { icon: FiBarChart2,     title: "Live Receivables Dashboard",    desc: "Real-time DSO, collection rate, cash runway. Know your exact cash position every morning — not every quarter.",   stat: "18d",  statLabel: "avg DSO drop",   accent: "#10D98A" },
-  { icon: FiMessageSquare, title: "Hinglish WhatsApp Automation",  desc: "AI-crafted messages in Hinglish sent automatically. Customers respond because it feels personal, not corporate.", stat: "73%",  statLabel: "open rate",      accent: "#FF6B35" },
-  { icon: FiTrendingUp,    title: "90-Day Cash Forecast",          desc: "Three scenarios: pessimistic, expected, optimistic. Never get surprised by a cash crunch again.",                 stat: "90d",  statLabel: "visibility",     accent: "#9B6DFF" },
-  { icon: FiShield,        title: "Tally ERP Sync",               desc: "One-click sync with Tally ERP 9 and TallyPrime. Customers, invoices, ledger — imported automatically.",          stat: "<2m",  statLabel: "setup time",    accent: "#F5A524" },
-  { icon: FiUsers,         title: "Team Collections CRM",          desc: "Assign customers, log promises-to-pay, track follow-ups, measure team performance — all in one place.",          stat: "100%", statLabel: "audit trail",   accent: "#10D98A" },
+  { icon: FiTarget,        title: "Collections Autopilot",        desc: "AI scores every debtor by payment probability and sends the right reminder at the right time — automatically. Zero manual chasing.",  stat: "3.2×", statLabel: "collection lift", accent: "#4F6EF7" },
+  { icon: FiBarChart2,     title: "Real-Time Business Dashboard", desc: "Live DSO, cash runway, and risk alerts every morning. Know your exact cash position without opening a spreadsheet.",                  stat: "18d",  statLabel: "avg DSO drop",   accent: "#10D98A" },
+  { icon: FiMessageSquare, title: "WhatsApp Business Automation", desc: "AI-crafted Hinglish messages sent at the optimal time. Customers respond because it feels personal, not corporate.",                   stat: "73%",  statLabel: "open rate",      accent: "#FF6B35" },
+  { icon: FiTrendingUp,    title: "Cash Flow Autopilot",          desc: "90-day forecasts with three scenarios. Automated runway alerts before you hit a crunch — not after.",                                  stat: "90d",  statLabel: "visibility",     accent: "#9B6DFF" },
+  { icon: FiShield,        title: "Zero-Touch Data Sync",         desc: "Tally ERP, Excel, CSV — data flows into Vantro automatically. Set it up once. Never do manual data entry again.",                     stat: "<2m",  statLabel: "to sync Tally",  accent: "#F5A524" },
+  { icon: FiUsers,         title: "Team Workflow Automation",     desc: "Assign, follow up, log promises, track performance — all running in the background. Your team stays focused on closing.",              stat: "100%", statLabel: "audit trail",    accent: "#10D98A" },
 ];
 
 const HOW_IT_WORKS = [
-  { step: "01", icon: FiUpload,    title: "Import in 2 minutes",    desc: "Connect Tally or upload Excel. Invoices and customer data load automatically — zero manual entry.",       tag: "Tally · Excel · CSV" },
-  { step: "02", icon: FiCpu,       title: "AI scores your debtors", desc: "Model ranks who to call first, predicts who pays this week, drafts the right Hinglish message for each.", tag: "No manual work" },
-  { step: "03", icon: FiPhoneCall, title: "Cash hits your account", desc: "Send WhatsApp reminders, share UPI links, track every promise. Customer pays. Mark it done.",            tag: "WhatsApp · UPI · Calls" },
+  { step: "01", icon: FiUpload,    title: "Connect once",            desc: "Link Tally or upload Excel. Invoices, customers, and ledger load automatically — zero manual entry. Done in under 5 minutes.",  tag: "Tally · Excel · CSV" },
+  { step: "02", icon: FiCpu,       title: "AI takes over",           desc: "Every morning, Vantro scores your debtors, drafts Hinglish messages, schedules reminders, and queues payment links.",           tag: "Runs every day · No manual work" },
+  { step: "03", icon: FiPhoneCall, title: "Business runs itself",    desc: "Reminders go out. Customers pay. Cash hits your account. You check one dashboard — and get back to growing.",                  tag: "WhatsApp · UPI · Razorpay" },
 ];
 
 const SOCIAL_PROOF = [
@@ -157,29 +157,32 @@ export default function LandingPage() {
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-8"
                 style={{ background: "rgba(16,217,138,0.08)", border: "1px solid rgba(16,217,138,0.22)", color: "#10D98A" }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                Live for Indian MSMEs
+                Business Automation OS · India
               </div>
 
               <h1 className="font-black text-primary tracking-tighter leading-[1.02] mb-6"
                 style={{ fontSize: "clamp(2.75rem, 7vw, 5rem)" }}>
-                Stop Chasing<br />
+                Your Business,<br />
                 <span style={{
                   background: "linear-gradient(125deg, #E8F0FF 0%, #B0CAFF 45%, #7096FF 100%)",
                   WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
                 }}>
-                  Payments.
+                  On Autopilot.
                 </span>
               </h1>
 
-              <p className="text-lg text-secondary leading-relaxed mb-10 max-w-[500px]" style={{ fontWeight: 400 }}>
-                AI-powered Collections OS for Indian MSMEs. Know who to call, what to say, and when to follow up — automatically, in Hinglish.
+              <p className="text-lg text-secondary leading-relaxed mb-4 max-w-[500px]" style={{ fontWeight: 400 }}>
+                Vantro automates your collections, invoicing, WhatsApp follow-ups, and cash flow — so you spend your time growing your business, not managing it.
+              </p>
+              <p className="text-sm text-muted mb-10 max-w-[480px]" style={{ fontStyle: "italic" }}>
+                "Karo business. Baaki Vantro karega."
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 mb-10">
                 <Link href="/signup"
                   className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-bold transition-all"
                   style={{ background: "#fff", color: "#000", boxShadow: "0 2px 20px rgba(255,255,255,0.12), 0 1px 4px rgba(0,0,0,0.5)" }}>
-                  Start 14-Day Free Trial <FiArrowRight size={15} />
+                  Start Automating Free <FiArrowRight size={15} />
                 </Link>
                 <button
                   onClick={() => { enableDemoMode(); window.location.href = "/dashboard"; }}
@@ -190,7 +193,7 @@ export default function LandingPage() {
               </div>
 
               <div className="flex flex-wrap gap-x-6 gap-y-2.5">
-                {["No credit card required", "14 days free", "Cancel anytime", "Tally sync in 2 min"].map(t => (
+                {["No credit card required", "14 days free", "Set up once, runs forever", "Cancel anytime"].map(t => (
                   <span key={t} className="flex items-center gap-1.5 text-xs text-muted">
                     <FiCheck size={11} className="text-success shrink-0" /> {t}
                   </span>
@@ -327,8 +330,8 @@ export default function LandingPage() {
         <div ref={stepRef} className="max-w-7xl mx-auto px-4 sm:px-6">
           <div style={rv(stepVis)} className="text-center mb-16">
             <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">How it Works</span>
-            <h2 className="text-4xl sm:text-5xl font-black text-primary tracking-tighter mb-4">Up and collecting in 3 steps</h2>
-            <p className="text-secondary max-w-md mx-auto text-base leading-relaxed">No IT team. No lengthy onboarding. Rajesh Kumar from Karol Bagh did it in 8 minutes.</p>
+            <h2 className="text-4xl sm:text-5xl font-black text-primary tracking-tighter mb-4">Set up in minutes.<br className="hidden sm:block" /> Runs forever.</h2>
+            <p className="text-secondary max-w-md mx-auto text-base leading-relaxed">No IT team. No lengthy onboarding. Rajesh Kumar from Karol Bagh was fully automated in 8 minutes.</p>
           </div>
 
           <div className="grid sm:grid-cols-3 gap-5 relative">
@@ -357,16 +360,74 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ═══════════ WHAT VANTRO AUTOMATES ══════════════════ */}
+      <section className="py-20 border-b border-border" style={{ background: "#0D0F14" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">Automation Modules</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-primary tracking-tighter mb-3">
+              One platform. Everything automated.
+            </h2>
+            <p className="text-secondary text-base max-w-md mx-auto">
+              Live today — with more modules shipping every month.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+            {[
+              { label: "Collections & Dunning",    live: true  },
+              { label: "Invoice Generation",       live: true  },
+              { label: "WhatsApp Campaigns",       live: true  },
+              { label: "Payment Links (UPI/RZP)",  live: true  },
+              { label: "Cash Flow Forecasting",    live: true  },
+              { label: "Tally ERP Sync",           live: true  },
+              { label: "AI Priority Scoring",      live: true  },
+              { label: "Auto Dunning Rules",       live: true  },
+              { label: "Team Follow-up CRM",       live: true  },
+              { label: "Khata / Bank Ledger",      live: true  },
+            ].map(({ label, live }) => (
+              <div key={label}
+                className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl border transition-all"
+                style={{
+                  background: live ? "rgba(16,217,138,0.04)" : "rgba(255,255,255,0.02)",
+                  borderColor: live ? "rgba(16,217,138,0.18)" : "rgba(255,255,255,0.06)",
+                }}>
+                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: live ? "#10D98A" : "#556070" }} />
+                <span className="text-xs font-semibold" style={{ color: live ? "#E0FFF5" : "#556070" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {[
+              { label: "GST Filing Reminders",     live: false },
+              { label: "Purchase Order Automation",live: false },
+              { label: "Expense Tracking",         live: false },
+              { label: "Payroll Automation",       live: false },
+              { label: "Inventory Reorders",       live: false },
+            ].map(({ label }) => (
+              <div key={label}
+                className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl border"
+                style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)", borderStyle: "dashed" }}>
+                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "#556070" }} />
+                <span className="text-xs font-medium text-muted">{label}</span>
+                <span className="ml-auto text-[9px] font-bold text-muted/60 uppercase tracking-wide shrink-0">Soon</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ═══════════════════ FEATURES ════════════════════════ */}
       <section id="features" className="py-24 border-b border-border" style={{ background: "#161A24" }}>
         <div ref={featRef} className="max-w-7xl mx-auto px-4 sm:px-6">
           <div style={rv(featVis)} className="text-center mb-16">
             <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">Platform</span>
             <h2 className="text-4xl sm:text-5xl font-black text-primary tracking-tighter mb-4">
-              Built for the Indian<br className="hidden sm:block" /> MSME reality
+              Everything Vantro<br className="hidden sm:block" /> automates for you
             </h2>
             <p className="text-secondary max-w-lg mx-auto text-base leading-relaxed">
-              Not enterprise bloatware re-skinned for India. Built ground-up for the way Rajesh Kumar runs his business.
+              Not enterprise bloatware re-skinned for India. Built ground-up for the way Rajesh Kumar actually runs his business.
             </p>
           </div>
 
@@ -401,7 +462,7 @@ export default function LandingPage() {
         <div ref={testRef} className="max-w-7xl mx-auto px-4 sm:px-6">
           <div style={rv(testVis)} className="text-center mb-16">
             <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">Customer Stories</span>
-            <h2 className="text-4xl sm:text-5xl font-black text-primary tracking-tighter mb-3">Rajesh got paid.<br className="hidden sm:block" /> So can you.</h2>
+            <h2 className="text-4xl sm:text-5xl font-black text-primary tracking-tighter mb-3">Rajesh got his time back.<br className="hidden sm:block" /> And ₹22 lakhs.</h2>
             <p className="text-sm text-muted">Real businesses. Real numbers. No stock photos.</p>
           </div>
 
@@ -584,20 +645,20 @@ export default function LandingPage() {
             <LogoMark size={52} />
           </div>
           <h2 className="text-4xl sm:text-5xl font-black text-primary tracking-tighter mb-4">
-            Your cash is waiting.
+            Start automating<br className="hidden sm:block" /> your business today.
           </h2>
           <p className="text-base text-secondary leading-relaxed mb-3 max-w-lg mx-auto">
-            Every day you wait, your receivables age. Start collecting smarter — 14 days free, zero setup risk.
+            Every hour you spend chasing payments or entering data is an hour not spent growing. Let Vantro handle it — free for 14 days.
           </p>
           <p className="text-sm text-muted mb-10">
-            Join <span className="text-primary font-semibold">200+ MSMEs</span> across India already collecting smarter
+            Join <span className="text-primary font-semibold">200+ MSMEs</span> across India already on autopilot
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/signup"
               className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl text-base font-bold transition-all"
               style={{ background: "#fff", color: "#000", boxShadow: "0 2px 20px rgba(255,255,255,0.1)" }}>
-              Get Started Free <FiArrowRight size={17} />
+              Put My Business On Autopilot <FiArrowRight size={17} />
             </Link>
             <a href={`https://wa.me/${WA_NUMBER}?text=Hi%2C%20I%20want%20to%20see%20a%20Vantro%20demo`}
               target="_blank" rel="noopener noreferrer"
@@ -607,7 +668,7 @@ export default function LandingPage() {
               WhatsApp for Demo
             </a>
           </div>
-          <p className="mt-6 text-xs text-muted">Setup in 5 minutes. Tally sync automatic. Our team calls within 24 hours.</p>
+          <p className="mt-6 text-xs text-muted">Set up in 5 minutes. Runs automatically. Our team calls within 24 hours.</p>
         </div>
       </section>
 
@@ -620,8 +681,11 @@ export default function LandingPage() {
                 <LogoMark size={24} />
                 <span className="font-bold text-sm text-primary">Vantro</span>
               </div>
+              <p className="text-xs font-semibold mb-1.5" style={{ color: "#10D98A", fontStyle: "italic" }}>
+                "Your business, on autopilot."
+              </p>
               <p className="text-xs text-muted leading-relaxed mb-4 max-w-xs">
-                India ka Collections OS. AI-powered receivables management built for real Indian MSMEs — in Hinglish, with Tally, on WhatsApp.
+                Business Automation OS for Indian MSMEs. Collections, invoicing, WhatsApp, payments — automated so you can focus on growing.
               </p>
               <p className="text-xs text-muted">🇮🇳 Made in India · Data stays in India</p>
             </div>
