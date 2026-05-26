@@ -40,6 +40,7 @@ const NAV = [
   // ── Operations
   { href: "/bills",          label: "GST Invoices",    icon: FiFile,          badge: "NEW",  group: "ops" },
   { href: "/khata",          label: "Customer Khata",  icon: FiBook,          badge: null,   group: "ops" },
+  { href: "/sales",          label: "Sales",           icon: FiTrendingUp,    badge: null,   group: "ops" },
   { href: "/purchases",      label: "Purchases",       icon: FiPackage,       badge: null,   group: "ops" },
   { href: "/orders",         label: "Today's Orders",  icon: FiShoppingBag,   badge: "NEW",  group: "ops" },
   { href: "/attendance",     label: "Staff Attendance",icon: FiUserCheck,     badge: null,   group: "ops" },

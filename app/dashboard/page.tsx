@@ -244,7 +244,7 @@ export default function DashboardPage() {
   // ── Override static values with real data when available ─────────────────
   const liveMetrics = metrics ? [
     { label: "Total Outstanding",      value: `₹${(metrics.total_outstanding/100000).toFixed(1)}L`, sub: `${metrics.total_customers} customers`,  icon: FiDollarSign,   accent: "#4F6EF7", glow: "rgba(79,110,247,0.15)",  pct: 72 },
-    { label: "Days Sales Outstanding", value: "42",      sub: "days — target <30",   icon: FiClock,        accent: "#F5A524", glow: "rgba(245,165,36,0.12)", pct: 58 },
+    { label: "Days Sales Outstanding", value: metrics.total_customers > 0 ? "—" : "0", sub: "days — target <30",   icon: FiClock,        accent: "#F5A524", glow: "rgba(245,165,36,0.12)", pct: 0 },
     { label: "Collection Rate",        value: `${metrics.avg_recovery_rate}%`, sub: "this period",  icon: FiPercent,      accent: "#10D98A", glow: "rgba(16,217,138,0.12)", pct: Number(metrics.avg_recovery_rate) },
     { label: "Pending Invoices",       value: String(metrics.pending_invoices), sub: "awaiting payment", icon: FiAlertTriangle,accent: "#F5424D", glow: "rgba(245,66,77,0.12)",   pct: 45 },
     { label: "Amount Collected",       value: `₹${(metrics.total_paid/100000).toFixed(1)}L`,  sub: "total recovered",icon: FiTarget,      accent: "#10D98A", glow: "rgba(16,217,138,0.12)", pct: 82 },

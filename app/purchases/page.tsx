@@ -30,6 +30,12 @@ type BillItem = {
   amount?: number;
 };
 
+type ScanGst = {
+  amount: number;
+  rate: string;
+  type: string; // "IGST" | "CGST+SGST" | "GST"
+};
+
 const fmtINR = (n: number) =>
   "₹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 0 });
 const fmtDate = (d?: string) =>
@@ -73,6 +79,7 @@ export default function PurchasesPage() {
   const [scanning, setScanning]         = useState(false);
   const [scanPreview, setScanPreview]   = useState<string | null>(null);
   const [scannedItems, setScannedItems] = useState<BillItem[]>([]);
+  const [scannedGst, setScannedGst]     = useState<ScanGst | null>(null);
   const [showCamera, setShowCamera]     = useState(false);
   const [cameraReady, setCameraReady]   = useState(false);
 
@@ -166,7 +173,7 @@ export default function PurchasesPage() {
 
   const closeModal = () => {
     setShowAdd(false); setEditId(null); setForm(emptyForm);
-    setScanPreview(null); setScannedItems([]); setScanning(false);
+    setScanPreview(null); setScannedItems([]); setScannedGst(null); setScanning(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -229,11 +236,27 @@ export default function PurchasesPage() {
       if (d.success && d.data) {
         const ex        = d.data;
         const items: BillItem[] = ex.items || [];
+
+        // Detect GST type from bill (IGST = interstate, CGST+SGST = intrastate)
+        let gstInfo: ScanGst | null = null;
+        if (ex.gst_amount && ex.gst_amount > 0) {
+          const igst  = ex.igst_amount  || (ex.igst_rate  ? ex.gst_amount : 0);
+          const cgst  = ex.cgst_amount  || 0;
+          const sgst  = ex.sgst_amount  || 0;
+          const gstType = (igst > 0 || ex.igst_rate)  ? "IGST"
+                        : (cgst > 0 || sgst > 0)        ? "CGST + SGST"
+                        : "GST";
+          gstInfo = { amount: ex.gst_amount, rate: ex.gst_rate || "", type: gstType };
+        }
+        setScannedGst(gstInfo);
+
+        // Build notes with items + GST
         const itemNotes = items.length > 0
           ? items.map((it: BillItem) =>
               `${it.qty || 1}${it.unit ? " " + it.unit : ""} ${it.description}${it.price ? " @₹" + Number(it.price).toLocaleString("en-IN") : ""}`
             ).join("; ")
           : (ex.notes || "");
+        const gstNote = gstInfo ? ` | ${gstInfo.type} ${gstInfo.rate}: ₹${Number(gstInfo.amount).toLocaleString("en-IN")}` : "";
 
         setScannedItems(items);
         setForm(f => ({
@@ -243,7 +266,7 @@ export default function PurchasesPage() {
           purchase_date:  ex.purchase_date  || new Date().toISOString().split("T")[0],
           due_date:       ex.due_date       || "",
           total_amount:   ex.total_amount   ? String(ex.total_amount) : "",
-          notes:          itemNotes,
+          notes:          itemNotes + gstNote,
           paid_amount:    "0",
         }));
       }
@@ -578,9 +601,20 @@ export default function PurchasesPage() {
                         </tr>
                       ))}
                     </tbody>
-                    {/* Total row */}
+                    {/* GST + Total rows */}
                     {form.total_amount && (
                       <tfoot>
+                        {scannedGst && (
+                          <tr style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                            <td colSpan={3} className="px-3 py-2 text-xs text-muted text-right">
+                              {scannedGst.type}{scannedGst.rate ? ` @ ${scannedGst.rate}%` : ""}
+                            </td>
+                            <td />
+                            <td className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "#F5A524" }}>
+                              +{fmtINR(scannedGst.amount)}
+                            </td>
+                          </tr>
+                        )}
                         <tr style={{ borderTop: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)" }}>
                           <td colSpan={4} className="px-3 py-2 text-xs font-semibold text-muted text-right">Grand Total</td>
                           <td className="px-3 py-2 text-right text-sm font-bold text-primary">

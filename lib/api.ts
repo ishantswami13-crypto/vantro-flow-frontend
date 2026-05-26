@@ -185,6 +185,8 @@ export const api = {
 
 // ─── Auth helpers ─────────────────────────────────────────
 export function saveAuth(token: string, user: User, rememberMe = true) {
+  // Clear any leftover demo-mode flag so real accounts never see demo data
+  localStorage.removeItem('vantro_demo');
   localStorage.setItem('vantro_token', token);
   localStorage.setItem('vantro_user', JSON.stringify(user));
   // Cookie so Next.js middleware can read it (localStorage is client-only, middleware can't touch it)
