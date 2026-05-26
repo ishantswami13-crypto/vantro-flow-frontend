@@ -353,7 +353,7 @@ export default function PurchasesPage() {
       console.log('[SCAN DEBUG]', { status: r.status, success: d.success, error: d.error, details: d.details });
 
       if (r.status === 429 || d.error === 'rate_limit') {
-        setScanError("⚡ AI quota used up for today. Try again tomorrow, or fill in manually.");
+        setScanError("⚡ AI scan limit reached. Try again in a few minutes, or fill in manually.");
         setScanning(false);
         return;
       }
