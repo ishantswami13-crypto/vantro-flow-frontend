@@ -49,7 +49,7 @@ const statusConfig = {
   unpaid:  { label: "Unpaid",  color: "text-danger",     bg: "bg-danger/10",     icon: FiAlertCircle },
 };
 
-function resizeImage(file: File, maxWidth = 512): Promise<{ base64: string; mimeType: string }> {
+function resizeImage(file: File, maxWidth = 1024): Promise<{ base64: string; mimeType: string }> {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -369,7 +369,7 @@ export default function PurchasesPage() {
       }
 
       const d = await r.json();
-      console.log('[SCAN DEBUG]', { status: r.status, success: d.success, error: d.error, details: d.details });
+      console.log('[SCAN DEBUG]', { status: r.status, success: d.success, error: d.error, details: d.details, _debug: d._debug, data: d.data });
 
       if (r.status === 429 || d.error === 'rate_limit') {
         setScanError("⚡ AI scan busy. Please wait 1 minute and try again.");

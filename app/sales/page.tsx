@@ -56,7 +56,7 @@ const statusConfig = {
   unpaid:  { label: "Unpaid",  color: "text-danger",     bg: "bg-danger/10",     icon: FiAlertCircle },
 };
 
-function resizeImage(file: File, maxWidth = 512): Promise<{ base64: string; mimeType: string }> {
+function resizeImage(file: File, maxWidth = 1024): Promise<{ base64: string; mimeType: string }> {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
