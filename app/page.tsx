@@ -70,12 +70,6 @@ const FAQS = [
 
 const WA_NUMBER = "919911164055";
 
-const DEBTOR_PREVIEW = [
-  { name: "Mehta Fabrics",  amt: "₹8.4L", days: "62d overdue", score: 92, color: "#F5424D" },
-  { name: "Sharma Steel",   amt: "₹5.2L", days: "45d overdue", score: 74, color: "#F5A524" },
-  { name: "Patel Agro",     amt: "₹3.1L", days: "38d overdue", score: 61, color: "#F5A524" },
-  { name: "Kumar Textiles", amt: "₹1.8L", days: "14d overdue", score: 39, color: "#10D98A" },
-];
 
 // ── Component ──────────────────────────────────────────────────
 export default function LandingPage() {
@@ -102,7 +96,6 @@ export default function LandingPage() {
           <div className="flex items-center gap-2.5">
             <LogoMark size={28} />
             <span className="font-bold text-[15px] tracking-tight text-primary">Vantro</span>
-            <span className="hidden sm:inline text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-2 border border-border text-muted tracking-widest">BETA</span>
           </div>
 
           <div className="hidden md:flex items-center gap-7 text-sm text-secondary">
@@ -139,151 +132,84 @@ export default function LandingPage() {
       </nav>
 
       {/* ═══════════════════════ HERO ══════════════════════════ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ paddingTop: "60px" }}>
-        {/* Grid bg */}
-        <div className="absolute inset-0"
-          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.013) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.013) 1px, transparent 1px)", backgroundSize: "54px 54px" }} />
-        {/* Radial glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at top, rgba(79,110,247,0.09) 0%, transparent 65%)" }} />
-        <div className="absolute inset-x-0 bottom-0 h-px"
-          style={{ background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)" }} />
+      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ backgroundColor: "#080808" }}>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full py-16 lg:py-24">
-          <div className="grid lg:grid-cols-[1fr_440px] xl:grid-cols-[1fr_480px] gap-12 xl:gap-20 items-center">
+        {/* ── Video background — drop /public/hero-bg.mp4 to activate ── */}
+        <video
+          autoPlay muted loop playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ opacity: 0.38, filter: "brightness(0.65) saturate(0.7)" }}
+          aria-hidden="true"
+        >
+          <source src="/hero-bg.mp4" type="video/mp4" />
+        </video>
 
-            {/* Left — text */}
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-8"
-                style={{ background: "rgba(16,217,138,0.08)", border: "1px solid rgba(16,217,138,0.22)", color: "#10D98A" }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                Business Automation OS · India
-              </div>
+        {/* ── Ambient gradient (fallback + depth layer) ── */}
+        <div className="absolute inset-0 hero-ambient" aria-hidden="true" />
 
-              <h1 className="font-black text-primary tracking-tighter leading-[1.02] mb-6"
-                style={{ fontSize: "clamp(2.75rem, 7vw, 5rem)" }}>
-                Your Business,<br />
-                <span style={{
-                  background: "linear-gradient(125deg, #E8F0FF 0%, #B0CAFF 45%, #7096FF 100%)",
-                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-                }}>
-                  On Autopilot.
-                </span>
-              </h1>
+        {/* ── Edge vignette ── */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true"
+          style={{ background: "radial-gradient(ellipse 110% 80% at 50% 50%, transparent 20%, rgba(8,8,8,0.8) 100%)" }} />
 
-              <p className="text-lg text-secondary leading-relaxed mb-4 max-w-[500px]" style={{ fontWeight: 400 }}>
-                Vantro automates your collections, invoicing, WhatsApp follow-ups, and cash flow — so you spend your time growing your business, not managing it.
-              </p>
-              <p className="text-sm text-muted mb-10 max-w-[480px]" style={{ fontStyle: "italic" }}>
-                "Karo business. Baaki Vantro karega."
-              </p>
+        {/* ── Bottom page-blend ── */}
+        <div className="absolute bottom-0 inset-x-0 h-56 pointer-events-none" aria-hidden="true"
+          style={{ background: "linear-gradient(to top, #080808, transparent)" }} />
 
-              <div className="flex flex-col sm:flex-row gap-3 mb-10">
-                <Link href="/signup"
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-bold transition-all"
-                  style={{ background: "#fff", color: "#000", boxShadow: "0 2px 20px rgba(255,255,255,0.12), 0 1px 4px rgba(0,0,0,0.5)" }}>
-                  Start Automating Free <FiArrowRight size={15} />
-                </Link>
-                <button
-                  onClick={() => { enableDemoMode(); window.location.href = "/dashboard"; }}
-                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-base font-semibold text-secondary border border-border hover:border-white/20 hover:text-primary transition-all"
-                  style={{ background: "rgba(255,255,255,0.025)" }}>
-                  👀 Try Demo — No Signup
-                </button>
-              </div>
+        {/* ── Hero content ── */}
+        <div className="relative z-10 text-center max-w-[900px] mx-auto px-6" style={{ paddingTop: "80px" }}>
 
-              <div className="flex flex-wrap gap-x-6 gap-y-2.5">
-                {["No credit card required", "14 days free", "Set up once, runs forever", "Cancel anytime"].map(t => (
-                  <span key={t} className="flex items-center gap-1.5 text-xs text-muted">
-                    <FiCheck size={11} className="text-success shrink-0" /> {t}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Right — product preview card */}
-            <div className="hidden lg:block animate-float-slow">
-              <div className="rounded-2xl p-5"
-                style={{ background: "linear-gradient(145deg, #1A1F2E 0%, #161A24 100%)", border: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.03) inset" }}>
-
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-[10px] font-bold text-muted uppercase tracking-[0.12em]">Today's Priority List</p>
-                    <p className="text-xs text-secondary mt-0.5">3 accounts need action</p>
-                  </div>
-                  <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                    style={{ background: "rgba(16,217,138,0.1)", color: "#10D98A", border: "1px solid rgba(16,217,138,0.2)" }}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" /> Live
-                  </span>
-                </div>
-
-                {/* Debtor rows */}
-                <div className="space-y-2 mb-4">
-                  {DEBTOR_PREVIEW.map((c) => (
-                    <div key={c.name} className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
-                      style={{ background: "#0D0F14", border: "1px solid rgba(255,255,255,0.05)" }}>
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-                        style={{ background: `${c.color}12`, border: `1px solid ${c.color}22`, color: c.color }}>
-                        {c.name[0]}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-semibold text-primary truncate">{c.name}</p>
-                        <div className="h-1 rounded-full mt-1.5 overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
-                          <div className="h-full rounded-full" style={{ width: `${c.score}%`, background: c.color, opacity: 0.8 }} />
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-[11px] font-bold text-primary">{c.amt}</p>
-                        <p className="text-[10px]" style={{ color: c.color }}>{c.days}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Bottom stats */}
-                <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/5">
-                  {[{ v: "₹18.5L", l: "Outstanding" }, { v: "4", l: "Overdue" }, { v: "73%", l: "WA open" }].map(({ v, l }) => (
-                    <div key={l} className="text-center py-2 px-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
-                      <p className="text-xs font-black text-primary">{v}</p>
-                      <p className="text-[10px] text-muted mt-0.5">{l}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Action button */}
-                <button className="w-full mt-3 py-2.5 rounded-xl text-xs font-bold text-black transition-all"
-                  style={{ background: "linear-gradient(135deg, #fff 0%, #e8f0ff 100%)", boxShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
-                  Send Reminders to All →
-                </button>
-              </div>
-            </div>
+          {/* Eyebrow pill */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium mb-10"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.52)" }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: "#10D98A" }} />
+            Business Automation OS · India
           </div>
 
-          {/* Mobile product card */}
-          <div className="lg:hidden mt-8 rounded-2xl p-4"
-            style={{ background: "linear-gradient(145deg, #1A1F2E, #161A24)", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-secondary">Today's Priority</p>
-              <span className="text-[10px] text-success flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" /> Live</span>
-            </div>
-            <div className="space-y-2">
-              {DEBTOR_PREVIEW.slice(0, 2).map((c) => (
-                <div key={c.name} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg"
-                  style={{ background: "#0D0F14", border: "1px solid rgba(255,255,255,0.05)" }}>
-                  <p className="text-xs font-semibold text-primary">{c.name}</p>
-                  <div className="flex items-center gap-2 text-right">
-                    <span className="text-xs font-bold text-primary">{c.amt}</span>
-                    <span className="text-[10px]" style={{ color: c.color }}>{c.days}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 pt-3 border-t border-white/5 flex justify-between">
-              <span className="text-[10px] text-muted">Total outstanding</span>
-              <span className="text-xs font-black text-primary">₹45.2L</span>
-            </div>
+          {/* Headline */}
+          <h1 className="text-white mb-6"
+            style={{ fontSize: "clamp(3.4rem, 10vw, 7.5rem)", fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 0.92 }}>
+            Your Business,<br />
+            <span style={{ color: "rgba(255,255,255,0.36)" }}>On Autopilot.</span>
+          </h1>
+
+          {/* Sub-headline */}
+          <p className="mx-auto mb-10 leading-relaxed"
+            style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", color: "rgba(255,255,255,0.44)", maxWidth: "580px" }}>
+            Vantro automates your collections, invoicing, WhatsApp follow-ups, and cash flow — so you spend your time growing, not managing.
+          </p>
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12">
+            <Link href="/signup"
+              className="inline-flex items-center gap-2 rounded-full font-semibold text-[15px] transition-opacity hover:opacity-88"
+              style={{ background: "#ffffff", color: "#000000", padding: "14px 36px" }}>
+              Start Automating Free <FiArrowRight size={15} />
+            </Link>
+            <button
+              onClick={() => { enableDemoMode(); window.location.href = "/dashboard"; }}
+              className="inline-flex items-center gap-2 rounded-full text-[15px] transition-colors"
+              style={{ color: "rgba(255,255,255,0.48)", border: "1px solid rgba(255,255,255,0.1)", padding: "14px 36px" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.72)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.48)")}>
+              👀 Try Demo — No Signup
+            </button>
           </div>
+
+          {/* Trust badges */}
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5">
+            {["No credit card required", "14 days free", "Set up once, runs forever", "Cancel anytime"].map(t => (
+              <span key={t} className="flex items-center gap-1.5 text-[11px]" style={{ color: "rgba(255,255,255,0.28)" }}>
+                <FiCheck size={10} style={{ color: "#10D98A" }} /> {t}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Hinglish tagline at bottom */}
+        <div className="absolute bottom-8 inset-x-0 text-center z-10">
+          <p className="text-xs italic" style={{ color: "rgba(255,255,255,0.14)" }}>
+            "Karo business. Baaki Vantro karega."
+          </p>
         </div>
       </section>
 
