@@ -194,6 +194,33 @@ export const api = {
       request<{ success: boolean; automation_enabled: boolean }>('/api/settings/automation/toggle', { method: 'POST', body: JSON.stringify({ enabled }) }),
   },
 
+  // ─── Sales ──────────────────────────────────────────────
+  sales: {
+    list: () => request<{ success: boolean; sales: any[] }>('/api/sales'),
+    create: (body: any) => request<{ success: boolean; sale: any; receivable: any }>('/api/sales', { method: 'POST', body: JSON.stringify(body) }),
+    scan: (imageBase64: string, mimeType = 'image/jpeg') =>
+      request<{ success: boolean; data: any }>('/api/sales/scan', {
+        method: 'POST',
+        body: JSON.stringify({ image: stripDataUrl(imageBase64), mimeType }),
+      }, 60_000),
+  },
+
+  // ─── Purchases ──────────────────────────────────────────
+  purchases: {
+    list: () => request<{ success: boolean; purchases: any[] }>('/api/purchases'),
+    create: (body: any) => request<{ success: boolean; purchase: any; supplier: any; inventory: any }>('/api/purchases', { method: 'POST', body: JSON.stringify(body) }),
+    scan: (imageBase64: string, mimeType = 'image/jpeg') =>
+      request<{ success: boolean; data: any }>('/api/purchases/scan', {
+        method: 'POST',
+        body: JSON.stringify({ image: stripDataUrl(imageBase64), mimeType }),
+      }, 60_000),
+  },
+
+  // ─── Suppliers ──────────────────────────────────────────
+  suppliers: {
+    list: (userId: string) => request<{ success: boolean; suppliers: any[] }>(`/api/suppliers/${userId}`),
+  },
+
   // ─── Bank Ledger / Transactions ──────────────────────────
   transactions: {
     list: (userId: string) =>
