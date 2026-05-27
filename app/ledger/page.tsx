@@ -229,7 +229,7 @@ function loadPdfJs(): Promise<any> {
         return;
       }
       if (pdfjs.GlobalWorkerOptions) {
-        pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.js";
       }
       resolve(pdfjs);
     };
@@ -242,7 +242,7 @@ function loadPdfJs(): Promise<any> {
 
     const script = document.createElement("script");
     script.id = "pdfjs-ledger-loader";
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    script.src = "/pdfjs/pdf.min.js";
     script.async = true;
     script.onload = finish;
     script.onerror = () => reject(new Error("PDF reader failed to load"));
