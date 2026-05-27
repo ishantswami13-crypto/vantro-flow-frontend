@@ -46,10 +46,25 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<{
     total_outstanding: number;
+    total_payable?: number;
     total_recovered: number;
+    sales_booked?: number;
+    purchases_booked?: number;
+    payables_paid?: number;
+    gross_margin_pct?: number;
+    booked_net?: number;
+    cash_net?: number;
     recovery_rate: number;
-    monthly_trend: { month: string; recovered: number }[];
+    monthly_trend: {
+      month: string;
+      recovered: number;
+      sales_booked?: number;
+      purchases_booked?: number;
+      net_booked?: number;
+      cash_net?: number;
+    }[];
     top_customers: { name: string; amount: number }[];
+    top_suppliers?: { name: string; amount: number; outstanding: number }[];
   } | null>(null);
   const [callLogs, setCallLogs] = useState<{
     day: string; made: number; answered: number; promised: number;
@@ -77,10 +92,18 @@ export default function AnalyticsPage() {
       } else {
         setAnalytics({
           total_outstanding: 0,
+          total_payable: 0,
           total_recovered: 0,
+          sales_booked: 0,
+          purchases_booked: 0,
+          payables_paid: 0,
+          gross_margin_pct: 0,
+          booked_net: 0,
+          cash_net: 0,
           recovery_rate: 0,
           monthly_trend: [],
           top_customers: [],
+          top_suppliers: [],
         });
         setEmpty(true);
       }
@@ -114,6 +137,9 @@ export default function AnalyticsPage() {
   const chartData = (analytics?.monthly_trend || []).slice(-(range === "1m" ? 1 : range === "3m" ? 3 : 6)).map(m => ({
     month: m.month?.slice(0, 7) || m.month,
     collected: +(m.recovered / 100000).toFixed(1),
+    sales: +((m.sales_booked || 0) / 100000).toFixed(1),
+    purchases: +((m.purchases_booked || 0) / 100000).toFixed(1),
+    net: +((m.net_booked || 0) / 100000).toFixed(1),
     calls: 0,
   }));
 
@@ -122,14 +148,17 @@ export default function AnalyticsPage() {
 
   // KPI cards
   const totalCollected = analytics?.total_recovered || 0;
+  const salesBooked = analytics?.sales_booked || 0;
+  const purchasesBooked = analytics?.purchases_booked || 0;
+  const bookedNet = analytics?.booked_net || 0;
   const recoveryRate   = analytics?.recovery_rate   || 0;
   const totalCalls     = callLogs.reduce((s, d) => s + d.made, 0);
 
   const kpis = [
-    { label: "Total Collected",     value: totalCollected >= 100000 ? `₹${(totalCollected/100000).toFixed(2)}L` : `₹${totalCollected.toLocaleString("en-IN")}`, color: "#10D98A", icon: <FiDollarSign size={16} /> },
-    { label: "Avg Recovery Rate",   value: `${recoveryRate}%`,     color: "#0066FF", icon: <FiTrendingUp size={16} /> },
-    { label: "Calls Logged",        value: totalCalls.toString(),  color: "#F5A524", icon: <FiPhone size={16} /> },
-    { label: "Outstanding",         value: analytics?.total_outstanding ? (analytics.total_outstanding >= 100000 ? `₹${(analytics.total_outstanding/100000).toFixed(1)}L` : `₹${analytics.total_outstanding.toLocaleString("en-IN")}`) : "—", color: "#F5424D", icon: <FiActivity size={16} /> },
+    { label: "Sales Booked",        value: salesBooked >= 100000 ? `₹${(salesBooked/100000).toFixed(2)}L` : `₹${salesBooked.toLocaleString("en-IN")}`, color: "#10D98A", icon: <FiTrendingUp size={16} /> },
+    { label: "Purchases Booked",    value: purchasesBooked >= 100000 ? `₹${(purchasesBooked/100000).toFixed(2)}L` : `₹${purchasesBooked.toLocaleString("en-IN")}`, color: "#F5A524", icon: <FiBarChart2 size={16} /> },
+    { label: "Booked Net",          value: `${bookedNet < 0 ? "-" : ""}₹${Math.abs(bookedNet) >= 100000 ? `${(Math.abs(bookedNet)/100000).toFixed(2)}L` : Math.abs(bookedNet).toLocaleString("en-IN")}`, color: bookedNet >= 0 ? "#0066FF" : "#F5424D", icon: <FiActivity size={16} /> },
+    { label: "Cash Collected",      value: totalCollected >= 100000 ? `₹${(totalCollected/100000).toFixed(2)}L` : `₹${totalCollected.toLocaleString("en-IN")}`, color: "#10D98A", icon: <FiDollarSign size={16} /> },
   ];
 
   return (
@@ -213,8 +242,10 @@ export default function AnalyticsPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#1E2D4A" />
                     <XAxis dataKey="month" tick={{ fill: "#4A6080", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fill: "#4A6080", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => [`₹${v}L`, "Collected"]} />
-                    <Area type="monotone" dataKey="collected" name="Collected ₹L" stroke="#10D98A" strokeWidth={2} fill="url(#gc)" />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number, name: string) => [`₹${v}L`, name]} />
+                    <Area type="monotone" dataKey="sales" name="Sales booked" stroke="#10D98A" strokeWidth={2} fill="url(#gc)" />
+                    <Area type="monotone" dataKey="purchases" name="Purchases booked" stroke="#F5A524" strokeWidth={2} fill="transparent" />
+                    <Area type="monotone" dataKey="collected" name="Cash collected" stroke="#0066FF" strokeWidth={2} fill="transparent" />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
@@ -279,6 +310,47 @@ export default function AnalyticsPage() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-32 text-sm text-muted">No customer data yet</div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="card-premium p-5">
+                <p className="text-sm font-bold text-primary mb-4">Connected Cash Position</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Receivable", value: analytics?.total_outstanding || 0, color: "#F5424D" },
+                    { label: "Payable", value: analytics?.total_payable || 0, color: "#F5A524" },
+                    { label: "Gross Margin", value: analytics?.gross_margin_pct || 0, suffix: "%", color: (analytics?.gross_margin_pct || 0) >= 0 ? "#10D98A" : "#F5424D" },
+                    { label: "Cash Net", value: analytics?.cash_net || 0, color: (analytics?.cash_net || 0) >= 0 ? "#0066FF" : "#F5424D" },
+                  ].map(item => (
+                    <div key={item.label} className="rounded-xl border border-border bg-surface-2 p-4">
+                      <p className="section-label mb-2">{item.label}</p>
+                      <p className="text-lg font-black" style={{ color: item.color }}>
+                        {item.suffix ? `${Number(item.value).toFixed(1)}${item.suffix}` : `${Number(item.value) < 0 ? "-" : ""}₹${Math.abs(Number(item.value)).toLocaleString("en-IN")}`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="card-premium p-5">
+                <p className="text-sm font-bold text-primary mb-4">Top Supplier Payables</p>
+                {(analytics?.top_suppliers || []).length > 0 ? (
+                  <div className="space-y-3">
+                    {(analytics?.top_suppliers || []).slice(0, 5).map((s, i) => (
+                      <div key={s.name} className="flex items-center gap-3">
+                        <span className="text-2xs font-mono text-muted w-4">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-primary truncate">{s.name}</p>
+                          <p className="text-2xs text-muted">Purchased ₹{Number(s.amount || 0).toLocaleString("en-IN")}</p>
+                        </div>
+                        <p className="text-xs font-bold text-warning">₹{Number(s.outstanding || 0).toLocaleString("en-IN")}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-32 text-sm text-muted">No supplier payable data yet</div>
                 )}
               </div>
             </div>
