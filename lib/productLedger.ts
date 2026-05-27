@@ -36,7 +36,7 @@ type LedgerConfig<T> = {
   partyName: (record: T) => string | undefined;
   documentNo: (record: T) => string | undefined;
   recordId?: (record: T) => string | number | undefined;
-  items?: (record: T) => LineItem[] | null | undefined;
+  items?: (record: T) => LineItem[] | string | null | undefined;
   notes?: (record: T) => string | null | undefined;
 };
 

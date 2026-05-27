@@ -102,7 +102,7 @@ const RISK_CUSTOMERS = [
 export default function DashboardPage() {
   const [showQuickSale, setShowQuickSale] = useState(false);
   const [metrics, setMetrics]   = useState<Metrics | null>(null);
-  const [promises, setPromises] = useState<{ customer_name: string; promised_payment_date: string; amount: number }[]>([]);
+  const [promises, setPromises] = useState<{ customer_name: string; promised_payment_date?: string; amount: number }[]>([]);
   const [userPlan, setUserPlan] = useState<string>("free");
   const [bizOverview, setBizOverview] = useState({ unpaidBills: 0, unpaidBillsAmt: 0, khataReceivable: 0, purchasesDue: 0, hasFeatures: false });
   const [ownerName, setOwnerName] = useState("User");
@@ -263,7 +263,7 @@ export default function DashboardPage() {
         {/* ── PROMISES DUE TODAY — highest-urgency banner ── */}
         {promises.length > 0 && (() => {
           const today = new Date().toISOString().split("T")[0];
-          const dueToday = promises.filter(p => p.promised_payment_date <= today);
+          const dueToday = promises.filter(p => p.promised_payment_date && p.promised_payment_date <= today);
           if (dueToday.length === 0) return null;
           const total = dueToday.reduce((s, p) => s + ((p as any).amount || 0), 0);
           return (
@@ -803,7 +803,7 @@ export default function DashboardPage() {
                 <div key={i} className="flex items-center justify-between px-5 py-3">
                   <div>
                     <p className="text-sm font-semibold text-primary">{p.customer_name}</p>
-                    <p className="text-xs text-muted">Promised by {p.promised_payment_date}</p>
+                    <p className="text-xs text-muted">Promised by {p.promised_payment_date || "date pending"}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {p.amount > 0 && <span className="text-sm font-bold text-accent">₹{Number(p.amount).toLocaleString("en-IN")}</span>}

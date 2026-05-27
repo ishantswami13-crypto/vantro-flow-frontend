@@ -161,13 +161,13 @@ export function getGrantedFeatures(ctx: UserContext): Set<FeatureKey> {
 
   // Step 3: Filter by plan gate
   const granted = new Set<FeatureKey>();
-  for (const feature of allAllowed) {
-    const requiredPlans = PLAN_GATES[feature] || ["pro"];
-    const minPlanIdx = Math.min(...requiredPlans.map(p => planOrder.indexOf(p)));
+  Array.from(allAllowed).forEach((feature: FeatureKey) => {
+    const requiredPlans = PLAN_GATES[feature];
+    const minPlanIdx = Math.min(...requiredPlans.map((p) => planOrder.indexOf(p)));
     if (planIdx >= minPlanIdx) {
       granted.add(feature);
     }
-  }
+  });
 
   // Step 4: Conditional additions based on onboarding flags
   if (ctx.hasGST) granted.add("bills");

@@ -1,83 +1,84 @@
-// Vantro Flow Service Worker — Offline Support + Cache Strategy
-const CACHE_NAME = 'vantro-v2';
-const STATIC_ASSETS = ['/', '/dashboard', '/manifest.json', '/icon-192.png', '/icon-512.png'];
+// Vantro Flow Service Worker - Offline Support + Cache Strategy
+const CACHE_NAME = "vantro-v2";
+const STATIC_ASSETS = ["/", "/dashboard", "/manifest.json", "/icon-192.png", "/icon-512.png"];
 
-// Install: cache static shell
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(STATIC_ASSETS.map((asset) => cache.add(asset).catch(() => undefined)))
+    )
   );
   self.skipWaiting();
 });
 
-// Activate: clean old caches
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
     )
   );
   self.clients.claim();
 });
 
-// Fetch: network-first for API, cache-first for assets
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
 
-  // Skip non-GET and chrome-extension
-  if (e.request.method !== 'GET' || url.protocol === 'chrome-extension:') return;
+  if (event.request.method !== "GET" || url.protocol === "chrome-extension:") return;
 
-  // API calls: network-first, no cache
-  if (url.hostname.includes('railway.app') || url.pathname.startsWith('/api/')) {
-    e.respondWith(fetch(e.request).catch(() => new Response(JSON.stringify({ error: 'Offline' }), { headers: { 'Content-Type': 'application/json' } })));
+  if (url.hostname.includes("railway.app") || url.pathname.startsWith("/api/")) {
+    event.respondWith(
+      fetch(event.request).catch(() =>
+        new Response(JSON.stringify({ error: "Offline" }), {
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+    );
     return;
   }
 
-  // Static assets: cache-first
-  e.respondWith(
-    caches.match(e.request).then(cached => {
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
       if (cached) return cached;
-      return fetch(e.request).then(res => {
-        if (res.ok) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        }
-        return res;
-      }).catch(() => caches.match('/'));
+      return fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match("/"));
     })
   );
 });
 
-// Push notifications
-self.addEventListener('push', e => {
-  const payload = e.data?.json() || {};
+self.addEventListener("push", (event) => {
+  const payload = event.data?.json() || {};
   const { title, body, data = {} } = payload;
 
-  // Determine destination URL based on notification type
-  let targetUrl = '/dashboard';
-  if (data.type === 'payment_received') targetUrl = '/collections';
-  if (data.type === 'morning_briefing') targetUrl = '/ai-chat';
+  let targetUrl = "/dashboard";
+  if (data.type === "payment_received") targetUrl = "/collections";
+  if (data.type === "morning_briefing") targetUrl = "/ai-chat";
 
-  e.waitUntil(
-    self.registration.showNotification(title || 'Vantro Flow', {
-      body: body || 'You have a new update',
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
+  event.waitUntil(
+    self.registration.showNotification(title || "Vantro Flow", {
+      body: body || "You have a new update",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
       vibrate: [200, 100, 200],
-      tag: data.type || 'general',       // replaces old notif of same type
-      renotify: data.type === 'payment_received', // payment alerts always ring
+      tag: data.type || "general",
+      renotify: data.type === "payment_received",
       data: { url: targetUrl, ...data },
     })
   );
 });
 
-self.addEventListener('notificationclick', e => {
-  e.notification.close();
-  const url = e.notification.data?.url || '/dashboard';
-  e.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(wins => {
-      // Focus existing window if open, else open new
-      const existing = wins.find(w => w.url.includes(url));
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/dashboard";
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      const existing = windows.find((windowClient) => windowClient.url.includes(url));
       if (existing) return existing.focus();
       return clients.openWindow(url);
     })

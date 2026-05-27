@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { FiX, FiMic, FiMicOff, FiPlus, FiCheck } from "react-icons/fi";
+import { FiX, FiMic, FiMicOff, FiPlus, FiCheck, FiZap } from "react-icons/fi";
 import LogoMark from "@/components/LogoMark";
+import {
+  getSpeechRecognitionConstructor,
+  type WebSpeechRecognition,
+  type WebSpeechRecognitionEvent,
+} from "@/lib/webSpeech";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -23,8 +28,8 @@ function parseQuickSale(text: string): SaleItem[] {
 
     // Extract numbers
     let qty = 1, price = 0;
-    if (nums.length === 1) { price = parseFloat(nums[0]); qty = 1; }
-    else if (nums.length >= 2) { qty = parseFloat(nums[0]); price = parseFloat(nums[nums.length - 1]); }
+    if (nums.length === 1) { price = parseFloat(nums[0] || "0"); qty = 1; }
+    else if (nums.length >= 2) { qty = parseFloat(nums[0] || "0"); price = parseFloat(nums[nums.length - 1] || "0"); }
 
     // Extract item name — remove numbers and units
     const namePart = line
@@ -49,8 +54,8 @@ export default function QuickSale({ onClose, onSaved }: QuickSaleProps) {
   const [saved, setSaved]         = useState(false);
   const [customer, setCustomer]   = useState("");
   const [note, setNote]           = useState("");
-  const [voiceSupport]            = useState(() => typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window));
-  const recogRef = useRef<any>(null);
+  const [voiceSupport]            = useState(() => Boolean(getSpeechRecognitionConstructor()));
+  const recogRef = useRef<WebSpeechRecognition | null>(null);
   const textRef  = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { textRef.current?.focus(); }, []);
@@ -63,12 +68,13 @@ export default function QuickSale({ onClose, onSaved }: QuickSaleProps) {
 
   const startListening = useCallback(() => {
     if (!voiceSupport) return;
-    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRec = getSpeechRecognitionConstructor();
+    if (!SpeechRec) return;
     const rec = new SpeechRec();
     rec.lang = "hi-IN";
     rec.continuous = false;
     rec.interimResults = false;
-    rec.onresult = (e: any) => {
+    rec.onresult = (e: WebSpeechRecognitionEvent) => {
       const transcript = e.results[0][0].transcript;
       setText(prev => prev ? prev + "\n" + transcript : transcript);
       setListening(false);

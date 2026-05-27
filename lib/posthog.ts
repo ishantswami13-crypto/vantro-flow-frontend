@@ -1,10 +1,13 @@
 import posthog from "posthog-js";
 
+const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+
 export function initPostHog() {
   if (typeof window === "undefined") return;
+  if (!POSTHOG_KEY) return;
   if (posthog.__loaded) return;
 
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY || "", {
+  posthog.init(POSTHOG_KEY, {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
     capture_pageview: false,   // manual, so we can include page title
     capture_pageleave: true,

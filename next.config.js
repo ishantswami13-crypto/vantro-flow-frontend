@@ -18,11 +18,11 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.razorpay.com https://app.posthog.com",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.razorpay.com https://*.posthog.com https://*.i.posthog.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self' https://vantro-flow-backend-production.up.railway.app https://app.posthog.com https://*.supabase.co wss://*.supabase.co",
+      "connect-src 'self' https://vantro-flow-backend-production.up.railway.app https://*.posthog.com https://*.i.posthog.com https://*.supabase.co wss://*.supabase.co",
       "frame-src https://checkout.razorpay.com https://api.razorpay.com",
       "object-src 'none'",
       "base-uri 'self'",

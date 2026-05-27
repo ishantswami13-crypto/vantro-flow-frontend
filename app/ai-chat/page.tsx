@@ -6,6 +6,11 @@ import Button from "@/components/ui/Button";
 import { api, getUser, type ChatMessage } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import {
+  getSpeechRecognitionConstructor,
+  type WebSpeechRecognition,
+  type WebSpeechRecognitionEvent,
+} from "@/lib/webSpeech";
+import {
   FiSend, FiZap, FiUser, FiCpu, FiTrendingUp,
   FiPhone, FiAlertTriangle, FiCheckCircle, FiActivity,
   FiTarget, FiRefreshCw, FiMic, FiMicOff,
@@ -340,15 +345,13 @@ export default function AIFounderPage() {
   const [twilioReady, setTwilioReady] = useState(false);
   const [twilioMissing, setTwilioMissing] = useState<string[]>([]);
   const bottomRef  = useRef<HTMLDivElement>(null);
-  const recogRef   = useRef<SpeechRecognition | null>(null);
+  const recogRef   = useRef<WebSpeechRecognition | null>(null);
   const user = getUser();
   const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") || "" : "";
 
   // Voice support check
   useEffect(() => {
-    const SR = (window as Window & typeof globalThis).SpeechRecognition
-      || (window as Window & typeof globalThis).webkitSpeechRecognition;
-    setVoiceSupported(!!SR);
+    setVoiceSupported(Boolean(getSpeechRecognitionConstructor()));
   }, []);
 
   const fetchBriefing = useCallback(() => {
@@ -386,8 +389,7 @@ export default function AIFounderPage() {
 
   // ── Voice input ──────────────────────────────────────────────────────────
   const startVoice = () => {
-    const SR = (window as Window & typeof globalThis).SpeechRecognition
-      || (window as Window & typeof globalThis).webkitSpeechRecognition;
+    const SR = getSpeechRecognitionConstructor();
     if (!SR) return;
     const recog = new SR();
     recog.lang = "hi-IN";
@@ -397,7 +399,7 @@ export default function AIFounderPage() {
     recog.onstart  = () => setIsListening(true);
     recog.onend    = () => setIsListening(false);
     recog.onerror  = () => setIsListening(false);
-    recog.onresult = (e: SpeechRecognitionEvent) => {
+    recog.onresult = (e: WebSpeechRecognitionEvent) => {
       const result = e.results[e.resultIndex];
       const text   = result[0].transcript;
       setInput(text);

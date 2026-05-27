@@ -25,6 +25,12 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return Uint8Array.from(Array.from(rawData, (c) => c.charCodeAt(0)));
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  return buffer;
+}
+
 async function subscribeToPush(token: string) {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
@@ -46,9 +52,10 @@ async function subscribeToPush(token: string) {
       return;
     }
 
+    const applicationServerKey = toArrayBuffer(urlBase64ToUint8Array(keyData.publicKey));
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(keyData.publicKey),
+      applicationServerKey,
     });
 
     await fetch(`${API}/api/notifications/subscribe`, {
