@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
@@ -7,6 +7,7 @@ import {
   FiCamera, FiX, FiZap, FiUpload, FiTrendingUp, FiPackage,
 } from "react-icons/fi";
 import { getToken, getUser } from "@/lib/api";
+import { buildProductLedgerRows, formatQuantity, groupProductRows, matchProductQuery, sortByDateDesc } from "@/lib/productLedger";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -25,6 +26,7 @@ type Sale = {
   gst_type?: string;
   gst_rate?: number;
   gst_amount?: number;
+  items?: SaleItem[] | null;
 };
 
 type SaleItem = {
@@ -96,8 +98,22 @@ const scanNumber = (ex: Record<string, unknown>, keys: string[]) => {
   return 0;
 };
 
+const toInputDate = (value?: string) => {
+  if (!value) return new Date().toISOString().split("T")[0];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const dmy = value.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (dmy) {
+    const [, day, month, year] = dmy;
+    const fullYear = year.length === 2 ? `20${year}` : year;
+    return `${fullYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().split("T")[0];
+  return new Date().toISOString().split("T")[0];
+};
+
 const scanDate = (ex: Record<string, unknown>, keys: string[]) =>
-  scanText(ex, keys) || new Date().toISOString().split("T")[0];
+  toInputDate(scanText(ex, keys));
 
 const scanItems = (ex: Record<string, unknown>): SaleItem[] =>
   Array.isArray(ex.items) ? (ex.items as SaleItem[]) : [];
@@ -124,6 +140,14 @@ function resizeImage(file: File, maxWidth = 1024): Promise<{ base64: string; mim
   });
 }
 
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const scanBody = (base64: string, mimeType: string) => JSON.stringify({
+  image: base64,
+  image_base64: `data:${mimeType};base64,${base64}`,
+  mimeType,
+});
+
 export default function SalesPage() {
   const [sales, setSales]               = useState<Sale[]>([]);
   const [loading, setLoading]           = useState(true);
@@ -132,6 +156,7 @@ export default function SalesPage() {
   const [payModal, setPayModal]         = useState<Sale | null>(null);
   const [payAmount, setPayAmount]       = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [productQuery, setProductQuery] = useState("");
   const [saving, setSaving]             = useState(false);
   const [mounted, setMounted]           = useState(false);
   const [myGstin, setMyGstin]           = useState("");
@@ -170,6 +195,13 @@ export default function SalesPage() {
     due_date: "", total_amount: "", paid_amount: "0", notes: "",
   };
   const [form, setForm] = useState(emptyForm);
+
+  const requestSaleScan = (base64: string, mimeType: string) =>
+    fetch(`${API}/api/sales/scan`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+      body: scanBody(base64, mimeType),
+    });
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach(t => t.stop());
@@ -291,51 +323,54 @@ export default function SalesPage() {
       setBulkDone(i);
       setBulkCurrent(fileArray[i].name);
 
-      // GROQ free tier: ~3 scans/min with 512px images — 22s gap keeps us safe
-      if (i > 0) {
-        setBulkWaiting(true);
-        await new Promise(r => setTimeout(r, 22000));
-        setBulkWaiting(false);
-      }
       if (bulkCancelRef.current) break;
 
       try {
         const { base64, mimeType } = await resizeImage(fileArray[i]);
-        const r = await fetch(`${API}/api/sales/scan`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ image: base64, mimeType }),
-        });
+        let r = await requestSaleScan(base64, mimeType);
 
         if (r.status === 429) {
-          stoppedReason = "AI scan limit hit. Remaining files were not processed.";
-          const remaining = fileArray.slice(i);
-          notProcessed += remaining.length;
-          remaining.forEach(file => details.push({
-            fileName: file.name,
-            status: "not_processed",
-            title: "Not processed",
-            reason: "AI scan limit hit. Try these again after a minute.",
-          }));
-          break;
+          setBulkWaiting(true);
+          await wait(22000);
+          setBulkWaiting(false);
+          r = await requestSaleScan(base64, mimeType);
+          if (r.status === 429) {
+            stoppedReason = "AI scan limit hit. Remaining files were not processed.";
+            const remaining = fileArray.slice(i);
+            notProcessed += remaining.length;
+            remaining.forEach(file => details.push({
+              fileName: file.name,
+              status: "not_processed",
+              title: "Not processed",
+              reason: "AI scan limit hit. Try these again after a minute.",
+            }));
+            break;
+          }
         }
         if (!r.ok) {
           failed++;
           details.push({ fileName: fileArray[i].name, status: "failed", title: "Scan failed", reason: "AI scan API rejected this file." });
           continue;
         }
-        const d = await r.json();
+        let d = await r.json();
         if (d.error === 'rate_limit') {
-          stoppedReason = "AI scan limit hit. Remaining files were not processed.";
-          const remaining = fileArray.slice(i);
-          notProcessed += remaining.length;
-          remaining.forEach(file => details.push({
-            fileName: file.name,
-            status: "not_processed",
-            title: "Not processed",
-            reason: "AI scan limit hit. Try these again after a minute.",
-          }));
-          break;
+          setBulkWaiting(true);
+          await wait(22000);
+          setBulkWaiting(false);
+          r = await requestSaleScan(base64, mimeType);
+          d = await r.json().catch(() => ({ error: "scan_failed" }));
+          if (r.status === 429 || d.error === 'rate_limit') {
+            stoppedReason = "AI scan limit hit. Remaining files were not processed.";
+            const remaining = fileArray.slice(i);
+            notProcessed += remaining.length;
+            remaining.forEach(file => details.push({
+              fileName: file.name,
+              status: "not_processed",
+              title: "Not processed",
+              reason: "AI scan limit hit. Try these again after a minute.",
+            }));
+            break;
+          }
         }
         if (!d.success || !d.data) {
           failed++;
@@ -417,7 +452,19 @@ export default function SalesPage() {
       }
     }
 
-    setBulkDone(fileArray.length);
+    if (bulkCancelRef.current) {
+      stoppedReason = "Bulk scan cancelled.";
+      const remaining = fileArray.slice(details.length);
+      notProcessed += remaining.length;
+      remaining.forEach(file => details.push({
+        fileName: file.name,
+        status: "not_processed",
+        title: "Not processed",
+        reason: "Bulk scan cancelled.",
+      }));
+    }
+
+    setBulkDone(details.length);
     setBulkScanning(false);
     setBulkResults({ added, skipped, failed, notProcessed, stoppedReason, details });
     if (bulkInputRef.current) bulkInputRef.current.value = "";
@@ -486,25 +533,19 @@ export default function SalesPage() {
 
     try {
       const { base64, mimeType } = await resizeImage(file);
-      const fetchOpts = {
-        method: "POST" as const,
-        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64, mimeType }),
-      };
-      let r = await fetch(`${API}/api/sales/scan`, fetchOpts);
+      let r = await requestSaleScan(base64, mimeType);
 
       // Auto-retry once on rate limit — 22s countdown then retry
       if (r.status === 429) {
         for (let cd = 22; cd > 0; cd--) {
           setScanCountdown(cd);
-          await new Promise(res => setTimeout(res, 1000));
+          await wait(1000);
         }
         setScanCountdown(null);
-        r = await fetch(`${API}/api/sales/scan`, fetchOpts);
+        r = await requestSaleScan(base64, mimeType);
       }
 
       const d = await r.json();
-      console.log('[SCAN DEBUG]', { status: r.status, success: d.success, keys: Object.keys(d.data || {}), _debug: d._debug, error: d.error, details: d.details });
 
       if (r.status === 429 || d.error === 'rate_limit') {
         setScanError("⚡ AI scan busy. Please wait 1 minute and try again.");
@@ -587,18 +628,25 @@ export default function SalesPage() {
   const totalRevenue   = sales.reduce((sum, s) => sum + s.total_amount, 0);
   const paidCount      = sales.filter(s => s.status === "paid").length;
 
-  // Top items analysis from notes
-  const itemFreq: Record<string, number> = {};
-  sales.forEach(s => {
-    if (s.notes) {
-      const parts = s.notes.split(";");
-      parts.forEach(p => {
-        const m = p.trim().match(/\d+[\w\s]* (.+?) @/);
-        if (m) itemFreq[m[1].trim()] = (itemFreq[m[1].trim()] || 0) + 1;
-      });
-    }
-  });
-  const topItems = Object.entries(itemFreq).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const productRows = useMemo(() => buildProductLedgerRows(sales, {
+    source: "sale",
+    date: (sale) => sale.sale_date,
+    partyName: (sale) => sale.customer_name,
+    documentNo: (sale) => sale.invoice_number,
+    recordId: (sale) => sale.id,
+    items: (sale) => sale.items,
+    notes: (sale) => sale.notes,
+  }), [sales]);
+  const topItems = useMemo(() => groupProductRows(productRows).slice(0, 4), [productRows]);
+  const productMatches = useMemo(() =>
+    sortByDateDesc(productRows.filter(row => matchProductQuery(row, productQuery))),
+    [productRows, productQuery]
+  );
+  const productTotals = productMatches.reduce((acc, row) => ({
+    quantity: acc.quantity + row.quantity,
+    amount: acc.amount + (row.amount || 0),
+  }), { quantity: 0, amount: 0 });
+  const productMatchUnit = productMatches.find(row => row.unit)?.unit;
 
   // ── Render ───────────────────────────────────────────────────────
   return (
@@ -622,7 +670,7 @@ export default function SalesPage() {
                 <div className="h-full bg-accent rounded-full transition-all duration-300"
                      style={{ width: `${bulkTotal > 0 ? (bulkDone / bulkTotal) * 100 : 0}%` }} />
               </div>
-              <p className="text-xs text-muted mt-3">22s gap per scan — GROQ free tier limit</p>
+              {bulkWaiting && <p className="text-xs text-muted mt-3">AI scan limit hit — retrying this file…</p>}
               <button
                 onClick={() => { bulkCancelRef.current = true; }}
                 className="mt-4 text-xs text-muted hover:text-danger transition-colors underline">
@@ -834,15 +882,62 @@ export default function SalesPage() {
               <p className="text-xs font-semibold text-accent">Top Selling Items</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              {topItems.map(([item, count]) => (
-                <span key={item} className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-surface-2 text-primary">
+              {topItems.map((item) => (
+                <span key={item.productName} className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-surface-2 text-primary">
                   <FiPackage size={10} className="text-muted" />
-                  {item} <span className="text-muted">×{count}</span>
+                  {item.productName} <span className="text-muted">x{formatQuantity(item.quantity, item.unit)}</span>
                 </span>
               ))}
             </div>
           </div>
         )}
+
+        <div className="mb-4 p-4 bg-surface-2/60 border border-white/8 rounded-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+            <div>
+              <p className="text-sm font-bold text-primary">Product Sales Finder</p>
+              <p className="text-xs text-muted">Search A2C machine, motor, fabric, cement and see qty sold by date.</p>
+            </div>
+            <input
+              value={productQuery}
+              onChange={e => setProductQuery(e.target.value)}
+              placeholder="Search product sold..."
+              className="w-full sm:w-64 bg-surface-1 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary placeholder-muted focus:outline-none focus:border-accent/50"
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <div className="rounded-xl bg-surface-1/80 p-3">
+              <p className="text-2xs text-muted">Qty Sold</p>
+              <p className="text-sm font-bold text-success">{formatQuantity(productTotals.quantity, productMatchUnit)}</p>
+            </div>
+            <div className="rounded-xl bg-surface-1/80 p-3">
+              <p className="text-2xs text-muted">Sales Value</p>
+              <p className="text-sm font-bold text-primary">{fmtINR(productTotals.amount)}</p>
+            </div>
+            <div className="rounded-xl bg-surface-1/80 p-3">
+              <p className="text-2xs text-muted">Entries</p>
+              <p className="text-sm font-bold text-accent">{productMatches.length}</p>
+            </div>
+          </div>
+          {productMatches.length > 0 ? (
+            <div className="max-h-44 overflow-y-auto divide-y divide-white/5">
+              {productMatches.slice(0, 8).map((row, index) => (
+                <div key={`${row.recordId}-${row.productName}-${index}`} className="flex items-center justify-between gap-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-primary truncate">{row.productName}</p>
+                    <p className="text-2xs text-muted truncate">{row.partyName || "Customer"} · {row.documentNo || "No invoice"} · {fmtDate(row.date)}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs font-bold text-success">{formatQuantity(row.quantity, row.unit)}</p>
+                    {row.amount ? <p className="text-2xs text-muted">{fmtINR(row.amount)}</p> : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted">No item lines found yet. Scan invoices with item rows or add item details in notes.</p>
+          )}
+        </div>
 
         {/* Filter */}
         <div className="flex gap-2 mb-4">

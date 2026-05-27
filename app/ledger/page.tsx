@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { api, getToken, getUser } from "@/lib/api";
+import { api, getUser } from "@/lib/api";
 import {
   FiArrowDown, FiArrowUp, FiActivity, FiPlus, FiX, FiZap,
   FiShield, FiAlertTriangle, FiCheckCircle, FiTrendingUp,
@@ -30,6 +30,57 @@ function fmtFull(n: number): string {
 function fmtDate(d: string): string {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function toInputDate(value?: string): string {
+  if (!value) return new Date().toISOString().split("T")[0];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const dmy = value.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (dmy) {
+    const [, day, month, year] = dmy;
+    const fullYear = year.length === 2 ? `20${year}` : year;
+    return `${fullYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().split("T")[0];
+  return new Date().toISOString().split("T")[0];
+}
+
+function numericAmount(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  const amount = String(value).replace(/[₹,\s]/g, "");
+  const parsed = Number(amount);
+  return Number.isFinite(parsed) && parsed > 0 ? String(parsed) : "";
+}
+
+function resizeImage(file: File, maxWidth = 1200): Promise<{ dataUrl: string; mimeType: string }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve({ dataUrl: canvas.toDataURL("image/jpeg", 0.86), mimeType: "image/jpeg" });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read this image"));
+    };
+    img.src = url;
+  });
+}
+
+function fileToDataUrl(file: File): Promise<{ dataUrl: string; mimeType: string }> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({ dataUrl: String(reader.result || ""), mimeType: file.type || "application/octet-stream" });
+    reader.onerror = () => reject(new Error("Could not read this file"));
+    reader.readAsDataURL(file);
+  });
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -252,39 +303,26 @@ export default function LedgerPage() {
     setSaving(false);
   };
 
-  const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || "").split(",")[1] || "");
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
   const handleScanFile = async (file?: File | null) => {
     if (!file) return;
     setScanning(true);
     setScanMessage("AI reading file...");
     setError("");
     try {
-      const image = await fileToBase64(file);
-      const res = await fetch(`${BASE}/api/transactions/scan`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getToken()}`,
-        },
-        body: JSON.stringify({ image, mimeType: file.type || "image/jpeg" }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "AI could not read this file");
-      const extracted = data.data || {};
+      const payload = file.type.startsWith("image/")
+        ? await resizeImage(file)
+        : await fileToDataUrl(file);
+      const data = await api.transactions.scan(payload.dataUrl, payload.mimeType);
+      if (data.success === false) throw new Error(data.error || "AI could not read this file");
+      const extracted = data.data || data.extracted || {};
       const nextType = extracted.type === "in" ? "in" : "out";
       setForm({
         type: nextType,
         category: extracted.category || (nextType === "in" ? "Customer Payment" : "Supplier Payment"),
-        amount: extracted.amount ? String(extracted.amount) : "",
+        amount: numericAmount(extracted.amount),
         party_name: extracted.party_name || "",
         description: extracted.description || "",
-        transaction_date: extracted.transaction_date || new Date().toISOString().split("T")[0],
+        transaction_date: toInputDate(extracted.transaction_date),
         payment_method: extracted.payment_method || "UPI",
         reference: extracted.reference || "",
       });

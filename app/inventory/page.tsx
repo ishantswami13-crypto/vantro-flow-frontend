@@ -1,10 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/Badge";
 import { FiPackage, FiAlertTriangle, FiTrendingUp, FiPlus, FiSearch, FiTruck, FiBox, FiX } from "react-icons/fi";
 import { api, getUser, getToken } from "@/lib/api";
+import {
+  buildProductLedgerRows,
+  formatQuantity,
+  matchProductQuery,
+  normalizeProductName,
+  type ProductLedgerRow,
+  sortByDateDesc,
+} from "@/lib/productLedger";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -30,6 +38,40 @@ type Movement = {
   ref?: string;
   moved_at?: string;
   created_at?: string;
+};
+
+type ItemLine = {
+  description?: string;
+  name?: string;
+  product_name?: string;
+  item_name?: string;
+  qty?: number | string;
+  quantity?: number | string;
+  unit?: string;
+  price?: number | string;
+  rate?: number | string;
+  unit_price?: number | string;
+  amount?: number | string;
+  total?: number | string;
+  total_amount?: number | string;
+};
+
+type InventorySale = {
+  id: number;
+  customer_name: string;
+  invoice_number?: string;
+  sale_date?: string;
+  notes?: string;
+  items?: ItemLine[] | null;
+};
+
+type InventoryPurchase = {
+  id: number;
+  supplier_name: string;
+  bill_number?: string;
+  purchase_date?: string;
+  notes?: string;
+  items?: ItemLine[] | null;
 };
 
 type Summary = {
@@ -65,11 +107,13 @@ function fmtDate(d?: string) {
 }
 
 export default function InventoryPage() {
-  const [tab, setTab]         = useState<"products" | "movements" | "suppliers">("products");
+  const [tab, setTab]         = useState<"products" | "intelligence" | "movements" | "suppliers">("products");
   const [search, setSearch]   = useState("");
+  const [inventoryQuery, setInventoryQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [products, setProducts]   = useState<Product[]>([]);
   const [movements, setMovements] = useState<Movement[]>([]);
+  const [productRows, setProductRows] = useState<ProductLedgerRow[]>([]);
   const [summary, setSummary]     = useState<Summary>({ total_products: 0, total_value: 0, low_stock_count: 0, out_of_stock_count: 0 });
 
   // Add product modal
@@ -78,18 +122,50 @@ export default function InventoryPage() {
   const [saving, setSaving]   = useState(false);
   const [formError, setFormError] = useState("");
 
-  const load = () => {
+  const load = async () => {
     const user = getUser();
     if (!user?.id) return;
     setLoading(true);
-    api.inventory(user.id)
-      .then(d => {
-        setProducts(d.products || []);
-        setMovements(d.movements || []);
-        setSummary(d.summary || { total_products: 0, total_value: 0, low_stock_count: 0, out_of_stock_count: 0 });
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    try {
+      const token = getToken();
+      const [inventoryData, salesData, purchasesData] = await Promise.all([
+        api.inventory(user.id).catch(() => ({ products: [], movements: [], summary: { total_products: 0, total_value: 0, low_stock_count: 0, out_of_stock_count: 0 } })),
+        fetch(`${API}/api/sales`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.json())
+          .catch(() => ({ sales: [] })),
+        fetch(`${API}/api/purchases`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.json())
+          .catch(() => ({ purchases: [] })),
+      ]);
+
+      setProducts(inventoryData.products || []);
+      setMovements(inventoryData.movements || []);
+      setSummary(inventoryData.summary || { total_products: 0, total_value: 0, low_stock_count: 0, out_of_stock_count: 0 });
+
+      const sales = (salesData.sales || []) as InventorySale[];
+      const purchases = (purchasesData.purchases || []) as InventoryPurchase[];
+      const saleRows = buildProductLedgerRows(sales, {
+        source: "sale",
+        date: (sale) => sale.sale_date,
+        partyName: (sale) => sale.customer_name,
+        documentNo: (sale) => sale.invoice_number,
+        recordId: (sale) => sale.id,
+        items: (sale) => sale.items,
+        notes: (sale) => sale.notes,
+      });
+      const purchaseRows = buildProductLedgerRows(purchases, {
+        source: "purchase",
+        date: (purchase) => purchase.purchase_date,
+        partyName: (purchase) => purchase.supplier_name,
+        documentNo: (purchase) => purchase.bill_number,
+        recordId: (purchase) => purchase.id,
+        items: (purchase) => purchase.items,
+        notes: (purchase) => purchase.notes,
+      });
+      setProductRows([...purchaseRows, ...saleRows]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -130,6 +206,79 @@ export default function InventoryPage() {
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     (p.sku || "").toLowerCase().includes(search.toLowerCase())
   );
+
+  const productInsights = useMemo(() => {
+    const map = new Map<string, {
+      productName: string;
+      unit?: string;
+      boughtQty: number;
+      soldQty: number;
+      boughtAmount: number;
+      soldAmount: number;
+      lastBought?: string;
+      lastSold?: string;
+      currentStock?: number;
+      reorderLevel?: number;
+    }>();
+
+    productRows.forEach((row) => {
+      const current = map.get(row.productKey) || {
+        productName: row.productName,
+        unit: row.unit,
+        boughtQty: 0,
+        soldQty: 0,
+        boughtAmount: 0,
+        soldAmount: 0,
+      };
+      if (row.source === "purchase") {
+        current.boughtQty += row.quantity;
+        current.boughtAmount += row.amount || 0;
+        if (row.date && (!current.lastBought || Date.parse(row.date) > Date.parse(current.lastBought))) current.lastBought = row.date;
+      } else {
+        current.soldQty += row.quantity;
+        current.soldAmount += row.amount || 0;
+        if (row.date && (!current.lastSold || Date.parse(row.date) > Date.parse(current.lastSold))) current.lastSold = row.date;
+      }
+      map.set(row.productKey, current);
+    });
+
+    products.forEach((product) => {
+      const key = normalizeProductName(product.name);
+      const current = map.get(key) || {
+        productName: product.name,
+        unit: product.unit,
+        boughtQty: 0,
+        soldQty: 0,
+        boughtAmount: 0,
+        soldAmount: 0,
+      };
+      current.unit = current.unit || product.unit;
+      current.currentStock = product.current_stock;
+      current.reorderLevel = product.low_stock_alert;
+      map.set(key, current);
+    });
+
+    return Array.from(map.values()).sort((a, b) =>
+      (b.boughtQty + b.soldQty + (b.currentStock || 0)) - (a.boughtQty + a.soldQty + (a.currentStock || 0))
+    );
+  }, [productRows, products]);
+
+  const intelligenceRows = useMemo(() => {
+    const q = inventoryQuery.trim();
+    if (!q) return productInsights;
+    const normalized = normalizeProductName(q);
+    return productInsights.filter(row => normalizeProductName(row.productName).includes(normalized));
+  }, [productInsights, inventoryQuery]);
+
+  const ledgerAllMatches = useMemo(() =>
+    sortByDateDesc(productRows.filter(row => matchProductQuery(row, inventoryQuery))),
+    [productRows, inventoryQuery]
+  );
+  const ledgerMatches = ledgerAllMatches.slice(0, 10);
+
+  const queryBought = ledgerAllMatches.filter(row => row.source === "purchase").reduce((sum, row) => sum + row.quantity, 0);
+  const querySold = ledgerAllMatches.filter(row => row.source === "sale").reduce((sum, row) => sum + row.quantity, 0);
+  const queryUnit = ledgerAllMatches.find(row => row.unit)?.unit;
 
   const fmtVal = (v: number) => v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : `₹${(v / 1000).toFixed(0)}k`;
 
@@ -182,13 +331,132 @@ export default function InventoryPage() {
 
         {/* Tabs */}
         <div className="flex gap-1 p-1 bg-surface-2 rounded-xl border border-border w-fit">
-          {(["products", "movements", "suppliers"] as const).map(t => (
+          {(["products", "intelligence", "movements", "suppliers"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={["px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all",
                 tab === t ? "bg-white text-black" : "text-muted hover:text-primary",
               ].join(" ")}>{t}</button>
           ))}
         </div>
+
+        {/* Intelligence Tab */}
+        {tab === "intelligence" && (
+          <div className="space-y-4">
+            <div className="card-premium p-4">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+                <div>
+                  <p className="text-sm font-bold text-primary">Product Buy/Sell Finder</p>
+                  <p className="text-xs text-muted mt-0.5">Search any product to see bought qty, sold qty, dates and parties.</p>
+                </div>
+                <div className="relative w-full lg:w-80">
+                  <FiSearch size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <input
+                    value={inventoryQuery}
+                    onChange={e => setInventoryQuery(e.target.value)}
+                    placeholder="Search A2C machine..."
+                    className="w-full pl-8 pr-3 py-2.5 bg-surface-2 border border-border rounded-xl text-xs text-primary placeholder-muted focus:outline-none focus:border-accent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="rounded-xl bg-surface-2/70 p-3">
+                  <p className="text-2xs text-muted">Bought</p>
+                  <p className="text-sm font-bold text-success">{formatQuantity(queryBought, queryUnit)}</p>
+                </div>
+                <div className="rounded-xl bg-surface-2/70 p-3">
+                  <p className="text-2xs text-muted">Sold</p>
+                  <p className="text-sm font-bold text-danger">{formatQuantity(querySold, queryUnit)}</p>
+                </div>
+                <div className="rounded-xl bg-surface-2/70 p-3">
+                  <p className="text-2xs text-muted">Ledger Balance</p>
+                  <p className="text-sm font-bold text-accent">{formatQuantity(queryBought - querySold, queryUnit)}</p>
+                </div>
+              </div>
+
+              {ledgerMatches.length > 0 ? (
+                <div className="divide-y divide-border/50 max-h-72 overflow-y-auto">
+                  {ledgerMatches.map((row, index) => (
+                    <div key={`${row.source}-${row.recordId}-${row.productName}-${index}`} className="flex items-center justify-between gap-3 py-2.5">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-primary truncate">{row.productName}</p>
+                        <p className="text-2xs text-muted truncate">{row.partyName || "Party"} · {row.documentNo || "No doc"} · {fmtDate(row.date)}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={`text-xs font-bold ${row.source === "purchase" ? "text-success" : "text-danger"}`}>
+                          {row.source === "purchase" ? "+" : "-"}{formatQuantity(row.quantity, row.unit)}
+                        </p>
+                        <p className="text-2xs text-muted capitalize">{row.source}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center">
+                  <FiPackage size={24} className="mx-auto mb-2 text-muted opacity-40" />
+                  <p className="text-sm font-semibold text-primary">No item history yet</p>
+                  <p className="text-xs text-muted mt-1">Scan purchase bills and sales invoices with item rows to build history.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="card-premium overflow-hidden">
+              <div className="p-4 border-b border-border">
+                <p className="text-sm font-semibold text-primary">Advanced Inventory Intelligence</p>
+                <p className="text-xs text-muted mt-0.5">Bought minus sold, linked with manual stock where available.</p>
+              </div>
+              {loading ? (
+                <div className="p-6 space-y-3">
+                  {[1,2,3].map(i => <div key={i} className="h-14 bg-surface-2 rounded-xl animate-pulse" />)}
+                </div>
+              ) : intelligenceRows.length === 0 ? (
+                <div className="py-12 text-center px-4">
+                  <p className="text-sm font-semibold text-primary">No product intelligence yet</p>
+                  <p className="text-xs text-muted mt-1">Add products or scan bills/invoices to populate this.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border/50">
+                  {intelligenceRows.slice(0, 20).map(row => {
+                    const ledgerStock = row.boughtQty - row.soldQty;
+                    const displayStock = row.currentStock ?? ledgerStock;
+                    const lowStock = row.currentStock !== undefined
+                      ? displayStock <= (row.reorderLevel || 0)
+                      : displayStock <= 0;
+                    return (
+                      <div key={row.productName} className="px-4 py-3 hover:bg-surface-2/40 transition-colors">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-primary truncate">{row.productName}</p>
+                            <p className="text-2xs text-muted mt-0.5">
+                              Last buy: {fmtDate(row.lastBought)} · Last sale: {fmtDate(row.lastSold)}
+                            </p>
+                          </div>
+                          <Badge variant={lowStock ? "warning" : "success"}>
+                            {lowStock ? "Reorder Check" : "Healthy"}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mt-3">
+                          <div className="rounded-lg bg-surface-2/70 p-2">
+                            <p className="text-2xs text-muted">Bought</p>
+                            <p className="text-xs font-bold text-success">{formatQuantity(row.boughtQty, row.unit)}</p>
+                          </div>
+                          <div className="rounded-lg bg-surface-2/70 p-2">
+                            <p className="text-2xs text-muted">Sold</p>
+                            <p className="text-xs font-bold text-danger">{formatQuantity(row.soldQty, row.unit)}</p>
+                          </div>
+                          <div className="rounded-lg bg-surface-2/70 p-2">
+                            <p className="text-2xs text-muted">{row.currentStock !== undefined ? "Current Stock" : "Est. Stock"}</p>
+                            <p className="text-xs font-bold text-accent">{formatQuantity(displayStock, row.unit)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Products Tab */}
         {tab === "products" && (

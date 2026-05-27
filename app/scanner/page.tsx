@@ -32,6 +32,20 @@ const addDays = (date: string, days: number) => {
   return d.toISOString().split("T")[0];
 };
 
+const toInputDate = (value?: string) => {
+  if (!value) return new Date().toISOString().split("T")[0];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const dmy = value.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (dmy) {
+    const [, day, month, year] = dmy;
+    const fullYear = year.length === 2 ? `20${year}` : year;
+    return `${fullYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().split("T")[0];
+  return new Date().toISOString().split("T")[0];
+};
+
 function resizeImage(file: File, maxWidth = 1200): Promise<{ dataUrl: string; mimeType: string }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -77,9 +91,11 @@ export default function ScannerPage() {
     try {
       const { dataUrl, mimeType } = await resizeImage(file);
       const data = await api.scanner.extract(dataUrl, mimeType);
-      const ext = data.extracted;
+      if (data.success === false) throw new Error(data.error || "AI scan failed");
+      const ext = data.extracted || data.data;
+      if (!ext) throw new Error("AI did not return readable invoice data");
       const amountValue = Number(ext.total_amount || ext.invoice_amount || 0);
-      const invoiceDate = ext.invoice_date || new Date().toISOString().split("T")[0];
+      const invoiceDate = toInputDate(ext.invoice_date);
       const rows = Array.isArray(ext.items) && ext.items.length > 0
         ? ext.items.map((item) => ({
             desc: item.description || ext.notes || "Invoice item",
@@ -97,7 +113,7 @@ export default function ScannerPage() {
         amount:        fmtAmount(amountValue),
         amountValue,
         date:          invoiceDate,
-        dueDate:       ext.due_date || addDays(invoiceDate, 30),
+        dueDate:       ext.due_date ? toInputDate(ext.due_date) : addDays(invoiceDate, 30),
         supplierName:  ext.supplier_name,
         notes:         ext.notes,
         items:         rows,

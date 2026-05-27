@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
   FiPlus, FiEdit2, FiTrash2, FiAlertCircle, FiCheckCircle, FiClock,
   FiCamera, FiX, FiZap, FiUpload,
 } from "react-icons/fi";
 import { getToken } from "@/lib/api";
+import { buildProductLedgerRows, formatQuantity, groupProductRows, matchProductQuery, sortByDateDesc } from "@/lib/productLedger";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -21,6 +22,7 @@ type Purchase = {
   paid_amount: number;
   status: "paid" | "partial" | "unpaid";
   notes?: string;
+  items?: BillItem[] | null;
 };
 
 type BillItem = {
@@ -89,8 +91,22 @@ const scanNumber = (ex: Record<string, unknown>, keys: string[]) => {
   return 0;
 };
 
+const toInputDate = (value?: string) => {
+  if (!value) return new Date().toISOString().split("T")[0];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const dmy = value.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (dmy) {
+    const [, day, month, year] = dmy;
+    const fullYear = year.length === 2 ? `20${year}` : year;
+    return `${fullYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().split("T")[0];
+  return new Date().toISOString().split("T")[0];
+};
+
 const scanDate = (ex: Record<string, unknown>, keys: string[]) =>
-  scanText(ex, keys) || new Date().toISOString().split("T")[0];
+  toInputDate(scanText(ex, keys));
 
 const scanItems = (ex: Record<string, unknown>): BillItem[] =>
   Array.isArray(ex.items) ? (ex.items as BillItem[]) : [];
@@ -117,6 +133,14 @@ function resizeImage(file: File, maxWidth = 1024): Promise<{ base64: string; mim
   });
 }
 
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const scanBody = (base64: string, mimeType: string) => JSON.stringify({
+  image: base64,
+  image_base64: `data:${mimeType};base64,${base64}`,
+  mimeType,
+});
+
 export default function PurchasesPage() {
   const [purchases, setPurchases]       = useState<Purchase[]>([]);
   const [loading, setLoading]           = useState(true);
@@ -125,6 +149,7 @@ export default function PurchasesPage() {
   const [payModal, setPayModal]         = useState<Purchase | null>(null);
   const [payAmount, setPayAmount]       = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [productQuery, setProductQuery] = useState("");
   const [saving, setSaving]             = useState(false);
 
   // Scan / camera states
@@ -160,6 +185,13 @@ export default function PurchasesPage() {
     due_date: "", total_amount: "", paid_amount: "0", notes: "",
   };
   const [form, setForm] = useState(emptyForm);
+
+  const requestPurchaseScan = (base64: string, mimeType: string) =>
+    fetch(`${API}/api/purchases/scan`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+      body: scanBody(base64, mimeType),
+    });
 
   // Stop camera stream + cleanup + exit fullscreen
   const stopCamera = useCallback(() => {
@@ -276,51 +308,54 @@ export default function PurchasesPage() {
       setBulkDone(i);
       setBulkCurrent(fileArray[i].name);
 
-      // GROQ free tier: ~3 scans/min with 512px images — 22s gap keeps us safe
-      if (i > 0) {
-        setBulkWaiting(true);
-        await new Promise(r => setTimeout(r, 22000));
-        setBulkWaiting(false);
-      }
       if (bulkCancelRef.current) break;
 
       try {
         const { base64, mimeType } = await resizeImage(fileArray[i]);
-        const r = await fetch(`${API}/api/purchases/scan`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ image: base64, mimeType }),
-        });
+        let r = await requestPurchaseScan(base64, mimeType);
 
         if (r.status === 429) {
-          stoppedReason = "AI scan limit hit. Remaining files were not processed.";
-          const remaining = fileArray.slice(i);
-          notProcessed += remaining.length;
-          remaining.forEach(file => details.push({
-            fileName: file.name,
-            status: "not_processed",
-            title: "Not processed",
-            reason: "AI scan limit hit. Try these again after a minute.",
-          }));
-          break;
+          setBulkWaiting(true);
+          await wait(22000);
+          setBulkWaiting(false);
+          r = await requestPurchaseScan(base64, mimeType);
+          if (r.status === 429) {
+            stoppedReason = "AI scan limit hit. Remaining files were not processed.";
+            const remaining = fileArray.slice(i);
+            notProcessed += remaining.length;
+            remaining.forEach(file => details.push({
+              fileName: file.name,
+              status: "not_processed",
+              title: "Not processed",
+              reason: "AI scan limit hit. Try these again after a minute.",
+            }));
+            break;
+          }
         }
         if (!r.ok) {
           failed++;
           details.push({ fileName: fileArray[i].name, status: "failed", title: "Scan failed", reason: "AI scan API rejected this file." });
           continue;
         }
-        const d = await r.json();
+        let d = await r.json();
         if (d.error === 'rate_limit') {
-          stoppedReason = "AI scan limit hit. Remaining files were not processed.";
-          const remaining = fileArray.slice(i);
-          notProcessed += remaining.length;
-          remaining.forEach(file => details.push({
-            fileName: file.name,
-            status: "not_processed",
-            title: "Not processed",
-            reason: "AI scan limit hit. Try these again after a minute.",
-          }));
-          break;
+          setBulkWaiting(true);
+          await wait(22000);
+          setBulkWaiting(false);
+          r = await requestPurchaseScan(base64, mimeType);
+          d = await r.json().catch(() => ({ error: "scan_failed" }));
+          if (r.status === 429 || d.error === 'rate_limit') {
+            stoppedReason = "AI scan limit hit. Remaining files were not processed.";
+            const remaining = fileArray.slice(i);
+            notProcessed += remaining.length;
+            remaining.forEach(file => details.push({
+              fileName: file.name,
+              status: "not_processed",
+              title: "Not processed",
+              reason: "AI scan limit hit. Try these again after a minute.",
+            }));
+            break;
+          }
         }
         if (!d.success || !d.data) {
           failed++;
@@ -398,7 +433,19 @@ export default function PurchasesPage() {
       }
     }
 
-    setBulkDone(fileArray.length);
+    if (bulkCancelRef.current) {
+      stoppedReason = "Bulk scan cancelled.";
+      const remaining = fileArray.slice(details.length);
+      notProcessed += remaining.length;
+      remaining.forEach(file => details.push({
+        fileName: file.name,
+        status: "not_processed",
+        title: "Not processed",
+        reason: "Bulk scan cancelled.",
+      }));
+    }
+
+    setBulkDone(details.length);
     setBulkScanning(false);
     setBulkResults({ added, skipped, failed, notProcessed, stoppedReason, details });
     if (bulkInputRef.current) bulkInputRef.current.value = "";
@@ -466,25 +513,19 @@ export default function PurchasesPage() {
 
     try {
       const { base64, mimeType } = await resizeImage(file);
-      const fetchOpts = {
-        method: "POST" as const,
-        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64, mimeType }),
-      };
-      let r = await fetch(`${API}/api/purchases/scan`, fetchOpts);
+      let r = await requestPurchaseScan(base64, mimeType);
 
       // Auto-retry once on rate limit — 22s countdown then retry
       if (r.status === 429) {
         for (let cd = 22; cd > 0; cd--) {
           setScanCountdown(cd);
-          await new Promise(res => setTimeout(res, 1000));
+          await wait(1000);
         }
         setScanCountdown(null);
-        r = await fetch(`${API}/api/purchases/scan`, fetchOpts);
+        r = await requestPurchaseScan(base64, mimeType);
       }
 
       const d = await r.json();
-      console.log('[SCAN DEBUG]', { status: r.status, success: d.success, error: d.error, details: d.details, _debug: d._debug, data: d.data });
 
       if (r.status === 429 || d.error === 'rate_limit') {
         setScanError("⚡ AI scan busy. Please wait 1 minute and try again.");
@@ -553,6 +594,25 @@ export default function PurchasesPage() {
   const filtered  = filterStatus === "all" ? purchases : purchases.filter(p => p.status === filterStatus);
   const totalDue  = purchases.filter(p => p.status !== "paid").reduce((s, p) => s + (p.total_amount - p.paid_amount), 0);
   const overdue   = purchases.filter(p => p.status !== "paid" && p.due_date && new Date(p.due_date) < new Date());
+  const productRows = useMemo(() => buildProductLedgerRows(purchases, {
+    source: "purchase",
+    date: (purchase) => purchase.purchase_date,
+    partyName: (purchase) => purchase.supplier_name,
+    documentNo: (purchase) => purchase.bill_number,
+    recordId: (purchase) => purchase.id,
+    items: (purchase) => purchase.items,
+    notes: (purchase) => purchase.notes,
+  }), [purchases]);
+  const topBoughtItems = useMemo(() => groupProductRows(productRows).slice(0, 4), [productRows]);
+  const productMatches = useMemo(() =>
+    sortByDateDesc(productRows.filter(row => matchProductQuery(row, productQuery))),
+    [productRows, productQuery]
+  );
+  const productTotals = productMatches.reduce((acc, row) => ({
+    quantity: acc.quantity + row.quantity,
+    amount: acc.amount + (row.amount || 0),
+  }), { quantity: 0, amount: 0 });
+  const productMatchUnit = productMatches.find(row => row.unit)?.unit;
 
   // ── Render ───────────────────────────────────────────────────────
   return (
@@ -799,6 +859,67 @@ export default function PurchasesPage() {
           </div>
         </div>
       )}
+
+      <div className="mb-4 p-4 bg-surface-2/60 border border-white/8 rounded-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+          <div>
+            <p className="text-sm font-bold text-primary">Product Purchase Finder</p>
+            <p className="text-xs text-muted">Search A2C machine and see qty bought, supplier, bill and date.</p>
+          </div>
+          <input
+            value={productQuery}
+            onChange={e => setProductQuery(e.target.value)}
+            placeholder="Search product bought..."
+            className="w-full sm:w-64 bg-surface-1 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary placeholder-muted focus:outline-none focus:border-accent/50"
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          <div className="rounded-xl bg-surface-1/80 p-3">
+            <p className="text-2xs text-muted">Qty Bought</p>
+            <p className="text-sm font-bold text-success">{formatQuantity(productTotals.quantity, productMatchUnit)}</p>
+          </div>
+          <div className="rounded-xl bg-surface-1/80 p-3">
+            <p className="text-2xs text-muted">Purchase Value</p>
+            <p className="text-sm font-bold text-primary">{fmtINR(productTotals.amount)}</p>
+          </div>
+          <div className="rounded-xl bg-surface-1/80 p-3">
+            <p className="text-2xs text-muted">Entries</p>
+            <p className="text-sm font-bold text-accent">{productMatches.length}</p>
+          </div>
+        </div>
+        {productMatches.length > 0 ? (
+          <div className="max-h-44 overflow-y-auto divide-y divide-white/5">
+            {productMatches.slice(0, 8).map((row, index) => (
+              <div key={`${row.recordId}-${row.productName}-${index}`} className="flex items-center justify-between gap-3 py-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-primary truncate">{row.productName}</p>
+                  <p className="text-2xs text-muted truncate">{row.partyName || "Supplier"} · {row.documentNo || "No bill"} · {fmtDate(row.date)}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs font-bold text-success">{formatQuantity(row.quantity, row.unit)}</p>
+                  {row.amount ? <p className="text-2xs text-muted">{fmtINR(row.amount)}</p> : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted">No item lines found yet. Scan bills with item rows or add product details in notes.</p>
+        )}
+        {topBoughtItems.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {topBoughtItems.map(item => (
+              <button
+                key={item.productName}
+                type="button"
+                onClick={() => setProductQuery(item.productName)}
+                className="text-xs px-2 py-1 rounded-lg bg-surface-1 text-primary border border-white/5"
+              >
+                {item.productName} <span className="text-muted">x{formatQuantity(item.quantity, item.unit)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Filter */}
       <div className="flex gap-2 mb-4">
