@@ -119,6 +119,95 @@ interface ParsedBankTransaction {
   reference: string;
 }
 
+type TransactionInput = {
+  user_id: string;
+  type: string;
+  category: string;
+  amount: string;
+  party_name?: string;
+  description?: string;
+  transaction_date: string;
+  payment_method?: string;
+  reference?: string;
+};
+
+const LOCAL_LEDGER_PREFIX = "vantro_local_ledger_";
+
+function normalizeTransaction(row: TransactionInput | ParsedBankTransaction): Transaction {
+  return {
+    id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+    type: row.type === "in" ? "in" : "out",
+    category: row.category || (row.type === "in" ? "Customer Payment" : "Supplier Payment"),
+    amount: Number(String(row.amount).replace(/[₹,\s]/g, "")) || 0,
+    party_name: row.party_name || "",
+    description: row.description || "",
+    transaction_date: row.transaction_date || new Date().toISOString().split("T")[0],
+    payment_method: row.payment_method || "Bank Transfer",
+    reference: row.reference || "",
+  };
+}
+
+function localLedgerKey(userId: string): string {
+  return `${LOCAL_LEDGER_PREFIX}${userId}`;
+}
+
+function readLocalLedger(userId: string): Transaction[] {
+  if (typeof window === "undefined" || !userId) return [];
+  try {
+    const rows = JSON.parse(localStorage.getItem(localLedgerKey(userId)) || "[]");
+    return Array.isArray(rows) ? rows : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalLedger(userId: string, rows: Transaction[]) {
+  if (typeof window === "undefined" || !userId) return;
+  localStorage.setItem(localLedgerKey(userId), JSON.stringify(rows));
+}
+
+function addLocalLedgerRows(userId: string, rows: (TransactionInput | ParsedBankTransaction)[]): Transaction[] {
+  const existing = readLocalLedger(userId);
+  const seen = new Set(existing.map(row => `${row.transaction_date}|${row.type}|${row.amount}|${row.party_name}|${row.reference}`));
+  const additions = rows
+    .map(normalizeTransaction)
+    .filter(row => {
+      const key = `${row.transaction_date}|${row.type}|${row.amount}|${row.party_name}|${row.reference}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  const merged = [...additions, ...existing].sort((a, b) => String(b.transaction_date).localeCompare(String(a.transaction_date)));
+  writeLocalLedger(userId, merged);
+  return additions;
+}
+
+function mergeTransactions(remoteRows: Transaction[], localRows: Transaction[]): Transaction[] {
+  const seen = new Set<string>();
+  return [...localRows, ...remoteRows].filter(row => {
+    const key = `${row.transaction_date}|${row.type}|${Number(row.amount)}|${row.party_name || ""}|${row.reference || ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).sort((a, b) => String(b.transaction_date).localeCompare(String(a.transaction_date)));
+}
+
+function buildSummary(rows: Transaction[]): LedgerSummary {
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  return rows.reduce((acc, row) => {
+    const amount = Number(row.amount || 0);
+    if (row.type === "in") acc.totalIn += amount;
+    if (row.type === "out") acc.totalOut += amount;
+    if (String(row.transaction_date || "").startsWith(currentMonth)) {
+      if (row.type === "in") acc.monthIn += amount;
+      if (row.type === "out") acc.monthOut += amount;
+    }
+    acc.balance = acc.totalIn - acc.totalOut;
+    acc.monthBalance = acc.monthIn - acc.monthOut;
+    return acc;
+  }, { totalIn: 0, totalOut: 0, balance: 0, monthIn: 0, monthOut: 0, monthBalance: 0 });
+}
+
 function parseLedgerDate(value: string): string {
   const [day, month, year] = value.split("-");
   return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
@@ -409,41 +498,50 @@ export default function LedgerPage() {
     try { await api.transactions.migrate(); } catch {}
   }, []);
 
-  const createTransaction = useCallback(async (body: {
-    user_id: string;
-    type: string;
-    category: string;
-    amount: string;
-    party_name?: string;
-    description?: string;
-    transaction_date: string;
-    payment_method?: string;
-    reference?: string;
-  }) => {
+  const createTransaction = useCallback(async (body: TransactionInput) => {
     try {
       return await api.transactions.create(body);
     } catch (err: any) {
       const message = String(err?.message || "");
-      if (!message.includes("Internal server error") && !message.includes("Request failed")) throw err;
+      if (
+        !message.includes("Internal server error") &&
+        !message.includes("Request failed") &&
+        !message.includes("Could not find the table") &&
+        !message.includes("DATABASE_URL")
+      ) throw err;
       await migrate();
-      return api.transactions.create(body);
+      try {
+        return await api.transactions.create(body);
+      } catch {
+        addLocalLedgerRows(body.user_id, [body]);
+        return { transaction: normalizeTransaction(body) };
+      }
     }
   }, [migrate]);
 
   const fetchData = useCallback(async (uid: string) => {
     setLoading(true);
+    const localRows = readLocalLedger(uid);
     try {
       const data = await api.transactions.list(uid);
-      setTransactions(data.transactions || []);
-      setSummary(data.summary || { totalIn: 0, totalOut: 0, balance: 0, monthIn: 0, monthOut: 0, monthBalance: 0 });
+      const mergedRows = mergeTransactions(data.transactions || [], localRows);
+      setTransactions(mergedRows);
+      setSummary(buildSummary(mergedRows));
     } catch (err: any) {
       if (err?.message?.includes("500") || err?.message?.includes("failed") || err?.message?.includes("Internal server error")) {
         await migrate();
         try {
           const data = await api.transactions.list(uid);
-          setTransactions(data.transactions || []);
-          setSummary(data.summary || { totalIn: 0, totalOut: 0, balance: 0, monthIn: 0, monthOut: 0, monthBalance: 0 });
-        } catch {}
+          const mergedRows = mergeTransactions(data.transactions || [], localRows);
+          setTransactions(mergedRows);
+          setSummary(buildSummary(mergedRows));
+        } catch {
+          setTransactions(localRows);
+          setSummary(buildSummary(localRows));
+        }
+      } else {
+        setTransactions(localRows);
+        setSummary(buildSummary(localRows));
       }
       setError("");
     }
@@ -526,14 +624,29 @@ export default function LedgerPage() {
     setError("");
     try {
       await migrate();
+      const failedRows: ParsedBankTransaction[] = [];
       for (const row of pdfRows) {
-        await createTransaction({ ...row, user_id: userId });
+        try {
+          await createTransaction({ ...row, user_id: userId });
+        } catch {
+          failedRows.push(row);
+        }
       }
-      setScanMessage(`Imported ${pdfRows.length} bank ledger transactions.`);
+      if (failedRows.length > 0) {
+        addLocalLedgerRows(userId, failedRows);
+      }
+      if (failedRows.length > 0) {
+        setScanMessage(`Imported ${pdfRows.length} bank ledger transactions. Saved ${failedRows.length} locally because cloud ledger storage is not ready.`);
+      } else {
+        setScanMessage(`Imported ${pdfRows.length} bank ledger transactions.`);
+      }
       setPdfRows([]);
       await fetchData(userId);
     } catch (err: any) {
-      setError(err?.message || "Could not import PDF transactions. Please try again.");
+      addLocalLedgerRows(userId, pdfRows);
+      setScanMessage(`Imported ${pdfRows.length} bank ledger transactions locally. Cloud ledger storage is not ready yet.`);
+      setPdfRows([]);
+      await fetchData(userId);
     } finally {
       setImportingPdf(false);
     }
