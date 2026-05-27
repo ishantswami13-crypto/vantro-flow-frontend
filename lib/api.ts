@@ -19,6 +19,16 @@ async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 3
   try {
     const res = await fetch(`${BASE}${path}`, { ...options, headers, signal: controller.signal });
     const data = await res.json();
+    // Auto-logout on 401 — token expired or invalid
+    if (res.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('vantro_token');
+        localStorage.removeItem('vantro_user');
+        document.cookie = 'vantro_token=; path=/; max-age=0; SameSite=Lax';
+        window.location.href = '/login';
+      }
+      throw new Error('Session expired. Please log in again.');
+    }
     if (!res.ok) throw new Error(data.error || 'Request failed');
     return data;
   } catch (err: unknown) {
@@ -27,6 +37,15 @@ async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 3
   } finally {
     clearTimeout(timer);
   }
+}
+
+function stripDataUrl(value: string): string {
+  const [, base64] = value.split(',');
+  return base64 || value;
+}
+
+function ensureDataUrl(value: string, mimeType: string): string {
+  return value.startsWith('data:') ? value : `data:${mimeType};base64,${value}`;
 }
 
 // ─── Auth ────────────────────────────────────────────────
@@ -91,9 +110,14 @@ export const api = {
   // ─── Scanner ────────────────────────────────────────────
   scanner: {
     extract: (imageBase64: string, mimeType = 'image/jpeg') =>
-      request<{ extracted: ExtractedInvoice }>('/api/scan-document', {
+      request<{ success?: boolean; extracted?: ExtractedInvoice; data?: ExtractedInvoice; error?: string }>('/api/scan-document', {
         method: 'POST',
-        body: JSON.stringify({ image_base64: imageBase64, mimeType, scan_type: 'invoice' }),
+        body: JSON.stringify({
+          image: stripDataUrl(imageBase64),
+          image_base64: ensureDataUrl(imageBase64, mimeType),
+          mimeType,
+          scan_type: 'invoice',
+        }),
       }, 60_000),
   },
 
@@ -179,6 +203,16 @@ export const api = {
       party_name?: string; description?: string; transaction_date: string;
       payment_method?: string; reference?: string;
     }) => request<{ transaction: Transaction }>('/api/transactions', { method: 'POST', body: JSON.stringify(body) }),
+    scan: (imageBase64: string, mimeType = 'image/jpeg') =>
+      request<{ success?: boolean; data?: ExtractedTransaction; extracted?: ExtractedTransaction; error?: string }>('/api/transactions/scan', {
+        method: 'POST',
+        body: JSON.stringify({
+          image: stripDataUrl(imageBase64),
+          image_base64: ensureDataUrl(imageBase64, mimeType),
+          mimeType,
+          scan_type: 'transaction',
+        }),
+      }, 60_000),
     migrate: () => request<{ success: boolean }>('/api/transactions/migrate', { method: 'POST' }),
   },
 };
@@ -190,9 +224,10 @@ export function saveAuth(token: string, user: User, rememberMe = true) {
   localStorage.setItem('vantro_token', token);
   localStorage.setItem('vantro_user', JSON.stringify(user));
   // Cookie so Next.js middleware can read it (localStorage is client-only, middleware can't touch it)
-  // rememberMe=true → 30-day persistent cookie; false → session cookie (gone on browser close)
-  const maxAgePart = rememberMe ? `; max-age=${30 * 24 * 60 * 60}` : '';
-  document.cookie = `vantro_token=${token}; path=/${maxAgePart}; SameSite=Lax`;
+  // Always set 30-day persistent cookie — token itself is also 30d now
+  const maxAge = 30 * 24 * 60 * 60; // 30 days in seconds
+  const secure = typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `vantro_token=${token}; path=/; max-age=${maxAge}${secure}; SameSite=Lax`;
 }
 
 export function getUser(): User | null {
@@ -410,6 +445,17 @@ export interface ExtractedInvoice {
   due_date?: string;
   notes?: string;
   items?: string | { description?: string; qty?: number; unit?: string; price?: number; amount?: number }[];
+}
+
+export interface ExtractedTransaction {
+  type?: 'in' | 'out';
+  category?: string;
+  amount?: number | string;
+  party_name?: string;
+  description?: string;
+  transaction_date?: string;
+  payment_method?: string;
+  reference?: string;
 }
 
 export interface ChatMessage {
