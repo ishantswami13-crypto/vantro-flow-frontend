@@ -137,14 +137,46 @@ function lineToRow<T>(item: LineItem, record: T, config: LedgerConfig<T>): Produ
 }
 
 export function buildProductLedgerRows<T>(records: T[], config: LedgerConfig<T>): ProductLedgerRow[] {
-  return records.flatMap((record) => {
-    const directItems = config.items?.(record) || [];
+  // Global dedup key → row map: prevents showing same product from same document twice
+  // Handles: DB-level duplicate records AND same product in both items[] + notes
+  const globalDedup = new Map<string, ProductLedgerRow>();
+
+  for (const record of records) {
+    const rawItems = config.items?.(record);
+
+    // Handle items returned as a JSON string (some API endpoints don't parse JSON columns)
+    let directItems: LineItem[] = [];
+    if (Array.isArray(rawItems) && rawItems.length > 0) {
+      directItems = rawItems as LineItem[];
+    } else if (typeof rawItems === "string" && rawItems.trim()) {
+      try {
+        const parsed = JSON.parse(rawItems);
+        if (Array.isArray(parsed)) directItems = parsed;
+      } catch { /* ignore malformed JSON */ }
+    }
+
     const noteItems = itemsFromNotes(config.notes?.(record));
     const items = directItems.length > 0 ? directItems : noteItems;
-    return items
+
+    const rows = items
       .map((item) => lineToRow(item, record, config))
       .filter((row): row is ProductLedgerRow => Boolean(row));
-  });
+
+    for (const row of rows) {
+      // Unique key: source + document number (or recordId) + product
+      const dedupKey = `${row.source}:${row.documentNo ?? row.recordId ?? ""}:${row.productKey}`;
+      if (!globalDedup.has(dedupKey)) {
+        globalDedup.set(dedupKey, { ...row });
+      } else {
+        // Same product in same document appearing again — merge quantities/amounts
+        const existing = globalDedup.get(dedupKey)!;
+        existing.quantity += row.quantity;
+        existing.amount = (existing.amount ?? 0) + (row.amount ?? 0);
+      }
+    }
+  }
+
+  return Array.from(globalDedup.values());
 }
 
 export function matchProductQuery(row: ProductLedgerRow, query: string): boolean {
