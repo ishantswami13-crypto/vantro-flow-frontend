@@ -1,6 +1,6 @@
 // Vantro Flow Service Worker - Offline Support + Cache Strategy
-const CACHE_NAME = "vantro-v2";
-const STATIC_ASSETS = ["/", "/dashboard", "/manifest.json", "/icon-192.png", "/icon-512.png"];
+const CACHE_NAME = "vantro-v3";
+const STATIC_ASSETS = ["/manifest.json", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -25,6 +25,18 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.method !== "GET" || url.protocol === "chrome-extension:") return;
 
+  if (event.request.mode === "navigate" || event.request.destination === "document") {
+    event.respondWith(
+      fetch(event.request).catch(() =>
+        new Response("You are offline. Please reconnect and refresh Vantro.", {
+          status: 503,
+          headers: { "Content-Type": "text/plain; charset=utf-8" },
+        })
+      )
+    );
+    return;
+  }
+
   if (url.hostname.includes("railway.app") || url.pathname.startsWith("/api/")) {
     event.respondWith(
       fetch(event.request).catch(() =>
@@ -41,7 +53,7 @@ self.addEventListener("fetch", (event) => {
       if (cached) return cached;
       return fetch(event.request)
         .then((response) => {
-          if (response.ok) {
+          if (response.ok && event.request.destination !== "") {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }

@@ -25,6 +25,20 @@ function getGreeting(name: string): string {
   return `${salutation}, ${first}! ${h < 12 ? "☀️" : h < 17 ? "🙏" : "🌙"}`;
 }
 
+function getStableGreeting(name: string): string {
+  const first = name.split(" ")[0] || "User";
+  return `Namaskar, ${first}!`;
+}
+
+function getDashboardClock(name: string) {
+  const now = new Date();
+  return {
+    date: now.toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
+    time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+    greeting: getGreeting(name),
+  };
+}
+
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
 const CUSTOMERS = [
@@ -117,12 +131,20 @@ export default function DashboardPage() {
   const [guideData, setGuideData] = useState({ waConnected: false, autoEnabled: false });
   const [liveCustomers, setLiveCustomers] = useState<typeof CUSTOMERS>([]);
   const [rawInvoices, setRawInvoices]       = useState<Invoice[]>([]);
+  const [dashboardClock, setDashboardClock] = useState<ReturnType<typeof getDashboardClock> | null>(null);
   const today = new Date().toISOString().split("T")[0];
 
   // Hydration-safe: read localStorage only after mount (never on the server)
   useEffect(() => {
     setShowGuide(localStorage.getItem("vantro_guide_dismissed") !== "1");
   }, []);
+
+  useEffect(() => {
+    const updateClock = () => setDashboardClock(getDashboardClock(ownerName));
+    updateClock();
+    const timer = window.setInterval(updateClock, 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, [ownerName]);
 
   useEffect(() => {
     const user = getUser();
@@ -395,10 +417,10 @@ export default function DashboardPage() {
             <div>
               <p className="text-xs text-muted font-medium flex items-center gap-1.5">
                 <span className="status-live text-success">Live</span>
-                {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                {dashboardClock?.date ?? "Today"}
               </p>
               <h2 className="text-lg font-black text-primary tracking-tight leading-tight">
-                {getGreeting(ownerName)}
+                {dashboardClock?.greeting ?? getStableGreeting(ownerName)}
               </h2>
             </div>
             <div className="flex flex-col items-center px-3 py-2 rounded-xl border border-orange-500/20"
@@ -462,7 +484,7 @@ export default function DashboardPage() {
               <p className="text-2xs font-bold text-accent uppercase tracking-wider">AI Briefing</p>
               {!briefingLoading && briefing && (
                 <span className="ml-auto text-2xs text-muted">
-                  {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                  {dashboardClock?.time ?? ""}
                 </span>
               )}
             </div>
