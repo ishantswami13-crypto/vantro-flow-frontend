@@ -29,8 +29,11 @@ export default function BillsPage() {
   const [items, setItems] = useState<Item[]>([emptyItem()]);
   const [submitting, setSubmitting] = useState(false);
 
+  const [error, setError] = useState("");
+
   const load = async () => {
     setLoading(true);
+    setError("");
     try {
       const [bRes, pRes] = await Promise.all([
         fetch(`${API}/api/bills`, { headers: { Authorization: `Bearer ${token()}` } }),
@@ -39,6 +42,8 @@ export default function BillsPage() {
       const [b, p] = await Promise.all([bRes.json(), pRes.json()]);
       setBills(b.bills || []);
       setProfile(p);
+    } catch {
+      setError("Could not load invoices. Check your connection and try again.");
     } finally { setLoading(false); }
   };
 
@@ -128,9 +133,15 @@ export default function BillsPage() {
       </div>
 
       {/* Bills list */}
+      {error && (
+        <div className="card-base p-6 text-center mb-4">
+          <p className="text-danger text-sm font-semibold mb-2">⚠ {error}</p>
+          <button onClick={load} className="text-xs text-muted border border-border rounded-lg px-3 py-1.5 hover:text-primary transition-colors">Retry</button>
+        </div>
+      )}
       {loading ? <div className="text-center text-muted py-10"><FiRefreshCw className="animate-spin inline mr-2" />Loading…</div> : (
         <div className="space-y-2">
-          {bills.length === 0 && !showForm && (
+          {bills.length === 0 && !showForm && !error && (
             <div className="card-base p-10 text-center">
               <FiFileText size={40} className="text-muted mx-auto mb-3" />
               <p className="font-semibold text-primary mb-1">Koi invoice nahi abhi</p>

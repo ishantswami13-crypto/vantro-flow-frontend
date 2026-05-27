@@ -93,7 +93,7 @@ export default function TodayPage() {
   const [submitting, setSubmitting] = useState(false);
   const [expanded, setExpanded] = useState<string|null>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
-  const token = () => localStorage.getItem("vantro_token") || "";
+  const token = () => typeof window !== "undefined" ? localStorage.getItem("vantro_token") || "" : "";
 
   const load = useCallback(async (d = date) => {
     if (isDemoMode()) { setSummary(DEMO_SUMMARY); setLoading(false); return; }
@@ -107,7 +107,7 @@ export default function TodayPage() {
     } finally { setLoading(false); }
   }, [date]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const changeDate = (d: string) => {
     setDate(d);

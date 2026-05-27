@@ -11,8 +11,8 @@ const securityHeaders = [
   { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
   // Don't leak URL in Referer header to third parties
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  // Restrict browser features (no camera/mic/geo access by default)
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()' },
+  // Restrict browser features — allow camera/mic only on same origin (needed for OCR scanner)
+  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=(), payment=(self "https://checkout.razorpay.com"), usb=()' },
   // Content Security Policy — allow only our own assets + backend + trusted CDNs
   {
     key: 'Content-Security-Policy',
@@ -24,10 +24,11 @@ const securityHeaders = [
       "img-src 'self' data: blob: https:",
       "connect-src 'self' https://vantro-flow-backend-production.up.railway.app https://*.posthog.com https://*.i.posthog.com https://*.supabase.co wss://*.supabase.co",
       "frame-src https://checkout.razorpay.com https://api.razorpay.com",
+      "media-src 'self' blob:",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
-      "upgrade-insecure-requests",
+      // upgrade-insecure-requests intentionally omitted — breaks localhost dev
     ].join('; '),
   },
 ];
