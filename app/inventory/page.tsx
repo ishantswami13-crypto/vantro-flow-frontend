@@ -396,13 +396,28 @@ export default function InventoryPage() {
                 </div>
                 <div>
                   <label className="text-xs text-muted block mb-1">Unit</label>
-                  <input
+                  <select
                     value={form.unit}
                     onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
-                    placeholder="pcs / kg / mtr"
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
-                  />
+                    style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                  >
+                    <option value="pcs">Piece (pcs)</option>
+                    <option value="set">Set</option>
+                    <option value="kg">Kilogram (kg)</option>
+                    <option value="gm">Gram (gm)</option>
+                    <option value="mtr">Metre (mtr)</option>
+                    <option value="litre">Litre</option>
+                    <option value="ml">Millilitre (ml)</option>
+                    <option value="box">Box</option>
+                    <option value="bag">Bag</option>
+                    <option value="bundle">Bundle</option>
+                    <option value="dozen">Dozen</option>
+                    <option value="roll">Roll</option>
+                    <option value="pair">Pair</option>
+                    <option value="sqft">Sq. Ft</option>
+                    <option value="sqmtr">Sq. Metre</option>
+                  </select>
                 </div>
               </div>
 
