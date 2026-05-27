@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { FiUsers, FiCalendar, FiDollarSign, FiChevronLeft, FiChevronRight, FiCheck, FiX, FiMinus } from "react-icons/fi";
 import { getToken } from "@/lib/api";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -95,6 +96,7 @@ export default function AttendancePage() {
   const totalPresent = attendance.filter(a => a.status === "present" && a.date.substring(0,7) === `${year}-${String(month).padStart(2,"0")}`).length;
 
   return (
+    <DashboardLayout pageTitle="Staff Attendance">
     <div className="p-4 max-w-5xl mx-auto pb-24">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
@@ -300,5 +302,6 @@ export default function AttendancePage() {
         </div>
       )}
     </div>
+    </DashboardLayout>
   );
 }
