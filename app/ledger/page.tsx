@@ -524,29 +524,19 @@ export default function LedgerPage() {
     const localRows = readLocalLedger(uid);
     try {
       const data = await api.transactions.list(uid);
+      // Backend is now the primary source. 
+      // We still merge with local rows for safety, but backend rows will override local duplicates.
       const mergedRows = mergeTransactions(data.transactions || [], localRows);
       setTransactions(mergedRows);
-      setSummary(buildSummary(mergedRows));
+      setSummary(data.summary || buildSummary(mergedRows));
     } catch (err: any) {
-      if (err?.message?.includes("500") || err?.message?.includes("failed") || err?.message?.includes("Internal server error")) {
-        await migrate();
-        try {
-          const data = await api.transactions.list(uid);
-          const mergedRows = mergeTransactions(data.transactions || [], localRows);
-          setTransactions(mergedRows);
-          setSummary(buildSummary(mergedRows));
-        } catch {
-          setTransactions(localRows);
-          setSummary(buildSummary(localRows));
-        }
-      } else {
-        setTransactions(localRows);
-        setSummary(buildSummary(localRows));
-      }
-      setError("");
+      // If backend fails, use local storage as fallback
+      setTransactions(localRows);
+      setSummary(buildSummary(localRows));
+      console.warn("Ledger backend error, using local fallback:", err);
     }
     setLoading(false);
-  }, [migrate]);
+  }, []);
 
   useEffect(() => {
     const u = getUser();

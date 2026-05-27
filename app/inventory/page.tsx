@@ -127,15 +127,10 @@ export default function InventoryPage() {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const token = getToken();
       const [inventoryData, salesData, purchasesData] = await Promise.all([
         api.inventory(user.id).catch(() => ({ products: [], movements: [], summary: { total_products: 0, total_value: 0, low_stock_count: 0, out_of_stock_count: 0 } })),
-        fetch(`${API}/api/sales`, { headers: { Authorization: `Bearer ${token}` } })
-          .then(r => r.json())
-          .catch(() => ({ sales: [] })),
-        fetch(`${API}/api/purchases`, { headers: { Authorization: `Bearer ${token}` } })
-          .then(r => r.json())
-          .catch(() => ({ purchases: [] })),
+        api.sales.list().catch(() => ({ sales: [] })),
+        api.purchases.list().catch(() => ({ purchases: [] })),
       ]);
 
       setProducts(inventoryData.products || []);
