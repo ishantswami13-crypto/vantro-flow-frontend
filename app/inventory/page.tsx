@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/Badge";
-import { FiPackage, FiAlertTriangle, FiTrendingUp, FiPlus, FiSearch, FiTruck, FiBox } from "react-icons/fi";
-import { api, getUser } from "@/lib/api";
+import { FiPackage, FiAlertTriangle, FiTrendingUp, FiPlus, FiSearch, FiTruck, FiBox, FiX } from "react-icons/fi";
+import { api, getUser, getToken } from "@/lib/api";
+
+const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
 type Product = {
   id: string;
@@ -37,6 +39,11 @@ type Summary = {
   out_of_stock_count: number;
 };
 
+const emptyForm = {
+  name: "", sku: "", category: "", unit: "pcs",
+  unit_price: "", current_stock: "", low_stock_alert: "10",
+};
+
 function getStatus(p: Product): "ok" | "low" | "critical" {
   if (p.current_stock === 0) return "critical";
   if (p.current_stock <= p.low_stock_alert) return "low";
@@ -65,7 +72,13 @@ export default function InventoryPage() {
   const [movements, setMovements] = useState<Movement[]>([]);
   const [summary, setSummary]     = useState<Summary>({ total_products: 0, total_value: 0, low_stock_count: 0, out_of_stock_count: 0 });
 
-  useEffect(() => {
+  // Add product modal
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm]       = useState(emptyForm);
+  const [saving, setSaving]   = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const load = () => {
     const user = getUser();
     if (!user?.id) return;
     setLoading(true);
@@ -77,7 +90,41 @@ export default function InventoryPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const saveProduct = async () => {
+    if (!form.name.trim()) { setFormError("Product name is required"); return; }
+    const user = getUser();
+    if (!user?.id) return;
+    setSaving(true);
+    setFormError("");
+    try {
+      const r = await fetch(`${API}/api/products`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id:         user.id,
+          name:            form.name.trim(),
+          sku:             form.sku.trim() || null,
+          category:        form.category.trim() || null,
+          unit:            form.unit || "pcs",
+          unit_price:      parseFloat(form.unit_price) || 0,
+          current_stock:   parseInt(form.current_stock) || 0,
+          low_stock_alert: parseInt(form.low_stock_alert) || 10,
+        }),
+      });
+      if (!r.ok) { setFormError("Failed to save. Try again."); return; }
+      setShowAdd(false);
+      setForm(emptyForm);
+      load();
+    } catch {
+      setFormError("Network error. Try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const filtered = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -97,8 +144,9 @@ export default function InventoryPage() {
             <p className="text-sm text-muted mt-0.5">Products, stock levels &amp; movements</p>
           </div>
           <button
+            onClick={() => { setShowAdd(true); setForm(emptyForm); setFormError(""); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors"
-            style={{ background: "rgba(255,255,255,0.08)", color: "#fff" }}
+            style={{ background: "#fff", color: "#000" }}
           >
             <FiPlus size={13} /> Add Product
           </button>
@@ -114,10 +162,10 @@ export default function InventoryPage() {
               </div>
             ))
           ) : [
-            { label: "Total Products",   value: summary.total_products.toString(), icon: <FiPackage size={15}/>,      color: "#0066FF" },
-            { label: "Stock Value",      value: fmtVal(summary.total_value),       icon: <FiTrendingUp size={15}/>,   color: "#10D98A" },
-            { label: "Low Stock",        value: summary.low_stock_count.toString(), icon: <FiAlertTriangle size={15}/>,color: "#F5A524" },
-            { label: "Out of Stock",     value: summary.out_of_stock_count.toString(), icon: <FiBox size={15}/>,     color: "#F5424D" },
+            { label: "Total Products",   value: summary.total_products.toString(),    icon: <FiPackage size={15}/>,      color: "#0066FF" },
+            { label: "Stock Value",      value: fmtVal(summary.total_value),          icon: <FiTrendingUp size={15}/>,   color: "#10D98A" },
+            { label: "Low Stock",        value: summary.low_stock_count.toString(),   icon: <FiAlertTriangle size={15}/>,color: "#F5A524" },
+            { label: "Out of Stock",     value: summary.out_of_stock_count.toString(),icon: <FiBox size={15}/>,          color: "#F5424D" },
           ].map(k => (
             <div key={k.label} className="card-metric p-5">
               <div className="flex items-center justify-between mb-3">
@@ -168,8 +216,9 @@ export default function InventoryPage() {
                 </div>
                 <p className="text-sm font-semibold text-primary mb-1">No products yet</p>
                 <p className="text-xs text-muted mb-4">Add your first product to start tracking stock</p>
-                <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
-                  style={{ background: "rgba(255,255,255,0.08)", color: "#fff" }}>
+                <button onClick={() => { setShowAdd(true); setForm(emptyForm); setFormError(""); }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
+                  style={{ background: "#fff", color: "#000" }}>
                   <FiPlus size={12} /> Add Product
                 </button>
               </div>
@@ -264,10 +313,6 @@ export default function InventoryPage() {
           <div className="card-premium overflow-hidden">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <p className="text-sm font-semibold text-primary">Suppliers</p>
-              <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
-                style={{ background: "rgba(255,255,255,0.08)", color: "#fff" }}>
-                <FiPlus size={12} /> Add Supplier
-              </button>
             </div>
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
@@ -275,16 +320,140 @@ export default function InventoryPage() {
                 <FiTruck size={22} style={{ color: "rgba(255,255,255,0.2)" }} />
               </div>
               <p className="text-sm font-semibold text-primary mb-1">No suppliers yet</p>
-              <p className="text-xs text-muted mb-4">Add your suppliers to track payment terms and contacts</p>
-              <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
-                style={{ background: "rgba(255,255,255,0.08)", color: "#fff" }}>
-                <FiPlus size={12} /> Add Supplier
-              </button>
+              <p className="text-xs text-muted">Add your suppliers to track payment terms and contacts</p>
             </div>
           </div>
         )}
 
       </div>
+
+      {/* ── Add Product Modal ── */}
+      {showAdd && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.7)" }}
+          onClick={e => { if (e.target === e.currentTarget) setShowAdd(false); }}>
+          <div className="w-full max-w-md rounded-2xl overflow-hidden"
+            style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)" }}>
+
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 py-4"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+              <p className="font-bold text-primary text-base">Add Product</p>
+              <button onClick={() => setShowAdd(false)}
+                className="p-1.5 rounded-lg"
+                style={{ color: "rgba(255,255,255,0.4)" }}>
+                <FiX size={16} />
+              </button>
+            </div>
+
+            {/* Form */}
+            <div className="p-5 space-y-3">
+              <div>
+                <label className="text-xs text-muted block mb-1">Product Name *</label>
+                <input
+                  value={form.name}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                  placeholder="e.g. Cotton Fabric 40s"
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted block mb-1">SKU / Code</label>
+                  <input
+                    value={form.sku}
+                    onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
+                    placeholder="e.g. CF-001"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted block mb-1">Category</label>
+                  <input
+                    value={form.category}
+                    onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                    placeholder="e.g. Fabric"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted block mb-1">Unit Price (₹)</label>
+                  <input
+                    type="number"
+                    value={form.unit_price}
+                    onChange={e => setForm(f => ({ ...f, unit_price: e.target.value }))}
+                    placeholder="0"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted block mb-1">Unit</label>
+                  <input
+                    value={form.unit}
+                    onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
+                    placeholder="pcs / kg / mtr"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted block mb-1">Current Stock</label>
+                  <input
+                    type="number"
+                    value={form.current_stock}
+                    onChange={e => setForm(f => ({ ...f, current_stock: e.target.value }))}
+                    placeholder="0"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted block mb-1">Low Stock Alert</label>
+                  <input
+                    type="number"
+                    value={form.low_stock_alert}
+                    onChange={e => setForm(f => ({ ...f, low_stock_alert: e.target.value }))}
+                    placeholder="10"
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                  />
+                </div>
+              </div>
+
+              {formError && (
+                <p className="text-xs text-danger">{formError}</p>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-2 px-5 pb-5">
+              <button onClick={() => setShowAdd(false)}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold"
+                style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}>
+                Cancel
+              </button>
+              <button onClick={saveProduct} disabled={saving}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold"
+                style={{ background: saving ? "rgba(255,255,255,0.3)" : "#fff", color: "#000" }}>
+                {saving ? "Saving…" : "Add Product"}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </DashboardLayout>
   );
 }
