@@ -108,6 +108,147 @@ interface AIAnalysis {
   insights?: { title: string; description: string; action?: string }[];
   top_expenses?: { category: string; amount: number; pct: number }[];
 }
+interface ParsedBankTransaction {
+  type: "in" | "out";
+  category: string;
+  amount: string;
+  party_name: string;
+  description: string;
+  transaction_date: string;
+  payment_method: string;
+  reference: string;
+}
+
+function parseLedgerDate(value: string): string {
+  const [day, month, year] = value.split("-");
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
+function amountFromLedger(value: string): string {
+  return value.replace(/,/g, "");
+}
+
+function cleanPartyName(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function parseBankLedgerText(text: string): ParsedBankTransaction[] {
+  const normalized = text
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const rows: ParsedBankTransaction[] = [];
+  const tokens = normalized.split(" ");
+  const datePattern = /^\d{1,2}-\d{1,2}-\d{4}$/;
+  const amountPattern = /^\d{1,3}(?:,\d{2,3})*(?:\.\d{2})$|^\d+(?:\.\d{2})$/;
+  let currentDate = "";
+  let i = 0;
+
+  while (i < tokens.length) {
+    if (datePattern.test(tokens[i])) {
+      currentDate = parseLedgerDate(tokens[i]);
+      i += 1;
+      continue;
+    }
+
+    if ((tokens[i] !== "Cr" && tokens[i] !== "Dr") || !currentDate) {
+      i += 1;
+      continue;
+    }
+
+    const direction = tokens[i] as "Cr" | "Dr";
+    const partyTokens: string[] = [];
+    let j = i + 1;
+    let found = false;
+
+    while (j < tokens.length) {
+      if (datePattern.test(tokens[j]) && (tokens[j + 1] === "Cr" || tokens[j + 1] === "Dr")) {
+        break;
+      }
+
+      if (
+        amountPattern.test(tokens[j]) &&
+        /^\d+$/.test(tokens[j + 1] || "") &&
+        /^(Receipt|Payment)$/.test(tokens[j + 2] || "")
+      ) {
+        const partyName = cleanPartyName(partyTokens.join(" "));
+        if (partyName && !/^(opening|closing|carried|brought)\b/i.test(partyName)) {
+          const type = direction === "Cr" ? "in" : "out";
+          rows.push({
+            type,
+            category: type === "in" ? "Customer Payment" : "Supplier Payment",
+            amount: amountFromLedger(tokens[j]),
+            party_name: partyName,
+            description: `${tokens[j + 2]} imported from bank ledger PDF`,
+            transaction_date: currentDate,
+            payment_method: "Bank Transfer",
+            reference: `${tokens[j + 2]} #${tokens[j + 1]}`,
+          });
+        }
+        i = j + 3;
+        found = true;
+        break;
+      }
+
+      partyTokens.push(tokens[j]);
+      j += 1;
+    }
+
+    if (!found) i += 1;
+  }
+
+  return rows;
+}
+
+async function extractPdfText(file: File): Promise<string> {
+  const pdfjs = await loadPdfJs();
+  const data = new Uint8Array(await file.arrayBuffer());
+  const pdf = await pdfjs.getDocument({ data, disableWorker: true }).promise;
+  const pages: string[] = [];
+
+  for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
+    const page = await pdf.getPage(pageNo);
+    const content = await page.getTextContent();
+    pages.push(content.items.map((item: any) => item.str || "").join(" "));
+  }
+
+  return pages.join("\n");
+}
+
+function loadPdfJs(): Promise<any> {
+  if (typeof window === "undefined") return Promise.reject(new Error("PDF scanner runs in the browser"));
+  const existing = (window as any).pdfjsLib;
+  if (existing) return Promise.resolve(existing);
+
+  return new Promise((resolve, reject) => {
+    const existingScript = document.getElementById("pdfjs-ledger-loader") as HTMLScriptElement | null;
+    const finish = () => {
+      const pdfjs = (window as any).pdfjsLib;
+      if (!pdfjs) {
+        reject(new Error("PDF reader failed to load"));
+        return;
+      }
+      if (pdfjs.GlobalWorkerOptions) {
+        pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+      resolve(pdfjs);
+    };
+
+    if (existingScript) {
+      existingScript.addEventListener("load", finish, { once: true });
+      existingScript.addEventListener("error", () => reject(new Error("PDF reader failed to load")), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = "pdfjs-ledger-loader";
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    script.async = true;
+    script.onload = finish;
+    script.onerror = () => reject(new Error("PDF reader failed to load"));
+    document.head.appendChild(script);
+  });
+}
 
 // ─── AI Monitor ──────────────────────────────────────────────────────────────
 function AIMonitor({ userId }: { userId: string }) {
@@ -259,6 +400,8 @@ export default function LedgerPage() {
   const [form, setForm]               = useState({ ...DEFAULT_FORM });
   const [scanning, setScanning]        = useState(false);
   const [scanMessage, setScanMessage]  = useState("");
+  const [pdfRows, setPdfRows]          = useState<ParsedBankTransaction[]>([]);
+  const [importingPdf, setImportingPdf] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -308,7 +451,21 @@ export default function LedgerPage() {
     setScanning(true);
     setScanMessage("AI reading file...");
     setError("");
+    setPdfRows([]);
     try {
+      if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+        setScanMessage("Reading PDF ledger rows...");
+        const text = await extractPdfText(file);
+        const rows = parseBankLedgerText(text);
+        if (rows.length === 0) {
+          throw new Error("Could not find transaction rows in this PDF. Try an HDFC/Tally ledger PDF with Date, Cr/Dr, Particulars and Amount columns.");
+        }
+        setPdfRows(rows);
+        setShowForm(false);
+        setScanMessage(`Found ${rows.length} transactions in ${file.name}. Review and import.`);
+        return;
+      }
+
       const payload = file.type.startsWith("image/")
         ? await resizeImage(file)
         : await fileToDataUrl(file);
@@ -337,13 +494,31 @@ export default function LedgerPage() {
     }
   };
 
+  const importPdfRows = async () => {
+    if (!pdfRows.length || !userId) return;
+    setImportingPdf(true);
+    setError("");
+    try {
+      for (const row of pdfRows) {
+        await api.transactions.create({ ...row, user_id: userId });
+      }
+      setScanMessage(`Imported ${pdfRows.length} bank ledger transactions.`);
+      setPdfRows([]);
+      await fetchData(userId);
+    } catch (err: any) {
+      setError(err?.message || "Could not import PDF transactions. Please try again.");
+    } finally {
+      setImportingPdf(false);
+    }
+  };
+
   const filtered = transactions.filter(t => {
     if (typeFilter !== "all" && t.type !== typeFilter) return false;
     if (catFilter !== "all" && t.category !== catFilter) return false;
     return true;
   });
 
-  const allCats = [...new Set(transactions.map(t => t.category))].sort();
+  const allCats = Array.from(new Set(transactions.map(t => t.category))).sort();
 
   // Summary card data
   const cards = [
@@ -429,6 +604,69 @@ export default function LedgerPage() {
           <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-success-dim border border-success/20 text-success text-sm">
             <FiUpload size={15} className="shrink-0" />
             {scanMessage}
+          </div>
+        )}
+
+        {pdfRows.length > 0 && (
+          <div className="card-premium overflow-hidden">
+            <div className="px-5 py-4 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold text-primary">PDF Ledger Import Preview</p>
+                <p className="text-xs text-muted mt-0.5">{pdfRows.length} transactions found. Opening/closing balances are skipped.</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPdfRows([])}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-surface-2 border border-border text-muted hover:text-primary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={importPdfRows}
+                  disabled={importingPdf}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-white text-black hover:bg-white/90 disabled:opacity-60"
+                >
+                  {importingPdf ? "Importing..." : `Import ${pdfRows.length}`}
+                </button>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm table-premium">
+                <thead>
+                  <tr className="border-b border-border bg-surface-2/50">
+                    <th className="text-left px-5 py-3 section-label">Date</th>
+                    <th className="text-left px-5 py-3 section-label">Type</th>
+                    <th className="text-left px-5 py-3 section-label">Party</th>
+                    <th className="text-left px-5 py-3 section-label hidden md:table-cell">Reference</th>
+                    <th className="text-right px-5 py-3 section-label">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pdfRows.slice(0, 12).map((row, index) => (
+                    <tr key={`${row.reference}-${index}`}>
+                      <td className="px-5 py-3 text-xs text-secondary whitespace-nowrap">{fmtDate(row.transaction_date)}</td>
+                      <td className="px-5 py-3">
+                        <span className={`px-2 py-0.5 rounded-md text-2xs font-bold ${row.type === "in" ? "bg-success-dim text-success" : "bg-danger-dim text-danger"}`}>
+                          {row.type === "in" ? "Money In" : "Money Out"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-xs text-primary">{row.party_name}</td>
+                      <td className="px-5 py-3 text-xs text-muted hidden md:table-cell">{row.reference}</td>
+                      <td className={`px-5 py-3 text-right text-xs font-bold ${row.type === "in" ? "text-success" : "text-danger"}`}>
+                        {row.type === "in" ? "+" : "-"} {fmtFull(Number(row.amount))}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {pdfRows.length > 12 && (
+              <p className="px-5 py-3 border-t border-border text-xs text-muted">
+                Showing first 12 rows. All {pdfRows.length} rows will be imported.
+              </p>
+            )}
           </div>
         )}
 
