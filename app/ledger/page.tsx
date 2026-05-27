@@ -404,12 +404,31 @@ export default function LedgerPage() {
   const [importingPdf, setImportingPdf] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
-
   // Migrate table if needed
   const migrate = useCallback(async () => {
-    try { await fetch(`${BASE}/api/transactions/migrate`, { method: "POST" }); } catch {}
-  }, [BASE]);
+    try { await api.transactions.migrate(); } catch {}
+  }, []);
+
+  const createTransaction = useCallback(async (body: {
+    user_id: string;
+    type: string;
+    category: string;
+    amount: string;
+    party_name?: string;
+    description?: string;
+    transaction_date: string;
+    payment_method?: string;
+    reference?: string;
+  }) => {
+    try {
+      return await api.transactions.create(body);
+    } catch (err: any) {
+      const message = String(err?.message || "");
+      if (!message.includes("Internal server error") && !message.includes("Request failed")) throw err;
+      await migrate();
+      return api.transactions.create(body);
+    }
+  }, [migrate]);
 
   const fetchData = useCallback(async (uid: string) => {
     setLoading(true);
@@ -418,7 +437,14 @@ export default function LedgerPage() {
       setTransactions(data.transactions || []);
       setSummary(data.summary || { totalIn: 0, totalOut: 0, balance: 0, monthIn: 0, monthOut: 0, monthBalance: 0 });
     } catch (err: any) {
-      if (err?.message?.includes("500") || err?.message?.includes("failed")) await migrate();
+      if (err?.message?.includes("500") || err?.message?.includes("failed") || err?.message?.includes("Internal server error")) {
+        await migrate();
+        try {
+          const data = await api.transactions.list(uid);
+          setTransactions(data.transactions || []);
+          setSummary(data.summary || { totalIn: 0, totalOut: 0, balance: 0, monthIn: 0, monthOut: 0, monthBalance: 0 });
+        } catch {}
+      }
       setError("");
     }
     setLoading(false);
@@ -437,7 +463,7 @@ export default function LedgerPage() {
     if (!form.amount || parseFloat(form.amount) <= 0) { setError("Enter a valid amount"); return; }
     setSaving(true);
     try {
-      await api.transactions.create({ ...form, user_id: userId });
+      await createTransaction({ ...form, user_id: userId });
       setShowForm(false);
       setForm({ ...DEFAULT_FORM });
       setError("");
@@ -499,8 +525,9 @@ export default function LedgerPage() {
     setImportingPdf(true);
     setError("");
     try {
+      await migrate();
       for (const row of pdfRows) {
-        await api.transactions.create({ ...row, user_id: userId });
+        await createTransaction({ ...row, user_id: userId });
       }
       setScanMessage(`Imported ${pdfRows.length} bank ledger transactions.`);
       setPdfRows([]);
