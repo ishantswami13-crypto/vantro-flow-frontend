@@ -79,6 +79,9 @@ type Summary = {
   total_value: number;
   low_stock_count: number;
   out_of_stock_count: number;
+  fast_moving_items?: { product_id: string; name: string; sku?: string; unit: string; quantity_sold_30d: number; value_sold_30d: number }[];
+  dead_stock_items?: { id: string; name: string; sku?: string; current_stock: number; unit: string }[];
+  reorder_suggestions?: { product_id: string; name: string; sku?: string; current_stock: number; low_stock_alert: number; unit: string; recommended_reorder_qty: number; estimated_cost: number }[];
 };
 
 const emptyForm = {
@@ -337,6 +340,72 @@ export default function InventoryPage() {
         {/* Intelligence Tab */}
         {tab === "intelligence" && (
           <div className="space-y-4">
+            {/* Advanced Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Reorder suggestions card */}
+              <div className="card-premium p-4">
+                <p className="text-xs font-bold text-warning uppercase tracking-wider mb-2">🛒 Reorder Suggestions</p>
+                {summary.reorder_suggestions && summary.reorder_suggestions.length > 0 ? (
+                  <div className="space-y-2 max-h-48 overflow-y-auto divide-y divide-border/30">
+                    {summary.reorder_suggestions.map(item => (
+                      <div key={item.product_id} className="flex justify-between items-center text-xs py-1.5 first:pt-0">
+                        <div>
+                          <p className="font-semibold text-primary">{item.name}</p>
+                          <p className="text-2xs text-muted">Stock: {item.current_stock} {item.unit} (Alert: {item.low_stock_alert})</p>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant="warning">Order +{item.recommended_reorder_qty}</Badge>
+                          <p className="text-2xs text-muted mt-0.5">Est: ₹{item.estimated_cost.toLocaleString('en-IN')}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted py-4 text-center">No low stock items. All healthy! ✓</p>
+                )}
+              </div>
+
+              {/* Fast moving items card */}
+              <div className="card-premium p-4">
+                <p className="text-xs font-bold text-success uppercase tracking-wider mb-2">🔥 Fast Moving (30d)</p>
+                {summary.fast_moving_items && summary.fast_moving_items.length > 0 ? (
+                  <div className="space-y-2 max-h-48 overflow-y-auto divide-y divide-border/30">
+                    {summary.fast_moving_items.map(item => (
+                      <div key={item.product_id} className="flex justify-between items-center text-xs py-1.5 first:pt-0">
+                        <div>
+                          <p className="font-semibold text-primary">{item.name}</p>
+                          <p className="text-2xs text-muted">{item.quantity_sold_30d} {item.unit} sold</p>
+                        </div>
+                        <span className="font-bold text-success">₹{(item.value_sold_30d / 1000).toFixed(0)}K</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted py-4 text-center">No sales movements registered in last 30 days.</p>
+                )}
+              </div>
+
+              {/* Dead stock items card */}
+              <div className="card-premium p-4">
+                <p className="text-xs font-bold text-danger uppercase tracking-wider mb-2">💀 Dead Stock (&gt;60d)</p>
+                {summary.dead_stock_items && summary.dead_stock_items.length > 0 ? (
+                  <div className="space-y-2 max-h-48 overflow-y-auto divide-y divide-border/30">
+                    {summary.dead_stock_items.map(item => (
+                      <div key={item.id} className="flex justify-between items-center text-xs py-1.5 first:pt-0">
+                        <div>
+                          <p className="font-semibold text-primary">{item.name}</p>
+                          <p className="text-2xs text-muted">SKU: {item.sku || 'N/A'}</p>
+                        </div>
+                        <span className="font-bold text-danger">{item.current_stock} {item.unit} idle</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted py-4 text-center">All stock has active movements! ✓</p>
+                )}
+              </div>
+            </div>
+
             <div className="card-premium p-4">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
                 <div>

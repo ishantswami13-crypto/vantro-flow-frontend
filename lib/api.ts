@@ -19,15 +19,15 @@ async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 3
   try {
     const res = await fetch(`${BASE}${path}`, { ...options, headers, signal: controller.signal });
     const data = await res.json();
-    // Auto-logout on 401 — token expired or invalid
-    if (res.status === 401) {
+    // Auto-logout on 401 — token expired or invalid, or 404 User not found
+    if (res.status === 401 || (res.status === 404 && data?.error === 'User not found')) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('vantro_token');
         localStorage.removeItem('vantro_user');
         document.cookie = 'vantro_token=; path=/; max-age=0; SameSite=Lax';
         window.location.href = '/login';
       }
-      throw new Error('Session expired. Please log in again.');
+      throw new Error(data?.error || 'Session expired. Please log in again.');
     }
     if (!res.ok) throw new Error(data.error || 'Request failed');
     return data;
@@ -105,6 +105,10 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ min_days: minDays, tone }),
       }),
+    summary: (userId: string) =>
+      request<{ success: boolean; summary: any }>(`/api/collections/summary/${userId}`),
+    timeline: (userId: string) =>
+      request<{ success: boolean; timeline: any[] }>(`/api/collections/timeline/${userId}`),
   },
 
   // ─── Scanner ────────────────────────────────────────────

@@ -82,7 +82,16 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
     const token = localStorage.getItem("vantro_token");
     if (!token) return;
     fetch(`${API}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
+      .then(r => {
+        if (r.status === 401 || r.status === 404) {
+          localStorage.removeItem("vantro_token");
+          localStorage.removeItem("vantro_user");
+          document.cookie = "vantro_token=; path=/; max-age=0; SameSite=Lax";
+          window.location.href = "/login";
+          throw new Error("Stale session");
+        }
+        return r.json();
+      })
       .then(d => {
         if (d.success && d.user) {
           // Persist updated user (plan may have changed on another device too)

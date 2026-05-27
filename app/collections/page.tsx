@@ -177,6 +177,18 @@ export default function CollectionsPage() {
   });
   const [addSaving, setAddSaving] = useState(false);
   const [addError, setAddError]   = useState("");
+  const [agingSummary, setAgingSummary] = useState<{
+    total_outstanding: number;
+    total_customers: number;
+    most_overdue_days: number;
+    buckets: {
+      due_today: number;
+      overdue_1_7: number;
+      overdue_8_30: number;
+      overdue_31_60: number;
+      overdue_60_plus: number;
+    }
+  } | null>(null);
 
   useEffect(() => {
     if (!paidToast) return;
@@ -235,8 +247,16 @@ export default function CollectionsPage() {
     const user = getUser();
     if (!user?.id) return;
     loadInvoices(user.id);
+    api.collections.summary(user.id).then(d => {
+      if (d.success && d.summary) setAgingSummary(d.summary);
+    }).catch(() => {});
     // Auto-poll every 30s — picks up Razorpay webhook-triggered status changes
-    const interval = setInterval(() => loadInvoices(user.id), 30_000);
+    const interval = setInterval(() => {
+      loadInvoices(user.id);
+      api.collections.summary(user.id).then(d => {
+        if (d.success && d.summary) setAgingSummary(d.summary);
+      }).catch(() => {});
+    }, 30_000);
     return () => clearInterval(interval);
   }, [loadInvoices]);
 
@@ -838,6 +858,24 @@ export default function CollectionsPage() {
         )}
 
         {/* ── Stats strip ──────────────────────────────────────── */}
+        {agingSummary && (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {[
+              { label: "Due Today", value: agingSummary.buckets.due_today, color: "#10D98A", glow: "rgba(16,217,138,0.06)" },
+              { label: "1-7 Days", value: agingSummary.buckets.overdue_1_7, color: "#F5A524", glow: "rgba(245,165,36,0.06)" },
+              { label: "8-30 Days", value: agingSummary.buckets.overdue_8_30, color: "#F5A524", glow: "rgba(245,165,36,0.06)" },
+              { label: "31-60 Days", value: agingSummary.buckets.overdue_31_60, color: "#F5424D", glow: "rgba(245,66,77,0.06)" },
+              { label: "60+ Days", value: agingSummary.buckets.overdue_60_plus, color: "#F5424D", glow: "rgba(245,66,77,0.06)" }
+            ].map(b => (
+              <div key={b.label} className="rounded-xl border p-3" style={{ background: b.glow, borderColor: `${b.color}20` }}>
+                <p className="text-[10px] text-muted font-medium mb-1">{b.label}</p>
+                <p className="text-sm font-black" style={{ color: b.color }}>
+                  ₹{b.value >= 100000 ? `${(b.value / 100000).toFixed(1)}L` : b.value >= 1000 ? `${(b.value / 1000).toFixed(0)}K` : b.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
         {(() => {
           const data = liveData ?? [];
           const totalOut = data.reduce((s, c) => s + c.outstanding, 0);
