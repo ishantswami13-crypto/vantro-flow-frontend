@@ -86,6 +86,8 @@ function cleanProductName(value: string): string {
     .replace(/\s+@\s*₹?.*$/i, "")
     .replace(/\s+-\s*₹?.*$/i, "")
     .replace(/\bhsn\s*[:#]?\s*\w+/i, "")
+    .replace(/\s+(?:s\/n|sn|serial|nos|no|code|model|sr|sl|sno|slno)\s*[:#.-]?\s*\S+.*$/i, "")
+    .replace(/(?:\s+[\d\-\/]{4,})+$/i, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -138,10 +140,24 @@ function lineToRow<T>(item: LineItem, record: T, config: LedgerConfig<T>): Produ
 
 export function buildProductLedgerRows<T>(records: T[], config: LedgerConfig<T>): ProductLedgerRow[] {
   // Global dedup key → row map: prevents showing same product from same document twice
-  // Handles: DB-level duplicate records AND same product in both items[] + notes
   const globalDedup = new Map<string, ProductLedgerRow>();
+  
+  // Track processed unique documents to skip duplicate records in the database (preventing double counting)
+  const processedDocs = new Set<string>();
 
   for (const record of records) {
+    const docNo = config.documentNo(record);
+    const party = config.partyName(record) || "";
+    
+    if (docNo) {
+      const docKey = `${config.source}:${party}:${docNo}`;
+      if (processedDocs.has(docKey)) {
+        // Skip duplicate records in the database entirely to prevent doubling quantities/amounts
+        continue;
+      }
+      processedDocs.add(docKey);
+    }
+
     const rawItems = config.items?.(record);
 
     // Handle items returned as a JSON string (some API endpoints don't parse JSON columns)
