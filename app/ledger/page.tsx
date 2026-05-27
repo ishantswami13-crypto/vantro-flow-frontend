@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { api, getUser } from "@/lib/api";
+import { api, getToken, getUser } from "@/lib/api";
 import {
   FiArrowDown, FiArrowUp, FiActivity, FiPlus, FiX, FiZap,
   FiShield, FiAlertTriangle, FiCheckCircle, FiTrendingUp,
+  FiUpload, FiCamera,
 } from "react-icons/fi";
 
 // ─── Categories ──────────────────────────────────────────────────────────────
@@ -205,6 +206,9 @@ export default function LedgerPage() {
   const [typeFilter, setTypeFilter]   = useState<"all" | "in" | "out">("all");
   const [catFilter, setCatFilter]     = useState("all");
   const [form, setForm]               = useState({ ...DEFAULT_FORM });
+  const [scanning, setScanning]        = useState(false);
+  const [scanMessage, setScanMessage]  = useState("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -246,6 +250,53 @@ export default function LedgerPage() {
       await fetchData(userId);
     } catch { setError("Failed to save. Please try again."); }
     setSaving(false);
+  };
+
+  const fileToBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || "").split(",")[1] || "");
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  const handleScanFile = async (file?: File | null) => {
+    if (!file) return;
+    setScanning(true);
+    setScanMessage("AI reading file...");
+    setError("");
+    try {
+      const image = await fileToBase64(file);
+      const res = await fetch(`${BASE}/api/transactions/scan`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ image, mimeType: file.type || "image/jpeg" }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "AI could not read this file");
+      const extracted = data.data || {};
+      const nextType = extracted.type === "in" ? "in" : "out";
+      setForm({
+        type: nextType,
+        category: extracted.category || (nextType === "in" ? "Customer Payment" : "Supplier Payment"),
+        amount: extracted.amount ? String(extracted.amount) : "",
+        party_name: extracted.party_name || "",
+        description: extracted.description || "",
+        transaction_date: extracted.transaction_date || new Date().toISOString().split("T")[0],
+        payment_method: extracted.payment_method || "UPI",
+        reference: extracted.reference || "",
+      });
+      setShowForm(true);
+      setScanMessage(`AI filled transaction from ${file.name}. Review and save.`);
+    } catch (err: any) {
+      setError(err?.message || "AI scan failed. Try a clearer photo or enter manually.");
+      setScanMessage("");
+    } finally {
+      setScanning(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const filtered = transactions.filter(t => {
@@ -304,6 +355,21 @@ export default function LedgerPage() {
               <FiShield size={11} />
               Private to {bizName}
             </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,application/pdf"
+              className="hidden"
+              onChange={(e) => handleScanFile(e.target.files?.[0])}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={scanning}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-dim border border-accent/25 text-accent text-sm font-semibold hover:bg-accent hover:text-white disabled:opacity-60 transition-all"
+            >
+              {scanning ? <><FiActivity size={14} /> Scanning</> : <><FiCamera size={14} /> AI Scan</>}
+            </button>
             <button
               onClick={() => { setShowForm(f => !f); setError(""); }}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-all shadow-button-accent"
@@ -318,6 +384,13 @@ export default function LedgerPage() {
           <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-danger-dim border border-danger/20 text-danger text-sm">
             <FiAlertTriangle size={15} className="shrink-0" />
             {error}
+          </div>
+        )}
+
+        {scanMessage && (
+          <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-success-dim border border-success/20 text-success text-sm">
+            <FiUpload size={15} className="shrink-0" />
+            {scanMessage}
           </div>
         )}
 

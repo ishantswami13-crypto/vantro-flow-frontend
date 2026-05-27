@@ -58,7 +58,11 @@ export default function AnalyticsPage() {
 
   const load = useCallback(async () => {
     const user = getUser();
-    if (!user?.id) return;
+    if (!user?.id) {
+      setEmpty(true);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const [analyticsData, callData] = await Promise.allSettled([
@@ -70,6 +74,15 @@ export default function AnalyticsPage() {
         const a = analyticsData.value.analytics;
         setAnalytics(a);
         setEmpty(!a.monthly_trend?.length && !a.top_customers?.length);
+      } else {
+        setAnalytics({
+          total_outstanding: 0,
+          total_recovered: 0,
+          recovery_rate: 0,
+          monthly_trend: [],
+          top_customers: [],
+        });
+        setEmpty(true);
       }
 
       if (callData.status === "fulfilled") {
@@ -88,8 +101,11 @@ export default function AnalyticsPage() {
         const ordered = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(d => ({ day: d, ...dayMap[d] }));
         setCallLogs(ordered);
       }
-    } catch {}
-    setLoading(false);
+    } catch {
+      setEmpty(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { getToken, getUser } from "@/lib/api";
-import { FiSearch, FiTruck, FiPhone, FiCalendar, FiAlertTriangle } from "react-icons/fi";
+import { FiSearch, FiTruck, FiPhone, FiCalendar, FiAlertTriangle, FiX, FiFileText, FiChevronRight } from "react-icons/fi";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -18,6 +18,41 @@ type Supplier = {
   purchase_count?: number;
   last_purchase_date?: string | null;
   inferred_from_purchases?: boolean;
+  purchases?: SupplierPurchase[];
+};
+
+type SupplierPurchaseItem = {
+  description?: string;
+  name?: string;
+  hsn_sac?: string | null;
+  hsn?: string | null;
+  qty?: number;
+  quantity?: number;
+  unit?: string | null;
+  price?: number;
+  rate?: number;
+  amount?: number;
+};
+
+type SupplierPurchase = {
+  id: string | number;
+  bill_number?: string | null;
+  purchase_date?: string | null;
+  due_date?: string | null;
+  status?: string | null;
+  total_amount?: number;
+  amount?: number;
+  paid_amount?: number;
+  outstanding_amount?: number;
+  subtotal?: number;
+  gst_type?: string | null;
+  gst_rate?: number | null;
+  gst_amount?: number | null;
+  cgst_amount?: number | null;
+  sgst_amount?: number | null;
+  igst_amount?: number | null;
+  notes?: string | null;
+  items?: SupplierPurchaseItem[];
 };
 
 const fmtINR = (n: number) =>
@@ -32,6 +67,7 @@ export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
   const loadSuppliers = async () => {
     const user = getUser();
@@ -128,7 +164,12 @@ export default function SuppliersPage() {
             {filtered.map((supplier) => {
               const outstanding = Number(supplier.outstanding_amount || 0);
               return (
-                <div key={String(supplier.id)} className="card-premium p-5">
+                <button
+                  key={String(supplier.id)}
+                  type="button"
+                  onClick={() => setSelectedSupplier(supplier)}
+                  className="card-premium p-5 text-left hover:border-yellow-400/35 transition-all focus:outline-none focus:border-yellow-400/50"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
@@ -178,10 +219,142 @@ export default function SuppliersPage() {
                         <FiAlertTriangle size={12} /> inferred
                       </span>
                     )}
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/8 text-primary">
+                      View details <FiChevronRight size={12} />
+                    </span>
                   </div>
-                </div>
+                </button>
               );
             })}
+          </div>
+        )}
+
+        {selectedSupplier && (
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-5xl max-h-[88vh] overflow-hidden rounded-2xl bg-surface border border-white/10 shadow-2xl">
+              <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-border">
+                <div className="min-w-0">
+                  <p className="text-lg font-black text-primary truncate">{selectedSupplier.name}</p>
+                  <p className="text-xs text-muted mt-1">
+                    {selectedSupplier.gstin || "GSTIN not saved"}{selectedSupplier.phone ? ` · ${selectedSupplier.phone}` : ""}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSupplier(null)}
+                  className="w-9 h-9 rounded-xl bg-surface-2 border border-border text-primary flex items-center justify-center hover:bg-white hover:text-black transition-all"
+                  aria-label="Close supplier details"
+                >
+                  <FiX size={16} />
+                </button>
+              </div>
+
+              <div className="p-5 overflow-y-auto max-h-[calc(88vh-73px)] space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="rounded-xl bg-surface-2/70 p-4">
+                    <p className="section-label mb-2">Total Bills</p>
+                    <p className="text-xl font-black text-primary">{selectedSupplier.purchase_count || selectedSupplier.purchases?.length || 0}</p>
+                  </div>
+                  <div className="rounded-xl bg-surface-2/70 p-4">
+                    <p className="section-label mb-2">Total Purchase</p>
+                    <p className="text-xl font-black text-primary">{fmtINR(Number(selectedSupplier.total_payable || 0))}</p>
+                  </div>
+                  <div className="rounded-xl bg-surface-2/70 p-4">
+                    <p className="section-label mb-2">Pending</p>
+                    <p className="text-xl font-black text-yellow-400">{fmtINR(Number(selectedSupplier.outstanding_amount || 0))}</p>
+                  </div>
+                  <div className="rounded-xl bg-surface-2/70 p-4">
+                    <p className="section-label mb-2">Last Bill</p>
+                    <p className="text-sm font-bold text-primary">{fmtDate(selectedSupplier.last_purchase_date)}</p>
+                  </div>
+                </div>
+
+                {(selectedSupplier.purchases || []).length === 0 ? (
+                  <div className="rounded-xl border border-border bg-surface-2/50 p-8 text-center">
+                    <FiFileText size={28} className="mx-auto text-muted opacity-50 mb-3" />
+                    <p className="text-sm font-bold text-primary">No bill rows saved yet</p>
+                    <p className="text-xs text-muted mt-1">Future scanned/manual purchases will show item, quantity, rate, GST and pending amount here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {(selectedSupplier.purchases || []).map((purchase) => {
+                      const items = purchase.items || [];
+                      const total = Number(purchase.total_amount ?? purchase.amount ?? 0);
+                      const paid = Number(purchase.paid_amount || 0);
+                      const pending = Number(purchase.outstanding_amount ?? Math.max(total - paid, 0));
+                      return (
+                        <div key={String(purchase.id)} className="rounded-xl border border-border bg-surface-2/45 overflow-hidden">
+                          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 p-4 border-b border-border">
+                            <div>
+                              <p className="text-2xs text-muted">Bill No.</p>
+                              <p className="text-sm font-bold text-primary">{purchase.bill_number || `#${purchase.id}`}</p>
+                            </div>
+                            <div>
+                              <p className="text-2xs text-muted">Date</p>
+                              <p className="text-sm font-bold text-primary">{fmtDate(purchase.purchase_date)}</p>
+                            </div>
+                            <div>
+                              <p className="text-2xs text-muted">Total</p>
+                              <p className="text-sm font-bold text-primary">{fmtINR(total)}</p>
+                            </div>
+                            <div>
+                              <p className="text-2xs text-muted">Paid</p>
+                              <p className="text-sm font-bold text-success">{fmtINR(paid)}</p>
+                            </div>
+                            <div>
+                              <p className="text-2xs text-muted">Pending</p>
+                              <p className="text-sm font-bold text-yellow-400">{fmtINR(pending)}</p>
+                            </div>
+                          </div>
+
+                          {items.length > 0 ? (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs">
+                                <thead className="bg-black/20 text-muted">
+                                  <tr>
+                                    <th className="text-left px-4 py-2 font-semibold">Item</th>
+                                    <th className="text-left px-4 py-2 font-semibold">HSN</th>
+                                    <th className="text-right px-4 py-2 font-semibold">Qty</th>
+                                    <th className="text-right px-4 py-2 font-semibold">Rate</th>
+                                    <th className="text-right px-4 py-2 font-semibold">Amount</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {items.map((item, idx) => {
+                                    const qty = Number(item.qty ?? item.quantity ?? 0);
+                                    const rate = Number(item.rate ?? item.price ?? 0);
+                                    const amount = Number(item.amount || qty * rate || 0);
+                                    return (
+                                      <tr key={`${purchase.id}-${idx}`} className="border-t border-border/60">
+                                        <td className="px-4 py-2 text-primary font-medium">{item.description || item.name || "Item"}</td>
+                                        <td className="px-4 py-2 text-muted">{item.hsn_sac || item.hsn || "—"}</td>
+                                        <td className="px-4 py-2 text-right text-secondary">{qty} {item.unit || ""}</td>
+                                        <td className="px-4 py-2 text-right text-secondary">{fmtINR(rate)}</td>
+                                        <td className="px-4 py-2 text-right text-primary font-bold">{fmtINR(amount)}</td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="px-4 py-4 text-xs text-muted">No item rows saved for this bill.</div>
+                          )}
+
+                          <div className="flex flex-wrap gap-2 px-4 py-3 border-t border-border text-2xs text-secondary">
+                            {purchase.gst_amount ? <span>GST: {fmtINR(Number(purchase.gst_amount))}</span> : null}
+                            {purchase.cgst_amount ? <span>CGST: {fmtINR(Number(purchase.cgst_amount))}</span> : null}
+                            {purchase.sgst_amount ? <span>SGST: {fmtINR(Number(purchase.sgst_amount))}</span> : null}
+                            {purchase.igst_amount ? <span>IGST: {fmtINR(Number(purchase.igst_amount))}</span> : null}
+                            {purchase.status ? <span>Status: {purchase.status}</span> : null}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

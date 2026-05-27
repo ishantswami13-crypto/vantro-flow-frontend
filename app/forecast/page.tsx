@@ -60,7 +60,11 @@ export default function ForecastPage() {
 
   const loadForecast = useCallback(async (days: 30 | 60 | 90, cash?: string) => {
     const user = getUser();
-    if (!user?.id) return;
+    if (!user?.id) {
+      setNoData(true);
+      setLoading(false);
+      return;
+    }
     const currentCash = cash !== undefined ? cash : openingCash;
     setLoading(true);
     try {
@@ -132,8 +136,11 @@ export default function ForecastPage() {
       }
     } catch {
       setNoData(true);
+      setChartData([]);
+      setTopImpact([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [openingCash]);
 
   useEffect(() => { loadForecast(range); }, [range, loadForecast]);
