@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "security:secrets": "node scripts/frontend-env-guard.js"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

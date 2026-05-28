@@ -34,7 +34,7 @@ function isUnsafeMethod(method?: string) {
   return !['GET', 'HEAD', 'OPTIONS'].includes((method || 'GET').toUpperCase());
 }
 
-async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
+export async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
   const token = getToken();
   const csrf = getCsrfToken();
   const headers: Record<string, string> = {
@@ -61,7 +61,29 @@ async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 3
       }
       throw new Error(data?.error || 'Session expired. Please log in again.');
     }
-    if (!res.ok) throw new Error(data.error || 'Request failed');
+    if (!res.ok) {
+      const errorMsg = data.error || 'Request failed';
+      const requestId = res.headers.get('x-request-id') || data.requestId || 'unknown';
+      const errorObj = new Error(`${errorMsg} (Error ID: ${requestId})`);
+      (errorObj as any).requestId = requestId;
+      (errorObj as any).status = res.status;
+
+      if (typeof window !== 'undefined') {
+        fetch(`${BASE}/api/client-errors`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({
+            path: window.location.pathname,
+            api_route: path,
+            status_code: res.status,
+            error_id: requestId,
+            message: errorMsg,
+            browser_info: navigator.userAgent
+          })
+        }).catch(() => {});
+      }
+      throw errorObj;
+    }
     return data;
   } catch (err: unknown) {
     if (err instanceof Error && err.name === 'AbortError') throw new Error('Request timed out — please check your connection');
