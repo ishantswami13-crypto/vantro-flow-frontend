@@ -2,9 +2,7 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { FiPlus, FiUser, FiArrowUp, FiArrowDown, FiMessageSquare, FiSearch, FiTrash2, FiChevronRight } from "react-icons/fi";
-import { getToken } from "@/lib/api";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
+import { api } from "@/lib/api";
 
 type Customer = {
   customer_name: string;
@@ -44,18 +42,20 @@ export default function KhataPage() {
   const loadCustomers = async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/khata`, { headers: { Authorization: `Bearer ${getToken()}` } });
-      const d = await r.json();
+      const d = await api.khata.list();
       if (d.success) setCustomers(d.customers);
+    } catch (err) {
+      console.error(err);
     } finally { setLoading(false); }
   };
 
   const loadEntries = async (name: string) => {
     setLoadingEntries(true);
     try {
-      const r = await fetch(`${API}/api/khata/${encodeURIComponent(name)}`, { headers: { Authorization: `Bearer ${getToken()}` } });
-      const d = await r.json();
+      const d = await api.khata.get(name);
       if (d.success) setEntries(d.entries);
+    } catch (err) {
+      console.error(err);
     } finally { setLoadingEntries(false); }
   };
 
@@ -76,26 +76,27 @@ export default function KhataPage() {
     if (!form.customer_name || !form.amount) return;
     setSaving(true);
     try {
-      const r = await fetch(`${API}/api/khata/entry`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, type: addType, amount: parseFloat(form.amount) }),
-      });
-      const d = await r.json();
+      const d = await api.khata.createEntry({ ...form, type: addType, amount: parseFloat(form.amount) });
       if (d.success) {
         setShowAdd(false);
         setForm({ customer_name: "", customer_phone: "", amount: "", note: "", payment_mode: "cash" });
         await loadCustomers();
         if (selected === form.customer_name) loadEntries(form.customer_name);
       }
+    } catch (err) {
+      console.error(err);
     } finally { setSaving(false); }
   };
 
   const deleteEntry = async (id: number) => {
     if (!confirm("Delete this entry?")) return;
-    await fetch(`${API}/api/khata/entry/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${getToken()}` } });
-    if (selected) loadEntries(selected);
-    loadCustomers();
+    try {
+      await api.khata.deleteEntry(id);
+      if (selected) loadEntries(selected);
+      loadCustomers();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const whatsappStatement = (c: Customer) => {

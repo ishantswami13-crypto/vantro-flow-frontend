@@ -165,11 +165,7 @@ export default function DashboardPage() {
       setBriefing(DEMO_BRIEFING);
       setBriefingLoading(false);
     } else {
-      const token = localStorage.getItem("vantro_token") || "";
-      fetch(`${API}/api/ml/briefing`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      }).then(r => r.json()).then(d => {
+      api.briefing().then(d => {
         if (d.success && d.briefing) setBriefing(d.briefing);
       }).catch(() => {}).finally(() => setBriefingLoading(false));
     }
@@ -208,14 +204,11 @@ export default function DashboardPage() {
       setPromises(todayPromises);
     }).catch(() => {});
 
-    // Load business overview data from new features
-    const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") : null;
-    if (!token) return;
-    const headers = { Authorization: `Bearer ${token}` };
+    // Load business overview data from new features using centralized client
     Promise.all([
-      fetch(`${API}/api/bills`, { headers }).then(r => r.json()).catch(() => ({ bills: [] })),
-      fetch(`${API}/api/khata`, { headers }).then(r => r.json()).catch(() => ({ customers: [] })),
-      fetch(`${API}/api/purchases`, { headers }).then(r => r.json()).catch(() => ({ purchases: [] })),
+      api.bills.list().catch(() => ({ bills: [] })),
+      api.khata.list().catch(() => ({ customers: [] })),
+      api.purchases.list().catch(() => ({ purchases: [] })),
     ]).then(([billsD, khataD, purchasesD]) => {
       const unpaidBills = (billsD.bills || []).filter((b: any) => b.status !== "paid");
       const khataReceivable = (khataD.customers || []).reduce((s: number, c: any) => s + (c.balance > 0 ? c.balance : 0), 0);

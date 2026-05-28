@@ -93,6 +93,21 @@ export const api = {
   // ─── Dashboard ──────────────────────────────────────────
   metrics: (userId: string) => request<{ metrics: Metrics }>(`/api/metrics/${userId}`),
   analytics: (userId: string) => request<{ analytics: Analytics }>(`/api/analytics/${userId}`),
+  controlRoom: () => request<{
+    success: boolean;
+    business: any;
+    metrics: {
+      total_outstanding: number;
+      total_payable: number;
+      ledger_balance: number;
+      inventory_value: number;
+    };
+    critical_actions: any[];
+    recent_activity: any[];
+    recent_notifications: any[];
+    collections_summary: any;
+    inventory_summary: any;
+  }>('/api/business/control-room'),
 
   // ─── Invoices / Collections ─────────────────────────────
   invoices: {
@@ -181,11 +196,33 @@ export const api = {
   // ─── Bills ────────────────────────────────────────────────
   bills: {
     list: () => request<{ success: boolean; bills: any[] }>('/api/bills'),
+    create: (body: any) => request<{ success: boolean; bill: any }>('/api/bills', { method: 'POST', body: JSON.stringify(body) }),
+    update: (id: string | number, body: any) => request<{ success: boolean; bill: any }>(`/api/bills/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+    delete: (id: string | number) => request<{ success: boolean }>(`/api/bills/${id}`, { method: 'DELETE' }),
   },
+
+  // ─── User Features ────────────────────────────────────────
+  userFeatures: () => request<{ success: boolean; features: any }>('/api/user/features'),
 
   // ─── Khata ────────────────────────────────────────────────
   khata: {
     list: () => request<{ success: boolean; customers: any[] }>('/api/khata'),
+    get: (name: string) => request<{ success: boolean; entries: any[]; summary: any }>(`/api/khata/${encodeURIComponent(name)}`),
+    createEntry: (body: any) => request<{ success: boolean; entry: any }>('/api/khata/entry', { method: 'POST', body: JSON.stringify(body) }),
+    deleteEntry: (id: string | number) => request<{ success: boolean }>(`/api/khata/entry/${id}`, { method: 'DELETE' }),
+  },
+
+  // ─── Attendance ──────────────────────────────────────────
+  attendance: {
+    listWorkers: () => request<{ success: boolean; workers: any[] }>('/api/workers'),
+    list: (month?: string | number, year?: string | number) => {
+      let path = '/api/attendance';
+      if (month && year) path += `?month=${month}&year=${year}`;
+      else if (month) path += `?month=${month}`;
+      return request<{ success: boolean; attendance: any[] }>(path);
+    },
+    save: (body: any) => request<{ success: boolean; record: any }>('/api/attendance', { method: 'POST', body: JSON.stringify(body) }),
+    salary: (month: string | number, year: string | number) => request<{ success: boolean; salary: any[] }>(`/api/attendance/salary?month=${month}&year=${year}`),
   },
 
   // ─── Priority ─────────────────────────────────────────────
@@ -242,6 +279,21 @@ export const api = {
       request<{ success: boolean; valid: boolean; message: string }>('/api/settings/razorpay', { method: 'POST', body: JSON.stringify(body) }),
     toggleAutomation: (enabled: boolean) =>
       request<{ success: boolean; automation_enabled: boolean }>('/api/settings/automation/toggle', { method: 'POST', body: JSON.stringify({ enabled }) }),
+    saveTwilio: (body: { account_sid: string; auth_token: string; phone_number: string }) =>
+      request<{ success: boolean; message: string }>('/api/settings/twilio', { method: 'POST', body: JSON.stringify(body) }),
+  },
+
+  // ─── Workers ─────────────────────────────────────────────
+  workers: {
+    list: () => request<{ success: boolean; workers: any[] }>('/api/workers'),
+    create: (body: any) => request<{ success: boolean; worker: any }>('/api/workers', { method: 'POST', body: JSON.stringify(body) }),
+    update: (id: string | number, body: any) => request<{ success: boolean; worker: any }>(`/api/workers/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+    delete: (id: string | number) => request<{ success: boolean }>(`/api/workers/${id}`, { method: 'DELETE' }),
+  },
+
+  // ─── Voice ───────────────────────────────────────────────
+  voice: {
+    getWebhookUrl: () => request<{ success: boolean; url: string; webhook_url?: string; twilio_account_sid?: string; twilio_phone_number?: string }>('/api/voice/webhook-url'),
   },
 
   // ─── Sales ──────────────────────────────────────────────

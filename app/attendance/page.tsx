@@ -1,10 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { FiUsers, FiCalendar, FiDollarSign, FiChevronLeft, FiChevronRight, FiCheck, FiX, FiMinus } from "react-icons/fi";
-import { getToken } from "@/lib/api";
+import { api } from "@/lib/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
 type Worker = { id: number; name: string; role?: string; monthly_salary: number; is_active: boolean; };
 type AttendanceRecord = { worker_id: number; date: string; status: "present" | "absent" | "half"; };
@@ -38,21 +36,24 @@ export default function AttendancePage() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [wR, aR] = await Promise.all([
-        fetch(`${API}/api/workers`, { headers: { Authorization: `Bearer ${getToken()}` } }),
-        fetch(`${API}/api/attendance?month=${month}&year=${year}`, { headers: { Authorization: `Bearer ${getToken()}` } }),
+      const [wD, aD] = await Promise.all([
+        api.attendance.listWorkers(),
+        api.attendance.list(month, year),
       ]);
-      const wD = await wR.json();
-      const aD = await aR.json();
       if (wD.success) setWorkers(wD.workers.filter((w: Worker) => w.is_active));
       if (aD.success) setAttendance(aD.attendance);
+    } catch (err) {
+      console.error(err);
     } finally { setLoading(false); }
   };
 
   const loadSalary = async () => {
-    const r = await fetch(`${API}/api/attendance/salary?month=${month}&year=${year}`, { headers: { Authorization: `Bearer ${getToken()}` } });
-    const d = await r.json();
-    if (d.success) setSalary(d.salary);
+    try {
+      const d = await api.attendance.salary(month, year);
+      if (d.success) setSalary(d.salary);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => { loadAll(); }, [month, year]);
@@ -71,16 +72,14 @@ export default function AttendancePage() {
     const key = `${workerId}-${dateStr}`;
     setSaving(key);
     try {
-      await fetch(`${API}/api/attendance`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ worker_id: workerId, date: dateStr, status: nextStatus }),
-      });
+      await api.attendance.save({ worker_id: workerId, date: dateStr, status: nextStatus });
       setAttendance(prev => {
         const filtered = prev.filter(a => !(a.worker_id === workerId && a.date.startsWith(dateStr)));
         if (nextStatus) return [...filtered, { worker_id: workerId, date: dateStr, status: nextStatus }];
         return filtered;
       });
+    } catch (err) {
+      console.error(err);
     } finally { setSaving(null); }
   };
 

@@ -6,7 +6,7 @@ import {
   FiPlus, FiEdit2, FiTrash2, FiAlertCircle, FiCheckCircle, FiClock,
   FiCamera, FiX, FiZap, FiUpload, FiTrendingUp, FiPackage,
 } from "react-icons/fi";
-import { getToken, getUser } from "@/lib/api";
+import { api, getToken, getUser } from "@/lib/api";
 import { buildProductLedgerRows, formatQuantity, groupProductRows, matchProductQuery, sortByDateDesc } from "@/lib/productLedger";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";

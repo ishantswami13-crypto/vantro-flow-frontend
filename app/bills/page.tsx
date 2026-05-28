@@ -3,12 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { FiPlus, FiTrash2, FiRefreshCw, FiPrinter, FiShare2,
   FiCheck, FiX, FiFileText, FiDownload, FiEye, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { api } from "@/lib/api";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 const GST_RATES = [0, 5, 12, 18, 28];
 const UNITS = ["piece","kg","gram","litre","metre","bag","box","ton","truck","set","pair","dozen"];
 const fmtINR = (n: number) => "₹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const token = () => typeof window !== "undefined" ? localStorage.getItem("vantro_token") || "" : "";
 
 interface Item { description: string; hsn: string; quantity: number; unit: string; rate: number; gst_rate: number; amount: number; }
 interface Bill { id: string; bill_number: string; customer_name: string; customer_phone?: string; customer_gstin?: string; customer_address?: string; items: Item[]; subtotal: number; cgst: number; sgst: number; igst: number; total: number; gst_rate: number; bill_date: string; due_date?: string; status: string; is_interstate: boolean; notes?: string; }
@@ -35,14 +35,13 @@ export default function BillsPage() {
     setLoading(true);
     setError("");
     try {
-      const [bRes, pRes] = await Promise.all([
-        fetch(`${API}/api/bills`, { headers: { Authorization: `Bearer ${token()}` } }),
-        fetch(`${API}/api/user/features`, { headers: { Authorization: `Bearer ${token()}` } }),
+      const [b, p] = await Promise.all([
+        api.bills.list(),
+        api.userFeatures(),
       ]);
-      const [b, p] = await Promise.all([bRes.json(), pRes.json()]);
       setBills(b.bills || []);
       setProfile(p);
-    } catch {
+    } catch (err) {
       setError("Could not load invoices. Check your connection and try again.");
     } finally { setLoading(false); }
   };
@@ -73,30 +72,35 @@ export default function BillsPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch(`${API}/api/bills`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
-        body: JSON.stringify({ ...form, items: items.filter(i => i.description && i.rate > 0) }),
-      });
-      const data = await res.json();
+      const data = await api.bills.create({ ...form, items: items.filter(i => i.description && i.rate > 0) });
       if (data.success) {
         setShowForm(false);
         setItems([emptyItem()]);
         setForm({ customer_name: "", customer_phone: "", customer_gstin: "", customer_address: "", gst_rate: 18, is_interstate: false, due_date: "", notes: "" });
         load();
       }
+    } catch (err) {
+      console.error(err);
     } finally { setSubmitting(false); }
   };
 
   const markPaid = async (id: string) => {
-    await fetch(`${API}/api/bills/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` }, body: JSON.stringify({ status: "paid" }) });
-    setBills(b => b.map(x => x.id === id ? { ...x, status: "paid" } : x));
+    try {
+      await api.bills.update(id, { status: "paid" });
+      setBills(b => b.map(x => x.id === id ? { ...x, status: "paid" } : x));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const deleteBill = async (id: string) => {
     if (!confirm("Delete this invoice?")) return;
-    await fetch(`${API}/api/bills/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token()}` } });
-    setBills(b => b.filter(x => x.id !== id));
+    try {
+      await api.bills.delete(id);
+      setBills(b => b.filter(x => x.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const shareURL = (id: string) => `${window.location.origin}/invoice/${id}`;

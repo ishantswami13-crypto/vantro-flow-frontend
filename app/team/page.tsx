@@ -7,8 +7,8 @@ import {
   FiDollarSign, FiSettings, FiEye, FiEyeOff, FiZap,
   FiCopy, FiCheckCircle, FiAlertCircle,
 } from "react-icons/fi";
+import { api } from "@/lib/api";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 const ROLES = ["delivery", "sales", "driver", "manager", "helper", "accountant", "supervisor", "loader"];
 
 interface Worker {
@@ -37,22 +37,19 @@ export default function TeamPage() {
   const [copied, setCopied]           = useState(false);
   const [twilioActive, setTwilioActive] = useState(false);
 
-  const tok = () => typeof window !== "undefined" ? localStorage.getItem("vantro_token") || "" : "";
-  const hdr = () => ({ "Content-Type": "application/json", Authorization: `Bearer ${tok()}` });
-
   const load = async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/workers`, { headers: hdr() });
-      const d = await r.json();
+      const d = await api.workers.list();
       setWorkers(d.workers || []);
+    } catch (err) {
+      console.error(err);
     } finally { setLoading(false); }
   };
 
   const loadTwilio = async () => {
     try {
-      const r = await fetch(`${API}/api/voice/webhook-url`, { headers: hdr() });
-      const d = await r.json();
+      const d = await api.voice.getWebhookUrl();
       if (d.webhook_url) setWebhookUrl(d.webhook_url);
       if (d.twilio_account_sid) { setSid(d.twilio_account_sid); setTwilioActive(true); }
       if (d.twilio_phone_number) setPhone(d.twilio_phone_number);
@@ -65,34 +62,44 @@ export default function TeamPage() {
     e.preventDefault();
     setAdding(true);
     try {
-      const r = await fetch(`${API}/api/workers`, {
-        method: "POST", headers: hdr(),
-        body: JSON.stringify({ ...wForm, monthly_salary: parseFloat(wForm.monthly_salary) || 0 }),
-      });
-      const d = await r.json();
+      const d = await api.workers.create({ ...wForm, monthly_salary: parseFloat(wForm.monthly_salary) || 0 });
       if (d.worker) {
         setWorkers(w => [...w, d.worker]);
         setWForm({ name: "", phone: "", role: "delivery", monthly_salary: "" });
         setShowAdd(false);
       }
+    } catch (err) {
+      console.error(err);
     } finally { setAdding(false); }
   };
 
   const toggleWorker = async (id: string, is_active: boolean) => {
-    await fetch(`${API}/api/workers/${id}`, { method: "PATCH", headers: hdr(), body: JSON.stringify({ is_active }) });
-    setWorkers(w => w.map(x => x.id === id ? { ...x, is_active } : x));
+    try {
+      await api.workers.update(id, { is_active });
+      setWorkers(w => w.map(x => x.id === id ? { ...x, is_active } : x));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const deleteWorker = async (id: string) => {
     if (!confirm("Delete this worker?")) return;
-    await fetch(`${API}/api/workers/${id}`, { method: "DELETE", headers: hdr() });
-    setWorkers(w => w.filter(x => x.id !== id));
+    try {
+      await api.workers.delete(id);
+      setWorkers(w => w.filter(x => x.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const saveEdit = async (id: string) => {
-    await fetch(`${API}/api/workers/${id}`, { method: "PATCH", headers: hdr(), body: JSON.stringify(editData) });
-    setWorkers(w => w.map(x => x.id === id ? { ...x, ...editData } : x));
-    setEditId(null);
+    try {
+      await api.workers.update(id, editData);
+      setWorkers(w => w.map(x => x.id === id ? { ...x, ...editData } : x));
+      setEditId(null);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const saveTwilio = async () => {
@@ -100,11 +107,7 @@ export default function TeamPage() {
     setSaving(true);
     setSaveStatus("idle");
     try {
-      const r = await fetch(`${API}/api/settings/twilio`, {
-        method: "POST", headers: hdr(),
-        body: JSON.stringify({ account_sid: sid, auth_token: token, phone_number: phone }),
-      });
-      const d = await r.json();
+      const d = await api.settings.saveTwilio({ account_sid: sid, auth_token: token, phone_number: phone });
       if (d.success) {
         setSaveStatus("saved");
         setTwilioActive(true);
