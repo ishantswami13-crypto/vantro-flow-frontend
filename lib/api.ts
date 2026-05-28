@@ -175,6 +175,19 @@ export const api = {
     log: (body: object) => request<{ log: CallLog }>('/api/log-call', { method: 'POST', body: JSON.stringify(body) }),
   },
 
+  // ─── ML Briefing ──────────────────────────────────────────
+  briefing: () => request<{ success: boolean; briefing: string }>('/api/ml/briefing', { method: 'POST' }),
+
+  // ─── Bills ────────────────────────────────────────────────
+  bills: {
+    list: () => request<{ success: boolean; bills: any[] }>('/api/bills'),
+  },
+
+  // ─── Khata ────────────────────────────────────────────────
+  khata: {
+    list: () => request<{ success: boolean; customers: any[] }>('/api/khata'),
+  },
+
   // ─── Priority ─────────────────────────────────────────────
   priority: (userId: string) =>
     request<{ priority_list: Invoice[] }>(`/api/calculate-priority/${userId}`, { method: 'POST' }),
@@ -235,6 +248,8 @@ export const api = {
   sales: {
     list: () => request<{ success: boolean; sales: any[] }>('/api/sales'),
     create: (body: any) => request<{ success: boolean; sale: any; receivable: any }>('/api/sales', { method: 'POST', body: JSON.stringify(body) }),
+    update: (id: string | number, body: any) => request<{ success: boolean; sale: any }>('/api/sales/' + id, { method: 'PATCH', body: JSON.stringify(body) }),
+    delete: (id: string | number) => request<{ success: boolean }>('/api/sales/' + id, { method: 'DELETE' }),
     scan: (imageBase64: string, mimeType = 'image/jpeg') =>
       request<{ success: boolean; data: any }>('/api/sales/scan', {
         method: 'POST',
@@ -246,6 +261,8 @@ export const api = {
   purchases: {
     list: () => request<{ success: boolean; purchases: any[] }>('/api/purchases'),
     create: (body: any) => request<{ success: boolean; purchase: any; supplier: any; inventory: any }>('/api/purchases', { method: 'POST', body: JSON.stringify(body) }),
+    update: (id: string | number, body: any) => request<{ success: boolean; purchase: any }>('/api/purchases/' + id, { method: 'PATCH', body: JSON.stringify(body) }),
+    delete: (id: string | number) => request<{ success: boolean }>('/api/purchases/' + id, { method: 'DELETE' }),
     scan: (imageBase64: string, mimeType = 'image/jpeg') =>
       request<{ success: boolean; data: any }>('/api/purchases/scan', {
         method: 'POST',

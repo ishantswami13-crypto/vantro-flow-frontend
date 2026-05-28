@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { getToken, getUser } from "@/lib/api";
+import { api, getToken, getUser } from "@/lib/api";
 import { FiSearch, FiTruck, FiPhone, FiCalendar, FiAlertTriangle, FiX, FiFileText, FiChevronRight } from "react-icons/fi";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -78,11 +78,10 @@ export default function SuppliersPage() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/suppliers/${user.id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      const data = await res.json();
+      const data = await api.suppliers.list(user.id);
       if (data.success) setSuppliers(data.suppliers || []);
+    } catch (err) {
+      console.error("Failed to load suppliers:", err);
     } finally {
       setLoading(false);
     }

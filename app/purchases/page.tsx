@@ -5,7 +5,8 @@ import {
   FiPlus, FiEdit2, FiTrash2, FiAlertCircle, FiCheckCircle, FiClock,
   FiCamera, FiX, FiZap, FiUpload,
 } from "react-icons/fi";
-import { getToken } from "@/lib/api";
+import { api, getToken, getUser } from "@/lib/api";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { buildProductLedgerRows, formatQuantity, groupProductRows, matchProductQuery, sortByDateDesc } from "@/lib/productLedger";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -207,11 +208,10 @@ export default function PurchasesPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/purchases`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      const d = await r.json();
+      const d = await api.purchases.list();
       if (d.success) setPurchases(d.purchases);
+    } catch (err) {
+      console.error("Failed to load purchases:", err);
     } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
@@ -220,8 +220,6 @@ export default function PurchasesPage() {
     if (!form.supplier_name || !form.total_amount) return;
     setSaving(true);
     try {
-      const url    = editId ? `${API}/api/purchases/${editId}` : `${API}/api/purchases`;
-      const method = editId ? "PATCH" : "POST";
       const body: Record<string, unknown> = {
         ...form,
         total_amount: parseFloat(form.total_amount),
@@ -233,37 +231,38 @@ export default function PurchasesPage() {
         body.gst_rate = scannedGst.rate;
         body.gst_amount = scannedGst.amount;
       }
-      const r = await fetch(url, {
-        method,
-        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (r.ok) {
+      const r = editId 
+        ? await api.purchases.update(editId, body)
+        : await api.purchases.create(body);
+
+      if (r.success || (r as any).purchase) {
         setShowAdd(false); setEditId(null); setForm(emptyForm);
         setScanPreview(null); setScannedItems([]);
         load();
       }
+    } catch (err) {
+      console.error("Failed to save purchase:", err);
     } finally { setSaving(false); }
   };
 
   const deletePurchase = async (id: number) => {
     if (!confirm("Delete this purchase?")) return;
-    await fetch(`${API}/api/purchases/${id}`, {
-      method: "DELETE", headers: { Authorization: `Bearer ${getToken()}` },
-    });
-    load();
+    try {
+      await api.purchases.delete(id);
+      load();
+    } catch (err) {
+      console.error("Failed to delete purchase:", err);
+    }
   };
 
   const recordPayment = async () => {
     if (!payModal || !payAmount) return;
     setSaving(true);
     try {
-      const r = await fetch(`${API}/api/purchases/${payModal.id}`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ paid_amount: payModal.paid_amount + parseFloat(payAmount) }),
-      });
-      if (r.ok) { setPayModal(null); setPayAmount(""); load(); }
+      const r = await api.purchases.update(payModal.id, { paid_amount: payModal.paid_amount + parseFloat(payAmount) });
+      if (r.success || (r as any).purchase) { setPayModal(null); setPayAmount(""); load(); }
+    } catch (err) {
+      console.error("Failed to record payment:", err);
     } finally { setSaving(false); }
   };
 
@@ -616,7 +615,8 @@ export default function PurchasesPage() {
 
   // ── Render ───────────────────────────────────────────────────────
   return (
-    <div className="p-4 max-w-4xl mx-auto pb-24">
+    <DashboardLayout pageTitle="Purchases / Payables">
+      <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto pb-24">
       {/* Hidden file input — fallback / desktop */}
       <input
         ref={fileInputRef}
@@ -1301,6 +1301,7 @@ export default function PurchasesPage() {
         </div>,
         document.body
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

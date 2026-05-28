@@ -216,11 +216,10 @@ export default function SalesPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const r = await fetch(`${API}/api/sales`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      const d = await r.json();
+      const d = await api.sales.list();
       if (d.success) setSales(d.sales);
+    } catch (err) {
+      console.error("Failed to load sales:", err);
     } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
@@ -244,39 +243,38 @@ export default function SalesPage() {
         body.igst_amount = scannedGst.igst || null;
       }
       if (scannedItems.length > 0) body.items = scannedItems;
-      const url    = editId ? `${API}/api/sales/${editId}` : `${API}/api/sales`;
-      const method = editId ? "PATCH" : "POST";
-      const r = await fetch(url, {
-        method,
-        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (r.ok) {
+      const r = editId 
+        ? await api.sales.update(editId, body)
+        : await api.sales.create(body);
+
+      if (r.success || (r as any).sale) {
         setShowAdd(false); setEditId(null); setForm(emptyForm);
         setScanPreview(null); setScannedItems([]); setScannedGst(null);
         load();
       }
+    } catch (err) {
+      console.error("Failed to save sale:", err);
     } finally { setSaving(false); }
   };
 
   const deleteSale = async (id: number) => {
     if (!confirm("Delete this sale?")) return;
-    await fetch(`${API}/api/sales/${id}`, {
-      method: "DELETE", headers: { Authorization: `Bearer ${getToken()}` },
-    });
-    load();
+    try {
+      await api.sales.delete(id);
+      load();
+    } catch (err) {
+      console.error("Failed to delete sale:", err);
+    }
   };
 
   const recordPayment = async () => {
     if (!payModal || !payAmount) return;
     setSaving(true);
     try {
-      const r = await fetch(`${API}/api/sales/${payModal.id}`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ paid_amount: payModal.paid_amount + parseFloat(payAmount) }),
-      });
-      if (r.ok) { setPayModal(null); setPayAmount(""); load(); }
+      const r = await api.sales.update(payModal.id, { paid_amount: payModal.paid_amount + parseFloat(payAmount) });
+      if (r.success || (r as any).sale) { setPayModal(null); setPayAmount(""); load(); }
+    } catch (err) {
+      console.error("Failed to record payment:", err);
     } finally { setSaving(false); }
   };
 
