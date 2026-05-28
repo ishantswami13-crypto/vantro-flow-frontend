@@ -48,6 +48,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (url.hostname.includes("fonts.googleapis.com") || url.hostname.includes("fonts.gstatic.com")) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
@@ -59,7 +64,11 @@ self.addEventListener("fetch", (event) => {
           }
           return response;
         })
-        .catch(() => caches.match("/"));
+        .catch((err) => {
+          // If we fail to fetch a non-navigational asset, don't return index.html (caches.match("/"))
+          // Return nothing or let the browser handle the failure.
+          return undefined;
+        });
     })
   );
 });
