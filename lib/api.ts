@@ -34,7 +34,7 @@ function isUnsafeMethod(method?: string) {
   return !['GET', 'HEAD', 'OPTIONS'].includes((method || 'GET').toUpperCase());
 }
 
-async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
+export async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
   const token = getToken();
   const csrf = getCsrfToken();
   const headers: Record<string, string> = {
