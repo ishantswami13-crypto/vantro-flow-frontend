@@ -2,69 +2,38 @@
 
 import { useEffect } from 'react';
 
+import { ErrorFallback } from '@/components/ErrorFallback';
+
 export default function GlobalError({
   error,
   reset,
 }: {
-  error: Error & { digest?: string };
+  error: Error & { requestId?: string };
   reset: () => void;
 }) {
   useEffect(() => {
     console.error('[Vantro Global Error]', error);
   }, [error]);
 
+  const errorId = error.requestId || 'UNKNOWN';
+
   return (
-    <html lang="hi">
+    <html lang="en">
       <body>
-        <div
-          style={{
-            minHeight: '100vh',
-            background: '#f9fafb',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-            textAlign: 'center',
-            fontFamily: 'system-ui, sans-serif',
-          }}
-        >
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              background: '#fee2e2',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 16,
-              fontSize: 28,
-            }}
-          >
-            🚨
+        <div style={{ minHeight: '100vh', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ padding: '2rem', maxWidth: '600px', width: '100%' }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>A critical error occurred</h1>
+            <p style={{ marginBottom: '2rem' }}>We've been notified. Please try reloading the page.</p>
+            <div style={{ background: '#f3f4f6', padding: '1rem', borderRadius: '0.5rem', fontFamily: 'monospace', marginBottom: '2rem' }}>
+              Error ID: {errorId}
+            </div>
+            <button
+              onClick={reset}
+              style={{ padding: '0.75rem 1.5rem', background: '#2563eb', color: 'white', borderRadius: '0.5rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+            >
+              Reload application
+            </button>
           </div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111', marginBottom: 8 }}>
-            App mein kuch problem hai
-          </h1>
-          <p style={{ color: '#6b7280', marginBottom: 24, maxWidth: 320 }}>
-            Please page refresh karein. Problem persist kare toh support se contact karein.
-          </p>
-          <button
-            onClick={reset}
-            style={{
-              padding: '12px 24px',
-              background: '#2563eb',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontSize: 15,
-            }}
-          >
-            Refresh karein
-          </button>
         </div>
       </body>
     </html>
