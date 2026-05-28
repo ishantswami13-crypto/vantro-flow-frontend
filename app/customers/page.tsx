@@ -31,6 +31,7 @@ export default function CustomersPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [scoreMap, setScoreMap] = useState<Record<string, { score: number; tier: string; overdue_amount: number }>>({});
 
   const loadCustomers = async () => {
     setLoading(true);
@@ -51,6 +52,14 @@ export default function CustomersPage() {
 
   useEffect(() => {
     loadCustomers();
+    fetch(`${API}/api/customer-scores`, { headers: { Authorization: `Bearer ${getToken()}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d?.scores) return;
+        const map: Record<string, any> = {};
+        d.scores.forEach((s: any) => { map[s.customer_name] = s; });
+        setScoreMap(map);
+      }).catch(() => {});
   }, []);
 
   const filtered = useMemo(() => {
@@ -164,6 +173,17 @@ export default function CustomersPage() {
                         {fmtINR(Math.abs(balance))}
                       </p>
                       <p className="text-2xs text-muted">{balance > 0 ? "lena hai" : balance < 0 ? "advance" : "clear"}</p>
+                      {scoreMap[customer.customer_name] && (() => {
+                        const risk = scoreMap[customer.customer_name];
+                        const tierColor = risk.tier === "HIGH_RISK" ? "#F5424D" : risk.tier === "MEDIUM" ? "#F5A524" : "#10D98A";
+                        const tierLabel = risk.tier === "HIGH_RISK" ? "High Risk" : risk.tier === "MEDIUM" ? "Medium" : "Low Risk";
+                        return (
+                          <span className="inline-block mt-1 text-[10px] font-semibold rounded-full px-2 py-0.5"
+                            style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}40` }}>
+                            {tierLabel} · {risk.score}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
 

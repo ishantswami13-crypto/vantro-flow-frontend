@@ -5,7 +5,7 @@ import { getUser } from "@/lib/api";
 import {
   FiZap, FiCheckCircle, FiXCircle, FiAlertTriangle,
   FiMessageSquare, FiTrendingDown, FiPackage, FiClock,
-  FiRefreshCw, FiChevronDown, FiChevronUp,
+  FiRefreshCw, FiChevronDown, FiChevronUp, FiSend, FiCopy,
 } from "react-icons/fi";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -61,7 +61,11 @@ function timeAgo(iso: string) {
 function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: string, status: Status) => void }) {
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [waSending, setWaSending] = useState<"idle" | "sending" | "sent" | "error" | "unconfigured">("idle");
+  const [waCopied, setWaCopied] = useState(false);
   const pc = PRIORITY_CONFIG[action.priority] || PRIORITY_CONFIG.medium;
+
+  const isMessageAction = /reminder|message|follow.*up|collection/i.test(action.action_type + " " + action.title);
 
   const handleAction = async (status: Status) => {
     setLoading(true);
@@ -76,6 +80,33 @@ function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: str
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSendWhatsApp = async () => {
+    setWaSending("sending");
+    try {
+      const token = localStorage.getItem("vantro_token");
+      const res = await fetch(`${BASE}/api/ai-actions/${action.id}/send-whatsapp`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.status === 503) {
+        setWaSending("unconfigured");
+      } else if (res.ok && data.success) {
+        setWaSending("sent");
+        onUpdate(action.id, "done");
+      } else {
+        setWaSending("error");
+      }
+    } catch {
+      setWaSending("error");
+    }
+  };
+
+  const copyMessage = () => {
+    const msg = action.recommended_message || action.description || action.title;
+    navigator.clipboard.writeText(msg).then(() => { setWaCopied(true); setTimeout(() => setWaCopied(false), 2000); });
   };
 
   return (
@@ -124,7 +155,7 @@ function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: str
         </div>
       )}
 
-      <div className="mt-3 ml-7 flex gap-2">
+      <div className="mt-3 ml-7 flex flex-wrap gap-2">
         <button
           onClick={() => handleAction("approved")}
           disabled={loading}
@@ -132,6 +163,29 @@ function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: str
         >
           <FiCheckCircle size={13} /> Approve
         </button>
+        {isMessageAction && waSending !== "sent" && (
+          <button
+            onClick={handleSendWhatsApp}
+            disabled={waSending === "sending"}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 text-xs font-medium hover:bg-green-600/30 transition-colors disabled:opacity-50"
+          >
+            <FiSend size={13} />
+            {waSending === "sending" ? "Sending…" : "Send via WhatsApp"}
+          </button>
+        )}
+        {waSending === "sent" && (
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 text-xs font-medium">
+            <FiCheckCircle size={13} /> Sent
+          </span>
+        )}
+        {(waSending === "unconfigured" || waSending === "error") && (
+          <button
+            onClick={copyMessage}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-700/40 border border-zinc-600 text-zinc-300 text-xs font-medium hover:bg-zinc-700 transition-colors"
+          >
+            <FiCopy size={13} /> {waCopied ? "Copied!" : "Copy message"}
+          </button>
+        )}
         <button
           onClick={() => handleAction("done")}
           disabled={loading}
@@ -147,6 +201,11 @@ function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: str
           <FiXCircle size={13} /> Dismiss
         </button>
       </div>
+      {waSending === "unconfigured" && (
+        <p className="ml-7 mt-1.5 text-[11px] text-amber-400/80">
+          WhatsApp not configured — set TWILIO_WHATSAPP_NUMBER in Railway to enable sending.
+        </p>
+      )}
     </div>
   );
 }
