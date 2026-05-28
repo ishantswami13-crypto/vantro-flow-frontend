@@ -24,20 +24,23 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get('vantro_token')?.value;
+  const hasSession = Boolean(
+    request.cookies.get('vantro_session')?.value ||
+    request.cookies.get('vantro_token')?.value
+  );
 
   // Logged-in users visiting root → send to their dashboard
-  if (pathname === '/' && token) {
+  if (pathname === '/' && hasSession) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   // Logged-in users visiting login/signup → send to dashboard
-  if ((pathname === '/login' || pathname === '/signup') && token) {
+  if ((pathname === '/login' || pathname === '/signup') && hasSession) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   // Protected routes without token → send to login
-  if (!token && PROTECTED.some(p => pathname === p || pathname.startsWith(p + '/'))) {
+  if (!hasSession && PROTECTED.some(p => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 

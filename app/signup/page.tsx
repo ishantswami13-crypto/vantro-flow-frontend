@@ -66,7 +66,7 @@ function OTPStep({
   preToken, userEmail, userPhone, onVerified,
 }: {
   preToken: string; userEmail: string; userPhone: string;
-  onVerified: (token: string, user: object) => void;
+  onVerified: (token: string, user: object, csrfToken?: string | null) => void;
 }) {
   const [otp, setOtp]         = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
@@ -112,10 +112,11 @@ function OTPStep({
       const r = await fetch(`${BASE}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${preToken}` },
+        credentials: "include",
         body: JSON.stringify({ otp: finalCode }),
       });
       const d = await r.json();
-      if (d.success) { onVerified(d.token, d.user); }
+      if (d.success) { onVerified(d.token, d.user, d.csrf_token); }
       else { setError(d.error || "Wrong OTP"); setOtp(["", "", "", "", "", ""]); inputs.current[0]?.focus(); }
     } catch { setError("Network error. Please try again."); }
     finally { setLoading(false); }
@@ -243,7 +244,7 @@ function SignupForm() {
         setVerifiedUser({ email: data.user.email, phone: data.user.phone });
         setOtpStep(true);
       } else {
-        saveAuth(data.token, data.user);
+        saveAuth(data.token, data.user, true, data.csrf_token);
         posthog.identify(data.user.id, { email: data.user.email, plan: data.user.plan });
         router.push("/dashboard");
       }
@@ -252,8 +253,8 @@ function SignupForm() {
     } finally { setLoading(false); }
   };
 
-  const handleOTPVerified = (token: string, user: any) => {
-    saveAuth(token, user);
+  const handleOTPVerified = (token: string, user: any, csrfToken?: string | null) => {
+    saveAuth(token, user, true, csrfToken);
     posthog.identify(user.id, { email: user.email, name: user.business_name, plan: user.plan });
     posthog.capture("user_signed_up", { business_type: form.business_type });
     router.push("/dashboard");

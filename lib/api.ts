@@ -1,30 +1,62 @@
 const BASE = process.env.NEXT_PUBLIC_API_URL || 'https://vantro-flow-backend-production.up.railway.app';
+const SESSION_COOKIE = 'vantro_session';
+const LEGACY_TOKEN_COOKIE = 'vantro_token';
+const CSRF_COOKIE = 'vantro_csrf';
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const prefix = `${name}=`;
+  const item = document.cookie.split(';').map(v => v.trim()).find(v => v.startsWith(prefix));
+  return item ? decodeURIComponent(item.slice(prefix.length)) : null;
+}
+
+function setClientCookie(name: string, value: string, maxAge: number) {
+  if (typeof document === 'undefined') return;
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}${secure}; SameSite=Lax`;
+}
+
+function clearClientCookie(name: string) {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+}
 
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('vantro_token');
 }
 
+function getCsrfToken(): string | null {
+  return getCookie(CSRF_COOKIE);
+}
+
+function isUnsafeMethod(method?: string) {
+  return !['GET', 'HEAD', 'OPTIONS'].includes((method || 'GET').toUpperCase());
+}
+
 async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
   const token = getToken();
+  const csrf = getCsrfToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (!token && csrf && isUnsafeMethod(options.method)) headers['X-CSRF-Token'] = csrf;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(`${BASE}${path}`, { ...options, headers, signal: controller.signal });
+    const res = await fetch(`${BASE}${path}`, { ...options, headers, credentials: 'include', signal: controller.signal });
     const data = await res.json();
     // Auto-logout on 401 — token expired or invalid, or 404 User not found
     if (res.status === 401 || (res.status === 404 && data?.error === 'User not found')) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('vantro_token');
         localStorage.removeItem('vantro_user');
-        document.cookie = 'vantro_token=; path=/; max-age=0; SameSite=Lax';
+        clearClientCookie(LEGACY_TOKEN_COOKIE);
+        clearClientCookie(SESSION_COOKIE);
         window.location.href = '/login';
       }
       throw new Error(data?.error || 'Session expired. Please log in again.');
@@ -52,9 +84,9 @@ function ensureDataUrl(value: string, mimeType: string): string {
 export const api = {
   auth: {
     signup: (body: { email: string; phone: string; business_name: string; password: string }) =>
-      request<{ token: string; user: User }>('/api/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
+      request<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
     login: (body: { email: string; password: string }) =>
-      request<{ token: string; user: User }>('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+      request<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
     me: () => request<{ user: User }>('/api/auth/me'),
   },
 
@@ -88,6 +120,7 @@ export const api = {
       return fetch(`${BASE}/api/upload-csv`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
         body: fd,
       }).then(r => r.json());
     },
@@ -249,16 +282,22 @@ export const api = {
 };
 
 // ─── Auth helpers ─────────────────────────────────────────
-export function saveAuth(token: string, user: User, rememberMe = true) {
+export function saveAuth(token: string, user: User, rememberMe = true, csrfToken?: string | null) {
   // Clear any leftover demo-mode flag so real accounts never see demo data
   localStorage.removeItem('vantro_demo');
-  localStorage.setItem('vantro_token', token);
   localStorage.setItem('vantro_user', JSON.stringify(user));
-  // Cookie so Next.js middleware can read it (localStorage is client-only, middleware can't touch it)
-  // Always set 30-day persistent cookie — token itself is also 30d now
-  const maxAge = 30 * 24 * 60 * 60; // 30 days in seconds
-  const secure = typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : '';
-  document.cookie = `vantro_token=${token}; path=/; max-age=${maxAge}${secure}; SameSite=Lax`;
+  const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 12 * 60 * 60;
+  setClientCookie(SESSION_COOKIE, '1', maxAge);
+
+  if (csrfToken) {
+    localStorage.removeItem('vantro_token');
+    clearClientCookie(LEGACY_TOKEN_COOKIE);
+    return;
+  }
+
+  // Legacy fallback until Railway enables ENABLE_AUTH_COOKIES=true.
+  localStorage.setItem('vantro_token', token);
+  setClientCookie(LEGACY_TOKEN_COOKIE, token, maxAge);
 }
 
 export function getUser(): User | null {
@@ -271,12 +310,13 @@ export function getUser(): User | null {
 export function clearAuth() {
   localStorage.removeItem('vantro_token');
   localStorage.removeItem('vantro_user');
-  // Clear cookie too
-  document.cookie = 'vantro_token=; path=/; max-age=0; SameSite=Lax';
+  clearClientCookie(LEGACY_TOKEN_COOKIE);
+  clearClientCookie(SESSION_COOKIE);
+  fetch(`${BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
 }
 
 export function isLoggedIn(): boolean {
-  return !!getToken() && !!getUser();
+  return (!!getToken() || !!getCookie(SESSION_COOKIE)) && !!getUser();
 }
 
 // ─── Types ────────────────────────────────────────────────
