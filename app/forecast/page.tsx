@@ -9,7 +9,7 @@ import {
   ResponsiveContainer, ComposedChart, Area, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
 } from "recharts";
-import { api, getUser } from "@/lib/api";
+import { api, getUser, getToken } from "@/lib/api";
 import Link from "next/link";
 
 function fmt(v: number) {
@@ -57,6 +57,11 @@ export default function ForecastPage() {
   });
   const [cashInput, setCashInput] = useState("");
   const [showCashInput, setShowCashInput] = useState(false);
+
+  // Cortex 7-day real cashflow from cashflow_events
+  const [cortexWeek, setCortexWeek] = useState<{
+    expected_inflow: number; expected_outflow: number; net_gap: number; overdue_payables: number;
+  } | null>(null);
 
   const loadForecast = useCallback(async (days: 30 | 60 | 90, cash?: string) => {
     const user = getUser();
@@ -145,6 +150,17 @@ export default function ForecastPage() {
 
   useEffect(() => { loadForecast(range); }, [range, loadForecast]);
 
+  // Fetch Cortex 7-day real cashflow data
+  useEffect(() => {
+    const token = getToken();
+    const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
+    if (!token) return;
+    fetch(`${BASE}/api/cortex/cashflow-week`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.success) setCortexWeek(d); })
+      .catch(() => {});
+  }, []);
+
   const isRunwayDanger = kpis.runwayDays > 0 && kpis.runwayDays < 15;
 
   const saveCash = () => {
@@ -177,6 +193,45 @@ export default function ForecastPage() {
             ))}
           </div>
         </div>
+
+        {/* Cortex 7-Day Real Cashflow Snapshot */}
+        {cortexWeek && (cortexWeek.expected_inflow > 0 || cortexWeek.expected_outflow > 0) && (
+          <div className="rounded-xl border border-white/8 p-4"
+            style={{ background: cortexWeek.net_gap >= 0 ? "rgba(16,217,138,0.04)" : "rgba(245,66,77,0.04)" }}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>
+                ⚡ Cortex 7-Day Real Cashflow (from cashflow_events)
+              </p>
+              <span className="text-sm font-bold" style={{ color: cortexWeek.net_gap >= 0 ? "#10D98A" : "#F5424D" }}>
+                {cortexWeek.net_gap >= 0 ? "+" : ""}{fmt(cortexWeek.net_gap)} net
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Expected Inflow", value: cortexWeek.expected_inflow, color: "#10D98A" },
+                { label: "Expected Outflow", value: cortexWeek.expected_outflow, color: "#F5424D" },
+              ].map(({ label, value, color }) => (
+                <div key={label}>
+                  <p className="text-[10px] text-muted mb-1">{label}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                      <div className="h-full rounded-full" style={{
+                        width: `${Math.min(100, Math.round(value / Math.max(cortexWeek.expected_inflow, cortexWeek.expected_outflow, 1) * 100))}%`,
+                        background: color, opacity: 0.75,
+                      }} />
+                    </div>
+                    <span className="text-xs font-semibold shrink-0" style={{ color }}>{fmt(value)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {cortexWeek.overdue_payables > 0 && (
+              <p className="text-[11px] mt-2 flex items-center gap-1" style={{ color: "#F5A524" }}>
+                <FiAlertTriangle size={10} /> {fmt(cortexWeek.overdue_payables)} supplier payments overdue — pay soon
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Danger alert */}
         {!loading && isRunwayDanger && (
