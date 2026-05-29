@@ -320,25 +320,33 @@ export default function DashboardPage() {
 
 
         {/* ── CORTEX URGENCY STRIP ── */}
-        {actionCounts && (actionCounts.urgent > 0 || actionCounts.high > 0) && (
+        {actionCounts && actionCounts.total > 0 && (
           <Link href="/ai-actions" className="block rounded-xl overflow-hidden transition-all hover:scale-[1.01] active:scale-[0.99]"
-            style={{ background: "rgba(251,146,60,0.08)", border: "1px solid rgba(251,146,60,0.25)" }}>
+            style={{
+              background: actionCounts.urgent > 0 ? "rgba(245,66,77,0.08)" : actionCounts.high > 0 ? "rgba(251,146,60,0.08)" : "rgba(255,255,255,0.04)",
+              border: actionCounts.urgent > 0 ? "1px solid rgba(245,66,77,0.3)" : actionCounts.high > 0 ? "1px solid rgba(251,146,60,0.25)" : "1px solid rgba(255,255,255,0.08)",
+            }}>
             <div className="px-4 py-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <span className="text-lg">⚡</span>
+                <span className="text-lg">{actionCounts.urgent > 0 ? "🔴" : actionCounts.high > 0 ? "⚡" : "💡"}</span>
                 <div>
-                  <p className="text-sm font-bold leading-tight" style={{ color: "rgba(251,146,60,0.95)" }}>
+                  <p className="text-sm font-bold leading-tight" style={{
+                    color: actionCounts.urgent > 0 ? "rgba(245,66,77,0.95)" : actionCounts.high > 0 ? "rgba(251,146,60,0.95)" : "rgba(255,255,255,0.7)",
+                  }}>
                     {actionCounts.urgent > 0 ? `${actionCounts.urgent} urgent` : ""}
                     {actionCounts.urgent > 0 && actionCounts.high > 0 ? " · " : ""}
                     {actionCounts.high > 0 ? `${actionCounts.high} high priority` : ""}
-                    {" "}action{(actionCounts.urgent + actionCounts.high) !== 1 ? "s" : ""} waiting
+                    {actionCounts.urgent === 0 && actionCounts.high === 0 ? `${actionCounts.total} action${actionCounts.total !== 1 ? "s" : ""}` : ""}
+                    {(actionCounts.urgent > 0 || actionCounts.high > 0) ? ` action${(actionCounts.urgent + actionCounts.high) !== 1 ? "s" : ""} waiting` : " waiting for review"}
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
                     Cortex needs your decision
                   </p>
                 </div>
               </div>
-              <span className="text-xs font-semibold shrink-0" style={{ color: "rgba(251,146,60,0.8)" }}>
+              <span className="text-xs font-semibold shrink-0" style={{
+                color: actionCounts.urgent > 0 ? "rgba(245,66,77,0.8)" : "rgba(251,146,60,0.8)",
+              }}>
                 Action Center →
               </span>
             </div>
