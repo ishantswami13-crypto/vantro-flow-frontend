@@ -32,6 +32,7 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [scoreMap, setScoreMap] = useState<Record<string, { score: number; tier: string; overdue_amount: number }>>({});
+  const [promiseCountMap, setPromiseCountMap] = useState<Record<string, number>>({});
 
   const loadCustomers = async () => {
     setLoading(true);
@@ -52,13 +53,27 @@ export default function CustomersPage() {
 
   useEffect(() => {
     loadCustomers();
-    fetch(`${API}/api/customer-scores`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    const token = getToken();
+    fetch(`${API}/api/customer-scores`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (!d?.scores) return;
         const map: Record<string, any> = {};
         d.scores.forEach((s: any) => { map[s.customer_name] = s; });
         setScoreMap(map);
+      }).catch(() => {});
+
+    // Fetch active promises to show count per customer
+    fetch(`${API}/api/promises?status=active&limit=200`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d?.promises) return;
+        const countMap: Record<string, number> = {};
+        d.promises.forEach((p: any) => {
+          const name = p.customers?.name;
+          if (name) countMap[name] = (countMap[name] || 0) + 1;
+        });
+        setPromiseCountMap(countMap);
       }).catch(() => {});
   }, []);
 
@@ -165,7 +180,15 @@ export default function CustomersPage() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-bold text-primary truncate">{customer.customer_name}</p>
-                        <p className="text-2xs text-muted">{customer.entry_count || 0} entries · {fmtDate(customer.last_entry)}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                          <p className="text-2xs text-muted">{customer.entry_count || 0} entries · {fmtDate(customer.last_entry)}</p>
+                          {promiseCountMap[customer.customer_name] > 0 && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                              style={{ color: "#F5A524", background: "rgba(245,165,36,0.12)", border: "1px solid rgba(245,165,36,0.25)" }}>
+                              🤝 {promiseCountMap[customer.customer_name]} promise{promiseCountMap[customer.customer_name] > 1 ? "s" : ""}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="text-right shrink-0">

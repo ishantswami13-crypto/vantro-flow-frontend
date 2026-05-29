@@ -169,6 +169,8 @@ export default function CollectionsPage() {
 
   // Cortex customer risk scores
   const [scoreMap, setScoreMap] = useState<Record<string, { customer_id: string; score: number; tier: string; overdue_amount: number }>>({});
+  // Cortex AI action stage per invoice
+  const [invoiceStageMap, setInvoiceStageMap] = useState<Record<string, { type: string; priority: string }>>({});
   const [cacheAge, setCacheAge]         = useState<number | null>(null);
 
   // Add Invoice modal
@@ -270,6 +272,21 @@ export default function CollectionsPage() {
         const map: Record<string, any> = {};
         d.scores.forEach((s: any) => { map[s.customer_name] = s; });
         setScoreMap(map);
+      }).catch(() => {});
+
+    // Fetch AI action stages per invoice
+    fetch(`${BASE}/api/ai-actions?status=pending&limit=200`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d?.actions) return;
+        const stageMap: Record<string, { type: string; priority: string }> = {};
+        const INVOICE_TYPES = ["SEND_POLITE_REMINDER","SEND_FIRM_REMINDER","ESCALATE_COLLECTION","FLAG_BAD_DEBT"];
+        d.actions.forEach((a: any) => {
+          if (a.related_entity_id && INVOICE_TYPES.includes(a.action_type)) {
+            stageMap[a.related_entity_id] = { type: a.action_type, priority: a.priority };
+          }
+        });
+        setInvoiceStageMap(stageMap);
       }).catch(() => {});
 
     return () => clearInterval(interval);
@@ -1110,6 +1127,20 @@ export default function CollectionsPage() {
                               <span className="text-[9px] font-bold rounded px-1.5 py-0.5"
                                 style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}35` }}>
                                 {tierShort}
+                              </span>
+                            );
+                          })()}
+                          {c.invoiceId && invoiceStageMap[c.invoiceId] && (() => {
+                            const stage = invoiceStageMap[c.invoiceId];
+                            const stageLabel = stage.type === "FLAG_BAD_DEBT" ? "BAD DEBT"
+                              : stage.type === "ESCALATE_COLLECTION" ? "ESCALATE"
+                              : stage.type === "SEND_FIRM_REMINDER" ? "FIRM"
+                              : "POLITE";
+                            const stageColor = stage.priority === "urgent" ? "#F5424D" : stage.priority === "high" ? "#F5A524" : "#4F6EF7";
+                            return (
+                              <span className="text-[8px] font-black rounded px-1 py-0.5 tracking-wide"
+                                style={{ color: stageColor, background: `${stageColor}15`, border: `1px solid ${stageColor}30` }}>
+                                AI: {stageLabel}
                               </span>
                             );
                           })()}

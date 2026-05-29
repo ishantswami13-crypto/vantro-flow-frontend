@@ -133,6 +133,8 @@ export default function DashboardPage() {
   const [rawInvoices, setRawInvoices]       = useState<Invoice[]>([]);
   const [dashboardClock, setDashboardClock] = useState<ReturnType<typeof getDashboardClock> | null>(null);
   const [actionCounts, setActionCounts]     = useState<{ urgent: number; high: number; total: number } | null>(null);
+  const [topActions, setTopActions]         = useState<{ id: string; title: string; description?: string; priority: string; action_type: string }[]>([]);
+  const [cashflowWeek, setCashflowWeek]     = useState<{ expected_inflow: number; expected_outflow: number; net_gap: number; overdue_payables: number } | null>(null);
   const today = new Date().toISOString().split("T")[0];
 
   // Hydration-safe: read localStorage only after mount (never on the server)
@@ -209,6 +211,24 @@ export default function DashboardPage() {
     fetch(`${API}/api/ai-actions/counts`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setActionCounts(d); })
+      .catch(() => {});
+
+    // Top 3 urgent/high actions for mini-feed
+    fetch(`${API}/api/ai-actions?status=pending&limit=5`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d?.actions) return;
+        const sorted = [...d.actions].sort((a: any, b: any) => {
+          const order: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+          return (order[a.priority] ?? 3) - (order[b.priority] ?? 3);
+        });
+        setTopActions(sorted.slice(0, 3));
+      }).catch(() => {});
+
+    // Cashflow week preview for mini-gauge
+    fetch(`${API}/api/cortex/cashflow-week`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.success) setCashflowWeek(d); })
       .catch(() => {});
 
     // Load business overview data from new features using centralized client
@@ -351,6 +371,38 @@ export default function DashboardPage() {
               </span>
             </div>
           </Link>
+        )}
+
+        {/* ── CORTEX ACTIONS MINI-FEED ── */}
+        {topActions.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider px-1" style={{ color: "rgba(255,255,255,0.25)" }}>
+              Cortex Actions
+            </p>
+            {topActions.map(action => {
+              const isUrgent = action.priority === "urgent";
+              const isHigh   = action.priority === "high";
+              const dot = isUrgent ? "🔴" : isHigh ? "⚡" : "💡";
+              const borderColor = isUrgent ? "rgba(245,66,77,0.25)" : isHigh ? "rgba(251,146,60,0.2)" : "rgba(255,255,255,0.07)";
+              const bgColor     = isUrgent ? "rgba(245,66,77,0.06)" : isHigh ? "rgba(251,146,60,0.06)" : "rgba(255,255,255,0.02)";
+              return (
+                <Link href="/ai-actions" key={action.id}
+                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all active:scale-[0.99]"
+                  style={{ background: bgColor, border: `1px solid ${borderColor}` }}>
+                  <span className="text-sm shrink-0">{dot}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-white truncate leading-snug">{action.title}</p>
+                    {action.description && (
+                      <p className="text-[10px] truncate mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                        {action.description}
+                      </p>
+                    )}
+                  </div>
+                  <span className="text-[10px] shrink-0" style={{ color: "rgba(255,255,255,0.25)" }}>→</span>
+                </Link>
+              );
+            })}
+          </div>
         )}
 
         {/* Free plan — loss aversion nudge tied to real pending count */}
@@ -698,23 +750,53 @@ export default function DashboardPage() {
 
         {/* Mid row: trend + quick actions */}
         <div className="grid lg:grid-cols-3 gap-4">
-          {/* Trend sparkline */}
+          {/* Cashflow Week Gauge */}
           <div className="lg:col-span-2 card-premium p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm font-bold text-primary">Outstanding Trend</p>
-                <p className="text-xs text-secondary mt-0.5">Last 7 weeks</p>
+                <p className="text-sm font-bold text-primary">7-Day Cash Forecast</p>
+                <p className="text-xs text-secondary mt-0.5">Expected inflow vs outflow</p>
               </div>
-              <span className="metric-value text-base text-accent">
-                {metrics ? fmtAmt(metrics.total_outstanding) : "₹—"}
-              </span>
+              {cashflowWeek && (
+                <span className="text-sm font-bold" style={{ color: cashflowWeek.net_gap >= 0 ? "#10D98A" : "#F5424D" }}>
+                  {cashflowWeek.net_gap >= 0 ? "+" : ""}{fmtAmt(cashflowWeek.net_gap)} net
+                </span>
+              )}
             </div>
-            <div className="flex items-center justify-center h-[110px] rounded-xl"
-              style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.07)" }}>
-              <p className="text-xs text-muted text-center">
-                Trend will appear after invoices are added
-              </p>
-            </div>
+            {cashflowWeek && (cashflowWeek.expected_inflow > 0 || cashflowWeek.expected_outflow > 0) ? (
+              <div className="space-y-3">
+                {[
+                  { label: "Expected In",  value: cashflowWeek.expected_inflow,  color: "#10D98A" },
+                  { label: "Expected Out", value: cashflowWeek.expected_outflow, color: "#F5424D" },
+                ].map(({ label, value, color }) => {
+                  const maxVal = Math.max(cashflowWeek.expected_inflow, cashflowWeek.expected_outflow, 1);
+                  return (
+                    <div key={label}>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span style={{ color: "rgba(255,255,255,0.45)" }}>{label}</span>
+                        <span className="font-semibold" style={{ color }}>{fmtAmt(value)}</span>
+                      </div>
+                      <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                        <div className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${Math.round((value / maxVal) * 100)}%`, background: color, opacity: 0.8 }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                {cashflowWeek.overdue_payables > 0 && (
+                  <p className="text-[11px] pt-1" style={{ color: "rgba(245,165,36,0.8)" }}>
+                    ⚠ {fmtAmt(cashflowWeek.overdue_payables)} supplier payments overdue
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-[90px] rounded-xl"
+                style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.07)" }}>
+                <p className="text-xs text-muted text-center">
+                  {cashflowWeek ? "No cashflow events yet — add sales and purchases" : "Loading forecast…"}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Quick KPIs — live data */}
