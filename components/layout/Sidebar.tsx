@@ -26,7 +26,8 @@ const NAV = [
   { href: "/whatsapp",       label: "WhatsApp",        icon: FiMessageSquare, badge: null,   group: "core" },
   { href: "/dunning",        label: "Auto Follow-Up",  icon: FiRepeat,        badge: null,   group: "core" },
   // ── Intelligence
-  { href: "/today",          label: "Today's P&L",     icon: FiSun,           badge: "NEW",  group: "intelligence" },
+  { href: "/ai-actions",     label: "Action Center",   icon: FiZap,           badge: "NEW",  group: "intelligence" },
+  { href: "/today",          label: "Today's P&L",     icon: FiSun,           badge: null,   group: "intelligence" },
   { href: "/brain",          label: "Vantro Brain",    icon: FiActivity,      badge: "AI",   group: "intelligence" },
   { href: "/ai-chat",        label: "AI Founder",      icon: FiCpu,           badge: null,   group: "intelligence" },
   { href: "/ai-train",       label: "AI Training",     icon: FiSliders,       badge: "AI",   group: "intelligence" },

@@ -132,6 +132,7 @@ export default function DashboardPage() {
   const [liveCustomers, setLiveCustomers] = useState<typeof CUSTOMERS>([]);
   const [rawInvoices, setRawInvoices]       = useState<Invoice[]>([]);
   const [dashboardClock, setDashboardClock] = useState<ReturnType<typeof getDashboardClock> | null>(null);
+  const [actionCounts, setActionCounts]     = useState<{ urgent: number; high: number; total: number } | null>(null);
   const today = new Date().toISOString().split("T")[0];
 
   // Hydration-safe: read localStorage only after mount (never on the server)
@@ -203,6 +204,12 @@ export default function DashboardPage() {
       );
       setPromises(todayPromises);
     }).catch(() => {});
+
+    const token = localStorage.getItem("vantro_token");
+    fetch(`${API}/api/ai-actions/counts`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setActionCounts(d); })
+      .catch(() => {});
 
     // Load business overview data from new features using centralized client
     Promise.all([
@@ -311,6 +318,32 @@ export default function DashboardPage() {
           );
         })()}
 
+
+        {/* ── CORTEX URGENCY STRIP ── */}
+        {actionCounts && (actionCounts.urgent > 0 || actionCounts.high > 0) && (
+          <Link href="/ai-actions" className="block rounded-xl overflow-hidden transition-all hover:scale-[1.01] active:scale-[0.99]"
+            style={{ background: "rgba(251,146,60,0.08)", border: "1px solid rgba(251,146,60,0.25)" }}>
+            <div className="px-4 py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="text-lg">⚡</span>
+                <div>
+                  <p className="text-sm font-bold leading-tight" style={{ color: "rgba(251,146,60,0.95)" }}>
+                    {actionCounts.urgent > 0 ? `${actionCounts.urgent} urgent` : ""}
+                    {actionCounts.urgent > 0 && actionCounts.high > 0 ? " · " : ""}
+                    {actionCounts.high > 0 ? `${actionCounts.high} high priority` : ""}
+                    {" "}action{(actionCounts.urgent + actionCounts.high) !== 1 ? "s" : ""} waiting
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    Cortex needs your decision
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-semibold shrink-0" style={{ color: "rgba(251,146,60,0.8)" }}>
+                Action Center →
+              </span>
+            </div>
+          </Link>
+        )}
 
         {/* Free plan — loss aversion nudge tied to real pending count */}
         {userPlan === "free" && (

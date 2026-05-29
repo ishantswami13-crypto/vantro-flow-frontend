@@ -166,6 +166,9 @@ export default function CollectionsPage() {
   const [promiseModal, setPromiseModal] = useState<Customer | null>(null);
   const [promiseDate, setPromiseDate]   = useState("");
   const [promiseSaving, setPromiseSaving] = useState(false);
+
+  // Cortex customer risk scores
+  const [scoreMap, setScoreMap] = useState<Record<string, { customer_id: string; score: number; tier: string; overdue_amount: number }>>({});
   const [cacheAge, setCacheAge]         = useState<number | null>(null);
 
   // Add Invoice modal
@@ -257,6 +260,18 @@ export default function CollectionsPage() {
         if (d.success && d.summary) setAgingSummary(d.summary);
       }).catch(() => {});
     }, 30_000);
+
+    // Fetch Cortex customer risk scores
+    const token = localStorage.getItem("vantro_token");
+    fetch(`${BASE}/api/customer-scores`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d?.scores) return;
+        const map: Record<string, any> = {};
+        d.scores.forEach((s: any) => { map[s.customer_name] = s; });
+        setScoreMap(map);
+      }).catch(() => {});
+
     return () => clearInterval(interval);
   }, [loadInvoices]);
 
@@ -401,6 +416,22 @@ export default function CollectionsPage() {
         notes:                 `Promise logged via quick tracker`,
         invoice_id:            promiseModal.invoiceId || null,
       });
+      // Also save to Cortex promises table if customer is scored
+      const cortexCustomer = scoreMap[promiseModal.name];
+      if (cortexCustomer?.customer_id) {
+        const token = localStorage.getItem("vantro_token");
+        fetch(`${BASE}/api/promises`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            customer_id:    cortexCustomer.customer_id,
+            receivable_id:  promiseModal.invoiceId || null,
+            promised_amount: promiseModal.outstanding,
+            promised_date:  promiseDate,
+            promise_note:   "Quick tracker",
+          }),
+        }).catch(() => {});
+      }
       setPromises(prev => ({
         ...prev,
         [promiseModal.id]: { date: promiseDate, amount: promiseModal.outstanding, name: promiseModal.name },
@@ -1069,7 +1100,20 @@ export default function CollectionsPage() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3.5 hidden md:table-cell">
-                        <ScoreRing score={c.score} />
+                        <div className="flex flex-col items-center gap-1">
+                          <ScoreRing score={c.score} />
+                          {scoreMap[c.name] && (() => {
+                            const risk = scoreMap[c.name];
+                            const tierColor = risk.tier === "HIGH_RISK" ? "#F5424D" : risk.tier === "MEDIUM" ? "#F5A524" : "#10D98A";
+                            const tierShort = risk.tier === "HIGH_RISK" ? "HIGH" : risk.tier === "MEDIUM" ? "MED" : "LOW";
+                            return (
+                              <span className="text-[9px] font-bold rounded px-1.5 py-0.5"
+                                style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}35` }}>
+                                {tierShort}
+                              </span>
+                            );
+                          })()}
+                        </div>
                       </td>
                       <td className="px-4 py-3.5 text-center hidden lg:table-cell">
                         <Badge variant={STATUS_VARIANT[c.status]}>{c.status}</Badge>
