@@ -215,6 +215,10 @@ export const api = {
   // ─── ML Briefing ──────────────────────────────────────────
   briefing: () => request<{ success: boolean; briefing: string }>('/api/ml/briefing', { method: 'POST' }),
 
+  // ─── Owner Briefing Agent (Phase 2C.8) ───────────────────
+  ownerBriefingPreview: () =>
+    request<OwnerBriefingResponse>('/api/agents/core.owner_briefing/preview'),
+
   // ─── Bills ────────────────────────────────────────────────
   bills: {
     list: () => request<{ success: boolean; bills: any[] }>('/api/bills'),
@@ -654,4 +658,48 @@ export interface LedgerSummary {
   monthIn: number;
   monthOut: number;
   monthBalance: number;
+}
+
+// ─── Owner Briefing Agent Types (Phase 2C.8) ─────────────────────────────────
+export interface OwnerBriefingAction {
+  action_id: string;
+  action_type: string;
+  title: string;
+  explanation: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  entity_type?: string;
+  entity_id?: string;
+  suggested_next_step: string;
+  approval_required: boolean;
+  safe_to_auto_execute: boolean;
+}
+
+export interface OwnerBriefingSection {
+  section_id: string;
+  title: string;
+  priority: string;
+  summary: string;
+  items: Record<string, unknown>[];
+  source_tables: string[];
+  confidence: number;
+  action_required: boolean;
+}
+
+export interface OwnerBriefingResponse {
+  agent_id: string;
+  status: string;
+  user_id?: string;
+  generated_at?: string;
+  briefing_date?: string;
+  headline: string;
+  risk_summary: string;
+  cash_summary: string;
+  sections: OwnerBriefingSection[];
+  top_actions: OwnerBriefingAction[];
+  total_actions: number;
+  duration_ms: number;
+  audit_context: string;
+  data_quality_summary?: unknown;
+  cost_route_summary?: unknown;
+  policy_summary?: unknown;
 }

@@ -10,9 +10,10 @@ import {
   FiList, FiTrendingUp, FiSettings, FiPhone, FiShield, FiZap,
   FiFileText, FiBook, FiPackage, FiUsers,
 } from "react-icons/fi";
-import { api, getUser, type Metrics, type Invoice } from "@/lib/api";
+import { api, getUser, type Metrics, type Invoice, type OwnerBriefingResponse } from "@/lib/api";
 import QuickSale from "@/components/QuickSale";
 import WelcomeGuide from "@/components/WelcomeGuide";
+import OwnerBriefingCard from "@/components/agents/OwnerBriefingCard";
 import { FiUpload } from "react-icons/fi";
 import { isDemoMode } from "@/lib/demo";
 
@@ -133,6 +134,10 @@ export default function DashboardPage() {
   const [rawInvoices, setRawInvoices]       = useState<Invoice[]>([]);
   const [dashboardClock, setDashboardClock] = useState<ReturnType<typeof getDashboardClock> | null>(null);
   const [actionCounts, setActionCounts]     = useState<{ urgent: number; high: number; total: number } | null>(null);
+  const [ownerBriefing, setOwnerBriefing]   = useState<OwnerBriefingResponse | null>(null);
+  const [ownerBriefingLoading, setOwnerBriefingLoading] = useState(true);
+  const [ownerBriefingError, setOwnerBriefingError]     = useState(false);
+  const [ownerBriefingFetchedAt, setOwnerBriefingFetchedAt] = useState<Date | null>(null);
   const today = new Date().toISOString().split("T")[0];
 
   // Hydration-safe: read localStorage only after mount (never on the server)
@@ -169,6 +174,26 @@ export default function DashboardPage() {
       api.briefing().then(d => {
         if (d.success && d.briefing) setBriefing(d.briefing);
       }).catch(() => {}).finally(() => setBriefingLoading(false));
+    }
+
+    // Fetch Owner Briefing Agent (Phase 2C.8) — feature-gated, graceful fallback
+    if (!isDemoMode()) {
+      api.ownerBriefingPreview()
+        .then(d => {
+          setOwnerBriefing(d);
+          setOwnerBriefingFetchedAt(new Date());
+        })
+        .catch(err => {
+          // 404 = feature flag disabled — silently hide the card
+          if ((err as { status?: number }).status === 404) {
+            setOwnerBriefingLoading(false);
+            return;
+          }
+          setOwnerBriefingError(true);
+        })
+        .finally(() => setOwnerBriefingLoading(false));
+    } else {
+      setOwnerBriefingLoading(false);
     }
 
     api.metrics(user.id).then(d => setMetrics(d.metrics)).catch(() => {});
@@ -527,6 +552,16 @@ export default function DashboardPage() {
               <p className="text-xs text-muted">Invoices upload karo — AI kal se briefing dega 🎯</p>
             )}
           </div>
+
+          {/* Owner Briefing Agent Card (Phase 2C.8) — hidden when 404/disabled */}
+          {(!isDemoMode() && (ownerBriefingLoading || ownerBriefingError || ownerBriefing)) && (
+            <OwnerBriefingCard
+              data={ownerBriefing}
+              loading={ownerBriefingLoading}
+              error={ownerBriefingError}
+              fetchedAt={ownerBriefingFetchedAt}
+            />
+          )}
 
           {/* 3 action chips — Zeigarnik Effect */}
           <div className="px-5 pb-5 grid grid-cols-3 gap-2">
