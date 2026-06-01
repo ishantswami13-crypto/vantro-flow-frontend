@@ -3,76 +3,72 @@
 import { useState, Suspense, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  FiEye, FiEyeOff, FiRefreshCw, FiCheckCircle, FiArrowRight, FiZap,
-} from "react-icons/fi";
-import LogoMark from "@/components/LogoMark";
+import { FiEye, FiEyeOff, FiArrowRight, FiRefreshCw, FiCheckCircle } from "react-icons/fi";
 import { saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import { INDUSTRY_OPTIONS } from "@/lib/businessTypes";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
+const GRAIN = "data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E";
 
 const businessTypes = [
   { value: "", label: "Select your industry" },
   ...INDUSTRY_OPTIONS,
 ];
 
-// ── Shared input style ────────────────────────────────────────────────────────
-const fieldCls = "w-full text-[13px] text-white placeholder:text-white/25 py-3 px-4 focus:outline-none transition-all duration-150 bg-transparent";
-const fieldStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.1)",
-  borderRadius: "10px",
-};
-const fieldFocusStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.28)",
-  borderRadius: "10px",
-};
-
-function Field({
-  label, children,
-}: { label: string; children: React.ReactNode }) {
+function AtlasMark({ size = 26 }: { size?: number }) {
   return (
-    <div>
-      <label
-        className="block mb-1.5 text-[11px] font-medium tracking-wide"
-        style={{ color: "rgba(255,255,255,0.35)", letterSpacing: "0.06em", textTransform: "uppercase" }}
-      >
-        {label}
-      </label>
-      {children}
-    </div>
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" aria-hidden="true">
+      <path fill="white" fillRule="evenodd" className="atlas-mark-anim"
+        d="M 50 8 L 4 92 L 96 92 Z M 50 78 L 38 92 L 62 92 Z M 26 59 L 74 59 L 74 68 L 26 68 Z" />
+    </svg>
   );
 }
 
-function FocusInput(props: React.InputHTMLAttributes<HTMLInputElement> & { wrapClass?: string }) {
+const inputBase: React.CSSProperties = {
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.10)",
+  borderRadius: "6px",
+  padding: "13px 16px",
+  fontSize: "15px",
+  color: "#fff",
+  outline: "none",
+  width: "100%",
+  fontFamily: "'Space Grotesk', system-ui",
+  transition: "border-color .2s, background .2s",
+};
+const inputFocus: React.CSSProperties = { ...inputBase, border: "1px solid rgba(255,255,255,0.38)", background: "rgba(255,255,255,0.07)" };
+
+function FInput(props: React.InputHTMLAttributes<HTMLInputElement> & { extraStyle?: React.CSSProperties }) {
   const [focused, setFocused] = useState(false);
-  const { wrapClass, style: _s, className: _c, ...rest } = props;
+  const { extraStyle, ...rest } = props;
   return (
-    <input
-      {...rest}
-      className={fieldCls + (props.className ? " " + props.className : "")}
-      style={focused ? fieldFocusStyle : fieldStyle}
+    <input {...rest}
+      style={{ ...(focused ? inputFocus : inputBase), ...extraStyle }}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
     />
   );
 }
 
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <label style={{ display: "block", marginBottom: "7px", fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".16em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.18)" }}>
+      {children}
+    </label>
+  );
+}
+
 // ── OTP Step ──────────────────────────────────────────────────────────────────
-function OTPStep({
-  preToken, userEmail, userPhone, onVerified,
-}: {
+function OTPStep({ preToken, userEmail, userPhone, onVerified }: {
   preToken: string; userEmail: string; userPhone: string;
   onVerified: (token: string, user: object, csrfToken?: string | null) => void;
 }) {
-  const [otp, setOtp]         = useState(["", "", "", "", "", ""]);
-  const [loading, setLoading] = useState(false);
+  const [otp, setOtp]             = useState(["", "", "", "", "", ""]);
+  const [loading, setLoading]     = useState(false);
   const [resending, setResending] = useState(false);
-  const [error, setError]     = useState("");
-  const [resent, setResent]   = useState(false);
+  const [error, setError]         = useState("");
+  const [resent, setResent]       = useState(false);
   const [countdown, setCountdown] = useState(30);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -82,12 +78,8 @@ function OTPStep({
     return () => clearTimeout(t);
   }, [countdown]);
 
-  const maskedPhone = userPhone
-    ? "+91 " + userPhone.replace(/\D/g, "").slice(-10).replace(/(\d{2})(\d{4})(\d{4})/, "$1XXXX$3")
-    : "";
-  const maskedEmail = userEmail
-    ? userEmail.replace(/(.{2})(.*)(@.*)/, "$1****$3")
-    : "";
+  const maskedPhone = userPhone ? "+91 " + userPhone.replace(/\D/g, "").slice(-10).replace(/(\d{2})(\d{4})(\d{4})/, "$1XXXX$3") : "";
+  const maskedEmail = userEmail ? userEmail.replace(/(.{2})(.*)(@.*)/, "$1****$3") : "";
 
   function handleDigit(i: number, val: string) {
     if (!/^\d?$/.test(val)) return;
@@ -132,69 +124,48 @@ function OTPStep({
   }
 
   return (
-    <div className="space-y-7">
-      <div className="text-center">
-        <h2 className="text-xl font-semibold text-white tracking-tight mb-2">Check your phone</h2>
-        <p className="text-[13px] leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+    <div>
+      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", letterSpacing: ".22em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.22)", marginBottom: "14px" }}>Step 3 of 3</div>
+        <h2 style={{ fontWeight: 700, fontSize: "clamp(26px,3.2vw,36px)", letterSpacing: "-.042em", lineHeight: 1.06, marginBottom: "10px" }}>Check your phone</h2>
+        <p style={{ fontSize: "14.5px", color: "rgba(255,255,255,.32)", lineHeight: 1.65 }}>
           6-digit code sent to{" "}
-          {maskedPhone && <span className="text-white">{maskedPhone}</span>}
+          {maskedPhone && <span style={{ color: "#fff" }}>{maskedPhone}</span>}
           {maskedPhone && maskedEmail && " and "}
-          {maskedEmail && <span className="text-white">{maskedEmail}</span>}
+          {maskedEmail && <span style={{ color: "#fff" }}>{maskedEmail}</span>}
         </p>
       </div>
 
-      <div className="flex justify-center gap-2.5" onPaste={handlePaste}>
+      <div style={{ display: "flex", justifyContent: "center", gap: "10px", marginBottom: "24px" }} onPaste={handlePaste}>
         {otp.map((digit, i) => (
-          <input
-            key={i}
-            ref={el => { inputs.current[i] = el; }}
+          <input key={i} ref={el => { inputs.current[i] = el; }}
             type="tel" inputMode="numeric" maxLength={1}
             value={digit} autoFocus={i === 0}
             onChange={e => handleDigit(i, e.target.value)}
             onKeyDown={e => handleKeyDown(i, e)}
-            className="w-11 h-13 text-center text-xl font-bold focus:outline-none transition-all"
-            style={{
-              height: "52px",
-              background: digit ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${digit ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.1)"}`,
-              borderRadius: "10px",
-              color: "#ffffff",
-              opacity: loading ? 0.5 : 1,
-            }}
+            style={{ width: "44px", height: "52px", textAlign: "center", fontSize: "20px", fontWeight: 700, outline: "none", background: digit ? "rgba(255,255,255,.08)" : "rgba(255,255,255,.04)", border: `1px solid ${digit ? "rgba(255,255,255,.35)" : "rgba(255,255,255,.1)"}`, borderRadius: "6px", color: "#fff", opacity: loading ? 0.5 : 1, fontFamily: "'Space Grotesk', system-ui" }}
           />
         ))}
       </div>
 
-      {error && (
-        <p className="text-center text-[12px] text-red-400">{error}</p>
-      )}
+      {error && <p style={{ textAlign: "center", fontSize: "12px", color: "#f87171", marginBottom: "16px" }}>{error}</p>}
       {resent && (
-        <div className="flex items-center justify-center gap-1.5 text-[12px]" style={{ color: "#10D98A" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontSize: "12px", color: "#10D98A", marginBottom: "16px" }}>
           <FiCheckCircle size={13} /> New code sent
         </div>
       )}
 
-      <button
-        disabled={loading || otp.join("").length < 6}
-        onClick={() => handleVerify()}
-        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-[13px] font-semibold transition-all disabled:opacity-30"
-        style={{ background: "#ffffff", color: "#000000" }}
-      >
-        {loading
-          ? <><div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" /> Verifying…</>
-          : <>Verify & continue <FiArrowRight size={13} /></>}
+      <button disabled={loading || otp.join("").length < 6} onClick={() => handleVerify()}
+        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", background: "#fff", color: "#000", border: "none", borderRadius: "6px", padding: "15px 24px", fontFamily: "'Space Grotesk', system-ui", fontWeight: 700, fontSize: "15px", cursor: loading || otp.join("").length < 6 ? "not-allowed" : "pointer", opacity: loading || otp.join("").length < 6 ? 0.4 : 1, transition: "opacity .2s" }}>
+        {loading ? <><div style={{ width: "16px", height: "16px", border: "2px solid rgba(0,0,0,.2)", borderTop: "2px solid #000", borderRadius: "50%", animation: "spin .7s linear infinite" }} /> Verifying…</> : <>Verify &amp; continue <FiArrowRight size={16} /></>}
       </button>
 
-      <div className="text-center">
+      <div style={{ textAlign: "center", marginTop: "20px" }}>
         {countdown > 0
-          ? <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>Resend in {countdown}s</p>
-          : (
-            <button onClick={handleResend} disabled={resending}
-              className="text-[12px] transition-colors disabled:opacity-40"
-              style={{ color: "rgba(255,255,255,0.45)" }}>
-              {resending ? <><FiRefreshCw size={11} className="inline animate-spin mr-1" />Sending…</> : "Resend code"}
-            </button>
-          )}
+          ? <p style={{ fontSize: "11px", color: "rgba(255,255,255,.25)" }}>Resend in {countdown}s</p>
+          : <button onClick={handleResend} disabled={resending} style={{ fontSize: "12px", color: "rgba(255,255,255,.45)", background: "none", border: "none", cursor: "pointer" }}>
+              {resending ? <><FiRefreshCw size={11} style={{ display: "inline", marginRight: "4px", animation: "spin .7s linear infinite" }} />Sending…</> : "Resend code"}
+            </button>}
       </div>
     </div>
   );
@@ -206,12 +177,13 @@ function SignupForm() {
   const params = useSearchParams();
   const referredBy = params.get("ref") || "";
 
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");
+  const [step, setStep]           = useState(1);
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm]   = useState(false);
-  const [otpStep, setOtpStep]   = useState(false);
-  const [preToken, setPreToken] = useState("");
+  const [otpStep, setOtpStep]     = useState(false);
+  const [preToken, setPreToken]   = useState("");
   const [verifiedUser, setVerifiedUser] = useState<{ email: string; phone: string } | null>(null);
 
   const [form, setForm] = useState({
@@ -222,7 +194,14 @@ function SignupForm() {
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [key]: e.target.value }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  function goToStep2(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim() || !form.business_name.trim()) { setError("Please fill all fields"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { setError("Enter a valid email"); return; }
+    setError(""); setStep(2);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setError("");
     if (form.password.length < 8) { setError("Password must be at least 8 characters"); return; }
     if (form.password !== form.confirm_password) { setError("Passwords do not match"); return; }
@@ -251,7 +230,7 @@ function SignupForm() {
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Signup failed");
     } finally { setLoading(false); }
-  };
+  }
 
   const handleOTPVerified = (token: string, user: any, csrfToken?: string | null) => {
     saveAuth(token, user, true, csrfToken);
@@ -265,234 +244,202 @@ function SignupForm() {
   }
 
   return (
-    <div className="space-y-5">
-      {referredBy && (
-        <div className="px-4 py-3 rounded-xl text-[12px]"
-          style={{ background: "rgba(16,217,138,0.08)", border: "1px solid rgba(16,217,138,0.2)", color: "#10D98A" }}>
+    <div>
+      {/* Progress dots */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "40px" }}>
+        {[1, 2].map(n => (
+          <>
+            <div key={`dot-${n}`} style={{ width: "6px", height: "6px", borderRadius: "50%", background: step >= n ? "#fff" : "rgba(255,255,255,.2)", transform: step === n ? "scale(1.3)" : "scale(1)", transition: "all .35s" }} />
+            {n < 2 && <div key={`line-${n}`} style={{ flex: 1, height: "1px", background: "rgba(255,255,255,.08)", maxWidth: "32px" }} />}
+          </>
+        ))}
+      </div>
+
+      {error && (
+        <div style={{ marginBottom: "16px", padding: "12px 16px", borderRadius: "6px", background: "rgba(255,80,80,.08)", border: "1px solid rgba(255,80,80,.2)", fontSize: "13px", color: "rgba(255,100,100,.9)", fontFamily: "'JetBrains Mono', monospace" }}>
+          {error}
+        </div>
+      )}
+      {referredBy && step === 1 && (
+        <div style={{ marginBottom: "16px", padding: "12px 16px", borderRadius: "6px", background: "rgba(16,217,138,0.08)", border: "1px solid rgba(16,217,138,0.2)", fontSize: "12px", color: "#10D98A" }}>
           🎉 You were invited — join free
         </div>
       )}
 
-      {error && (
-        <div className="px-4 py-3 rounded-xl text-[12px]"
-          style={{ background: "rgba(245,66,77,0.08)", border: "1px solid rgba(245,66,77,0.2)", color: "#F5424D" }}>
-          {error}
-        </div>
+      {/* Step 1: Account */}
+      {step === 1 && (
+        <form onSubmit={goToStep2} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div style={{ marginBottom: "36px" }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", letterSpacing: ".22em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.22)", marginBottom: "14px" }}>Step 1 of 2</div>
+            <h2 style={{ fontWeight: 700, fontSize: "clamp(26px,3.2vw,36px)", letterSpacing: "-.042em", lineHeight: 1.06, marginBottom: "10px" }}>Create your<br />free account.</h2>
+            <p style={{ fontSize: "14.5px", color: "rgba(255,255,255,.32)", lineHeight: 1.65 }}>No credit card required. Up and running in 8 minutes.</p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div>
+              <FieldLabel>Full name</FieldLabel>
+              <FInput type="text" placeholder="Rahul Mehra" value={form.name} onChange={set("name")} required />
+            </div>
+            <div>
+              <FieldLabel>Business name</FieldLabel>
+              <FInput type="text" placeholder="Mehra Traders" value={form.business_name} onChange={set("business_name")} required />
+            </div>
+          </div>
+
+          <div>
+            <FieldLabel>Work email</FieldLabel>
+            <FInput type="email" placeholder="you@company.com" value={form.email} onChange={set("email")} required autoComplete="email" />
+          </div>
+
+          <div>
+            <FieldLabel>Industry</FieldLabel>
+            <select value={form.business_type} onChange={set("business_type")}
+              style={{ ...inputBase, appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center", paddingRight: "38px", cursor: "pointer", color: form.business_type ? "#fff" : "rgba(255,255,255,.3)" }}>
+              {businessTypes.map(o => (
+                <option key={o.value} value={o.value} style={{ background: "#111", color: "#fff" }}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <button type="submit" style={{ marginTop: "10px", background: "#fff", color: "#000", border: "none", borderRadius: "6px", padding: "15px 24px", fontFamily: "'Space Grotesk', system-ui", fontWeight: 700, fontSize: "15px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+            Continue <FiArrowRight size={16} />
+          </button>
+
+          <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", marginTop: "32px", paddingTop: "28px", borderTop: "1px solid rgba(255,255,255,.07)" }}>
+            {["Free forever plan", "No credit card", "Cancel anytime"].map(t => (
+              <div key={t} style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9.5px", letterSpacing: ".1em", color: "rgba(255,255,255,.22)", textTransform: "uppercase" as const, display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ color: "rgba(255,255,255,.35)" }}>✓</span> {t}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: "16px", fontSize: "13px", color: "rgba(255,255,255,.3)", textAlign: "center" }}>
+            Already have an account?{" "}
+            <Link href="/login" style={{ color: "rgba(255,255,255,.65)", textDecoration: "none", fontWeight: 500 }}>Log in</Link>
+          </div>
+        </form>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-
-        {/* Name + Business */}
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Full name">
-            <FocusInput type="text" placeholder="Rajesh Kumar" value={form.name} onChange={set("name")} required />
-          </Field>
-          <Field label="Business name">
-            <FocusInput type="text" placeholder="Kumar Traders" value={form.business_name} onChange={set("business_name")} required />
-          </Field>
-        </div>
-
-        {/* Email */}
-        <Field label="Email">
-          <FocusInput type="email" placeholder="rajesh@kumartraders.com" value={form.email} onChange={set("email")} required autoComplete="email" />
-        </Field>
-
-        {/* Phone */}
-        <Field label="Phone (WhatsApp — OTP sent here)">
-          <div className="flex">
-            <span
-              className="flex items-center px-3.5 text-[13px] font-mono shrink-0"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRight: "none",
-                borderRadius: "10px 0 0 10px",
-                color: "rgba(255,255,255,0.45)",
-              }}
-            >
-              +91
-            </span>
-            <input
-              type="tel" placeholder="9876543210" value={form.phone}
-              onChange={set("phone")} required maxLength={10} pattern="\d{10}"
-              title="Enter 10-digit mobile number"
-              className="flex-1 text-[13px] text-white placeholder:text-white/25 py-3 px-4 focus:outline-none transition-all"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "0 10px 10px 0",
-              }}
-            />
+      {/* Step 2: Business + Password */}
+      {step === 2 && (
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div style={{ marginBottom: "36px" }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", letterSpacing: ".22em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.22)", marginBottom: "14px" }}>Step 2 of 2</div>
+            <h2 style={{ fontWeight: 700, fontSize: "clamp(26px,3.2vw,36px)", letterSpacing: "-.042em", lineHeight: 1.06, marginBottom: "10px" }}>Set your password<br />&amp; go live.</h2>
+            <p style={{ fontSize: "14.5px", color: "rgba(255,255,255,.32)", lineHeight: 1.65 }}>Atlas adapts to your business from day one.</p>
           </div>
-        </Field>
 
-        {/* Password */}
-        <Field label="Password">
-          <div className="relative">
-            <FocusInput
-              type={showPassword ? "text" : "password"}
-              placeholder="Min 8 characters"
-              value={form.password} onChange={set("password")} required minLength={8}
-              className="pr-10"
-            />
-            <button type="button" onClick={() => setShowPassword(v => !v)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
-              style={{ color: "rgba(255,255,255,0.3)" }}>
-              {showPassword ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+          {/* Phone */}
+          <div>
+            <FieldLabel>Phone (WhatsApp — OTP sent here)</FieldLabel>
+            <div style={{ display: "flex" }}>
+              <span style={{ display: "flex", alignItems: "center", padding: "0 14px", background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.1)", borderRight: "none", borderRadius: "6px 0 0 6px", fontSize: "13px", fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,.45)", flexShrink: 0 }}>+91</span>
+              <input type="tel" placeholder="9876543210" value={form.phone} onChange={set("phone")} required maxLength={10} pattern="\d{10}"
+                style={{ ...inputBase, borderRadius: "0 6px 6px 0" }} />
+            </div>
+          </div>
+
+          {/* Amount */}
+          <div>
+            <FieldLabel>Amount stuck in receivables (approx)</FieldLabel>
+            <div style={{ position: "relative" }}>
+              <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", fontSize: "13px", fontFamily: "'JetBrains Mono', monospace", color: "rgba(255,255,255,.35)" }}>₹</span>
+              <FInput type="number" placeholder="2500000" value={form.amount_stuck} onChange={set("amount_stuck")} required extraStyle={{ paddingLeft: "28px" }} />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div>
+            <FieldLabel>Password</FieldLabel>
+            <div style={{ position: "relative" }}>
+              <FInput type={showPassword ? "text" : "password"} placeholder="Min 8 characters" value={form.password} onChange={set("password")} required minLength={8} extraStyle={{ paddingRight: "44px" }} />
+              <button type="button" onClick={() => setShowPassword(v => !v)} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,.3)" }}>
+                {showPassword ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+              </button>
+            </div>
+            {form.password.length > 0 && form.password.length < 8 && (
+              <p style={{ fontSize: "10px", marginTop: "4px", color: "rgba(255,80,80,.8)", fontFamily: "'JetBrains Mono', monospace" }}>At least 8 characters</p>
+            )}
+          </div>
+
+          {/* Confirm */}
+          <div>
+            <FieldLabel>Confirm password</FieldLabel>
+            <div style={{ position: "relative" }}>
+              <FInput type={showConfirm ? "text" : "password"} placeholder="Re-enter password" value={form.confirm_password} onChange={set("confirm_password")} required extraStyle={{ paddingRight: "44px" }} />
+              <button type="button" onClick={() => setShowConfirm(v => !v)} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,.3)" }}>
+                {showConfirm ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+              </button>
+            </div>
+            {form.confirm_password.length > 0 && form.password !== form.confirm_password && (
+              <p style={{ fontSize: "10px", marginTop: "4px", color: "rgba(255,80,80,.8)", fontFamily: "'JetBrains Mono', monospace" }}>Passwords do not match</p>
+            )}
+            {form.confirm_password.length > 0 && form.password === form.confirm_password && form.password.length >= 8 && (
+              <p style={{ fontSize: "10px", marginTop: "4px", color: "#10D98A", fontFamily: "'JetBrains Mono', monospace" }}>✓ Looks good</p>
+            )}
+          </div>
+
+          <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+            <button type="button" onClick={() => { setStep(1); setError(""); }} style={{ background: "transparent", border: "1px solid rgba(255,255,255,.12)", borderRadius: "6px", padding: "13px 20px", fontFamily: "'Space Grotesk', system-ui", fontWeight: 500, fontSize: "14px", color: "rgba(255,255,255,.55)", cursor: "pointer", transition: "background .2s" }}>
+              Back
+            </button>
+            <button type="submit" disabled={loading} style={{ flex: 1, background: "#fff", color: "#000", border: "none", borderRadius: "6px", padding: "15px 24px", fontFamily: "'Space Grotesk', system-ui", fontWeight: 700, fontSize: "15px", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", opacity: loading ? 0.6 : 1, position: "relative", transition: "opacity .2s" }}>
+              {loading
+                ? <><div style={{ width: "16px", height: "16px", border: "2px solid rgba(0,0,0,.2)", borderTop: "2px solid #000", borderRadius: "50%", animation: "spin .7s linear infinite" }} /> Creating account…</>
+                : <>Create free account <FiArrowRight size={16} /></>}
             </button>
           </div>
-          {form.password.length > 0 && form.password.length < 8 && (
-            <p className="text-[11px] mt-1" style={{ color: "#F5424D" }}>At least 8 characters</p>
-          )}
-        </Field>
 
-        {/* Confirm Password */}
-        <Field label="Confirm password">
-          <div className="relative">
-            <FocusInput
-              type={showConfirm ? "text" : "password"}
-              placeholder="Re-enter password"
-              value={form.confirm_password} onChange={set("confirm_password")} required
-              className="pr-10"
-            />
-            <button type="button" onClick={() => setShowConfirm(v => !v)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
-              style={{ color: "rgba(255,255,255,0.3)" }}>
-              {showConfirm ? <FiEyeOff size={14} /> : <FiEye size={14} />}
-            </button>
-          </div>
-          {form.confirm_password.length > 0 && form.password !== form.confirm_password && (
-            <p className="text-[11px] mt-1" style={{ color: "#F5424D" }}>Passwords do not match</p>
-          )}
-          {form.confirm_password.length > 0 && form.password === form.confirm_password && form.password.length >= 8 && (
-            <p className="text-[11px] mt-1" style={{ color: "#10D98A" }}>✓ Looks good</p>
-          )}
-        </Field>
-
-        {/* Industry */}
-        <Field label="Industry">
-          <select
-            value={form.business_type} onChange={set("business_type")} required
-            className="w-full text-[13px] py-3 px-4 focus:outline-none transition-all"
-            style={{ ...fieldStyle, color: form.business_type ? "#ffffff" : "rgba(255,255,255,0.25)", appearance: "none" }}
-          >
-            {businessTypes.map(o => (
-              <option key={o.value} value={o.value} style={{ background: "#111111", color: "#ffffff" }}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        {/* Amount */}
-        <Field label="Amount stuck in receivables (approx)">
-          <div className="relative">
-            <span
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[13px] font-mono"
-              style={{ color: "rgba(255,255,255,0.35)" }}
-            >
-              ₹
-            </span>
-            <FocusInput
-              type="number" placeholder="2500000"
-              value={form.amount_stuck} onChange={set("amount_stuck")} required
-              className="pl-7"
-            />
-          </div>
-          <p className="text-[11px] mt-1" style={{ color: "rgba(255,255,255,0.25)" }}>
-            Approximate outstanding from customers
+          <p style={{ marginTop: "8px", fontSize: "12px", color: "rgba(255,255,255,.28)", textAlign: "center", lineHeight: 1.6 }}>
+            By creating an account you agree to our{" "}
+            <Link href="/terms" style={{ color: "rgba(255,255,255,.55)", textDecoration: "none" }}>Terms</Link>
+            {" "}and{" "}
+            <Link href="/privacy" style={{ color: "rgba(255,255,255,.55)", textDecoration: "none" }}>Privacy Policy</Link>.
           </p>
-        </Field>
-
-        <button
-          type="submit" disabled={loading}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-[13px] font-semibold transition-all disabled:opacity-30 mt-1"
-          style={{ background: "#ffffff", color: "#000000" }}
-        >
-          {loading
-            ? <><div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" /> Creating account…</>
-            : <>Continue <FiArrowRight size={13} /></>}
-        </button>
-      </form>
-
-      <p className="text-center text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>
-        No credit card required · Cancel anytime
-      </p>
-
-      <div className="pt-4 text-center" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-        <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.45)" }}>
-          Already have an account?{" "}
-          <Link href="/login" className="text-white hover:opacity-70 transition-opacity font-medium">
-            Sign in
-          </Link>
-        </p>
-      </div>
+        </form>
+      )}
     </div>
   );
 }
 
-function SignupSkeleton() {
-  return (
-    <div className="space-y-4">
-      {[48, 40, 40, 40, 40, 48].map((h, i) => (
-        <div key={i} className="rounded-xl animate-pulse" style={{ height: `${h}px`, background: "rgba(255,255,255,0.05)" }} />
-      ))}
-    </div>
-  );
-}
-
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Page Shell ────────────────────────────────────────────────────────────────
 export default function SignupPage() {
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
-      style={{ background: "#080808" }}
-    >
-      {/* Logo */}
-      <Link href="/" className="flex items-center gap-2.5 mb-10">
-        <LogoMark size={36} />
-        <span
-          className="font-semibold tracking-tight"
-          style={{ fontSize: "16px", color: "rgba(255,255,255,0.7)", letterSpacing: "-0.01em" }}
-        >
-          Vantro
-        </span>
-      </Link>
+    <div style={{ minHeight: "100vh", background: "#020202", color: "#fff", fontFamily: "'Space Grotesk', system-ui", display: "flex", flexDirection: "column", position: "relative" }}>
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, backgroundImage: `url("${GRAIN}")`, opacity: 0.5 }} />
 
-      {/* Card */}
-      <div
-        className="w-full max-w-md rounded-2xl p-8"
-        style={{
-          background: "#0e0e0e",
-          border: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
-        }}
-      >
-        {/* Header */}
-        <div className="mb-7">
-          <h1
-            className="font-semibold tracking-tight mb-1"
-            style={{ fontSize: "22px", color: "#ffffff", letterSpacing: "-0.02em" }}
-          >
-            Create your account
-          </h1>
-          <p className="text-[13px]" style={{ color: "rgba(255,255,255,0.4)" }}>
-            14 days free · No credit card required
-          </p>
+      {/* Top bar */}
+      <header style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px 40px", borderBottom: "1px solid rgba(255,255,255,.08)" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "#fff" }}>
+          <AtlasMark size={26} />
+          <span style={{ fontWeight: 700, fontSize: "14px", letterSpacing: ".2em", textTransform: "uppercase" as const }}>Atlas</span>
+        </Link>
+        <div style={{ fontSize: "13px", color: "rgba(255,255,255,.32)" }}>
+          Already have an account?{" "}
+          <Link href="/login" style={{ color: "#fff", fontWeight: 600, textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,.2)", paddingBottom: "1px" }}>Log in</Link>
         </div>
+      </header>
 
-        <Suspense fallback={<SignupSkeleton />}>
-          <SignupForm />
-        </Suspense>
-      </div>
+      {/* Center */}
+      <main style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "48px 24px" }}>
+        <div style={{ width: "100%", maxWidth: "520px" }}>
+          <Suspense fallback={null}>
+            <SignupForm />
+          </Suspense>
+        </div>
+      </main>
 
-      <Link
-        href="/"
-        className="mt-6 text-[12px] transition-colors"
-        style={{ color: "rgba(255,255,255,0.25)" }}
-      >
-        ← Back to Vantro
-      </Link>
+      {/* Page footer */}
+      <footer style={{ position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,.08)", padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", fontFamily: "'JetBrains Mono', monospace", fontSize: "9.5px", letterSpacing: ".1em", color: "rgba(255,255,255,.18)", textTransform: "uppercase" as const }}>
+        <span>© 2026 Vantro Technologies</span>
+        <div style={{ display: "flex", gap: "24px" }}>
+          <Link href="/privacy" style={{ color: "rgba(255,255,255,.22)", textDecoration: "none" }}>Privacy</Link>
+          <Link href="/terms" style={{ color: "rgba(255,255,255,.22)", textDecoration: "none" }}>Terms</Link>
+          <Link href="/security" style={{ color: "rgba(255,255,255,.22)", textDecoration: "none" }}>Security</Link>
+        </div>
+      </footer>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import {
-  FiArrowRight, FiCheck, FiBarChart2, FiMessageSquare,
-  FiTarget, FiShield, FiTrendingUp, FiUsers,
-  FiMenu, FiX, FiPhoneCall, FiUpload, FiCpu,
-  FiChevronDown, FiMail, FiZap,
-} from "react-icons/fi";
-import LogoMark from "@/components/LogoMark";
+import { FiArrowRight, FiChevronDown } from "react-icons/fi";
 import { enableDemoMode } from "@/lib/demo";
 
 // ── Scroll reveal ──────────────────────────────────────────────
@@ -32,527 +26,447 @@ const rv = (vis: boolean, delay = 0): React.CSSProperties => ({
   transition: `opacity 0.75s ease-out ${delay}ms, transform 0.75s cubic-bezier(0.22,1,0.36,1) ${delay}ms`,
 });
 
-// ── Static data ────────────────────────────────────────────────
+// ── Atlas mark ─────────────────────────────────────────────────
+function AtlasMark({ size = 28, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path fill="white" fillRule="evenodd" className={`atlas-mark-anim${className ? " " + className : ""}`}
+        d="M 50 8 L 4 92 L 96 92 Z M 50 78 L 38 92 L 62 92 Z M 26 59 L 74 59 L 74 68 L 26 68 Z" />
+    </svg>
+  );
+}
+
+// ── Data ────────────────────────────────────────────────────────
+const INTEGRATIONS = ["QuickBooks", "Stripe", "Xero", "WhatsApp Business", "Tally ERP", "Zoho Books", "Razorpay", "Salesforce", "HubSpot", "Excel / CSV", "PayPal", "NetSuite", "FreshBooks", "Square"];
+
 const FEATURES = [
-  { icon: FiTarget,        title: "Collections Autopilot",        desc: "AI scores every debtor by payment probability and sends the right reminder at the right time — automatically. Zero manual chasing.",  stat: "3.2×", statLabel: "collection lift", accent: "#4F6EF7" },
-  { icon: FiBarChart2,     title: "Real-Time Business Dashboard", desc: "Live DSO, cash runway, and risk alerts every morning. Know your exact cash position without opening a spreadsheet.",                  stat: "18d",  statLabel: "avg DSO drop",   accent: "#10D98A" },
-  { icon: FiMessageSquare, title: "WhatsApp Business Automation", desc: "AI-crafted Hinglish messages sent at the optimal time. Customers respond because it feels personal, not corporate.",                   stat: "73%",  statLabel: "open rate",      accent: "#FF6B35" },
-  { icon: FiTrendingUp,    title: "Cash Flow Autopilot",          desc: "90-day forecasts with three scenarios. Automated runway alerts before you hit a crunch — not after.",                                  stat: "90d",  statLabel: "visibility",     accent: "#9B6DFF" },
-  { icon: FiShield,        title: "Zero-Touch Data Sync",         desc: "Tally ERP, Excel, CSV — data flows into Vantro automatically. Set it up once. Never do manual data entry again.",                     stat: "<2m",  statLabel: "to sync Tally",  accent: "#F5A524" },
-  { icon: FiUsers,         title: "Team Workflow Automation",     desc: "Assign, follow up, log promises, track performance — all running in the background. Your team stays focused on closing.",              stat: "100%", statLabel: "audit trail",    accent: "#10D98A" },
+  { idx: "01", metric: "3.2× collection lift",   title: "Collections Autopilot",   desc: "AI scores every debtor by pay probability, sends the right reminder at the right time — in their language, personally. Zero manual chasing. Every day, automatically." },
+  { idx: "02", metric: "Daily · every morning",   title: "AI Owner Briefing",       desc: "Who to call, what's risky, what cash is incoming, what to approve today. One screen. The complete picture in under 60 seconds." },
+  { idx: "03", metric: "90-day visibility",        title: "Cash Flow Forecast",      desc: "Three-scenario forecast updated daily. Automated runway alerts. Know what's coming before it arrives — not after the crisis starts." },
+  { idx: "04", metric: "73% open rate",            title: "Smart Messaging",         desc: "AI-crafted reminders delivered via the channel your customer prefers — email, WhatsApp, SMS. Feels personal. Works globally. Sent at the optimal moment." },
+  { idx: "05", metric: "Real-time risk radar",     title: "Risk Signals",            desc: "Credit flags, broken-promise tracking, payment behaviour scoring. Atlas alerts you before a slow payer becomes a bad debt written off." },
+  { idx: "06", metric: "Live stock intelligence",  title: "Inventory Intelligence",  desc: "Moving stock vs trapped capital — updated daily. See exactly what's tying up your working capital and what needs reordering before you run out." },
 ];
 
-const HOW_IT_WORKS = [
-  { step: "01", icon: FiUpload,    title: "Connect once",            desc: "Link Tally or upload Excel. Invoices, customers, and ledger load automatically — zero manual entry. Done in under 5 minutes.",  tag: "Tally · Excel · CSV" },
-  { step: "02", icon: FiCpu,       title: "AI takes over",           desc: "Every morning, Vantro scores your debtors, drafts Hinglish messages, schedules reminders, and queues payment links.",           tag: "Runs every day · No manual work" },
-  { step: "03", icon: FiPhoneCall, title: "Business runs itself",    desc: "Reminders go out. Customers pay. Cash hits your account. You check one dashboard — and get back to growing.",                  tag: "WhatsApp · UPI · Razorpay" },
+const PIPELINE = [
+  { n: "01", phase: "INPUT",  name: "Business Event",    desc: "sale · overdue · promise missed · payment received · silent customer detected" },
+  { n: "02", phase: "INPUT",  name: "Event Normalizer",  desc: "Converts raw event into a structured, typed signal ready for pipeline processing" },
+  { n: "03", phase: "INTEL",  name: "Context Builder",   desc: "Fetches full user-scoped context from Postgres — customers, invoices, history, promises" },
+  { n: "04", phase: "INTEL",  name: "Agent Router",      desc: "Cortex Orchestrator selects the correct specialized agent for this event type" },
+  { n: "05", phase: "INTEL",  name: "Rust Engine",       desc: "Deterministic score, policy evaluation, timing calculation, risk — zero ambiguity, zero hallucination" },
+  { n: "06", phase: "INTEL",  name: "LLM Gate",          desc: "Reasoning and language generation, only when this event requires it. Never by default." },
+  { n: "07", phase: "SAFETY", name: "Policy Guard",      desc: "Blocks unsafe actions, legal threats, cross-tenant leakage. Every proposed output reviewed." },
+  { n: "08", phase: "SAFETY", name: "Owner Approval",    desc: "Risky or high-value actions pause here. Human sign-off required before any execution." },
+  { n: "09", phase: "OUTPUT", name: "Execution",         desc: "Creates the task, sends the reminder, generates the action card. Real-world effect fires." },
+  { n: "10", phase: "OUTPUT", name: "Audit Log",         desc: "Full decision trail — agent, inputs, output, policy hash, timestamp. Immutable." },
+  { n: "11", phase: "OUTPUT", name: "Outcome Tracking",  desc: "Reply? Payment? Promise kept? Every result feeds the Learning agent to improve future actions." },
 ];
 
-const SOCIAL_PROOF = [
-  { name: "Vikram Mehta", co: "Mehta Fabrics · Surat",     avatar: "VM", result: "₹22L in 6 weeks",   quote: "WhatsApp messages in Hinglish made all the difference. Customers responded — even ones silent for 8 months." },
-  { name: "Priya Sharma", co: "Sharma Steel · Ahmedabad",  avatar: "PS", result: "DSO: 67d → 41d",     quote: "The AI priority list is genuinely better than what our team did manually. First week, we recovered ₹8L." },
-  { name: "Amit Gupta",   co: "Gupta Construction · Pune", avatar: "AG", result: "Cash crunch avoided", quote: "The 90-day forecast saved us. We knew exactly when to tighten collections — before the crunch hit." },
+const TESTI_ROW1 = [
+  { av: "MJ", name: "Marcus Johnson",   co: "Precision Logistics · Chicago, USA · $2.1M managed",        quote: "Before Atlas, we had two full-time credit controllers. Now one person handles twice the volume — and DSO dropped 34 days." },
+  { av: "SM", name: "Sophie Müller",    co: "Bautech Consulting · Berlin, Germany · 45 invoices/mo",      quote: "DSO dropped from 52 to 29 days in six weeks. I stopped sending payment reminders entirely. Atlas does it better than I ever did." },
+  { av: "JO", name: "James Okafor",     co: "BuildRight Materials · Lagos, Nigeria · $180K outstanding",  quote: "Three collectors plus Atlas. The AI does more than all three combined, every single day." },
+  { av: "TR", name: "Tariq Al-Rashid",  co: "Gulf Fresh Foods · Dubai, UAE · $320K managed",              quote: "The 90-day cash forecast is the first thing I open every morning. In four months, it hasn't been wrong once." },
+  { av: "PN", name: "Priya Nair",       co: "Indigo Textiles · Chennai, India · 200+ employees",          quote: "We export to 14 countries. Atlas handles every follow-up in the customer's time zone. Seamlessly, every single day." },
+  { av: "RO", name: "Ryan O'Brien",     co: "O'Brien Plumbing · Dublin, Ireland · €95K recovered",        quote: "First automated message went out at 7am. By 9am we had three payments clear. I was still in bed." },
+  { av: "CM", name: "Carlos Mendez",    co: "Acero del Norte · Mexico City, Mexico · $450K/mo",           quote: "My CFO wanted to hire two more people for collections. I showed him Atlas. We didn't hire anyone." },
+];
+const TESTI_ROW2 = [
+  { av: "ST", name: "Sakura Tanaka",    co: "Tanaka Fashion Trade · Tokyo, Japan · $220K managed",        quote: "Japanese clients expect perfect communication. Atlas gets the tone, timing, and formality right every single time." },
+  { av: "IP", name: "Igor Petrov",      co: "Techprom Industrial · Warsaw, Poland · 80 employees",        quote: "We had €340K stuck in overdue accounts for months. Six weeks with Atlas: €290K cleared." },
+  { av: "MS", name: "Maria Santos",     co: "Floresta E-commerce · São Paulo, Brazil · R$180K/mo",        quote: "Three employees, 400 invoices a month. Atlas handles every follow-up while I sleep." },
+  { av: "DC", name: "David Choi",       co: "KoreaNet IT Services · Seoul, South Korea · 38 enterprise clients", quote: "Our biggest client paid 90 days late, every quarter, for two years. Atlas sent the right message. They now pay at 30." },
+  { av: "AM", name: "Aisha Mohammed",   co: "MedSupply Ghana · Accra, Ghana · 89 overdue invoices",      quote: "89 invoices were 60+ days overdue. Atlas prioritized them in one ranked list. 71 cleared within 30 days." },
+  { av: "LF", name: "Luisa Ferreira",   co: "Ferreira Food Industries · Lisbon, Portugal · €280K/mo",    quote: "I thought AI would send robotic messages. My customers actually complimented how personal the reminders felt." },
 ];
 
-const INTEGRATIONS = ["Tally ERP", "WhatsApp Business", "Razorpay", "UPI / BHIM", "GST Portal", "Excel / CSV", "Interakt", "Twilio"];
-
-const PLAN_FREE    = ["5 invoices/month", "Manual WhatsApp messages", "Basic dashboard", "CSV import"];
-const PLAN_PRO     = ["Unlimited invoices", "WhatsApp auto-reminders", "Razorpay payment links", "AI priority scoring", "Cash flow forecast", "Tally ERP sync", "Auto dunning"];
-const PLAN_SUCCESS = ["Everything in Pro", "No monthly fee — ever", "1.5% only on what Vantro collects", "AI voice calls", "Dedicated account manager", "API access + webhooks", "24/7 priority support"];
+const PLAN_FREE    = ["5 invoices per month", "Manual WhatsApp messages", "Basic receivables dashboard", "CSV import"];
+const PLAN_PRO     = ["Unlimited invoices", "WhatsApp auto-reminders", "Razorpay & UPI payment links", "AI priority scoring", "90-day cash flow forecast", "Tally ERP sync", "Inventory intelligence", "AI Owner Briefing daily"];
+const PLAN_SUCCESS = ["Everything in Pro", "No monthly fee — ever", "1.5% on Atlas-collected invoices only", "AI voice follow-up calls", "Dedicated account manager", "API access & 24/7 support"];
 
 const FAQS = [
-  { q: "Do I need to add my own API keys?",         a: "No. Vantro manages everything — WhatsApp via our own account, payment links via our Razorpay. Zero technical setup from your end." },
-  { q: "What counts as 'collected via Vantro'?",     a: "Any payment where the customer clicked a UPI/Razorpay link from Vantro, or paid after a Vantro WhatsApp reminder." },
-  { q: "Does it work with Tally ERP 9 & TallyPrime?", a: "Yes — both versions. We sync customers, invoices, and ledger data automatically. No manual export after the first setup." },
-  { q: "Is my financial data safe?",                a: "All data encrypted at rest and in transit (AES-256 + TLS 1.3). Hosted on AWS Mumbai — your data never leaves India." },
-  { q: "Do I need technical knowledge?",            a: "No. If you can use WhatsApp, you can use Vantro. Setup takes 5 minutes. Our team calls within 24 hours to help." },
+  { q: 'What does "200 agents" mean in practice?', a: 'Each agent owns a single, narrow business task — one scores payment probability, one tracks promises, one guards policy, one routes cost. 200 agents run in parallel, each triggered by the exact business event they are designed for. The result: deterministic decisions at scale with a complete audit trail.' },
+  { q: 'Which accounting tools does Atlas connect to?', a: 'Atlas connects to QuickBooks, Xero, Zoho Books, Tally ERP, FreshBooks, NetSuite, and any system that exports CSV or has an API. Setup takes under 5 minutes. After that, invoices, customers and payments sync automatically.' },
+  { q: 'Can I review messages before they go out?', a: '"Approve before send" mode puts every message in a queue for your review. Read it, edit if needed, then send — or skip it. Most founders switch to fully automatic after seeing the first week of messages.' },
+  { q: 'Will automated reminders damage my customer relationships?', a: 'Atlas learns your customer patterns. A first-time buyer gets a very different message than a chronic late-payer. Polite, personal, contextual — in the language and channel that fits your business.' },
+  { q: "I've tried tools before and stopped. Why is Vantro different?", a: "Most tools show data but don't do work. Atlas sends the messages, logs responses, follows up and keeps the cycle running even when you ignore it for a week. It's designed to need less from you — not more." },
+  { q: 'Is my financial data safe? Where is it stored?', a: 'All data is encrypted in transit (TLS 1.3) and at rest (AES-256), stored in India. We keep a full audit trail of every action and never share or sell your data. Role-based access means your accountant sees only what they need to.' },
 ];
 
 const WA_NUMBER = "919911164055";
 
-
 // ── Component ──────────────────────────────────────────────────
 export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [scrolled, setScrolled]     = useState(false);
+  const [openFaq, setOpenFaq]       = useState<number | null>(null);
 
-  const [marqRef, marqVis] = useReveal(0.05);
-  const [statRef, statVis] = useReveal(0.1);
-  const [stepRef, stepVis] = useReveal();
-  const [featRef, featVis] = useReveal();
-  const [testRef, testVis] = useReveal();
-  const [planRef, planVis] = useReveal(0.05);
-  const [faqRef,  faqVis]  = useReveal();
-  const [ctaRef,  ctaVis]  = useReveal(0.15);
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 20);
+    fn(); window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
+
+  const [heroRef,  heroVis]  = useReveal(0.04);
+  const [tractRef, tractVis] = useReveal(0.05);
+  const [probRef,  probVis]  = useReveal(0.08);
+  const [cortRef,  cortVis]  = useReveal(0.06);
+  const [featRef,  featVis]  = useReveal(0.05);
+  const [pipeRef,  pipeVis]  = useReveal(0.04);
+  const [testiRef, testiVis] = useReveal(0.05);
+  const [planRef,  planVis]  = useReveal(0.05);
+  const [faqRef,   faqVis]   = useReveal(0.06);
+  const [ctaRef,   ctaVis]   = useReveal(0.12);
+
+  const phaseColors: Record<string, string> = { INPUT: "#4F6EF7", INTEL: "#F5A524", SAFETY: "#F5424D", OUTPUT: "#10D98A" };
 
   return (
-    <div className="min-h-screen bg-bg text-primary overflow-x-hidden">
+    <div style={{ background: "#020202", color: "#fff", fontFamily: "'Space Grotesk', system-ui", overflowX: "hidden", minHeight: "100vh" }}>
 
-      {/* ═══════════════════════ NAV ═══════════════════════════ */}
-      <nav className="fixed top-0 inset-x-0 z-50"
-        style={{ background: "rgba(8,8,8,0.85)", backdropFilter: "blur(24px) saturate(180%)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[60px] flex items-center justify-between">
+      {/* ── GRAIN ──────────────────────────────────────────────── */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E")`, opacity: 0.5 }} />
 
-          <div className="flex items-center gap-2.5">
-            <LogoMark size={28} />
-            <span className="font-bold text-[15px] tracking-tight text-primary">Vantro</span>
-          </div>
-
-          <div className="hidden md:flex items-center gap-7 text-sm text-secondary">
-            {[["#features","Features"],["#how-it-works","How it Works"],["#pricing","Pricing"],["#faq","FAQ"]].map(([href, label]) => (
-              <a key={href} href={href} className="hover:text-primary transition-colors duration-150">{label}</a>
+      {/* ── NAV ────────────────────────────────────────────────── */}
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, transition: "all .3s", background: scrolled ? "rgba(2,2,2,0.9)" : "transparent", backdropFilter: scrolled ? "blur(24px)" : "none", borderBottom: scrolled ? "1px solid rgba(255,255,255,.06)" : "none" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 32px", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          {/* Logo */}
+          <a href="#top" style={{ display: "flex", alignItems: "center", gap: "11px", textDecoration: "none", color: "#fff" }}>
+            <AtlasMark size={28} />
+            <span style={{ fontWeight: 700, fontSize: "14.5px", letterSpacing: ".2em", textTransform: "uppercase" as const }}>ATLAS</span>
+          </a>
+          {/* Desktop links */}
+          <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
+            {["#features", "#pipeline", "#pricing", "#faq"].map((href, i) => (
+              <a key={href} href={href} style={{ fontSize: "14px", color: "rgba(255,255,255,.5)", textDecoration: "none", transition: "color .15s" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
+                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,.5)")}>
+                {["Features", "Pipeline", "Pricing", "FAQ"][i]}
+              </a>
             ))}
           </div>
-
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="hidden sm:block text-sm text-secondary hover:text-primary transition-colors">Log in</Link>
-            <Link href="/signup"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all"
-              style={{ background: "#fff", color: "#000", boxShadow: "0 1px 4px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1) inset" }}>
-              Start Free Trial <FiArrowRight size={13} />
+          {/* CTA */}
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <Link href="/login" style={{ fontSize: "14px", color: "rgba(255,255,255,.5)", textDecoration: "none" }}>Log in</Link>
+            <Link href="/signup" style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#fff", color: "#000", fontWeight: 700, fontSize: "14px", padding: "10px 22px", borderRadius: "6px", textDecoration: "none", transition: "opacity .2s" }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = ".88")}
+              onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
+              Start free <FiArrowRight size={14} />
             </Link>
-            <button onClick={() => setMobileOpen(o => !o)} className="md:hidden p-1.5 rounded-lg text-secondary hover:text-primary transition-colors">
-              {mobileOpen ? <FiX size={20} /> : <FiMenu size={20} />}
-            </button>
           </div>
         </div>
-
-        {mobileOpen && (
-          <div className="md:hidden border-t border-white/5 px-4 py-4 space-y-1" style={{ background: "rgba(8,8,8,0.98)" }}>
-            {[["#features","Features"],["#how-it-works","How it Works"],["#pricing","Pricing"],["#faq","FAQ"]].map(([href, label]) => (
-              <a key={href} href={href} onClick={() => setMobileOpen(false)}
-                className="block px-3 py-3 rounded-xl text-sm font-medium text-secondary hover:text-primary hover:bg-surface-2 transition-colors">{label}</a>
-            ))}
-            <div className="pt-3 border-t border-white/5 flex flex-col gap-2">
-              <Link href="/login" onClick={() => setMobileOpen(false)} className="block text-center py-2.5 rounded-xl text-sm text-secondary bg-surface-2">Log In</Link>
-              <Link href="/signup" onClick={() => setMobileOpen(false)} className="block text-center py-2.5 rounded-xl text-sm font-bold bg-white text-black">Start Free Trial</Link>
-            </div>
-          </div>
-        )}
       </nav>
 
-      {/* ═══════════════════════ HERO ══════════════════════════ */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden" style={{ backgroundColor: "#080808" }}>
-
-        {/* ── Video background — drop /public/hero-bg.mp4 to activate ── */}
-        <video
-          autoPlay muted loop playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ opacity: 0.38, filter: "brightness(0.65) saturate(0.7)" }}
-          aria-hidden="true"
-        >
-          <source src="/hero-bg.mp4" type="video/mp4" />
-        </video>
-
-        {/* ── Ambient gradient (fallback + depth layer) ── */}
-        <div className="absolute inset-0 hero-ambient" aria-hidden="true" />
-
-        {/* ── Edge vignette ── */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true"
-          style={{ background: "radial-gradient(ellipse 110% 80% at 50% 50%, transparent 20%, rgba(8,8,8,0.8) 100%)" }} />
-
-        {/* ── Bottom page-blend ── */}
-        <div className="absolute bottom-0 inset-x-0 h-56 pointer-events-none" aria-hidden="true"
-          style={{ background: "linear-gradient(to top, #080808, transparent)" }} />
-
-        {/* ── Hero content ── */}
-        <div className="relative z-10 text-center max-w-[900px] mx-auto px-6" style={{ paddingTop: "80px" }}>
-
-          {/* Eyebrow pill */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium mb-10"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.52)" }}>
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: "#10D98A" }} />
-            Business Automation OS · India
+      {/* ── HERO ───────────────────────────────────────────────── */}
+      <section id="top" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", padding: "140px 32px 80px", position: "relative" }}>
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 80% 60% at 50% 30%, rgba(79,110,247,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div ref={heroRef} style={{ maxWidth: "900px", margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <div style={{ ...rv(heroVis), display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.09)", borderRadius: "999px", padding: "6px 14px", fontSize: "11.5px", color: "rgba(255,255,255,.52)", marginBottom: "36px" }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10D98A", animation: "pulse 2s ease-in-out infinite", flexShrink: 0 }} />
+            200 AI Agents · Every Business. Every Scale. Everywhere.
           </div>
 
-          {/* Headline */}
-          <h1 className="text-white mb-6"
-            style={{ fontSize: "clamp(3.4rem, 10vw, 7.5rem)", fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 0.92 }}>
-            Your Business,<br />
-            <span style={{ color: "rgba(255,255,255,0.36)" }}>On Autopilot.</span>
+          <h1 style={{ ...rv(heroVis, 50), fontWeight: 600, fontSize: "clamp(3rem,8vw,6.5rem)", letterSpacing: "-.045em", lineHeight: 1.02, marginBottom: "28px" }}>
+            <em style={{ fontStyle: "italic", color: "rgba(255,255,255,.9)" }}>AI runs the ops.</em><br />
+            You run the business.
           </h1>
 
-          {/* Sub-headline */}
-          <p className="mx-auto mb-10 leading-relaxed"
-            style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", color: "rgba(255,255,255,0.44)", maxWidth: "580px" }}>
-            Vantro automates your collections, invoicing, WhatsApp follow-ups, and cash flow — so you spend your time growing, not managing.
+          <p style={{ ...rv(heroVis, 100), fontSize: "clamp(1rem,2vw,1.15rem)", color: "rgba(255,255,255,.45)", lineHeight: 1.7, maxWidth: "600px", marginBottom: "40px" }}>
+            Atlas deploys 200 specialized AI agents across your entire business — collections, cashflow, credit risk, inventory, payables. Every decision logged. Every action explainable. Nothing assumed.
           </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12">
-            <Link href="/signup"
-              className="inline-flex items-center gap-2 rounded-full font-semibold text-[15px] transition-opacity hover:opacity-88"
-              style={{ background: "#ffffff", color: "#000000", padding: "14px 36px" }}>
-              Start Automating Free <FiArrowRight size={15} />
+          <div style={{ ...rv(heroVis, 150), display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "56px" }}>
+            <Link href="/signup" style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#fff", color: "#000", fontWeight: 700, fontSize: "15px", padding: "14px 32px", borderRadius: "6px", textDecoration: "none", transition: "opacity .2s" }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = ".88")}
+              onMouseLeave={e => (e.currentTarget.style.opacity = "1")}>
+              Start for free <FiArrowRight size={16} />
             </Link>
-            <button
-              onClick={() => { enableDemoMode(); window.location.href = "/dashboard"; }}
-              className="inline-flex items-center gap-2 rounded-full text-[15px] transition-colors"
-              style={{ color: "rgba(255,255,255,0.48)", border: "1px solid rgba(255,255,255,0.1)", padding: "14px 36px" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.72)")}
-              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.48)")}>
-              👀 Try Demo — No Signup
+            <button onClick={() => { enableDemoMode(); window.location.href = "/dashboard"; }}
+              style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "transparent", border: "1px solid rgba(255,255,255,.12)", color: "rgba(255,255,255,.55)", fontWeight: 500, fontSize: "15px", padding: "14px 32px", borderRadius: "6px", cursor: "pointer", fontFamily: "'Space Grotesk', system-ui", transition: "border-color .2s, color .2s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.3)"; e.currentTarget.style.color = "rgba(255,255,255,.8)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.12)"; e.currentTarget.style.color = "rgba(255,255,255,.55)"; }}>
+              Try demo — no signup
             </button>
           </div>
 
-          {/* Trust badges */}
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5">
-            {["No credit card required", "14 days free", "Set up once, runs forever", "Cancel anytime"].map(t => (
-              <span key={t} className="flex items-center gap-1.5 text-[11px]" style={{ color: "rgba(255,255,255,0.28)" }}>
-                <FiCheck size={10} style={{ color: "#10D98A" }} /> {t}
-              </span>
+          {/* Guarantees */}
+          <div style={{ ...rv(heroVis, 200), display: "flex", flexWrap: "wrap", gap: "32px", paddingTop: "32px", borderTop: "1px solid rgba(255,255,255,.07)" }}>
+            {[["↓18 days", "Average DSO reduction"], ["3.2×", "Collection rate lift"], ["8 min", "To go live from any accounting tool"]].map(([val, lbl]) => (
+              <div key={val}>
+                <div style={{ fontWeight: 700, fontSize: "clamp(1.4rem,3vw,2rem)", letterSpacing: "-.04em", marginBottom: "4px" }}>{val}</div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".14em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.3)" }}>{lbl}</div>
+              </div>
             ))}
           </div>
-        </div>
-
-        {/* Hinglish tagline at bottom */}
-        <div className="absolute bottom-8 inset-x-0 text-center z-10">
-          <p className="text-xs italic" style={{ color: "rgba(255,255,255,0.14)" }}>
-            "Karo business. Baaki Vantro karega."
-          </p>
         </div>
       </section>
 
-      {/* ═══════════════ INTEGRATION MARQUEE ════════════════════ */}
-      <div ref={marqRef} style={rv(marqVis)} className="border-y border-border py-6 overflow-hidden">
-        <p className="text-center text-[10px] text-muted uppercase tracking-[0.18em] font-bold mb-4">Works with your existing tools</p>
-        <div className="overflow-hidden">
-          <div className="animate-marquee">
-            {[...INTEGRATIONS, ...INTEGRATIONS, ...INTEGRATIONS].map((name, i) => (
-              <div key={i} className="mx-4 px-4 py-2 rounded-xl border text-sm font-semibold text-secondary shrink-0 whitespace-nowrap"
-                style={{ background: "#111111", borderColor: "rgba(255,255,255,0.07)" }}>
-                {name}
-              </div>
+      {/* ── TRACTION BAR ────────────────────────────────────────── */}
+      <div ref={tractRef} style={{ ...rv(tractVis), borderTop: "1px solid rgba(255,255,255,.07)", borderBottom: "1px solid rgba(255,255,255,.07)", background: "rgba(255,255,255,.015)", padding: "40px 32px" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", flexWrap: "wrap", gap: "0", justifyContent: "space-around" }}>
+          {[["$60M+", "Receivables managed"], ["200+", "Businesses live"], ["14", "Countries"], ["↓18d", "Avg DSO cut"], ["200", "AI agents"], ["11", "Pipeline stages"]].map(([val, lbl], i) => (
+            <div key={i} style={{ textAlign: "center", padding: "0 24px", borderLeft: i > 0 ? "1px solid rgba(255,255,255,.06)" : "none" }}>
+              <div style={{ fontWeight: 700, fontSize: "clamp(1.5rem,3vw,2.4rem)", letterSpacing: "-.04em", marginBottom: "4px" }}>{val}</div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9.5px", letterSpacing: ".14em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.28)" }}>{lbl}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── MARQUEE ─────────────────────────────────────────────── */}
+      <div style={{ padding: "40px 0", borderBottom: "1px solid rgba(255,255,255,.06)", overflow: "hidden" }}>
+        <div style={{ textAlign: "center", fontFamily: "'JetBrains Mono', monospace", fontSize: "10.5px", letterSpacing: ".22em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.25)", marginBottom: "20px" }}>
+          Connects with what you already use
+        </div>
+        <div style={{ display: "flex", overflow: "hidden", WebkitMaskImage: "linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)", maskImage: "linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)" }}>
+          <div className="animate-mq" style={{ display: "flex", gap: "52px", paddingRight: "52px", flexShrink: 0, whiteSpace: "nowrap" as const }}>
+            {[...INTEGRATIONS, ...INTEGRATIONS].map((name, i) => (
+              <span key={i} style={{ fontWeight: 500, fontSize: "18px", color: "rgba(255,255,255,.38)" }}>{name}</span>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ═══════════════════ STATS BAR ═══════════════════════ */}
-      <section ref={statRef} className="border-b border-border" style={{ background: "#0e0e0e" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
+      {/* ── PROBLEM ─────────────────────────────────────────────── */}
+      <section style={{ padding: "80px 32px", borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+        <div ref={probRef} style={{ maxWidth: "800px", margin: "0 auto" }}>
+          <div style={{ ...rv(probVis), fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".22em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.28)", marginBottom: "24px" }}>The silent drain</div>
+          <h2 style={{ ...rv(probVis, 50), fontWeight: 600, fontSize: "clamp(2rem,5vw,4rem)", letterSpacing: "-.045em", lineHeight: 1.04, marginBottom: "40px" }}>
+            Your business is<br />bleeding cash. <em>Silently.</em>
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
             {[
-              { value: "₹45Cr+",  label: "Receivables managed",   sub: "and growing" },
-              { value: "18 days", label: "Avg DSO reduction",      sub: "across all customers" },
-              { value: "+23%",    label: "Collection rate lift",    sub: "in first 60 days" },
-              { value: "6 hrs",   label: "Saved per week",         sub: "per collections team" },
-            ].map(({ value, label, sub }, i) => (
-              <div key={label} style={rv(statVis, i * 80)} className="px-6 py-10 text-center">
-                <p className="font-black text-primary tracking-tighter mb-1"
-                  style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontFamily: "'IBM Plex Mono', monospace" }}>
-                  {value}
-                </p>
-                <p className="text-sm font-semibold text-secondary mb-0.5">{label}</p>
-                <p className="text-xs text-muted">{sub}</p>
+              "Dozens of open threads — invoices buried in email, chat and spreadsheets.",
+              "An Excel sheet nobody has updated in three weeks.",
+              "Chasing customers at random. No strategy. Just hoping someone pays today.",
+              "No idea what cash is actually arriving next month.",
+            ].map((text, i) => (
+              <div key={i} style={{ ...rv(probVis, i * 60 + 100), display: "flex", alignItems: "flex-start", gap: "20px", padding: "20px 0", borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "rgba(255,255,255,.2)", letterSpacing: ".08em", flexShrink: 0, paddingTop: "2px" }}>0{i + 1}</span>
+                <p style={{ fontSize: "16px", color: "rgba(255,255,255,.6)", lineHeight: 1.6 }}>{text}</p>
               </div>
             ))}
+          </div>
+          <div style={{ ...rv(probVis, 350), display: "flex", alignItems: "center", gap: "20px", marginTop: "32px" }}>
+            <span style={{ fontSize: "15px", color: "rgba(255,255,255,.7)", fontWeight: 500 }}>Atlas solves all four. In 8 minutes.</span>
+            <a href="#features" style={{ fontSize: "13px", color: "rgba(255,255,255,.35)", textDecoration: "none" }}>See how →</a>
           </div>
         </div>
       </section>
 
-      {/* ═══════════════ HOW IT WORKS ════════════════════════ */}
-      <section id="how-it-works" className="py-24 border-b border-border">
-        <div ref={stepRef} className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div style={rv(stepVis)} className="text-center mb-16">
-            <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">How it Works</span>
-            <h2 className="text-4xl sm:text-5xl font-black text-primary tracking-tighter mb-4">Set up in minutes.<br className="hidden sm:block" /> Runs forever.</h2>
-            <p className="text-secondary max-w-md mx-auto text-base leading-relaxed">No IT team. No lengthy onboarding. Rajesh Kumar from Karol Bagh was fully automated in 8 minutes.</p>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-5 relative">
-            <div className="hidden sm:block absolute top-[38px] left-[calc(16.67%+20px)] right-[calc(16.67%+20px)] h-px"
-              style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.08) 70%, transparent)" }} />
-
-            {HOW_IT_WORKS.map(({ step, icon: Icon, title, desc, tag }, i) => (
-              <div key={step} style={{ ...rv(stepVis, i * 100), background: "linear-gradient(145deg, #141414, #0e0e0e)" }}
-                className="relative rounded-2xl border border-border p-7 flex flex-col group hover:border-accent/30 transition-all duration-300">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all group-hover:scale-110 duration-300"
-                    style={{ background: "rgba(79,110,247,0.1)", border: "1px solid rgba(79,110,247,0.2)" }}>
-                    <Icon size={18} className="text-accent" />
-                  </div>
-                  <span className="text-xs font-black text-muted tracking-[0.15em]">{step}</span>
-                </div>
-                <h3 className="text-base font-bold text-primary mb-2">{title}</h3>
-                <p className="text-sm text-secondary leading-relaxed mb-5 flex-1">{desc}</p>
-                <span className="inline-block px-3 py-1.5 rounded-full text-[10px] font-bold text-muted"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                  {tag}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ WHAT VANTRO AUTOMATES ══════════════════ */}
-      <section className="py-20 border-b border-border" style={{ background: "#080808" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">Automation Modules</span>
-            <h2 className="text-3xl sm:text-4xl font-black text-primary tracking-tighter mb-3">
-              One platform. Everything automated.
-            </h2>
-            <p className="text-secondary text-base max-w-md mx-auto">
-              Live today — with more modules shipping every month.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
-            {[
-              { label: "Collections & Dunning",    live: true  },
-              { label: "Invoice Generation",       live: true  },
-              { label: "WhatsApp Campaigns",       live: true  },
-              { label: "Payment Links (UPI/RZP)",  live: true  },
-              { label: "Cash Flow Forecasting",    live: true  },
-              { label: "Tally ERP Sync",           live: true  },
-              { label: "AI Priority Scoring",      live: true  },
-              { label: "Auto Dunning Rules",       live: true  },
-              { label: "Team Follow-up CRM",       live: true  },
-              { label: "Khata / Bank Ledger",      live: true  },
-            ].map(({ label, live }) => (
-              <div key={label}
-                className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl border transition-all"
-                style={{
-                  background: live ? "rgba(16,217,138,0.04)" : "rgba(255,255,255,0.02)",
-                  borderColor: live ? "rgba(16,217,138,0.18)" : "rgba(255,255,255,0.06)",
-                }}>
-                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: live ? "#10D98A" : "#556070" }} />
-                <span className="text-xs font-semibold" style={{ color: live ? "#E0FFF5" : "#556070" }}>{label}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {[
-              { label: "GST Filing Reminders",     live: false },
-              { label: "Purchase Order Automation",live: false },
-              { label: "Expense Tracking",         live: false },
-              { label: "Payroll Automation",       live: false },
-              { label: "Inventory Reorders",       live: false },
-            ].map(({ label }) => (
-              <div key={label}
-                className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl border"
-                style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)", borderStyle: "dashed" }}>
-                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "#556070" }} />
-                <span className="text-xs font-medium text-muted">{label}</span>
-                <span className="ml-auto text-[9px] font-bold text-muted/60 uppercase tracking-wide shrink-0">Soon</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════ FEATURES ════════════════════════ */}
-      <section id="features" className="py-24 border-b border-border" style={{ background: "#0e0e0e" }}>
-        <div ref={featRef} className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div style={rv(featVis)} className="text-center mb-16">
-            <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">Platform</span>
-            <h2 className="text-4xl sm:text-5xl font-black text-primary tracking-tighter mb-4">
-              Everything Vantro<br className="hidden sm:block" /> automates for you
-            </h2>
-            <p className="text-secondary max-w-lg mx-auto text-base leading-relaxed">
-              Not enterprise bloatware re-skinned for India. Built ground-up for the way Rajesh Kumar actually runs his business.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {FEATURES.map(({ icon: Icon, title, desc, stat, statLabel, accent }, i) => (
-              <div key={title} style={{ ...rv(featVis, i * 60), background: "#080808" }}
-                className="group relative rounded-2xl border border-border p-6 hover:border-white/15 transition-all duration-300 overflow-hidden cursor-default">
-                {/* Hover glow */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl"
-                  style={{ background: `radial-gradient(ellipse at top left, ${accent}08 0%, transparent 60%)` }} />
-
-                <div className="relative flex items-start justify-between mb-5">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
-                    style={{ background: `${accent}12`, border: `1px solid ${accent}22` }}>
-                    <Icon size={17} style={{ color: accent }} />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-black text-primary tracking-tight">{stat}</p>
-                    <p className="text-[10px] text-muted">{statLabel}</p>
-                  </div>
-                </div>
-                <h3 className="relative font-bold text-primary mb-2 text-sm">{title}</h3>
-                <p className="relative text-secondary text-xs leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════ SOCIAL PROOF ═══════════════════════ */}
-      <section id="proof" className="py-24 border-b border-border">
-        <div ref={testRef} className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div style={rv(testVis)} className="text-center mb-16">
-            <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">Customer Stories</span>
-            <h2 className="text-4xl sm:text-5xl font-black text-primary tracking-tighter mb-3">Rajesh got his time back.<br className="hidden sm:block" /> And ₹22 lakhs.</h2>
-            <p className="text-sm text-muted">Real businesses. Real numbers. No stock photos.</p>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-5">
-            {SOCIAL_PROOF.map(({ name, co, quote, avatar, result }, i) => (
-              <div key={name} style={{ ...rv(testVis, i * 100), background: "linear-gradient(145deg, #141414, #0e0e0e)" }}
-                className="rounded-2xl border border-border p-7 flex flex-col hover:border-white/15 transition-all duration-300">
-                {/* Result badge */}
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold mb-5 self-start"
-                  style={{ background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.22)", color: "#10D98A" }}>
-                  <FiZap size={9} /> {result}
-                </div>
-                {/* Stars */}
-                <div className="flex gap-0.5 mb-4">
-                  {[...Array(5)].map((_, k) => (
-                    <svg key={k} width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  ))}
-                </div>
-                <p className="text-sm text-secondary leading-relaxed mb-6 flex-1">&ldquo;{quote}&rdquo;</p>
-                <div className="flex items-center gap-3 pt-5 border-t border-border">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-primary shrink-0"
-                    style={{ background: "rgba(79,110,247,0.15)", border: "1px solid rgba(79,110,247,0.25)" }}>
-                    {avatar}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-primary">{name}</p>
-                    <p className="text-xs text-muted">{co}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <p style={rv(testVis, 300)} className="text-center text-xs text-muted mt-10">
-            Join <span className="text-primary font-semibold">200+ MSMEs</span> across India collecting smarter with Vantro
+      {/* ── CORTEX ──────────────────────────────────────────────── */}
+      <section style={{ padding: "80px 32px", borderBottom: "1px solid rgba(255,255,255,.06)", background: "rgba(255,255,255,.01)" }}>
+        <div ref={cortRef} style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ ...rv(cortVis), fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".22em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.28)", marginBottom: "20px" }}>Vantro Cortex</div>
+          <h2 style={{ ...rv(cortVis, 50), fontWeight: 600, fontSize: "clamp(1.8rem,4.2vw,3.8rem)", letterSpacing: "-.045em", lineHeight: 1.04, maxWidth: "18ch", marginBottom: "20px" }}>Raw data in.<br />Ranked decisions out.</h2>
+          <p style={{ ...rv(cortVis, 100), fontSize: "15px", color: "rgba(255,255,255,.45)", lineHeight: 1.7, maxWidth: "52ch", marginBottom: "48px" }}>
+            Every morning, Atlas processes your entire business — invoices, payments, customers, stock — and hands you one list. Ranked. Specific. Ready to act on.
           </p>
+          {/* Cortex architecture strip */}
+          <div style={{ ...rv(cortVis, 150), background: "linear-gradient(135deg, #0a0a0a, #111)", borderRadius: "12px", border: "1px solid rgba(255,255,255,.07)", padding: "32px 24px", overflowX: "auto" }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".18em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.2)", textAlign: "center", marginBottom: "24px" }}>Cortex X — Event to Action</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0", flexWrap: "nowrap", minWidth: "max-content", margin: "0 auto" }}>
+              {[
+                { label: "Business Event", color: "#4F6EF7" },
+                { label: "Rules Engine",   color: "#F5A524" },
+                { label: "Policy Guard",   color: "#F5424D" },
+                { label: "Action Created", color: "#9B6DFF" },
+                { label: "Owner Approves", color: "#10D98A" },
+                { label: "Audit + Learn",  color: "#4F6EF7" },
+              ].map(({ label, color }, i, arr) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: "0" }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", padding: "0 12px" }}>
+                    <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: color }} />
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", fontWeight: 600, whiteSpace: "nowrap", color }}>{label}</span>
+                  </div>
+                  {i < arr.length - 1 && <div style={{ width: "24px", height: "1px", background: "rgba(255,255,255,.12)", flexShrink: 0 }} />}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ═══════════════════ PRICING ═════════════════════════ */}
-      <section id="pricing" className="py-24 border-b border-border" style={{ background: "#0e0e0e" }}>
-        <div ref={planRef} className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div style={rv(planVis)} className="text-center mb-16">
-            <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">Pricing</span>
-            <h2 className="text-4xl sm:text-5xl font-black text-primary tracking-tighter mb-4">
-              Start free. Scale on results.
-            </h2>
-            <p className="text-secondary text-base max-w-md mx-auto">Three tiers. No hidden fees. No lock-in. Pay only when you get paid.</p>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-5 max-w-5xl mx-auto">
-
-            {/* Free */}
-            <div style={{ ...rv(planVis, 0), background: "#080808" }}
-              className="rounded-2xl border border-border p-7 flex flex-col hover:border-white/15 transition-all duration-300">
-              <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-muted mb-4">Free</p>
-              <div className="mb-1">
-                <span className="text-5xl font-black text-primary tracking-tighter">₹0</span>
-                <span className="text-muted text-sm ml-2">/forever</span>
+      {/* ── FEATURES ─────────────────────────────────────────────── */}
+      <section id="features" style={{ padding: "80px 32px", borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+        <div ref={featRef} style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ ...rv(featVis), fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".22em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.28)", marginBottom: "20px" }}>Six modules</div>
+          <h2 style={{ ...rv(featVis, 50), fontWeight: 600, fontSize: "clamp(2rem,4.5vw,4.5rem)", letterSpacing: "-.045em", lineHeight: 1.04, marginBottom: "56px" }}>
+            Everything Atlas<br />runs automatically.
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+            {FEATURES.map(({ idx, metric, title, desc }, i) => (
+              <div key={idx} style={{ ...rv(featVis, i * 50 + 100), display: "flex", gap: "32px", padding: "28px 0", borderTop: "1px solid rgba(255,255,255,.06)", alignItems: "flex-start" }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "rgba(255,255,255,.2)", letterSpacing: ".08em", flexShrink: 0, width: "28px" }}>{idx}</div>
+                <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "start" }}>
+                  <div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".12em", color: "#10D98A", textTransform: "uppercase" as const, marginBottom: "8px" }}>{metric}</div>
+                    <h3 style={{ fontWeight: 600, fontSize: "clamp(1.1rem,2vw,1.5rem)", letterSpacing: "-.02em", color: "#fff" }}>{title}</h3>
+                  </div>
+                  <p style={{ fontSize: "14px", color: "rgba(255,255,255,.5)", lineHeight: 1.7 }}>{desc}</p>
+                </div>
               </div>
-              <p className="text-xs text-muted mb-7">Start tracking. No credit card.</p>
-              <div className="h-px bg-border mb-6" />
-              <ul className="space-y-3 mb-8 flex-1">
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── EVENT PIPELINE ───────────────────────────────────────── */}
+      <section id="pipeline" style={{ padding: "80px 32px", borderBottom: "1px solid rgba(255,255,255,.06)", background: "#020202" }}>
+        <div ref={pipeRef} style={{ maxWidth: "760px", margin: "0 auto" }}>
+          <div style={{ ...rv(pipeVis), fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".22em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.28)", marginBottom: "20px" }}>Event Pipeline</div>
+          <h2 style={{ ...rv(pipeVis, 50), fontWeight: 600, fontSize: "clamp(1.8rem,4vw,3.5rem)", letterSpacing: "-.045em", lineHeight: 1.04, marginBottom: "12px" }}>Event to action.<br /><span style={{ color: "rgba(255,255,255,.35)" }}>11 deterministic stages.</span></h2>
+          <p style={{ ...rv(pipeVis, 100), fontSize: "14px", color: "rgba(255,255,255,.4)", lineHeight: 1.7, marginBottom: "48px" }}>Every business event passes through 11 deterministic stages before any action fires. Rust engine for scoring. LLM only when needed. Human approval before execution.</p>
+
+          {/* Phase groups */}
+          {(["INPUT", "INTEL", "SAFETY", "OUTPUT"] as const).map(phase => (
+            <div key={phase} style={{ marginBottom: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "4px", padding: "8px 0" }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", letterSpacing: ".18em", fontWeight: 600, color: phaseColors[phase], textTransform: "uppercase" as const }}>{phase}</span>
+                <div style={{ flex: 1, height: "1px", background: `${phaseColors[phase]}22` }} />
+              </div>
+              {PIPELINE.filter(s => s.phase === phase).map(({ n, name, desc }) => (
+                <div key={n} style={{ ...rv(pipeVis, 150), display: "flex", gap: "16px", padding: "14px 0", borderBottom: "1px solid rgba(255,255,255,.05)", alignItems: "flex-start", paddingLeft: "16px" }}>
+                  <div style={{ position: "relative", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: phaseColors[phase], border: `2px solid ${phaseColors[phase]}`, flexShrink: 0 }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "4px" }}>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: "rgba(255,255,255,.2)", letterSpacing: ".06em" }}>{n}</span>
+                      <span style={{ fontWeight: 600, fontSize: "14px", color: "rgba(255,255,255,.85)" }}>{name}</span>
+                    </div>
+                    <p style={{ fontSize: "13px", color: "rgba(255,255,255,.38)", lineHeight: 1.6 }}>{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ─────────────────────────────────────────── */}
+      <section style={{ padding: "80px 0", borderBottom: "1px solid rgba(255,255,255,.06)", overflow: "hidden" }}>
+        <div ref={testiRef} style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 32px" }}>
+          <div style={{ ...rv(testiVis), fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".22em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.28)", marginBottom: "12px" }}>Customer proof</div>
+          <h2 style={{ ...rv(testiVis, 50), fontWeight: 600, fontSize: "clamp(1.8rem,3.5vw,3rem)", letterSpacing: "-.042em", lineHeight: 1.05, marginBottom: "40px" }}>Real businesses.<br />Real numbers.</h2>
+        </div>
+        {/* Row 1 */}
+        <div style={{ overflow: "hidden", WebkitMaskImage: "linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)", maskImage: "linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)", marginBottom: "12px" }}>
+          <div className="animate-marquee-l" style={{ display: "flex", gap: "14px", width: "max-content" }}>
+            {[...TESTI_ROW1, ...TESTI_ROW1].map((t, i) => (
+              <div key={i} style={{ width: "288px", flexShrink: 0, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)", borderRadius: "10px", padding: "22px 22px 18px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                <p style={{ fontSize: "13.5px", lineHeight: 1.65, color: "rgba(255,255,255,.7)", flex: 1 }}>&ldquo;{t.quote}&rdquo;</p>
+                <div style={{ display: "flex", gap: "11px", alignItems: "center" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(255,255,255,.09)", border: "1px solid rgba(255,255,255,.12)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: "11px", color: "rgba(255,255,255,.7)", flexShrink: 0 }}>{t.av}</div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: "12.5px", color: "rgba(255,255,255,.82)", letterSpacing: "-.01em" }}>{t.name}</div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9.5px", color: "rgba(255,255,255,.28)", letterSpacing: ".04em", marginTop: "2px" }}>{t.co}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Row 2 */}
+        <div style={{ overflow: "hidden", WebkitMaskImage: "linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)", maskImage: "linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)" }}>
+          <div className="animate-marquee-r" style={{ display: "flex", gap: "14px", width: "max-content" }}>
+            {[...TESTI_ROW2, ...TESTI_ROW2].map((t, i) => (
+              <div key={i} style={{ width: "288px", flexShrink: 0, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)", borderRadius: "10px", padding: "22px 22px 18px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                <p style={{ fontSize: "13.5px", lineHeight: 1.65, color: "rgba(255,255,255,.7)", flex: 1 }}>&ldquo;{t.quote}&rdquo;</p>
+                <div style={{ display: "flex", gap: "11px", alignItems: "center" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(255,255,255,.09)", border: "1px solid rgba(255,255,255,.12)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: "11px", color: "rgba(255,255,255,.7)", flexShrink: 0 }}>{t.av}</div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: "12.5px", color: "rgba(255,255,255,.82)", letterSpacing: "-.01em" }}>{t.name}</div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9.5px", color: "rgba(255,255,255,.28)", letterSpacing: ".04em", marginTop: "2px" }}>{t.co}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRICING ──────────────────────────────────────────────── */}
+      <section id="pricing" style={{ padding: "80px 32px", borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+        <div ref={planRef} style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ ...rv(planVis), fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".22em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.28)", marginBottom: "20px" }}>Pricing</div>
+          <h2 style={{ ...rv(planVis, 50), fontWeight: 600, fontSize: "clamp(2rem,4.5vw,4rem)", letterSpacing: "-.045em", lineHeight: 1.02, marginBottom: "12px" }}>Start free.<br />Scale on results.</h2>
+          <p style={{ ...rv(planVis, 100), fontSize: "14px", color: "rgba(255,255,255,.38)", marginBottom: "56px" }}>Three tiers. No hidden fees. No lock-in.</p>
+
+          <div style={{ ...rv(planVis, 150), display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px", maxWidth: "900px" }}>
+            {/* Free */}
+            <div style={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,.08)", borderRadius: "12px", padding: "28px", display: "flex", flexDirection: "column" }}>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".12em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.35)", marginBottom: "16px" }}>Free</p>
+              <div style={{ marginBottom: "4px" }}><span style={{ fontWeight: 700, fontSize: "2.8rem", letterSpacing: "-.04em" }}>₹0</span><span style={{ fontSize: "14px", color: "rgba(255,255,255,.35)", marginLeft: "8px" }}>/forever</span></div>
+              <p style={{ fontSize: "13px", color: "rgba(255,255,255,.35)", marginBottom: "28px" }}>Start tracking. No card needed.</p>
+              <div style={{ height: "1px", background: "rgba(255,255,255,.06)", marginBottom: "24px" }} />
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", flex: 1, marginBottom: "28px" }}>
                 {PLAN_FREE.map(f => (
-                  <li key={f} className="flex items-center gap-3 text-sm text-secondary">
-                    <span className="w-4 h-4 rounded-full border border-white/15 flex items-center justify-center shrink-0">
-                      <FiCheck size={9} className="text-white/50" />
-                    </span>
-                    {f}
+                  <li key={f} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "rgba(255,255,255,.55)" }}>
+                    <span style={{ width: "16px", height: "16px", borderRadius: "50%", border: "1px solid rgba(255,255,255,.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "9px" }}>✓</span>{f}
                   </li>
                 ))}
               </ul>
-              <Link href="/signup?plan=free"
-                className="block text-center py-3 rounded-xl text-sm font-bold text-secondary border border-border hover:border-white/20 hover:text-primary transition-all">
-                Get Started Free
-              </Link>
+              <Link href="/signup?plan=free" style={{ display: "block", textAlign: "center", padding: "12px", borderRadius: "6px", fontSize: "13px", fontWeight: 700, border: "1px solid rgba(255,255,255,.12)", color: "rgba(255,255,255,.65)", textDecoration: "none" }}>Get started free</Link>
             </div>
 
-            {/* Pro — white card */}
-            <div style={{ ...rv(planVis, 80), background: "#fff" }} className="relative rounded-2xl p-7 flex flex-col shadow-2xl">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase bg-black text-white shadow-lg">
-                  ★ Most Popular
-                </span>
-              </div>
-              <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-black/40 mb-4">Pro</p>
-              <div className="mb-1">
-                <span className="text-5xl font-black text-black tracking-tighter">₹999</span>
-                <span className="text-black/50 text-sm ml-2">/month</span>
-              </div>
-              <p className="text-xs text-black/50 mb-7">Full automation. Flat fee. Zero surprises.</p>
-              <div className="h-px bg-black/10 mb-6" />
-              <ul className="space-y-3 mb-8 flex-1">
+            {/* Pro */}
+            <div style={{ background: "#fff", borderRadius: "12px", padding: "28px", display: "flex", flexDirection: "column", position: "relative" }}>
+              <div style={{ position: "absolute", top: "-14px", left: "50%", transform: "translateX(-50%)", background: "#000", color: "#fff", fontWeight: 700, fontSize: "10px", letterSpacing: ".1em", textTransform: "uppercase" as const, padding: "6px 16px", borderRadius: "999px" }}>★ Most Popular</div>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".12em", textTransform: "uppercase" as const, color: "rgba(0,0,0,.4)", marginBottom: "16px" }}>Pro</p>
+              <div style={{ marginBottom: "4px" }}><span style={{ fontWeight: 700, fontSize: "2.8rem", letterSpacing: "-.04em", color: "#000" }}>₹999</span><span style={{ fontSize: "14px", color: "rgba(0,0,0,.45)", marginLeft: "8px" }}>/month</span></div>
+              <p style={{ fontSize: "13px", color: "rgba(0,0,0,.45)", marginBottom: "28px" }}>Full automation. Flat fee.</p>
+              <div style={{ height: "1px", background: "rgba(0,0,0,.1)", marginBottom: "24px" }} />
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", flex: 1, marginBottom: "28px" }}>
                 {PLAN_PRO.map(f => (
-                  <li key={f} className="flex items-center gap-3 text-sm text-black/70">
-                    <span className="w-4 h-4 rounded-full bg-black flex items-center justify-center shrink-0">
-                      <FiCheck size={9} className="text-white" />
-                    </span>
-                    {f}
+                  <li key={f} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "rgba(0,0,0,.65)" }}>
+                    <span style={{ width: "16px", height: "16px", borderRadius: "50%", background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "9px", color: "#fff" }}>✓</span>{f}
                   </li>
                 ))}
               </ul>
-              <Link href="/signup?plan=pro"
-                className="block text-center py-3 rounded-xl text-sm font-black text-white bg-black hover:bg-black/85 transition-all">
-                Start 14-Day Free Trial
-              </Link>
+              <Link href="/signup?plan=pro" style={{ display: "block", textAlign: "center", padding: "12px", borderRadius: "6px", fontSize: "13px", fontWeight: 700, background: "#000", color: "#fff", textDecoration: "none" }}>Start 14-day free trial</Link>
             </div>
 
             {/* Success */}
-            <div style={{ ...rv(planVis, 160), background: "linear-gradient(145deg, #141414, #0e0e0e)", borderColor: "rgba(16,217,138,0.2)" }}
-              className="rounded-2xl border p-7 flex flex-col hover:border-success/30 transition-all duration-300">
-              <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-muted mb-4">Success</p>
-              <div className="mb-1">
-                <span className="text-5xl font-black text-primary tracking-tighter">₹0</span>
-                <span className="text-muted text-sm ml-2">/mo + 1.5%</span>
-              </div>
-              <p className="text-xs text-muted mb-7">Pay only when Vantro collects for you.</p>
-              <div className="h-px bg-border mb-6" />
-              <ul className="space-y-3 mb-8 flex-1">
+            <div style={{ background: "#0a0a0a", border: "1px solid rgba(16,217,138,.2)", borderRadius: "12px", padding: "28px", display: "flex", flexDirection: "column" }}>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".12em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.35)", marginBottom: "16px" }}>Success</p>
+              <div style={{ marginBottom: "4px" }}><span style={{ fontWeight: 700, fontSize: "2.8rem", letterSpacing: "-.04em" }}>₹0</span><span style={{ fontSize: "14px", color: "rgba(255,255,255,.35)", marginLeft: "8px" }}>/mo + 1.5%</span></div>
+              <p style={{ fontSize: "13px", color: "rgba(255,255,255,.35)", marginBottom: "28px" }}>Pay only when Atlas collects for you.</p>
+              <div style={{ height: "1px", background: "rgba(255,255,255,.06)", marginBottom: "24px" }} />
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", flex: 1, marginBottom: "28px" }}>
                 {PLAN_SUCCESS.map(f => (
-                  <li key={f} className="flex items-center gap-3 text-sm text-secondary">
-                    <span className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: "rgba(16,217,138,0.12)", border: "1px solid rgba(16,217,138,0.25)" }}>
-                      <FiCheck size={9} style={{ color: "#10D98A" }} />
-                    </span>
-                    {f}
+                  <li key={f} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "rgba(255,255,255,.55)" }}>
+                    <span style={{ width: "16px", height: "16px", borderRadius: "50%", background: "rgba(16,217,138,.12)", border: "1px solid rgba(16,217,138,.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "9px", color: "#10D98A" }}>✓</span>{f}
                   </li>
                 ))}
               </ul>
-              <Link href="/signup?plan=success"
-                className="block text-center py-3 rounded-xl text-sm font-bold text-primary border border-white/15 hover:border-success/40 hover:text-success transition-all">
-                Start for Free → Pay from Results
-              </Link>
+              <Link href="/signup?plan=success" style={{ display: "block", textAlign: "center", padding: "12px", borderRadius: "6px", fontSize: "13px", fontWeight: 700, border: "1px solid rgba(255,255,255,.15)", color: "rgba(255,255,255,.7)", textDecoration: "none" }}>Pay from results</Link>
             </div>
           </div>
 
-          <div style={rv(planVis, 200)} className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10 text-xs text-muted">
-            <span className="flex items-center gap-1.5"><FiCheck size={11} className="text-success" /> No credit card on Free &amp; Success</span>
-            <span className="flex items-center gap-1.5"><FiCheck size={11} className="text-success" /> 14-day free trial on Pro</span>
-            <span className="flex items-center gap-1.5"><FiCheck size={11} className="text-success" /> Cancel anytime, no lock-in</span>
+          <div style={{ ...rv(planVis, 200), display: "flex", flexWrap: "wrap", gap: "6px 22px", marginTop: "28px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "rgba(255,255,255,.25)", letterSpacing: ".04em" }}>
+            {["SOC 2 Type II", "Role-based access", "Full audit trail", "Human approval first", "Cancel anytime"].map((t, i) => (
+              <span key={i}>{t}{i < 4 ? " ·" : ""}</span>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════ FAQ ══════════════════════════ */}
-      <section id="faq" className="py-24 border-b border-border">
-        <div ref={faqRef} className="max-w-3xl mx-auto px-4 sm:px-6">
-          <div style={rv(faqVis)} className="text-center mb-14">
-            <span className="inline-block text-[10px] font-bold tracking-[0.18em] uppercase text-muted border border-border rounded-full px-4 py-1.5 mb-5">FAQ</span>
-            <h2 className="text-3xl sm:text-4xl font-black text-primary tracking-tighter mb-3">Common questions</h2>
-            <p className="text-sm text-muted">Still have doubts? WhatsApp us — we reply in minutes.</p>
-          </div>
-          <div className="space-y-2">
+      {/* ── FAQ ──────────────────────────────────────────────────── */}
+      <section id="faq" style={{ padding: "80px 32px", borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+        <div ref={faqRef} style={{ maxWidth: "720px", margin: "0 auto" }}>
+          <div style={{ ...rv(faqVis), fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".22em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.28)", marginBottom: "20px" }}>FAQ</div>
+          <h2 style={{ ...rv(faqVis, 50), fontWeight: 600, fontSize: "clamp(1.8rem,4vw,3.5rem)", letterSpacing: "-.044em", lineHeight: 1.04, marginBottom: "48px" }}>Questions founders ask.</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
             {FAQS.map(({ q, a }, i) => (
-              <div key={i} style={{ ...rv(faqVis, i * 50), background: "#0e0e0e" }}
-                className="rounded-2xl border border-border overflow-hidden hover:border-white/12 transition-all">
+              <div key={i} style={{ ...rv(faqVis, i * 40 + 100), background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.06)", borderRadius: "8px", overflow: "hidden" }}>
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between px-6 py-4 text-left gap-4 hover:bg-white/[0.02] transition-colors">
-                  <span className="text-sm font-semibold text-primary">{q}</span>
-                  <FiChevronDown size={15} className={`text-muted shrink-0 transition-transform duration-200 ${openFaq === i ? "rotate-180" : ""}`} />
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 22px", textAlign: "left", background: "none", border: "none", cursor: "pointer", gap: "16px", color: "#fff" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,.85)", fontFamily: "'Space Grotesk', system-ui" }}>{q}</span>
+                  <FiChevronDown size={15} style={{ color: "rgba(255,255,255,.35)", flexShrink: 0, transform: openFaq === i ? "rotate(180deg)" : "rotate(0)", transition: "transform .2s" }} />
                 </button>
                 {openFaq === i && (
-                  <div className="px-6 pb-5 border-t border-border">
-                    <p className="text-sm text-secondary leading-relaxed pt-4">{a}</p>
+                  <div style={{ padding: "0 22px 18px", borderTop: "1px solid rgba(255,255,255,.05)" }}>
+                    <p style={{ fontSize: "13.5px", color: "rgba(255,255,255,.5)", lineHeight: 1.7, paddingTop: "16px" }}>{a}</p>
                   </div>
                 )}
               </div>
@@ -561,92 +475,81 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═════════════════ FINAL CTA ═════════════════════════ */}
-      <section className="py-28 relative overflow-hidden" style={{ background: "#0e0e0e" }}>
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(79,110,247,0.06) 0%, transparent 60%)" }} />
-
-        <div ref={ctaRef} style={rv(ctaVis)} className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <div className="flex justify-center mb-8">
-            <LogoMark size={52} />
+      {/* ── FINAL CTA ────────────────────────────────────────────── */}
+      <section style={{ padding: "100px 32px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 60% 60% at 50% 100%, rgba(79,110,247,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div ref={ctaRef} style={{ ...rv(ctaVis), maxWidth: "640px", margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "32px" }}>
+            <AtlasMark size={52} />
           </div>
-          <h2 className="text-4xl sm:text-5xl font-black text-primary tracking-tighter mb-4">
-            Start automating<br className="hidden sm:block" /> your business today.
+          <h2 style={{ fontWeight: 600, fontSize: "clamp(2rem,4.5vw,3.8rem)", letterSpacing: "-.045em", lineHeight: 1.04, marginBottom: "20px" }}>
+            AI runs the ops.<br />You run the business.
           </h2>
-          <p className="text-base text-secondary leading-relaxed mb-3 max-w-lg mx-auto">
-            Every hour you spend chasing payments or entering data is an hour not spent growing. Let Vantro handle it — free for 14 days.
+          <p style={{ fontSize: "15px", color: "rgba(255,255,255,.45)", lineHeight: 1.7, maxWidth: "48ch", margin: "0 auto 12px" }}>
+            Every hour your team spends on follow-ups, data entry and manual collections is an hour not spent on growth. Atlas runs the operations — you run the business.
           </p>
-          <p className="text-sm text-muted mb-10">
-            Join <span className="text-primary font-semibold">200+ MSMEs</span> across India already on autopilot
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/signup"
-              className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl text-base font-bold transition-all"
-              style={{ background: "#fff", color: "#000", boxShadow: "0 2px 20px rgba(255,255,255,0.1)" }}>
-              Put My Business On Autopilot <FiArrowRight size={17} />
+          <p style={{ fontSize: "13px", color: "rgba(255,255,255,.25)", marginBottom: "40px" }}>Free for 14 days. Set up in 8 minutes. No card required.</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center" }}>
+            <Link href="/signup" style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#fff", color: "#000", fontWeight: 700, fontSize: "15px", padding: "14px 32px", borderRadius: "6px", textDecoration: "none" }}>
+              Start for free — no card needed <FiArrowRight size={16} />
             </Link>
-            <a href={`https://wa.me/${WA_NUMBER}?text=Hi%2C%20I%20want%20to%20see%20a%20Vantro%20demo`}
+            <a href={`https://wa.me/${WA_NUMBER}?text=Hi%2C%20I%20want%20to%20see%20a%20Vantro%20Atlas%20demo`}
               target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl text-base font-semibold text-secondary border border-border hover:border-white/20 hover:text-primary transition-all"
-              style={{ background: "rgba(255,255,255,0.025)" }}>
+              style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.12)", color: "rgba(255,255,255,.65)", fontWeight: 500, fontSize: "15px", padding: "14px 32px", borderRadius: "6px", textDecoration: "none" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              WhatsApp for Demo
+              WhatsApp for demo
             </a>
           </div>
-          <p className="mt-6 text-xs text-muted">Set up in 5 minutes. Runs automatically. Our team calls within 24 hours.</p>
         </div>
       </section>
 
-      {/* ═══════════════════ FOOTER ══════════════════════════ */}
-      <footer className="border-t border-border" style={{ background: "#080808" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
-          <div className="grid sm:grid-cols-4 gap-10 mb-10">
-            <div className="sm:col-span-2">
-              <div className="flex items-center gap-2.5 mb-4">
-                <LogoMark size={24} />
-                <span className="font-bold text-sm text-primary">Vantro</span>
+      {/* ── FOOTER ───────────────────────────────────────────────── */}
+      <footer style={{ borderTop: "1px solid rgba(255,255,255,.07)", background: "#020202" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "56px 32px 24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "40px", marginBottom: "48px" }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                <AtlasMark size={22} />
+                <span style={{ fontWeight: 700, fontSize: "13px", letterSpacing: ".15em", textTransform: "uppercase" as const }}>Atlas by Vantro</span>
               </div>
-              <p className="text-xs font-semibold mb-1.5" style={{ color: "#10D98A", fontStyle: "italic" }}>
-                "Your business, on autopilot."
+              <p style={{ fontSize: "13px", color: "rgba(255,255,255,.32)", lineHeight: 1.6, maxWidth: "30ch", marginBottom: "8px" }}>
+                The AI business control room for founders at any scale. Collections, cashflow, inventory and follow-ups — automated in one place.
               </p>
-              <p className="text-xs text-muted leading-relaxed mb-4 max-w-xs">
-                Business Automation OS for Indian MSMEs. Collections, invoicing, WhatsApp, payments — automated so you can focus on growing.
-              </p>
-              <p className="text-xs text-muted">🇮🇳 Made in India · Data stays in India</p>
+              <p style={{ fontSize: "12px", color: "rgba(255,255,255,.2)" }}>🇮🇳 Made in India · Data stays in India</p>
             </div>
             <div>
-              <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">Product</p>
-              <div className="space-y-2.5">
-                {[["#features","Features"],["#how-it-works","How it Works"],["#pricing","Pricing"],["#faq","FAQ"]].map(([href, label]) => (
-                  <a key={href} href={href} className="block text-xs text-muted hover:text-secondary transition-colors">{label}</a>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: ".12em", color: "rgba(255,255,255,.45)", marginBottom: "16px" }}>Product</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {[["#features", "Features"], ["#pipeline", "Pipeline"], ["#pricing", "Pricing"], ["#faq", "FAQ"]].map(([href, label]) => (
+                  <a key={href} href={href} style={{ fontSize: "13px", color: "rgba(255,255,255,.35)", textDecoration: "none" }}>{label}</a>
                 ))}
               </div>
             </div>
             <div>
-              <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">Get in Touch</p>
-              <div className="space-y-2.5">
-                <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-xs text-muted hover:text-secondary transition-colors">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                  WhatsApp us
-                </a>
-                <a href="mailto:hello@vantro.in" className="flex items-center gap-2 text-xs text-muted hover:text-secondary transition-colors">
-                  <FiMail size={13} /> hello@vantro.in
-                </a>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: ".12em", color: "rgba(255,255,255,.45)", marginBottom: "16px" }}>Contact</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <a href={`https://wa.me/${WA_NUMBER}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: "13px", color: "rgba(255,255,255,.35)", textDecoration: "none" }}>WhatsApp us</a>
+                <a href="mailto:support@vantro.in" style={{ fontSize: "13px", color: "rgba(255,255,255,.35)", textDecoration: "none" }}>support@vantro.in</a>
+                <a href="mailto:hello@vantro.in" style={{ fontSize: "13px", color: "rgba(255,255,255,.35)", textDecoration: "none" }}>hello@vantro.in</a>
               </div>
             </div>
           </div>
-          <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-muted">© 2025 Vantro Technologies Pvt. Ltd.</p>
-            <div className="flex gap-5 text-xs text-muted">
-              <Link href="/privacy" className="hover:text-secondary transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-secondary transition-colors">Terms of Service</Link>
-              <a href="mailto:ishantswami13@gmail.com?subject=Vantro Security" className="hover:text-secondary transition-colors">Security</a>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,.06)", paddingTop: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "rgba(255,255,255,.18)", letterSpacing: ".06em" }}>
+              VANTRO &nbsp;&nbsp;&nbsp; © 2026 Vantro · An Auren Group company
+            </p>
+            <div style={{ display: "flex", gap: "20px", fontSize: "13px" }}>
+              <Link href="/privacy" style={{ color: "rgba(255,255,255,.28)", textDecoration: "none" }}>Privacy</Link>
+              <Link href="/terms" style={{ color: "rgba(255,255,255,.28)", textDecoration: "none" }}>Terms</Link>
+              <Link href="/security" style={{ color: "rgba(255,255,255,.28)", textDecoration: "none" }}>Security</Link>
             </div>
           </div>
         </div>
       </footer>
+
+      <style>{`
+        @keyframes pulse { 0%,100% { opacity: .6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+      `}</style>
     </div>
   );
 }

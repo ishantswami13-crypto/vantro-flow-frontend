@@ -1,179 +1,174 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import LogoMark from "@/components/LogoMark";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description: "How Vantro collects, uses, and protects your business data.",
+  title: "Privacy Policy — Atlas by Vantro",
+  description: "How Vantro collects, uses, and protects your business data inside Atlas.",
 };
 
-const LAST_UPDATED = "May 26, 2025";
+const GRAIN = "data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E";
+
+function AtlasMark({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" aria-hidden="true">
+      <path fill="white" fillRule="evenodd" className="atlas-mark-anim"
+        d="M 50 8 L 4 92 L 96 92 Z M 50 78 L 38 92 L 62 92 Z M 26 59 L 74 59 L 74 68 L 26 68 Z" />
+    </svg>
+  );
+}
+
+const S: React.CSSProperties = { fontFamily: "'Space Grotesk', system-ui" };
+
+const sections = [
+  {
+    h: "Who we are",
+    body: `Vantro is a fintech and AI business automation company, part of the Auren Group. Vantro operates Atlas — an AI-powered collections, cashflow and inventory management app for Indian businesses. This policy explains what data we collect, how we use it, and what rights you have. It applies to all users of vantro.in and the Atlas app.`,
+  },
+  {
+    h: "What we collect",
+    list: [
+      { b: "Account information:", t: " Your name, email address, phone number and business name when you sign up." },
+      { b: "Business data:", t: " Invoices, customer records, payment history, bank transaction data, and inventory levels — imported from Tally, Excel, GST portal or entered directly. This data belongs to you." },
+      { b: "Integration data:", t: " When you connect Razorpay, WhatsApp Business, UPI or other tools, we receive the minimum data necessary to run those integrations on your behalf." },
+      { b: "Usage data:", t: " Pages visited, features used, session duration, and error logs. We use this to fix bugs and improve Atlas." },
+      { b: "Device data:", t: " IP address, browser type, and device identifiers — standard for any web application." },
+    ],
+  },
+  {
+    h: "How we use your data",
+    list: [
+      { t: "To operate Atlas and deliver the features you've subscribed to" },
+      { t: "To send WhatsApp reminders to your customers on your behalf (only when you enable this)" },
+      { t: "To generate your daily AI briefing and action list" },
+      { t: "To detect fraud and ensure account security" },
+      { t: "To send you product updates, invoices and support messages" },
+      { t: "To improve Atlas's AI models, using anonymised and aggregated data only" },
+    ],
+    note: "We will never use your customer data to market to your customers directly. We will never sell or rent your data to any third party.",
+  },
+  {
+    h: "Data storage and security",
+    body: "All data is stored on servers physically located in India. Data is encrypted in transit using TLS 1.3 and at rest using AES-256. Full details are on our Security page.",
+    secLink: true,
+  },
+  {
+    h: "Third-party integrations",
+    body: "When you connect third-party services (Tally, Razorpay, WhatsApp Business, GST portal), we share only the data necessary to operate those integrations. Sub-processors include AWS (infrastructure), Razorpay (payments), and WhatsApp Business API providers (messaging). We maintain data processing agreements with each.",
+  },
+  {
+    h: "Your rights",
+    body: "Under India's Digital Personal Data Protection Act 2023 and applicable IT laws, you have the right to:",
+    list: [
+      { b: "Access", t: " the personal data we hold about you" },
+      { b: "Correct", t: " inaccurate data" },
+      { b: "Delete", t: " your account and data (purged within 90 days)" },
+      { b: "Export", t: " your business data as CSV at any time from Atlas settings" },
+      { b: "Withdraw consent", t: " for specific processing activities" },
+    ],
+    note: "To exercise any of these rights, email legal@vantro.in. We respond within 30 days.",
+  },
+  {
+    h: "Data retention",
+    body: "We keep your data for as long as your account is active. After deletion, all personal data is purged within 90 days, except where we are legally required to retain it (e.g. GST records for 7 years).",
+  },
+  {
+    h: "Children's data",
+    body: "Atlas is a business tool and not intended for anyone under 18. We do not knowingly collect data from minors.",
+  },
+  {
+    h: "Changes to this policy",
+    body: "We'll notify you by email and in-app before material changes take effect. Continued use after notice constitutes acceptance.",
+  },
+];
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#0D0F14" }}>
+    <div style={{ ...S, minHeight: "100vh", background: "#020202", color: "#fff", position: "relative" }}>
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, backgroundImage: `url("${GRAIN}")`, opacity: 0.5 }} />
+
+      {/* Draft banner */}
+      <div style={{ position: "relative", zIndex: 2, background: "rgba(255,200,0,.07)", borderBottom: "1px solid rgba(255,200,0,.15)", padding: "12px 40px", textAlign: "center", fontFamily: "'JetBrains Mono', monospace", fontSize: "10.5px", letterSpacing: ".08em", color: "rgba(255,200,0,.6)" }}>
+        ⚠ Draft template — to be reviewed by a qualified legal professional before paid public launch
+      </div>
 
       {/* Nav */}
-      <nav className="border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <LogoMark size={24} />
-            <span className="font-bold text-sm" style={{ color: "#F2F4F7" }}>Vantro</span>
-          </Link>
-          <Link href="/" className="text-xs hover:underline" style={{ color: "rgba(242,244,247,0.5)" }}>
-            ← Back to Home
-          </Link>
+      <nav style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 40px", borderBottom: "1px solid rgba(255,255,255,.08)" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "#fff" }}>
+          <AtlasMark />
+          <span style={{ fontWeight: 700, fontSize: "14px", letterSpacing: ".2em", textTransform: "uppercase" as const }}>Atlas</span>
+        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
+          <Link href="/#features" style={{ fontSize: "14px", color: "rgba(255,255,255,.5)", textDecoration: "none" }}>Features</Link>
+          <Link href="/#pricing" style={{ fontSize: "14px", color: "rgba(255,255,255,.5)", textDecoration: "none" }}>Pricing</Link>
+          <Link href="/login" style={{ fontSize: "14px", color: "rgba(255,255,255,.5)", textDecoration: "none" }}>Log in</Link>
+          <Link href="/signup" style={{ background: "#fff", color: "#000", fontWeight: 700, fontSize: "13px", padding: "8px 18px", borderRadius: "6px", textDecoration: "none" }}>Start free</Link>
         </div>
       </nav>
 
-      {/* Content */}
-      <div className="max-w-3xl mx-auto px-6 py-14">
-        <div className="mb-10">
-          <h1 className="text-3xl font-black tracking-tight mb-2" style={{ color: "#F2F4F7" }}>
-            Privacy Policy
-          </h1>
-          <p className="text-sm" style={{ color: "rgba(242,244,247,0.45)" }}>
-            Last updated: {LAST_UPDATED}
-          </p>
-        </div>
+      {/* Header */}
+      <section style={{ position: "relative", zIndex: 1, padding: "clamp(88px,12vw,120px) 40px clamp(40px,5vw,56px)", borderBottom: "1px solid rgba(255,255,255,.08)", maxWidth: "1200px", margin: "0 auto" }}>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", letterSpacing: ".22em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.28)", marginBottom: "16px" }}>Legal</div>
+        <h1 style={{ fontWeight: 600, fontSize: "clamp(32px,5vw,64px)", letterSpacing: "-0.045em", lineHeight: 1, marginBottom: "16px" }}>Privacy Policy</h1>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "rgba(255,255,255,.28)", letterSpacing: ".1em" }}>Last updated: 31 May 2026 · Atlas by Vantro</div>
+      </section>
 
-        <div className="space-y-10 text-sm leading-relaxed" style={{ color: "rgba(242,244,247,0.7)" }}>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>1. Who We Are</h2>
-            <p>
-              Vantro Technologies (&ldquo;Vantro&rdquo;, &ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;us&rdquo;) operates the Vantro Flow platform — a business automation OS for Indian MSMEs. Our registered address is India. You can reach us at{" "}
-              <a href="mailto:ishantswami13@gmail.com" className="underline" style={{ color: "#4F6EF7" }}>
-                ishantswami13@gmail.com
-              </a>.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>2. Information We Collect</h2>
-            <ul className="space-y-2 list-disc list-outside ml-5">
-              <li><span className="font-semibold" style={{ color: "#F2F4F7" }}>Account data:</span> Your name, business name, email address, and phone number when you sign up.</li>
-              <li><span className="font-semibold" style={{ color: "#F2F4F7" }}>Business data:</span> Invoice details, customer names and contact numbers, payment records, and outstanding receivables you enter into the platform.</li>
-              <li><span className="font-semibold" style={{ color: "#F2F4F7" }}>Usage data:</span> Pages visited, features used, and actions taken — collected via PostHog analytics to improve the product.</li>
-              <li><span className="font-semibold" style={{ color: "#F2F4F7" }}>Payment data:</span> Billing and subscription information processed via Razorpay. Vantro does not store full card or bank details.</li>
-              <li><span className="font-semibold" style={{ color: "#F2F4F7" }}>Communication data:</span> WhatsApp messages sent through Vantro&apos;s managed Twilio integration on your behalf.</li>
-              <li><span className="font-semibold" style={{ color: "#F2F4F7" }}>Device data:</span> Browser type, device type, IP address, and operating system for security and debugging purposes.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>3. How We Use Your Information</h2>
-            <ul className="space-y-2 list-disc list-outside ml-5">
-              <li>To provide and operate the Vantro Flow platform</li>
-              <li>To send automated WhatsApp and email reminders to your customers on your behalf</li>
-              <li>To generate payment links and collect payments via Razorpay</li>
-              <li>To provide cash flow forecasts and collections analytics</li>
-              <li>To send you product updates, billing notifications, and support communications</li>
-              <li>To detect fraud, abuse, and security threats</li>
-              <li>To comply with applicable Indian laws including the IT Act, 2000 and GST regulations</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>4. Data Sharing</h2>
-            <p className="mb-3">We do not sell your data. We share data only in these situations:</p>
-            <ul className="space-y-2 list-disc list-outside ml-5">
-              <li><span className="font-semibold" style={{ color: "#F2F4F7" }}>Service providers:</span> Twilio (WhatsApp messaging), Razorpay (payments), Supabase (database), Vercel (hosting), PostHog (analytics). All are bound by data processing agreements.</li>
-              <li><span className="font-semibold" style={{ color: "#F2F4F7" }}>Legal requirements:</span> If required by Indian law, court order, or regulatory authority.</li>
-              <li><span className="font-semibold" style={{ color: "#F2F4F7" }}>Business transfers:</span> If Vantro is acquired or merges, your data may transfer to the new entity, with prior notice.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>5. Data Security</h2>
-            <p>
-              We use industry-standard security measures including 256-bit TLS encryption in transit, encrypted storage in Supabase (hosted on AWS), row-level security on all database tables, and token-based authentication. No system is 100% secure — if you suspect unauthorized access, contact us immediately.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>6. Data Retention</h2>
-            <p>
-              We retain your account and business data for as long as your account is active and for up to 3 years after closure, as required under Indian tax and financial recordkeeping laws. You may request deletion of your account at any time by emailing us — we will action it within 30 days, subject to legal retention obligations.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>7. Your Rights</h2>
-            <p className="mb-3">You have the right to:</p>
-            <ul className="space-y-2 list-disc list-outside ml-5">
-              <li>Access a copy of the personal data we hold about you</li>
-              <li>Correct inaccurate data</li>
-              <li>Request deletion of your data (subject to legal holds)</li>
-              <li>Opt out of marketing communications (you can unsubscribe from any email)</li>
-              <li>Withdraw consent for optional processing</li>
-            </ul>
-            <p className="mt-3">
-              To exercise any of these rights, email{" "}
-              <a href="mailto:ishantswami13@gmail.com" className="underline" style={{ color: "#4F6EF7" }}>
-                ishantswami13@gmail.com
-              </a>{" "}
-              with &ldquo;Privacy Request&rdquo; in the subject line.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>8. Cookies</h2>
-            <p>
-              Vantro uses essential cookies for authentication and session management, and analytics cookies via PostHog to understand how users interact with the product. You can disable cookies in your browser settings; however, disabling essential cookies will prevent you from logging in.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>9. Third-Party Links</h2>
-            <p>
-              Our platform may link to third-party services (e.g., Razorpay payment gateway). We are not responsible for their privacy practices. Please review their policies separately.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>10. Children&apos;s Privacy</h2>
-            <p>
-              Vantro is a B2B platform intended for business use. We do not knowingly collect data from individuals under 18 years of age.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>11. Changes to This Policy</h2>
-            <p>
-              We may update this Privacy Policy from time to time. We will notify you of significant changes via email or an in-app banner at least 7 days before they take effect. Continued use of Vantro after the effective date constitutes acceptance of the updated policy.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>12. Governing Law</h2>
-            <p>
-              This Privacy Policy is governed by the laws of India, including the Information Technology Act, 2000 and applicable rules thereunder. Disputes shall be subject to the exclusive jurisdiction of courts in India.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-base font-bold mb-3" style={{ color: "#F2F4F7" }}>13. Contact Us</h2>
-            <p>
-              For any questions, concerns, or requests regarding this Privacy Policy:
-            </p>
-            <div className="mt-3 p-4 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <p className="font-semibold mb-1" style={{ color: "#F2F4F7" }}>Vantro Technologies</p>
-              <p>Email: <a href="mailto:ishantswami13@gmail.com" className="underline" style={{ color: "#4F6EF7" }}>ishantswami13@gmail.com</a></p>
-              <p className="mt-1">We respond to all privacy inquiries within 5 business days.</p>
+      {/* Body */}
+      <div style={{ position: "relative", zIndex: 1, padding: "64px 40px 100px", maxWidth: "1200px", margin: "0 auto" }}>
+        <div style={{ maxWidth: "720px" }}>
+          {sections.map(({ h, body, list, note, secLink }) => (
+            <div key={h}>
+              <h2 style={{ fontWeight: 600, fontSize: "19px", letterSpacing: "-0.025em", margin: "48px 0 10px", color: "rgba(255,255,255,.9)", paddingBottom: "8px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>{h}</h2>
+              {body && (
+                <p style={{ fontSize: "15px", color: "rgba(255,255,255,.5)", lineHeight: 1.75, marginBottom: "12px" }}>
+                  {body}
+                  {secLink && (
+                    <>{" "}<Link href="/security" style={{ color: "rgba(255,255,255,.68)", textDecoration: "underline" }}>Security page</Link>.</>
+                  )}
+                </p>
+              )}
+              {list && (
+                <ul style={{ margin: "6px 0 14px 18px", display: "flex", flexDirection: "column", gap: "5px", listStyle: "disc" }}>
+                  {list.map((item: { b?: string; t: string }, i) => (
+                    <li key={i} style={{ fontSize: "15px", color: "rgba(255,255,255,.5)", lineHeight: 1.65 }}>
+                      {item.b && <strong style={{ color: "rgba(255,255,255,.78)" }}>{item.b}</strong>}
+                      {item.t}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {note && <p style={{ fontSize: "15px", color: "rgba(255,255,255,.5)", lineHeight: 1.75, marginBottom: "12px" }}>{note}</p>}
             </div>
-          </section>
+          ))}
 
-        </div>
-
-        {/* Footer nav */}
-        <div className="mt-14 pt-8 border-t flex flex-wrap gap-4 text-xs" style={{ borderColor: "rgba(255,255,255,0.06)", color: "rgba(242,244,247,0.4)" }}>
-          <Link href="/" className="hover:underline">Home</Link>
-          <Link href="/terms" className="hover:underline">Terms of Service</Link>
-          <Link href="/login" className="hover:underline">Login</Link>
-          <Link href="/signup" className="hover:underline">Sign Up</Link>
+          <h2 style={{ fontWeight: 600, fontSize: "19px", letterSpacing: "-0.025em", margin: "48px 0 10px", color: "rgba(255,255,255,.9)", paddingBottom: "8px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>Contact &amp; Grievance Officer</h2>
+          <div style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: "8px", padding: "16px 20px", margin: "24px 0", fontSize: "14px", color: "rgba(255,255,255,.45)", lineHeight: 1.6 }}>
+            <strong style={{ color: "rgba(255,255,255,.78)" }}>Vantro · An Auren Group company</strong><br />
+            Mumbai, India<br />
+            Legal: <a href="mailto:legal@vantro.in" style={{ color: "rgba(255,255,255,.68)", textDecoration: "underline" }}>legal@vantro.in</a><br />
+            Support: <a href="mailto:support@vantro.in" style={{ color: "rgba(255,255,255,.68)", textDecoration: "underline" }}>support@vantro.in</a><br />
+            Response time: within 30 days
+          </div>
+          <p style={{ marginTop: "16px", fontSize: "13px", color: "rgba(255,255,255,.3)" }}>This is a draft template and should be reviewed by a qualified legal professional before paid public launch.</p>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer style={{ position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,.08)", background: "#020202" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "48px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <AtlasMark size={20} />
+            <span style={{ fontWeight: 700, fontSize: "13px", letterSpacing: ".15em", textTransform: "uppercase" as const }}>Atlas by Vantro</span>
+          </div>
+          <div style={{ display: "flex", gap: "24px", fontSize: "13px" }}>
+            <Link href="/privacy" style={{ color: "rgba(255,255,255,.35)", textDecoration: "none" }}>Privacy</Link>
+            <Link href="/terms" style={{ color: "rgba(255,255,255,.35)", textDecoration: "none" }}>Terms</Link>
+            <Link href="/security" style={{ color: "rgba(255,255,255,.35)", textDecoration: "none" }}>Security</Link>
+          </div>
+        </div>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 40px 32px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "rgba(255,255,255,.18)", letterSpacing: ".06em" }}>
+          © 2026 Vantro · An Auren Group company
+        </div>
+      </footer>
     </div>
   );
 }
