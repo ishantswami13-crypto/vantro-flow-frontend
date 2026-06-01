@@ -157,33 +157,161 @@ function useCortexCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   },[canvasRef]);
 }
 
+/* ── CORTEX AGENT NETWORK — 200 agents, 20×10 grid ──────────── */
 function useAgentNetCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   useEffect(()=>{
-    const canvas=canvasRef.current;if(!canvas)return;const ctx=canvas.getContext("2d");if(!ctx)return;
-    const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches,DPR=Math.min(2,window.devicePixelRatio||1);
-    let W=0,H=0,raf=0,last=0;
-    type NT={x:number;y:number;vx:number;vy:number;r:number;hub:boolean;ph:number};
-    type ET={a:number;b:number};type PT={e:ET;t:number;sp:number;dir:number};
-    let nodes:NT[]=[],edges:ET[]=[],pulses:PT[]=[],mouse={x:-999,y:-999};
-    const resize=()=>{const r=canvas!.parentElement!.getBoundingClientRect();W=r.width;H=Math.max(r.height,300);canvas!.width=W*DPR;canvas!.height=H*DPR;canvas!.style.width=W+"px";canvas!.style.height=H+"px";ctx!.setTransform(DPR,0,0,DPR,0,0);};
-    const build=()=>{const N=window.innerWidth<760?22:44;nodes=[];edges=[];pulses=[];for(let i=0;i<N;i++)nodes.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.14,vy:(Math.random()-.5)*.14,r:Math.random()<.16?2.2+Math.random()*1.4:.8+Math.random()*.8,hub:Math.random()<.16,ph:Math.random()*6.28});const maxD=Math.min(W,H)*.32;for(let i=0;i<nodes.length;i++){const d=nodes.map((_,j)=>({j,dist:Math.hypot(nodes[i].x-nodes[j].x,nodes[i].y-nodes[j].y)})).filter((_,j)=>j!==i).sort((a,b)=>a.dist-b.dist);const k=nodes[i].hub?3:2;for(let n=0;n<k;n++)if(d[n]&&d[n].dist<maxD&&!edges.some(e=>(e.a===i&&e.b===d[n].j)||(e.a===d[n].j&&e.b===i)))edges.push({a:i,b:d[n].j});}};
-    const spawnPulse=()=>{if(!edges.length)return;const e=edges[(Math.random()*edges.length)|0];pulses.push({e,t:0,sp:.006+Math.random()*.009,dir:Math.random()<.5?1:-1});};
-    const frame=(now:number)=>{
+    const cv=canvasRef.current; if(!cv)return;
+    const ctx=cv.getContext("2d"); if(!ctx)return;
+    const DPR=Math.min(2,window.devicePixelRatio||1);
+    const reduce=window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+    let W=0,H=520,raf=0,startTime=0,lastT=0;
+    let mX=-9999,mY=-9999,hovAgent:NamedAgent|null=null,hovFade=0;
+    const COLS=20,ROWS=10;
+
+    type NamedAgent={col:number;row:number;num:string;name:string;status:string;desc:string};
+    type Agent={col:number;row:number;named:NamedAgent|null;x:number;y:number;pT:number;nP:number};
+
+    const NAMED:NamedAgent[]=[
+      {col:9, row:0,num:"001",name:"Policy Guard",   status:"ALWAYS ACTIVE",  desc:"Checks every action. Blocks unsafe messages, legal threats and cross-tenant leakage."},
+      {col:2, row:0,num:"002",name:"Cost Router",    status:"EVERY CALL",     desc:"Routes to cheapest engine — rules, cache, cheap or strong model."},
+      {col:16,row:0,num:"003",name:"Data Quality",   status:"DAILY SWEEP",    desc:"Detects missing dates, duplicates and corrupted records before they affect AI decisions."},
+      {col:3, row:2,num:"005",name:"Collections",    status:"RUNS DAILY",     desc:"Scores every debtor by pay probability. Right reminder at the right time."},
+      {col:8, row:2,num:"006",name:"Cashflow",       status:"DAILY FORECAST", desc:"Monitors cash and forecasts gaps 90 days out."},
+      {col:13,row:2,num:"007",name:"Credit Risk",    status:"PER TRANSACTION",desc:"Real-time credit scoring per customer. Flags exposure before a new sale worsens it."},
+      {col:18,row:2,num:"008",name:"Promise Tracker",status:"REAL-TIME",      desc:"Tracks every payment promise and escalates broken ones automatically."},
+      {col:1, row:5,num:"009",name:"Owner Briefing", status:"EVERY MORNING",  desc:"Generates the ranked daily action list. Complete picture in 60 seconds."},
+      {col:6, row:5,num:"010",name:"Inventory-Cash", status:"DAILY",          desc:"Links stock levels to cash pressure. Flags reorder danger points before crisis."},
+      {col:11,row:5,num:"011",name:"Dispute",        status:"EVENT-DRIVEN",   desc:"Detects invoice disputes, pauses collections, routes to resolution."},
+      {col:16,row:5,num:"012",name:"Payables",       status:"WEEKLY",         desc:"Optimises supplier payment timing vs available cash."},
+      {col:4, row:8,num:"013",name:"Alert Mgr",      status:"ALWAYS ACTIVE",  desc:"Monitors all KPIs in real-time. Fires alerts the moment a threshold is crossed."}
+    ];
+
+    const namedMap:Record<string,NamedAgent>={};
+    NAMED.forEach(a=>{ namedMap[a.col+"-"+a.row]=a; });
+    const agents:Agent[]=[];
+    for(let row=0;row<ROWS;row++)
+      for(let col=0;col<COLS;col++)
+        agents.push({col,row,named:namedMap[col+"-"+row]||null,x:0,y:0,pT:0,nP:Math.random()*5000});
+
+    function computeLayout(){
+      H=W<480?380:520;
+      cv!.width=W*DPR; cv!.height=H*DPR;
+      cv!.style.width=W+"px"; cv!.style.height=H+"px";
+      ctx!.setTransform(DPR,0,0,DPR,0,0);
+      const px=W<480?20:36,py=W<480?32:44;
+      const cw=(W-px*2)/(COLS-1),ch=(H-py*2)/(ROWS-1);
+      agents.forEach(a=>{ a.x=px+a.col*cw; a.y=py+a.row*ch; });
+    }
+
+    function rrect(x:number,y:number,w:number,h:number,r:number){ctx!.beginPath();ctx!.moveTo(x+r,y);ctx!.lineTo(x+w-r,y);ctx!.quadraticCurveTo(x+w,y,x+w,y+r);ctx!.lineTo(x+w,y+h-r);ctx!.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx!.lineTo(x+r,y+h);ctx!.quadraticCurveTo(x,y+h,x,y+h-r);ctx!.lineTo(x,y+r);ctx!.quadraticCurveTo(x,y,x+r,y);ctx!.closePath();}
+
+    function drawCard(ag:NamedAgent){
+      const CW=252,CH=130,pad=14;
+      let px2=ag.col<COLS/2?agents[ag.row*COLS+ag.col].x+14:agents[ag.row*COLS+ag.col].x-CW-14;
+      let py2=agents[ag.row*COLS+ag.col].y-CH/2;
+      px2=Math.max(8,Math.min(W-CW-8,px2)); py2=Math.max(8,Math.min(H-CH-8,py2));
+      ctx!.save(); ctx!.globalAlpha=hovFade;
+      ctx!.fillStyle="rgba(2,2,5,.98)"; rrect(px2,py2,CW,CH,6); ctx!.fill();
+      ctx!.fillStyle="rgba(255,255,255,.88)"; rrect(px2,py2,CW,1.5,0); ctx!.fill();
+      ctx!.strokeStyle="rgba(255,255,255,.1)"; ctx!.lineWidth=1; rrect(px2,py2,CW,CH,6); ctx!.stroke();
+      ctx!.textAlign="left";
+      ctx!.fillStyle="rgba(255,255,255,.25)"; ctx!.font='400 7.5px "JetBrains Mono",monospace'; ctx!.fillText("AGENT "+ag.num+" · CORTEX MESH",px2+pad,py2+15);
+      ctx!.fillStyle="rgba(255,255,255,.14)"; ctx!.font='400 7px "JetBrains Mono",monospace'; ctx!.fillText(ag.status,px2+pad,py2+26);
+      ctx!.fillStyle="rgba(255,255,255,.9)"; ctx!.font='600 14px "Space Grotesk",system-ui'; ctx!.fillText(ag.name,px2+pad,py2+46);
+      ctx!.fillStyle="rgba(255,255,255,.38)"; ctx!.font='400 10px "Space Grotesk",system-ui';
+      const ws=ag.desc.split(" "); let line="",ly=py2+64;
+      for(let i=0;i<ws.length;i++){const t=line+(line?" ":"")+ws[i];if(ctx!.measureText(t).width>CW-pad*2&&line){ctx!.fillText(line,px2+pad,ly);line=ws[i];ly+=13;}else line=t;}
+      ctx!.fillText(line,px2+pad,ly);
+      ctx!.restore();
+    }
+
+    function frame(now:number){
+      if(!startTime) startTime=now;
+      const dt=Math.min(50,now-lastT); lastT=now;
+      const elapsed=now-startTime;
       ctx!.clearRect(0,0,W,H);
-      for(let i=0;i<nodes.length;i++){const n=nodes[i];n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1;const dx=n.x-mouse.x,dy=n.y-mouse.y,dd=Math.hypot(dx,dy);if(dd<100){const f=(100-dd)/100*.5;n.x+=dx/dd*f;n.y+=dy/dd*f;}}
-      for(let i=0;i<edges.length;i++){const e=edges[i],a=nodes[e.a],b=nodes[e.b],dist=Math.hypot(a.x-b.x,a.y-b.y),op=Math.max(0,1-dist/(Math.min(W,H)*.38));ctx!.strokeStyle=`rgba(255,255,255,${.04+op*.09})`;ctx!.lineWidth=.55;ctx!.beginPath();ctx!.moveTo(a.x,a.y);ctx!.lineTo(b.x,b.y);ctx!.stroke();}
-      for(let i=pulses.length-1;i>=0;i--){const p=pulses[i];p.t+=p.sp;if(p.t>=1){pulses.splice(i,1);continue;}const a=nodes[p.e.a],b=nodes[p.e.b],tt=p.dir>0?p.t:1-p.t,x=a.x+(b.x-a.x)*tt,y=a.y+(b.y-a.y)*tt;const g=ctx!.createRadialGradient(x,y,0,x,y,8);g.addColorStop(0,"rgba(255,255,255,.92)");g.addColorStop(1,"rgba(255,255,255,0)");ctx!.fillStyle=g;ctx!.beginPath();ctx!.arc(x,y,8,0,6.28);ctx!.fill();ctx!.fillStyle="#fff";ctx!.beginPath();ctx!.arc(x,y,1.4,0,6.28);ctx!.fill();}
-      for(let i=0;i<nodes.length;i++){const n=nodes[i],tw=.6+.4*Math.sin(now*.0014+n.ph);if(n.hub){const g=ctx!.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*5);g.addColorStop(0,`rgba(255,255,255,${.17*tw})`);g.addColorStop(1,"rgba(255,255,255,0)");ctx!.fillStyle=g;ctx!.beginPath();ctx!.arc(n.x,n.y,n.r*5,0,6.28);ctx!.fill();}ctx!.fillStyle=`rgba(255,255,255,${(n.hub?.95:.5)*tw})`;ctx!.beginPath();ctx!.arc(n.x,n.y,n.r,0,6.28);ctx!.fill();}
-      if(now-last>230){last=now;if(pulses.length<22)spawnPulse();}raf=requestAnimationFrame(frame);
-    };
-    const start=()=>{resize();build();if(reduce){for(let i=0;i<edges.length;i++){const e=edges[i],a=nodes[e.a],b=nodes[e.b];ctx!.strokeStyle="rgba(255,255,255,.07)";ctx!.beginPath();ctx!.moveTo(a.x,a.y);ctx!.lineTo(b.x,b.y);ctx!.stroke();}for(let i=0;i<nodes.length;i++){ctx!.fillStyle="rgba(255,255,255,.45)";ctx!.beginPath();ctx!.arc(nodes[i].x,nodes[i].y,nodes[i].r,0,6.28);ctx!.fill();}return;}cancelAnimationFrame(raf);raf=requestAnimationFrame(frame);};
-    const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(reduce)return;if(e.isIntersecting){cancelAnimationFrame(raf);raf=requestAnimationFrame(frame);}else cancelAnimationFrame(raf);}),{threshold:0});
-    io.observe(canvas);
-    const onMM=(e:MouseEvent)=>{const r=canvas!.getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;};
-    const onML=()=>{mouse.x=-999;mouse.y=-999;};
-    canvas.parentElement?.addEventListener("mousemove",onMM);canvas.parentElement?.addEventListener("mouseleave",onML);
-    let rt=0;const onResize=()=>{clearTimeout(rt);rt=window.setTimeout(start,180);};window.addEventListener("resize",onResize);start();
-    return()=>{cancelAnimationFrame(raf);io.disconnect();window.removeEventListener("resize",onResize);canvas.parentElement?.removeEventListener("mousemove",onMM);canvas.parentElement?.removeEventListener("mouseleave",onML);};
+
+      // HUD corners
+      const cs=16;
+      ctx!.strokeStyle="rgba(255,255,255,.16)"; ctx!.lineWidth=1.2;
+      [[0,0,1,1],[W,0,-1,1],[0,H,1,-1],[W,H,-1,-1]].forEach(c=>{
+        ctx!.beginPath(); ctx!.moveTo(c[0]+c[2]*cs,c[1]); ctx!.lineTo(c[0],c[1]); ctx!.lineTo(c[0],c[1]+c[3]*cs); ctx!.stroke();
+      });
+      ctx!.font='400 8.5px "JetBrains Mono",monospace';
+      ctx!.fillStyle="rgba(255,255,255,.18)"; ctx!.textAlign="left";
+      ctx!.fillText("CORTEX · 200 AGENTS ACTIVE",W<480?16:26,14);
+      ctx!.textAlign="right"; ctx!.fillText("ALL SYSTEMS NOMINAL",W<480?W-16:W-26,14);
+      ctx!.fillStyle="rgba(255,255,255,.07)"; ctx!.textAlign="left";
+      ctx!.fillText("HOVER NAMED NODES FOR DETAIL",W<480?16:26,H-8);
+
+      // Pulse wave sweeping left→right
+      const pulseNorm=((elapsed*0.00022)%1.4)-0.2;
+      const pxPx=pulseNorm*W;
+      const bigScreen=W>560;
+
+      // Connections
+      agents.forEach(a=>{
+        (bigScreen?[[1,0],[0,1],[1,1]]:[[1,0],[0,1]] as number[][]).forEach(dir=>{
+          const nx=a.col+dir[0],ny=a.row+dir[1];
+          if(nx>=COLS||ny>=ROWS)return;
+          const nb=agents[ny*COLS+nx];
+          const pg=Math.max(0,1-Math.abs((a.x+nb.x)/2-pxPx)/70)*0.14;
+          ctx!.strokeStyle=`rgba(255,255,255,${0.04+pg})`; ctx!.lineWidth=0.5+pg*2;
+          ctx!.beginPath(); ctx!.moveTo(a.x,a.y); ctx!.lineTo(nb.x,nb.y); ctx!.stroke();
+        });
+      });
+
+      // Dots
+      let newH:NamedAgent|null=null;
+      agents.forEach(a=>{
+        const pg=Math.max(0,1-Math.abs(a.x-pxPx)/55);
+        const isN=!!a.named;
+        const isH=!!(a.named&&Math.abs(mX-a.x)<10&&Math.abs(mY-a.y)<10);
+        if(isH&&a.named) newH=a.named;
+        if(!reduce){a.nP-=dt;if(a.nP<=0){a.pT=1;a.nP=2500+Math.random()*8000;}if(a.pT>0)a.pT=Math.max(0,a.pT-dt/480);}
+        const sp=a.pT;
+        const brightness=(isN?0.52:0.13)+pg*0.48+sp*0.26+(isH?0.36:0);
+        const dr=isN?3.4:2;
+        if(isN||pg>0.22||sp>0.22){
+          const gr=dr*(isN?4.5:3.5);
+          const g=ctx!.createRadialGradient(a.x,a.y,0,a.x,a.y,gr);
+          g.addColorStop(0,`rgba(255,255,255,${brightness*0.36})`); g.addColorStop(1,"rgba(255,255,255,0)");
+          ctx!.fillStyle=g; ctx!.beginPath(); ctx!.arc(a.x,a.y,gr,0,6.28); ctx!.fill();
+        }
+        ctx!.fillStyle=`rgba(255,255,255,${brightness})`; ctx!.beginPath(); ctx!.arc(a.x,a.y,dr*(isH?1.5:1),0,6.28); ctx!.fill();
+        if(isN&&W>480&&(pg>0.1||sp>0.15||isH)){
+          const la=Math.max(pg*0.85,sp*0.75,isH?0.7:0);
+          const side=a.col<COLS/2?1:-1;
+          ctx!.fillStyle=`rgba(255,255,255,${la})`; ctx!.font=`500 ${W<700?7:8}px "JetBrains Mono",monospace`;
+          ctx!.textAlign=side>0?"left":"right";
+          ctx!.fillText(a.named!.name,a.x+side*(dr+6),a.y-5);
+          ctx!.fillStyle=`rgba(255,255,255,${la*0.4})`; ctx!.font='400 6.5px "JetBrains Mono",monospace';
+          ctx!.fillText(a.named!.num,a.x+side*(dr+6),a.y+10); ctx!.textAlign="left";
+        }
+      });
+
+      if(newH){hovAgent=newH;hovFade=Math.min(1,hovFade+.1);}
+      else{hovFade=Math.max(0,hovFade-.07);if(!hovFade)hovAgent=null;}
+      if(hovAgent&&hovFade>.01) drawCard(hovAgent);
+      raf=requestAnimationFrame(frame);
+    }
+
+    function setup(){const r=cv!.parentElement!.getBoundingClientRect();W=r.width||800;computeLayout();}
+
+    const onMM=(e:MouseEvent)=>{const r=cv!.getBoundingClientRect();mX=(e.clientX-r.left)*(W/r.width);mY=(e.clientY-r.top)*(H/r.height);cv!.style.cursor="crosshair";};
+    const onML=()=>{mX=-9999;mY=-9999;};
+    cv.addEventListener("mousemove",onMM); cv.addEventListener("mouseleave",onML);
+
+    const io=new IntersectionObserver(entries=>entries.forEach(e=>{
+      if(e.isIntersecting){if(!raf){setup();startTime=0;raf=requestAnimationFrame(frame);}}
+      else{cancelAnimationFrame(raf);raf=0;}
+    }),{threshold:0});
+    io.observe(cv);
+
+    let rt=0;const onResize=()=>{clearTimeout(rt);rt=window.setTimeout(()=>{setup();startTime=0;},180);};
+    window.addEventListener("resize",onResize);
+    setup(); startTime=0;
+    return()=>{cancelAnimationFrame(raf);io.disconnect();window.removeEventListener("resize",onResize);cv.removeEventListener("mousemove",onMM);cv.removeEventListener("mouseleave",onML);};
   },[canvasRef]);
 }
 
