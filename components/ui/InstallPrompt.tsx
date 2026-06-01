@@ -51,7 +51,7 @@ export default function InstallPrompt() {
         <div className="flex items-start gap-3">
           <LogoMark size={36} className="shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-primary">Install Vantro App</p>
+            <p className="text-sm font-bold text-primary">Install Atlas App</p>
             <p className="text-xs text-muted mt-0.5">Add to home screen for instant access, offline support &amp; push notifications.</p>
             <div className="flex gap-2 mt-3">
               <button onClick={install}

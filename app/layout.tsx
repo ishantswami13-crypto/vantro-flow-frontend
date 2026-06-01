@@ -10,11 +10,11 @@ const APP_URL = "https://vantro-flow-frontend.vercel.app";
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Vantro — Your Business, On Autopilot",
-    template: "%s | Vantro",
+    default: "Atlas by Vantro | AI Business Automation Infrastructure",
+    template: "%s | Atlas",
   },
   description:
-    "Vantro automates your business — collections, invoicing, WhatsApp follow-ups, payment links, and cash flow — so Indian MSME founders can focus on growing, not managing. Set up in 5 minutes.",
+    "Atlas by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
   keywords: [
     "business automation India", "MSME automation software", "collections automation India",
     "WhatsApp business automation", "invoice automation India", "Hinglish WhatsApp reminders",
@@ -30,10 +30,10 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     url: APP_URL,
-    siteName: "Vantro",
-    title: "Vantro — Your Business, On Autopilot",
+    siteName: "Atlas",
+    title: "Atlas by Vantro | AI Business Automation Infrastructure",
     description:
-      "Vantro automates collections, invoicing, WhatsApp reminders, and cash flow for Indian MSMEs. Set up once. Runs forever. 200+ businesses trust Vantro.",
+      "Atlas by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
     images: [
       {
         url: "/opengraph-image",
@@ -46,9 +46,9 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "Vantro — Your Business, On Autopilot",
+    title: "Atlas by Vantro | AI Business Automation Infrastructure",
     description:
-      "Vantro automates collections, invoicing, WhatsApp reminders, and cash flow for Indian MSMEs. Set up once. Runs forever.",
+      "Atlas by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
     images: ["/opengraph-image"],
     creator: "@vantro_in",
   },
@@ -97,7 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              name: "Vantro",
+              name: "Atlas by Vantro",
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web, Android, iOS",
               offers: {
@@ -107,7 +107,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 priceValidUntil: "2026-12-31",
               },
               description:
-                "Business automation OS for Indian MSMEs. Automate collections, invoicing, WhatsApp reminders, payments, and cash flow. Your business, on autopilot.",
+                "Atlas by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
               url: APP_URL,
               inLanguage: ["en", "hi"],
               audience: {

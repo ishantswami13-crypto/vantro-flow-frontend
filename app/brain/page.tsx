@@ -56,7 +56,7 @@ export default function BrainPage() {
     // Welcome message
     setMessages([{
       role: "assistant",
-      content: "Namaste! Main Vantro Brain hoon — aapka business intelligence AI. Mujhe apne aapke business ke baare mein poochho: sales, outstanding, orders, expenses, kuch bhi. Main live data dekh sakta hoon aur aapko best action suggest karunga. 🧠\n\nAaj ka update lene ke liye kaho: *\"Aaj ki summary do\"*",
+      content: "Namaste! Main Atlas Brain hoon — aapka business intelligence AI. Mujhe apne aapke business ke baare mein poochho: sales, outstanding, orders, expenses, kuch bhi. Main live data dekh sakta hoon aur aapko best action suggest karunga. 🧠\n\nAaj ka update lene ke liye kaho: *\"Aaj ki summary do\"*",
     }]);
   }, []);
 
@@ -122,7 +122,7 @@ export default function BrainPage() {
   };
 
   return (
-    <DashboardLayout pageTitle="Vantro Brain">
+    <DashboardLayout pageTitle="Atlas Brain">
       <div className="flex flex-col h-[calc(100vh-8rem)] lg:h-[calc(100vh-6rem)]">
 
         {/* Header */}
@@ -132,7 +132,7 @@ export default function BrainPage() {
               <FiCpu size={15} className="text-white" />
             </div>
             <div>
-              <p className="font-bold text-primary text-sm">Vantro Brain v1</p>
+              <p className="font-bold text-primary text-sm">Atlas Brain v1</p>
               <p className="text-2xs text-muted">Live data · Vocabulary aware · Learns your rules</p>
             </div>
           </div>

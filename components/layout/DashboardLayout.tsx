@@ -144,7 +144,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
         {isDemo && (
           <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-2 flex items-center justify-between gap-3 text-sm shrink-0">
             <span className="text-yellow-400 font-medium text-xs">
-              👀 Demo Mode — You're exploring Vantro with sample data. Sign up to save real data.
+              👀 Demo Mode — You're exploring Atlas with sample data. Sign up to save real data.
             </span>
             <div className="flex items-center gap-2 shrink-0">
               <Link href="/signup"

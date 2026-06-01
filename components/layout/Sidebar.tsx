@@ -28,7 +28,7 @@ const NAV = [
   // ── Intelligence
   { href: "/ai-actions",     label: "Action Center",   icon: FiZap,           badge: "NEW",  group: "intelligence" },
   { href: "/today",          label: "Today's P&L",     icon: FiSun,           badge: null,   group: "intelligence" },
-  { href: "/brain",          label: "Vantro Brain",    icon: FiActivity,      badge: "AI",   group: "intelligence" },
+  { href: "/brain",          label: "Atlas Brain",    icon: FiActivity,      badge: "AI",   group: "intelligence" },
   { href: "/ai-chat",        label: "AI Founder",      icon: FiCpu,           badge: null,   group: "intelligence" },
   { href: "/ai-train",       label: "AI Training",     icon: FiSliders,       badge: "AI",   group: "intelligence" },
   { href: "/neural-engine",  label: "Neural Engine",   icon: FiZap,           badge: null,   group: "intelligence" },
@@ -37,7 +37,7 @@ const NAV = [
   { href: "/analytics",      label: "Analytics",       icon: FiBarChart2,     badge: null,   group: "intelligence" },
   { href: "/reports",        label: "Reports",         icon: FiFileText,      badge: null,   group: "intelligence" },
   // ── Network
-  { href: "/network",        label: "Vantro Network",  icon: FiGlobe,         badge: "NEW",  group: "network" },
+  { href: "/network",        label: "Atlas Network",  icon: FiGlobe,         badge: "NEW",  group: "network" },
   { href: "/industry",       label: "My Industry",     icon: FiShoppingBag,   badge: null,   group: "network" },
   { href: "/crm",            label: "CRM",             icon: FiUsers,         badge: null,   group: "network" },
   // ── Operations
@@ -53,7 +53,7 @@ const NAV = [
   { href: "/scanner",        label: "Invoice Scanner", icon: FiCamera,        badge: null,   group: "ops" },
   { href: "/bad-debt",       label: "Bad Debt Radar",  icon: FiAlertTriangle, badge: null,   group: "ops" },
   // ── Account
-  { href: "/my-id",          label: "My Vantro ID",    icon: FiShield,        badge: null,   group: "account" },
+  { href: "/my-id",          label: "My Atlas ID",    icon: FiShield,        badge: null,   group: "account" },
   { href: "/billing",        label: "Billing",         icon: FiCreditCard,    badge: null,   group: "account" },
   { href: "/settings",       label: "Settings",        icon: FiSettings,      badge: null,   group: "account" },
 ];
@@ -147,7 +147,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               className="font-semibold tracking-tight"
               style={{ fontSize: "14px", color: "rgba(255,255,255,0.85)", letterSpacing: "-0.01em" }}
             >
-              Vantro
+              Atlas
             </span>
           </div>
           <button

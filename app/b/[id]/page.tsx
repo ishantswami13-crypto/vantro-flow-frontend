@@ -80,8 +80,8 @@ export default function PublicProfilePage() {
           <FiShield size={24} className="text-danger" />
         </div>
         <p className="text-primary font-bold mb-1">Profile Not Found</p>
-        <p className="text-sm text-muted mb-6">This Vantro Business ID doesn't exist.</p>
-        <Link href="/" className="text-accent text-sm hover:underline">Go to Vantro Flow →</Link>
+        <p className="text-sm text-muted mb-6">This Atlas Business ID doesn't exist.</p>
+        <Link href="/" className="text-accent text-sm hover:underline">Go to Atlas →</Link>
       </div>
     </div>
   );
@@ -98,7 +98,7 @@ export default function PublicProfilePage() {
             <div className="w-7 h-7 rounded-lg bg-gradient-accent flex items-center justify-center">
               <FiZap size={13} className="text-white" />
             </div>
-            <span className="font-bold text-sm text-primary">Vantro Flow</span>
+            <span className="font-bold text-sm text-primary">Atlas</span>
           </div>
           <Link href={`/signup?ref=${id}`} className="text-xs px-3 py-1.5 rounded-lg bg-white text-black font-semibold hover:bg-white/90 transition-all">
             Get Your Free ID →
@@ -126,7 +126,7 @@ export default function PublicProfilePage() {
                 )}
               </div>
               <h1 className="text-2xl font-black text-primary">{profile.business_name}</h1>
-              <p className="text-sm text-muted mt-1">Vantro Member since {memberSince} · {profile.member_days} days</p>
+              <p className="text-sm text-muted mt-1">Atlas Member since {memberSince} · {profile.member_days} days</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent shrink-0">
               <FiZap size={20} className="text-white" />
@@ -181,7 +181,7 @@ export default function PublicProfilePage() {
           <div className="w-10 h-10 bg-gradient-accent rounded-xl flex items-center justify-center mx-auto mb-3 shadow-button-accent">
             <FiZap size={18} className="text-white" />
           </div>
-          <p className="font-bold text-primary mb-1">Get Your Vantro Business ID</p>
+          <p className="font-bold text-primary mb-1">Get Your Atlas Business ID</p>
           <p className="text-xs text-muted mb-4">
             Join thousands of Indian businesses building verified financial identities. Free to start.
           </p>
@@ -192,7 +192,7 @@ export default function PublicProfilePage() {
         </div>
 
         <p className="text-center text-2xs text-muted pb-4">
-          Verified by Vantro Flow · vantro-flow-frontend.vercel.app
+          Verified by Atlas · vantro-flow-frontend.vercel.app
         </p>
       </div>
     </div>

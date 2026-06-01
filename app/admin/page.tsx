@@ -52,7 +52,7 @@ export default function AdminPage() {
             <FiZap size={16} className="text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-primary text-lg">Vantro Admin</h1>
+            <h1 className="font-bold text-primary text-lg">Atlas Admin</h1>
             <p className="text-xs text-muted">Founder analytics — private</p>
           </div>
         </div>

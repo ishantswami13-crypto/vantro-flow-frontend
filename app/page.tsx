@@ -119,7 +119,7 @@ function useCortexCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
       const gO=ctx!.createRadialGradient(brain.x,brain.y,R*.5,brain.x,brain.y,R*3);gO.addColorStop(0,`rgba(255,255,255,${0.18*tw})`);gO.addColorStop(.4,`rgba(255,255,255,${0.05*tw})`);gO.addColorStop(1,"rgba(255,255,255,0)");ctx!.fillStyle=gO;ctx!.beginPath();ctx!.arc(brain.x,brain.y,R*3,0,6.28);ctx!.fill();
       const gC=ctx!.createRadialGradient(brain.x,brain.y,0,brain.x,brain.y,R);gC.addColorStop(0,"rgba(255,255,255,0.93)");gC.addColorStop(.45,"rgba(255,255,255,0.28)");gC.addColorStop(1,"rgba(255,255,255,0.06)");ctx!.fillStyle=gC;ctx!.beginPath();ctx!.arc(brain.x,brain.y,R,0,6.28);ctx!.fill();
       ctx!.strokeStyle="rgba(0,0,0,0.16)";ctx!.lineWidth=1;ctx!.setLineDash([]);ctx!.beginPath();ctx!.moveTo(brain.x-R*.6,brain.y);ctx!.lineTo(brain.x+R*.6,brain.y);ctx!.stroke();ctx!.beginPath();ctx!.moveTo(brain.x,brain.y-R*.6);ctx!.lineTo(brain.x,brain.y+R*.6);ctx!.stroke();
-      ctx!.textAlign="center";ctx!.fillStyle="rgba(0,0,0,0.88)";ctx!.font=`700 ${W<580?10:13}px "Space Grotesk",system-ui,sans-serif`;ctx!.fillText("VANTRO",brain.x,brain.y-3);
+      ctx!.textAlign="center";ctx!.fillStyle="rgba(0,0,0,0.88)";ctx!.font=`700 ${W<580?10:13}px "Space Grotesk",system-ui,sans-serif`;ctx!.fillText("ATLAS",brain.x,brain.y-3);
       ctx!.font=`500 ${W<580?7:9}px "JetBrains Mono",ui-monospace,monospace`;ctx!.fillStyle="rgba(0,0,0,0.55)";ctx!.fillText("CORTEX",brain.x,brain.y+10);
     };
     const drawNode=(n:NodeT,now:number)=>{
@@ -321,7 +321,7 @@ const FEATURES=[
   {idx:"02",metric:"Daily · every morning",title:"AI Owner Briefing",desc:"Who to call, what's risky, what cash is incoming, what to approve today. One screen. The complete picture in under 60 seconds."},
   {idx:"03",metric:"90-day visibility",title:"Cash Flow Forecast",desc:"Three-scenario forecast updated daily. Automated runway alerts. Know what's coming before it arrives — not after the crisis starts."},
   {idx:"04",metric:"73% open rate",title:"Smart Messaging",desc:"AI-crafted reminders delivered via the channel your customer prefers — email, WhatsApp, SMS. Feels personal. Works globally. Sent at the optimal moment."},
-  {idx:"05",metric:"Real-time risk radar",title:"Risk Signals",desc:"Credit flags, broken-promise tracking, payment behaviour scoring. Vantro alerts you before a slow payer becomes a bad debt written off."},
+  {idx:"05",metric:"Real-time risk radar",title:"Risk Signals",desc:"Credit flags, broken-promise tracking, payment behaviour scoring. Atlas alerts you before a slow payer becomes a bad debt written off."},
   {idx:"06",metric:"Live stock intelligence",title:"Inventory Intelligence",desc:"Moving stock vs trapped capital — updated daily. See exactly what's tying up your working capital and what needs reordering before you run out."},
 ];
 const PIPELINE=[
@@ -363,7 +363,7 @@ const FAQS=[
   {q:'Which accounting tools does Atlas connect to?',a:'QuickBooks, Xero, Zoho Books, Tally ERP, FreshBooks, NetSuite, and any system that exports CSV or has an API. Setup takes under 5 minutes.'},
   {q:'Can I review messages before they go out?',a:'"Approve before send" mode puts every message in a queue for your review. Most founders switch to fully automatic after seeing the first week of messages.'},
   {q:'Will automated reminders damage my customer relationships?',a:'Atlas learns your customer patterns. A first-time buyer gets a very different message than a chronic late-payer. Polite, personal, contextual.'},
-  {q:"I've tried tools before and stopped. Why is Vantro different?",a:"Most tools show data but don't do work. Atlas sends the messages, logs responses, follows up and keeps the cycle running even when you ignore it for a week."},
+  {q:"I've tried tools before and stopped. Why is Atlas different?",a:"Most tools show data but don't do work. Atlas sends the messages, logs responses, follows up and keeps the cycle running even when you ignore it for a week."},
   {q:'Is my financial data safe? Where is it stored?',a:'All data is encrypted in transit (TLS 1.3) and at rest (AES-256), stored in India. Full audit trail of every action. Role-based access.'},
 ];
 
@@ -476,7 +476,7 @@ export default function LandingPage() {
 
       {/* CORTEX */}
       <section className="cortex-sec" id="cortex-section"><div className="wrap">
-        <span className="s-label rv">Vantro Cortex</span>
+        <span className="s-label rv">Atlas Cortex</span>
         <h2 className="rv" style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:600,fontSize:"clamp(28px,4.2vw,58px)",letterSpacing:"-0.045em",lineHeight:1.04,maxWidth:"18ch"}}>Raw data in.<br/>Ranked decisions out.</h2>
         <p className="rv s-desc" style={{maxWidth:"52ch"}}>Every morning, Atlas processes your entire business — invoices, payments, customers, stock — and hands you one list. Ranked. Specific. Ready to act on.</p>
       </div>
@@ -653,9 +653,9 @@ export default function LandingPage() {
             <a href="#">Book a demo</a>
           </div>
         </div>
-        <div className="wm">VANTRO</div>
+        <div className="wm">ATLAS by VANTRO</div>
         <div className="foot-bottom">
-          <span>&copy; 2026 Vantro Technologies, Inc.</span>
+          <span>&copy; 2026 Vantro. Atlas is a product of Vantro under Auren Group.</span>
           <span className="foot-links"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link></span>
         </div>
       </div></footer>

@@ -21,9 +21,9 @@ export default function LogoMark({ size = 32, className = "" }: LogoMarkProps) {
         display: "inline-block",
         userSelect: "none",
       }}
-      aria-label="Vantro"
+      aria-label="Atlas"
     >
-      V
+      A
     </span>
   );
 }

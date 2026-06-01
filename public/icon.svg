@@ -6,12 +6,6 @@
   <rect x="0.75" y="0.75" width="98.5" height="98.5" rx="21.5"
         stroke="rgba(255,255,255,0.10)" stroke-width="1.5" fill="none"/>
 
-  <!-- Bar 1: widest -->
-  <rect x="15" y="23" width="70" height="13" rx="6.5" fill="white"/>
-
-  <!-- Bar 2: medium -->
-  <rect x="25" y="43" width="50" height="13" rx="6.5" fill="white" fill-opacity="0.85"/>
-
-  <!-- Bar 3: narrowest -->
-  <rect x="35" y="63" width="30" height="13" rx="6.5" fill="white" fill-opacity="0.60"/>
+  <!-- Logo Mark -->
+  <text x="50" y="68" dominant-baseline="middle" text-anchor="middle" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-weight="800" font-size="60" fill="#ffffff">A</text>
 </svg>

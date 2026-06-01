@@ -136,7 +136,7 @@ export default function NetworkPage() {
   useEffect(() => { search(); }, []);
 
   return (
-    <DashboardLayout pageTitle="Vantro Network">
+    <DashboardLayout pageTitle="Atlas Network">
       <div className="max-w-4xl mx-auto space-y-5 page-enter">
 
         {/* Header */}
@@ -145,10 +145,10 @@ export default function NetworkPage() {
             <div className="w-8 h-8 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent">
               <FiUsers size={15} className="text-white" />
             </div>
-            <h2 className="text-2xl font-black text-primary tracking-tight">Vantro Network</h2>
+            <h2 className="text-2xl font-black text-primary tracking-tight">Atlas Network</h2>
             <span className="text-2xs font-bold text-accent bg-accent-dim border border-accent/20 px-2 py-0.5 rounded-full">LIVE</span>
           </div>
-          <p className="text-sm text-muted">Discover and verify businesses before you trade. Every member has a verified Vantro Trust Score.</p>
+          <p className="text-sm text-muted">Discover and verify businesses before you trade. Every member has a verified Atlas Trust Score.</p>
         </div>
 
         {/* Why this matters */}
