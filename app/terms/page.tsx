@@ -50,7 +50,7 @@ export default function TermsPage() {
             <p>These terms form a binding agreement under the Indian Contract Act, 1872 and the Information Technology Act, 2000.</p>
 
             <h2>Who operates Atlas</h2>
-            <p><strong>Atlas</strong> is a product by <strong>Vantro</strong>, part of the <strong>Auren Group</strong>. Vantro is headquartered in Mumbai, India.</p>
+            <p><strong>Atlas</strong> is a product by <strong>Vantro</strong>, part of the <strong>Auren Group</strong>. Vantro is headquartered in New York, NY, with operations across California, Texas, and other leading AI innovation hubs in the United States.</p>
 
             <h2>What Atlas does</h2>
             <p>Atlas is an AI-powered platform for Indian businesses that automates accounts receivable collections, cashflow forecasting, inventory monitoring, and WhatsApp-based customer follow-ups. <strong>Atlas is a software tool — it does not provide legal, financial, tax or accounting advice.</strong></p>
