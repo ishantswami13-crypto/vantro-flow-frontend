@@ -524,11 +524,14 @@ export default function LedgerPage() {
     const localRows = readLocalLedger(uid);
     try {
       const data = await api.transactions.list(uid);
-      // Backend is now the primary source. 
+      // Backend is now the primary source.
       // We still merge with local rows for safety, but backend rows will override local duplicates.
       const mergedRows = mergeTransactions(data.transactions || [], localRows);
       setTransactions(mergedRows);
-      setSummary(data.summary || buildSummary(mergedRows));
+      // Always compute the summary from the rows actually shown in the table.
+      // (Using the backend-only `data.summary` made totals read ₹0 whenever a
+      //  transaction had fallen back to localStorage — rows visible, totals wrong.)
+      setSummary(buildSummary(mergedRows));
     } catch (err: any) {
       // If backend fails, use local storage as fallback
       setTransactions(localRows);

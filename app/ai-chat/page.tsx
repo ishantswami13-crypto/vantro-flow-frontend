@@ -539,10 +539,10 @@ export default function AIFounderPage() {
                 </div>
                 <p className="text-sm text-muted animate-pulse">Neural network is analyzing your business...</p>
               </div>
-            ) : !briefing ? (
+            ) : !briefing || !briefing.debtors?.length ? (
               <div className="card-premium p-8 text-center">
-                <p className="text-sm text-secondary mb-2">No invoice data found.</p>
-                <p className="text-xs text-muted">Upload invoices from the Collections page to activate AI Founder.</p>
+                <p className="text-sm text-secondary mb-2">No verified business data yet.</p>
+                <p className="text-xs text-muted">Add real invoices or sales from the Collections page — AI Founder will analyse your actual debtors here.</p>
               </div>
             ) : (
               <>

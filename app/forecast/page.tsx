@@ -145,6 +145,20 @@ export default function ForecastPage() {
 
   useEffect(() => { loadForecast(range); }, [range, loadForecast]);
 
+  // Safety watchdog — the forecast skeleton must never persist forever, even if a
+  // request hangs at the network layer below the API client's own timeout.
+  useEffect(() => {
+    if (!loading) return;
+    const t = setTimeout(() => {
+      setLoading(false);
+      setChartData(prev => {
+        if (prev.length === 0) setNoData(true);
+        return prev;
+      });
+    }, 15000);
+    return () => clearTimeout(t);
+  }, [loading]);
+
   const isRunwayDanger = kpis.runwayDays > 0 && kpis.runwayDays < 15;
 
   const saveCash = () => {

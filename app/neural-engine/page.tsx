@@ -131,8 +131,21 @@ export default function NeuralEnginePage() {
           </div>
         </div>
 
-        {/* Live model outputs */}
-        {mlData && !loading && (
+        {/* No verified data yet — shown once the network has run but found no real debtors */}
+        {!loading && (!mlData || !mlData.debtors?.length) && (
+          <div className="card-premium p-6 text-center">
+            <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center mx-auto mb-3">
+              <FiDatabase size={20} className="text-muted" />
+            </div>
+            <p className="text-sm font-bold text-primary mb-1">No verified business data yet</p>
+            <p className="text-xs text-muted max-w-sm mx-auto">
+              The models are live, but there are no real debtors to score yet. Add invoices or sales from Collections — your actual data will appear here.
+            </p>
+          </div>
+        )}
+
+        {/* Live model outputs — only when there is real scored data */}
+        {mlData && !loading && (mlData.debtors?.length ?? 0) > 0 && (
           <div className="card-premium p-5">
             <div className="flex items-center gap-2 mb-4">
               <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
