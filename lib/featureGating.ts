@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Vantro Feature Gating System
+// Starlane Feature Gating System
 // Decides which features to show based on:
 //   1. Industry / Business Type
 //   2. Plan (free / starter / growth / pro)
@@ -45,7 +45,7 @@ export type FeatureKey =
   | "billing"           // Subscription billing
   | "brain"             // AI brain / chat
   | "neural_engine"     // ML scoring engine
-  | "network"           // Vantro B2B network
+  | "network"           // Starlane B2B network
   | "voice_calls"       // AI voice calls
   | "payment_plans"     // EMI splits
   | "disputes"          // Dispute management

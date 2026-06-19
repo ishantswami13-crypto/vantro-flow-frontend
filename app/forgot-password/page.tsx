@@ -133,7 +133,7 @@ export default function ForgotPasswordPage() {
         <div className="flex items-center justify-center gap-2.5 mb-8">
           <LogoMark size={36} />
           <div>
-            <p className="font-bold text-base text-primary leading-none tracking-tight">Vantro</p>
+            <p className="font-bold text-base text-primary leading-none tracking-tight">Starlane</p>
             <p className="text-2xs text-muted">Business OS</p>
           </div>
         </div>
@@ -331,7 +331,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         <p className="mt-6 text-center text-xs text-muted">
-          <Link href="/" className="hover:text-secondary transition-colors">Vantro Flow</Link>
+          <Link href="/" className="hover:text-secondary transition-colors">Starlane</Link>
           {" "}— Collections OS for Indian MSMEs
         </p>
       </div>

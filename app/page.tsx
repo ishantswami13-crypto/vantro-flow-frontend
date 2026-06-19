@@ -4,12 +4,22 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { enableDemoMode } from "@/lib/demo";
 
-function AtlasMark({ size = 28 }: { size?: number }) {
+function StarlaneMark({ size = 28 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path fill="white" fillRule="evenodd" className="atlas-mark-spin"
-        d="M 50 8 L 4 92 L 96 92 Z M 50 78 L 38 92 L 62 92 Z M 26 59 L 74 59 L 74 68 L 26 68 Z" />
-    </svg>
+    <span
+      aria-hidden="true"
+      style={{
+        display: "inline-block",
+        width: size,
+        height: size,
+        backgroundImage: 'url("/brand/starlane-icon.jpeg")',
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        backgroundSize: "contain",
+        borderRadius: Math.max(4, Math.round(size * 0.18)),
+        flexShrink: 0,
+      }}
+    />
   );
 }
 
@@ -119,7 +129,7 @@ function useCortexCanvas(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
       const gO=ctx!.createRadialGradient(brain.x,brain.y,R*.5,brain.x,brain.y,R*3);gO.addColorStop(0,`rgba(255,255,255,${0.18*tw})`);gO.addColorStop(.4,`rgba(255,255,255,${0.05*tw})`);gO.addColorStop(1,"rgba(255,255,255,0)");ctx!.fillStyle=gO;ctx!.beginPath();ctx!.arc(brain.x,brain.y,R*3,0,6.28);ctx!.fill();
       const gC=ctx!.createRadialGradient(brain.x,brain.y,0,brain.x,brain.y,R);gC.addColorStop(0,"rgba(255,255,255,0.93)");gC.addColorStop(.45,"rgba(255,255,255,0.28)");gC.addColorStop(1,"rgba(255,255,255,0.06)");ctx!.fillStyle=gC;ctx!.beginPath();ctx!.arc(brain.x,brain.y,R,0,6.28);ctx!.fill();
       ctx!.strokeStyle="rgba(0,0,0,0.16)";ctx!.lineWidth=1;ctx!.setLineDash([]);ctx!.beginPath();ctx!.moveTo(brain.x-R*.6,brain.y);ctx!.lineTo(brain.x+R*.6,brain.y);ctx!.stroke();ctx!.beginPath();ctx!.moveTo(brain.x,brain.y-R*.6);ctx!.lineTo(brain.x,brain.y+R*.6);ctx!.stroke();
-      ctx!.textAlign="center";ctx!.fillStyle="rgba(0,0,0,0.88)";ctx!.font=`700 ${W<580?10:13}px "Space Grotesk",system-ui,sans-serif`;ctx!.fillText("ATLAS",brain.x,brain.y-3);
+      ctx!.textAlign="center";ctx!.fillStyle="rgba(0,0,0,0.88)";ctx!.font=`700 ${W<580?9:11}px "Space Grotesk",system-ui,sans-serif`;ctx!.fillText("CORE",brain.x,brain.y-3);
       ctx!.font=`500 ${W<580?7:9}px "JetBrains Mono",ui-monospace,monospace`;ctx!.fillStyle="rgba(0,0,0,0.55)";ctx!.fillText("CORTEX",brain.x,brain.y+10);
     };
     const drawNode=(n:NodeT,now:number)=>{
@@ -321,7 +331,7 @@ const FEATURES=[
   {idx:"02",metric:"Daily · every morning",title:"AI Owner Briefing",desc:"Who to call, what's risky, what cash is incoming, what to approve today. One screen. The complete picture in under 60 seconds."},
   {idx:"03",metric:"90-day visibility",title:"Cash Flow Forecast",desc:"Three-scenario forecast updated daily. Automated runway alerts. Know what's coming before it arrives — not after the crisis starts."},
   {idx:"04",metric:"73% open rate",title:"Smart Messaging",desc:"AI-crafted reminders delivered via the channel your customer prefers — email, WhatsApp, SMS. Feels personal. Works globally. Sent at the optimal moment."},
-  {idx:"05",metric:"Real-time risk radar",title:"Risk Signals",desc:"Credit flags, broken-promise tracking, payment behaviour scoring. Atlas alerts you before a slow payer becomes a bad debt written off."},
+  {idx:"05",metric:"Real-time risk radar",title:"Risk Signals",desc:"Credit flags, broken-promise tracking, payment behaviour scoring. Starlane alerts you before a slow payer becomes a bad debt written off."},
   {idx:"06",metric:"Live stock intelligence",title:"Inventory Intelligence",desc:"Moving stock vs trapped capital — updated daily. See exactly what's tying up your working capital and what needs reordering before you run out."},
 ];
 const PIPELINE=[
@@ -338,32 +348,32 @@ const PIPELINE=[
   {phase:"OUTPUT",n:"11",name:"Outcome Tracking",desc:"Reply? Payment? Promise kept? Every result feeds the Learning agent to improve future actions."},
 ];
 const TESTI_1=[
-  {av:"MJ",name:"Marcus Johnson",co:"Precision Logistics · Chicago, USA · $2.1M managed",q:"Before Atlas, we had two full-time credit controllers. Now one person handles twice the volume — and DSO dropped 34 days."},
-  {av:"SM",name:"Sophie Müller",co:"Bautech Consulting · Berlin, Germany · 45 invoices/mo",q:"DSO dropped from 52 to 29 days in six weeks. I stopped sending payment reminders entirely. Atlas does it better than I ever did."},
-  {av:"JO",name:"James Okafor",co:"BuildRight Materials · Lagos, Nigeria · $180K outstanding",q:"Three collectors plus Atlas. The AI does more than all three combined, every single day."},
+  {av:"MJ",name:"Marcus Johnson",co:"Precision Logistics · Chicago, USA · $2.1M managed",q:"Before Starlane, we had two full-time credit controllers. Now one person handles twice the volume — and DSO dropped 34 days."},
+  {av:"SM",name:"Sophie Müller",co:"Bautech Consulting · Berlin, Germany · 45 invoices/mo",q:"DSO dropped from 52 to 29 days in six weeks. I stopped sending payment reminders entirely. Starlane does it better than I ever did."},
+  {av:"JO",name:"James Okafor",co:"BuildRight Materials · Lagos, Nigeria · $180K outstanding",q:"Three collectors plus Starlane. The AI does more than all three combined, every single day."},
   {av:"TR",name:"Tariq Al-Rashid",co:"Gulf Fresh Foods · Dubai, UAE · $320K managed",q:"The 90-day cash forecast is the first thing I open every morning. In four months, it hasn't been wrong once."},
-  {av:"PN",name:"Priya Nair",co:"Indigo Textiles · Chennai, India · 200+ employees",q:"We export to 14 countries. Atlas handles every follow-up in the customer's time zone. Seamlessly, every single day."},
+  {av:"PN",name:"Priya Nair",co:"Indigo Textiles · Chennai, India · 200+ employees",q:"We export to 14 countries. Starlane handles every follow-up in the customer's time zone. Seamlessly, every single day."},
   {av:"RO",name:"Ryan O'Brien",co:"O'Brien Plumbing · Dublin, Ireland · €95K recovered",q:"First automated message went out at 7am. By 9am we had three payments clear. I was still in bed."},
-  {av:"CM",name:"Carlos Mendez",co:"Acero del Norte · Mexico City, Mexico · $450K/mo",q:"My CFO wanted to hire two more people for collections. I showed him Atlas. We didn't hire anyone."},
+  {av:"CM",name:"Carlos Mendez",co:"Acero del Norte · Mexico City, Mexico · $450K/mo",q:"My CFO wanted to hire two more people for collections. I showed him Starlane. We didn't hire anyone."},
 ];
 const TESTI_2=[
-  {av:"ST",name:"Sakura Tanaka",co:"Tanaka Fashion Trade · Tokyo, Japan · $220K managed",q:"Japanese clients expect perfect communication. Atlas gets the tone, timing, and formality right every single time."},
-  {av:"IP",name:"Igor Petrov",co:"Techprom Industrial · Warsaw, Poland · 80 employees",q:"We had €340K stuck in overdue accounts for months. Six weeks with Atlas: €290K cleared."},
-  {av:"MS",name:"Maria Santos",co:"Floresta E-commerce · São Paulo, Brazil · R$180K/mo",q:"Three employees, 400 invoices a month. Atlas handles every follow-up while I sleep."},
-  {av:"DC",name:"David Choi",co:"KoreaNet IT Services · Seoul, South Korea · 38 enterprise clients",q:"Our biggest client paid 90 days late, every quarter, for two years. Atlas sent the right message. They now pay at 30."},
-  {av:"AM",name:"Aisha Mohammed",co:"MedSupply Ghana · Accra, Ghana · 89 overdue invoices",q:"89 invoices were 60+ days overdue. Atlas prioritized them in one ranked list. 71 cleared within 30 days."},
+  {av:"ST",name:"Sakura Tanaka",co:"Tanaka Fashion Trade · Tokyo, Japan · $220K managed",q:"Japanese clients expect perfect communication. Starlane gets the tone, timing, and formality right every single time."},
+  {av:"IP",name:"Igor Petrov",co:"Techprom Industrial · Warsaw, Poland · 80 employees",q:"We had €340K stuck in overdue accounts for months. Six weeks with Starlane: €290K cleared."},
+  {av:"MS",name:"Maria Santos",co:"Floresta E-commerce · São Paulo, Brazil · R$180K/mo",q:"Three employees, 400 invoices a month. Starlane handles every follow-up while I sleep."},
+  {av:"DC",name:"David Choi",co:"KoreaNet IT Services · Seoul, South Korea · 38 enterprise clients",q:"Our biggest client paid 90 days late, every quarter, for two years. Starlane sent the right message. They now pay at 30."},
+  {av:"AM",name:"Aisha Mohammed",co:"MedSupply Ghana · Accra, Ghana · 89 overdue invoices",q:"89 invoices were 60+ days overdue. Starlane prioritized them in one ranked list. 71 cleared within 30 days."},
   {av:"LF",name:"Luisa Ferreira",co:"Ferreira Food Industries · Lisbon, Portugal · €280K/mo",q:"I thought AI would send robotic messages. My customers actually complimented how personal the reminders felt."},
-  {av:"NT",name:"Nguyen Thanh",co:"VietFresh Export · Ho Chi Minh City, Vietnam · $380K/mo",q:"We export to 12 countries. Before Atlas we lost 8% to bad debt every year. This year: 0.3%."},
+  {av:"NT",name:"Nguyen Thanh",co:"VietFresh Export · Ho Chi Minh City, Vietnam · $380K/mo",q:"We export to 12 countries. Before Starlane we lost 8% to bad debt every year. This year: 0.3%."},
 ];
 const PLAN_FREE=["5 invoices per month","Manual WhatsApp messages","Basic receivables dashboard","CSV import"];
 const PLAN_PRO=["Unlimited invoices","WhatsApp auto-reminders","Razorpay & UPI payment links","AI priority scoring","90-day cash flow forecast","Tally ERP sync","Inventory intelligence","AI Owner Briefing daily"];
-const PLAN_SUCCESS=["Everything in Pro","No monthly fee — ever","1.5% on Atlas-collected invoices only","AI voice follow-up calls","Dedicated account manager","API access & 24/7 support"];
+const PLAN_SUCCESS=["Everything in Pro","No monthly fee — ever","1.5% on Starlane-collected invoices only","AI voice follow-up calls","Dedicated account manager","API access & 24/7 support"];
 const FAQS=[
   {q:'What does "200 agents" mean in practice?',a:'Each agent owns a single, narrow business task. 200 agents run in parallel, each triggered by the exact business event they are designed for. Deterministic decisions at scale with a complete audit trail.'},
-  {q:'Which accounting tools does Atlas connect to?',a:'QuickBooks, Xero, Zoho Books, Tally ERP, FreshBooks, NetSuite, and any system that exports CSV or has an API. Setup takes under 5 minutes.'},
+  {q:'Which accounting tools does Starlane connect to?',a:'QuickBooks, Xero, Zoho Books, Tally ERP, FreshBooks, NetSuite, and any system that exports CSV or has an API. Setup takes under 5 minutes.'},
   {q:'Can I review messages before they go out?',a:'"Approve before send" mode puts every message in a queue for your review. Most founders switch to fully automatic after seeing the first week of messages.'},
-  {q:'Will automated reminders damage my customer relationships?',a:'Atlas learns your customer patterns. A first-time buyer gets a very different message than a chronic late-payer. Polite, personal, contextual.'},
-  {q:"I've tried tools before and stopped. Why is Atlas different?",a:"Most tools show data but don't do work. Atlas sends the messages, logs responses, follows up and keeps the cycle running even when you ignore it for a week."},
+  {q:'Will automated reminders damage my customer relationships?',a:'Starlane learns your customer patterns. A first-time buyer gets a very different message than a chronic late-payer. Polite, personal, contextual.'},
+  {q:"I've tried tools before and stopped. Why is Starlane different?",a:"Most tools show data but don't do work. Starlane sends the messages, logs responses, follows up and keeps the cycle running even when you ignore it for a week."},
   {q:'Is my financial data safe? Where is it stored?',a:'All data is encrypted in transit (TLS 1.3) and at rest (AES-256), stored in India. Full audit trail of every action. Role-based access.'},
 ];
 
@@ -398,8 +408,8 @@ export default function LandingPage() {
       <nav ref={navRef} className={`nav${mobOpen?" mob-open":""}`}>
         <div className="wrap nav-inner">
           <a className="brand" href="#top" style={{display:"flex",alignItems:"center",gap:"11px",textDecoration:"none"}}>
-            <AtlasMark size={28}/>
-            <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"14.5px",letterSpacing:".2em",textTransform:"uppercase",color:"white",lineHeight:1}}>ATLAS</span>
+            <StarlaneMark size={28}/>
+            <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"14.5px",letterSpacing:".2em",textTransform:"uppercase",color:"white",lineHeight:1}}>STARLANE</span>
           </a>
           <div className="nav-links">
             <a href="#features">Features</a><a href="#agent-mesh">Agents</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
@@ -418,7 +428,7 @@ export default function LandingPage() {
           <div className="hero-copy">
             <span className="hero-badge"><span className="dot"/>&nbsp;200 AI Agents &middot; Every Business. Every Scale. Everywhere.</span>
             <h1><em>AI runs the ops.</em><br/>You run the business.</h1>
-            <p>Atlas deploys 200 specialized AI agents across your entire business — collections, cashflow, credit risk, inventory, payables. Every decision logged. Every action explainable. Nothing assumed.</p>
+            <p>Starlane deploys 200 specialized AI agents across your entire business — collections, cashflow, credit risk, inventory, payables. Every decision logged. Every action explainable. Nothing assumed.</p>
             <div className="hero-actions">
               <Link className="btn btn-primary btn-lg" {...mag} href="/signup">
                 Start for free
@@ -469,16 +479,16 @@ export default function LandingPage() {
           <div className="pain-line"><span className="n">04</span>No idea what cash is actually arriving next month.</div>
         </div>
         <div className="pain-fix rv">
-          <span className="pain-fix-text">Atlas solves all four. In 8 minutes.</span>
+          <span className="pain-fix-text">Starlane solves all four. In 8 minutes.</span>
           <a className="btn btn-ghost btn-sm" href="#cortex-section">See how →</a>
         </div>
       </div></section>
 
       {/* CORTEX */}
       <section className="cortex-sec" id="cortex-section"><div className="wrap">
-        <span className="s-label rv">Atlas Cortex</span>
+        <span className="s-label rv">Starlane Cortex</span>
         <h2 className="rv" style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:600,fontSize:"clamp(28px,4.2vw,58px)",letterSpacing:"-0.045em",lineHeight:1.04,maxWidth:"18ch"}}>Raw data in.<br/>Ranked decisions out.</h2>
-        <p className="rv s-desc" style={{maxWidth:"52ch"}}>Every morning, Atlas processes your entire business — invoices, payments, customers, stock — and hands you one list. Ranked. Specific. Ready to act on.</p>
+        <p className="rv s-desc" style={{maxWidth:"52ch"}}>Every morning, Starlane processes your entire business — invoices, payments, customers, stock — and hands you one list. Ranked. Specific. Ready to act on.</p>
       </div>
         <div className="cortex-canvas-wrap rv"><canvas ref={cortexRef} id="cortex"/></div>
       </section>
@@ -486,7 +496,7 @@ export default function LandingPage() {
       {/* FEATURES */}
       <section className="s" id="features"><div className="wrap">
         <span className="s-label rv">Six modules</span>
-        <h2 className="pain-hed rv" style={{fontSize:"clamp(28px,4.5vw,68px)"}}>Everything Atlas<br/>runs automatically.</h2>
+        <h2 className="pain-hed rv" style={{fontSize:"clamp(28px,4.5vw,68px)"}}>Everything Starlane<br/>runs automatically.</h2>
         <div className="feat-list rv">{FEATURES.map(f=>(
           <div className="feat-row" key={f.idx}>
             <div className="idx">{f.idx}</div>
@@ -588,7 +598,7 @@ export default function LandingPage() {
           </div>
           <div className="price">
             <div className="pname">Success</div><div className="amt">₹0<small>/mo + 1.5%</small></div>
-            <div className="desc">Pay only when Atlas collects for you.</div>
+            <div className="desc">Pay only when Starlane collects for you.</div>
             <ul>{PLAN_SUCCESS.map(f=><li key={f}>{f}</li>)}</ul>
             <Link className="pbtn pbtn-outline" href="/signup?plan=success">Pay from results</Link>
           </div>
@@ -619,7 +629,7 @@ export default function LandingPage() {
         <div className="final-cta rv">
           <div className="final-cta-glow"/>
           <h2>AI runs the ops.<br/>You run the business.</h2>
-          <p>Every hour your team spends on follow-ups, data entry and manual collections is an hour not spent on growth. Atlas runs the operations — you run the business.</p>
+          <p>Every hour your team spends on follow-ups, data entry and manual collections is an hour not spent on growth. Starlane runs the operations — you run the business.</p>
           <div className="final-cta-actions">
             <Link className="btn btn-primary btn-lg" {...mag} href="/signup">
               Start for free — no card needed
@@ -636,8 +646,8 @@ export default function LandingPage() {
         <div className="foot-grid">
           <div className="foot-brand">
             <a className="brand" href="#top" style={{display:"flex",alignItems:"center",gap:"9px",textDecoration:"none"}}>
-              <AtlasMark size={22}/>
-              <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13px",letterSpacing:".2em",textTransform:"uppercase",color:"white",lineHeight:1}}>ATLAS</span>
+              <StarlaneMark size={22}/>
+              <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13px",letterSpacing:".2em",textTransform:"uppercase",color:"white",lineHeight:1}}>STARLANE</span>
             </a>
             <p>The AI business control room for every founder, at every scale, everywhere. Collections, cashflow, inventory and follow-ups — automated in one place.</p>
             <p className="foot-made">Global infrastructure &middot; Regional data residency &middot; SOC 2 compliant</p>
@@ -649,13 +659,13 @@ export default function LandingPage() {
           <div className="foot-col">
             <h4>Contact</h4>
             <a href="#">Investor inquiries</a>
-            <a href="mailto:hello@atlas.vantro.io">hello@atlas.vantro.io</a>
+            <a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a>
             <a href="#">Book a demo</a>
           </div>
         </div>
-        <div className="wm">ATLAS by VANTRO</div>
+        <div className="wm">STARLANE by ATLAX</div>
         <div className="foot-bottom">
-          <span>&copy; 2026 Vantro. Atlas is a product of Vantro under Auren Group.</span>
+          <span>&copy; 2026 Atlax. Starlane is a product of Atlax.</span>
           <span className="foot-links"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link></span>
         </div>
       </div></footer>

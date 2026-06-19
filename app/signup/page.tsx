@@ -12,12 +12,22 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-pro
 
 const businessTypes = [{ value: "", label: "Select type" }, ...INDUSTRY_OPTIONS];
 
-function AtlasMark({ size = 26 }: { size?: number }) {
+function StarlaneMark({ size = 26 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" aria-hidden="true">
-      <path fill="white" fillRule="evenodd" className="atlas-mark-spin"
-        d="M 50 8 L 4 92 L 96 92 Z M 50 78 L 38 92 L 62 92 Z M 26 59 L 74 59 L 74 68 L 26 68 Z"/>
-    </svg>
+    <span
+      aria-hidden="true"
+      style={{
+        display: "inline-block",
+        width: size,
+        height: size,
+        backgroundImage: 'url("/brand/starlane-icon.jpeg")',
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        backgroundSize: "contain",
+        borderRadius: Math.max(4, Math.round(size * 0.18)),
+        flexShrink: 0,
+      }}
+    />
   );
 }
 
@@ -212,7 +222,7 @@ function SignupForm() {
           <div className="step-head">
             <div className="step-num">Step 2 of 2</div>
             <h2>Set your password<br/>&amp; go live.</h2>
-            <p>Atlas adapts to your business from day one.</p>
+            <p>Starlane adapts to your business from day one.</p>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
             {/* Phone */}
@@ -271,8 +281,8 @@ export default function SignupPage() {
     <div className="atlas-page auth-page">
       <header className="topbar">
         <a href="/" style={{display:"flex",alignItems:"center",gap:"10px",textDecoration:"none",color:"#fff"}}>
-          <AtlasMark size={26}/>
-          <span className="brand-wm">Atlas</span>
+          <StarlaneMark size={26}/>
+          <span className="brand-wm">Starlane</span>
         </a>
         <div className="topbar-right">Already have an account? <Link href="/login">Log in</Link></div>
       </header>
@@ -280,7 +290,7 @@ export default function SignupPage() {
         <Suspense fallback={null}><SignupForm/></Suspense>
       </main>
       <footer className="page-foot">
-        <span>&copy; 2026 Vantro Technologies</span>
+        <span>&copy; 2026 Atlax</span>
         <div style={{display:"flex",gap:"24px"}}>
           <Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link>
         </div>

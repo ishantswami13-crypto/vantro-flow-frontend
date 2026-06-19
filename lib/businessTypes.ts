@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Vantro Business Type System
+// Starlane Business Type System
 // Defines which features each business type needs — and which to hide.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -70,7 +70,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
       { icon: "🧾", title: "GST on Works Contract",     desc: "Generate GST invoices with correct works contract rates (18% or 12%)." },
       { icon: "📱", title: "Client WhatsApp Follow-Up", desc: "Hinglish messages that sound professional for HNI clients and government departments." },
     ],
-    notNeeded: ["Inventory management", "Daily orders", "Invoice scanner", "Vantro Network"],
+    notNeeded: ["Inventory management", "Daily orders", "Invoice scanner", "Starlane Network"],
     waTemplates: [
       {
         label: "RA Bill Pending",
@@ -115,7 +115,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
       { icon: "🧾", title: "GST Invoice with HSN",    desc: "Auto-fill HSN codes for fabric (52xx, 54xx, 55xx) on every invoice." },
       { icon: "📊", title: "Buyer Risk Analytics",    desc: "See which buyers are stretching payment terms — before they become bad debt." },
     ],
-    notNeeded: ["Daily orders module", "Vantro Network (coming soon for textile hubs)"],
+    notNeeded: ["Daily orders module", "Starlane Network (coming soon for textile hubs)"],
     waTemplates: [
       {
         label: "Payment Due Reminder",
@@ -160,7 +160,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
       { icon: "📊", title: "Credit Limit Monitoring",    desc: "See which retailers have crossed their credit limit — stop supply before risk compounds." },
       { icon: "🧾", title: "GST Invoice (Pharma)",       desc: "GST invoices with correct pharma HSN codes and Scheme/PTR calculations." },
     ],
-    notNeeded: ["Daily orders (use your ERP for this)", "Vantro Network", "Job work tracking"],
+    notNeeded: ["Daily orders (use your ERP for this)", "Starlane Network", "Job work tracking"],
     waTemplates: [
       {
         label: "Retailer Dues",
@@ -437,7 +437,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
       { icon: "💰", title: "Cash Flow Forecast",        desc: "Predict monthly fee inflows. Plan teacher salaries and operating expenses confidently." },
       { icon: "🏦", title: "Bank Reconciliation",       desc: "Match fee payments (online + cash + cheque) with your bank automatically." },
     ],
-    notNeeded: ["Inventory management", "B2B collections", "Job work tracking", "Vantro Network"],
+    notNeeded: ["Inventory management", "B2B collections", "Job work tracking", "Starlane Network"],
     waTemplates: [
       { label: "Fee Due Reminder", message: "Namaskar {name} ji, {student_name} ki {month} ki fees Rs.{amount} abhi bhi pending hai. Kripya {due_date} tak jama karein. Online transfer ya cash dono chalega. Dhanyavaad." },
       { label: "Fee Overdue", message: "Namaskar {name} ji, {student_name} ki fees Rs.{amount} {days} din se overdue hai. Kripya aaj hi school mein contact karein ya neeche diye account mein transfer karein." },
@@ -473,7 +473,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
       { icon: "📱", title: "Patient Follow-Up",           desc: "Gentle WhatsApp follow-up for patient balances — maintains dignity while collecting." },
       { icon: "📊", title: "Revenue by TPA",              desc: "Which insurance company gives you most business — and which delays payments most." },
     ],
-    notNeeded: ["Inventory (use dedicated medical software)", "Job work", "Vantro Network"],
+    notNeeded: ["Inventory (use dedicated medical software)", "Job work", "Starlane Network"],
     waTemplates: [
       { label: "Patient Balance", message: "Namaskar {name} ji, aapka {date} ka balance Rs.{amount} abhi bhi pending hai (insurance ke baad). Kripya reception se contact karein ya UPI se settle karein. Hospital number: {phone}" },
       { label: "TPA Claim Follow-Up", message: "Dear {tpa_name} team, Claim ID {claim_id} for patient {patient_name} (admission: {date}, amount: Rs.{amount}) is pending for {days} days. Request urgent processing. Contact: {contact}" },

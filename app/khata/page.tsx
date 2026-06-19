@@ -102,10 +102,10 @@ export default function KhataPage() {
   const whatsappStatement = (c: Customer) => {
     const bal = c.balance;
     const msg = bal > 0
-      ? `Namaste ${c.customer_name} ji 🙏\n\nAapka hamare yahan ₹${bal.toLocaleString("en-IN")} baaki hai.\n\nKripya jaldi settle karein.\n\n- Vantro Flow`
+      ? `Namaste ${c.customer_name} ji 🙏\n\nAapka hamare yahan ₹${bal.toLocaleString("en-IN")} baaki hai.\n\nKripya jaldi settle karein.\n\n- Starlane`
       : bal < 0
-      ? `Namaste ${c.customer_name} ji 🙏\n\nHumne aapka ₹${Math.abs(bal).toLocaleString("en-IN")} advance liya hua hai. Agle purchase mein adjust ho jayega.\n\n- Vantro Flow`
-      : `Namaste ${c.customer_name} ji 🙏\n\nAapka account clear hai. Koi baaki nahi.\n\n- Vantro Flow`;
+      ? `Namaste ${c.customer_name} ji 🙏\n\nHumne aapka ₹${Math.abs(bal).toLocaleString("en-IN")} advance liya hua hai. Agle purchase mein adjust ho jayega.\n\n- Starlane`
+      : `Namaste ${c.customer_name} ji 🙏\n\nAapka account clear hai. Koi baaki nahi.\n\n- Starlane`;
     if (c.customer_phone) {
       window.open(`https://wa.me/91${c.customer_phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(msg)}`, "_blank");
     } else {

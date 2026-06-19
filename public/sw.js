@@ -1,4 +1,4 @@
-// Vantro Flow Service Worker - Offline Support + Cache Strategy
+// Starlane Service Worker - Offline Support + Cache Strategy
 const CACHE_NAME = "vantro-v3";
 const STATIC_ASSETS = ["/manifest.json", "/icon-192.png", "/icon-512.png"];
 
@@ -28,7 +28,7 @@ self.addEventListener("fetch", (event) => {
   if (event.request.mode === "navigate" || event.request.destination === "document") {
     event.respondWith(
       fetch(event.request).catch(() =>
-        new Response("You are offline. Please reconnect and refresh Vantro.", {
+        new Response("You are offline. Please reconnect and refresh Starlane.", {
           status: 503,
           headers: { "Content-Type": "text/plain; charset=utf-8" },
         })
@@ -82,7 +82,7 @@ self.addEventListener("push", (event) => {
   if (data.type === "morning_briefing") targetUrl = "/ai-chat";
 
   event.waitUntil(
-    self.registration.showNotification(title || "Vantro Flow", {
+    self.registration.showNotification(title || "Starlane", {
       body: body || "You have a new update",
       icon: "/icon-192.png",
       badge: "/icon-192.png",

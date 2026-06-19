@@ -57,7 +57,7 @@ const MODELS = [
     name: "Business Health Scorer",
     version: "v1.0",
     type: "Weighted Neural Score",
-    description: "Computes a 0-100 health score from collection rate, engagement depth, and pickup rate. Powers the Vantro Trust Score.",
+    description: "Computes a 0-100 health score from collection rate, engagement depth, and pickup rate. Powers the Starlane Trust Score.",
     features: ["Collection efficiency", "Engagement depth", "Network trust", "Activity signals"],
     accuracy: "94%",
     icon: FiShield,
@@ -119,14 +119,14 @@ export default function NeuralEnginePage() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-black text-primary">Vantro Neural Engine</h2>
+                  <h2 className="text-xl font-black text-primary">Starlane Neural Engine</h2>
                   <span className="text-2xs font-black text-accent bg-accent-dim border border-accent/20 px-2 py-0.5 rounded-full font-mono">v2.1</span>
                 </div>
                 <p className="text-xs text-muted">Proprietary AI infrastructure powering every intelligent feature</p>
               </div>
             </div>
             <p className="text-sm text-secondary leading-relaxed">
-              The Vantro Neural Engine is a multi-model AI system combining a 70-billion parameter language neural network with purpose-built ML scoring models trained specifically on Indian MSME collections behavior. It runs in real-time, on your data, with sub-second latency.
+              The Starlane Neural Engine is a multi-model AI system combining a 70-billion parameter language neural network with purpose-built ML scoring models trained specifically on Indian MSME collections behavior. It runs in real-time, on your data, with sub-second latency.
             </p>
           </div>
         </div>
@@ -268,7 +268,7 @@ export default function NeuralEnginePage() {
           <div className="space-y-3">
             {[
               { version: "v3.0", label: "Payment Intent Classifier", desc: "Classify debtor WhatsApp replies in real-time: 'Kal pakka' → Promise, 'Dekhunga' → Uncertain", status: "Building", color: "#F5A524" },
-              { version: "v3.5", label: "Custom Vantro LLM", desc: "Fine-tuned language model trained on 1M+ Hinglish MSME conversations for collections", status: "Planned", color: "#9B6DFF" },
+              { version: "v3.5", label: "Custom Starlane LLM", desc: "Fine-tuned language model trained on 1M+ Hinglish MSME conversations for collections", status: "Planned", color: "#9B6DFF" },
               { version: "v4.0", label: "Credit Underwriting Model", desc: "B2B credit score from collections behavior — partner with NBFCs for embedded lending", status: "Planned", color: "#10D98A" },
             ].map(({ version, label, desc, status, color }) => (
               <div key={version} className="flex items-start gap-3 p-3 bg-surface-2 rounded-xl border border-border">

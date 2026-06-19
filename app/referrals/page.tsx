@@ -53,7 +53,7 @@ export default function ReferralsPage() {
 
   function shareWhatsApp() {
     if (!stats) return;
-    const msg = `Bhai, Vantro Flow try karo — outstanding payments automatically collect karta hai WhatsApp se. Mujhe bahut kaam aaya. Mere link se signup karo: ${stats.referral_link}`;
+    const msg = `Bhai, Starlane try karo — outstanding payments automatically collect karta hai WhatsApp se. Mujhe bahut kaam aaya. Mere link se signup karo: ${stats.referral_link}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }
 
@@ -127,7 +127,7 @@ export default function ReferralsPage() {
               <div className="space-y-3">
                 {[
                   { step: "1", text: "Share your referral link with business owner friends, CA, or distributor network" },
-                  { step: "2", text: "They sign up using your link and start using Vantro Flow" },
+                  { step: "2", text: "They sign up using your link and start using Starlane" },
                   { step: "3", text: "They upgrade to a paid plan (₹999+/month)" },
                   { step: "4", text: "You get 1 free month added to your account — automatically" },
                 ].map(s => (

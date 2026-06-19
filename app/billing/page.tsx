@@ -90,12 +90,12 @@ const FAQS = [
     a: "Yes — no contracts, no lock-in. Cancel from Settings in one click. You keep access until the end of your billing period.",
   },
   {
-    q: "What if Atlas doesn't help me collect more?",
+    q: "What if Starlane doesn't help me collect more?",
     a: "If you don't recover more than the plan cost in your first 30 days, we refund. No questions asked.",
   },
   {
     q: "Do I need to set up any WhatsApp API or account?",
-    a: "No. Atlas AutoPilot handles everything — WhatsApp reminders are sent via Vantro's managed system. Zero setup. Works the moment you upgrade.",
+    a: "No. Starlane AutoPilot handles everything — WhatsApp reminders are sent via Starlane's managed system. Zero setup. Works the moment you upgrade.",
   },
 ];
 
@@ -135,7 +135,7 @@ export default function BillingPage() {
       await new Promise<void>((resolve, reject) => {
         const rzp = new window.Razorpay({
           key, amount: order.amount, currency: order.currency, order_id: order.id,
-          name: "Atlas",
+          name: "Starlane",
           description: `${planId.charAt(0).toUpperCase() + planId.slice(1)} Plan — ${billing}`,
           prefill: { email: user?.email || "", contact: user?.phone || "", name: user?.business_name || "" },
           theme: { color: "#0066FF" },
@@ -209,7 +209,7 @@ export default function BillingPage() {
                 <p className="text-sm font-black text-primary">
                   {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} Plan — Active
                 </p>
-                <p className="text-xs text-muted">Automation is running. Thank you for building with Atlas.</p>
+                <p className="text-xs text-muted">Automation is running. Thank you for building with Starlane.</p>
               </div>
             </div>
             <button className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-secondary hover:text-primary hover:border-white/20 transition-all">
@@ -489,7 +489,7 @@ export default function BillingPage() {
               <p className="text-xs text-muted">50+ clients · White-label · Custom integrations · Dedicated team</p>
             </div>
           </div>
-          <a href="mailto:ishantswami13@gmail.com?subject=Atlas Enterprise Enquiry"
+          <a href="mailto:ishantswami13@gmail.com?subject=Starlane Enterprise Enquiry"
             target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-sm font-semibold text-secondary hover:text-primary hover:border-white/20 transition-all">
             Talk to Us <FiArrowRight size={13} />

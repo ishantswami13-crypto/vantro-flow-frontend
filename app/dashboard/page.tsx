@@ -202,7 +202,7 @@ export default function DashboardPage() {
     api.settings.get().then(d => {
       const s = d.settings;
       setGuideData({
-        waConnected: true, // Vantro AutoPilot — always active via Twilio
+        waConnected: true, // Starlane AutoPilot — always active via Twilio
         autoEnabled: !!s.automation_enabled,
       });
     }).catch(() => {});
@@ -609,7 +609,7 @@ export default function DashboardPage() {
                 <span className="text-lg">{badge.emoji}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-black" style={{ color: badge.color }}>{badge.label}</p>
-                  <p className="text-2xs text-muted">Aapki identity — Vantro community</p>
+                  <p className="text-2xs text-muted">Aapki identity — Starlane community</p>
                 </div>
                 <Link href="/collections" className="text-2xs font-bold shrink-0" style={{ color: badge.color }}>
                   Dekho →
@@ -714,7 +714,7 @@ export default function DashboardPage() {
             </div>
             <h3 className="text-lg font-bold text-primary mb-2">Upload your invoices to get started</h3>
             <p className="text-sm text-secondary mb-6 max-w-sm">
-              Go to Collections and upload a CSV with your outstanding invoices. Vantro will prioritize who to call and generate WhatsApp messages automatically.
+              Go to Collections and upload a CSV with your outstanding invoices. Starlane will prioritize who to call and generate WhatsApp messages automatically.
             </p>
             <Link href="/collections"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-all shadow-sm">
@@ -901,7 +901,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Vantro ID mini-card */}
+        {/* Starlane ID mini-card */}
         <Link href="/my-id">
           <div className="card-premium p-5 flex items-center gap-4 group cursor-pointer hover:border-accent/30 transition-all">
             <div className="w-12 h-12 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent shrink-0">
@@ -909,7 +909,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <p className="text-sm font-bold text-primary">Your Vantro Business ID</p>
+                <p className="text-sm font-bold text-primary">Your Starlane Business ID</p>
                 <span className="text-2xs font-bold text-accent bg-accent-dim border border-accent/20 px-1.5 py-0.5 rounded font-mono">
                   VAN-ID
                 </span>

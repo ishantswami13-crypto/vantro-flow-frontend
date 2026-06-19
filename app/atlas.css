@@ -558,7 +558,7 @@
 .atlas-page .rv2.in > *:nth-child(3) { transition-delay: .12s }
 .atlas-page .rv2.in > *:nth-child(4) { transition-delay: .18s }
 
-/* Atlas mark animation */
+/* Starlane mark animation */
 .atlas-mark-spin { animation: atlasBreath 4s ease-in-out infinite }
 @keyframes atlasBreath { 0%,100%{opacity:.82}50%{opacity:1} }
 

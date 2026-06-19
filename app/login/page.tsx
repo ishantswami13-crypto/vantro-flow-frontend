@@ -7,12 +7,22 @@ import { FiEye, FiEyeOff, FiArrowRight, FiCheck } from "react-icons/fi";
 import { api, saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 
-function AtlasMark({ size = 26 }: { size?: number }) {
+function StarlaneMark({ size = 26 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" aria-hidden="true">
-      <path fill="white" fillRule="evenodd" className="atlas-mark-spin"
-        d="M 50 8 L 4 92 L 96 92 Z M 50 78 L 38 92 L 62 92 Z M 26 59 L 74 59 L 74 68 L 26 68 Z"/>
-    </svg>
+    <span
+      aria-hidden="true"
+      style={{
+        display: "inline-block",
+        width: size,
+        height: size,
+        backgroundImage: 'url("/brand/starlane-icon.jpeg")',
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        backgroundSize: "contain",
+        borderRadius: Math.max(4, Math.round(size * 0.18)),
+        flexShrink: 0,
+      }}
+    />
   );
 }
 
@@ -65,8 +75,8 @@ export default function LoginPage() {
     <div className="atlas-page auth-page">
       <header className="topbar">
         <Link href="/" style={{display:"flex",alignItems:"center",gap:"10px",textDecoration:"none",color:"#fff"}}>
-          <AtlasMark size={26}/>
-          <span className="brand-wm">Atlas</span>
+          <StarlaneMark size={26}/>
+          <span className="brand-wm">Starlane</span>
         </Link>
         <div className="topbar-right">No account? <Link href="/signup">Start free</Link></div>
       </header>
@@ -74,7 +84,7 @@ export default function LoginPage() {
       <main className="center">
         <div className="auth-head">
           <h1>Welcome back.</h1>
-          <p style={{fontFamily:"'Hanken Grotesk',system-ui"}}>{step === "email" ? "Sign in to your Atlas workspace." : form.email}</p>
+          <p style={{fontFamily:"'Hanken Grotesk',system-ui"}}>{step === "email" ? "Sign in to your Starlane workspace." : form.email}</p>
         </div>
 
         {error && (
@@ -148,7 +158,7 @@ export default function LoginPage() {
       </main>
 
       <footer className="page-foot">
-        <span>&copy; 2026 Vantro Technologies</span>
+        <span>&copy; 2026 Atlax</span>
         <div style={{display:"flex",gap:"24px"}}>
           <Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link>
         </div>

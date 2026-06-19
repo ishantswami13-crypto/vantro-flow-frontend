@@ -1264,7 +1264,7 @@ export default function CollectionsPage() {
                 {[
                   { step: "1", icon: "📂", title: "Go to Reports", desc: "Gateway → Display → Statements of Accounts → Outstandings → Receivables" },
                   { step: "2", icon: "📊", title: "Export to Excel", desc: "Set date range to current. Press Alt+E or click Export button. Choose Excel format." },
-                  { step: "3", icon: "⬆️", title: "Upload above", desc: "Drop that Excel file in the box above. Vantro auto-detects columns — no formatting needed." },
+                  { step: "3", icon: "⬆️", title: "Upload above", desc: "Drop that Excel file in the box above. Starlane auto-detects columns — no formatting needed." },
                 ].map(({ step, icon, title, desc }) => (
                   <div key={step} className="flex gap-3">
                     <div className="w-6 h-6 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0 mt-0.5">
@@ -1277,7 +1277,7 @@ export default function CollectionsPage() {
                   </div>
                 ))}
                 <div className="p-2.5 bg-warning/10 border border-warning/30 rounded-lg">
-                  <p className="text-2xs text-warning font-medium">💡 Tip: "Ledger Outstanding" report works best. Any format is accepted — Vantro reads it all.</p>
+                  <p className="text-2xs text-warning font-medium">💡 Tip: "Ledger Outstanding" report works best. Any format is accepted — Starlane reads it all.</p>
                 </div>
               </div>
             )}

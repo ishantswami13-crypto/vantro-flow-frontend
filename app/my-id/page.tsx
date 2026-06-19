@@ -80,12 +80,12 @@ export default function MyIdPage() {
 
   const shareLink = () => {
     if (navigator.share) {
-      navigator.share({ title: `${profile?.business_name} — Atlas ID`, url: profileUrl });
+      navigator.share({ title: `${profile?.business_name} — Starlane ID`, url: profileUrl });
     } else copyLink();
   };
 
   if (loading) return (
-    <DashboardLayout pageTitle="My Atlas ID">
+    <DashboardLayout pageTitle="My Starlane ID">
       <div className="flex items-center justify-center py-20 text-sm text-muted animate-pulse">
         Building your financial identity...
       </div>
@@ -97,12 +97,12 @@ export default function MyIdPage() {
     profile.trust_score >= 40 ? "text-warning" : "text-danger";
 
   return (
-    <DashboardLayout pageTitle="My Atlas ID">
+    <DashboardLayout pageTitle="My Starlane ID">
       <div className="max-w-2xl mx-auto space-y-5 page-enter">
 
         {/* Header */}
         <div>
-          <h2 className="text-2xl font-black text-primary tracking-tight">Your Atlas Business ID</h2>
+          <h2 className="text-2xl font-black text-primary tracking-tight">Your Starlane Business ID</h2>
           <p className="text-sm text-muted mt-0.5">Your verified financial identity — share it with anyone to build trust instantly.</p>
         </div>
 
@@ -189,11 +189,11 @@ export default function MyIdPage() {
 
         {/* Share */}
         <div className="card-premium p-5">
-          <p className="text-sm font-bold text-primary mb-1">Share Your Atlas ID</p>
+          <p className="text-sm font-bold text-primary mb-1">Share Your Starlane ID</p>
           <p className="text-xs text-muted mb-4">Share this link with customers, suppliers, and partners to build instant trust.</p>
           <div className="flex gap-2">
             <div className="flex-1 bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-xs text-muted font-mono truncate">
-              {profileUrl || "vantroflow.com/b/..."}
+              {profileUrl || "starlane.app/b/..."}
             </div>
             <button onClick={copyLink}
               className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-surface-2 border border-border text-xs font-semibold text-secondary hover:text-primary hover:border-accent/40 transition-all shrink-0">
@@ -226,7 +226,7 @@ export default function MyIdPage() {
             </div>
             <div className="flex-1 text-xs text-secondary">
               {referralCount === 0
-                ? "Share your Atlas ID link — every signup through it counts as your referral."
+                ? "Share your Starlane ID link — every signup through it counts as your referral."
                 : `You've helped ${referralCount} business${referralCount > 1 ? "es" : ""} build their financial identity. Keep sharing!`}
             </div>
           </div>
@@ -244,8 +244,8 @@ export default function MyIdPage() {
           <div className="space-y-2.5">
             {[
               { label: "Collection Rate",   weight: "40%", desc: "% of invoices collected successfully" },
-              { label: "Invoice Volume",    weight: "20%", desc: "Number of invoices tracked on Atlas" },
-              { label: "Time on Platform",  weight: "20%", desc: "How long you've been an Atlas member" },
+              { label: "Invoice Volume",    weight: "20%", desc: "Number of invoices tracked on Starlane" },
+              { label: "Time on Platform",  weight: "20%", desc: "How long you've been a Starlane member" },
               { label: "Calls & Follow-ups",weight: "20%", desc: "Active collection efforts logged" },
             ].map(({ label, weight, desc }) => (
               <div key={label} className="flex items-start gap-3">

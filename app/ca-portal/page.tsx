@@ -60,13 +60,14 @@ export default function CAPortalPage() {
   }
 
   function copyCode(code: string) {
-    navigator.clipboard.writeText(`https://vantroflow.app/signup?ref=${code}`);
+    navigator.clipboard.writeText(`${window.location.origin}/signup?ref=${code}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
   function shareWhatsApp(code: string) {
-    const msg = `Namaskar! Main ek CA hoon aur mere clients ke liye Vantro Flow recommend karta hoon — outstanding payments WhatsApp se automatically collect hote hain. Free trial ke liye signup karein: https://vantroflow.app/signup?ref=${code}`;
+    const link = `${window.location.origin}/signup?ref=${code}`;
+    const msg = `Namaskar! Main ek CA hoon aur mere clients ke liye Starlane recommend karta hoon — outstanding payments WhatsApp se automatically collect hote hain. Free trial ke liye signup karein: ${link}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }
 
@@ -78,7 +79,7 @@ export default function CAPortalPage() {
         <div className="text-center py-16 space-y-5">
           <div className="text-6xl">🏦</div>
           <h1 className="text-2xl font-bold text-white">CA Partner Portal</h1>
-          <p className="text-gray-400">Are you a CA (Chartered Accountant) or business consultant? Register as a Vantro partner and earn commission for every client you bring.</p>
+          <p className="text-gray-400">Are you a CA (Chartered Accountant) or business consultant? Register as a Starlane partner and earn commission for every client you bring.</p>
           <div className="grid grid-cols-3 gap-4 text-center">
             {[
               { value: "₹300/mo", label: "Per paying client" },
@@ -158,7 +159,7 @@ export default function CAPortalPage() {
           <h2 className="text-white font-semibold">Share with Clients</h2>
           <div className="bg-[#0f0f23] border border-white/10 rounded-lg px-4 py-3 flex items-center justify-between gap-2">
             <span className="text-sm text-blue-400 truncate">
-              https://vantroflow.app/signup?ref={dashboard?.stats.referral_code}
+              /signup?ref={dashboard?.stats.referral_code}
             </span>
             <button onClick={() => copyCode(dashboard?.stats.referral_code || "")} className="text-xs px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg shrink-0">
               {copied ? "Copied!" : "Copy Link"}

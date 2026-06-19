@@ -109,7 +109,7 @@ export default function IndustryPage() {
             <p className="text-3xl mb-3">🏢</p>
             <h1 className="text-2xl font-black text-primary mb-2">What kind of business are you?</h1>
             <p className="text-sm text-secondary">
-              Vantro will show only the features that matter for your business.
+              Starlane will show only the features that matter for your business.
               Useless pages will be hidden.
             </p>
           </div>

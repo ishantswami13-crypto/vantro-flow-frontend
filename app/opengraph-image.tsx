@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Vantro — AI-powered Business OS for Indian MSMEs";
+export const alt = "Starlane — AI-powered Business OS for Indian MSMEs";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -46,7 +46,7 @@ export default function OgImage() {
             <div style={{ width: 13, height: 5, borderRadius: 3, background: "rgba(255,255,255,0.60)" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 28, fontWeight: 900, color: "white", letterSpacing: -0.5 }}>Vantro</span>
+            <span style={{ fontSize: 28, fontWeight: 900, color: "white", letterSpacing: -0.5 }}>Starlane</span>
             <span style={{
               fontSize: 12, fontWeight: 600, color: "#0066FF",
               background: "rgba(0,102,255,0.15)", padding: "2px 8px",
@@ -87,7 +87,7 @@ export default function OgImage() {
           position: "absolute", bottom: 48, right: 80,
           fontSize: 14, color: "rgba(255,255,255,0.3)",
         }}>
-          vantro.in
+          Starlane by Atlax
         </div>
       </div>
     ),

@@ -1,6 +1,6 @@
 {
-  "name": "Atlas by Vantro — Business OS",
-  "short_name": "Atlas",
+  "name": "Starlane by Atlax — Business OS",
+  "short_name": "Starlane",
   "description": "AI-powered Business Operating System for every Indian business",
   "start_url": "/dashboard",
   "scope": "/",
@@ -19,7 +19,7 @@
     { "name": "Collections", "short_name": "Collect", "url": "/collections", "description": "View outstanding receivables" },
     { "name": "AI Founder", "short_name": "AI", "url": "/ai-chat", "description": "Ask your AI co-founder" },
     { "name": "Network", "short_name": "Network", "url": "/network", "description": "Verify business partners" },
-    { "name": "My Atlas ID", "short_name": "ID", "url": "/my-id", "description": "Share your business identity" }
+    { "name": "My Starlane ID", "short_name": "ID", "url": "/my-id", "description": "Share your business identity" }
   ],
   "screenshots": [
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "form_factor": "wide" }

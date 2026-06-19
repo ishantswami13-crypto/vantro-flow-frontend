@@ -15,7 +15,7 @@ const TEMPLATES = [
     id: "gentle",
     label: "Gentle Reminder",
     tone: "gentle" as const,
-    text: "Namaste {name} ji 🙏\n\nHamare records mein aapka {amount} payment {days} din se pending hai.\n\nKya aap is hafte payment arrange kar sakte hain?\n{upi_link}\nDhanyawad\nVantro Collections",
+    text: "Namaste {name} ji 🙏\n\nHamare records mein aapka {amount} payment {days} din se pending hai.\n\nKya aap is hafte payment arrange kar sakte hain?\n{upi_link}\nDhanyawad\nStarlane Collections",
   },
   {
     id: "firm",
@@ -334,7 +334,7 @@ export default function WhatsAppPage() {
                     VC
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-white">Vantro Collections</p>
+                    <p className="text-xs font-semibold text-white">Starlane Collections</p>
                     <div className="flex items-center gap-1.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#25D366]" />
                       <p className="text-[10px] text-[#8696A0]">Business Account · Online</p>

@@ -95,7 +95,7 @@ export default function SettingsPage() {
   const [extractResult, setExtractResult] = useState<{ style_description: string; sample_phrase: string } | null>(null);
   const [voiceActive, setVoiceActive] = useState(false);
 
-  // ── Integrations state (test WhatsApp only — rest is Vantro-managed) ──
+  // ── Integrations state (test WhatsApp only — rest is Starlane-managed) ──
   const [testLoading, setTestLoading]     = useState(false);
   const [testResult, setTestResult]       = useState<{ ok: boolean; msg: string } | null>(null);
 
@@ -273,7 +273,7 @@ export default function SettingsPage() {
                   <Button type="submit" icon={<FiCheck size={14} />} loading={saving}>Save Profile</Button>
                 </form>
                 <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
-                  <div><p className="text-xs font-semibold text-secondary">Sign out of Vantro</p><p className="text-2xs text-muted">You can log back in anytime</p></div>
+                  <div><p className="text-xs font-semibold text-secondary">Sign out of Starlane</p><p className="text-2xs text-muted">You can log back in anytime</p></div>
                   <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-danger/30 text-danger text-xs font-semibold hover:bg-danger/10 transition-colors">
                     <FiLogOut size={12} /> Sign Out
                   </button>
@@ -424,7 +424,7 @@ export default function SettingsPage() {
               </Card>
             )}
 
-            {/* ── INTEGRATIONS — Vantro AutoPilot ────────── */}
+            {/* ── INTEGRATIONS — Starlane AutoPilot ────────── */}
             {tab === "integrations" && (
               <div className="space-y-5">
 
@@ -440,13 +440,13 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-base font-black text-primary">Vantro AutoPilot</p>
+                        <p className="text-base font-black text-primary">Starlane AutoPilot</p>
                         <span className="flex items-center gap-1 text-2xs font-bold text-success bg-success/10 border border-success/20 px-2 py-0.5 rounded-full">
                           <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" /> Active
                         </span>
                       </div>
                       <p className="text-sm text-secondary leading-relaxed">
-                        WhatsApp, Razorpay, aur daily dunning — sab Vantro handle karta hai.<br />
+                        WhatsApp, Razorpay, aur daily dunning — sab Starlane handle karta hai.<br />
                         <span className="text-muted text-xs">Koi API key dene ki zaroorat nahi. Bas apna business chalao.</span>
                       </p>
                     </div>
@@ -455,7 +455,7 @@ export default function SettingsPage() {
 
                 {/* Status rows */}
                 <Card>
-                  <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">What Vantro Manages For You</p>
+                  <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">What Starlane Manages For You</p>
                   <div className="space-y-4">
                     {/* WhatsApp */}
                     <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
@@ -464,7 +464,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-primary">WhatsApp Reminders</p>
-                        <p className="text-2xs text-muted">Powered by Vantro's Twilio account · Sent from verified WhatsApp number</p>
+                        <p className="text-2xs text-muted">Powered by Starlane's Twilio account · Sent from verified WhatsApp number</p>
                       </div>
                       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
                         style={{ background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" }}>
@@ -479,7 +479,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-primary">Payment Links (Razorpay)</p>
-                        <p className="text-2xs text-muted">Powered by Vantro's Razorpay · UPI, card, netbanking sab accepted</p>
+                        <p className="text-2xs text-muted">Powered by Starlane's Razorpay · UPI, card, netbanking sab accepted</p>
                       </div>
                       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
                         style={{ background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" }}>

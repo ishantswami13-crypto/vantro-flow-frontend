@@ -1,11 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <!-- Background: pure black rounded square -->
   <rect width="100" height="100" rx="22" fill="#000000"/>
-
-  <!-- Subtle inner border -->
   <rect x="0.75" y="0.75" width="98.5" height="98.5" rx="21.5"
         stroke="rgba(255,255,255,0.10)" stroke-width="1.5" fill="none"/>
-
-  <!-- Logo Mark -->
-  <text x="50" y="68" dominant-baseline="middle" text-anchor="middle" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-weight="800" font-size="60" fill="#ffffff">A</text>
+  <path d="M50 18 C52.8 37 56.9 43.1 75 46 C56.9 48.9 52.8 55 50 74 C47.2 55 43.1 48.9 25 46 C43.1 43.1 47.2 37 50 18Z" fill="#ffffff"/>
+  <path d="M23 65 C36 55 53 47 72 38" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+  <path d="M20 67 C29 69 37 68 45 64" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="78" cy="35" r="6" fill="#ffffff"/>
 </svg>

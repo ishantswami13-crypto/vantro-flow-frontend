@@ -10,11 +10,11 @@ const APP_URL = "https://vantro-flow-frontend.vercel.app";
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Atlas by Vantro | AI Business Automation Infrastructure",
-    template: "%s | Atlas",
+    default: "Starlane by Atlax | AI Business Automation Infrastructure",
+    template: "%s | Starlane",
   },
   description:
-    "Atlas by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+    "Starlane by Atlax is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
   keywords: [
     "business automation India", "MSME automation software", "collections automation India",
     "WhatsApp business automation", "invoice automation India", "Hinglish WhatsApp reminders",
@@ -22,35 +22,35 @@ export const metadata: Metadata = {
     "autopilot business software", "distributor automation India", "vyapar alternative",
     "receivables management India", "B2B collections India",
   ],
-  authors: [{ name: "Vantro Technologies", url: APP_URL }],
-  creator: "Vantro Technologies",
-  publisher: "Vantro Technologies",
+  authors: [{ name: "Atlax", url: APP_URL }],
+  creator: "Atlax",
+  publisher: "Atlax",
 
   openGraph: {
     type: "website",
     locale: "en_IN",
     url: APP_URL,
-    siteName: "Atlas",
-    title: "Atlas by Vantro | AI Business Automation Infrastructure",
+    siteName: "Starlane",
+    title: "Starlane by Atlax | AI Business Automation Infrastructure",
     description:
-      "Atlas by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+      "Starlane by Atlax is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Vantro — AI-powered Business OS for Indian MSMEs",
+        alt: "Starlane — AI-powered Business OS for Indian MSMEs",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Atlas by Vantro | AI Business Automation Infrastructure",
+    title: "Starlane by Atlax | AI Business Automation Infrastructure",
     description:
-      "Atlas by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+      "Starlane by Atlax is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
     images: ["/opengraph-image"],
-    creator: "@vantro_in",
+    creator: "@ishantswami13",
   },
 
   icons: {
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Vantro",
+    title: "Starlane",
   },
 
   other: {
@@ -97,7 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              name: "Atlas by Vantro",
+              name: "Starlane by Atlax",
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web, Android, iOS",
               offers: {
@@ -107,7 +107,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 priceValidUntil: "2026-12-31",
               },
               description:
-                "Atlas by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+                "Starlane by Atlax is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
               url: APP_URL,
               inLanguage: ["en", "hi"],
               audience: {
