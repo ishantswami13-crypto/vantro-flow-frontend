@@ -408,7 +408,7 @@ export default function LandingPage() {
       <nav ref={navRef} className={`nav${mobOpen?" mob-open":""}`}>
         <div className="wrap nav-inner">
           <a className="brand" href="#top" style={{display:"flex",alignItems:"center",gap:"11px",textDecoration:"none"}}>
-            <StarlaneMark size={52} imageScale={1.85}/>
+            <StarlaneMark size={44} imageScale={1.6}/>
             <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"14.5px",letterSpacing:".2em",textTransform:"uppercase",color:"white",lineHeight:1}}>STARLANE</span>
           </a>
           <div className="nav-links">
