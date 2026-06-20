@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { enableDemoMode } from "@/lib/demo";
 
-function StarlaneMark({ size = 28 }: { size?: number }) {
+function StarlaneMark({ size = 28, imageScale = 1 }: { size?: number; imageScale?: number }) {
   return (
     <span
       aria-hidden="true"
@@ -15,7 +15,7 @@ function StarlaneMark({ size = 28 }: { size?: number }) {
         backgroundImage: 'url("/brand/starlane-icon.jpeg")',
         backgroundRepeat: "no-repeat",
         backgroundPosition: "center",
-        backgroundSize: "contain",
+        backgroundSize: `${Math.round(imageScale * 100)}%`,
         borderRadius: Math.max(4, Math.round(size * 0.18)),
         flexShrink: 0,
       }}
@@ -408,7 +408,7 @@ export default function LandingPage() {
       <nav ref={navRef} className={`nav${mobOpen?" mob-open":""}`}>
         <div className="wrap nav-inner">
           <a className="brand" href="#top" style={{display:"flex",alignItems:"center",gap:"11px",textDecoration:"none"}}>
-            <StarlaneMark size={28}/>
+            <StarlaneMark size={52} imageScale={1.85}/>
             <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"14.5px",letterSpacing:".2em",textTransform:"uppercase",color:"white",lineHeight:1}}>STARLANE</span>
           </a>
           <div className="nav-links">
