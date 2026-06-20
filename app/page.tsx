@@ -12,11 +12,10 @@ function StarlaneMark({ size = 28, imageScale = 1 }: { size?: number; imageScale
         display: "inline-block",
         width: size,
         height: size,
-        backgroundImage: 'url("/brand/starlane-icon.jpeg")',
+        backgroundImage: 'url("/brand/starlane-icon-transparent.png")',
         backgroundRepeat: "no-repeat",
         backgroundPosition: "center",
-        backgroundSize: `${Math.round(imageScale * 100)}%`,
-        borderRadius: Math.max(4, Math.round(size * 0.18)),
+        backgroundSize: `${Math.round(imageScale * 100)}% auto`,
         flexShrink: 0,
       }}
     />
@@ -408,7 +407,7 @@ export default function LandingPage() {
       <nav ref={navRef} className={`nav${mobOpen?" mob-open":""}`}>
         <div className="wrap nav-inner">
           <a className="brand" href="#top" style={{display:"flex",alignItems:"center",gap:"11px",textDecoration:"none"}}>
-            <StarlaneMark size={44} imageScale={1.6}/>
+            <StarlaneMark size={36}/>
             <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"14.5px",letterSpacing:".2em",textTransform:"uppercase",color:"white",lineHeight:1}}>STARLANE</span>
           </a>
           <div className="nav-links">
