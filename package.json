@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "security:secrets": "node scripts/frontend-env-guard.js"
+    "security:secrets": "node scripts/frontend-env-guard.js",
+    "test:auth-mode": "node scripts/auth-mode-test.js"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

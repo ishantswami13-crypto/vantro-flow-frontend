@@ -10,7 +10,7 @@ import {
   FiList, FiTrendingUp, FiSettings, FiPhone, FiShield, FiZap,
   FiFileText, FiBook, FiPackage, FiUsers,
 } from "react-icons/fi";
-import { api, getUser, type Metrics, type Invoice, type OwnerBriefingResponse } from "@/lib/api";
+import { api, getUser, type Metrics, type Invoice, type OwnerBriefingResponse, authHeaders } from "@/lib/api";
 import QuickSale from "@/components/QuickSale";
 import WelcomeGuide from "@/components/WelcomeGuide";
 import OwnerBriefingCard from "@/components/agents/OwnerBriefingCard";
@@ -230,8 +230,7 @@ export default function DashboardPage() {
       setPromises(todayPromises);
     }).catch(() => {});
 
-    const token = localStorage.getItem("vantro_token");
-    fetch(`${API}/api/ai-actions/counts`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API}/api/ai-actions/counts`, { headers: { ...authHeaders() }, credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setActionCounts(d); })
       .catch(() => {});

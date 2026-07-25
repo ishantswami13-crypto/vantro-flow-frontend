@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
@@ -166,16 +167,15 @@ export default function BankPage() {
   const [showAdd, setShowAdd]   = useState(false);
   const [addForm, setAddForm]   = useState({ date: new Date().toISOString().split("T")[0], description: "", amount: "", type: "credit" as "credit" | "debit" });
 
-  const tok = () => typeof window !== "undefined" ? localStorage.getItem("vantro_token") || "" : "";
-  const hdr = () => ({ "Content-Type": "application/json", Authorization: `Bearer ${tok()}` });
+  const hdr = () => ({ ...authHeaders(), "Content-Type": "application/json" });
 
   const load = async () => {
     setLoading(true);
     try {
       const [aRes, tRes, bRes] = await Promise.all([
-        fetch(`${API}/api/bank/accounts`, { headers: hdr() }),
-        fetch(`${API}/api/bank/transactions`, { headers: hdr() }),
-        fetch(`${API}/api/bills`, { headers: hdr() }),
+        fetch(`${API}/api/bank/accounts`, { headers: hdr(), credentials: "include" as RequestCredentials }),
+        fetch(`${API}/api/bank/transactions`, { headers: hdr(), credentials: "include" as RequestCredentials }),
+        fetch(`${API}/api/bills`, { headers: hdr(), credentials: "include" as RequestCredentials }),
       ]);
       const [aD, tD, bD] = await Promise.all([aRes.json(), tRes.json(), bRes.json()]);
       setAccounts(aD.accounts || []);
@@ -200,7 +200,7 @@ export default function BankPage() {
     e.preventDefault();
     setAddingAcct(true);
     try {
-      const r = await fetch(`${API}/api/bank/accounts`, { method: "POST", headers: hdr(), body: JSON.stringify(acctForm) });
+      const r = await fetch(`${API}/api/bank/accounts`, { method: "POST", headers: hdr(), credentials: "include" as RequestCredentials, body: JSON.stringify(acctForm) });
       const d = await r.json();
       if (d.success) {
         setAccounts(a => [...a, d.account]);
@@ -212,7 +212,7 @@ export default function BankPage() {
 
   const deleteAccount = async (id: number) => {
     if (!confirm("Remove this bank account?")) return;
-    await fetch(`${API}/api/bank/accounts/${id}`, { method: "DELETE", headers: hdr() });
+    await fetch(`${API}/api/bank/accounts/${id}`, { method: "DELETE", headers: hdr(), credentials: "include" as RequestCredentials });
     setAccounts(a => a.filter(x => x.id !== id));
   };
 
@@ -241,7 +241,7 @@ export default function BankPage() {
     try {
       for (const row of selected) {
         await fetch(`${API}/api/bank/transactions`, {
-          method: "POST", headers: hdr(),
+          method: "POST", headers: hdr(), credentials: "include" as RequestCredentials,
           body: JSON.stringify({ txn_date: row.date, description: row.description, amount: row.amount, type: row.type, account_id: importAcct?.id }),
         });
       }
@@ -257,7 +257,7 @@ export default function BankPage() {
     setSaving(true);
     try {
       const r = await fetch(`${API}/api/bank/transactions`, {
-        method: "POST", headers: hdr(),
+        method: "POST", headers: hdr(), credentials: "include" as RequestCredentials,
         body: JSON.stringify({ ...addForm, txn_date: addForm.date, amount: parseFloat(addForm.amount) }),
       });
       const d = await r.json();
@@ -269,7 +269,7 @@ export default function BankPage() {
     setSaving(true);
     try {
       const r = await fetch(`${API}/api/bank/match`, {
-        method: "POST", headers: hdr(),
+        method: "POST", headers: hdr(), credentials: "include" as RequestCredentials,
         body: JSON.stringify({ transaction_id: txnId, match_type: type, match_id: matchId }),
       });
       const d = await r.json();
@@ -277,8 +277,8 @@ export default function BankPage() {
     } finally { setSaving(false); }
   };
 
-  const ignoreTxn  = async (id: number) => { await fetch(`${API}/api/bank/transactions/${id}/ignore`, { method: "PATCH", headers: hdr() }); load(); };
-  const deleteTxn  = async (id: number) => { await fetch(`${API}/api/bank/transactions/${id}`, { method: "DELETE", headers: hdr() }); load(); };
+  const ignoreTxn  = async (id: number) => { await fetch(`${API}/api/bank/transactions/${id}/ignore`, { method: "PATCH", headers: hdr(), credentials: "include" as RequestCredentials }); load(); };
+  const deleteTxn  = async (id: number) => { await fetch(`${API}/api/bank/transactions/${id}`, { method: "DELETE", headers: hdr(), credentials: "include" as RequestCredentials }); load(); };
 
   const creditTotal = txns.filter(t => t.type === "credit").reduce((s, t) => s + t.amount, 0);
   const unmatched   = txns.filter(t => t.status === "unmatched" && t.type === "credit").length;

@@ -80,7 +80,7 @@ function OTPStep({ preToken, userEmail, userPhone, onVerified }: {
 
   async function handleResend() {
     setResending(true); setError(""); setResent(false);
-    try { await fetch(`${BASE}/api/auth/resend-otp`,{method:"POST",headers:{Authorization:`Bearer ${preToken}`}}); setResent(true); setCountdown(30); setOtp(["","","","","",""]); inputs.current[0]?.focus(); }
+    try { await fetch(`${BASE}/api/auth/resend-otp`,{method:"POST",headers:{Authorization:`Bearer ${preToken}`}, credentials:"include"}); setResent(true); setCountdown(30); setOtp(["","","","","",""]); inputs.current[0]?.focus(); }
     catch { setError("Could not resend."); }
     finally { setResending(false); }
   }
@@ -151,13 +151,13 @@ function SignupForm() {
       const data = await res.json();
       if (!res.ok||!data.success) throw new Error(data.error||"Signup failed");
       if (data.needs_otp) { setPreToken(data.pre_token); setVerifiedUser({email:data.user.email,phone:data.user.phone}); setOtpStep(true); }
-      else { saveAuth(data.token,data.user,true,data.csrf_token); posthog.identify(data.user.id,{email:data.user.email,plan:data.user.plan}); router.push("/dashboard"); }
+      else { await saveAuth(data.token,data.user,true,data.csrf_token); posthog.identify(data.user.id,{email:data.user.email,plan:data.user.plan}); router.push("/dashboard"); }
     } catch (err: unknown) { setError(err instanceof Error?err.message:"Signup failed"); }
     finally { setLoading(false); }
   }
 
-  const handleOTPVerified = (token: string, user: any, csrfToken?: string|null) => {
-    saveAuth(token,user,true,csrfToken);
+  const handleOTPVerified = async (token: string, user: any, csrfToken?: string|null) => {
+    await saveAuth(token,user,true,csrfToken);
     posthog.identify(user.id,{email:user.email,name:user.business_name,plan:user.plan});
     posthog.capture("user_signed_up",{business_type:form.business_type});
     router.push("/dashboard");

@@ -15,7 +15,7 @@ import {
   FiToggleLeft, FiToggleRight, FiPlus, FiSend,
   FiAlertCircle, FiCopy, FiInfo,
 } from "react-icons/fi";
-import { api, getUser, clearAuth, type DunningRule } from "@/lib/api";
+import { api, getUser, clearAuth, type DunningRule, authHeaders } from "@/lib/api";
 import { INDUSTRY_OPTIONS, setBusinessType } from "@/lib/businessTypes";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -164,8 +164,7 @@ export default function SettingsPage() {
     if (!validSamples.length) return;
     setExtracting(true);
     try {
-      const token = localStorage.getItem("vantro_token") || "";
-      const r = await fetch(`${BASE}/api/ai/extract-voice`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ samples: validSamples }) });
+      const r = await fetch(`${BASE}/api/ai/extract-voice`, { method: "POST", headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ samples: validSamples }) });
       const data = await r.json();
       if (data.success) { setExtractResult({ style_description: data.style_description, sample_phrase: data.sample_phrase }); setVoice(v => ({ ...v, ai_persona: data.style_description || v.ai_persona, voice_style: data.detected_style || v.voice_style })); setVoiceActive(true); }
     } catch { /* noop */ }

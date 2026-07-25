@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders, isLoggedIn } from "@/lib/api";
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
@@ -23,15 +24,14 @@ export default function CAPortalPage() {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") : null;
 
   async function fetchDashboard() {
-    if (!token) return;
+    if (!isLoggedIn()) return;
     setLoading(true);
     try {
       const [dashRes, clientRes] = await Promise.all([
-        fetch(`${BASE}/api/ca-partners/dashboard`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${BASE}/api/ca-partners/clients`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${BASE}/api/ca-partners/dashboard`, { headers: { ...authHeaders() }, credentials: "include" }),
+        fetch(`${BASE}/api/ca-partners/clients`, { headers: { ...authHeaders() }, credentials: "include" }),
       ]);
       const dashData = await dashRes.json();
       const clientData = await clientRes.json();
@@ -50,7 +50,7 @@ export default function CAPortalPage() {
     try {
       const r = await fetch(`${BASE}/api/ca-partners/register`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify(regForm),
       });
       const d = await r.json();

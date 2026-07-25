@@ -1,9 +1,9 @@
 "use client";
+import { authHeaders } from "@/lib/api";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { getToken } from "@/lib/api";
 import { FiBook, FiMessageSquare, FiPhone, FiSearch, FiUser, FiUsers } from "react-icons/fi";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -38,7 +38,7 @@ export default function CustomersPage() {
     setError("");
     try {
       const res = await fetch(`${API}/api/khata`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        headers: authHeaders(), credentials: "include",
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Could not load customers");
@@ -52,7 +52,7 @@ export default function CustomersPage() {
 
   useEffect(() => {
     loadCustomers();
-    fetch(`${API}/api/customer-scores`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    fetch(`${API}/api/customer-scores`, { headers: authHeaders(), credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (!d?.scores) return;

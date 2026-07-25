@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders, isLoggedIn } from "@/lib/api";
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
@@ -20,24 +21,23 @@ export default function ReferralsPage() {
   const [claimMsg, setClaimMsg] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") : null;
 
   useEffect(() => {
-    if (!token) return;
-    fetch(`${BASE}/api/referrals/my-stats`, { headers: { Authorization: `Bearer ${token}` } })
+    if (!isLoggedIn()) return;
+    fetch(`${BASE}/api/referrals/my-stats`, { headers: { ...authHeaders() }, credentials: "include" })
       .then(r => r.json())
       .then(d => { if (d.success) setStats(d.stats); })
       .finally(() => setLoading(false));
   }, []);
 
   async function claimReward() {
-    if (!token) return;
+    if (!isLoggedIn()) return;
     setClaiming(true); setClaimMsg("");
-    const r = await fetch(`${BASE}/api/referrals/claim-reward`, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+    const r = await fetch(`${BASE}/api/referrals/claim-reward`, { method: "POST", headers: { ...authHeaders() }, credentials: "include" });
     const d = await r.json();
     setClaimMsg(d.message || "");
     if (d.success) {
-      const r2 = await fetch(`${BASE}/api/referrals/my-stats`, { headers: { Authorization: `Bearer ${token}` } });
+      const r2 = await fetch(`${BASE}/api/referrals/my-stats`, { headers: { ...authHeaders() }, credentials: "include" });
       const d2 = await r2.json();
       if (d2.success) setStats(d2.stats);
     }

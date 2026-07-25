@@ -1,8 +1,9 @@
 "use client";
+import { isLoggedIn } from "@/lib/api";
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { FiAlertTriangle, FiPhone, FiMessageSquare, FiDownload } from "react-icons/fi";
-import { getUser } from "@/lib/api";
+import { getUser, authHeaders } from "@/lib/api";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -28,14 +29,17 @@ export default function BadDebtPage() {
   const [error, setError]       = useState("");
   const [filter, setFilter]     = useState<"all" | "critical" | "high" | "medium">("all");
 
-  const token  = typeof window !== "undefined" ? localStorage.getItem("vantro_token") : null;
+  // Session lives in an HttpOnly cookie or localStorage depending on mode;
+
+
+  // this component authenticates through authHeaders() either way.
   const user   = getUser();
   const userId = user?.id || "";
 
   useEffect(() => {
-    if (!userId || !token) return;
+    if (!userId || !isLoggedIn()) return;
     setLoading(true);
-    fetch(`${BASE}/api/bad-debt-flags/${userId}`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${BASE}/api/bad-debt-flags/${userId}`, { headers: { ...authHeaders() }, credentials: "include" })
       .then(r => r.json())
       .then(d => {
         if (d.success) setAccounts(d.flagged || []);
@@ -43,7 +47,7 @@ export default function BadDebtPage() {
       })
       .catch(() => setError("Network error"))
       .finally(() => setLoading(false));
-  }, [userId, token]);
+  }, [userId]);
 
   const filtered = filter === "all" ? accounts : accounts.filter(a => a.risk_level === filter);
 

@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders, isLoggedIn } from "@/lib/api";
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
@@ -36,13 +37,12 @@ export default function DisputesPage() {
   const [resolution, setResolution] = useState({ status: "resolved", resolution: "", resolved_amount: "" });
   const [saving, setSaving] = useState(false);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") : null;
 
   async function fetchDisputes() {
-    if (!token) return;
+    if (!isLoggedIn()) return;
     setLoading(true);
     try {
-      const r = await fetch(`${BASE}/api/disputes`, { headers: { Authorization: `Bearer ${token}` } });
+      const r = await fetch(`${BASE}/api/disputes`, { headers: { ...authHeaders() }, credentials: "include" });
       const d = await r.json();
       if (d.success) setDisputes(d.disputes || []);
     } catch (e) { console.error(e); }
@@ -57,7 +57,7 @@ export default function DisputesPage() {
     try {
       const r = await fetch(`${BASE}/api/disputes`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ ...form, disputed_amount: parseFloat(form.disputed_amount) }),
       });
       const d = await r.json();
@@ -72,7 +72,7 @@ export default function DisputesPage() {
     try {
       const r = await fetch(`${BASE}/api/disputes/${selected.id}`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ status: resolution.status, resolution: resolution.resolution, resolved_amount: resolution.resolved_amount ? parseFloat(resolution.resolved_amount) : undefined }),
       });
       const d = await r.json();
@@ -83,7 +83,7 @@ export default function DisputesPage() {
 
   async function deleteDispute(id: string) {
     if (!confirm("Delete this dispute?")) return;
-    await fetch(`${BASE}/api/disputes/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    await fetch(`${BASE}/api/disputes/${id}`, { method: "DELETE", headers: { ...authHeaders() }, credentials: "include" });
     fetchDisputes();
   }
 

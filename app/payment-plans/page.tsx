@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { getUser } from "@/lib/api";
+import { getUser, authHeaders, isLoggedIn } from "@/lib/api";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -34,13 +34,12 @@ export default function PaymentPlansPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") : null;
 
   async function fetchPlans() {
-    if (!token) return;
+    if (!isLoggedIn()) return;
     setLoading(true);
     try {
-      const r = await fetch(`${BASE}/api/payment-plans`, { headers: { Authorization: `Bearer ${token}` } });
+      const r = await fetch(`${BASE}/api/payment-plans`, { headers: { ...authHeaders() }, credentials: "include" });
       const d = await r.json();
       if (d.success) setPlans(d.plans || []);
     } catch (e) { console.error(e); }
@@ -67,7 +66,7 @@ export default function PaymentPlansPage() {
     try {
       const r = await fetch(`${BASE}/api/payment-plans`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ ...form, total_amount: parseFloat(form.total_amount), installments: buildInstallments() }),
       });
       const d = await r.json();
@@ -78,10 +77,10 @@ export default function PaymentPlansPage() {
   }
 
   async function markInstallmentPaid(planId: string, idx: number) {
-    if (!token) return;
+    if (!isLoggedIn()) return;
     await fetch(`${BASE}/api/payment-plans/${planId}/installment`, {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
       body: JSON.stringify({ installment_index: idx }),
     });
     fetchPlans();
@@ -89,7 +88,7 @@ export default function PaymentPlansPage() {
 
   async function deletePlan(id: string) {
     if (!confirm("Delete this plan?")) return;
-    await fetch(`${BASE}/api/payment-plans/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    await fetch(`${BASE}/api/payment-plans/${id}`, { method: "DELETE", headers: { ...authHeaders() }, credentials: "include" });
     fetchPlans();
   }
 

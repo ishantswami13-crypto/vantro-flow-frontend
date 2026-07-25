@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders, isLoggedIn } from "@/lib/api";
 
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -94,11 +95,10 @@ export default function NeuralEnginePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") : "";
-    if (!token) { setLoading(false); return; }
+    if (!isLoggedIn()) { setLoading(false); return; }
     fetch(`${BASE}/api/ml/briefing`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { ...authHeaders() }, credentials: "include",
     }).then(r => r.json()).then(d => {
       if (d.success) setMlData(d);
     }).catch(() => {}).finally(() => setLoading(false));
