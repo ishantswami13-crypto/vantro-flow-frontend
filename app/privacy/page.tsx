@@ -36,7 +36,7 @@ export default function PrivacyPage() {
           <Link href="/" className="brand" style={{display:"flex",alignItems:"center",gap:"9px",textDecoration:"none"}}>
             <StarlaneMark/> <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13.5px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
           </Link>
-          <div className="nav-links"><a href="/#features">Features</a><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></div>
+          <div className="nav-links"><Link href="/#features">Features</Link><Link href="/#pricing">Pricing</Link><Link href="/#faq">FAQ</Link></div>
           <div className="nav-cta">
             <Link className="nav-login" href="/login">Log in</Link>
             <Link className="btn btn-primary" href="/signup">Start free</Link>
@@ -126,7 +126,7 @@ export default function PrivacyPage() {
               <p>Starlane by Atlax — the AI business control room for Indian founders.</p>
               <p className="foot-made">Made in India &middot; Data stays in India</p>
             </div>
-            <div className="foot-col"><h4>Product</h4><a href="/#features">Features</a><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></div>
+            <div className="foot-col"><h4>Product</h4><Link href="/#features">Features</Link><Link href="/#pricing">Pricing</Link><Link href="/#faq">FAQ</Link></div>
             <div className="foot-col"><h4>Contact</h4><a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a></div>
           </div>
           <div className="wm">STARLANE</div>

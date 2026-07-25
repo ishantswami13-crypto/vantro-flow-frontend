@@ -280,10 +280,10 @@ export default function SignupPage() {
   return (
     <div className="atlas-page auth-page">
       <header className="topbar">
-        <a href="/" style={{display:"flex",alignItems:"center",gap:"10px",textDecoration:"none",color:"#fff"}}>
+        <Link href="/" style={{display:"flex",alignItems:"center",gap:"10px",textDecoration:"none",color:"#fff"}}>
           <StarlaneMark size={26}/>
           <span className="brand-wm">Starlane</span>
-        </a>
+        </Link>
         <div className="topbar-right">Already have an account? <Link href="/login">Log in</Link></div>
       </header>
       <main className="center">
