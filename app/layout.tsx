@@ -10,11 +10,11 @@ const APP_URL = "https://vantro-flow-frontend.vercel.app";
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Starlane by Atlax | AI Business Automation Infrastructure",
+    default: "Starlane | AI BusinessOS",
     template: "%s | Starlane",
   },
   description:
-    "Starlane by Atlax is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+    "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
   keywords: [
     "business automation India", "MSME automation software", "collections automation India",
     "WhatsApp business automation", "invoice automation India", "Hinglish WhatsApp reminders",
@@ -31,24 +31,24 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: APP_URL,
     siteName: "Starlane",
-    title: "Starlane by Atlax | AI Business Automation Infrastructure",
+    title: "Starlane — The operating layer every modern business runs on",
     description:
-      "Starlane by Atlax is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+      "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Starlane — AI-powered Business OS for Indian MSMEs",
+        alt: "Starlane — the operating layer every modern business runs on",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Starlane by Atlax | AI Business Automation Infrastructure",
+    title: "Starlane — The operating layer every modern business runs on",
     description:
-      "Starlane by Atlax is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+      "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
     images: ["/opengraph-image"],
     creator: "@ishantswami13",
   },
