@@ -56,11 +56,15 @@ export default function OgImage() {
           </div>
         </div>
 
-        {/* Headline */}
-        <div style={{ fontSize: 72, fontWeight: 900, color: "white", lineHeight: 1.05, letterSpacing: -2, marginBottom: 24 }}>
-          Stop Chasing{" "}
-          <span style={{ color: "#1A6FFF" }}>Payments.</span>
-          <br />Start Collecting.
+        {/* Headline — Satori requires an explicit display on any element with
+            more than one child, and does not lay out <br /> inside flex, so the
+            two lines are separate rows rather than a single wrapped block. */}
+        <div style={{ display: "flex", flexDirection: "column", fontSize: 72, fontWeight: 900, color: "white", lineHeight: 1.05, letterSpacing: -2, marginBottom: 24 }}>
+          <div style={{ display: "flex" }}>
+            <span>Stop Chasing&nbsp;</span>
+            <span style={{ color: "#1A6FFF" }}>Payments.</span>
+          </div>
+          <div style={{ display: "flex" }}>Start Collecting.</div>
         </div>
 
         {/* Subheading */}
