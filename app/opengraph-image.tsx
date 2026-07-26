@@ -18,7 +18,7 @@ export default function OgImage() {
         style={{
           width: "100%",
           height: "100%",
-          background: "#000000",
+          background: "#FFFFFF",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
@@ -26,7 +26,7 @@ export default function OgImage() {
           fontFamily: "sans-serif",
         }}
       >
-        {/* Official brand lockup, used as-is */}
+        {/* Official brand lockup, recoloured from the shipped file — not redrawn */}
         <img
           src={STARLANE_WORDMARK}
           width={WORDMARK_WIDTH}
@@ -39,7 +39,7 @@ export default function OgImage() {
             style={{
               fontSize: 21,
               fontWeight: 700,
-              color: "#9CA3AF",
+              color: "#6B7280",
               letterSpacing: 4,
               marginBottom: 22,
             }}
@@ -51,7 +51,7 @@ export default function OgImage() {
             style={{
               fontSize: 66,
               fontWeight: 800,
-              color: "#FFFFFF",
+              color: "#0A0A0A",
               lineHeight: 1.08,
               letterSpacing: -1.8,
               maxWidth: 1000,
@@ -64,7 +64,7 @@ export default function OgImage() {
           <div
             style={{
               fontSize: 25,
-              color: "#9CA3AF",
+              color: "#4B5563",
               lineHeight: 1.45,
               maxWidth: 940,
             }}
@@ -76,8 +76,8 @@ export default function OgImage() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ display: "flex", width: 8, height: 8, borderRadius: 4, background: "#FFFFFF" }} />
-          <span style={{ fontSize: 20, color: "#9CA3AF" }}>
+          <div style={{ display: "flex", width: 8, height: 8, borderRadius: 4, background: "#0A0A0A" }} />
+          <span style={{ fontSize: 20, color: "#6B7280" }}>
             Pilot program now open for selected businesses
           </span>
         </div>
