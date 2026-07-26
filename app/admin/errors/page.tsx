@@ -2,18 +2,38 @@
 import { useEffect, useState } from 'react';
 import { request } from '@/lib/api';
 
+interface ErrorEvent {
+  id: string;
+  error_id: string;
+  type: string;
+  severity: string;
+  route: string;
+  created_at: string;
+  resolved_at: string | null;
+}
+
+interface ErrorSummary {
+  totalErrors: number;
+  criticalErrors: number;
+}
+
 export default function AdminErrorsDashboard() {
-  const [events, setEvents] = useState([]);
-  const [summary, setSummary] = useState({ totalErrors: 0, criticalErrors: 0 });
+  // Typed rather than inferred: useState([]) infers never[], so every later
+  // setEvents call is a type error and the rows have to be cast to any to read
+  // a field. Naming the shape once removes both.
+  const [events, setEvents] = useState<ErrorEvent[]>([]);
+  const [summary, setSummary] = useState<ErrorSummary>({ totalErrors: 0, criticalErrors: 0 });
 
   useEffect(() => {
-    request('/api/admin/error-summary').then((res: any) => setSummary(res.summary)).catch(() => {});
-    request('/api/admin/error-events').then((res: any) => setEvents(res.data)).catch(() => {});
+    request<{ summary: ErrorSummary }>('/api/admin/error-summary')
+      .then(res => setSummary(res.summary)).catch(() => {});
+    request<{ data: ErrorEvent[] }>('/api/admin/error-events')
+      .then(res => setEvents(res.data)).catch(() => {});
   }, []);
 
   const resolve = async (id: string) => {
     await request(`/api/admin/error-events/${id}/resolve`, { method: 'PATCH' });
-    setEvents(events.map((e: any) => e.id === id ? { ...e, resolved_at: new Date().toISOString() } : e));
+    setEvents(events.map(e => e.id === id ? { ...e, resolved_at: new Date().toISOString() } : e));
   };
 
   return (
@@ -42,7 +62,7 @@ export default function AdminErrorsDashboard() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {events.map((evt: any) => (
+            {events.map(evt => (
               <tr key={evt.id} className={evt.resolved_at ? 'opacity-50' : ''}>
                 <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">{evt.error_id}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
