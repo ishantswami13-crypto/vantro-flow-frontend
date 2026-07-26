@@ -10,7 +10,8 @@
     "security:secrets": "node scripts/frontend-env-guard.js",
     "test:auth-mode": "node scripts/auth-mode-test.js",
     "security:auth-usage": "node scripts/check-auth-usage.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "security:audit-gate": "node scripts/check-dependency-audit.js"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

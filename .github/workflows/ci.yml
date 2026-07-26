@@ -46,6 +46,12 @@ jobs:
       - name: Secret scan
         run: npm run security:secrets
 
+      # Blocking. Production dependencies are at zero advisories, so the
+      # allowlist is empty and anything reported here was introduced by a
+      # change rather than inherited.
+      - name: Dependency audit gate
+        run: npm run security:audit-gate
+
       # Blocking, and last: it is the slowest step and the ones above give
       # sharper failures.
       - name: Build
