@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Blocking. next.config.js sets eslint.ignoreDuringBuilds, so a lint
+      # regression would otherwise reach main unnoticed — the build cannot catch
+      # it. Currently clean at 0 errors.
+      - name: Lint
+        run: npm run lint
+
+      # Informational. next.config.js sets typescript.ignoreBuildErrors, and two
+      # pre-existing errors are unrelated to anything currently in flight:
+      # app/admin/errors uses an untyped setState, and ReactQueryProvider imports
+      # @tanstack/react-query, which is not a dependency. Make this blocking once
+      # those two are resolved.
+      - name: Typecheck
+        run: npx tsc --noEmit
+        continue-on-error: true
+
+      # Blocking. Guards the login fallback: the auth cookie is third-party
+      # across Vercel and Railway, so the app must keep the bearer token when a
+      # browser rejects it rather than looping on /login.
+      - name: Auth mode fallback
+        run: npm run test:auth-mode
+
+      # Blocking. Keeps the session token confined to lib/api.ts, so a new fetch
+      # cannot reintroduce a hardcoded bearer header that silently 401s under
+      # cookie auth.
+      - name: Auth usage
+        run: npm run security:auth-usage
+
+      # Blocking. No backend secret should ever reach a NEXT_PUBLIC_ variable.
+      - name: Secret scan
+        run: npm run security:secrets
+
+      # Blocking, and last: it is the slowest step and the ones above give
+      # sharper failures.
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: https://vantro-flow-backend-production.up.railway.app
