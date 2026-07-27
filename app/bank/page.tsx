@@ -161,7 +161,7 @@ export default function BankPage() {
   const [parsedRows, setParsedRows]   = useState<ParsedRow[]>([]);
   const [importing, setImporting]     = useState(false);
   const [importDone, setImportDone]   = useState(false);
-  const [importResult, setImportResult] = useState<{ imported: number; failed: number } | null>(null);
+  const [importResult, setImportResult] = useState<{ imported: number; failed: number; duplicates: number; message?: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Manual add
@@ -241,43 +241,47 @@ export default function BankPage() {
     setImporting(true);
     setImportResult(null);
     try {
-      // Each row's response is checked. Previously the result was discarded and
-      // importDone was set unconditionally, so any failure — most likely a 429,
-      // since this posts one request per row against a 120/min limit — silently
-      // dropped that transaction while the UI reported success. Silently losing
-      // rows from a bank statement is the worst possible failure for a
-      // reconciliation screen, because the totals look plausible.
-      const failed: ParsedRow[] = [];
-      let imported = 0;
+      // One request for the whole statement. This used to post per row, which
+      // meant a 150-row import made 150 requests against a 120/min limit and
+      // lost the tail to 429s — silently, until the previous fix surfaced it.
+      // The server validates each row and reports which ones it rejected, so
+      // per-row feedback survives the change.
+      const r = await fetch(`${API}/api/bank/transactions/bulk`, {
+        method: "POST", headers: hdr(), credentials: "include" as RequestCredentials,
+        body: JSON.stringify({
+          account_id: importAcct?.id ?? null,
+          transactions: selected.map(row => ({
+            txn_date: row.date, description: row.description, amount: row.amount, type: row.type,
+          })),
+        }),
+      });
 
-      for (const row of selected) {
-        try {
-          const r = await fetch(`${API}/api/bank/transactions`, {
-            method: "POST", headers: hdr(), credentials: "include" as RequestCredentials,
-            body: JSON.stringify({ txn_date: row.date, description: row.description, amount: row.amount, type: row.type, account_id: importAcct?.id }),
-          });
-          if (r.ok) {
-            imported++;
-          } else if (r.status === 429) {
-            // Rate limited: everything after this would fail too. Stop and keep
-            // the remainder selected so the user can resume rather than
-            // discovering later that the tail of the statement is missing.
-            failed.push(row, ...selected.slice(selected.indexOf(row) + 1));
-            break;
-          } else {
-            failed.push(row);
-          }
-        } catch {
-          failed.push(row);
-        }
+      if (!r.ok) {
+        const msg = r.status === 429
+          ? "Too many imports in a short time. Please wait a few minutes and try again."
+          : "Import failed. Please try again.";
+        setImportResult({ imported: 0, failed: selected.length, duplicates: 0, message: msg });
+        return;
       }
 
-      setImportResult({ imported, failed: failed.length });
+      const d = await r.json();
+      const rejectedIdx = new Set<number>((d.rejected || []).map((x: { index: number }) => x.index));
+      // Chunk-level failures report an index range rather than single rows.
+      for (const c of (d.failed_chunks || []) as { from: number; to: number }[]) {
+        for (let i = c.from; i <= c.to; i++) rejectedIdx.add(i);
+      }
 
-      if (failed.length) {
-        // Keep only what did not import, still selected, so a retry sends
-        // exactly the missing rows.
-        setParsedRows(failed.map(f => ({ ...f, selected: true })));
+      const stillFailed = selected.filter((_, i) => rejectedIdx.has(i));
+      setImportResult({
+        imported: d.inserted ?? 0,
+        failed: stillFailed.length,
+        duplicates: d.duplicates ?? 0,
+      });
+
+      if (stillFailed.length) {
+        // Keep only the rows that did not land, still selected, so a retry sends
+        // exactly those and cannot duplicate what already succeeded.
+        setParsedRows(stillFailed.map(f => ({ ...f, selected: true })));
       } else {
         setImportDone(true);
         setParsedRows([]);
@@ -450,9 +454,11 @@ export default function BankPage() {
             <div>
               <p className="text-sm font-bold text-warning">
                 Imported {importResult.imported}, {importResult.failed} could not be added
+                {importResult.duplicates > 0 && `, ${importResult.duplicates} already imported`}
               </p>
               <p className="text-xs text-muted">
-                The rows that failed are still listed below and stay selected — press Import again to retry just those.
+                {importResult.message
+                  || "The rows that failed are still listed below and stay selected — press Import again to retry just those."}
               </p>
             </div>
           </div>
@@ -464,8 +470,9 @@ export default function BankPage() {
             <div>
               <p className="text-sm font-bold text-success">
                 Import complete — {importResult?.imported ?? 0} transactions added
+                {(importResult?.duplicates ?? 0) > 0 && `, ${importResult?.duplicates} skipped as already imported`}
               </p>
-              <p className="text-xs text-muted">AI is auto-matching payments to invoices below.</p>
+              <p className="text-xs text-muted">Matching suggestions appear below where an amount lines up with a pending invoice.</p>
             </div>
           </div>
         )}
