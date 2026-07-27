@@ -161,6 +161,7 @@ export default function BankPage() {
   const [parsedRows, setParsedRows]   = useState<ParsedRow[]>([]);
   const [importing, setImporting]     = useState(false);
   const [importDone, setImportDone]   = useState(false);
+  const [importResult, setImportResult] = useState<{ imported: number; failed: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Manual add
@@ -238,16 +239,50 @@ export default function BankPage() {
     const selected = parsedRows.filter(r => r.selected);
     if (!selected.length) return;
     setImporting(true);
+    setImportResult(null);
     try {
+      // Each row's response is checked. Previously the result was discarded and
+      // importDone was set unconditionally, so any failure — most likely a 429,
+      // since this posts one request per row against a 120/min limit — silently
+      // dropped that transaction while the UI reported success. Silently losing
+      // rows from a bank statement is the worst possible failure for a
+      // reconciliation screen, because the totals look plausible.
+      const failed: ParsedRow[] = [];
+      let imported = 0;
+
       for (const row of selected) {
-        await fetch(`${API}/api/bank/transactions`, {
-          method: "POST", headers: hdr(), credentials: "include" as RequestCredentials,
-          body: JSON.stringify({ txn_date: row.date, description: row.description, amount: row.amount, type: row.type, account_id: importAcct?.id }),
-        });
+        try {
+          const r = await fetch(`${API}/api/bank/transactions`, {
+            method: "POST", headers: hdr(), credentials: "include" as RequestCredentials,
+            body: JSON.stringify({ txn_date: row.date, description: row.description, amount: row.amount, type: row.type, account_id: importAcct?.id }),
+          });
+          if (r.ok) {
+            imported++;
+          } else if (r.status === 429) {
+            // Rate limited: everything after this would fail too. Stop and keep
+            // the remainder selected so the user can resume rather than
+            // discovering later that the tail of the statement is missing.
+            failed.push(row, ...selected.slice(selected.indexOf(row) + 1));
+            break;
+          } else {
+            failed.push(row);
+          }
+        } catch {
+          failed.push(row);
+        }
       }
-      setImportDone(true);
-      setParsedRows([]);
-      setImportAcct(null);
+
+      setImportResult({ imported, failed: failed.length });
+
+      if (failed.length) {
+        // Keep only what did not import, still selected, so a retry sends
+        // exactly the missing rows.
+        setParsedRows(failed.map(f => ({ ...f, selected: true })));
+      } else {
+        setImportDone(true);
+        setParsedRows([]);
+        setImportAcct(null);
+      }
       load();
     } finally { setImporting(false); }
   };
@@ -409,12 +444,28 @@ export default function BankPage() {
           </div>
         )}
 
+        {importResult && importResult.failed > 0 && (
+          <div className="card p-4 border border-warning/20 bg-warning/5 flex items-center gap-3">
+            <FiAlertCircle size={18} className="text-warning shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-warning">
+                Imported {importResult.imported}, {importResult.failed} could not be added
+              </p>
+              <p className="text-xs text-muted">
+                The rows that failed are still listed below and stay selected — press Import again to retry just those.
+              </p>
+            </div>
+          </div>
+        )}
+
         {importDone && (
           <div className="card p-4 border border-success/20 bg-success/5 flex items-center gap-3">
             <FiCheckCircle size={18} className="text-success shrink-0" />
             <div>
-              <p className="text-sm font-bold text-success">Import complete!</p>
-              <p className="text-xs text-muted">Transactions added. AI is auto-matching payments to invoices below.</p>
+              <p className="text-sm font-bold text-success">
+                Import complete — {importResult?.imported ?? 0} transactions added
+              </p>
+              <p className="text-xs text-muted">AI is auto-matching payments to invoices below.</p>
             </div>
           </div>
         )}
