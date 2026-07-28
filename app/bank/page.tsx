@@ -31,7 +31,10 @@ type Txn = {
   type: "credit" | "debit"; status: "unmatched" | "matched" | "ignored";
   matched_to?: string; account_id?: number;
 };
-type PendingInvoice = { id: number; customer_name: string; total: number; bill_number: string; bill_date: string; };
+// id is bills.id, which is a UUID — typing it as number made every id a string
+// at runtime that TypeScript believed was a number. Txn.id stays number because
+// bank_transactions.id really is a bigint.
+type PendingInvoice = { id: string; customer_name: string; total: number; bill_number: string; bill_date: string; };
 type ParsedRow = { date: string; description: string; amount: number; type: "credit" | "debit"; selected: boolean; };
 
 const fmtINR  = (n: number) => "₹" + Math.abs(Number(n)).toLocaleString("en-IN");
@@ -304,7 +307,7 @@ export default function BankPage() {
     } finally { setSaving(false); }
   };
 
-  const markMatched = async (txnId: number, matchId: number, type: "invoice" | "khata") => {
+  const markMatched = async (txnId: number, matchId: string, type: "invoice" | "khata") => {
     setSaving(true);
     try {
       const r = await fetch(`${API}/api/bank/match`, {
