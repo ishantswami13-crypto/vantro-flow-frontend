@@ -5,7 +5,7 @@ import {
   FiPlus, FiEdit2, FiTrash2, FiAlertCircle, FiCheckCircle, FiClock,
   FiCamera, FiX, FiZap, FiUpload,
 } from "react-icons/fi";
-import { api, getToken, getUser } from "@/lib/api";
+import { api, authHeaders, getUser } from "@/lib/api";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { buildProductLedgerRows, formatQuantity, groupProductRows, matchProductQuery, sortByDateDesc } from "@/lib/productLedger";
 
@@ -190,7 +190,7 @@ export default function PurchasesPage() {
   const requestPurchaseScan = (base64: string, mimeType: string) =>
     fetch(`${API}/api/purchases/scan`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+      headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
       body: scanBody(base64, mimeType),
     });
 
@@ -398,7 +398,7 @@ export default function PurchasesPage() {
         const gstType = cgst || sgst ? "CGST+SGST" : igst ? "IGST" : (gstAmount ? "GST" : null);
         const saveR = await fetch(`${API}/api/purchases`, {
           method: "POST",
-          headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+          headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
           body: JSON.stringify({
             supplier_name:  supplierName,
             supplier_gstin: scanText(ex, ["supplier_gstin", "seller_gstin", "vendor_gstin"]) || null,

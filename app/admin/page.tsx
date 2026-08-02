@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders, isLoggedIn } from "@/lib/api";
 
 import { useState, useEffect } from "react";
 import { FiZap, FiUsers, FiTrendingUp, FiDatabase, FiDollarSign, FiRefreshCw } from "react-icons/fi";
@@ -24,11 +25,10 @@ export default function AdminPage() {
 
   const load = async () => {
     setLoading(true); setError("");
-    const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") : null;
-    if (!token) { setError("Not logged in"); setLoading(false); return; }
+    if (!isLoggedIn()) { setError("Not logged in"); setLoading(false); return; }
     try {
       const res = await fetch(`${BASE}/api/admin/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders() }, credentials: "include",
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);

@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders, isLoggedIn, clearAuth } from "@/lib/api";
 
 import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
@@ -31,7 +32,7 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return buffer;
 }
 
-async function subscribeToPush(token: string) {
+async function subscribeToPush() {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
   try {
@@ -46,7 +47,7 @@ async function subscribeToPush(token: string) {
       // Already subscribed — just re-send to backend in case it changed
       await fetch(`${API}/api/notifications/subscribe`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ subscription: existing.toJSON() }),
       });
       return;
@@ -60,7 +61,7 @@ async function subscribeToPush(token: string) {
 
     await fetch(`${API}/api/notifications/subscribe`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
       body: JSON.stringify({ subscription: subscription.toJSON() }),
     });
   } catch (err) {
@@ -79,14 +80,13 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
   // Hydrate feature-gating context from DB on every app load
   // This ensures cross-device correctness — localStorage may be stale or empty
   useEffect(() => {
-    const token = localStorage.getItem("vantro_token");
-    if (!token) return;
-    fetch(`${API}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+    if (!isLoggedIn()) return;
+    fetch(`${API}/api/auth/me`, { headers: { ...authHeaders() }, credentials: "include" })
       .then(r => {
         if (r.status === 401 || r.status === 404) {
-          localStorage.removeItem("vantro_token");
-          localStorage.removeItem("vantro_user");
-          document.cookie = "vantro_token=; path=/; max-age=0; SameSite=Lax";
+          // clearAuth also drops the auth-mode flag and asks the backend to
+          // expire the HttpOnly cookie, which this component cannot clear itself.
+          clearAuth();
           window.location.href = "/login";
           throw new Error("Stale session");
         }
@@ -119,8 +119,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
     }
     if (Notification.permission === "granted") {
       // Auto-subscribe in background
-      const token = localStorage.getItem("vantro_token");
-      if (token) subscribeToPush(token);
+      if (isLoggedIn()) subscribeToPush();
     }
   }, []);
 
@@ -128,8 +127,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
     setShowNotifBanner(false);
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
-      const token = localStorage.getItem("vantro_token");
-      if (token) subscribeToPush(token);
+      if (isLoggedIn()) subscribeToPush();
     }
   };
 

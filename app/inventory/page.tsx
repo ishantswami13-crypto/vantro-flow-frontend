@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/Badge";
 import { FiPackage, FiAlertTriangle, FiTrendingUp, FiPlus, FiSearch, FiTruck, FiBox, FiX } from "react-icons/fi";
-import { api, getUser, getToken } from "@/lib/api";
+import { api, getUser, authHeaders } from "@/lib/api";
 import {
   buildProductLedgerRows,
   formatQuantity,
@@ -177,7 +177,7 @@ export default function InventoryPage() {
     try {
       const r = await fetch(`${API}/api/products`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({
           user_id:         user.id,
           name:            form.name.trim(),

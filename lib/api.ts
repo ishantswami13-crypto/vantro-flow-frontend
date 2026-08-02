@@ -34,15 +34,65 @@ function isUnsafeMethod(method?: string) {
   return !['GET', 'HEAD', 'OPTIONS'].includes((method || 'GET').toUpperCase());
 }
 
-export async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
+// ─── Auth mode ────────────────────────────────────────────
+// 'cookie' means the session lives in a HttpOnly cookie the browser holds and
+// this code can never read — the goal, since an XSS cannot exfiltrate it.
+// 'bearer' is the legacy path with the JWT in localStorage.
+//
+// The mode is decided at login by probing, not assumed: the backend and
+// frontend are on different domains (Railway and Vercel), so the auth cookie is
+// third-party. Safari blocks those by default and Chrome is restricting them.
+// Switching to cookie mode without checking would 401 every request and bounce
+// the user back to /login forever, so the token is only discarded once a real
+// cookie-only request has succeeded.
+const AUTH_MODE_KEY = 'vantro_auth_mode';
+type AuthMode = 'cookie' | 'bearer';
+
+export function getAuthMode(): AuthMode {
+  if (typeof window === 'undefined') return 'bearer';
+  return localStorage.getItem(AUTH_MODE_KEY) === 'cookie' ? 'cookie' : 'bearer';
+}
+
+function setAuthMode(mode: AuthMode) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(AUTH_MODE_KEY, mode);
+}
+
+// Headers that authenticate a request under whichever mode is active. Use this
+// for hand-rolled fetch calls; `request()` applies it already. Any fetch using
+// these must also set credentials: 'include', or cookie mode sends no session.
+export function authHeaders(): Record<string, string> {
   const token = getToken();
+  if (token) return { Authorization: `Bearer ${token}` };
+  // The CSRF header goes on every cookie-mode request, not just unsafe ones.
+  // The backend only validates it for unsafe methods, so sending it on a GET is
+  // inert — and a single unconditional shape means call sites don't each have
+  // to know their own method.
   const csrf = getCsrfToken();
+  return csrf ? { 'X-CSRF-Token': csrf } : {};
+}
+
+// Does the browser actually hold and return the auth cookie? Deliberately sends
+// no Authorization header, so success means the cookie alone authenticated it.
+async function cookieAuthWorks(): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE}/api/auth/me`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    ...authHeaders(),
     ...(options.headers as Record<string, string>),
   };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  if (!token && csrf && isUnsafeMethod(options.method)) headers['X-CSRF-Token'] = csrf;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -55,6 +105,7 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
       if (typeof window !== 'undefined') {
         localStorage.removeItem('vantro_token');
         localStorage.removeItem('vantro_user');
+        localStorage.removeItem(AUTH_MODE_KEY);
         clearClientCookie(LEGACY_TOKEN_COOKIE);
         clearClientCookie(SESSION_COOKIE);
         window.location.href = '/login';
@@ -71,7 +122,8 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
       if (typeof window !== 'undefined') {
         fetch(`${BASE}/api/client-errors`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          credentials: 'include',
           body: JSON.stringify({
             path: window.location.pathname,
             api_route: path,
@@ -153,10 +205,10 @@ export const api = {
       const fd = new FormData();
       fd.append('file', file);
       fd.append('user_id', userId);
-      const token = getToken();
+      // No Content-Type — the browser sets the multipart boundary itself.
       return fetch(`${BASE}/api/upload-csv`, {
         method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: authHeaders(),
         credentials: 'include',
         body: fd,
       }).then(r => r.json());
@@ -377,22 +429,45 @@ export const api = {
 };
 
 // ─── Auth helpers ─────────────────────────────────────────
-export function saveAuth(token: string, user: User, rememberMe = true, csrfToken?: string | null) {
+// Persists the session. Async because switching to cookie mode is verified
+// against the backend rather than assumed — see the auth mode notes above.
+// Awaiting it is optional: the bearer fallback is written synchronously first,
+// so a caller that navigates immediately is still authenticated either way.
+export async function saveAuth(
+  token: string,
+  user: User,
+  rememberMe = true,
+  csrfToken?: string | null,
+): Promise<AuthMode> {
   // Clear any leftover demo-mode flag so real accounts never see demo data
   localStorage.removeItem('vantro_demo');
   localStorage.setItem('vantro_user', JSON.stringify(user));
   const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 12 * 60 * 60;
   setClientCookie(SESSION_COOKIE, '1', maxAge);
 
-  if (csrfToken) {
-    localStorage.removeItem('vantro_token');
-    clearClientCookie(LEGACY_TOKEN_COOKIE);
-    return;
-  }
-
-  // Legacy fallback until Railway enables ENABLE_AUTH_COOKIES=true.
+  // Write the bearer session first, unconditionally. It is the fallback, and
+  // holding it until the cookie is proven means a blocked third-party cookie
+  // degrades to the old behaviour instead of locking the user out.
   localStorage.setItem('vantro_token', token);
   setClientCookie(LEGACY_TOKEN_COOKIE, token, maxAge);
+  setAuthMode('bearer');
+
+  // No csrf_token means the backend has ENABLE_AUTH_COOKIES off and issued no
+  // cookies — nothing to upgrade to.
+  if (!csrfToken) return 'bearer';
+
+  if (!(await cookieAuthWorks())) {
+    // The backend set the cookie but the browser will not send it back, so the
+    // JWT stays in localStorage. Less safe, but functional.
+    console.warn('[auth] Cookie session was rejected by the browser — staying on bearer tokens.');
+    return 'bearer';
+  }
+
+  // The cookie alone authenticated a request, so the readable copies can go.
+  setAuthMode('cookie');
+  localStorage.removeItem('vantro_token');
+  clearClientCookie(LEGACY_TOKEN_COOKIE);
+  return 'cookie';
 }
 
 export function getUser(): User | null {
@@ -405,12 +480,22 @@ export function getUser(): User | null {
 export function clearAuth() {
   localStorage.removeItem('vantro_token');
   localStorage.removeItem('vantro_user');
+  localStorage.removeItem(AUTH_MODE_KEY);
   clearClientCookie(LEGACY_TOKEN_COOKIE);
   clearClientCookie(SESSION_COOKIE);
-  fetch(`${BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+  // The HttpOnly cookie can only be cleared server-side, so this call is what
+  // actually ends a cookie-mode session — not best-effort cleanup.
+  fetch(`${BASE}/api/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: authHeaders(),
+  }).catch(() => {});
 }
 
 export function isLoggedIn(): boolean {
+  // In cookie mode there is no readable token by design, so the non-HttpOnly
+  // session marker set at login is the only client-side signal — same one
+  // middleware.ts gates routes on.
   return (!!getToken() || !!getCookie(SESSION_COOKIE)) && !!getUser();
 }
 

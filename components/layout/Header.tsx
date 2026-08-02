@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { FiMenu, FiBell, FiRefreshCw, FiCheck, FiAlertCircle, FiTrendingUp, FiX } from "react-icons/fi";
 import Link from "next/link";
-import { getUser } from "@/lib/api";
+import { getUser, authHeaders } from "@/lib/api";
 import { isDemoMode } from "@/lib/demo";
 
 interface Notif {
@@ -81,30 +81,28 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
 
     setLoadingNotifs(true);
     try {
-      const token = localStorage.getItem("vantro_token") || "";
       const r = await fetch(`${API}/api/notifications/recent`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders() }, credentials: "include",
       });
       const d = await r.json();
       if (d.success && Array.isArray(d.notifications) && d.notifications.length > 0) {
         setNotifs(d.notifications);
       } else {
-        generateLocalNotifs(token);
+        generateLocalNotifs();
       }
     } catch {
-      const token = localStorage.getItem("vantro_token") || "";
-      generateLocalNotifs(token);
+      generateLocalNotifs();
     } finally {
       setLoadingNotifs(false);
     }
   };
 
-  const generateLocalNotifs = async (token: string) => {
+  const generateLocalNotifs = async () => {
     try {
       const user = getUser();
       if (!user?.id) return;
       const r = await fetch(`${API}/api/invoices?user_id=${user.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders() }, credentials: "include",
       });
       const d = await r.json();
       const invoices = d.invoices || [];

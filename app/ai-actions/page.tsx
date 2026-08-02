@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { getUser } from "@/lib/api";
+import { getUser, authHeaders } from "@/lib/api";
 import {
   FiZap, FiCheckCircle, FiXCircle, FiAlertTriangle,
   FiMessageSquare, FiTrendingDown, FiPackage, FiClock,
@@ -70,10 +70,9 @@ function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: str
   const handleAction = async (status: Status) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("vantro_token");
       const res = await fetch(`${BASE}/api/ai-actions/${action.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ status }),
       });
       if (res.ok) onUpdate(action.id, status);
@@ -85,10 +84,9 @@ function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: str
   const handleSendWhatsApp = async () => {
     setWaSending("sending");
     try {
-      const token = localStorage.getItem("vantro_token");
       const res = await fetch(`${BASE}/api/ai-actions/${action.id}/send-whatsapp`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders() }, credentials: "include",
       });
       const data = await res.json();
       if (res.status === 503) {
@@ -224,10 +222,9 @@ export default function AiActionsPage() {
     try {
       const user = getUser();
       if (!user) { setError("Not logged in"); return; }
-      const token = localStorage.getItem("vantro_token");
       const status = statusTab === "done" ? "all" : "pending";
       const url = `${BASE}/api/ai-actions?status=${statusTab === "done" ? "done" : "pending"}&limit=100`;
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(url, { headers: { ...authHeaders() }, credentials: "include" });
       if (!res.ok) throw new Error("Failed to load");
       const data = await res.json();
       setActions(data.actions || []);

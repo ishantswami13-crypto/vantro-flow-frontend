@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders } from "@/lib/api";
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { FiX, FiMic, FiMicOff, FiPlus, FiCheck, FiZap } from "react-icons/fi";
@@ -105,10 +106,9 @@ export default function QuickSale({ onClose, onSaved }: QuickSaleProps) {
     if (items.length === 0) return;
     setSaving(true);
     try {
-      const token = localStorage.getItem("vantro_token") || "";
       const r = await fetch(`${API}/api/orders`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({
           customer_name: customer || "Walk-in",
           source: "quick_sale",

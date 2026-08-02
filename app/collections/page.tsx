@@ -2,7 +2,7 @@
 // v3 — one-click send-reminder, auto-poll, bulk remind, sent-state tracking
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { api, getUser, type Invoice } from "@/lib/api";
+import { api, getUser, type Invoice, authHeaders } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import { Badge } from "@/components/ui/Badge";
 import { isDemoMode } from "@/lib/demo";
@@ -262,8 +262,7 @@ export default function CollectionsPage() {
     }, 30_000);
 
     // Fetch Cortex customer risk scores
-    const token = localStorage.getItem("vantro_token");
-    fetch(`${BASE}/api/customer-scores`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${BASE}/api/customer-scores`, { headers: { ...authHeaders() }, credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (!d?.scores) return;
@@ -419,10 +418,9 @@ export default function CollectionsPage() {
       // Also save to Cortex promises table if customer is scored
       const cortexCustomer = scoreMap[promiseModal.name];
       if (cortexCustomer?.customer_id) {
-        const token = localStorage.getItem("vantro_token");
         fetch(`${BASE}/api/promises`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
           body: JSON.stringify({
             customer_id:    cortexCustomer.customer_id,
             receivable_id:  promiseModal.invoiceId || null,
@@ -456,10 +454,9 @@ export default function CollectionsPage() {
     if (!file) return;
     setImporting(true); setImportMsg("");
     try {
-      const token = localStorage.getItem("vantro_token") || "";
       const form = new FormData();
       form.append("file", file);
-      const r = await fetch(`${BASE}/api/import/excel`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form });
+      const r = await fetch(`${BASE}/api/import/excel`, { method: "POST", headers: { ...authHeaders() }, credentials: "include", body: form });
       const d = await r.json();
       if (d.success) {
         setImportMsg(`${d.imported} invoices imported successfully!`);

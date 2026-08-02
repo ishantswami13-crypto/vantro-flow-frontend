@@ -8,7 +8,7 @@ import {
   FiUser, FiPhone, FiMail, FiCalendar,
   FiFileText, FiMessageSquare, FiZap, FiPackage,
 } from "react-icons/fi";
-import { api, getUser } from "@/lib/api";
+import { api, getUser, authHeaders } from "@/lib/api";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -152,10 +152,9 @@ export default function NewInvoicePage() {
     setError("");
     setLoading(true);
     try {
-      const token = localStorage.getItem("vantro_token");
       const res = await fetch(`${BASE}/api/invoices/create`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({
           customer_name:  customerName.trim(),
           customer_phone: customerPhone.trim() || undefined,

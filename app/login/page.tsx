@@ -59,7 +59,7 @@ export default function LoginPage() {
       const data = await api.auth.login(form);
       if (rememberMe) { localStorage.setItem("vantro_saved_email", form.email); localStorage.setItem("vantro_remember", "1"); }
       else { localStorage.removeItem("vantro_saved_email"); localStorage.removeItem("vantro_remember"); }
-      saveAuth(data.token, data.user, rememberMe, data.csrf_token);
+      await saveAuth(data.token, data.user, rememberMe, data.csrf_token);
       posthog.identify(data.user.id, { email: data.user.email, name: data.user.business_name, plan: data.user.plan });
       posthog.capture("user_logged_in");
       router.push("/dashboard");

@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
@@ -30,7 +31,10 @@ type Txn = {
   type: "credit" | "debit"; status: "unmatched" | "matched" | "ignored";
   matched_to?: string; account_id?: number;
 };
-type PendingInvoice = { id: number; customer_name: string; total: number; bill_number: string; bill_date: string; };
+// id is bills.id, which is a UUID — typing it as number made every id a string
+// at runtime that TypeScript believed was a number. Txn.id stays number because
+// bank_transactions.id really is a bigint.
+type PendingInvoice = { id: string; customer_name: string; total: number; bill_number: string; bill_date: string; };
 type ParsedRow = { date: string; description: string; amount: number; type: "credit" | "debit"; selected: boolean; };
 
 const fmtINR  = (n: number) => "₹" + Math.abs(Number(n)).toLocaleString("en-IN");
@@ -160,22 +164,22 @@ export default function BankPage() {
   const [parsedRows, setParsedRows]   = useState<ParsedRow[]>([]);
   const [importing, setImporting]     = useState(false);
   const [importDone, setImportDone]   = useState(false);
+  const [importResult, setImportResult] = useState<{ imported: number; failed: number; duplicates: number; message?: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Manual add
   const [showAdd, setShowAdd]   = useState(false);
   const [addForm, setAddForm]   = useState({ date: new Date().toISOString().split("T")[0], description: "", amount: "", type: "credit" as "credit" | "debit" });
 
-  const tok = () => typeof window !== "undefined" ? localStorage.getItem("vantro_token") || "" : "";
-  const hdr = () => ({ "Content-Type": "application/json", Authorization: `Bearer ${tok()}` });
+  const hdr = () => ({ ...authHeaders(), "Content-Type": "application/json" });
 
   const load = async () => {
     setLoading(true);
     try {
       const [aRes, tRes, bRes] = await Promise.all([
-        fetch(`${API}/api/bank/accounts`, { headers: hdr() }),
-        fetch(`${API}/api/bank/transactions`, { headers: hdr() }),
-        fetch(`${API}/api/bills`, { headers: hdr() }),
+        fetch(`${API}/api/bank/accounts`, { headers: hdr(), credentials: "include" as RequestCredentials }),
+        fetch(`${API}/api/bank/transactions`, { headers: hdr(), credentials: "include" as RequestCredentials }),
+        fetch(`${API}/api/bills`, { headers: hdr(), credentials: "include" as RequestCredentials }),
       ]);
       const [aD, tD, bD] = await Promise.all([aRes.json(), tRes.json(), bRes.json()]);
       setAccounts(aD.accounts || []);
@@ -200,7 +204,7 @@ export default function BankPage() {
     e.preventDefault();
     setAddingAcct(true);
     try {
-      const r = await fetch(`${API}/api/bank/accounts`, { method: "POST", headers: hdr(), body: JSON.stringify(acctForm) });
+      const r = await fetch(`${API}/api/bank/accounts`, { method: "POST", headers: hdr(), credentials: "include" as RequestCredentials, body: JSON.stringify(acctForm) });
       const d = await r.json();
       if (d.success) {
         setAccounts(a => [...a, d.account]);
@@ -212,7 +216,7 @@ export default function BankPage() {
 
   const deleteAccount = async (id: number) => {
     if (!confirm("Remove this bank account?")) return;
-    await fetch(`${API}/api/bank/accounts/${id}`, { method: "DELETE", headers: hdr() });
+    await fetch(`${API}/api/bank/accounts/${id}`, { method: "DELETE", headers: hdr(), credentials: "include" as RequestCredentials });
     setAccounts(a => a.filter(x => x.id !== id));
   };
 
@@ -238,16 +242,54 @@ export default function BankPage() {
     const selected = parsedRows.filter(r => r.selected);
     if (!selected.length) return;
     setImporting(true);
+    setImportResult(null);
     try {
-      for (const row of selected) {
-        await fetch(`${API}/api/bank/transactions`, {
-          method: "POST", headers: hdr(),
-          body: JSON.stringify({ txn_date: row.date, description: row.description, amount: row.amount, type: row.type, account_id: importAcct?.id }),
-        });
+      // One request for the whole statement. This used to post per row, which
+      // meant a 150-row import made 150 requests against a 120/min limit and
+      // lost the tail to 429s — silently, until the previous fix surfaced it.
+      // The server validates each row and reports which ones it rejected, so
+      // per-row feedback survives the change.
+      const r = await fetch(`${API}/api/bank/transactions/bulk`, {
+        method: "POST", headers: hdr(), credentials: "include" as RequestCredentials,
+        body: JSON.stringify({
+          account_id: importAcct?.id ?? null,
+          transactions: selected.map(row => ({
+            txn_date: row.date, description: row.description, amount: row.amount, type: row.type,
+          })),
+        }),
+      });
+
+      if (!r.ok) {
+        const msg = r.status === 429
+          ? "Too many imports in a short time. Please wait a few minutes and try again."
+          : "Import failed. Please try again.";
+        setImportResult({ imported: 0, failed: selected.length, duplicates: 0, message: msg });
+        return;
       }
-      setImportDone(true);
-      setParsedRows([]);
-      setImportAcct(null);
+
+      const d = await r.json();
+      const rejectedIdx = new Set<number>((d.rejected || []).map((x: { index: number }) => x.index));
+      // Chunk-level failures report an index range rather than single rows.
+      for (const c of (d.failed_chunks || []) as { from: number; to: number }[]) {
+        for (let i = c.from; i <= c.to; i++) rejectedIdx.add(i);
+      }
+
+      const stillFailed = selected.filter((_, i) => rejectedIdx.has(i));
+      setImportResult({
+        imported: d.inserted ?? 0,
+        failed: stillFailed.length,
+        duplicates: d.duplicates ?? 0,
+      });
+
+      if (stillFailed.length) {
+        // Keep only the rows that did not land, still selected, so a retry sends
+        // exactly those and cannot duplicate what already succeeded.
+        setParsedRows(stillFailed.map(f => ({ ...f, selected: true })));
+      } else {
+        setImportDone(true);
+        setParsedRows([]);
+        setImportAcct(null);
+      }
       load();
     } finally { setImporting(false); }
   };
@@ -257,7 +299,7 @@ export default function BankPage() {
     setSaving(true);
     try {
       const r = await fetch(`${API}/api/bank/transactions`, {
-        method: "POST", headers: hdr(),
+        method: "POST", headers: hdr(), credentials: "include" as RequestCredentials,
         body: JSON.stringify({ ...addForm, txn_date: addForm.date, amount: parseFloat(addForm.amount) }),
       });
       const d = await r.json();
@@ -265,11 +307,11 @@ export default function BankPage() {
     } finally { setSaving(false); }
   };
 
-  const markMatched = async (txnId: number, matchId: number, type: "invoice" | "khata") => {
+  const markMatched = async (txnId: number, matchId: string, type: "invoice" | "khata") => {
     setSaving(true);
     try {
       const r = await fetch(`${API}/api/bank/match`, {
-        method: "POST", headers: hdr(),
+        method: "POST", headers: hdr(), credentials: "include" as RequestCredentials,
         body: JSON.stringify({ transaction_id: txnId, match_type: type, match_id: matchId }),
       });
       const d = await r.json();
@@ -277,8 +319,8 @@ export default function BankPage() {
     } finally { setSaving(false); }
   };
 
-  const ignoreTxn  = async (id: number) => { await fetch(`${API}/api/bank/transactions/${id}/ignore`, { method: "PATCH", headers: hdr() }); load(); };
-  const deleteTxn  = async (id: number) => { await fetch(`${API}/api/bank/transactions/${id}`, { method: "DELETE", headers: hdr() }); load(); };
+  const ignoreTxn  = async (id: number) => { await fetch(`${API}/api/bank/transactions/${id}/ignore`, { method: "PATCH", headers: hdr(), credentials: "include" as RequestCredentials }); load(); };
+  const deleteTxn  = async (id: number) => { await fetch(`${API}/api/bank/transactions/${id}`, { method: "DELETE", headers: hdr(), credentials: "include" as RequestCredentials }); load(); };
 
   const creditTotal = txns.filter(t => t.type === "credit").reduce((s, t) => s + t.amount, 0);
   const unmatched   = txns.filter(t => t.status === "unmatched" && t.type === "credit").length;
@@ -409,12 +451,31 @@ export default function BankPage() {
           </div>
         )}
 
+        {importResult && importResult.failed > 0 && (
+          <div className="card p-4 border border-warning/20 bg-warning/5 flex items-center gap-3">
+            <FiAlertCircle size={18} className="text-warning shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-warning">
+                Imported {importResult.imported}, {importResult.failed} could not be added
+                {importResult.duplicates > 0 && `, ${importResult.duplicates} already imported`}
+              </p>
+              <p className="text-xs text-muted">
+                {importResult.message
+                  || "The rows that failed are still listed below and stay selected — press Import again to retry just those."}
+              </p>
+            </div>
+          </div>
+        )}
+
         {importDone && (
           <div className="card p-4 border border-success/20 bg-success/5 flex items-center gap-3">
             <FiCheckCircle size={18} className="text-success shrink-0" />
             <div>
-              <p className="text-sm font-bold text-success">Import complete!</p>
-              <p className="text-xs text-muted">Transactions added. AI is auto-matching payments to invoices below.</p>
+              <p className="text-sm font-bold text-success">
+                Import complete — {importResult?.imported ?? 0} transactions added
+                {(importResult?.duplicates ?? 0) > 0 && `, ${importResult?.duplicates} skipped as already imported`}
+              </p>
+              <p className="text-xs text-muted">Matching suggestions appear below where an amount lines up with a pending invoice.</p>
             </div>
           </div>
         )}
