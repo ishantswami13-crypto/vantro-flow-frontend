@@ -5,7 +5,6 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type Invoice, authHeaders } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import { Badge } from "@/components/ui/Badge";
-import { isDemoMode } from "@/lib/demo";
 import { generateWhatsAppPaymentLink } from "@/lib/paymentLink";
 import {
   FiSearch, FiMessageSquare, FiCheckSquare,
@@ -50,22 +49,6 @@ interface PromiseRecord {
   amount: number;
   name: string;
 }
-
-// Demo data fallback
-const DATA: Customer[] = [
-  { id:  1, name: "Mehta Fabrics Pvt Ltd",      contact: "9876543210", industry: "Manufacturing", outstanding: 840000, daysOverdue: 62, score: 82, lastContact: "10 May", lastPayment: "12 Jan", status: "overdue"  },
-  { id:  2, name: "Sharma Steel Works",          contact: "9765432109", industry: "Trading",       outstanding: 520000, daysOverdue: 45, score: 67, lastContact: "12 May", lastPayment: "28 Jan", status: "overdue"  },
-  { id:  3, name: "Patel Agro Industries",       contact: "9654321098", industry: "Manufacturing", outstanding: 315000, daysOverdue: 38, score: 54, lastContact: "8 May",  lastPayment: "5 Feb",  status: "overdue"  },
-  { id:  4, name: "Gupta Construction Co",       contact: "9543210987", industry: "Construction",  outstanding: 280000, daysOverdue: 29, score: 71, lastContact: "13 May", lastPayment: "15 Feb", status: "promised" },
-  { id:  5, name: "Verma Chemicals Ltd",         contact: "9432109876", industry: "Services",      outstanding: 195000, daysOverdue: 18, score: 45, lastContact: "14 May", lastPayment: "22 Feb", status: "due"      },
-  { id:  6, name: "Singh Logistics Pvt Ltd",     contact: "9321098765", industry: "Services",      outstanding: 175000, daysOverdue: 55, score: 61, lastContact: "5 May",  lastPayment: "3 Jan",  status: "overdue"  },
-  { id:  7, name: "Joshi Electronics",           contact: "9210987654", industry: "Retail",        outstanding: 142000, daysOverdue: 14, score: 88, lastContact: "15 May", lastPayment: "1 Mar",  status: "due"      },
-  { id:  8, name: "Agarwal Textiles",            contact: "9109876543", industry: "Manufacturing", outstanding: 128000, daysOverdue: 70, score: 32, lastContact: "28 Apr", lastPayment: "10 Jan", status: "overdue"  },
-  { id:  9, name: "Kapoor Real Estate",          contact: "9098765432", industry: "Construction",  outstanding: 115000, daysOverdue: 22, score: 74, lastContact: "11 May", lastPayment: "25 Feb", status: "due"      },
-  { id: 10, name: "Pandey Pharma Distributors",  contact: "8987654321", industry: "Trading",       outstanding: 98000,  daysOverdue: 33, score: 59, lastContact: "9 May",  lastPayment: "18 Feb", status: "overdue"  },
-  { id: 11, name: "Mishra Auto Parts",           contact: "8876543210", industry: "Retail",        outstanding: 87000,  daysOverdue: 11, score: 90, lastContact: "15 May", lastPayment: "5 Mar",  status: "due"      },
-  { id: 12, name: "Yadav Hardware Suppliers",    contact: "8765432109", industry: "Trading",       outstanding: 74000,  daysOverdue: 48, score: 41, lastContact: "2 May",  lastPayment: "20 Jan", status: "overdue"  },
-];
 
 function fmt(n: number) {
   return n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${(n / 1000).toFixed(0)}K`;
@@ -495,7 +478,7 @@ export default function CollectionsPage() {
     }
   };
 
-  const tableData = liveData ?? [];
+  const tableData = useMemo(() => liveData ?? [], [liveData]);
   const industries = useMemo(() => ["all", ...Array.from(new Set(tableData.map((c) => c.industry)))], [tableData]);
   const rows = useMemo(() => {
     let r = tableData;
