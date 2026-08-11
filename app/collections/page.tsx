@@ -145,11 +145,6 @@ export default function CollectionsPage() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkResult, setBulkResult]   = useState<string | null>(null);
 
-  // Quick Promise modal — "kal dunga" tracker
-  const [promiseModal, setPromiseModal] = useState<Customer | null>(null);
-  const [promiseDate, setPromiseDate]   = useState("");
-  const [promiseSaving, setPromiseSaving] = useState(false);
-
   // Cortex customer risk scores
   const [scoreMap, setScoreMap] = useState<Record<string, { customer_id: string; score: number; tier: string; overdue_amount: number }>>({});
   const [cacheAge, setCacheAge]         = useState<number | null>(null);
@@ -366,6 +361,21 @@ export default function CollectionsPage() {
       posthog.capture("call_logged", { did_pick_up: callForm.did_pick_up, has_promise: !!callForm.promised_date });
       if (callForm.promised_date && logModal) {
         setPromises(prev => ({ ...prev, [logModal.id]: { date: callForm.promised_date, amount: logModal.outstanding, name: logModal.name } }));
+        // Also save to Cortex promises table if customer is scored
+        const cortexCustomer = scoreMap[logModal.name];
+        if (cortexCustomer?.customer_id) {
+          fetch(`${BASE}/api/promises`, {
+            method: "POST",
+            headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
+            body: JSON.stringify({
+              customer_id:    cortexCustomer.customer_id,
+              receivable_id:  logModal.invoiceId || null,
+              promised_amount: logModal.outstanding,
+              promised_date:  callForm.promised_date,
+              promise_note:   callForm.notes || "Logged via call",
+            }),
+          }).catch(() => {});
+        }
       }
       setLogModal(null);
       setCallForm({ did_pick_up: true, promised_date: "", notes: "" });
@@ -381,47 +391,6 @@ export default function CollectionsPage() {
     setReplyModal(null);
     setReplyText("");
   }, [replyModal, replyText]);
-
-  // Quick Promise — log call with promise date, no extra fields required
-  const handleQuickPromise = async () => {
-    const user = getUser();
-    if (!user?.id || !promiseModal || !promiseDate) return;
-    setPromiseSaving(true);
-    try {
-      await api.calls.log({
-        user_id:               user.id,
-        customer_name:         promiseModal.name,
-        customer_phone:        promiseModal.contact,
-        amount:                promiseModal.outstanding,
-        did_pick_up:           true,
-        promised_payment_date: promiseDate,
-        notes:                 `Promise logged via quick tracker`,
-        invoice_id:            promiseModal.invoiceId || null,
-      });
-      // Also save to Cortex promises table if customer is scored
-      const cortexCustomer = scoreMap[promiseModal.name];
-      if (cortexCustomer?.customer_id) {
-        fetch(`${BASE}/api/promises`, {
-          method: "POST",
-          headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
-          body: JSON.stringify({
-            customer_id:    cortexCustomer.customer_id,
-            receivable_id:  promiseModal.invoiceId || null,
-            promised_amount: promiseModal.outstanding,
-            promised_date:  promiseDate,
-            promise_note:   "Quick tracker",
-          }),
-        }).catch(() => {});
-      }
-      setPromises(prev => ({
-        ...prev,
-        [promiseModal.id]: { date: promiseDate, amount: promiseModal.outstanding, name: promiseModal.name },
-      }));
-      setPromiseModal(null);
-      setPromiseDate("");
-    } catch { /* noop */ }
-    finally { setPromiseSaving(false); }
-  };
 
   const getPromiseNudgeMsg = (c: Customer) => {
     const p = promises[c.id];
@@ -533,100 +502,6 @@ export default function CollectionsPage() {
           </div>
         )}
 
-        {/* ── Quick Promise Modal ── */}
-        {promiseModal && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onClick={() => { setPromiseModal(null); setPromiseDate(""); }}>
-            <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl"
-              style={{ background: "#1A1F2E", border: "1px solid #2A3349" }}
-              onClick={e => e.stopPropagation()}>
-
-              {/* Header */}
-              <div className="px-5 pt-5 pb-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-black text-primary">🤝 Promise Track Karo</p>
-                  <button onClick={() => { setPromiseModal(null); setPromiseDate(""); }}
-                    className="text-muted hover:text-primary transition-colors"><FiX size={16} /></button>
-                </div>
-                <p className="text-xs text-muted">{promiseModal.name} ne kab tak dene ka promise kiya?</p>
-              </div>
-
-              {/* Amount chip */}
-              <div className="mx-5 mb-4 flex items-center gap-2 px-3 py-2 rounded-xl"
-                style={{ background: "rgba(245,165,36,0.08)", border: "1px solid rgba(245,165,36,0.2)" }}>
-                <span className="text-warning text-base">🤝</span>
-                <div>
-                  <p className="text-xs font-black text-warning">
-                    ₹{promiseModal.outstanding.toLocaleString("en-IN")}
-                  </p>
-                  <p className="text-2xs text-muted">{promiseModal.daysOverdue}d overdue</p>
-                </div>
-              </div>
-
-              {/* Date picker */}
-              <div className="px-5 pb-5 space-y-3">
-                <div>
-                  <label className="text-xs font-semibold text-secondary block mb-1.5">
-                    Payment ki date
-                  </label>
-                  <div className="relative">
-                    <FiCalendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                    <input
-                      type="date"
-                      autoFocus
-                      value={promiseDate}
-                      min={new Date().toISOString().split("T")[0]}
-                      onChange={e => setPromiseDate(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm text-primary focus:outline-none focus:border-warning transition-colors"
-                      style={{ background: "#1F2538", border: "1px solid #2A3349" }}
-                    />
-                  </div>
-                </div>
-
-                {/* Quick date chips */}
-                <div className="flex gap-2">
-                  {[
-                    { label: "Kal",      days: 1 },
-                    { label: "Parso",    days: 2 },
-                    { label: "Is hafte", days: 5 },
-                  ].map(({ label, days }) => {
-                    const d = new Date();
-                    d.setDate(d.getDate() + days);
-                    const val = d.toISOString().split("T")[0];
-                    return (
-                      <button key={label} onClick={() => setPromiseDate(val)}
-                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
-                          promiseDate === val
-                            ? "text-black"
-                            : "text-muted hover:text-primary"
-                        }`}
-                        style={{
-                          background: promiseDate === val
-                            ? "linear-gradient(135deg, #FF6B35, #F55A22)"
-                            : "#1F2538",
-                          border: promiseDate === val
-                            ? "none"
-                            : "1px solid #2A3349",
-                        }}>
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button onClick={handleQuickPromise} disabled={!promiseDate || promiseSaving}
-                  className="w-full py-3 rounded-xl text-sm font-black text-white transition-all active:scale-95 disabled:opacity-50"
-                  style={{
-                    background: "linear-gradient(135deg, #FF6B35, #F55A22)",
-                    boxShadow: "0 4px 16px rgba(255,107,53,0.4)",
-                  }}>
-                  {promiseSaving ? "Saving..." : "🤝 Promise Save Karo"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Log Reply Modal */}
         {replyModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => { setReplyModal(null); setReplyText(""); }}>
@@ -697,6 +572,27 @@ export default function CollectionsPage() {
                     <label className="text-xs font-medium text-secondary block mb-1">Promised payment date</label>
                     <input type="date" value={callForm.promised_date} onChange={e => setCallForm(f => ({ ...f, promised_date: e.target.value }))}
                       className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2 focus:outline-none focus:border-accent" />
+                    <div className="flex gap-1.5 mt-1.5">
+                      {[
+                        { label: "Kal",      days: 1 },
+                        { label: "Parso",    days: 2 },
+                        { label: "Is hafte", days: 5 },
+                      ].map(({ label, days }) => {
+                        const d = new Date();
+                        d.setDate(d.getDate() + days);
+                        const val = d.toISOString().split("T")[0];
+                        return (
+                          <button key={label} type="button" onClick={() => setCallForm(f => ({ ...f, promised_date: val }))}
+                            className={`flex-1 py-1.5 rounded-lg text-2xs font-bold transition-all ${
+                              callForm.promised_date === val
+                                ? "bg-accent text-white"
+                                : "bg-surface-2 text-muted border border-border hover:text-primary"
+                            }`}>
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
                 <div>
@@ -1130,8 +1026,8 @@ export default function CollectionsPage() {
                             </button>
                           )}
 
-                          {/* ── Quick Promise ── */}
-                          {promises[c.id] ? (
+                          {/* Existing promise, set via Log Call below */}
+                          {promises[c.id] && (
                             <span
                               title={`Promise: ${promises[c.id].date}`}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-bold rounded-lg"
@@ -1144,18 +1040,6 @@ export default function CollectionsPage() {
                               }}>
                               {isPromiseBroken(c.id) ? "⚠️" : "🤝"} {promises[c.id].date.slice(5)}
                             </span>
-                          ) : (
-                            <button
-                              onClick={() => { setPromiseModal(c); setPromiseDate(""); }}
-                              title="Track payment promise"
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-bold rounded-lg transition-all hover:scale-105 active:scale-95"
-                              style={{
-                                background: "rgba(245,165,36,0.10)",
-                                color: "#F5A524",
-                                border: "1px solid rgba(245,165,36,0.22)",
-                              }}>
-                              🤝
-                            </button>
                           )}
 
                           {/* ── One-click send reminder ── */}
