@@ -129,6 +129,7 @@ export default function CollectionsPage() {
   const [replyModal, setReplyModal]   = useState<Customer | null>(null);
   const [replyText, setReplyText]     = useState("");
   const [replyLogs, setReplyLogs]     = useState<Record<number, ReplyLog>>({});
+  const [savingReply, setSavingReply] = useState(false);
 
   // Promise tracker
   const [promises, setPromises]       = useState<Record<number, PromiseRecord>>({});
@@ -383,14 +384,42 @@ export default function CollectionsPage() {
     finally { setLoggingCall(false); }
   };
 
-  const handleLogReply = useCallback(() => {
-    if (!replyModal || !replyText.trim()) return;
-    const log = classifyIntent(replyText);
-    setReplyLogs(prev => ({ ...prev, [replyModal.id]: log }));
+  // Persists a classified reply the same way Log Call persists a phone call --
+  // via api.calls.log, so "Log Customer Reply" produces a durable record
+  // instead of a badge that only lives in this tab's React state and is gone
+  // on refresh. did_pick_up is true here: the customer did respond, just by
+  // text rather than picking up a call.
+  const persistReply = useCallback(async (customer: Customer, log: ReplyLog) => {
+    const user = getUser();
+    setReplyLogs(prev => ({ ...prev, [customer.id]: log }));
     posthog.capture("reply_logged", { intent: log.intent });
+    if (user?.id) {
+      try {
+        await api.calls.log({
+          user_id: user.id,
+          customer_name: customer.name,
+          customer_phone: customer.contact,
+          amount: customer.outstanding,
+          did_pick_up: true,
+          promised_payment_date: null,
+          notes: log.text ? `[${log.label}] ${log.text}` : `[${log.label}]`,
+          invoice_id: customer.invoiceId || null,
+        });
+      } catch { /* noop -- badge already shown, retry isn't worth blocking on */ }
+    }
     setReplyModal(null);
     setReplyText("");
-  }, [replyModal, replyText]);
+  }, []);
+
+  const handleLogReply = useCallback(async () => {
+    if (!replyModal || !replyText.trim()) return;
+    setSavingReply(true);
+    try {
+      await persistReply(replyModal, classifyIntent(replyText));
+    } finally {
+      setSavingReply(false);
+    }
+  }, [replyModal, replyText, persistReply]);
 
   const getPromiseNudgeMsg = (c: Customer) => {
     const p = promises[c.id];
@@ -533,13 +562,15 @@ export default function CollectionsPage() {
                   );
                 })()}
                 <div className="flex gap-2">
-                  <button onClick={() => { setReplyLogs(prev => ({ ...prev, [replyModal.id]: { intent: "no_response", label: "⚫ No Reply", color: "#6B7280", text: "", date: new Date().toISOString() } })); setReplyModal(null); setReplyText(""); }}
-                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-surface-2 border border-border text-secondary hover:text-primary transition-all">
+                  <button
+                    onClick={() => persistReply(replyModal, { intent: "no_response", label: "⚫ No Reply", color: "#6B7280", text: "", date: new Date().toISOString() })}
+                    disabled={savingReply}
+                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-surface-2 border border-border text-secondary hover:text-primary transition-all disabled:opacity-50">
                     ⚫ No Response
                   </button>
-                  <button onClick={handleLogReply} disabled={!replyText.trim()}
+                  <button onClick={handleLogReply} disabled={!replyText.trim() || savingReply}
                     className="flex-1 py-2 rounded-lg text-xs font-semibold bg-white text-black hover:bg-white/90 transition-all disabled:opacity-50">
-                    Save Reply
+                    {savingReply ? "Saving..." : "Save Reply"}
                   </button>
                 </div>
               </div>
