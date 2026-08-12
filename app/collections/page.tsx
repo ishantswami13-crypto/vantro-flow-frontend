@@ -5,7 +5,6 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type Invoice, authHeaders } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import { Badge } from "@/components/ui/Badge";
-import { isDemoMode } from "@/lib/demo";
 import { generateWhatsAppPaymentLink } from "@/lib/paymentLink";
 import {
   FiSearch, FiMessageSquare, FiCheckSquare,
@@ -50,22 +49,6 @@ interface PromiseRecord {
   amount: number;
   name: string;
 }
-
-// Demo data fallback
-const DATA: Customer[] = [
-  { id:  1, name: "Mehta Fabrics Pvt Ltd",      contact: "9876543210", industry: "Manufacturing", outstanding: 840000, daysOverdue: 62, score: 82, lastContact: "10 May", lastPayment: "12 Jan", status: "overdue"  },
-  { id:  2, name: "Sharma Steel Works",          contact: "9765432109", industry: "Trading",       outstanding: 520000, daysOverdue: 45, score: 67, lastContact: "12 May", lastPayment: "28 Jan", status: "overdue"  },
-  { id:  3, name: "Patel Agro Industries",       contact: "9654321098", industry: "Manufacturing", outstanding: 315000, daysOverdue: 38, score: 54, lastContact: "8 May",  lastPayment: "5 Feb",  status: "overdue"  },
-  { id:  4, name: "Gupta Construction Co",       contact: "9543210987", industry: "Construction",  outstanding: 280000, daysOverdue: 29, score: 71, lastContact: "13 May", lastPayment: "15 Feb", status: "promised" },
-  { id:  5, name: "Verma Chemicals Ltd",         contact: "9432109876", industry: "Services",      outstanding: 195000, daysOverdue: 18, score: 45, lastContact: "14 May", lastPayment: "22 Feb", status: "due"      },
-  { id:  6, name: "Singh Logistics Pvt Ltd",     contact: "9321098765", industry: "Services",      outstanding: 175000, daysOverdue: 55, score: 61, lastContact: "5 May",  lastPayment: "3 Jan",  status: "overdue"  },
-  { id:  7, name: "Joshi Electronics",           contact: "9210987654", industry: "Retail",        outstanding: 142000, daysOverdue: 14, score: 88, lastContact: "15 May", lastPayment: "1 Mar",  status: "due"      },
-  { id:  8, name: "Agarwal Textiles",            contact: "9109876543", industry: "Manufacturing", outstanding: 128000, daysOverdue: 70, score: 32, lastContact: "28 Apr", lastPayment: "10 Jan", status: "overdue"  },
-  { id:  9, name: "Kapoor Real Estate",          contact: "9098765432", industry: "Construction",  outstanding: 115000, daysOverdue: 22, score: 74, lastContact: "11 May", lastPayment: "25 Feb", status: "due"      },
-  { id: 10, name: "Pandey Pharma Distributors",  contact: "8987654321", industry: "Trading",       outstanding: 98000,  daysOverdue: 33, score: 59, lastContact: "9 May",  lastPayment: "18 Feb", status: "overdue"  },
-  { id: 11, name: "Mishra Auto Parts",           contact: "8876543210", industry: "Retail",        outstanding: 87000,  daysOverdue: 11, score: 90, lastContact: "15 May", lastPayment: "5 Mar",  status: "due"      },
-  { id: 12, name: "Yadav Hardware Suppliers",    contact: "8765432109", industry: "Trading",       outstanding: 74000,  daysOverdue: 48, score: 41, lastContact: "2 May",  lastPayment: "20 Jan", status: "overdue"  },
-];
 
 function fmt(n: number) {
   return n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${(n / 1000).toFixed(0)}K`;
@@ -146,6 +129,7 @@ export default function CollectionsPage() {
   const [replyModal, setReplyModal]   = useState<Customer | null>(null);
   const [replyText, setReplyText]     = useState("");
   const [replyLogs, setReplyLogs]     = useState<Record<number, ReplyLog>>({});
+  const [savingReply, setSavingReply] = useState(false);
 
   // Promise tracker
   const [promises, setPromises]       = useState<Record<number, PromiseRecord>>({});
@@ -161,11 +145,6 @@ export default function CollectionsPage() {
   // Bulk remind
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkResult, setBulkResult]   = useState<string | null>(null);
-
-  // Quick Promise modal — "kal dunga" tracker
-  const [promiseModal, setPromiseModal] = useState<Customer | null>(null);
-  const [promiseDate, setPromiseDate]   = useState("");
-  const [promiseSaving, setPromiseSaving] = useState(false);
 
   // Cortex customer risk scores
   const [scoreMap, setScoreMap] = useState<Record<string, { customer_id: string; score: number; tier: string; overdue_amount: number }>>({});
@@ -383,6 +362,21 @@ export default function CollectionsPage() {
       posthog.capture("call_logged", { did_pick_up: callForm.did_pick_up, has_promise: !!callForm.promised_date });
       if (callForm.promised_date && logModal) {
         setPromises(prev => ({ ...prev, [logModal.id]: { date: callForm.promised_date, amount: logModal.outstanding, name: logModal.name } }));
+        // Also save to Cortex promises table if customer is scored
+        const cortexCustomer = scoreMap[logModal.name];
+        if (cortexCustomer?.customer_id) {
+          fetch(`${BASE}/api/promises`, {
+            method: "POST",
+            headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
+            body: JSON.stringify({
+              customer_id:    cortexCustomer.customer_id,
+              receivable_id:  logModal.invoiceId || null,
+              promised_amount: logModal.outstanding,
+              promised_date:  callForm.promised_date,
+              promise_note:   callForm.notes || "Logged via call",
+            }),
+          }).catch(() => {});
+        }
       }
       setLogModal(null);
       setCallForm({ did_pick_up: true, promised_date: "", notes: "" });
@@ -390,55 +384,42 @@ export default function CollectionsPage() {
     finally { setLoggingCall(false); }
   };
 
-  const handleLogReply = useCallback(() => {
-    if (!replyModal || !replyText.trim()) return;
-    const log = classifyIntent(replyText);
-    setReplyLogs(prev => ({ ...prev, [replyModal.id]: log }));
+  // Persists a classified reply the same way Log Call persists a phone call --
+  // via api.calls.log, so "Log Customer Reply" produces a durable record
+  // instead of a badge that only lives in this tab's React state and is gone
+  // on refresh. did_pick_up is true here: the customer did respond, just by
+  // text rather than picking up a call.
+  const persistReply = useCallback(async (customer: Customer, log: ReplyLog) => {
+    const user = getUser();
+    setReplyLogs(prev => ({ ...prev, [customer.id]: log }));
     posthog.capture("reply_logged", { intent: log.intent });
+    if (user?.id) {
+      try {
+        await api.calls.log({
+          user_id: user.id,
+          customer_name: customer.name,
+          customer_phone: customer.contact,
+          amount: customer.outstanding,
+          did_pick_up: true,
+          promised_payment_date: null,
+          notes: log.text ? `[${log.label}] ${log.text}` : `[${log.label}]`,
+          invoice_id: customer.invoiceId || null,
+        });
+      } catch { /* noop -- badge already shown, retry isn't worth blocking on */ }
+    }
     setReplyModal(null);
     setReplyText("");
-  }, [replyModal, replyText]);
+  }, []);
 
-  // Quick Promise — log call with promise date, no extra fields required
-  const handleQuickPromise = async () => {
-    const user = getUser();
-    if (!user?.id || !promiseModal || !promiseDate) return;
-    setPromiseSaving(true);
+  const handleLogReply = useCallback(async () => {
+    if (!replyModal || !replyText.trim()) return;
+    setSavingReply(true);
     try {
-      await api.calls.log({
-        user_id:               user.id,
-        customer_name:         promiseModal.name,
-        customer_phone:        promiseModal.contact,
-        amount:                promiseModal.outstanding,
-        did_pick_up:           true,
-        promised_payment_date: promiseDate,
-        notes:                 `Promise logged via quick tracker`,
-        invoice_id:            promiseModal.invoiceId || null,
-      });
-      // Also save to Cortex promises table if customer is scored
-      const cortexCustomer = scoreMap[promiseModal.name];
-      if (cortexCustomer?.customer_id) {
-        fetch(`${BASE}/api/promises`, {
-          method: "POST",
-          headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
-          body: JSON.stringify({
-            customer_id:    cortexCustomer.customer_id,
-            receivable_id:  promiseModal.invoiceId || null,
-            promised_amount: promiseModal.outstanding,
-            promised_date:  promiseDate,
-            promise_note:   "Quick tracker",
-          }),
-        }).catch(() => {});
-      }
-      setPromises(prev => ({
-        ...prev,
-        [promiseModal.id]: { date: promiseDate, amount: promiseModal.outstanding, name: promiseModal.name },
-      }));
-      setPromiseModal(null);
-      setPromiseDate("");
-    } catch { /* noop */ }
-    finally { setPromiseSaving(false); }
-  };
+      await persistReply(replyModal, classifyIntent(replyText));
+    } finally {
+      setSavingReply(false);
+    }
+  }, [replyModal, replyText, persistReply]);
 
   const getPromiseNudgeMsg = (c: Customer) => {
     const p = promises[c.id];
@@ -495,7 +476,7 @@ export default function CollectionsPage() {
     }
   };
 
-  const tableData = liveData ?? [];
+  const tableData = useMemo(() => liveData ?? [], [liveData]);
   const industries = useMemo(() => ["all", ...Array.from(new Set(tableData.map((c) => c.industry)))], [tableData]);
   const rows = useMemo(() => {
     let r = tableData;
@@ -550,100 +531,6 @@ export default function CollectionsPage() {
           </div>
         )}
 
-        {/* ── Quick Promise Modal ── */}
-        {promiseModal && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onClick={() => { setPromiseModal(null); setPromiseDate(""); }}>
-            <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl"
-              style={{ background: "#1A1F2E", border: "1px solid #2A3349" }}
-              onClick={e => e.stopPropagation()}>
-
-              {/* Header */}
-              <div className="px-5 pt-5 pb-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-black text-primary">🤝 Promise Track Karo</p>
-                  <button onClick={() => { setPromiseModal(null); setPromiseDate(""); }}
-                    className="text-muted hover:text-primary transition-colors"><FiX size={16} /></button>
-                </div>
-                <p className="text-xs text-muted">{promiseModal.name} ne kab tak dene ka promise kiya?</p>
-              </div>
-
-              {/* Amount chip */}
-              <div className="mx-5 mb-4 flex items-center gap-2 px-3 py-2 rounded-xl"
-                style={{ background: "rgba(245,165,36,0.08)", border: "1px solid rgba(245,165,36,0.2)" }}>
-                <span className="text-warning text-base">🤝</span>
-                <div>
-                  <p className="text-xs font-black text-warning">
-                    ₹{promiseModal.outstanding.toLocaleString("en-IN")}
-                  </p>
-                  <p className="text-2xs text-muted">{promiseModal.daysOverdue}d overdue</p>
-                </div>
-              </div>
-
-              {/* Date picker */}
-              <div className="px-5 pb-5 space-y-3">
-                <div>
-                  <label className="text-xs font-semibold text-secondary block mb-1.5">
-                    Payment ki date
-                  </label>
-                  <div className="relative">
-                    <FiCalendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                    <input
-                      type="date"
-                      autoFocus
-                      value={promiseDate}
-                      min={new Date().toISOString().split("T")[0]}
-                      onChange={e => setPromiseDate(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm text-primary focus:outline-none focus:border-warning transition-colors"
-                      style={{ background: "#1F2538", border: "1px solid #2A3349" }}
-                    />
-                  </div>
-                </div>
-
-                {/* Quick date chips */}
-                <div className="flex gap-2">
-                  {[
-                    { label: "Kal",      days: 1 },
-                    { label: "Parso",    days: 2 },
-                    { label: "Is hafte", days: 5 },
-                  ].map(({ label, days }) => {
-                    const d = new Date();
-                    d.setDate(d.getDate() + days);
-                    const val = d.toISOString().split("T")[0];
-                    return (
-                      <button key={label} onClick={() => setPromiseDate(val)}
-                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
-                          promiseDate === val
-                            ? "text-black"
-                            : "text-muted hover:text-primary"
-                        }`}
-                        style={{
-                          background: promiseDate === val
-                            ? "linear-gradient(135deg, #FF6B35, #F55A22)"
-                            : "#1F2538",
-                          border: promiseDate === val
-                            ? "none"
-                            : "1px solid #2A3349",
-                        }}>
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button onClick={handleQuickPromise} disabled={!promiseDate || promiseSaving}
-                  className="w-full py-3 rounded-xl text-sm font-black text-white transition-all active:scale-95 disabled:opacity-50"
-                  style={{
-                    background: "linear-gradient(135deg, #FF6B35, #F55A22)",
-                    boxShadow: "0 4px 16px rgba(255,107,53,0.4)",
-                  }}>
-                  {promiseSaving ? "Saving..." : "🤝 Promise Save Karo"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Log Reply Modal */}
         {replyModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => { setReplyModal(null); setReplyText(""); }}>
@@ -675,13 +562,15 @@ export default function CollectionsPage() {
                   );
                 })()}
                 <div className="flex gap-2">
-                  <button onClick={() => { setReplyLogs(prev => ({ ...prev, [replyModal.id]: { intent: "no_response", label: "⚫ No Reply", color: "#6B7280", text: "", date: new Date().toISOString() } })); setReplyModal(null); setReplyText(""); }}
-                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-surface-2 border border-border text-secondary hover:text-primary transition-all">
+                  <button
+                    onClick={() => persistReply(replyModal, { intent: "no_response", label: "⚫ No Reply", color: "#6B7280", text: "", date: new Date().toISOString() })}
+                    disabled={savingReply}
+                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-surface-2 border border-border text-secondary hover:text-primary transition-all disabled:opacity-50">
                     ⚫ No Response
                   </button>
-                  <button onClick={handleLogReply} disabled={!replyText.trim()}
+                  <button onClick={handleLogReply} disabled={!replyText.trim() || savingReply}
                     className="flex-1 py-2 rounded-lg text-xs font-semibold bg-white text-black hover:bg-white/90 transition-all disabled:opacity-50">
-                    Save Reply
+                    {savingReply ? "Saving..." : "Save Reply"}
                   </button>
                 </div>
               </div>
@@ -714,6 +603,27 @@ export default function CollectionsPage() {
                     <label className="text-xs font-medium text-secondary block mb-1">Promised payment date</label>
                     <input type="date" value={callForm.promised_date} onChange={e => setCallForm(f => ({ ...f, promised_date: e.target.value }))}
                       className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2 focus:outline-none focus:border-accent" />
+                    <div className="flex gap-1.5 mt-1.5">
+                      {[
+                        { label: "Kal",      days: 1 },
+                        { label: "Parso",    days: 2 },
+                        { label: "Is hafte", days: 5 },
+                      ].map(({ label, days }) => {
+                        const d = new Date();
+                        d.setDate(d.getDate() + days);
+                        const val = d.toISOString().split("T")[0];
+                        return (
+                          <button key={label} type="button" onClick={() => setCallForm(f => ({ ...f, promised_date: val }))}
+                            className={`flex-1 py-1.5 rounded-lg text-2xs font-bold transition-all ${
+                              callForm.promised_date === val
+                                ? "bg-accent text-white"
+                                : "bg-surface-2 text-muted border border-border hover:text-primary"
+                            }`}>
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
                 <div>
@@ -1147,8 +1057,8 @@ export default function CollectionsPage() {
                             </button>
                           )}
 
-                          {/* ── Quick Promise ── */}
-                          {promises[c.id] ? (
+                          {/* Existing promise, set via Log Call below */}
+                          {promises[c.id] && (
                             <span
                               title={`Promise: ${promises[c.id].date}`}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-bold rounded-lg"
@@ -1161,18 +1071,6 @@ export default function CollectionsPage() {
                               }}>
                               {isPromiseBroken(c.id) ? "⚠️" : "🤝"} {promises[c.id].date.slice(5)}
                             </span>
-                          ) : (
-                            <button
-                              onClick={() => { setPromiseModal(c); setPromiseDate(""); }}
-                              title="Track payment promise"
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-bold rounded-lg transition-all hover:scale-105 active:scale-95"
-                              style={{
-                                background: "rgba(245,165,36,0.10)",
-                                color: "#F5A524",
-                                border: "1px solid rgba(245,165,36,0.22)",
-                              }}>
-                              🤝
-                            </button>
                           )}
 
                           {/* ── One-click send reminder ── */}

@@ -556,10 +556,21 @@ export interface InvoiceLineItem {
   unit: string;
   rate: number;
   amount: number;
+  hsn?: string | null;
 }
 
 export interface InvoiceDetail extends Invoice {
   items?: InvoiceLineItem[] | null;
+  // Present only when this invoice originated from the GST bills flow
+  // (POST /api/bills) rather than the legacy invoices table.
+  customer_gstin?: string | null;
+  customer_address?: string | null;
+  gst_rate?: number | null;
+  is_interstate?: boolean;
+  subtotal?: number;
+  cgst?: number;
+  sgst?: number;
+  igst?: number;
 }
 
 export interface BusinessProfile {
