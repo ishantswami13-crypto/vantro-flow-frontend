@@ -219,6 +219,26 @@ export const api = {
   ownerBriefingPreview: () =>
     request<OwnerBriefingResponse>('/api/agents/core.owner_briefing/preview'),
 
+  // ─── Business State (canonical read-model, see lib/domain/intelligence/businessState.js) ───
+  businessState: () => request<BusinessStateResponse>('/api/business-state'),
+
+  // ─── Customer intelligence (drawer: Business State → Receivables Risk → Customer) ───
+  customers: {
+    intelligence: (name: string, phone?: string) =>
+      request<CustomerIntelligenceResponse>(
+        `/api/customers/intelligence?name=${encodeURIComponent(name)}${phone ? `&phone=${encodeURIComponent(phone)}` : ''}`
+      ),
+  },
+
+  // ─── AI Actions (approve/reject only — execution is a separate, existing pathway) ───
+  aiActions: {
+    updateStatus: (id: string, status: 'approved' | 'rejected' | 'done') =>
+      request<{ success: boolean; action: RankedAction }>(`/api/ai-actions/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      }),
+  },
+
   // ─── Bills ────────────────────────────────────────────────
   bills: {
     list: () => request<{ success: boolean; bills: any[] }>('/api/bills'),
@@ -683,6 +703,124 @@ export interface OwnerBriefingSection {
   source_tables: string[];
   confidence: number;
   action_required: boolean;
+}
+
+// ─── Business State (canonical read-model) ───────────────────────────────
+// Mirrors lib/domain/intelligence/businessState.js's exact return shape on the
+// backend — do not add fields here that the backend doesn't actually return.
+export interface OverallState {
+  state: 'HEALTHY' | 'UNDER_PRESSURE' | 'NEEDS_ATTENTION';
+  reasons: string[];
+  computedFrom: { urgentActionCount: number; highRiskCustomerCount: number; cashflowGapPct: number | null };
+}
+
+export interface RankedActionCustomer {
+  id: string;
+  name?: string;
+  phone?: string;
+  credit_risk_score?: number;
+  collection_priority_score?: number;
+  score_reason?: string | null;
+}
+
+export interface RankedAction {
+  id: string;
+  action_type: string;
+  title: string;
+  description: string;
+  priority: 'urgent' | 'high' | 'medium' | 'low';
+  risk_level: 'high' | 'medium' | 'low' | null;
+  requires_approval: boolean;
+  recommended_message: string | null;
+  related_entity_type: string | null;
+  related_entity_id: string | null;
+  customer: RankedActionCustomer | null;
+  created_at: string;
+}
+
+export interface BrainSummary {
+  asOf: string;
+  generatedAt: string;
+  kpis: {
+    salesThis: number; salesPrev: number; salesDelta: number;
+    grossProfit: number; margin: number; netCashFlow: number;
+    cashIn: number; cashOut: number; receivable: number; payable: number;
+  };
+  position: {
+    receivable: number; payable: number; net: number;
+    setoffTotal: number; customerCount: number; supplierCount: number;
+  };
+  setoff: Array<{ name: string; settle: number }>;
+  actions: Array<{ sev: 'hi' | 'mid' | 'lo'; title: string; sub: string; value: number | null }>;
+  approximations: { grossProfit: string; cash: string };
+  // salesTrend/products intentionally left untyped here — not consumed by Business State V1.
+  salesTrend: unknown[];
+  products: unknown[];
+}
+
+export interface BusinessState {
+  overallState: OverallState | null; // null when there isn't enough data to classify honestly — never fabricate a verdict
+  rankedActions: RankedAction[];
+  receivablesRisk: RankedAction[];
+  payablesRisk: RankedAction[];
+  cashflow: { expected_inflow: number; expected_outflow: number; error?: string };
+  brain: BrainSummary | null; // null if brain_dashboard_enabled is off, or that section failed — see `sections.brain`
+  sections?: { rankedActions: 'ok' | 'error'; cashflow: 'ok' | 'error'; brain: 'ok' | 'disabled' | 'error' };
+  generatedAt: string;
+}
+
+export interface BusinessStateResponse {
+  success: true;
+  businessState: BusinessState;
+  _cached?: boolean;
+}
+
+// ─── Customer intelligence (drawer view) ─────────────────────────────────
+// Mirrors GET /api/customers/intelligence's exact return shape (server.js).
+export interface CustomerIntelligenceResponse {
+  success: boolean;
+  customer_id: string | null;
+  name: string;
+  score: {
+    credit_risk_score: number;
+    collection_priority_score: number;
+    promise_reliability_score: number;
+    average_delay_days: number;
+    max_delay_days: number;
+    broken_promise_count: number;
+    tier: 'HIGH_RISK' | 'MEDIUM' | 'LOW';
+    credit_recommendation: string;
+    last_calculated_at: string | null;
+  };
+  summary: {
+    total_outstanding: number;
+    overdue_count: number;
+    active_promises: number;
+    broken_promises: number;
+    pending_actions: number;
+  };
+  promises: Array<{ promised_amount: number; promised_date: string; status: string; created_at: string }>;
+  actions: Array<{ action_type: string; title: string; priority: string; status: string; created_at: string }>;
+  invoices: Array<{ id: string; invoice_amount: number; payment_status: string; due_date: string; days_overdue: number; created_at: string }>;
+  memories: Array<{ memory_key: string; memory_value: unknown; updated_at: string }>;
+  // Revenue block rendered by the Customer drawer's "Revenue & Momentum" card
+  // (components/business-state/DrawerViews/CustomerDrawerView.tsx) — null when the
+  // customer_revenue_intelligence feature flag is off or the customer could not be
+  // resolved; every populated field always carries a plain-language `evidence`
+  // string alongside its number(s) — never a bare figure.
+  revenue?: CustomerRevenueBlock | null;
+}
+
+export interface CustomerRevenueBlock {
+  value: { windowDays: number; revenue: number; orderCount: number; aov: number; evidence: string };
+  momentum: {
+    status: 'GROWING' | 'DECLINING' | 'FLAT' | 'INSUFFICIENT_HISTORY';
+    changePct: number | null;
+    evidence: string;
+  };
+  concentration: { share: number; sharePct: number; isConcentrationRisk: boolean; evidence: string };
+  dormancy: { isDormant: boolean; daysSinceLastSale: number | null; avgGapDays: number | null; evidence: string };
+  health: { label: 'DORMANT' | 'AT_RISK' | 'WATCH' | 'GROWING' | 'HEALTHY'; evidence: string[] };
 }
 
 export interface OwnerBriefingResponse {
