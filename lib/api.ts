@@ -228,6 +228,9 @@ export const api = {
       request<CustomerIntelligenceResponse>(
         `/api/customers/intelligence?name=${encodeURIComponent(name)}${phone ? `&phone=${encodeURIComponent(phone)}` : ''}`
       ),
+    // Phase 10 — portfolio-level revenue concentration + attention-ranked list.
+    // Returns { enabled: false, ... } zeroed shape when the feature flag is off.
+    portfolio: () => request<CustomerPortfolioResponse>('/api/customers/portfolio'),
   },
 
   // ─── AI Actions (approve/reject only — execution is a separate, existing pathway) ───
@@ -821,6 +824,34 @@ export interface CustomerRevenueBlock {
   concentration: { share: number; sharePct: number; isConcentrationRisk: boolean; evidence: string };
   dormancy: { isDormant: boolean; daysSinceLastSale: number | null; avgGapDays: number | null; evidence: string };
   health: { label: 'DORMANT' | 'AT_RISK' | 'WATCH' | 'GROWING' | 'HEALTHY'; evidence: string[] };
+}
+
+// Phase 10 — GET /api/customers/portfolio (revenueIntelligence.service.js computePortfolio()).
+export interface CustomerPortfolioEntry {
+  customerId: string | null;
+  customerName: string;
+  revenue: number;
+  orderCount: number;
+  aov: number;
+  concentration: { share: number; sharePct: number; isConcentrationRisk: boolean; evidence: string };
+  momentum: { status: string; changePct: number | null; evidence: string };
+  dormancy: { isDormant: boolean; daysSinceLastSale: number | null; avgGapDays: number | null; evidence: string };
+  creditRiskScore: number;
+  trajectory: string;
+  healthLabel: 'DORMANT' | 'AT_RISK' | 'WATCH' | 'GROWING' | 'HEALTHY';
+  healthEvidence: string[];
+  attentionScore: number;
+  evidence: string[];
+}
+export interface CustomerPortfolioResponse {
+  enabled: boolean;
+  customers: CustomerPortfolioEntry[];
+  tenantRevenue: number;
+  windowDays?: number;
+  top1SharePct: number;
+  top3SharePct: number;
+  top5SharePct: number;
+  concentrationRiskCount: number;
 }
 
 export interface OwnerBriefingResponse {

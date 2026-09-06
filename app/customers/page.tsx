@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { getToken } from "@/lib/api";
-import { FiBook, FiMessageSquare, FiPhone, FiSearch, FiUser, FiUsers } from "react-icons/fi";
+import { api, getToken, type CustomerPortfolioResponse } from "@/lib/api";
+import { FiBook, FiMessageSquare, FiPhone, FiSearch, FiUser, FiUsers, FiAlertTriangle } from "react-icons/fi";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -31,7 +31,8 @@ export default function CustomersPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [scoreMap, setScoreMap] = useState<Record<string, { score: number; tier: string; overdue_amount: number }>>({});
+  const [scoreMap, setScoreMap] = useState<Record<string, { score: number; tier: string; overdue_amount: number; health_label?: string | null }>>({});
+  const [portfolio, setPortfolio] = useState<CustomerPortfolioResponse | null>(null);
 
   const loadCustomers = async () => {
     setLoading(true);
@@ -60,7 +61,21 @@ export default function CustomersPage() {
         d.scores.forEach((s: any) => { map[s.customer_name] = s; });
         setScoreMap(map);
       }).catch(() => {});
+    // Phase 10 — portfolio-level concentration + attention-ranked list.
+    // Fails silently (stays null) when the feature flag is off or the request
+    // errors — this section is purely additive and never blocks the base page.
+    api.customers.portfolio().then(setPortfolio).catch(() => {});
   }, []);
+
+  const HEALTH_LABEL_TEXT: Record<string, string> = {
+    DORMANT: "Dormant", AT_RISK: "At Risk", WATCH: "Watch", GROWING: "Growing", HEALTHY: "Healthy",
+  };
+  const HEALTH_LABEL_COLOR: Record<string, string> = {
+    DORMANT: "#8B8FA3", AT_RISK: "#F5424D", WATCH: "#F5A524", GROWING: "#10D98A", HEALTHY: "#3B82F6",
+  };
+  const attentionList = (portfolio?.customers || [])
+    .filter(c => c.healthLabel !== "HEALTHY")
+    .slice(0, 5);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -142,6 +157,60 @@ export default function CustomersPage() {
           />
         </div>
 
+        {portfolio?.enabled && portfolio.customers.length > 0 && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="card-metric p-4">
+                <p className="section-label mb-2">Top Customer Share</p>
+                <p className="metric-lg text-primary">{portfolio.top1SharePct}%</p>
+                <p className="text-2xs text-muted mt-1">of trailing-90d revenue</p>
+              </div>
+              <div className="card-metric p-4">
+                <p className="section-label mb-2">Top 3 Concentration</p>
+                <p className="metric-lg text-primary">{portfolio.top3SharePct}%</p>
+                <p className="text-2xs text-muted mt-1">of trailing-90d revenue</p>
+              </div>
+              <div className="card-metric p-4">
+                <p className="section-label mb-2">Top 5 Concentration</p>
+                <p className="metric-lg text-primary">{portfolio.top5SharePct}%</p>
+                <p className="text-2xs text-muted mt-1">of trailing-90d revenue</p>
+              </div>
+              <div className="card-metric p-4">
+                <p className="section-label mb-2">Needs Attention</p>
+                <p className="metric-lg text-danger">{attentionList.length}</p>
+                <p className="text-2xs text-muted mt-1">{portfolio.concentrationRiskCount} concentration risk</p>
+              </div>
+            </div>
+
+            {attentionList.length > 0 && (
+              <div className="card-premium p-4">
+                <h3 className="text-2xs font-bold text-secondary uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                  <FiAlertTriangle size={12} /> Customers Needing Attention
+                </h3>
+                <div className="space-y-2">
+                  {attentionList.map((c) => (
+                    <div key={c.customerId || c.customerName} className="flex items-start justify-between gap-3 rounded-xl bg-surface-2/70 p-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-bold text-primary truncate">{c.customerName}</p>
+                          <span
+                            className="text-[10px] font-semibold rounded-full px-2 py-0.5 shrink-0"
+                            style={{ color: HEALTH_LABEL_COLOR[c.healthLabel], background: `${HEALTH_LABEL_COLOR[c.healthLabel]}18`, border: `1px solid ${HEALTH_LABEL_COLOR[c.healthLabel]}40` }}
+                          >
+                            {HEALTH_LABEL_TEXT[c.healthLabel] || c.healthLabel}
+                          </span>
+                        </div>
+                        <p className="text-2xs text-muted mt-1">{c.healthEvidence[0] || c.evidence[0]}</p>
+                      </div>
+                      <p className="text-2xs text-muted shrink-0">Attention {c.attentionScore}/100</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {loading ? (
           <div className="card-premium p-10 text-center text-sm text-muted">Loading customers...</div>
         ) : error ? (
@@ -177,11 +246,26 @@ export default function CustomersPage() {
                         const risk = scoreMap[customer.customer_name];
                         const tierColor = risk.tier === "HIGH_RISK" ? "#F5424D" : risk.tier === "MEDIUM" ? "#F5A524" : "#10D98A";
                         const tierLabel = risk.tier === "HIGH_RISK" ? "High Risk" : risk.tier === "MEDIUM" ? "Medium" : "Low Risk";
+                        const HEALTH_LABEL_TEXT: Record<string, string> = {
+                          DORMANT: "Dormant", AT_RISK: "At Risk", WATCH: "Watch", GROWING: "Growing", HEALTHY: "Healthy",
+                        };
+                        const HEALTH_LABEL_COLOR: Record<string, string> = {
+                          DORMANT: "#8B8FA3", AT_RISK: "#F5424D", WATCH: "#F5A524", GROWING: "#10D98A", HEALTHY: "#3B82F6",
+                        };
+                        const health = risk.health_label;
                         return (
-                          <span className="inline-block mt-1 text-[10px] font-semibold rounded-full px-2 py-0.5"
-                            style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}40` }}>
-                            {tierLabel} · {risk.score}
-                          </span>
+                          <div className="flex flex-col items-end gap-1 mt-1">
+                            <span className="inline-block text-[10px] font-semibold rounded-full px-2 py-0.5"
+                              style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}40` }}>
+                              {tierLabel} · {risk.score}
+                            </span>
+                            {health && HEALTH_LABEL_TEXT[health] && (
+                              <span className="inline-block text-[10px] font-semibold rounded-full px-2 py-0.5"
+                                style={{ color: HEALTH_LABEL_COLOR[health], background: `${HEALTH_LABEL_COLOR[health]}18`, border: `1px solid ${HEALTH_LABEL_COLOR[health]}40` }}>
+                                {HEALTH_LABEL_TEXT[health]}
+                              </span>
+                            )}
+                          </div>
                         );
                       })()}
                     </div>
