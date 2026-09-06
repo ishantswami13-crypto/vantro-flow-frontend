@@ -222,6 +222,9 @@ export const api = {
   // ─── Business State (canonical read-model, see lib/domain/intelligence/businessState.js) ───
   businessState: () => request<BusinessStateResponse>('/api/business-state'),
 
+  // ─── Cortex health (track record of past recommendations, see server.js GET /api/cortex/health) ───
+  cortexHealth: () => request<CortexHealthResponse>('/api/cortex/health'),
+
   // ─── Customer intelligence (drawer: Business State → Receivables Risk → Customer) ───
   customers: {
     intelligence: (name: string, phone?: string) =>
@@ -776,6 +779,35 @@ export interface BusinessStateResponse {
   success: true;
   businessState: BusinessState;
   _cached?: boolean;
+}
+
+// ─── Cortex health (track record of past recommendations) ───────────────
+// Mirrors server.js GET /api/cortex/health's exact response shape — by_action_type
+// is additive-only grouping of the already-fetched ai_actions.outcome rows.
+export interface CortexHealthActionTypeBreakdown {
+  effective: number;
+  ineffective: number;
+  unknown: number;
+  rate: number | null; // null when this type has 0 evaluated actions
+}
+
+export interface CortexHealthStats {
+  pending_actions: number;
+  pending_by_priority: { urgent: number; high: number; medium: number; low: number };
+  customer_scores: number;
+  active_plans: number;
+  memory_entries: number;
+  evaluated_actions: number;
+  effectiveness_rate: number | null;
+  effective_count: number;
+  ineffective_count: number;
+  by_action_type: Record<string, CortexHealthActionTypeBreakdown>;
+}
+
+export interface CortexHealthResponse {
+  success: true;
+  flags: Record<string, boolean>;
+  stats: CortexHealthStats;
 }
 
 // ─── Customer intelligence (drawer view) ─────────────────────────────────

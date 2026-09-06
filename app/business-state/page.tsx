@@ -16,6 +16,7 @@ import { MoneySection } from "@/components/business-state/MoneySection";
 import { RiskSection } from "@/components/business-state/RiskSection";
 import { SignalsSection } from "@/components/business-state/SignalsSection";
 import { RecommendedActionsSection } from "@/components/business-state/RecommendedActionsSection";
+import { TrackRecordCard } from "@/components/business-state/TrackRecordCard";
 import { CustomerDrawerView } from "@/components/business-state/DrawerViews/CustomerDrawerView";
 import { InvoiceDrawerView } from "@/components/business-state/DrawerViews/InvoiceDrawerView";
 import { TransactionDrawerView } from "@/components/business-state/DrawerViews/TransactionDrawerView";
@@ -160,6 +161,10 @@ export default function BusinessStatePage() {
                 pushView({ type: "customer", name, phone, label: name })
               }
             />
+          </Section>
+
+          <Section title="Track Record" order="order-8 lg:order-none">
+            <TrackRecordCard />
           </Section>
         </div>
       )}
