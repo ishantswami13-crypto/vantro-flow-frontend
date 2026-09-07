@@ -18,7 +18,7 @@ export default function Error({
   const errorId = error.requestId || 'UNKNOWN';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: "#080808" }}>
       <ErrorFallback errorId={errorId} retryAction={reset} />
     </div>
   );

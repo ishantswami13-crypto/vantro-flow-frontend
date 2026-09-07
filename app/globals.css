@@ -279,6 +279,32 @@
 }
 
 /* ============================================================
+   CARD BASE + INPUT BASE  (generic aliases for brain/bills/orders)
+   ============================================================ */
+.card-base {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.input-base {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #F2F2F2;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100%;
+}
+.input-base:focus {
+  border-color: rgba(255,255,255,0.30);
+  background: rgba(255,255,255,0.07);
+}
+.input-base::placeholder { color: rgba(255,255,255,0.28); }
+
+/* ============================================================
    TABLE PREMIUM
    ============================================================ */
 .table-premium tbody tr {

@@ -22,7 +22,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self' https://vantro-flow-backend-production.up.railway.app https://*.posthog.com https://*.i.posthog.com https://*.supabase.co wss://*.supabase.co",
+      `connect-src 'self' https://vantro-flow-backend-production.up.railway.app https://*.posthog.com https://*.i.posthog.com https://*.supabase.co wss://*.supabase.co${process.env.NODE_ENV !== 'production' ? ' http://localhost:3001' : ''}`,
       "frame-src https://checkout.razorpay.com https://api.razorpay.com",
       "media-src 'self' blob:",
       "object-src 'none'",

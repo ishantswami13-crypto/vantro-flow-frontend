@@ -2,8 +2,6 @@
 
 import { useEffect } from 'react';
 
-import { ErrorFallback } from '@/components/ErrorFallback';
-
 export default function GlobalError({
   error,
   reset,
@@ -12,7 +10,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[Vantro Global Error]', error);
+    console.error('[Atlas Error]', error);
   }, [error]);
 
   const errorId = error.requestId || 'UNKNOWN';
@@ -20,16 +18,16 @@ export default function GlobalError({
   return (
     <html lang="en">
       <body>
-        <div style={{ minHeight: '100vh', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ padding: '2rem', maxWidth: '600px', width: '100%' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>A critical error occurred</h1>
-            <p style={{ marginBottom: '2rem' }}>We've been notified. Please try reloading the page.</p>
-            <div style={{ background: '#f3f4f6', padding: '1rem', borderRadius: '0.5rem', fontFamily: 'monospace', marginBottom: '2rem' }}>
-              Error ID: {errorId}
+        <div style={{ minHeight: '100vh', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ padding: '2rem', maxWidth: '600px', width: '100%', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#F2F2F2' }}>A critical error occurred</h1>
+            <p style={{ marginBottom: '2rem', color: '#888888' }}>We've been notified. Please try reloading the page.</p>
+            <div style={{ background: '#161616', border: '1px solid #222222', padding: '1rem', borderRadius: '0.5rem', fontFamily: 'monospace', marginBottom: '2rem', color: '#888888' }}>
+              Error ID: <span style={{ color: '#F2F2F2', fontWeight: 'bold' }}>{errorId}</span>
             </div>
             <button
               onClick={reset}
-              style={{ padding: '0.75rem 1.5rem', background: '#2563eb', color: 'white', borderRadius: '0.5rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+              style={{ padding: '0.75rem 1.5rem', background: '#4F6EF7', color: 'white', borderRadius: '0.75rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
             >
               Reload application
             </button>
