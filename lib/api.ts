@@ -686,6 +686,64 @@ export interface LedgerSummary {
   monthBalance: number;
 }
 
+// ─── RAG Evidence Contract Types (Phase 2C.12) ───────────────────────────────
+
+export interface EvidenceItem {
+  id: string;
+  source_type: string;
+  source_id: string;
+  label?: string;
+  excerpt?: string;
+  amount?: number;
+  currency?: string;
+  created_at?: string;
+  updated_at?: string;
+  confidence?: number;
+  metadata?: Record<string, unknown>;
+}
+
+export interface AgentClaim {
+  id: string;
+  claim: string;
+  claim_type: 'summary' | 'risk' | 'opportunity' | 'action' | 'warning';
+  evidence_ids: string[];
+  confidence: number;
+  safe_to_show_claim: boolean;
+  blocked_reason?: string;
+  risk_level?: 'low' | 'medium' | 'high' | 'critical';
+}
+
+export interface AgentRecommendation {
+  id: string;
+  title: string;
+  description: string;
+  action_type: string;
+  evidence_ids: string[];
+  confidence: number;
+  requires_human_approval: boolean;
+  safe_to_auto_execute: false;
+  risk_level: 'low' | 'medium' | 'high' | 'critical';
+}
+
+export interface OwnerBriefingEvidenceContract {
+  briefing_id: string;
+  generated_at: string;
+  agent: 'core.owner_briefing' | string;
+  tenant_id?: string;
+  user_id?: string;
+  summary: string;
+  claims: AgentClaim[];
+  recommendations: AgentRecommendation[];
+  evidence: EvidenceItem[];
+  confidence: number;
+  safe_to_show: boolean;
+  blocked_claim_count: number;
+  evidence_source_ids: string[];
+  audit_id?: string;
+  fallback_reason?: string;
+  contract_version?: string;
+}
+
 // ─── Owner Briefing Agent Types (Phase 2C.8) ─────────────────────────────────
 export interface OwnerBriefingAction {
   action_id: string;
@@ -903,4 +961,5 @@ export interface OwnerBriefingResponse {
   data_quality_summary?: unknown;
   cost_route_summary?: unknown;
   policy_summary?: unknown;
+  evidence_contract?: OwnerBriefingEvidenceContract;
 }
