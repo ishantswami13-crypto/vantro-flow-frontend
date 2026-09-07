@@ -9,7 +9,7 @@ const PROTECTED = [
   '/neural-engine', '/network', '/ledger', '/my-id', '/admin',
   '/ai-train', '/industry', '/invoice',
   '/bad-debt', '/disputes', '/referrals', '/ca-portal', '/payment-plans',
-  '/onboarding',
+  '/onboarding', '/ai-actions',
 ];
 
 export function middleware(request: NextRequest) {
