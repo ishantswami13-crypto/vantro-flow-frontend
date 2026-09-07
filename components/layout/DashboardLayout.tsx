@@ -175,7 +175,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
               </button>
               <button
                 onClick={() => setShowNotifBanner(false)}
-                className="text-text-muted px-2 py-1 text-xs hover:text-text"
+                className="text-muted px-2 py-1 text-xs hover:text-primary"
               >
                 Later
               </button>

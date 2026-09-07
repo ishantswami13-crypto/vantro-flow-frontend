@@ -11,7 +11,7 @@ import {
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; next: string; icon: any }> = {
-  new:        { label: "New",        color: "text-brand-primary bg-brand-primary/10 border-brand-primary/20",  next: "confirmed",  icon: FiAlertCircle },
+  new:        { label: "New",        color: "text-accent bg-accent/10 border-accent/20",  next: "confirmed",  icon: FiAlertCircle },
   confirmed:  { label: "Confirmed",  color: "text-warning bg-warning/10 border-warning/20",                    next: "dispatched", icon: FiCheckCircle },
   dispatched: { label: "Dispatched", color: "text-info bg-info/10 border-info/20",                             next: "delivered",  icon: FiTruck },
   delivered:  { label: "Delivered",  color: "text-success bg-success/10 border-success/20",                    next: "",           icon: FiCheckCircle },
@@ -141,7 +141,7 @@ export default function OrdersPage() {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: "Total Orders", value: total, sub: `${aiCalls} via AI call`, color: "text-brand-primary" },
+            { label: "Total Orders", value: total, sub: `${aiCalls} via AI call`, color: "text-accent" },
             { label: "Pending",      value: pending, sub: "need action",          color: "text-warning" },
             { label: "Delivered",    value: delivered, sub: "completed today",    color: "text-success" },
             { label: "Order Value",  value: totalValue ? fmtINR(totalValue) : "—", sub: "today's total", color: "text-accent" },
@@ -182,8 +182,8 @@ export default function OrdersPage() {
                 {/* Order row */}
                 <div className="p-4 flex items-start gap-3">
                   {/* Source dot */}
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${order.source === "ai_call" ? "bg-brand-primary/15" : "bg-surface-2"}`}>
-                    {order.source === "ai_call" ? <FiMic size={14} className="text-brand-primary" /> : <FiEdit2 size={14} className="text-muted" />}
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${order.source === "ai_call" ? "bg-accent/15" : "bg-surface-2"}`}>
+                    {order.source === "ai_call" ? <FiMic size={14} className="text-accent" /> : <FiEdit2 size={14} className="text-muted" />}
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -192,7 +192,7 @@ export default function OrdersPage() {
                         <p className="font-semibold text-primary">{order.customer_name}</p>
                         <div className="flex flex-wrap items-center gap-2 mt-0.5">
                           {order.customer_phone && (
-                            <a href={`tel:${order.customer_phone}`} className="text-xs text-muted flex items-center gap-1 hover:text-brand-primary">
+                            <a href={`tel:${order.customer_phone}`} className="text-xs text-muted flex items-center gap-1 hover:text-accent">
                               <FiPhone size={11} /> {order.customer_phone}
                             </a>
                           )}
@@ -226,7 +226,7 @@ export default function OrdersPage() {
                       {nextStatus && (
                         <button
                           onClick={() => changeStatus(order.id, nextStatus)}
-                          className="text-xs bg-brand-primary/10 text-brand-primary border border-brand-primary/20 px-3 py-1 rounded-lg font-medium hover:bg-brand-primary/20 transition-colors">
+                          className="text-xs bg-accent/10 text-accent border border-accent/20 px-3 py-1 rounded-lg font-medium hover:bg-accent/20 transition-colors">
                           → Mark {STATUS_CONFIG[nextStatus]?.label}
                         </button>
                       )}

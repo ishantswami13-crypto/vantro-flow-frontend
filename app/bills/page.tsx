@@ -176,7 +176,7 @@ export default function BillsPage() {
                         <FiCheck size={11} /> Mark Paid
                       </button>
                     )}
-                    <button onClick={() => window.open(`/invoice/${b.id}`, '_blank')} className="text-xs bg-brand-primary/10 text-brand-primary border border-brand-primary/20 px-2 py-1 rounded-lg flex items-center gap-1">
+                    <button onClick={() => window.open(`/invoice/${b.id}`, '_blank')} className="text-xs bg-accent/10 text-accent border border-accent/20 px-2 py-1 rounded-lg flex items-center gap-1">
                       <FiEye size={11} /> View
                     </button>
                     <button onClick={() => {
@@ -277,7 +277,7 @@ export default function BillsPage() {
                   </select>
                 </div>
                 <label className="flex items-center gap-2 text-sm text-secondary cursor-pointer mt-4">
-                  <input type="checkbox" checked={form.is_interstate} onChange={e => setForm(f=>({...f,is_interstate:e.target.checked}))} className="w-4 h-4 accent-brand-primary" />
+                  <input type="checkbox" checked={form.is_interstate} onChange={e => setForm(f=>({...f,is_interstate:e.target.checked}))} className="w-4 h-4 accent-accent" />
                   Interstate (IGST)
                 </label>
               </div>
@@ -286,7 +286,7 @@ export default function BillsPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-semibold text-primary">Items</label>
-                  <button type="button" onClick={() => setItems(i => [...i, emptyItem()])} className="text-xs text-brand-primary flex items-center gap-1"><FiPlus size={12} /> Add Row</button>
+                  <button type="button" onClick={() => setItems(i => [...i, emptyItem()])} className="text-xs text-accent flex items-center gap-1"><FiPlus size={12} /> Add Row</button>
                 </div>
                 <div className="space-y-2">
                   <div className="hidden sm:grid grid-cols-12 gap-1 text-2xs text-muted px-1">

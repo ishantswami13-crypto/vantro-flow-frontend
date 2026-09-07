@@ -128,7 +128,7 @@ export default function BrainPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-3 shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-accent flex items-center justify-center shadow-button-accent">
+            <div className="w-8 h-8 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent">
               <FiCpu size={15} className="text-white" />
             </div>
             <div>
@@ -138,7 +138,7 @@ export default function BrainPage() {
           </div>
           <div className="flex gap-2">
             <button onClick={() => setShowRules(!showRules)}
-              className={`text-xs px-3 py-1.5 rounded-xl border font-medium transition-all flex items-center gap-1.5 ${showRules ? "bg-brand-primary/15 text-brand-primary border-brand-primary/30" : "border-border text-muted hover:text-primary"}`}>
+              className={`text-xs px-3 py-1.5 rounded-xl border font-medium transition-all flex items-center gap-1.5 ${showRules ? "bg-accent/15 text-accent border-accent/30" : "border-border text-muted hover:text-primary"}`}>
               <FiBook size={12} /> Rules ({rules.length})
             </button>
             <button onClick={clearChat} className="text-xs px-2 py-1.5 rounded-xl border border-border text-muted hover:text-primary">
@@ -171,7 +171,7 @@ export default function BrainPage() {
               <div className="space-y-1.5">
                 {rules.map(r => (
                   <div key={r.id} className="flex items-start gap-2 group">
-                    <span className="text-2xs text-brand-primary bg-brand-primary/10 px-1.5 py-0.5 rounded-full shrink-0 capitalize">{r.category}</span>
+                    <span className="text-2xs text-accent bg-accent/10 px-1.5 py-0.5 rounded-full shrink-0 capitalize">{r.category}</span>
                     <p className="text-xs text-secondary flex-1">{r.rule}</p>
                     <button onClick={() => deleteRule(r.id)} className="text-danger/40 hover:text-danger opacity-0 group-hover:opacity-100 p-0.5">
                       <FiTrash2 size={11} />
@@ -188,9 +188,9 @@ export default function BrainPage() {
           {messages.map((msg, i) => (
             <div key={i} className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
               {/* Avatar */}
-              <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${msg.role === "user" ? "bg-brand-primary/20" : "bg-gradient-to-br from-brand-primary to-accent"}`}>
+              <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${msg.role === "user" ? "bg-accent/20" : "bg-gradient-accent"}`}>
                 {msg.role === "user"
-                  ? <FiUser size={13} className="text-brand-primary" />
+                  ? <FiUser size={13} className="text-accent" />
                   : <FiCpu size={13} className="text-white" />
                 }
               </div>
@@ -198,7 +198,7 @@ export default function BrainPage() {
               <div className={`max-w-[80%] space-y-1 ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col`}>
                 <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                   msg.role === "user"
-                    ? "bg-brand-primary/20 text-primary rounded-tr-sm"
+                    ? "bg-accent/20 text-primary rounded-tr-sm"
                     : "bg-surface-2 text-secondary rounded-tl-sm"
                 }`}>
                   {msg.content.split("\n").map((line, li) => (
@@ -222,7 +222,7 @@ export default function BrainPage() {
           {/* Loading indicator */}
           {loading && (
             <div className="flex gap-2.5">
-              <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-brand-primary to-accent flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-xl bg-gradient-accent flex items-center justify-center shrink-0">
                 <FiCpu size={13} className="text-white animate-pulse" />
               </div>
               <div className="bg-surface-2 rounded-2xl rounded-tl-sm px-4 py-3">
@@ -243,7 +243,7 @@ export default function BrainPage() {
           <div className="shrink-0 flex flex-wrap gap-1.5 mb-2">
             {STARTER_PROMPTS.slice(0, 4).map(p => (
               <button key={p} onClick={() => send(p)}
-                className="text-2xs text-brand-primary bg-brand-primary/10 border border-brand-primary/20 px-2.5 py-1.5 rounded-full hover:bg-brand-primary/20 transition-colors">
+                className="text-2xs text-accent bg-accent/10 border border-accent/20 px-2.5 py-1.5 rounded-full hover:bg-accent/20 transition-colors">
                 {p}
               </button>
             ))}

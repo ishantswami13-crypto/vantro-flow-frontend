@@ -59,14 +59,16 @@ export default function CAPortalPage() {
     setSaving(false);
   }
 
+  const appOrigin = typeof window !== "undefined" ? window.location.origin : "https://app.atlas.vantro.io";
+
   function copyCode(code: string) {
-    navigator.clipboard.writeText(`https://vantroflow.app/signup?ref=${code}`);
+    navigator.clipboard.writeText(`${appOrigin}/signup?ref=${code}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
   function shareWhatsApp(code: string) {
-    const msg = `Namaskar! Main ek CA hoon aur mere clients ke liye Vantro Flow recommend karta hoon — outstanding payments WhatsApp se automatically collect hote hain. Free trial ke liye signup karein: https://vantroflow.app/signup?ref=${code}`;
+    const msg = `Namaskar! Main ek CA hoon aur mere clients ke liye Atlas by Vantro recommend karta hoon — outstanding payments WhatsApp se automatically collect hote hain. Free trial ke liye signup karein: ${appOrigin}/signup?ref=${code}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }
 
@@ -157,8 +159,8 @@ export default function CAPortalPage() {
         <div className="bg-[#1a1a2e] border border-white/10 rounded-xl p-5 space-y-4">
           <h2 className="text-white font-semibold">Share with Clients</h2>
           <div className="bg-[#0f0f23] border border-white/10 rounded-lg px-4 py-3 flex items-center justify-between gap-2">
-            <span className="text-sm text-blue-400 truncate">
-              https://vantroflow.app/signup?ref={dashboard?.stats.referral_code}
+            <span className="text-sm text-accent truncate">
+              {appOrigin}/signup?ref={dashboard?.stats.referral_code}
             </span>
             <button onClick={() => copyCode(dashboard?.stats.referral_code || "")} className="text-xs px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg shrink-0">
               {copied ? "Copied!" : "Copy Link"}
