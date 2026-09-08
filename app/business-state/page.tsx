@@ -1,8 +1,9 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { posthog } from "@/lib/posthog";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -17,6 +18,7 @@ import { RiskSection } from "@/components/business-state/RiskSection";
 import { SignalsSection } from "@/components/business-state/SignalsSection";
 import { RecommendedActionsSection } from "@/components/business-state/RecommendedActionsSection";
 import { TrackRecordCard } from "@/components/business-state/TrackRecordCard";
+import { ExternalConditionsSection } from "@/components/business-state/ExternalConditionsSection";
 import { CustomerDrawerView } from "@/components/business-state/DrawerViews/CustomerDrawerView";
 import { InvoiceDrawerView } from "@/components/business-state/DrawerViews/InvoiceDrawerView";
 import { TransactionDrawerView } from "@/components/business-state/DrawerViews/TransactionDrawerView";
@@ -75,6 +77,11 @@ export default function BusinessStatePage() {
 
   const businessState = data?.businessState;
   const isStale = businessState ? Date.now() - new Date(businessState.generatedAt).getTime() > STALE_AFTER_MS : false;
+
+  useEffect(() => {
+    if (businessState) posthog.capture("business_state_viewed");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!businessState]);
 
   const [drawerStack, setDrawerStack] = useState<DrawerView[]>([]);
   const currentView = drawerStack[drawerStack.length - 1];
@@ -165,6 +172,10 @@ export default function BusinessStatePage() {
 
           <Section title="Track Record" order="order-8 lg:order-none">
             <TrackRecordCard />
+          </Section>
+
+          <Section title="Outside Conditions" order="order-9 lg:order-none">
+            <ExternalConditionsSection externalConditions={businessState.externalConditions} />
           </Section>
         </div>
       )}
