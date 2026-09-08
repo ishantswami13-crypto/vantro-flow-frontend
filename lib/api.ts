@@ -787,6 +787,65 @@ export interface RankedActionCustomer {
   score_reason?: string | null;
 }
 
+// Day 7 — cashRiskNarrative.js's real output shape (lib/domain/intelligence/cashRiskNarrative.js).
+// Additive only. When insufficientEvidence is true, no other fields are populated
+// (render calmly — never a scary state for missing evidence).
+export interface CashRiskNarrativeEvidenceItem {
+  type: 'score_trajectory' | 'revenue_concentration' | 'observed_payer_pattern';
+  claim: string;
+  sourceRows?: Array<{ table: string; id: string; recorded_at: string; credit_risk_score: number }>;
+  honestyNote?: string; // e.g. "2-point comparison only" — the trajectory disclaimer
+  sharePct?: number;
+  payer_reference?: string;
+  count?: number;
+  total_amount?: number;
+}
+
+export interface CashRiskNarrative {
+  insufficientEvidence: boolean;
+  reasons?: string[]; // present when insufficientEvidence is true
+  trajectory?: 'UNKNOWN' | 'DETERIORATING' | 'IMPROVING' | 'STABLE';
+  observation?: string;
+  what_changed?: string;
+  evidence?: CashRiskNarrativeEvidenceItem[];
+  relationship_context?: string;
+  why_it_matters?: string;
+  likely_consequence?: string;
+  recommended_action?: string;
+  confidence_components?: {
+    trajectory_confidence: number;
+    concentration_confidence: number;
+    payer_pattern_confidence: number;
+  };
+  customer?: { id: string; name: string };
+  generatedAt?: string;
+}
+
+// Day 7 Part 6 — priorityScoring.js's real output shape. Optional/additive;
+// callers must fall back to existing priority/risk_level sort when absent.
+export interface PriorityScoreV2Component {
+  value: number;
+  known: boolean;
+}
+
+export interface PriorityScoreV2 {
+  priorityScoreV2: number;
+  components: {
+    monetaryExposure: PriorityScoreV2Component;
+    urgency: PriorityScoreV2Component;
+    deterioration: PriorityScoreV2Component;
+    concentration: PriorityScoreV2Component;
+    confidence: PriorityScoreV2Component;
+  };
+  weights: {
+    monetaryExposure: number;
+    urgency: number;
+    deterioration: number;
+    concentration: number;
+    confidence: number;
+  };
+}
+
 export interface RankedAction {
   id: string;
   action_type: string;
@@ -800,6 +859,12 @@ export interface RankedAction {
   related_entity_id: string | null;
   customer: RankedActionCustomer | null;
   created_at: string;
+  // Day 7 — additive enrichment (lib/domain/intelligence/businessState.js's
+  // enrichRowsWithDay7Intelligence). Only present when a customer is attached
+  // AND the underlying evidence honestly cleared the bar (insufficientEvidence
+  // narratives are never attached to the row at all).
+  cashRiskNarrative?: CashRiskNarrative;
+  priorityScoreV2?: PriorityScoreV2;
 }
 
 export interface BrainSummary {
@@ -822,6 +887,41 @@ export interface BrainSummary {
   products: unknown[];
 }
 
+// Day 7 Part 3B — lib/world/businessStateBoundary.js's getWorldExposureStatus()
+// real three-state contract. NEVER render DATA_INCOMPLETE and NO_MATERIAL_SIGNALS
+// as the same message — they mean genuinely different things (unknown exposure
+// vs. verified-but-currently-quiet). Never use FX/currency-risk copy for this —
+// it is LOCATION/exposure data (LOCATED_IN/OPERATES_IN), not currency-denominated risk.
+export interface IntelligenceReadiness {
+  organization_country: 'known' | 'unknown';
+  base_currency: 'known' | 'unknown';
+  suppliers_with_country: string; // "known/total" e.g. "2/8"
+  suppliers_with_currency: string;
+  customers_with_country: string;
+  customers_with_currency: string;
+  external_intelligence_ready: 'none' | 'partial' | 'full';
+  generated_at: string;
+}
+
+export interface ExternalConditionsSignal {
+  signalId: string;
+  status: string;
+  impactStatus: string;
+  affectedBusinessDimensions: string[];
+  whyExists: string;
+  materialityComponents?: Record<string, unknown>;
+  rankScore?: number;
+}
+
+export interface ExternalConditions {
+  world_exposure_status: 'DATA_INCOMPLETE' | 'NO_MATERIAL_SIGNALS' | 'signals_present';
+  reason: string;
+  verified_exposure_count?: number;
+  signals: ExternalConditionsSignal[];
+  intelligence_readiness?: IntelligenceReadiness | { error: string; message: string };
+  error?: string; // present on the loadBusinessState fallback when the section itself failed
+}
+
 export interface BusinessState {
   overallState: OverallState | null; // null when there isn't enough data to classify honestly — never fabricate a verdict
   rankedActions: RankedAction[];
@@ -829,7 +929,8 @@ export interface BusinessState {
   payablesRisk: RankedAction[];
   cashflow: { expected_inflow: number; expected_outflow: number; error?: string };
   brain: BrainSummary | null; // null if brain_dashboard_enabled is off, or that section failed — see `sections.brain`
-  sections?: { rankedActions: 'ok' | 'error'; cashflow: 'ok' | 'error'; brain: 'ok' | 'disabled' | 'error' };
+  externalConditions?: ExternalConditions; // Day 7 Part 3B — additive-only
+  sections?: { rankedActions: 'ok' | 'error'; cashflow: 'ok' | 'error'; brain: 'ok' | 'disabled' | 'error'; externalConditions?: 'ok' | 'error' };
   generatedAt: string;
 }
 
@@ -896,11 +997,34 @@ export interface CustomerIntelligenceResponse {
   actions: Array<{ action_type: string; title: string; priority: string; status: string; created_at: string }>;
   invoices: Array<{ id: string; invoice_amount: number; payment_status: string; due_date: string; days_overdue: number; created_at: string }>;
   memories: Array<{ memory_key: string; memory_value: unknown; updated_at: string }>;
-  // Revenue block rendered by the Customer drawer's "Revenue & Momentum" card
-  // (components/business-state/DrawerViews/CustomerDrawerView.tsx) — null when the
-  // customer_revenue_intelligence feature flag is off or the customer could not be
-  // resolved; every populated field always carries a plain-language `evidence`
-  // string alongside its number(s) — never a bare figure.
+  // Phase 4 additions — raw evidence from Phase 3's temporal-history tables (customer_score_history,
+  // business_events) and the already-computed score_reason_json, previously fetched then discarded.
+  scoreHistory?: Array<{
+    id: string;
+    user_id: string;
+    customer_id: string;
+    credit_risk_score: number | null;
+    promise_reliability_score: number | null;
+    broken_promise_count: number | null;
+    collection_priority_score: number | null;
+    recorded_at: string;
+  }>;
+  riskEvents?: Array<{
+    id: string;
+    user_id: string;
+    event_type: string;
+    entity_type: string | null;
+    entity_id: string | null;
+    actor_type: string;
+    actor_id: string | null;
+    payload_json: unknown;
+    created_at: string;
+  }>;
+  scoreReason?: unknown | null;
+  // Phase 10 — Customer & Revenue Intelligence. null when the
+  // customer_revenue_intelligence feature flag is off or the customer could
+  // not be resolved; every populated field always carries a plain-language
+  // `evidence` string alongside its number(s) — never a bare figure.
   revenue?: CustomerRevenueBlock | null;
 }
 
