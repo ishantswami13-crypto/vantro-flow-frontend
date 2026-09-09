@@ -400,7 +400,24 @@ export const api = {
       }, 60_000),
     migrate: () => request<{ success: boolean }>('/api/transactions/migrate', { method: 'POST' }),
   },
+
+  // ─── Data connections (Tally, file upload, etc.) ────────
+  connections: {
+    list: () => request<{ success: boolean; connections: DataConnection[] }>('/api/connections'),
+  },
 };
+
+export interface DataConnection {
+  id: string;
+  user_id: string;
+  source_type: string;
+  status: string;
+  connected_at: string | null;
+  last_sync_at: string | null;
+  last_sync_error: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 // ─── Auth helpers ─────────────────────────────────────────
 export function saveAuth(token: string, user: User, rememberMe = true, csrfToken?: string | null) {
