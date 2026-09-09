@@ -822,8 +822,8 @@ export default function SalesPage() {
         {/* ══════════ PAGE HEADER ══════════ */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold text-primary">Sales / Receivables</h1>
-            <p className="text-xs text-muted">Customer se kya lena hai</p>
+            <h1 className="text-xl font-bold text-primary">Sales</h1>
+            <p className="text-xs text-muted">What customers owe you</p>
           </div>
           <div className="flex items-center gap-2">
             {/* Hidden bulk file input */}
@@ -854,21 +854,21 @@ export default function SalesPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           <div className="card p-4">
-            <p className="text-xs text-muted mb-1">Total Revenue</p>
+            <p className="text-xs text-muted mb-1">Total sales</p>
             <p className="text-xl font-bold text-success">{fmtINR(totalRevenue)}</p>
           </div>
           <div className="card p-4">
-            <p className="text-xs text-muted mb-1">Receivable</p>
+            <p className="text-xs text-muted mb-1">Customers still owe you</p>
             <p className="text-xl font-bold text-yellow-400">{fmtINR(totalReceivable)}</p>
           </div>
           <div className="card p-4">
-            <p className="text-xs text-muted mb-1">Total Sales</p>
+            <p className="text-xs text-muted mb-1">Number of sales</p>
             <p className="text-xl font-bold text-primary">{sales.length}</p>
           </div>
           <div className="card p-4">
-            <p className="text-xs text-muted mb-1">Paid</p>
+            <p className="text-xs text-muted mb-1">Fully paid</p>
             <p className="text-xl font-bold text-success">{paidCount}</p>
-            <p className="text-2xs text-muted">{sales.length > 0 ? Math.round((paidCount / sales.length) * 100) : 0}% collection</p>
+            <p className="text-2xs text-muted">{sales.length > 0 ? Math.round((paidCount / sales.length) * 100) : 0}% collected</p>
           </div>
         </div>
 
@@ -954,8 +954,8 @@ export default function SalesPage() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
             <FiAlertCircle size={36} className="mx-auto mb-3 text-muted opacity-30" />
-            <p className="text-muted text-sm">Koi sale nahi mili</p>
-            <p className="text-xs text-muted mt-1">Scan karo ya manually add karo customer ka invoice</p>
+            <p className="text-muted text-sm">No sales recorded yet</p>
+            <p className="text-xs text-muted mt-1">Scan a customer's invoice or add one manually</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -973,7 +973,7 @@ export default function SalesPage() {
                         <span className={`inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.color}`}>
                           <StatusIcon size={10} /> {cfg.label}
                         </span>
-                        {isOverdue && <span className="text-2xs text-yellow-400 font-semibold">OVERDUE</span>}
+                        {isOverdue && <span className="text-2xs text-yellow-400 font-semibold">LATE</span>}
                       </div>
                       {s.invoice_number && <p className="text-xs text-muted">Invoice #{s.invoice_number}</p>}
                       {(myGstin || s.customer_gstin) && (

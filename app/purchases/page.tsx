@@ -615,7 +615,7 @@ export default function PurchasesPage() {
 
   // ── Render ───────────────────────────────────────────────────────
   return (
-    <DashboardLayout pageTitle="Purchases / Payables">
+    <DashboardLayout pageTitle="Purchases">
       <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto pb-24">
       {/* Hidden file input — fallback / desktop */}
       <input
@@ -805,8 +805,8 @@ export default function PurchasesPage() {
 
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-primary">Purchases / Payables</h1>
-          <p className="text-xs text-muted">Supplier ko kya dena hai</p>
+          <h1 className="text-xl font-bold text-primary">Purchases</h1>
+          <p className="text-xs text-muted">What you owe your suppliers</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -835,16 +835,16 @@ export default function PurchasesPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="card p-4">
-          <p className="text-xs text-muted mb-1">Total Dena</p>
+          <p className="text-xs text-muted mb-1">You still need to pay</p>
           <p className="text-xl font-bold text-danger">{fmtINR(totalDue)}</p>
         </div>
         <div className="card p-4">
-          <p className="text-xs text-muted mb-1">Overdue</p>
+          <p className="text-xs text-muted mb-1">Late bills</p>
           <p className="text-xl font-bold text-yellow-400">{overdue.length}</p>
-          <p className="text-2xs text-muted">bills overdue</p>
+          <p className="text-2xs text-muted">past their due date</p>
         </div>
         <div className="card p-4">
-          <p className="text-xs text-muted mb-1">Total Purchases</p>
+          <p className="text-xs text-muted mb-1">Number of purchases</p>
           <p className="text-xl font-bold text-primary">{purchases.length}</p>
         </div>
       </div>
@@ -854,7 +854,7 @@ export default function PurchasesPage() {
         <div className="mb-4 p-3 bg-yellow-400/5 border border-yellow-400/20 rounded-xl flex items-start gap-2.5">
           <FiAlertCircle size={16} className="text-yellow-400 shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-yellow-400">⚠ {overdue.length} overdue {overdue.length === 1 ? "bill" : "bills"}</p>
+            <p className="text-sm font-semibold text-yellow-400">⚠ {overdue.length} {overdue.length === 1 ? "bill is" : "bills are"} late</p>
             <p className="text-xs text-muted">{overdue.map(p => p.supplier_name).join(", ")}</p>
           </div>
         </div>
@@ -940,8 +940,8 @@ export default function PurchasesPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-12">
           <FiAlertCircle size={36} className="mx-auto mb-3 text-muted opacity-30" />
-          <p className="text-muted text-sm">Koi purchase nahi mila</p>
-          <p className="text-xs text-muted mt-1">Scan karo ya add karo supplier ka bill</p>
+          <p className="text-muted text-sm">No purchases recorded yet</p>
+          <p className="text-xs text-muted mt-1">Scan a supplier's bill or add one manually</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -959,7 +959,7 @@ export default function PurchasesPage() {
                       <span className={`inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.color}`}>
                         <StatusIcon size={10} /> {cfg.label}
                       </span>
-                      {isOverdue && <span className="text-2xs text-yellow-400 font-semibold">OVERDUE</span>}
+                      {isOverdue && <span className="text-2xs text-yellow-400 font-semibold">LATE</span>}
                     </div>
                     {p.bill_number && <p className="text-xs text-muted">Bill #{p.bill_number}</p>}
                     {p.supplier_gstin && <p className="text-xs text-muted font-mono">GST: {p.supplier_gstin}</p>}
@@ -989,7 +989,7 @@ export default function PurchasesPage() {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-bold text-lg text-primary">{fmtINR(p.total_amount)}</p>
-                    {p.status !== "paid" && <p className="text-xs text-danger font-semibold">{fmtINR(pending)} baki</p>}
+                    {p.status !== "paid" && <p className="text-xs text-danger font-semibold">{fmtINR(pending)} left to pay</p>}
                     <div className="flex gap-1.5 mt-2 justify-end">
                       {p.status !== "paid" && (
                         <button

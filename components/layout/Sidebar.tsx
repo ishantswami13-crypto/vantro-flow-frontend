@@ -9,7 +9,7 @@ import {
   FiCamera, FiFileText, FiCreditCard, FiRepeat, FiShield,
   FiCpu, FiGlobe, FiBook, FiShoppingBag, FiUserCheck,
   FiSun, FiActivity, FiUser, FiSliders, FiDatabase,
-  FiArchive, FiFile, FiDollarSign, FiZap, FiLock, FiAlertTriangle, FiPlus, FiTruck,
+  FiArchive, FiFile, FiDollarSign, FiZap, FiLock, FiAlertTriangle, FiPlus, FiTruck, FiTarget,
 } from "react-icons/fi";
 import LogoMark from "@/components/LogoMark";
 import { api, getUser, clearAuth } from "@/lib/api";
@@ -18,6 +18,7 @@ import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey }
 
 const NAV = [
   // ── Command Center
+  { href: "/business-state", label: "Business State",  icon: FiTarget,        badge: "NEW",  group: "core" },
   { href: "/dashboard",      label: "Dashboard",       icon: FiGrid,          badge: null,   group: "core" },
   { href: "/invoice/new",    label: "New Invoice",     icon: FiPlus,          badge: null,   group: "core" },
   { href: "/collections",    label: "Collections",     icon: FiList,          badge: null,   group: "core" },

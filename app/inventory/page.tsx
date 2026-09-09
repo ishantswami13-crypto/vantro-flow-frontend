@@ -333,7 +333,7 @@ export default function InventoryPage() {
             <button key={t} onClick={() => setTab(t)}
               className={["px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all",
                 tab === t ? "bg-white text-black" : "text-muted hover:text-primary",
-              ].join(" ")}>{t}</button>
+              ].join(" ")}>{{ products: "Products", intelligence: "Stock Details", movements: "Movements", suppliers: "Suppliers" }[t]}</button>
           ))}
         </div>
 
@@ -466,7 +466,7 @@ export default function InventoryPage() {
 
             <div className="card-premium overflow-hidden">
               <div className="p-4 border-b border-border">
-                <p className="text-sm font-semibold text-primary">Advanced Inventory Intelligence</p>
+                <p className="text-sm font-semibold text-primary">Stock Details</p>
                 <p className="text-xs text-muted mt-0.5">Bought minus sold, linked with manual stock where available.</p>
               </div>
               {loading ? (
@@ -475,7 +475,7 @@ export default function InventoryPage() {
                 </div>
               ) : intelligenceRows.length === 0 ? (
                 <div className="py-12 text-center px-4">
-                  <p className="text-sm font-semibold text-primary">No product intelligence yet</p>
+                  <p className="text-sm font-semibold text-primary">No stock details yet</p>
                   <p className="text-xs text-muted mt-1">Add products or scan bills/invoices to populate this.</p>
                 </div>
               ) : (

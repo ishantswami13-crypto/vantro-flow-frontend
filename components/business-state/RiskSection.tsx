@@ -24,9 +24,9 @@ export function RiskSection({ receivablesRisk, payablesRisk, onSelectCustomer, o
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <h2 className="text-sm font-bold text-primary mb-2">Receivables Risk</h2>
+        <h2 className="text-sm font-bold text-primary mb-2">Customers who may pay late</h2>
         {topReceivables.length === 0 ? (
-          <EmptyState title="No receivables risk right now" />
+          <EmptyState title="No customers look risky right now" />
         ) : (
           <div className="space-y-2">
             {topReceivables.map(a => (
@@ -46,10 +46,10 @@ export function RiskSection({ receivablesRisk, payablesRisk, onSelectCustomer, o
         )}
       </div>
       <div>
-        <h2 className="text-sm font-bold text-primary mb-2">Payables Risk</h2>
-        <p className="text-2xs text-muted mb-2">Rule-based (due-soon / overdue) — not a scored risk, unlike receivables above.</p>
+        <h2 className="text-sm font-bold text-primary mb-2">Bills you need to pay soon</h2>
+        <p className="text-2xs text-muted mb-2">Bills that are due soon or already late.</p>
         {topPayables.length === 0 ? (
-          <EmptyState title="No payables risk right now" />
+          <EmptyState title="No bills due soon" />
         ) : (
           <div className="space-y-2">
             {topPayables.map(a => (

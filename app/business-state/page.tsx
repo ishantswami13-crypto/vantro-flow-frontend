@@ -14,6 +14,8 @@ import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { OverallStateBand } from "@/components/business-state/OverallStateBand";
 import { BusinessSummarySection } from "@/components/business-state/BusinessSummarySection";
 import { MoneySection } from "@/components/business-state/MoneySection";
+import { WhoOwesYouSection } from "@/components/business-state/WhoOwesYouSection";
+import { MoneySpentSection } from "@/components/business-state/MoneySpentSection";
 import { RiskSection } from "@/components/business-state/RiskSection";
 import { SignalsSection } from "@/components/business-state/SignalsSection";
 import { RecommendedActionsSection } from "@/components/business-state/RecommendedActionsSection";
@@ -25,6 +27,7 @@ import { TransactionDrawerView } from "@/components/business-state/DrawerViews/T
 import { SupplierDrawerView } from "@/components/business-state/DrawerViews/SupplierDrawerView";
 import { PurchaseDrawerView } from "@/components/business-state/DrawerViews/PurchaseDrawerView";
 import { api, type BusinessStateResponse, type RankedAction } from "@/lib/api";
+import type { PurchaseRow } from "@/components/business-state/MoneySpentSection";
 
 // Drawer navigation stack — local React state, NOT URL-encoded (explicit,
 // approved decision, see implementation plan §8). Opening pushes; a
@@ -78,6 +81,16 @@ export default function BusinessStatePage() {
   const businessState = data?.businessState;
   const isStale = businessState ? Date.now() - new Date(businessState.generatedAt).getTime() > STALE_AFTER_MS : false;
 
+  // Q3 ("what did I spend money on") — the real purchases list, already
+  // used by the Purchases page (api.purchases.list()). Business State
+  // fetches it separately here rather than growing businessState's own
+  // shape, since it's a plain itemized list, not a computed KPI.
+  const { data: purchasesData, isLoading: purchasesLoading } = useQuery<{ success: boolean; purchases: PurchaseRow[] }>({
+    queryKey: ["purchases-for-business-state"],
+    queryFn: () => api.purchases.list(),
+    staleTime: 25_000,
+  });
+
   useEffect(() => {
     if (businessState) posthog.capture("business_state_viewed");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -102,7 +115,7 @@ export default function BusinessStatePage() {
   return (
     <DashboardLayout pageTitle="Business State">
       <PageHeader
-        title="Business State"
+        title="Your Business Today"
         subtitle="How your business is doing right now"
         freshness={businessState ? fmtFreshness(businessState.generatedAt) : undefined}
       />
@@ -129,15 +142,29 @@ export default function BusinessStatePage() {
             <OverallStateBand overallState={businessState.overallState} />
           </div>
 
-          <Section title="Business Summary" order="order-6 lg:order-none">
+          {/* Q1 — "Am I actually making money right now?" — the clearest
+              number on the screen, first in both mobile and desktop order. */}
+          <Section title="Sales & Profit" order="order-6 lg:order-none">
             <BusinessSummarySection brain={businessState.brain} brainSection={businessState.sections?.brain} />
           </Section>
 
-          <Section title="Money" order="order-7 lg:order-none">
+          {/* Q2 — "Who owes me money, and who is taking too long to pay?" —
+              aggregate snapshot, then the plain per-customer breakdown. */}
+          <Section title="Money Owed" order="order-7 lg:order-none">
             <MoneySection brain={businessState.brain} />
           </Section>
 
-          <Section title="Risk" order="order-4 lg:order-none">
+          <Section title="Who Owes You" order="order-8 lg:order-none">
+            <WhoOwesYouSection brain={businessState.brain} />
+          </Section>
+
+          {/* Q3 — "What did I spend money on?" — real recorded purchases,
+              no invented categories. */}
+          <Section title="What You Spent This Month" order="order-9 lg:order-none">
+            <MoneySpentSection purchases={purchasesData?.purchases ?? null} isLoading={purchasesLoading} />
+          </Section>
+
+          <Section title="Payment Risks" order="order-4 lg:order-none">
             <RiskSection
               receivablesRisk={businessState.receivablesRisk}
               payablesRisk={businessState.payablesRisk}
@@ -157,11 +184,14 @@ export default function BusinessStatePage() {
             />
           </Section>
 
-          <Section title="Signals" order="order-3 lg:order-none">
-            <SignalsSection rankedActions={businessState.rankedActions} />
+          {/* Q5 — "Is there anything I should pay attention to?" — objective,
+              directly-provable facts only; "Nothing urgent right now" when
+              there genuinely are none. */}
+          <Section title="Things to Notice" order="order-3 lg:order-none">
+            <SignalsSection rankedActions={businessState.rankedActions} brain={businessState.brain} />
           </Section>
 
-          <Section title="Recommended Actions" order="order-5 lg:order-none">
+          <Section title="What You Should Do" order="order-5 lg:order-none">
             <RecommendedActionsSection
               rankedActions={businessState.rankedActions}
               onOpenCustomer={(_customerId, name, phone) =>
@@ -170,11 +200,11 @@ export default function BusinessStatePage() {
             />
           </Section>
 
-          <Section title="Track Record" order="order-8 lg:order-none">
+          <Section title="Track Record" order="order-10 lg:order-none">
             <TrackRecordCard />
           </Section>
 
-          <Section title="Outside Conditions" order="order-9 lg:order-none">
+          <Section title="Outside Factors" order="order-11 lg:order-none">
             <ExternalConditionsSection externalConditions={businessState.externalConditions} />
           </Section>
         </div>

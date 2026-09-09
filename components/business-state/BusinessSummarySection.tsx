@@ -17,9 +17,9 @@ function fmtINR(n: number): string {
   return `${sign}₹${abs.toLocaleString("en-IN")}`;
 }
 
-// Renders a subset of brain.kpis — sales delta, gross profit, net cash flow —
-// with the backend's own approximation caveats surfaced verbatim rather than
-// hidden, since brainSummary.js explicitly documents these as approximate.
+// Q1 (profit) + Q4 (vs last month) — renders brain.kpis with the backend's
+// own approximation caveats surfaced verbatim, and never shows a profit
+// number when hasCostData is false (see brainSummary.js).
 export function BusinessSummarySection({ brain, brainSection }: BusinessSummarySectionProps) {
   if (!brain) {
     if (brainSection === "disabled") {
@@ -39,35 +39,58 @@ export function BusinessSummarySection({ brain, brainSection }: BusinessSummaryS
   }
 
   const { kpis, approximations } = brain;
-  const salesTrend: "up" | "down" | "neutral" = kpis.salesDelta > 0 ? "up" : kpis.salesDelta < 0 ? "down" : "neutral";
   const cashTrend: "up" | "down" | "neutral" = kpis.netCashFlow > 0 ? "up" : kpis.netCashFlow < 0 ? "down" : "neutral";
+
+  // Q4 — one plain sentence, comparing the same number of days in each
+  // month (the backend now bounds last month's total to the same
+  // day-of-month as today, so a partial current month is never held up
+  // against a full previous one).
+  const salesDiff = Math.abs(kpis.salesThis - kpis.salesPrev);
+  let comparisonLine: string;
+  if (kpis.salesPrev === 0 && kpis.salesThis === 0) {
+    comparisonLine = "No sales recorded yet this month or in the same days last month.";
+  } else if (Math.abs(kpis.salesDelta) < 3) {
+    comparisonLine = "Sales are about the same as last month so far.";
+  } else if (kpis.salesDelta > 0) {
+    comparisonLine = `Sales are ${fmtINR(salesDiff)} higher than last month, comparing the same number of days.`;
+  } else {
+    comparisonLine = `Sales are ${fmtINR(salesDiff)} lower than last month, comparing the same number of days.`;
+  }
+
+  // Q1 — profit is only shown as a defensible number when there is at
+  // least some purchase/cost data behind it. With zero cost data recorded,
+  // "profit = sales" is not a real profit figure — it just means no
+  // expenses have been logged yet, so say that plainly instead of
+  // presenting a suspicious 100% margin as fact.
+  const profitSub = kpis.hasCostData
+    ? `You keep about ₹${kpis.margin} from every ₹100 of sales, so far this month`
+    : "No purchases or expenses recorded yet — this is sales only, not a real profit figure";
 
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <MetricCard
-          label="Sales this month"
+          label="Sales so far this month"
           value={fmtINR(kpis.salesThis)}
-          trend={salesTrend}
-          trendValue={`${Math.abs(kpis.salesDelta)}%`}
-          sub="vs last month"
-          accent={salesTrend === "down" ? "danger" : "default"}
+          sub="booked sales, whether or not paid yet"
+          accent="default"
         />
         <MetricCard
-          label="Gross profit (approx.)"
+          label={kpis.hasCostData ? "Profit so far this month" : "Sales so far (no cost data yet)"}
           value={fmtINR(kpis.grossProfit)}
-          sub={`${kpis.margin}% margin`}
-          accent="success"
+          sub={profitSub}
+          accent={kpis.hasCostData ? "success" : "default"}
         />
         <MetricCard
-          label="Net cash flow"
+          label="Money received minus money paid"
           value={fmtINR(kpis.netCashFlow)}
           trend={cashTrend}
-          sub="this month"
+          sub="this month, from recorded payments only"
           accent={cashTrend === "down" ? "danger" : "default"}
         />
       </div>
-      <p className="text-2xs text-muted mt-2">{approximations.grossProfit}</p>
+      <p className="text-xs text-secondary mt-3">{comparisonLine}</p>
+      {kpis.hasCostData && <p className="text-2xs text-muted mt-1">{approximations.grossProfit}</p>}
     </div>
   );
 }

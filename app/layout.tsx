@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./atlas.css";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
+import ReactQueryProvider from "@/components/providers/ReactQueryProvider";
 import { Analytics } from "@vercel/analytics/next";
 import CookieBanner from "@/components/CookieBanner";
 
@@ -119,7 +120,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <PostHogProvider>{children}</PostHogProvider>
+        <PostHogProvider>
+          <ReactQueryProvider>{children}</ReactQueryProvider>
+        </PostHogProvider>
         <CookieBanner />
         <Analytics />
       </body>

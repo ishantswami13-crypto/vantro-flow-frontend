@@ -29,21 +29,21 @@ export function MoneySection({ brain }: MoneySectionProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <MetricCard
-        label="Receivable"
+        label="Customers still need to pay you"
         value={fmtINR(position.receivable)}
         sub={`${position.customerCount} customer${position.customerCount === 1 ? "" : "s"}`}
         accent="success"
       />
       <MetricCard
-        label="Payable"
+        label="You still need to pay suppliers"
         value={fmtINR(position.payable)}
         sub={`${position.supplierCount} supplier${position.supplierCount === 1 ? "" : "s"}`}
         accent="warning"
       />
       <MetricCard
-        label="Net position"
+        label="Overall balance"
         value={fmtINR(position.net)}
-        sub={position.setoffTotal > 0 ? `${fmtINR(position.setoffTotal)} can be set off` : undefined}
+        sub={position.setoffTotal > 0 ? `${fmtINR(position.setoffTotal)} can be adjusted between customers and suppliers` : undefined}
         accent={position.net >= 0 ? "default" : "danger"}
       />
     </div>

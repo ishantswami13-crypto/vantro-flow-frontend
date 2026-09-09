@@ -874,11 +874,21 @@ export interface BrainSummary {
     salesThis: number; salesPrev: number; salesDelta: number;
     grossProfit: number; margin: number; netCashFlow: number;
     cashIn: number; cashOut: number; receivable: number; payable: number;
+    // False when there is zero purchase/cost data recorded anywhere in the
+    // lookback window — lets the UI say "no costs recorded yet" instead of
+    // presenting a suspicious 100% margin as if it were a real number.
+    hasCostData: boolean;
   };
   position: {
     receivable: number; payable: number; net: number;
     setoffTotal: number; customerCount: number; supplierCount: number;
   };
+  // Per-customer / per-supplier breakdowns behind `position`'s totals —
+  // "who owes me, and how late" (daysLate from the invoice's own
+  // days_overdue field) and "who I still owe, and by when" (dueDate is the
+  // nearest due_date among that supplier's unpaid purchases, if any).
+  receivables: Array<{ name: string; amount: number; daysLate: number }>;
+  payables: Array<{ name: string; amount: number; dueDate: string | null }>;
   setoff: Array<{ name: string; settle: number }>;
   actions: Array<{ sev: 'hi' | 'mid' | 'lo'; title: string; sub: string; value: number | null }>;
   approximations: { grossProfit: string; cash: string };
