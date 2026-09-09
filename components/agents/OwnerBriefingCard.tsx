@@ -171,7 +171,7 @@ export default function OwnerBriefingCard({ data, loading, error, fetchedAt }: P
       >
         <div className="flex items-center gap-1.5 mb-2.5">
           <FiCpu size={11} className="text-accent" />
-          <p className="text-2xs font-bold text-accent uppercase tracking-wider">Atlas Intelligence</p>
+          <p className="text-2xs font-bold text-accent uppercase tracking-wider">Starlane Intelligence</p>
         </div>
         <div className="flex gap-1.5 items-center">
           {[0, 150, 300].map(d => (
@@ -192,7 +192,7 @@ export default function OwnerBriefingCard({ data, loading, error, fetchedAt }: P
       >
         <div className="flex items-center gap-1.5">
           <FiAlertTriangle size={11} className="text-danger" />
-          <p className="text-2xs font-bold text-danger uppercase tracking-wider">Atlas Intelligence</p>
+          <p className="text-2xs font-bold text-danger uppercase tracking-wider">Starlane Intelligence</p>
           <span className="ml-auto text-2xs text-muted">Unavailable</span>
         </div>
         <p className="text-xs text-muted mt-1.5">
@@ -211,7 +211,7 @@ export default function OwnerBriefingCard({ data, loading, error, fetchedAt }: P
       >
         <div className="flex items-center gap-1.5">
           <FiWifiOff size={11} className="text-muted" />
-          <p className="text-2xs font-bold text-muted uppercase tracking-wider">Atlas Intelligence</p>
+          <p className="text-2xs font-bold text-muted uppercase tracking-wider">Starlane Intelligence</p>
           <span className="ml-auto text-2xs text-muted/60">Offline</span>
         </div>
         <p className="text-xs text-muted mt-1.5">
@@ -230,12 +230,12 @@ export default function OwnerBriefingCard({ data, loading, error, fetchedAt }: P
       >
         <div className="flex items-center gap-1.5 mb-2">
           <FiCpu size={11} className="text-accent/60" />
-          <p className="text-2xs font-bold text-accent/60 uppercase tracking-wider">Atlas Intelligence</p>
+          <p className="text-2xs font-bold text-accent/60 uppercase tracking-wider">Starlane Intelligence</p>
           <span className="ml-auto text-2xs text-muted/60">Building evidence</span>
         </div>
         <p className="text-xs text-secondary leading-relaxed">
           No verified evidence yet. Add invoices, customers, payments, sales, or business
-          activity so Atlas can generate a safe briefing.
+          activity so Starlane can generate a safe briefing.
         </p>
         {ec.fallback_reason && (
           <p className="text-2xs text-muted/50 mt-1">
@@ -258,7 +258,7 @@ export default function OwnerBriefingCard({ data, loading, error, fetchedAt }: P
       {/* Header */}
       <div className="px-3.5 pt-3 pb-2 flex items-center gap-1.5">
         <FiCpu size={11} className="text-accent" />
-        <p className="text-2xs font-bold text-accent uppercase tracking-wider">Atlas Intelligence</p>
+        <p className="text-2xs font-bold text-accent uppercase tracking-wider">Starlane Intelligence</p>
         <div className="ml-auto flex items-center gap-1.5">
           <FiCheckCircle size={9} className="text-success" />
           <span className="text-2xs text-muted">{fetchedTime ?? ""}</span>

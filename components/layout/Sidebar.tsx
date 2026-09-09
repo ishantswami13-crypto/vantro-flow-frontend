@@ -11,7 +11,6 @@ import {
   FiSun, FiActivity, FiUser, FiSliders, FiDatabase,
   FiArchive, FiFile, FiDollarSign, FiZap, FiLock, FiAlertTriangle, FiPlus, FiTruck, FiTarget,
 } from "react-icons/fi";
-import LogoMark from "@/components/LogoMark";
 import { api, getUser, clearAuth } from "@/lib/api";
 import { getBusinessType, getSmartHiddenRoutes, type BusinessTypeConfig } from "@/lib/businessTypes";
 import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
@@ -29,7 +28,7 @@ const NAV = [
   // ── Intelligence
   { href: "/ai-actions",     label: "Action Center",   icon: FiZap,           badge: "NEW",  group: "intelligence" },
   { href: "/today",          label: "Today's P&L",     icon: FiSun,           badge: null,   group: "intelligence" },
-  { href: "/brain",          label: "Atlas Brain",    icon: FiActivity,      badge: "AI",   group: "intelligence" },
+  { href: "/brain",          label: "Starlane Brain", icon: FiActivity,      badge: "AI",   group: "intelligence" },
   { href: "/ai-chat",        label: "AI Founder",      icon: FiCpu,           badge: null,   group: "intelligence" },
   { href: "/ai-train",       label: "AI Training",     icon: FiSliders,       badge: "AI",   group: "intelligence" },
   { href: "/neural-engine",  label: "Neural Engine",   icon: FiZap,           badge: null,   group: "intelligence" },
@@ -38,7 +37,7 @@ const NAV = [
   { href: "/analytics",      label: "Analytics",       icon: FiBarChart2,     badge: null,   group: "intelligence" },
   { href: "/reports",        label: "Reports",         icon: FiFileText,      badge: null,   group: "intelligence" },
   // ── Network
-  { href: "/network",        label: "Atlas Network",  icon: FiGlobe,         badge: "NEW",  group: "network" },
+  { href: "/network",        label: "Starlane Network", icon: FiGlobe,       badge: "NEW",  group: "network" },
   { href: "/industry",       label: "My Industry",     icon: FiShoppingBag,   badge: null,   group: "network" },
   { href: "/crm",            label: "CRM",             icon: FiUsers,         badge: null,   group: "network" },
   // ── Operations
@@ -54,7 +53,7 @@ const NAV = [
   { href: "/scanner",        label: "Invoice Scanner", icon: FiCamera,        badge: null,   group: "ops" },
   { href: "/bad-debt",       label: "Bad Debt Radar",  icon: FiAlertTriangle, badge: null,   group: "ops" },
   // ── Account
-  { href: "/my-id",          label: "My Atlas ID",    icon: FiShield,        badge: null,   group: "account" },
+  { href: "/my-id",          label: "My Starlane ID", icon: FiShield,        badge: null,   group: "account" },
   { href: "/billing",        label: "Billing",         icon: FiCreditCard,    badge: null,   group: "account" },
   { href: "/settings",       label: "Settings",        icon: FiSettings,      badge: null,   group: "account" },
 ];
@@ -143,12 +142,13 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         <div className="flex items-center justify-between px-5 h-14 shrink-0"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <div className="flex items-center gap-2">
-            <LogoMark size={22} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/branding/starlane-mark.png" alt="Starlane" width={22} height={22} style={{ borderRadius: "4px" }} />
             <span
               className="font-semibold tracking-tight"
               style={{ fontSize: "14px", color: "rgba(255,255,255,0.85)", letterSpacing: "-0.01em" }}
             >
-              Atlas
+              Starlane
             </span>
           </div>
           <button

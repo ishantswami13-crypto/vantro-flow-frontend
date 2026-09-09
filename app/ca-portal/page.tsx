@@ -68,7 +68,7 @@ export default function CAPortalPage() {
   }
 
   function shareWhatsApp(code: string) {
-    const msg = `Namaskar! Main ek CA hoon aur mere clients ke liye Atlas by Vantro recommend karta hoon — outstanding payments WhatsApp se automatically collect hote hain. Free trial ke liye signup karein: ${appOrigin}/signup?ref=${code}`;
+    const msg = `Namaskar! Main ek CA hoon aur mere clients ke liye Starlane by Vantro recommend karta hoon — outstanding payments WhatsApp se automatically collect hote hain. Free trial ke liye signup karein: ${appOrigin}/signup?ref=${code}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }
 

@@ -4,26 +4,17 @@ interface LogoMarkProps {
 }
 
 /**
- * Vantro logomark — bold serif "V" in Playfair Display.
- * Mirrors Harvey.ai's editorial serif lettermark approach.
+ * Starlane logomark — the branded mark image.
  */
 export default function LogoMark({ size = 32, className = "" }: LogoMarkProps) {
   return (
-    <span
+    <img
+      src="/branding/starlane-mark.png"
+      alt="Starlane"
+      width={size}
+      height={size}
       className={className}
-      style={{
-        fontFamily: "'Playfair Display', Georgia, 'Times New Roman', serif",
-        fontWeight: 800,
-        fontSize: `${size}px`,
-        color: "#ffffff",
-        lineHeight: 1,
-        letterSpacing: "-0.03em",
-        display: "inline-block",
-        userSelect: "none",
-      }}
-      aria-label="Atlas"
-    >
-      A
-    </span>
+      style={{ borderRadius: "4px", display: "inline-block" }}
+    />
   );
 }

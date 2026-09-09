@@ -11,11 +11,11 @@ const APP_URL = "https://vantro-flow-frontend.vercel.app";
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Atlas by Vantro | AI Business Automation Infrastructure",
-    template: "%s | Atlas",
+    default: "Starlane | Intelligence and Execution Infrastructure",
+    template: "%s | Starlane",
   },
   description:
-    "Atlas by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+    "Starlane by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
   keywords: [
     "business automation India", "MSME automation software", "collections automation India",
     "WhatsApp business automation", "invoice automation India", "Hinglish WhatsApp reminders",
@@ -31,10 +31,10 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     url: APP_URL,
-    siteName: "Atlas",
-    title: "Atlas by Vantro | AI Business Automation Infrastructure",
+    siteName: "Starlane",
+    title: "Starlane | Intelligence and Execution Infrastructure",
     description:
-      "Atlas by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+      "Starlane by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
     images: [
       {
         url: "/opengraph-image",
@@ -47,20 +47,20 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "Atlas by Vantro | AI Business Automation Infrastructure",
+    title: "Starlane | Intelligence and Execution Infrastructure",
     description:
-      "Atlas by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+      "Starlane by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
     images: ["/opengraph-image"],
     creator: "@vantro_in",
   },
 
   icons: {
     icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/branding/starlane-mark.png", type: "image/png" },
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
     ],
     apple: "/icon-192.png",
-    shortcut: "/icon.svg",
+    shortcut: "/branding/starlane-mark.png",
   },
 
   manifest: "/manifest.json",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Vantro",
+    title: "Starlane",
   },
 
   other: {
@@ -98,7 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              name: "Atlas by Vantro",
+              name: "Starlane by Vantro",
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web, Android, iOS",
               offers: {
@@ -108,7 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 priceValidUntil: "2026-12-31",
               },
               description:
-                "Atlas by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+                "Starlane by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
               url: APP_URL,
               inLanguage: ["en", "hi"],
               audience: {

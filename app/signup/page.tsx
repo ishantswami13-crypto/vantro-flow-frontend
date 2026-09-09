@@ -12,13 +12,9 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-pro
 
 const businessTypes = [{ value: "", label: "Select type" }, ...INDUSTRY_OPTIONS];
 
-function AtlasMark({ size = 26 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" aria-hidden="true">
-      <path fill="white" fillRule="evenodd" className="atlas-mark-spin"
-        d="M 50 8 L 4 92 L 96 92 Z M 50 78 L 38 92 L 62 92 Z M 26 59 L 74 59 L 74 68 L 26 68 Z"/>
-    </svg>
-  );
+function StarlaneMark({ size = 26 }: { size?: number }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src="/branding/starlane-mark.png" alt="Starlane" width={size} height={size} style={{ borderRadius: "4px" }} />;
 }
 
 const iBase = { background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.10)", borderRadius:"6px", padding:"13px 16px", fontFamily:"'Hanken Grotesk',system-ui", fontSize:"15px", color:"#fff", outline:"none", width:"100%", transition:"border-color .2s,background .2s", WebkitAppearance:"none" as const };
@@ -212,7 +208,7 @@ function SignupForm() {
           <div className="step-head">
             <div className="step-num">Step 2 of 2</div>
             <h2>Set your password<br/>&amp; go live.</h2>
-            <p>Atlas adapts to your business from day one.</p>
+            <p>Starlane adapts to your business from day one.</p>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
             {/* Phone */}
@@ -271,8 +267,8 @@ export default function SignupPage() {
     <div className="atlas-page auth-page">
       <header className="topbar">
         <a href="/" style={{display:"flex",alignItems:"center",gap:"10px",textDecoration:"none",color:"#fff"}}>
-          <AtlasMark size={26}/>
-          <span className="brand-wm">Atlas</span>
+          <StarlaneMark size={26}/>
+          <span className="brand-wm">Starlane</span>
         </a>
         <div className="topbar-right">Already have an account? <Link href="/login">Log in</Link></div>
       </header>
