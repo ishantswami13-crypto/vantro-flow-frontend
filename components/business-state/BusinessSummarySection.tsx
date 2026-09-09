@@ -17,9 +17,11 @@ function fmtINR(n: number): string {
   return `${sign}₹${abs.toLocaleString("en-IN")}`;
 }
 
-// Q1 (profit) + Q4 (vs last month) — renders brain.kpis with the backend's
-// own approximation caveats surfaced verbatim, and never shows a profit
-// number when hasCostData is false (see brainSummary.js).
+// Q1 (money left after purchases) + Q4 (vs last month) — renders brain.kpis
+// with the backend's own approximation caveats surfaced verbatim, and never
+// labels this figure "profit" since purchases here are total spend booked
+// this month, not cost of goods sold, and expenses aren't included (see
+// brainSummary.js).
 export function BusinessSummarySection({ brain, brainSection }: BusinessSummarySectionProps) {
   if (!brain) {
     if (brainSection === "disabled") {
@@ -57,14 +59,15 @@ export function BusinessSummarySection({ brain, brainSection }: BusinessSummaryS
     comparisonLine = `Sales are ${fmtINR(salesDiff)} lower than last month, comparing the same number of days.`;
   }
 
-  // Q1 — profit is only shown as a defensible number when there is at
-  // least some purchase/cost data behind it. With zero cost data recorded,
-  // "profit = sales" is not a real profit figure — it just means no
-  // expenses have been logged yet, so say that plainly instead of
-  // presenting a suspicious 100% margin as fact.
+  // Q1 — this figure is sales minus recorded purchases, not accounting
+  // profit: "purchases" here is total spend booked this month (whether or
+  // not that stock has sold yet), and operating expenses like rent or
+  // salaries aren't captured at all. So it's only shown once there is some
+  // purchase data to subtract, and it is never called "profit" — the label
+  // and sub-copy describe exactly what is and isn't included.
   const profitSub = kpis.hasCostData
-    ? `You keep about ₹${kpis.margin} from every ₹100 of sales, so far this month`
-    : "No purchases or expenses recorded yet — this is sales only, not a real profit figure";
+    ? "Sales minus recorded purchases this month — doesn't account for unsold stock or expenses like rent and salaries"
+    : "No purchases or expenses recorded yet — this is sales only, not a profit figure";
 
   return (
     <div>
@@ -76,10 +79,10 @@ export function BusinessSummarySection({ brain, brainSection }: BusinessSummaryS
           accent="default"
         />
         <MetricCard
-          label={kpis.hasCostData ? "Profit so far this month" : "Sales so far (no cost data yet)"}
+          label={kpis.hasCostData ? "Left after recorded purchases" : "Sales so far (no cost data yet)"}
           value={fmtINR(kpis.grossProfit)}
           sub={profitSub}
-          accent={kpis.hasCostData ? "success" : "default"}
+          accent="default"
         />
         <MetricCard
           label="Money received minus money paid"
