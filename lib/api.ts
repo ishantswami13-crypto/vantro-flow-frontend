@@ -245,6 +245,26 @@ export const api = {
       }),
   },
 
+  // ─── Supply Chain Intelligence (see server.js /api/intelligence/*, lib/domain/intelligence/supplyChainOrchestrator.js) ───
+  // Every number here comes from a deterministic backend calculation — this
+  // client layer never computes or estimates anything itself.
+  intelligence: {
+    signals: () => request<IntelligenceSignalsResponse>('/api/intelligence/signals'),
+    impact: (signalId: string) => request<IntelligenceImpactResponse>(`/api/intelligence/signals/${signalId}/impact`),
+    forecast: (signalId: string) => request<IntelligenceForecastResponse>(`/api/intelligence/signals/${signalId}/forecast`, { method: 'POST' }),
+    actions: (signalId: string) => request<IntelligenceActionsResponse>(`/api/intelligence/signals/${signalId}/actions`, { method: 'POST' }),
+    approveAndExecute: (actionId: string) =>
+      request<IntelligenceExecutionResponse>(`/api/intelligence/actions/${actionId}/approve-and-execute`, { method: 'POST' }),
+  },
+
+  // ─── Demo control (2xA meeting slice) — internal use only, never surfaced as a normal product control ───
+  // Long timeout: the backend shells out to two CLI scripts (seed + trigger),
+  // and cold Node process spawn on this host can take well over the default
+  // 30s request timeout.
+  demo2xa: {
+    reset: () => request<{ success: boolean; triggerOutput?: string }>('/api/demo/2xa/reset', { method: 'POST' }, 120_000),
+  },
+
   // ─── Bills ────────────────────────────────────────────────
   bills: {
     list: () => request<{ success: boolean; bills: any[] }>('/api/bills'),
@@ -1113,4 +1133,196 @@ export interface OwnerBriefingResponse {
   cost_route_summary?: unknown;
   policy_summary?: unknown;
   evidence_contract?: OwnerBriefingEvidenceContract;
+}
+
+
+// ─── Supply Chain Intelligence types (mirrors lib/domain/intelligence/supplyChainOrchestrator.js + business_signals/ai_actions/predictions table shapes exactly — see server.js /api/intelligence/*) ───
+
+export interface IntelligenceSignal {
+  id: string;
+  user_id: string;
+  world_event_id: string;
+  related_entity_type: string;
+  related_entity_id: string;
+  transmission_channel_id: string;
+  plausibility_confidence: number | null;
+  evidence_notes: string | null;
+  created_at: string;
+  status: 'CANDIDATE' | 'ACTIVE' | 'UPDATED' | string;
+  business_exposure_id: string;
+  first_detected_at: string;
+  last_updated_at: string;
+  why_exists: string;
+  affected_business_dimensions: string[];
+  impact_status: string;
+  event_title: string | null;
+  event_type: string | null;
+  event_observed_at: string | null;
+}
+
+export interface IntelligenceSignalsResponse {
+  success: boolean;
+  signals: IntelligenceSignal[];
+}
+
+// Every claim in the causal chain is tagged with one of these kinds — the
+// frontend must never blur them (see EVIDENCE_KIND in supplyChainOrchestrator.js).
+export type EvidenceKind =
+  | 'OBSERVED_FACT'
+  | 'CALCULATED_FACT'
+  | 'ASSUMPTION'
+  | 'FORECAST'
+  | 'EXTERNAL_EVIDENCE'
+  | 'INTERNAL_EVIDENCE';
+
+export interface IntelligenceEvidenceItem {
+  kind: EvidenceKind;
+  label: string;
+  detail: string;
+  source: string;
+  timestamp?: string | null;
+  confidence: 'HIGH' | 'MEDIUM' | 'LOW' | 'UNKNOWN';
+}
+
+export interface CoverageResult {
+  sufficientData: boolean;
+  coverageDays?: number;
+  reason?: string;
+}
+
+export interface StockoutResult {
+  sufficientData: boolean;
+  alreadyBelowSafetyStock?: boolean;
+  daysUntilStockout?: number;
+  stockoutDate?: string;
+  reason?: string;
+}
+
+export interface AffectedFinishedProduct {
+  finishedProductId: string;
+  quantityPerUnit: number;
+}
+
+export interface AffectedDemand {
+  sufficientData: boolean;
+  affectedOrderCount: number;
+  affectedOrderIds: string[];
+  affectedLineItems: Array<{ order_id: string; product_id: string; quantity: number; unit_price: number; needed_by: string | null; customer_name?: string; status?: string }>;
+}
+
+export interface RevenueExposureResult {
+  sufficientData: boolean;
+  totalRevenueExposure: number;
+  excludedLineCount: number;
+}
+
+export interface ImpactComponent {
+  component: { id: string; name: string; sku: string };
+  coverage: CoverageResult;
+  stockout: StockoutResult;
+  affectedFinishedProducts: AffectedFinishedProduct[];
+  affectedDemand: AffectedDemand;
+  revenueExposure: RevenueExposureResult;
+  alternateSource: { id: string; name: string } | null;
+  leadTimeDays: number | null;
+}
+
+export interface SignalImpact {
+  signal: IntelligenceSignal & {
+    event_summary?: string | null;
+    event_source_url?: string | null;
+    magnitude?: number | null;
+    magnitude_unit?: string | null;
+    event_confidence?: number | null;
+    channel_code?: string | null;
+    mechanism?: string | null;
+    rule_explanation?: string | null;
+  };
+  supplier?: { id: string; name: string; country: string };
+  evidence: IntelligenceEvidenceItem[];
+  sufficientDataForQuantification: boolean;
+  reason?: string;
+  components?: ImpactComponent[];
+  totalRevenueExposure?: number;
+}
+
+export interface IntelligenceImpactResponse {
+  success: boolean;
+  impact: SignalImpact;
+}
+
+export interface IntelligencePrediction {
+  id: string;
+  entity_id: string;
+  target: string;
+  horizon_days: number;
+  point_estimate: number | null;
+  data_quality: 'sufficient' | 'insufficient';
+  evidence: { signalId: string; projectedDate: string; stockout: StockoutResult };
+  as_of: string;
+}
+
+export interface IntelligenceForecastResponse {
+  success: boolean;
+  predictions: IntelligencePrediction[];
+}
+
+export interface RankedInterventionOption {
+  id: string;
+  label: string;
+  cost: number;
+  leadTimeDays: number | null;
+  benefitToCostRatio: number;
+  avoidedRevenueExposure: number;
+}
+
+export interface IntelligenceAction {
+  id: string;
+  user_id: string;
+  action_type: string;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'pending' | 'approved' | 'rejected' | 'done' | 'expired' | 'system_blocked';
+  supplier_id: string | null;
+  risk_level: 'low' | 'medium' | 'high';
+  requires_approval: boolean;
+  reason_json: { signalId: string; componentId: string; rankedOptions: RankedInterventionOption[] };
+  approved_by?: string | null;
+  approved_at?: string | null;
+  completed_at?: string | null;
+  created_at: string;
+}
+
+export interface IntelligenceActionsResponse {
+  success: boolean;
+  actions: IntelligenceAction[];
+}
+
+export interface DemoExecutionResult {
+  mode: 'DEMO_ADAPTER' | 'LIVE_ODOO';
+  liveExternalWriteOccurred: boolean;
+  purchaseOrder: {
+    id: string;
+    supplier_name: string;
+    items: { component_id: string | null; component_name: string | null; note: string };
+    estimated_amount: number | null;
+    status: string;
+    related_ai_action_id: string;
+    created_at: string;
+  };
+  executionRecord: {
+    id: string;
+    channel: string;
+    provider_message_id: string;
+    status: string;
+    sent_at: string;
+  };
+  note: string;
+}
+
+export interface IntelligenceExecutionResponse {
+  success: boolean;
+  executionMode: 'DEMO_ADAPTER' | 'LIVE_ODOO';
+  execution: DemoExecutionResult;
 }
