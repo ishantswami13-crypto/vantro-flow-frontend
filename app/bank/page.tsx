@@ -427,7 +427,7 @@ export default function BankPage() {
           </div>
           <div className="card p-4">
             <p className="text-xs text-muted mb-1">Unmatched</p>
-            <p className="text-lg font-black text-yellow-400">{unmatched}</p>
+            <p className="text-lg font-black text-warning">{unmatched}</p>
             <p className="text-2xs text-muted">transactions</p>
           </div>
           <div className="card p-4">

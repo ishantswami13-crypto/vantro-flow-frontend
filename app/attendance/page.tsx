@@ -15,7 +15,7 @@ const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const statusConfig = {
   present: { label: "P", bg: "bg-success text-white", icon: FiCheck },
   absent:  { label: "A", bg: "bg-danger text-white",  icon: FiX },
-  half:    { label: "H", bg: "bg-yellow-400 text-black", icon: FiMinus },
+  half:    { label: "H", bg: "bg-warning text-black", icon: FiMinus },
 };
 
 export default function AttendancePage() {
@@ -199,7 +199,7 @@ export default function AttendancePage() {
                         <span className="text-muted">/</span>
                         <span className="text-danger font-bold">{a}</span>
                         <span className="text-muted">/</span>
-                        <span className="text-yellow-400 font-bold">{h}</span>
+                        <span className="text-warning font-bold">{h}</span>
                       </td>
                     </tr>
                   );
@@ -213,7 +213,7 @@ export default function AttendancePage() {
             <span className="flex items-center gap-1"><span className="w-4 h-4 rounded bg-surface-2 inline-block" /> Empty</span>
             <span className="flex items-center gap-1"><span className="w-4 h-4 rounded bg-success inline-block" /> Present (P)</span>
             <span className="flex items-center gap-1"><span className="w-4 h-4 rounded bg-danger inline-block" /> Absent (A)</span>
-            <span className="flex items-center gap-1"><span className="w-4 h-4 rounded bg-yellow-400 inline-block" /> Half Day (H)</span>
+            <span className="flex items-center gap-1"><span className="w-4 h-4 rounded bg-warning inline-block" /> Half Day (H)</span>
           </div>
         </div>
       ) : (
@@ -242,7 +242,7 @@ export default function AttendancePage() {
                   </div>
                   <div className="flex justify-between text-muted">
                     <span>Half Days</span>
-                    <span className="text-yellow-400 font-semibold">{s.half_days}</span>
+                    <span className="text-warning font-semibold">{s.half_days}</span>
                   </div>
                   <div className="flex justify-between text-muted">
                     <span>Absent Days</span>
@@ -293,7 +293,7 @@ export default function AttendancePage() {
                   )}
                 </div>
                 {s.advance_balance > 0 && (
-                  <p className="text-xs text-yellow-400 mt-2">⚠ Advance balance {fmtINR(s.advance_balance)} deducted from salary</p>
+                  <p className="text-xs text-warning mt-2">⚠ Advance balance {fmtINR(s.advance_balance)} deducted from salary</p>
                 )}
               </div>
             ))

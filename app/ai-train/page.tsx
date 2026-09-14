@@ -227,10 +227,10 @@ export default function AITrainPage() {
             {tab === "setup" && (
               <div className="space-y-4">
                 {/* Status */}
-                <div className={`card p-4 border ${twilioConfigured ? "border-success/30 bg-success/5" : "border-yellow-400/20 bg-yellow-400/5"}`}>
+                <div className={`card p-4 border ${twilioConfigured ? "border-success/30 bg-success/5" : "border-warning/20 bg-warning/5"}`}>
                   <div className="flex items-center gap-2 mb-1">
-                    {twilioConfigured ? <FiCheck size={15} className="text-success" /> : <FiAlertCircle size={15} className="text-yellow-400" />}
-                    <p className={`font-semibold text-sm ${twilioConfigured ? "text-success" : "text-yellow-400"}`}>
+                    {twilioConfigured ? <FiCheck size={15} className="text-success" /> : <FiAlertCircle size={15} className="text-warning" />}
+                    <p className={`font-semibold text-sm ${twilioConfigured ? "text-success" : "text-warning"}`}>
                       {twilioConfigured ? "✅ AI Calling Active" : "⚠ Setup Required"}
                     </p>
                   </div>
@@ -244,8 +244,8 @@ export default function AITrainPage() {
                 {/* Twilio form */}
                 <div className="card p-4">
                   <div className="flex items-center gap-2.5 mb-4">
-                    <div className="w-8 h-8 rounded-xl bg-red-500/15 flex items-center justify-center shrink-0">
-                      <FiPhone size={14} className="text-red-400" />
+                    <div className="w-8 h-8 rounded-xl bg-surface-2 border border-border flex items-center justify-center shrink-0">
+                      <FiPhone size={14} className="text-secondary" />
                     </div>
                     <div>
                       <p className="font-bold text-primary text-sm">Twilio Credentials</p>

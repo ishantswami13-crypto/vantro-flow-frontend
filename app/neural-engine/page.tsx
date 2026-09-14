@@ -109,10 +109,8 @@ export default function NeuralEnginePage() {
       <div className="max-w-4xl mx-auto space-y-5 page-enter">
 
         {/* Header */}
-        <div className="card-premium p-6 relative overflow-hidden">
-          <div className="absolute -top-8 -right-8 w-48 h-48 bg-accent/5 rounded-full blur-3xl" />
-          <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl" />
-          <div className="relative">
+        <div className="card-premium p-6">
+          <div>
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent">
                 <FiCpu size={18} className="text-white" />

@@ -692,9 +692,9 @@ export default function AIFounderPage() {
             {/* Input + mic */}
             <div className="px-5 py-4 border-t border-border shrink-0">
               {isListening && (
-                <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <p className="text-xs text-red-400 font-semibold">Listening... bolein aur ruk jayein</p>
+                <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-danger/10 border border-danger/20">
+                  <span className="w-2 h-2 rounded-full bg-danger animate-pulse" />
+                  <p className="text-xs text-danger font-semibold">Listening... bolein aur ruk jayein</p>
                   <p className="text-xs text-secondary ml-2 flex-1 truncate italic">{input || "..."}</p>
                 </div>
               )}
@@ -717,7 +717,7 @@ export default function AIFounderPage() {
                     className={[
                       "w-12 h-12 rounded-xl flex items-center justify-center transition-all shrink-0 select-none",
                       isListening
-                        ? "bg-red-500 text-white shadow-lg scale-110"
+                        ? "bg-danger text-white"
                         : "bg-surface-2 border border-border text-muted hover:text-accent hover:border-accent/40",
                     ].join(" ")}
                     title="Hold to speak (Hindi/Hinglish)">
