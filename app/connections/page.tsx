@@ -54,6 +54,9 @@ export default function ConnectionsPage() {
   const [connections, setConnections] = useState<DataConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showTallySetup, setShowTallySetup] = useState(false);
+  const [connectingTally, setConnectingTally] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,6 +69,18 @@ export default function ConnectionsPage() {
 
   const tally = connections.find((c) => c.source_type === "TALLY");
   const tallyStatus = describeTally(tally);
+
+  async function connectTally() {
+    setConnectingTally(true); setConnectError(null);
+    try {
+      const enrollment = await api.connections.enrollTally();
+      const protocolUrl = `vantro-tally://pair?enrollment=${encodeURIComponent(enrollment.enrollmentCode)}`;
+      window.location.assign(protocolUrl);
+      setShowTallySetup(true);
+    } catch (error: any) {
+      setConnectError(error?.message || 'Could not start Tally connection. Please try again.');
+    } finally { setConnectingTally(false); }
+  }
 
   return (
     <DashboardLayout pageTitle="Connections">
@@ -86,7 +101,7 @@ export default function ConnectionsPage() {
           <div className="space-y-4">
             {/* Tally */}
             <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center shrink-0 text-lg font-black text-blue-400">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/25 flex items-center justify-center shrink-0 text-lg font-black text-accent">
                 T
               </div>
               <div className="flex-1 min-w-0">
@@ -95,7 +110,16 @@ export default function ConnectionsPage() {
                   {loading ? "Checking..." : "Read-only — Vantro never changes anything in Tally"}
                 </p>
               </div>
-              {!loading && <StatusPill tone={tallyStatus.tone} text={tallyStatus.text} />}
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={connectTally}
+                  className="px-3 py-1.5 rounded-full text-xs font-bold bg-accent/10 border border-accent/25 text-accent hover:bg-accent/20 transition-colors"
+                >
+                  {connectingTally ? "Connecting…" : "Connect Tally"}
+                </button>
+                {!loading && <StatusPill tone={tallyStatus.tone} text={tallyStatus.text} />}
+              </div>
             </div>
 
             {/* Upload a file */}
@@ -135,7 +159,22 @@ export default function ConnectionsPage() {
             ))}
           </div>
         </Card>
-      </div>
+
+        {showTallySetup && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="Connecting Tally">
+            <div className="w-full max-w-xl rounded-2xl border border-border bg-surface shadow-2xl p-5 space-y-5">
+              <div className="flex items-start justify-between gap-4">
+                <div><p className="text-base font-black text-primary">Connecting Tally</p><p className="text-xs text-secondary mt-1">The StarLane Connector is opening on this computer to securely pair and begin background synchronization.</p></div>
+                <button type="button" onClick={() => setShowTallySetup(false)} className="text-muted hover:text-primary text-xl leading-none" aria-label="Close connection dialog">×</button>
+              </div>
+              {connectError ? <p className="rounded-xl bg-danger-dim border border-danger/30 p-3 text-sm text-danger">{connectError}</p> : <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 text-sm text-secondary">If the connector is already installed, Windows will open it and pairing will continue automatically. Your workspace password is never shared with the connector.</div>}
+              <div className="rounded-xl border border-success/20 bg-success/5 p-3 text-xs text-success">StarLane reads Tally through local export requests only. It does not alter or delete data in Tally.</div>
+              <button type="button" onClick={() => setShowTallySetup(false)} className="w-full rounded-xl bg-accent py-2.5 text-sm font-bold text-white hover:bg-accent-hover transition-colors">Continue in connector</button>
+            </div>
+          </div>
+        )}      </div>
     </DashboardLayout>
   );
 }
+
+
