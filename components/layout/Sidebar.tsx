@@ -31,6 +31,7 @@ const NAV = [
   { href: "/dashboard",      label: "Dashboard",       icon: FiGrid,          badge: null,   group: "core" },
   { href: "/invoice/new",    label: "New Invoice",     icon: FiPlus,          badge: null,   group: "core" },
   { href: "/connections",    label: "Sources",         icon: FiDatabase,      badge: null,   group: "core" },
+  { href: "/control",        label: "Control",         icon: FiShield,        badge: null,   group: "core" },
   // ── Money & Collections
   { href: "/collections",    label: "Collections",     icon: FiList,          badge: null,   group: "money" },
   { href: "/customers",      label: "Customers",       icon: FiUsers,         badge: null,   group: "money" },
