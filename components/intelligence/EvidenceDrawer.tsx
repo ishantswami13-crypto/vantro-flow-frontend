@@ -29,22 +29,29 @@ export function EvidenceDrawer({ evidence, onClose }: { evidence: IntelligenceEv
         records or the external event. Assumptions are planning parameters you or Starlane recorded. Forecasts are
         projections, not observations.
       </p>
-      <div className="space-y-5">
+      {/* Open list, thin dividers — not a card per fact. Opening this drawer
+          should feel like reading the system's reasoning, not scrolling a
+          stack of boxes. Only real fields render: claim, classification,
+          source, timestamp, confidence — nothing invented to fill a slot
+          this data doesn't have (no Entity/Location/Calculation, since the
+          API doesn't carry them). */}
+      <div className="space-y-6">
         {grouped.map((group) => (
           <div key={group.kind}>
-            <div className="mb-2">
+            <div className="mb-1">
               <EvidenceKindBadge kind={group.kind} />
             </div>
-            <ul className="space-y-2">
+            <ul className="divide-y divide-border border-t border-border mt-2">
               {group.items.map((item, i) => (
-                <li key={`${group.kind}-${i}`} className="card-premium p-3">
+                <li key={`${group.kind}-${i}`} className="py-3">
                   <p className="text-xs font-semibold text-primary">{item.label}</p>
                   <p className="text-2xs text-secondary mt-1 leading-relaxed">{item.detail}</p>
                   <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
-                    <span className="text-2xs text-muted font-mono truncate">{item.source}</span>
+                    <span className="text-2xs text-muted font-mono truncate">
+                      {item.source}{item.timestamp ? ` · ${formatDateTime(item.timestamp)}` : ""}
+                    </span>
                     <ConfidenceBadge level={item.confidence} />
                   </div>
-                  {item.timestamp && <p className="text-2xs text-muted mt-1">{formatDateTime(item.timestamp)}</p>}
                 </li>
               ))}
             </ul>
