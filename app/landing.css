@@ -181,8 +181,14 @@
 @media (max-width: 860px) {
   .sl-chain { flex-direction: column; }
   .sl-chain-connector { width: auto; height: 26px; }
-  .sl-cap-grid { grid-template-columns: 1fr; row-gap: 32px; }
   .sl-ev-row { grid-template-columns: 1fr; gap: 6px; }
+}
+
+/* Two columns of short cells fit comfortably down to tablet width — only
+   collapse to one column once it would genuinely feel cramped, not at the
+   same 860px breakpoint the unrelated chain-diagram/evidence-row rules use. */
+@media (max-width: 620px) {
+  .sl-cap-grid { grid-template-columns: 1fr; row-gap: 32px; }
 }
 
 
