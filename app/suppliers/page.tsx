@@ -125,7 +125,7 @@ export default function SuppliersPage() {
           </div>
           <div className="card-metric p-5">
             <p className="section-label mb-3">We Need To Pay</p>
-            <p className="metric-lg text-yellow-400">{fmtINR(totalPayable)}</p>
+            <p className="metric-lg text-warning">{fmtINR(totalPayable)}</p>
             <p className="text-2xs text-muted mt-1">from purchases</p>
           </div>
           <div className="card-metric p-5">
@@ -167,12 +167,12 @@ export default function SuppliersPage() {
                   key={String(supplier.id)}
                   type="button"
                   onClick={() => setSelectedSupplier(supplier)}
-                  className="card-premium p-5 text-left hover:border-yellow-400/35 transition-all focus:outline-none focus:border-yellow-400/50"
+                  className="card-premium p-5 text-left hover:border-warning/35 transition-all focus:outline-none focus:border-warning/50"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-xl bg-yellow-400/12 border border-yellow-400/25 text-yellow-400 flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-xl bg-warning/12 border border-warning/25 text-warning flex items-center justify-center">
                           <FiTruck size={16} />
                         </div>
                         <div className="min-w-0">
@@ -182,7 +182,7 @@ export default function SuppliersPage() {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className={outstanding > 0 ? "metric-value text-yellow-400" : "metric-value text-success"}>
+                      <p className={outstanding > 0 ? "metric-value text-warning" : "metric-value text-success"}>
                         {fmtINR(outstanding)}
                       </p>
                       <p className="text-2xs text-muted">{outstanding > 0 ? "dena hai" : "clear"}</p>
@@ -214,7 +214,7 @@ export default function SuppliersPage() {
                       <FiCalendar size={12} /> {fmtDate(supplier.last_purchase_date)}
                     </span>
                     {supplier.inferred_from_purchases && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-yellow-400/10 text-yellow-400">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-warning/10 text-warning">
                         <FiAlertTriangle size={12} /> inferred
                       </span>
                     )}
@@ -260,7 +260,7 @@ export default function SuppliersPage() {
                   </div>
                   <div className="rounded-xl bg-surface-2/70 p-4">
                     <p className="section-label mb-2">Pending</p>
-                    <p className="text-xl font-black text-yellow-400">{fmtINR(Number(selectedSupplier.outstanding_amount || 0))}</p>
+                    <p className="text-xl font-black text-warning">{fmtINR(Number(selectedSupplier.outstanding_amount || 0))}</p>
                   </div>
                   <div className="rounded-xl bg-surface-2/70 p-4">
                     <p className="section-label mb-2">Last Bill</p>
@@ -302,20 +302,20 @@ export default function SuppliersPage() {
                             </div>
                             <div>
                               <p className="text-2xs text-muted">Pending</p>
-                              <p className="text-sm font-bold text-yellow-400">{fmtINR(pending)}</p>
+                              <p className="text-sm font-bold text-warning">{fmtINR(pending)}</p>
                             </div>
                           </div>
 
                           {items.length > 0 ? (
                             <div className="overflow-x-auto">
-                              <table className="w-full text-xs">
-                                <thead className="bg-black/20 text-muted">
-                                  <tr>
-                                    <th className="text-left px-4 py-2 font-semibold">Item</th>
-                                    <th className="text-left px-4 py-2 font-semibold">HSN</th>
-                                    <th className="text-right px-4 py-2 font-semibold">Qty</th>
-                                    <th className="text-right px-4 py-2 font-semibold">Rate</th>
-                                    <th className="text-right px-4 py-2 font-semibold">Amount</th>
+                              <table className="w-full text-xs table-premium">
+                                <thead>
+                                  <tr className="border-b border-border">
+                                    <th className="text-left px-4 py-2 section-label">Item</th>
+                                    <th className="text-left px-4 py-2 section-label">HSN</th>
+                                    <th className="text-right px-4 py-2 section-label">Qty</th>
+                                    <th className="text-right px-4 py-2 section-label">Rate</th>
+                                    <th className="text-right px-4 py-2 section-label">Amount</th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -324,12 +324,12 @@ export default function SuppliersPage() {
                                     const rate = Number(item.rate ?? item.price ?? 0);
                                     const amount = Number(item.amount || qty * rate || 0);
                                     return (
-                                      <tr key={`${purchase.id}-${idx}`} className="border-t border-border/60">
+                                      <tr key={`${purchase.id}-${idx}`}>
                                         <td className="px-4 py-2 text-primary font-medium">{item.description || item.name || "Item"}</td>
                                         <td className="px-4 py-2 text-muted">{item.hsn_sac || item.hsn || "—"}</td>
-                                        <td className="px-4 py-2 text-right text-secondary">{qty} {item.unit || ""}</td>
-                                        <td className="px-4 py-2 text-right text-secondary">{fmtINR(rate)}</td>
-                                        <td className="px-4 py-2 text-right text-primary font-bold">{fmtINR(amount)}</td>
+                                        <td className="px-4 py-2 text-right text-secondary metric-value">{qty} {item.unit || ""}</td>
+                                        <td className="px-4 py-2 text-right text-secondary metric-value">{fmtINR(rate)}</td>
+                                        <td className="px-4 py-2 text-right text-primary font-bold metric-value">{fmtINR(amount)}</td>
                                       </tr>
                                     );
                                   })}
