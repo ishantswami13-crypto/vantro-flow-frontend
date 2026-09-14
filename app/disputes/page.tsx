@@ -91,21 +91,24 @@ export default function DisputesPage() {
   const resolvedCount = disputes.filter(d => d.status === "resolved").length;
   const totalDisputedAmt = disputes.filter(d => d.status !== "resolved").reduce((s, d) => s + d.disputed_amount, 0);
 
+  // Three real states, three fixed semantic roles - not a fourth "stuck
+  // amount" orange invented on top: disputed/stuck money is the same
+  // "needs attention" tier as under_review.
   const statusColor: Record<string, string> = {
-    open: "bg-red-500/20 text-red-400",
-    under_review: "bg-yellow-500/20 text-yellow-400",
-    resolved: "bg-green-500/20 text-green-400",
+    open: "bg-danger-dim text-danger",
+    under_review: "bg-warning/10 text-warning",
+    resolved: "bg-success-dim text-success",
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-5">
+    <DashboardLayout pageTitle="Disputes">
+      <div className="space-y-5 max-w-4xl">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white">Dispute Management</h1>
-            <p className="text-sm text-gray-400">Customer raised an issue? Track it here. Auto-pauses WhatsApp follow-up.</p>
+            <h1 className="text-xl font-bold text-primary">Dispute Management</h1>
+            <p className="text-sm text-secondary">Customer raised an issue? Track it here. Auto-pauses WhatsApp follow-up.</p>
           </div>
-          <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition">
+          <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-white/90 transition-colors">
             + New Dispute
           </button>
         </div>
@@ -113,53 +116,53 @@ export default function DisputesPage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Open", value: openCount, color: "text-red-400" },
-            { label: "Resolved", value: resolvedCount, color: "text-green-400" },
-            { label: "Stuck Amount", value: `₹${totalDisputedAmt.toLocaleString("en-IN")}`, color: "text-orange-400" },
+            { label: "Open", value: openCount, color: "text-danger" },
+            { label: "Resolved", value: resolvedCount, color: "text-success" },
+            { label: "Stuck Amount", value: `₹${totalDisputedAmt.toLocaleString("en-IN")}`, color: "text-warning" },
           ].map(s => (
-            <div key={s.label} className="bg-[#1a1a2e] rounded-xl p-4 border border-white/5 text-center">
-              <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-              <div className="text-xs text-gray-400 mt-1">{s.label}</div>
+            <div key={s.label} className="card-metric p-4 text-center">
+              <div className={`text-2xl font-bold metric-value ${s.color}`}>{s.value}</div>
+              <div className="text-2xs text-muted mt-1">{s.label}</div>
             </div>
           ))}
         </div>
 
         {/* Create form */}
         {showCreate && (
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-xl p-5 space-y-4">
-            <h2 className="text-white font-semibold">Log New Dispute</h2>
+          <div className="card-premium p-5 space-y-4">
+            <h2 className="text-primary font-semibold">Log New Dispute</h2>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Customer Name *</label>
-                <input value={form.customer_name} onChange={e => setForm(f => ({ ...f, customer_name: e.target.value }))} className="w-full bg-[#0f0f23] border border-white/10 rounded-lg px-3 py-2 text-white text-sm" placeholder="Ramesh Traders" />
+                <label className="text-2xs text-muted block mb-1">Customer Name *</label>
+                <input value={form.customer_name} onChange={e => setForm(f => ({ ...f, customer_name: e.target.value }))} className="input-base" placeholder="Ramesh Traders" />
               </div>
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Phone</label>
-                <input value={form.customer_phone} onChange={e => setForm(f => ({ ...f, customer_phone: e.target.value }))} className="w-full bg-[#0f0f23] border border-white/10 rounded-lg px-3 py-2 text-white text-sm" placeholder="9876543210" />
+                <label className="text-2xs text-muted block mb-1">Phone</label>
+                <input value={form.customer_phone} onChange={e => setForm(f => ({ ...f, customer_phone: e.target.value }))} className="input-base" placeholder="9876543210" />
               </div>
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Disputed Amount (₹) *</label>
-                <input value={form.disputed_amount} onChange={e => setForm(f => ({ ...f, disputed_amount: e.target.value }))} type="number" className="w-full bg-[#0f0f23] border border-white/10 rounded-lg px-3 py-2 text-white text-sm" placeholder="25000" />
+                <label className="text-2xs text-muted block mb-1">Disputed Amount (₹) *</label>
+                <input value={form.disputed_amount} onChange={e => setForm(f => ({ ...f, disputed_amount: e.target.value }))} type="number" className="input-base" placeholder="25000" />
               </div>
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Reason *</label>
-                <select value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} className="w-full bg-[#0f0f23] border border-white/10 rounded-lg px-3 py-2 text-white text-sm">
+                <label className="text-2xs text-muted block mb-1">Reason *</label>
+                <select value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} className="input-base">
                   {REASON_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
             </div>
             <div>
-              <label className="text-xs text-gray-400 block mb-1">Notes</label>
-              <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="w-full bg-[#0f0f23] border border-white/10 rounded-lg px-3 py-2 text-white text-sm" rows={2} placeholder="Details of what happened..." />
+              <label className="text-2xs text-muted block mb-1">Notes</label>
+              <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="input-base" rows={2} placeholder="Details of what happened..." />
             </div>
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-              <p className="text-yellow-400 text-xs">⚠️ WhatsApp follow-up for this invoice will be paused automatically until dispute is resolved.</p>
+            <div className="rounded-lg border border-warning/20 bg-warning/5 p-3">
+              <p className="text-warning text-2xs">WhatsApp follow-up for this invoice will be paused automatically until dispute is resolved.</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={createDispute} disabled={saving} className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition disabled:opacity-50">
+              <button onClick={createDispute} disabled={saving} className="flex-1 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-white/90 transition-colors disabled:opacity-50">
                 {saving ? "Saving..." : "Log Dispute"}
               </button>
-              <button onClick={() => setShowCreate(false)} className="px-4 py-2 border border-white/10 text-gray-400 text-sm rounded-lg hover:bg-white/5">Cancel</button>
+              <button onClick={() => setShowCreate(false)} className="px-4 py-2 border border-border text-secondary text-sm rounded-xl hover:bg-surface-2 transition-colors">Cancel</button>
             </div>
           </div>
         )}
@@ -167,21 +170,21 @@ export default function DisputesPage() {
         {/* Resolve modal */}
         {selected && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-            <div className="bg-[#1a1a2e] border border-white/10 rounded-xl p-5 w-full max-w-md space-y-4">
-              <h2 className="text-white font-semibold">Resolve: {selected.customer_name}</h2>
+            <div className="card-premium p-5 w-full max-w-md space-y-4">
+              <h2 className="text-primary font-semibold">Resolve: {selected.customer_name}</h2>
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Resolution</label>
-                <textarea value={resolution.resolution} onChange={e => setResolution(r => ({ ...r, resolution: e.target.value }))} className="w-full bg-[#0f0f23] border border-white/10 rounded-lg px-3 py-2 text-white text-sm" rows={3} placeholder="How was it resolved? Credit note issued, amount adjusted..." />
+                <label className="text-2xs text-muted block mb-1">Resolution</label>
+                <textarea value={resolution.resolution} onChange={e => setResolution(r => ({ ...r, resolution: e.target.value }))} className="input-base" rows={3} placeholder="How was it resolved? Credit note issued, amount adjusted..." />
               </div>
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Settled Amount (₹)</label>
-                <input value={resolution.resolved_amount} onChange={e => setResolution(r => ({ ...r, resolved_amount: e.target.value }))} type="number" className="w-full bg-[#0f0f23] border border-white/10 rounded-lg px-3 py-2 text-white text-sm" placeholder={String(selected.disputed_amount)} />
+                <label className="text-2xs text-muted block mb-1">Settled Amount (₹)</label>
+                <input value={resolution.resolved_amount} onChange={e => setResolution(r => ({ ...r, resolved_amount: e.target.value }))} type="number" className="input-base" placeholder={String(selected.disputed_amount)} />
               </div>
               <div className="flex gap-3">
-                <button onClick={resolveDispute} disabled={saving} className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition">
+                <button onClick={resolveDispute} disabled={saving} className="flex-1 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-white/90 transition-colors">
                   {saving ? "Saving..." : "Mark Resolved"}
                 </button>
-                <button onClick={() => setSelected(null)} className="px-4 py-2 border border-white/10 text-gray-400 text-sm rounded-lg hover:bg-white/5">Cancel</button>
+                <button onClick={() => setSelected(null)} className="px-4 py-2 border border-border text-secondary text-sm rounded-xl hover:bg-surface-2 transition-colors">Cancel</button>
               </div>
             </div>
           </div>
@@ -189,35 +192,34 @@ export default function DisputesPage() {
 
         {/* List */}
         {loading ? (
-          <div className="text-center text-gray-400 py-10">Loading...</div>
+          <div className="text-center text-secondary py-10 text-sm">Loading...</div>
         ) : disputes.length === 0 ? (
           <div className="text-center py-16">
-            <div className="text-4xl mb-3">⚖️</div>
-            <p className="text-gray-400 text-sm">No disputes logged. When a customer raises an issue, track it here.</p>
+            <p className="text-secondary text-sm">No disputes logged. When a customer raises an issue, track it here.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {disputes.map(d => (
-              <div key={d.id} className="bg-[#1a1a2e] border border-white/5 rounded-xl p-4">
+              <div key={d.id} className="card-premium p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-white font-medium">{d.customer_name}</h3>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${statusColor[d.status] || ""}`}>{d.status.replace("_", " ")}</span>
+                      <h3 className="text-primary font-medium text-sm">{d.customer_name}</h3>
+                      <span className={`text-2xs px-2 py-0.5 rounded-full ${statusColor[d.status] || ""}`}>{d.status.replace("_", " ")}</span>
                     </div>
-                    <p className="text-sm text-orange-400 font-medium">₹{d.disputed_amount.toLocaleString("en-IN")}</p>
-                    <p className="text-xs text-gray-400 mt-1">{d.reason}</p>
-                    {d.notes && <p className="text-xs text-gray-500 mt-1">{d.notes}</p>}
-                    {d.resolution && <p className="text-xs text-green-400 mt-1">Resolution: {d.resolution}</p>}
+                    <p className="text-sm text-warning font-medium metric-value">₹{d.disputed_amount.toLocaleString("en-IN")}</p>
+                    <p className="text-2xs text-muted mt-1">{d.reason}</p>
+                    {d.notes && <p className="text-2xs text-muted mt-1">{d.notes}</p>}
+                    {d.resolution && <p className="text-2xs text-success mt-1">Resolution: {d.resolution}</p>}
                   </div>
                   <div className="flex gap-2 ml-3">
                     {d.status !== "resolved" && (
                       <button onClick={() => { setSelected(d); setResolution({ status: "resolved", resolution: "", resolved_amount: String(d.disputed_amount) }); }}
-                        className="text-xs px-3 py-1.5 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600/30">
+                        className="text-2xs px-3 py-1.5 bg-success-dim text-success rounded-lg hover:bg-success/20 transition-colors">
                         Resolve
                       </button>
                     )}
-                    <button onClick={() => deleteDispute(d.id)} className="text-xs px-2 py-1.5 text-gray-600 hover:text-red-400">✕</button>
+                    <button onClick={() => deleteDispute(d.id)} className="text-2xs px-2 py-1.5 text-muted hover:text-danger transition-colors">✕</button>
                   </div>
                 </div>
               </div>
