@@ -1,5 +1,7 @@
-// Section 09 — a restrained capability overview. Only capabilities that
-// exist and are honestly represented by the shipped product.
+// Section H — capability overview. Deliberately NOT another full-width
+// bordered-row list (that pattern already carries Evidence, immediately
+// above this section) — a two-column numbered grid instead, so consecutive
+// sections don't read as the same component restyled.
 const CAPS = [
   { l: "Business state", d: "A single, continuously reconciled view of what you're owed, what you owe, and what's at risk — never a stale snapshot." },
   { l: "External intelligence", d: "Real-world events matched against your verified exposures — never a generic news feed treated as relevant." },
@@ -16,11 +18,12 @@ export function Capabilities() {
     <section id="capabilities" className="sl-section">
       <div className="sl-wrap">
         <span className="sl-eyebrow sl-rv">Capabilities</span>
-        <h2 className="sl-h2 sl-rv" style={{ maxWidth: 640, marginBottom: 40 }}>From context to action.</h2>
-        <div className="sl-rv2">
-          {CAPS.map((c) => (
-            <div key={c.l} className="sl-cap-row">
-              <p className="sl-cap-label">{c.l}</p>
+        <h2 className="sl-h2 sl-rv" style={{ maxWidth: 640, marginBottom: 56 }}>From context to action.</h2>
+        <div className="sl-cap-grid sl-rv2">
+          {CAPS.map((c, i) => (
+            <div key={c.l} className="sl-cap-cell">
+              <span className="sl-cap-num">{String(i + 1).padStart(2, "0")}</span>
+              <p className="sl-h3" style={{ marginBottom: 8 }}>{c.l}</p>
               <p className="sl-p">{c.d}</p>
             </div>
           ))}

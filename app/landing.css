@@ -165,10 +165,11 @@
 .sl-flow-step.hi { color: var(--sl-ink); }
 .sl-flow-sep { color: var(--sl-line-2); font-size: 20px; margin: 0 16px; font-family: var(--sl-serif); }
 
-/* ── Capability list ─────────────────────────────────────────── */
-.sl-cap-row { display: grid; grid-template-columns: 220px 1fr; gap: 32px; padding: 26px 0; border-top: 1px solid var(--sl-line); }
-.sl-cap-row:last-child { border-bottom: 1px solid var(--sl-line); }
-.sl-cap-label { font-family: var(--sl-serif); font-size: 19px; font-weight: 700; }
+/* ── Capability grid — deliberately a 2-col numbered grid, not another
+   full-width bordered-row list like Evidence directly above it ──────── */
+.sl-cap-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 64px; row-gap: 48px; }
+.sl-cap-cell { border-top: 1px solid var(--sl-line); padding-top: 20px; }
+.sl-cap-num { font-family: var(--sl-mono); font-size: 12px; color: var(--sl-ink-faint); display: block; margin-bottom: 14px; }
 
 /* ── Footer ──────────────────────────────────────────────────── */
 .sl-footer-col h4 { font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--sl-ink-faint); margin-bottom: 14px; font-weight: 600; }
@@ -180,7 +181,7 @@
 @media (max-width: 860px) {
   .sl-chain { flex-direction: column; }
   .sl-chain-connector { width: auto; height: 26px; }
-  .sl-cap-row { grid-template-columns: 1fr; gap: 8px; }
+  .sl-cap-grid { grid-template-columns: 1fr; row-gap: 32px; }
   .sl-ev-row { grid-template-columns: 1fr; gap: 6px; }
 }
 
