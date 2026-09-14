@@ -140,20 +140,23 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onMenuToggle={() => setSidebarOpen(true)} pageTitle={pageTitle} />
 
-        {/* Demo mode banner */}
+        {/* Demo mode notice — must stay truthful and legible, but shouldn't
+            out-shout the product itself. A quiet bordered strip with plain
+            text reads as "simulated" without becoming the loudest thing on
+            the screen (previously a solid yellow alert-style bar). */}
         {isDemo && (
-          <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-2 flex items-center justify-between gap-3 text-sm shrink-0">
-            <span className="text-yellow-400 font-medium text-xs">
-              👀 Demo Mode — You're exploring Starlane with sample data. Sign up to save real data.
+          <div className="border-b border-border px-4 py-1.5 flex items-center justify-between gap-3 shrink-0" style={{ background: "rgba(255,255,255,0.02)" }}>
+            <span className="text-2xs text-muted font-mono tracking-wide">
+              SIMULATED DEMONSTRATION — sample data, not your business
             </span>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-3 shrink-0">
               <Link href="/signup"
                 onClick={() => exitDemoMode()}
-                className="bg-yellow-500 text-black px-3 py-1 rounded-lg text-xs font-bold hover:bg-yellow-400 transition-colors">
-                Sign Up Free
+                className="text-2xs font-semibold text-secondary hover:text-primary transition-colors">
+                Sign up to save real data →
               </Link>
               <button onClick={() => { exitDemoMode(); window.location.href = "/login"; }}
-                className="text-yellow-500/60 text-xs hover:text-yellow-400 transition-colors">
+                className="text-2xs text-muted hover:text-secondary transition-colors">
                 Exit
               </button>
             </div>
