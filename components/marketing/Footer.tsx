@@ -9,19 +9,19 @@ export function Footer() {
           <p className="sl-p" style={{ marginTop: 14, maxWidth: 280 }}>Intelligence and execution infrastructure, by Vantro Technologies.</p>
         </div>
         <div className="sl-footer-col">
-          <h4>Product</h4>
+          <h3>Product</h3>
           <a href="#product">Intelligence</a>
           <a href="#story">How it reasons</a>
           <a href="#capabilities">Capabilities</a>
         </div>
         <div className="sl-footer-col">
-          <h4>Company</h4>
+          <h3>Company</h3>
           <Link href="/security">Security</Link>
           <a href="#trust">Evidence &amp; controls</a>
           <Link href="/login">Sign in</Link>
         </div>
         <div className="sl-footer-col">
-          <h4>Legal</h4>
+          <h3>Legal</h3>
           <Link href="/terms">Terms</Link>
           <Link href="/privacy">Privacy</Link>
         </div>

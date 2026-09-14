@@ -1,28 +1,23 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./atlas.css";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import ReactQueryProvider from "@/components/providers/ReactQueryProvider";
 import { Analytics } from "@vercel/analytics/next";
 import CookieBanner from "@/components/CookieBanner";
+import AuthenticatedRequestBridge from "@/components/providers/AuthenticatedRequestBridge";
 
 const APP_URL = "https://vantro-flow-frontend.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Starlane | Intelligence and Execution Infrastructure",
+    default: "Starlane | Know what happens next.",
     template: "%s | Starlane",
   },
   description:
-    "Starlane by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
-  keywords: [
-    "business automation India", "MSME automation software", "collections automation India",
-    "WhatsApp business automation", "invoice automation India", "Hinglish WhatsApp reminders",
-    "Tally ERP sync", "cash flow automation India", "Indian business OS",
-    "autopilot business software", "distributor automation India", "vyapar alternative",
-    "receivables management India", "B2B collections India",
-  ],
+    "Starlane connects your business to the world around it, traces consequences, and helps you act with evidence.",
+  keywords: ["Starlane", "business intelligence", "supply chain intelligence", "evidence-based decisions"],
   authors: [{ name: "Vantro Technologies", url: APP_URL }],
   creator: "Vantro Technologies",
   publisher: "Vantro Technologies",
@@ -32,48 +27,43 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: APP_URL,
     siteName: "Starlane",
-    title: "Starlane | Intelligence and Execution Infrastructure",
+    title: "Starlane | Know what happens next.",
     description:
-      "Starlane by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+      "Starlane connects your business to the world around it, traces consequences, and helps you act with evidence.",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Vantro — AI-powered Business OS for Indian MSMEs",
+        alt: "Starlane — Know what happens next.",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Starlane | Intelligence and Execution Infrastructure",
+    title: "Starlane | Know what happens next.",
     description:
-      "Starlane by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+      "Starlane connects your business to the world around it, traces consequences, and helps you act with evidence.",
     images: ["/opengraph-image"],
-    creator: "@vantro_in",
   },
 
   icons: {
-    icon: [
-      { url: "/branding/starlane-mark.png", type: "image/png" },
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-    ],
-    apple: "/icon-192.png",
-    shortcut: "/branding/starlane-mark.png",
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/branding/starlane-icon-light-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/branding/starlane-icon-light-180.png", sizes: "180x180", type: "image/png" }],
+    shortcut: "/icon.svg",
   },
 
   manifest: "/manifest.json",
 
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "Starlane",
   },
 
   other: {
     "mobile-web-app-capable": "yes",
-    "theme-color": "#050B1A",
   },
 
   robots: {
@@ -86,6 +76,8 @@ export const metadata: Metadata = {
     canonical: APP_URL,
   },
 };
+
+export const viewport: Viewport = { themeColor: "#FAFAF9" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -100,15 +92,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "@type": "SoftwareApplication",
               name: "Starlane by Vantro",
               applicationCategory: "BusinessApplication",
-              operatingSystem: "Web, Android, iOS",
-              offers: {
-                "@type": "Offer",
-                price: "1999",
-                priceCurrency: "INR",
-                priceValidUntil: "2026-12-31",
-              },
+              operatingSystem: "Web",
               description:
-                "Starlane by Vantro is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+                "Starlane connects your business to the world around it, traces consequences, and helps you act with evidence.",
               url: APP_URL,
               inLanguage: ["en", "hi"],
               audience: {
@@ -120,11 +106,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <AuthenticatedRequestBridge />
         <PostHogProvider>
           <ReactQueryProvider>{children}</ReactQueryProvider>
         </PostHogProvider>
         <CookieBanner />
-        <Analytics />
+        {process.env.VERCEL === "1" && <Analytics />}
       </body>
     </html>
   );
