@@ -114,9 +114,11 @@ export default function SignalImpactPage() {
             />
           </div>
 
-          {/* What happened / why it matters */}
-          <div className="grid lg:grid-cols-2 gap-4 mb-8">
-            <div className="card-premium p-4">
+          {/* What happened / why it matters — open composition with a thin
+              divider, not two bordered cards side by side for two short
+              paragraphs. */}
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 mb-10 lg:divide-x lg:divide-border">
+            <div>
               <p className="section-label mb-2">What happened</p>
               <p className="text-sm text-primary font-semibold">{impact.signal.event_title}</p>
               {impact.signal.event_summary && <p className="text-2xs text-secondary mt-1.5 leading-relaxed">{impact.signal.event_summary}</p>}
@@ -126,7 +128,7 @@ export default function SignalImpactPage() {
                 </a>
               )}
             </div>
-            <div className="card-premium p-4">
+            <div className="lg:pl-8">
               <p className="section-label mb-2">Why it matters to this business</p>
               <p className="text-2xs text-secondary leading-relaxed">{humanReason(impact.signal, impact.supplier?.name)}</p>
               {impact.signal.rule_explanation && (
@@ -135,9 +137,9 @@ export default function SignalImpactPage() {
             </div>
           </div>
 
-          {/* Causal chain */}
-          <div className="mb-8">
-            <p className="section-label mb-3">Dependency chain</p>
+          {/* Causal chain — Starlane's signature trace, not a boxed card */}
+          <div className="mb-10">
+            <p className="section-label mb-4">Dependency chain</p>
             <CausalChain impact={impact} component={primaryComponent} />
           </div>
 
