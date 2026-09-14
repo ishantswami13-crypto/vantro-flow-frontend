@@ -131,6 +131,13 @@
 /* ── Sections / rhythm ───────────────────────────────────────── */
 .sl-section { padding: clamp(72px, 8vw, 116px) 0; }
 .sl-section + .sl-section { border-top: 1px solid var(--sl-line); }
+/* Deliberate rhythm variation — every section previously used identical
+   padding regardless of role, which is exactly the "no rhythm, just a
+   repeating template" failure mode this page's own design direction warns
+   against. These two are the page's quiet, monumental pauses (one
+   statement, one ending) and get noticeably more room than the informational
+   sections between them. */
+.sl-section-monumental { padding: clamp(100px, 13vw, 176px) 0; }
 .sl-eyebrow { font-family: var(--sl-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sl-accent-2); margin-bottom: 20px; display: block; }
 .sl-h1 { font-family: var(--sl-serif); font-weight: 700; line-height: 0.98; letter-spacing: -0.02em; font-size: var(--sl-type-display); color: var(--sl-ink); }
 .sl-h2 { font-family: var(--sl-serif); font-weight: 700; line-height: 1.06; letter-spacing: -0.012em; font-size: var(--sl-type-h2); color: var(--sl-ink); }

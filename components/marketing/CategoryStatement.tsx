@@ -14,7 +14,7 @@ const LINES = [
 
 export function CategoryStatement() {
   return (
-    <section className="sl-section sl-dark">
+    <section className="sl-section sl-dark sl-section-monumental">
       <div className="sl-wrap sl-rv" style={{ textAlign: "center" }}>
         <h2 className="sl-h2" style={{ color: "var(--sl-bg)", maxWidth: 780, margin: "0 auto 40px" }}>
           Your business does not exist in isolation.
