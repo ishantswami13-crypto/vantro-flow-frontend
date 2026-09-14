@@ -215,48 +215,42 @@
 }
 
 /* ============================================================
-   CARDS
+   SURFACE / CARD PRIMITIVE — one canonical set of rules.
+
+   .card-premium, .card-metric and .card-base used to be three separate
+   definitions (12px/12px/10px radius, three different shadow recipes, a
+   hover lift + glow on one of them, a decorative top-highlight line on
+   another) with no documented reason for which to reach for. They're
+   now three semantic aliases onto ONE shared style:
+
+     card-premium → surface   (elevated content, most cards)
+     card-metric  → inset     (a metric tile — recessed one shade darker)
+     card-base    → inset     (grouped/nested content — same recessed role)
+
+   One radius (10px). No drop shadow — a border plus the surface/inset
+   tonal step carries separation, per "almost no shadows, borders and
+   tonal separation first." Hover is a border-tone shift only — no lift,
+   no transform, no glow — since most cards using these classes aren't
+   actually clickable; a card that IS a real click target should add its
+   own cursor-pointer/interactive affordance rather than get one for free.
    ============================================================ */
-.card-premium {
+.card-premium,
+.card-metric,
+.card-base {
   background: var(--surface-1);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  border-radius: 10px;
+  transition: border-color 0.15s ease;
 }
 
-.card-premium:hover {
-  border-color: rgba(255,255,255,0.1);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+.card-metric,
+.card-base {
+  background: var(--surface-2);
 }
 
-.card-metric {
-  background: linear-gradient(145deg, var(--surface-2) 0%, var(--surface-1) 100%);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
-  transition: all 0.2s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.card-metric::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.card-metric:hover::after { opacity: 1; }
+.card-premium:hover,
 .card-metric:hover {
-  transform: translateY(-1px);
-  border-color: rgba(255,255,255,0.1);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  border-color: #2a2a2a; /* border-2 in tailwind.config.ts — no matching CSS var exists */
 }
 
 /* ============================================================
@@ -275,14 +269,9 @@
 }
 
 /* ============================================================
-   CARD BASE + INPUT BASE  (generic aliases for brain/bills/orders)
+   INPUT BASE  (.card-base is now defined above, in the unified
+   surface/card primitive block — kept as one alias, not redefined here)
    ============================================================ */
-.card-base {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-
 .input-base {
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.10);
@@ -534,14 +523,11 @@ input:focus, select:focus, textarea:focus {
 .page-fade { animation: fade-in 0.25s ease-out both; }
 
 /* ============================================================
-   CRITICAL CARD — pulsing red glow for Cash Runway / danger metrics
+   CRITICAL CARD — static, not pulsing. A permanently-glowing red card
+   trained the eye to ignore it (everything "important" pulsed); a fixed
+   border is the calmer, more legible way to say "this one needs a look."
    ============================================================ */
-@keyframes pulse-danger-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(245,66,77,0), inset 0 0 0 1px rgba(245,66,77,0.3); }
-  50%       { box-shadow: 0 0 24px 4px rgba(245,66,77,0.18), inset 0 0 0 1px rgba(245,66,77,0.6); }
-}
 .card-metric-critical {
-  animation: pulse-danger-glow 2.4s ease-in-out infinite;
   border-color: rgba(245,66,77,0.4) !important;
 }
 
