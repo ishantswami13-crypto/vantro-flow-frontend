@@ -153,15 +153,23 @@
 /* Content remains visible without JavaScript. Motion is reserved for convergence. */
 .sl-rv, .sl-rv2 > * { opacity: 1; transform: none; }
 
-/* ── Vertical intelligence story ───────────────────────────────── */
-.sl-story { max-width: 720px; margin: 0 0 0 auto; position: relative; }
-.sl-story::before { content: ""; position: absolute; left: 15px; top: 14px; bottom: 14px; width: 1px; background: var(--sl-line-2); }
-.sl-story-step { position: relative; padding-left: 52px; padding-bottom: 32px; }
+/* ── Intelligence story — editorial numbered clauses, not a node-graph
+   timeline. No connecting line, no circular chips: a large quiet serif
+   folio number sits beside each step, and a thin rule between entries
+   (like a numbered list in a printed document) carries the sequence
+   instead of a drawn spine. ── */
+.sl-story { max-width: 720px; margin: 0 0 0 auto; }
+.sl-story-step { display: grid; grid-template-columns: 56px 1fr; column-gap: 24px; padding: 28px 0; border-top: 1px solid var(--sl-line); }
+.sl-story-step:first-child { border-top: none; padding-top: 0; }
 .sl-story-step:last-child { padding-bottom: 0; }
-.sl-story-dot { position: absolute; left: 0; top: 2px; width: 31px; height: 31px; border-radius: 50%; background: var(--sl-bg-raised); border: 1px solid var(--sl-line-2); display: flex; align-items: center; justify-content: center; font-family: var(--sl-mono); font-size: 12px; color: var(--sl-ink-soft); }
-.sl-story-step.hi .sl-story-dot { border-color: var(--sl-accent); color: var(--sl-accent); }
+.sl-story-dot { font-family: var(--sl-serif); font-size: 34px; font-weight: 700; line-height: 1; color: var(--sl-line-2); font-variant-numeric: tabular-nums; }
+.sl-story-step.hi .sl-story-dot { color: var(--sl-ink); }
 .sl-story-kicker { font-family: var(--sl-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sl-accent-2); }
 .sl-story-title { font-family: var(--sl-serif); font-size: var(--sl-type-h3); font-weight: 700; margin: 6px 0 8px; }
+@media (max-width: 560px) {
+  .sl-story-step { grid-template-columns: 40px 1fr; column-gap: 16px; }
+  .sl-story-dot { font-size: 26px; }
+}
 
 /* ── Chain diagram (system flow) ─────────────────────────────── */
 .sl-chain { display: flex; align-items: stretch; gap: 0; }

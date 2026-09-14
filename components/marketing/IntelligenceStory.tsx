@@ -26,12 +26,12 @@ export function IntelligenceStory() {
         <div className="sl-story sl-rv2">
           {STEPS.map((s, i) => (
             <div key={s.title} className={`sl-story-step${s.hi ? " hi" : ""}`}>
-              
-              <span className="sl-story-dot">{i + 1}</span>
-              <span className="sl-story-kicker">{s.kicker}</span>
-              <p className="sl-story-title">{s.title}</p>
-              <p className="sl-p" style={{ marginBottom: 10 }}>{s.body}</p>
-
+              <span className="sl-story-dot">{String(i + 1).padStart(2, "0")}</span>
+              <div>
+                <span className="sl-story-kicker">{s.kicker}</span>
+                <p className="sl-story-title">{s.title}</p>
+                <p className="sl-p" style={{ marginBottom: 0 }}>{s.body}</p>
+              </div>
             </div>
           ))}
         </div>
