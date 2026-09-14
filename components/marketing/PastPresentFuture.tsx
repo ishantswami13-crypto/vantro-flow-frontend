@@ -15,7 +15,6 @@ export function PastPresentFuture() {
         <div className="sl-tri sl-rv2">
           {COLS.map((c) => (
             <div key={c.tag} className={`sl-tri-col ${c.cls}`}>
-              <div className="sl-tri-marker" />
               <span className="sl-tri-tag">{c.tag}</span>
               <p className="sl-tri-title">{c.title}</p>
               <p className="sl-p">{c.body}</p>

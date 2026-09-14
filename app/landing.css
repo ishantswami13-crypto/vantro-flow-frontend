@@ -181,14 +181,17 @@
 .sl-chain-path { stroke-dasharray: 400; stroke-dashoffset: 400; transition: stroke-dashoffset 1.4s cubic-bezier(.16,1,.3,1); }
 .sl-rv2.in .sl-chain-path { stroke-dashoffset: 0; }
 
-/* ── Past / Present / Future timeline ────────────────────────── */
-.sl-tri { display: grid; grid-template-columns: 1fr 1fr 1fr; position: relative; }
-.sl-tri::before { content: ""; position: absolute; left: 0; right: 0; top: 4px; height: 1px; background: var(--sl-line-2); }
-.sl-tri-col { padding-right: clamp(20px, 3vw, 40px); }
-.sl-tri-marker { width: 9px; height: 9px; border-radius: 50%; background: var(--sl-ink); margin-bottom: 24px; position: relative; z-index: 1; }
-.sl-tri-col.future .sl-tri-marker { background: var(--sl-accent); }
+/* ── Past / Present / Future triptych — a printed three-column layout,
+   not a timeline. No connecting line, no dot markers: a vertical rule
+   between columns (like a triptych panel edge) is the only structure,
+   and "Future" is differentiated by weight/style, not a colored dot. ── */
+.sl-tri { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.sl-tri-col { padding: 0 clamp(20px, 3vw, 40px) 0 0; }
+.sl-tri-col + .sl-tri-col { padding-left: clamp(20px, 3vw, 40px); border-left: 1px solid var(--sl-line); }
 .sl-tri-tag { font-family: var(--sl-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sl-ink-faint); }
-.sl-tri-title { font-family: var(--sl-serif); font-size: var(--sl-type-statement); font-weight: 700; margin: 10px 0 14px; }
+.sl-tri-col.future .sl-tri-tag { color: var(--sl-ink); }
+.sl-tri-title { font-family: var(--sl-serif); font-size: var(--sl-type-statement); font-weight: 700; margin: 14px 0 14px; }
+.sl-tri-col.future .sl-tri-title { font-style: italic; }
 
 /* ── Evidence rows ────────────────────────────────────────────── */
 .sl-ev-row { display: grid; grid-template-columns: 160px 1fr; gap: 24px; padding: 20px 0; border-top: 1px solid var(--sl-line); align-items: baseline; }
@@ -271,20 +274,14 @@
 .sl-footer-grid { display: grid; grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)); gap: 32px; padding-bottom: 40px; border-bottom: 1px solid var(--sl-line); }
 .sl-footer-grid > * { min-width: 0; }
 .sl .sl-footer-col a { min-height: 44px; display: flex; align-items: center; }
-.sl-converge { display: grid; grid-template-columns: minmax(0, 1fr) clamp(24px, 5vw, 72px) 148px clamp(24px, 5vw, 72px) minmax(0, 1fr); align-items: center; row-gap: 28px; }
-.sl-converge-col { min-width: 0; transform: translateX(-14px); transition: transform 1.2s cubic-bezier(.22,1,.36,1); }
-.sl-converge-col.right { transform: translateX(14px); text-align: right; }
-.sl-converge-col ul { list-style: none; margin-top: 16px; }
-.sl-converge-item { font-size: 15px; color: var(--sl-ink-soft); padding-block: 9px; }
-.sl-converge-core { display: grid; place-items: center; width: 148px; height: 148px; border: 1px solid var(--sl-line-2); border-radius: 50%; text-align: center; font-family: var(--sl-serif); font-size: 19px; line-height: 1.3; }
-.sl-converge-link { height: 1px; background: var(--sl-line-2); position: relative; }
-.sl-converge-link::after { content: ''; position: absolute; inset: 0; background: var(--sl-accent); transform: scaleX(0); transition: transform 1.2s cubic-bezier(.22,1,.36,1) .15s; }
-.sl-converge-link-left::after { transform-origin: left; }
-.sl-converge-link-right::after { transform-origin: right; }
-.sl-converge-result { grid-column: 1 / -1; text-align: center; font-size: 13px; color: var(--sl-ink-soft); opacity: .65; transition: opacity .7s ease .9s; }
-.sl-converge.is-connected .sl-converge-col { transform: none; }
-.sl-converge.is-connected .sl-converge-link::after { transform: scaleX(1); }
-.sl-converge.is-connected .sl-converge-result { opacity: 1; }
+/* ── World / Business context — two-column spread, one dividing rule.
+   No circular node, no connecting lines. ── */
+.sl-context { display: grid; grid-template-columns: 1fr 1fr; }
+.sl-context-col { min-width: 0; padding-right: clamp(24px, 5vw, 64px); }
+.sl-context-col + .sl-context-col { padding-right: 0; padding-left: clamp(24px, 5vw, 64px); border-left: 1px solid var(--sl-line); }
+.sl-context-col ul { list-style: none; margin-top: 16px; }
+.sl-context-item { font-size: 15px; color: var(--sl-ink-soft); padding-block: 9px; border-top: 1px solid var(--sl-line); }
+.sl-context-item:first-child { border-top: none; }
 @media (min-width: 768px) and (max-width: 1180px) {
   .sl-product-metrics .card-metric { padding: 16px; }
 }
@@ -300,19 +297,12 @@
   .sl-product-ui .section-label { font-size: 9px; }
   .sl-product-explanation, .sl-evidence-heading { grid-template-columns: 1fr; gap: 24px; }
   .sl-product-caption { flex-direction: column; gap: 8px; }
-  .sl-tri { grid-template-columns: 1fr; gap: 32px; }
-  .sl-tri::before { top: 4px; bottom: 0; left: 4px; right: auto; width: 1px; height: auto; }
-  .sl-tri-col { position: relative; padding: 0 0 0 32px; }
-  .sl-tri-marker { position: absolute; left: 0; top: 4px; }
-  .sl-story-step { padding-left: 44px; }
-  .sl-converge { grid-template-columns: 1fr; gap: 20px; }
-  .sl-converge-col, .sl-converge-col.right { transform: none; text-align: left; }
-  .sl-converge-col ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; margin-top: 10px; }
-  .sl-converge-item { font-size: 13px; }
-  .sl-converge-link { width: 1px; height: 24px; justify-self: center; }
-  .sl-converge-link::after { transform: none; transition: none; }
-  .sl-converge-core { justify-self: center; width: auto; height: auto; border-radius: 4px; padding: 20px 32px; }
-  .sl-converge-result { opacity: 1; transition: none; }
+  .sl-tri { grid-template-columns: 1fr; gap: 28px; }
+  .sl-tri-col, .sl-tri-col + .sl-tri-col { padding: 0; border-left: none; }
+  .sl-context { grid-template-columns: 1fr; }
+  .sl-context-col, .sl-context-col + .sl-context-col { padding: 0; border-left: none; }
+  .sl-context-col + .sl-context-col { margin-top: 32px; }
+  .sl-context-item { font-size: 13px; }
   .sl-footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; }
   .sl-footer-grid > :first-child { grid-column: 1 / -1; }
   .sl-flow { row-gap: 16px; }
@@ -321,9 +311,6 @@
 @media (prefers-reduced-motion: reduce) {
   html:has(.sl) { scroll-behavior: auto; }
   .sl *, .sl *::before, .sl *::after { animation: none !important; transition: none !important; }
-  .sl-converge-col, .sl-converge-col.right { transform: none; }
-  .sl-converge-link::after { transform: scaleX(1); }
-  .sl-converge-result { opacity: 1; }
 }
 
 /* Match the existing consent surface to the public page without changing consent. */
@@ -381,6 +368,7 @@ html:has(.sl) [aria-label="Cookie consent"] :focus-visible { outline: 2px solid 
 
 /* ── Research topic chips ────────────────────────────────────────────── */
 .sl-topic-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.sl-chip-light { font-family: var(--sl-mono); font-size: 11.5px; letter-spacing: 0.02em; color: var(--sl-ink-soft); border: 1px solid var(--sl-line-2); border-radius: 4px; padding: 5px 10px; }
 
 @media (max-width: 860px) {
   .sl-measure-row { grid-template-columns: repeat(2, 1fr); }
