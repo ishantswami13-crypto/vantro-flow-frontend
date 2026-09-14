@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { api, getUser, type ChatMessage } from "@/lib/api";
@@ -328,7 +329,16 @@ function DebtorCallCard({ d, rank, token, twilioReady }: { d: Debtor; rank: numb
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
+// useSearchParams requires a Suspense boundary during static prerendering.
 export default function AIFounderPage() {
+  return (
+    <Suspense fallback={null}>
+      <AIFounderPageInner />
+    </Suspense>
+  );
+}
+
+function AIFounderPageInner() {
   const [briefing, setBriefing]       = useState<MLBriefing | null>(null);
   const [mlLoading, setMlLoading]     = useState(true);
   const [messages, setMessages]       = useState<Message[]>(INITIAL_MESSAGES);
@@ -352,6 +362,16 @@ export default function AIFounderPage() {
   // Voice support check
   useEffect(() => {
     setVoiceSupported(Boolean(getSpeechRecognitionConstructor()));
+  }, []);
+
+  // A query typed into the Home command input arrives as ?q= — send it
+  // once on mount rather than just pre-filling the box, so "ask and land
+  // here" feels like one action, not two.
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q && q.trim()) sendChat(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchBriefing = useCallback(() => {
