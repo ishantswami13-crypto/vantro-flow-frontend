@@ -289,6 +289,22 @@ html:has(.sl) [aria-label="Cookie consent"] :focus-visible { outline: 2px solid 
 
 .sl-product-capture { padding: clamp(12px, 2.2vw, 28px); }
 .sl-product-capture img { display:block; width:100%; height:auto; }
+
+/* The real capture is a wide desktop crop (~5.3:1). Shrinking it to fit a
+   phone width alone would render every number illegibly small (measured:
+   58px tall at 375px wide) — instead crop to a fixed, legible aspect ratio
+   showing the top metrics band, the single most decision-relevant part of
+   the image, rather than the full width at unreadable scale. */
+@media (max-width: 767px) {
+  .sl-product-capture { padding: 14px; overflow: hidden; aspect-ratio: 2 / 1; }
+  .sl-product-capture img {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    object-position: top left;
+  }
+}
 .sl-product-caption strong { color: var(--sl-ink); font-weight: 600; }
 
 /* ── Dark editorial moment (Category Statement) ──────────────────────── */
