@@ -806,7 +806,7 @@ export default function DashboardPage() {
                   </tr>
                 )}
                 {liveCustomers.map((c, i) => (
-                  <tr key={c.id} style={{ animationDelay: `${i * 40}ms` }} className="animate-row-in">
+                  <tr key={c.id}>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <div
