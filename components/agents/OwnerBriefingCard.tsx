@@ -12,12 +12,14 @@ import {
   FiWifiOff, FiShield, FiDatabase, FiInfo,
 } from "react-icons/fi";
 
-// ─── Priority / risk colour map ───────────────────────────────────────────────
+// ─── Priority / risk colour map — only critical/high are genuinely
+// alarming; medium/low are neutral grades, not a blue "info" hue reusing
+// the interactive accent color (which reads as a link, not a risk level).
 const RISK_COLOR: Record<string, string> = {
   critical: "#F5424D",
   high:     "#F5A524",
-  medium:   "#4F6EF7",
-  low:      "#6B7280",
+  medium:   "#888888",
+  low:      "#555555",
 };
 
 function confidenceLabel(c: number): string {
@@ -25,8 +27,10 @@ function confidenceLabel(c: number): string {
   if (c >= 0.65) return "Medium";
   return "Low";
 }
+// Same three hues the rest of the product uses for confidence
+// (success/warning/danger) - not a separately-invented green/orange/red.
 function confidenceColor(c: number): string {
-  if (c >= 0.9) return "#22C55E";
+  if (c >= 0.9) return "#10D98A";
   if (c >= 0.65) return "#F5A524";
   return "#F5424D";
 }
@@ -173,11 +177,9 @@ export default function OwnerBriefingCard({ data, loading, error, fetchedAt }: P
           <FiCpu size={11} className="text-accent" />
           <p className="text-2xs font-bold text-accent uppercase tracking-wider">Starlane Intelligence</p>
         </div>
-        <div className="flex gap-1.5 items-center">
-          {[0, 150, 300].map(d => (
-            <div key={d} className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: `${d}ms` }} />
-          ))}
-          <span className="text-xs text-muted ml-1">Business signals loading...</span>
+        <div className="flex gap-2 items-center">
+          <span className="w-3 h-3 border-2 border-accent/30 border-t-accent rounded-full animate-spin shrink-0" />
+          <span className="text-xs text-muted">Business signals loading...</span>
         </div>
       </div>
     );
