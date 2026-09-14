@@ -10,48 +10,61 @@ import {
   FiCpu, FiGlobe, FiBook, FiShoppingBag, FiUserCheck,
   FiSun, FiActivity, FiUser, FiSliders, FiDatabase,
   FiArchive, FiFile, FiDollarSign, FiZap, FiLock, FiAlertTriangle, FiPlus, FiTruck, FiTarget,
+  FiChevronDown, FiChevronRight,
 } from "react-icons/fi";
 import { api, getUser, clearAuth } from "@/lib/api";
 import { getBusinessType, getSmartHiddenRoutes, type BusinessTypeConfig } from "@/lib/businessTypes";
 import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
+import { getRecents, timeAgo, type RecentEntry } from "@/lib/recents";
 
+// Grouped by what a user is actually trying to do, not by which team built
+// the feature — "AI" used to be a dumping ground for anything advanced
+// (Cash Forecast, Bank Ledger, Analytics, Reports included), which put
+// finance tools nowhere near Collections/Customers. Regrouped so every
+// section answers one question: Money & Collections = "who owes/is owed",
+// Sales & Inventory = "what moved", Automation = "what runs itself",
+// Insights = "how am I doing over time".
 const NAV = [
   // ── Command Center
   { href: "/business-state", label: "Business State",  icon: FiTarget,        badge: "NEW",  group: "core" },
+  { href: "/intelligence",   label: "Intelligence",    icon: FiGlobe,         badge: "NEW",  group: "core" },
   { href: "/dashboard",      label: "Dashboard",       icon: FiGrid,          badge: null,   group: "core" },
   { href: "/invoice/new",    label: "New Invoice",     icon: FiPlus,          badge: null,   group: "core" },
-  { href: "/collections",    label: "Collections",     icon: FiList,          badge: null,   group: "core" },
-  { href: "/customers",      label: "Customers",       icon: FiUsers,         badge: null,   group: "core" },
-  { href: "/suppliers",      label: "Suppliers",       icon: FiTruck,         badge: null,   group: "core" },
-  { href: "/whatsapp",       label: "WhatsApp",        icon: FiMessageSquare, badge: null,   group: "core" },
-  { href: "/dunning",        label: "Auto Follow-Up",  icon: FiRepeat,        badge: null,   group: "core" },
-  // ── Intelligence
-  { href: "/ai-actions",     label: "Action Center",   icon: FiZap,           badge: "NEW",  group: "intelligence" },
-  { href: "/today",          label: "Today's P&L",     icon: FiSun,           badge: null,   group: "intelligence" },
-  { href: "/brain",          label: "Starlane Brain", icon: FiActivity,      badge: "AI",   group: "intelligence" },
-  { href: "/ai-chat",        label: "AI Founder",      icon: FiCpu,           badge: null,   group: "intelligence" },
-  { href: "/ai-train",       label: "AI Training",     icon: FiSliders,       badge: "AI",   group: "intelligence" },
-  { href: "/neural-engine",  label: "Neural Engine",   icon: FiZap,           badge: null,   group: "intelligence" },
-  { href: "/forecast",       label: "Cash Forecast",   icon: FiTrendingUp,    badge: null,   group: "intelligence" },
-  { href: "/ledger",         label: "Bank Ledger",     icon: FiDollarSign,    badge: null,   group: "intelligence" },
-  { href: "/analytics",      label: "Analytics",       icon: FiBarChart2,     badge: null,   group: "intelligence" },
-  { href: "/reports",        label: "Reports",         icon: FiFileText,      badge: null,   group: "intelligence" },
+  { href: "/connections",    label: "Sources",         icon: FiDatabase,      badge: null,   group: "core" },
+  // ── Money & Collections
+  { href: "/collections",    label: "Collections",     icon: FiList,          badge: null,   group: "money" },
+  { href: "/customers",      label: "Customers",       icon: FiUsers,         badge: null,   group: "money" },
+  { href: "/suppliers",      label: "Suppliers",       icon: FiTruck,         badge: null,   group: "money" },
+  { href: "/khata",          label: "Customer Khata",  icon: FiBook,          badge: null,   group: "money" },
+  { href: "/bills",          label: "GST Invoices",    icon: FiFile,          badge: "NEW",  group: "money" },
+  { href: "/bank",           label: "Bank Monitor",    icon: FiDatabase,      badge: "NEW",  group: "money" },
+  { href: "/ledger",         label: "Bank Ledger",     icon: FiDollarSign,    badge: null,   group: "money" },
+  { href: "/forecast",       label: "Cash Forecast",   icon: FiTrendingUp,    badge: null,   group: "money" },
+  { href: "/bad-debt",       label: "Bad Debt Radar",  icon: FiAlertTriangle, badge: null,   group: "money" },
+  // ── Sales & Inventory
+  { href: "/sales",          label: "Sales",           icon: FiTrendingUp,    badge: null,   group: "ops" },
+  { href: "/purchases",      label: "Purchases",       icon: FiPackage,       badge: null,   group: "ops" },
+  { href: "/orders",         label: "Today's Orders",  icon: FiShoppingBag,   badge: "NEW",  group: "ops" },
+  { href: "/inventory",      label: "Inventory",       icon: FiArchive,       badge: null,   group: "ops" },
+  { href: "/scanner",        label: "Invoice Scanner", icon: FiCamera,        badge: null,   group: "ops" },
+  { href: "/attendance",     label: "Staff Attendance",icon: FiUserCheck,     badge: null,   group: "ops" },
+  { href: "/team",           label: "Team",            icon: FiUser,          badge: null,   group: "ops" },
+  // ── Automation
+  { href: "/whatsapp",       label: "WhatsApp",        icon: FiMessageSquare, badge: null,   group: "automation" },
+  { href: "/dunning",        label: "Auto Follow-Up",  icon: FiRepeat,        badge: null,   group: "automation" },
+  { href: "/ai-actions",     label: "Action Center",   icon: FiZap,           badge: "NEW",  group: "automation" },
+  { href: "/brain",          label: "Starlane Brain", icon: FiActivity,      badge: "AI",   group: "automation" },
+  { href: "/ai-chat",        label: "AI Founder",      icon: FiCpu,           badge: null,   group: "automation" },
+  { href: "/ai-train",       label: "AI Training",     icon: FiSliders,       badge: "AI",   group: "automation" },
+  { href: "/neural-engine",  label: "Neural Engine",   icon: FiZap,           badge: null,   group: "automation" },
+  // ── Insights
+  { href: "/today",          label: "Today's P&L",     icon: FiSun,           badge: null,   group: "insights" },
+  { href: "/analytics",      label: "Analytics",       icon: FiBarChart2,     badge: null,   group: "insights" },
+  { href: "/reports",        label: "Reports",         icon: FiFileText,      badge: null,   group: "insights" },
   // ── Network
   { href: "/network",        label: "Starlane Network", icon: FiGlobe,       badge: "NEW",  group: "network" },
   { href: "/industry",       label: "My Industry",     icon: FiShoppingBag,   badge: null,   group: "network" },
   { href: "/crm",            label: "CRM",             icon: FiUsers,         badge: null,   group: "network" },
-  // ── Operations
-  { href: "/bills",          label: "GST Invoices",    icon: FiFile,          badge: "NEW",  group: "ops" },
-  { href: "/khata",          label: "Customer Khata",  icon: FiBook,          badge: null,   group: "ops" },
-  { href: "/sales",          label: "Sales",           icon: FiTrendingUp,    badge: null,   group: "ops" },
-  { href: "/purchases",      label: "Purchases",       icon: FiPackage,       badge: null,   group: "ops" },
-  { href: "/orders",         label: "Today's Orders",  icon: FiShoppingBag,   badge: "NEW",  group: "ops" },
-  { href: "/attendance",     label: "Staff Attendance",icon: FiUserCheck,     badge: null,   group: "ops" },
-  { href: "/team",           label: "Team",            icon: FiUser,          badge: null,   group: "ops" },
-  { href: "/bank",           label: "Bank Monitor",    icon: FiDatabase,      badge: "NEW",  group: "ops" },
-  { href: "/inventory",      label: "Inventory",       icon: FiArchive,       badge: null,   group: "ops" },
-  { href: "/scanner",        label: "Invoice Scanner", icon: FiCamera,        badge: null,   group: "ops" },
-  { href: "/bad-debt",       label: "Bad Debt Radar",  icon: FiAlertTriangle, badge: null,   group: "ops" },
   // ── Account
   { href: "/my-id",          label: "My Starlane ID", icon: FiShield,        badge: null,   group: "account" },
   { href: "/billing",        label: "Billing",         icon: FiCreditCard,    badge: null,   group: "account" },
@@ -59,11 +72,13 @@ const NAV = [
 ];
 
 const GROUPS = [
-  { key: "core",         label: "Core" },
-  { key: "intelligence", label: "AI" },
-  { key: "network",      label: "Network" },
-  { key: "ops",          label: "Operations" },
-  { key: "account",      label: "Account" },
+  { key: "core",       label: "Command Center" },
+  { key: "money",      label: "Money & Collections" },
+  { key: "ops",        label: "Sales & Inventory" },
+  { key: "automation", label: "Automation" },
+  { key: "insights",   label: "Insights" },
+  { key: "network",    label: "Network" },
+  { key: "account",    label: "Account" },
 ];
 
 interface SidebarProps { open: boolean; onClose: () => void; }
@@ -78,6 +93,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const [hiddenRoutes, setHiddenRoutes]   = useState<Set<string>>(new Set());
   const [grantedFeatures, setGrantedFeatures] = useState<Set<FeatureKey>>(new Set());
   const [pendingCount, setPendingCount]   = useState<number | null>(null);
+  const [showLocked, setShowLocked]       = useState(false);
+  const [recents, setRecents]             = useState<RecentEntry[]>([]);
+
+  // Re-read on every navigation — DashboardLayout writes a fresh entry to
+  // the same localStorage key on each page visit, before this reads it.
+  useEffect(() => { setRecents(getRecents().filter(r => r.href !== pathname)); }, [pathname]);
 
   useEffect(() => {
     const loadBizType = () => {
@@ -162,12 +183,49 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
         {/* Nav */}
         <nav className="flex-1 px-2.5 py-3 overflow-y-auto">
+          {/* Recents — real client-recorded navigation history, not a
+              fabricated activity feed. Only shows once something real has
+              been visited. */}
+          {recents.length > 0 && (
+            <div className="mb-3">
+              <p className="px-2 mb-1" style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)" }}>
+                Recents
+              </p>
+              <div className="space-y-px">
+                {recents.slice(0, 5).map(r => (
+                  <Link
+                    key={r.href}
+                    href={r.href}
+                    onClick={onClose}
+                    className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-[12px] transition-colors duration-150"
+                    style={{ color: "rgba(255,255,255,0.4)" }}
+                    onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)")}
+                    onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.4)")}
+                  >
+                    <span className="truncate">{r.label}</span>
+                    <span className="shrink-0 text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>{timeAgo(r.at)}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+          {(() => {
+            // Locked (paywalled) items used to render inline, struck-through,
+            // scattered across every group — half the sidebar looked broken
+            // at a glance. Pull them all into one clearly-labeled, collapsed-
+            // by-default section instead: the unlocked nav stays short and
+            // scannable, and "what could I get if I upgrade" is still one
+            // click away rather than hidden entirely.
+            const isRouteLocked = (href: string) => {
+              const featureKey = ROUTE_TO_FEATURE[href];
+              return featureKey ? grantedFeatures.size > 0 && !grantedFeatures.has(featureKey) : false;
+            };
+            const visible = NAV.filter(n => !(hiddenRoutes.size > 0 && hiddenRoutes.has(n.href)));
+            const lockedItems = visible.filter(n => isRouteLocked(n.href));
+            return (
+              <>
           {GROUPS.map(({ key, label }) => {
-            const items = NAV.filter(n => {
-              if (n.group !== key) return false;
-              if (hiddenRoutes.size > 0 && hiddenRoutes.has(n.href)) return false;
-              return true;
-            });
+            const items = visible.filter(n => n.group === key && !isRouteLocked(n.href));
             if (items.length === 0) return null;
             return (
               <div key={key} className="mb-3">
@@ -189,28 +247,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     const liveBadge = href === "/collections"
                       ? (pendingCount !== null && pendingCount > 0 ? String(pendingCount) : null)
                       : badge;
-
-                    const featureKey = ROUTE_TO_FEATURE[href];
-                    const isLocked = featureKey
-                      ? grantedFeatures.size > 0 && !grantedFeatures.has(featureKey)
-                      : false;
-
-                    if (isLocked) {
-                      return (
-                        <Link
-                          key={href}
-                          href="/billing"
-                          onClick={onClose}
-                          title={`Upgrade to unlock ${itemLabel}`}
-                          className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150"
-                          style={{ color: "rgba(255,255,255,0.2)" }}
-                        >
-                          <Icon size={14} className="shrink-0" style={{ color: "rgba(255,255,255,0.15)" }} />
-                          <span className="flex-1 line-through">{itemLabel}</span>
-                          <FiLock size={10} className="shrink-0" />
-                        </Link>
-                      );
-                    }
 
                     return (
                       <Link
@@ -265,6 +301,46 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               </div>
             );
           })}
+
+          {lockedItems.length > 0 && (
+            <div className="mb-3">
+              <button
+                onClick={() => setShowLocked(v => !v)}
+                className="w-full flex items-center gap-1.5 px-2 mb-1 py-0.5"
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.25)",
+                }}
+              >
+                {showLocked ? <FiChevronDown size={11} /> : <FiChevronRight size={11} />}
+                <span>Unlock more ({lockedItems.length})</span>
+              </button>
+              {showLocked && (
+                <div className="space-y-px">
+                  {lockedItems.map(({ href, label: itemLabel, icon: Icon }) => (
+                    <Link
+                      key={href}
+                      href="/billing"
+                      onClick={onClose}
+                      title={`Upgrade to unlock ${itemLabel}`}
+                      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150"
+                      style={{ color: "rgba(255,255,255,0.3)" }}
+                    >
+                      <Icon size={14} className="shrink-0" style={{ color: "rgba(255,255,255,0.25)" }} />
+                      <span className="flex-1">{itemLabel}</span>
+                      <FiLock size={10} className="shrink-0" />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+              </>
+            );
+          })()}
         </nav>
 
         {/* Admin link */}

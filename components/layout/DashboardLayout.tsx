@@ -6,11 +6,13 @@ import Header from "./Header";
 import BottomNav from "./BottomNav";
 import InstallPrompt from "@/components/ui/InstallPrompt";
 import PaymentCelebration from "@/components/PaymentCelebration";
+import { usePathname } from "next/navigation";
 import { isDemoMode, exitDemoMode } from "@/lib/demo";
 import { hydrateUserContext } from "@/lib/featureGating";
+import { api, authenticatedFetch } from "@/lib/api";
+import { recordRecent } from "@/lib/recents";
 import Link from "next/link";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -31,12 +33,12 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return buffer;
 }
 
-async function subscribeToPush(token: string) {
+async function subscribeToPush() {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
   try {
     // Get VAPID public key from backend
-    const keyRes = await fetch(`${API}/api/notifications/vapid-key`);
+    const keyRes = await authenticatedFetch('/api/notifications/vapid-key');
     const keyData = await keyRes.json();
     if (!keyData.success || !keyData.publicKey) return; // not configured
 
@@ -44,9 +46,9 @@ async function subscribeToPush(token: string) {
     const existing = await registration.pushManager.getSubscription();
     if (existing) {
       // Already subscribed — just re-send to backend in case it changed
-      await fetch(`${API}/api/notifications/subscribe`, {
+      await authenticatedFetch('/api/notifications/subscribe', {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subscription: existing.toJSON() }),
       });
       return;
@@ -58,9 +60,9 @@ async function subscribeToPush(token: string) {
       applicationServerKey,
     });
 
-    await fetch(`${API}/api/notifications/subscribe`, {
+    await authenticatedFetch('/api/notifications/subscribe', {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subscription: subscription.toJSON() }),
     });
   } catch (err) {
@@ -73,27 +75,22 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNotifBanner, setShowNotifBanner] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => { setIsDemo(isDemoMode()); }, []);
+
+  // Real working-memory: record the page actually visited, keyed off the
+  // same pageTitle every screen already passes in. No server-side activity
+  // log exists yet, so this is client-recorded — real navigation history,
+  // not a fabricated "recent activity" feed.
+  useEffect(() => { recordRecent(pathname, pageTitle); }, [pathname, pageTitle]);
 
   // Hydrate feature-gating context from DB on every app load
   // This ensures cross-device correctness — localStorage may be stale or empty
   useEffect(() => {
-    const token = localStorage.getItem("vantro_token");
-    if (!token) return;
-    fetch(`${API}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => {
-        if (r.status === 401 || r.status === 404) {
-          localStorage.removeItem("vantro_token");
-          localStorage.removeItem("vantro_user");
-          document.cookie = "vantro_token=; path=/; max-age=0; SameSite=Lax";
-          window.location.href = "/login";
-          throw new Error("Stale session");
-        }
-        return r.json();
-      })
+    api.auth.me()
       .then(d => {
-        if (d.success && d.user) {
+        if (d.user) {
           // Persist updated user (plan may have changed on another device too)
           localStorage.setItem("vantro_user", JSON.stringify(d.user));
           hydrateUserContext(d.user);
@@ -102,10 +99,24 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
       .catch(() => {}); // silently fail — offline is fine
   }, []);
 
-  // Register service worker for PWA / offline support
+  // Register service worker for PWA / offline support — production only.
+  // The SW's fetch handler caches JS chunks cache-first with no
+  // revalidation (see public/sw.js), which is safe in production only
+  // because Next.js content-hashes chunk filenames there — a changed file
+  // gets a new URL, so the cache naturally busts. In dev, chunk filenames
+  // stay stable across rebuilds, so a dev-mode SW install permanently
+  // serves stale JS after every code change until someone manually clears
+  // it, surfacing as "Cannot read properties of undefined" runtime errors
+  // that have nothing to do with the actual app code. Also proactively
+  // unregisters any SW a previous dev session may have already installed.
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
+    if (!("serviceWorker" in navigator)) return;
+    if (process.env.NODE_ENV === "production") {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
+    } else {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.unregister());
+      }).catch(() => {});
     }
   }, []);
 
@@ -119,8 +130,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
     }
     if (Notification.permission === "granted") {
       // Auto-subscribe in background
-      const token = localStorage.getItem("vantro_token");
-      if (token) subscribeToPush(token);
+      subscribeToPush();
     }
   }, []);
 
@@ -128,8 +138,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
     setShowNotifBanner(false);
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
-      const token = localStorage.getItem("vantro_token");
-      if (token) subscribeToPush(token);
+      subscribeToPush();
     }
   };
 
