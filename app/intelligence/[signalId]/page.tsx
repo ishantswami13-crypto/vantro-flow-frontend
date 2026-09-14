@@ -17,7 +17,18 @@ import { ForecastTimeline } from "@/components/intelligence/ForecastTimeline";
 import { DecisionSection } from "@/components/intelligence/DecisionSection";
 import { OutcomeVerification } from "@/components/intelligence/OutcomeVerification";
 import { formatINR, formatDateTime, confidenceFromScore } from "@/components/intelligence/format";
-import { api, type IntelligencePrediction, type IntelligenceAction } from "@/lib/api";
+import { api, type IntelligencePrediction, type IntelligenceAction, type IntelligenceEvidenceItem } from "@/lib/api";
+
+// Real counts from the real evidence array — not a fabricated coverage
+// score. Groups by the same kind vocabulary EvidenceDrawer already uses.
+function evidenceSummary(evidence: IntelligenceEvidenceItem[]): { kind: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const e of evidence) counts.set(e.kind, (counts.get(e.kind) || 0) + 1);
+  return Array.from(counts.entries()).map(([kind, count]) => ({ kind, count }));
+}
+function kindLabel(kind: string): string {
+  return kind.replace(/_/g, " ").toLowerCase().replace(/^./, c => c.toUpperCase());
+}
 
 function humanReason(signal: { why_exists?: string | null; event_type?: string | null }, supplierName?: string | null): string {
   if (supplierName) return `This ${signal.event_type?.replace(/_/g, " ").toLowerCase() || "external event"} was matched to ${supplierName}'s verified location exposure through the recorded transmission rule.`;
@@ -87,11 +98,6 @@ export default function SignalImpactPage() {
           <PageHeader
             title={impact.signal.event_title || "External signal"}
             subtitle={`${impact.supplier?.name} · ${impact.supplier?.country} · detected ${formatDateTime(impact.signal.first_detected_at)}`}
-            actions={
-              <Button variant="ghost" size="sm" icon={<FiFileText size={13} />} onClick={() => setEvidenceOpen(true)}>
-                View evidence
-              </Button>
-            }
           />
 
           {/* Top metrics — the four numbers that matter, nothing more */}
@@ -114,71 +120,94 @@ export default function SignalImpactPage() {
             />
           </div>
 
-          {/* What happened / why it matters — open composition with a thin
-              divider, not two bordered cards side by side for two short
-              paragraphs. */}
-          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 mb-10 lg:divide-x lg:divide-border">
-            <div>
-              <p className="section-label mb-2">What happened</p>
-              <p className="text-sm text-primary font-semibold">{impact.signal.event_title}</p>
-              {impact.signal.event_summary && <p className="text-2xs text-secondary mt-1.5 leading-relaxed">{impact.signal.event_summary}</p>}
-              {impact.signal.event_source_url && (
-                <a href={impact.signal.event_source_url} target="_blank" rel="noreferrer" className="text-2xs text-accent underline mt-2 inline-block">
-                  Source record
-                </a>
-              )}
-            </div>
-            <div className="lg:pl-8">
-              <p className="section-label mb-2">Why it matters to this business</p>
-              <p className="text-2xs text-secondary leading-relaxed">{humanReason(impact.signal, impact.supplier?.name)}</p>
-              {impact.signal.rule_explanation && (
-                <p className="text-2xs text-muted mt-2 italic">{impact.signal.rule_explanation}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Causal chain — Starlane's signature trace, not a boxed card */}
-          <div className="mb-10">
-            <p className="section-label mb-4">Dependency chain</p>
-            <CausalChain impact={impact} component={primaryComponent} />
-          </div>
-
-          {/* Forecast + Decision — generated on demand so we never silently
-              write duplicate prediction/action rows on every page view */}
-          {!actions && !predictions && (
-            <div className="card-premium p-6 text-center mb-8">
-              <FiClock className="mx-auto text-muted mb-2" size={20} />
-              <p className="text-sm font-semibold text-primary">Run forecast &amp; recommended actions</p>
-              <p className="text-2xs text-muted mt-1 mb-4">Calls Starlane's deterministic forecasting and ranking engine against this signal.</p>
-              <Button variant="primary" size="md" loading={analyzeMutation.isPending} onClick={() => analyzeMutation.mutate()}>
-                Analyze impact
-              </Button>
-              {analyzeMutation.isError && <p className="text-2xs text-danger mt-2">Analysis failed — check the backend log.</p>}
-            </div>
-          )}
-
-          {predictions && (
-            <div className="mb-8">
-              <p className="section-label mb-3">Forecast</p>
-              <div className="card-premium p-4">
-                <ForecastTimeline predictions={predictions} component={primaryComponent} />
+          {/* Two conceptual regions: EVIDENCE (left, narrower, what grounds
+              this) and UNDERSTANDING -> DECISION (right, the main flow).
+              Both real data, just spatially separated so the evidence that
+              grounds a conclusion stays visible while working through the
+              forecast/decision, instead of scrolling past it once and never
+              seeing it again. Stacks to one column below lg. */}
+          <div className="grid lg:grid-cols-[280px_1fr] gap-8 lg:gap-10">
+            {/* LEFT — evidence / reality */}
+            <div className="lg:border-r lg:border-border lg:pr-8 space-y-6">
+              <div>
+                <p className="section-label mb-2">What happened</p>
+                <p className="text-sm text-primary font-semibold">{impact.signal.event_title}</p>
+                {impact.signal.event_summary && <p className="text-2xs text-secondary mt-1.5 leading-relaxed">{impact.signal.event_summary}</p>}
+                {impact.signal.event_source_url && (
+                  <a href={impact.signal.event_source_url} target="_blank" rel="noreferrer" className="text-2xs text-accent underline mt-2 inline-block">
+                    Source record
+                  </a>
+                )}
               </div>
+              <div>
+                <p className="section-label mb-2">Why it matters</p>
+                <p className="text-2xs text-secondary leading-relaxed">{humanReason(impact.signal, impact.supplier?.name)}</p>
+                {impact.signal.rule_explanation && (
+                  <p className="text-2xs text-muted mt-2 italic">{impact.signal.rule_explanation}</p>
+                )}
+              </div>
+              {impact.evidence.length > 0 && (
+                <div>
+                  <p className="section-label mb-2">Evidence</p>
+                  <ul className="space-y-1 mb-2">
+                    {evidenceSummary(impact.evidence).map(({ kind, count }) => (
+                      <li key={kind} className="flex items-center justify-between text-2xs">
+                        <span className="text-secondary">{kindLabel(kind)}</span>
+                        <span className="text-muted font-mono">{count}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button variant="ghost" size="xs" icon={<FiFileText size={12} />} onClick={() => setEvidenceOpen(true)}>
+                    View all evidence
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
 
-          {actions && (
-            <div className="mb-8">
-              <DecisionSection actions={actions} component={primaryComponent} />
+            {/* RIGHT — understanding -> decision */}
+            <div className="space-y-10 min-w-0">
+              {/* Causal chain — Starlane's signature trace, not a boxed card */}
+              <div>
+                <p className="section-label mb-4">Dependency chain</p>
+                <CausalChain impact={impact} component={primaryComponent} />
+              </div>
+
+              {/* Forecast + Decision — generated on demand so we never
+                  silently write duplicate prediction/action rows on every
+                  page view */}
+              {!actions && !predictions && (
+                <div className="card-premium p-6 text-center">
+                  <FiClock className="mx-auto text-muted mb-2" size={20} />
+                  <p className="text-sm font-semibold text-primary">Run forecast &amp; recommended actions</p>
+                  <p className="text-2xs text-muted mt-1 mb-4">Calls Starlane's deterministic forecasting and ranking engine against this signal.</p>
+                  <Button variant="primary" size="md" loading={analyzeMutation.isPending} onClick={() => analyzeMutation.mutate()}>
+                    Analyze impact
+                  </Button>
+                  {analyzeMutation.isError && <p className="text-2xs text-danger mt-2">Analysis failed — check the backend log.</p>}
+                </div>
+              )}
+
+              {predictions && (
+                <div>
+                  <p className="section-label mb-3">Forecast</p>
+                  <div className="card-premium p-4">
+                    <ForecastTimeline predictions={predictions} component={primaryComponent} />
+                  </div>
+                </div>
+              )}
+
+              {actions && <DecisionSection actions={actions} component={primaryComponent} />}
+
+              {/* Always available once actions exist, not gated on local
+                  action status (which never reflects execution that
+                  happened inside DecisionSection's own state) — the backend
+                  itself reports NO_ACTION_TO_VERIFY honestly when nothing
+                  has executed yet. */}
+              {actions && actions.length > 0 && (
+                <OutcomeVerification signalId={signalId} />
+              )}
             </div>
-          )}
-
-          {/* Always available once actions exist, not gated on local action
-              status (which never reflects execution that happened inside
-              DecisionSection's own state) — the backend itself reports
-              NO_ACTION_TO_VERIFY honestly when nothing has executed yet. */}
-          {actions && actions.length > 0 && (
-            <OutcomeVerification signalId={signalId} />
-          )}
+          </div>
         </>
       )}
 
