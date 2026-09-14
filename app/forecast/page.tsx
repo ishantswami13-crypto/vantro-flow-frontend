@@ -346,7 +346,7 @@ export default function ForecastPage() {
               </thead>
               <tbody>
                 {topImpact.map((c, i) => (
-                  <tr key={c.name} className="animate-row-in" style={{ animationDelay: `${i * 40}ms` }}>
+                  <tr key={c.name}>
                     <td className="px-5 py-3.5 text-xs text-muted font-mono">{i + 1}</td>
                     <td className="px-4 py-3.5 text-xs font-semibold text-primary">{c.name}</td>
                     <td className="px-4 py-3.5 text-right">

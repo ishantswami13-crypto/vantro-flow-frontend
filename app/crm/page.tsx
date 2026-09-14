@@ -202,11 +202,11 @@ export default function CRMPage() {
         {/* Prospect Cards */}
         {!loading && filtered.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {filtered.map((p, i) => {
+            {filtered.map((p) => {
               const cfg = STATUS_CONFIG[p.status] || STATUS_CONFIG.lead;
               const autoCustomer = p.source_type === "customer";
               return (
-                <div key={p.id} className="card-premium p-4 hover:border-border-2 transition-all animate-row-in" style={{ animationDelay: `${i * 40}ms` }}>
+                <div key={p.id} className="card-premium p-4 hover:border-border-2 transition-all">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-success/20 flex items-center justify-center text-sm font-bold text-accent shrink-0">

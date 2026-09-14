@@ -1025,7 +1025,7 @@ export default function LedgerPage() {
                 </thead>
                 <tbody>
                   {filtered.map((t, i) => (
-                    <tr key={t.id || i} className="animate-row-in" style={{ animationDelay: `${i * 25}ms` }}>
+                    <tr key={t.id || i}>
                       <td className="px-5 py-3.5 text-xs text-secondary whitespace-nowrap">{fmtDate(t.transaction_date)}</td>
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-2">

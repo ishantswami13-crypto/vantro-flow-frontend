@@ -913,20 +913,23 @@ export default function CollectionsPage() {
           const overdueCount = data.filter(c => c.daysOverdue > 0).length;
           const criticalCount = data.filter(c => c.daysOverdue >= 60).length;
           return (
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl border border-border bg-surface-1 px-4 py-3">
-                <p className="text-2xs text-muted mb-0.5">Total Outstanding</p>
-                <p className="text-xl font-black text-primary">
+            // Open typographic metrics, thin dividers — not three bordered
+            // cards for three numbers. Only "Overdue" carries a semantic
+            // color (critical/danger); the rest read as plain fact.
+            <div className="flex items-stretch divide-x divide-border">
+              <div className="pr-5">
+                <p className="metric-value text-xl text-primary">
                   ₹{totalOut >= 100000 ? `${(totalOut / 100000).toFixed(1)}L` : `${(totalOut / 1000).toFixed(0)}K`}
                 </p>
+                <p className="text-2xs text-muted mt-0.5">Total outstanding</p>
               </div>
-              <div className="rounded-xl border border-danger/25 bg-danger/5 px-4 py-3">
-                <p className="text-2xs text-muted mb-0.5">Overdue</p>
-                <p className="text-xl font-black text-danger">{overdueCount}</p>
+              <div className="px-5">
+                <p className={["metric-value text-xl", overdueCount > 0 ? "text-danger" : "text-primary"].join(" ")}>{overdueCount}</p>
+                <p className="text-2xs text-muted mt-0.5">Overdue</p>
               </div>
-              <div className="rounded-xl border border-warning/20 bg-warning/5 px-4 py-3">
-                <p className="text-2xs text-muted mb-0.5">Critical (&gt;60d)</p>
-                <p className="text-xl font-black text-warning">{criticalCount}</p>
+              <div className="pl-5">
+                <p className="metric-value text-xl text-primary">{criticalCount}</p>
+                <p className="text-2xs text-muted mt-0.5">Critical (&gt;60d)</p>
               </div>
             </div>
           );
@@ -1047,7 +1050,7 @@ export default function CollectionsPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((c, i) => {
+                {rows.map((c) => {
                   const reply = replyLogs[c.id];
                   const broken = isPromiseBroken(c.id);
                   const nudgeMsg = broken ? getPromiseNudgeMsg(c) : "";
@@ -1057,7 +1060,7 @@ export default function CollectionsPage() {
                   const isLoading = rState === "loading";
 
                   return (
-                    <tr key={c.id} style={{ animationDelay: `${i * 30}ms` }} className="animate-row-in">
+                    <tr key={c.id}>
                       <td className="px-5 py-3.5">
                         <input type="checkbox" className="accent-accent"
                           checked={selected.includes(c.id)}

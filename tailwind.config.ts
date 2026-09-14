@@ -48,7 +48,6 @@ const config: Config = {
         "5xl": ["3rem",     { lineHeight: "1",        letterSpacing: "-0.04em" }],
       },
       backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-accent": "linear-gradient(135deg, #4F6EF7 0%, #3D5CF5 100%)",
         "gradient-cta":    "linear-gradient(135deg, #FF6B35 0%, #F55A22 100%)",
         "gradient-success":"linear-gradient(135deg, #10D98A 0%, #059669 100%)",
@@ -63,9 +62,6 @@ const config: Config = {
         "cta":         "0 2px 12px rgba(255,107,53,0.45), 0 1px 3px rgba(0,0,0,0.3)",
         "success":     "0 0 0 1px rgba(16,217,138,0.4), 0 4px 16px rgba(16,217,138,0.15)",
         "danger":      "0 0 0 1px rgba(245,66,77,0.4), 0 4px 16px rgba(245,66,77,0.15)",
-        "glow-accent": "0 0 30px rgba(79,110,247,0.2), 0 0 60px rgba(79,110,247,0.08)",
-        "glow-success":"0 0 20px rgba(16,217,138,0.15)",
-        "button-cta":  "0 2px 12px rgba(255,107,53,0.4), inset 0 1px 0 rgba(255,255,255,0.15)",
         "inner-top":   "inset 0 1px 0 rgba(255,255,255,0.06)",
         "button":      "0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
         "button-accent":"0 1px 3px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08)",
@@ -99,10 +95,6 @@ const config: Config = {
           "0%":   { width: "0%" },
           "100%": { width: "var(--progress-width)" },
         },
-        "gradient-x": {
-          "0%, 100%": { backgroundPosition: "0% 50%" },
-          "50%":      { backgroundPosition: "100% 50%" },
-        },
         "float": {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%":      { transform: "translateY(-6px)" },
@@ -110,10 +102,6 @@ const config: Config = {
         "spin-slow": {
           "0%":   { transform: "rotate(0deg)" },
           "100%": { transform: "rotate(360deg)" },
-        },
-        "row-in": {
-          "0%":   { opacity: "0", transform: "translateX(-4px)" },
-          "100%": { opacity: "1", transform: "translateX(0)" },
         },
       },
       animation: {
@@ -123,10 +111,8 @@ const config: Config = {
         "shimmer":       "shimmer 2s linear infinite",
         "pulse-accent":  "pulse-accent 2s ease-in-out infinite",
         "count-up":      "count-up 0.4s ease-out both",
-        "gradient-x":    "gradient-x 4s ease infinite",
         "float":         "float 3s ease-in-out infinite",
         "spin-slow":     "spin-slow 8s linear infinite",
-        "row-in":        "row-in 0.2s ease-out both",
       },
       backdropBlur: {
         xs: "2px",

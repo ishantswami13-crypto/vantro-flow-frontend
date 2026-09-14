@@ -23,6 +23,45 @@
 }
 
 /* ============================================================
+   STARLANE PRODUCT DESIGN SYSTEM — semantic map
+   Canonical roles, mapped onto the existing tokens above and the
+   Tailwind color scale in tailwind.config.ts. Nothing renamed here —
+   this documents which existing token plays which semantic role so
+   future components pick the right one instead of inventing a new one.
+
+   BACKGROUND
+     page       → bg            (#080808)
+     elevated   → surface-1     (#111111)  — cards, panels
+     inset      → surface-2     (#161616)  — nested/sunken content within a card
+     sidebar    → #080808 (same as page — shell reads as one plane, not a separate surface)
+
+   TEXT
+     primary    → primary       (#F2F2F2)
+     secondary  → secondary     (#888888)
+     tertiary   → muted         (#555555)
+     disabled   → muted at reduced opacity (text-muted/50) — never a 4th gray token
+
+   BORDER
+     subtle     → rgba(255,255,255,0.06)  — shell seams, header/sidebar dividers
+     standard   → border        (#222222) — card edges, table rows
+     strong     → border-2      (#2a2a2a) — hover/focus emphasis on a border
+
+   INTERACTION
+     primary interactive accent → accent (#4F6EF7) — links, selection, focus ring.
+     Do not use `cta` (orange) as a second interactive accent — see .btn-cta below.
+
+   SEMANTIC STATUS — scarce, always paired with a text label, never color-only
+     neutral            → secondary/border  (no color — most states are neutral)
+     attention          → warning (#F5A524) — one hue for "needs a look"
+     critical           → danger  (#F5424D) — one hue for "needs action now"
+     success / verified → success (#10D98A) — confirmation only, used sparingly
+
+   Do not add a 5th or 6th status hue (gold, accent-as-status, etc.) to a
+   badge/metric/table row. If a new state doesn't fit neutral / attention /
+   critical / success, it's neutral with a clearer text label — not a new color.
+   ============================================================ */
+
+/* ============================================================
    BASE RESET
    ============================================================ */
 @layer base {
@@ -146,49 +185,6 @@
 .glass-surface {
   background: #0e0e0e;
   border: 1px solid rgba(255,255,255,0.06);
-}
-
-/* ============================================================
-   GRADIENT BORDERS
-   ============================================================ */
-.border-gradient-accent {
-  position: relative;
-  border: 1px solid transparent;
-  background-clip: padding-box;
-}
-.border-gradient-accent::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.6), rgba(var(--accent-rgb), 0.1), transparent);
-  z-index: -1;
-}
-
-.border-gradient-success {
-  position: relative;
-  border: 1px solid transparent;
-}
-.border-gradient-success::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(var(--success-rgb), 0.5), transparent);
-  z-index: -1;
-}
-
-/* ============================================================
-   GLOW EFFECTS
-   ============================================================ */
-.glow-accent {
-  box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.3), 0 0 60px rgba(var(--accent-rgb), 0.1);
-}
-.glow-success {
-  box-shadow: 0 0 20px rgba(var(--success-rgb), 0.25), 0 0 40px rgba(var(--success-rgb), 0.08);
-}
-.glow-danger {
-  box-shadow: 0 0 20px rgba(var(--danger-rgb), 0.25);
 }
 
 /* ============================================================
@@ -341,24 +337,24 @@
 }
 .btn-primary:active { transform: translateY(0); }
 
-/* ── CTA button — saffron, one per screen ── */
+/* ── Primary action button — monochrome, no brand-color CTA system.
+   Kept as .btn-cta for now (call sites unchanged) but restyled to the
+   same restrained language as .btn-primary: near-black fill would be
+   wrong on this dark UI, so it uses the same white-fill treatment. ── */
 .btn-cta {
-  background: linear-gradient(135deg, #FF6B35 0%, #F55A22 100%);
-  color: #ffffff;
-  font-weight: 800;
-  box-shadow: 0 2px 12px rgba(255,107,53,0.4), 0 1px 3px rgba(0,0,0,0.3);
-  border: none;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
   transition: all 0.15s ease;
 }
 .btn-cta:hover {
-  box-shadow: 0 4px 20px rgba(255,107,53,0.55), 0 2px 8px rgba(0,0,0,0.3);
+  background: rgba(255,255,255,0.91);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18), 0 4px 20px rgba(0,0,0,0.10);
   transform: translateY(-1px);
 }
-.btn-cta:active { transform: translateY(0); box-shadow: 0 1px 6px rgba(255,107,53,0.4); }
-
-.glow-cta {
-  box-shadow: 0 0 20px rgba(var(--cta-rgb), 0.35), 0 0 50px rgba(var(--cta-rgb), 0.12);
-}
+.btn-cta:active { transform: translateY(0); }
 
 /* ============================================================
    STATUS INDICATOR (pulsing dot)
@@ -421,22 +417,6 @@
   height: 100%;
   border-radius: 99px;
   transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
-}
-
-/* ============================================================
-   ANIMATED GRADIENT TEXT
-   ============================================================ */
-.gradient-text {
-  background: linear-gradient(135deg, #F0F4FF 0%, #A0BFFF 50%, #4F6EF7 100%);
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradient-x 5s ease infinite;
-}
-@keyframes gradient-x {
-  0%, 100% { background-position: 0% 50%; }
-  50%       { background-position: 100% 50%; }
 }
 
 /* ============================================================
@@ -608,4 +588,11 @@ input:focus, select:focus, textarea:focus {
 @keyframes cookie-enter {
   from { transform: translateY(110%); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .card-metric { min-width: 0; overflow: hidden; }
+  .card-metric .metric-lg { font-size: clamp(1.35rem, 7vw, 2rem); line-height: 1.15; overflow-wrap: anywhere; word-break: break-word; }
+  .card-metric .section-label { min-width: 0; overflow-wrap: anywhere; }
+  .card-metric .text-2xs { min-width: 0; overflow-wrap: anywhere; }
 }
