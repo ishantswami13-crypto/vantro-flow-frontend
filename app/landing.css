@@ -205,7 +205,17 @@
 .sl .sl-navlinks { gap: clamp(16px, 2.4vw, 32px); }
 .sl-mobile-menu { position: sticky; top: 88px; z-index: 49; }
 .sl .sl-product { padding-bottom: clamp(56px, 6vw, 88px); }
-.sl-frame { background: #0e0e0e; border: 1px solid #303030; border-radius: 8px; box-shadow: 0 28px 70px -32px #16150f50; overflow: hidden; }
+.sl-frame { background: #0e0e0e; border: 1px solid #303030; border-radius: 8px; box-shadow: 0 28px 70px -32px #16150f50; overflow: hidden; position: relative; }
+.sl-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 5;
+}
 .sl-product-ui { color: #f2f2f2; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
 .sl-product-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; padding: 18px clamp(20px, 3vw, 40px); border-bottom: 1px solid #303030; font-size: 12px; color: #b6b5ad; }
 .sl-product-body { padding: clamp(20px, 3vw, 40px); }
@@ -314,8 +324,21 @@ html:has(.sl) [aria-label="Cookie consent"] :focus-visible { outline: 2px solid 
 .sl-product-caption strong { color: var(--sl-ink); font-weight: 600; }
 
 /* ── Dark editorial moment (Category Statement) ──────────────────────── */
-.sl-dark { background: var(--sl-ink); border-top-color: transparent !important; }
+.sl-dark { background: var(--sl-ink); border-top-color: transparent !important; position: relative; overflow: hidden; }
 .sl-dark + .sl-section { border-top-color: transparent; }
+/* Procedural film-grain texture (pure SVG feTurbulence, no image asset) —
+   the same technique Harvey uses on its dark cards to keep flat black from
+   reading as cheap/digital. Applied as an overlay, never affecting layout
+   or text contrast underneath. */
+.sl-dark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
 .sl-dark-lines { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .sl-dark-lines p { font-family: var(--sl-serif); font-size: clamp(20px, 2.4vw, 30px); color: rgba(250,250,249,0.88); margin: 0; }
 
