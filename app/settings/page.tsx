@@ -358,7 +358,7 @@ export default function SettingsPage() {
                       <div className="space-y-2">
                         {voiceStyleOptions.map(opt => (
                           <label key={opt.value} className={["flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all", voice.voice_style === opt.value ? "border-accent/40 bg-accent-dim" : "border-border bg-surface-2 hover:border-border/70"].join(" ")}>
-                            <input type="radio" name="voice_style" value={opt.value} checked={voice.voice_style === opt.value} onChange={e => setVoice(v => ({ ...v, voice_style: e.target.value }))} className="accent-blue-500" />
+                            <input type="radio" name="voice_style" value={opt.value} checked={voice.voice_style === opt.value} onChange={e => setVoice(v => ({ ...v, voice_style: e.target.value }))} className="accent-accent" />
                             <span className="text-sm text-secondary">{opt.label}</span>
                           </label>
                         ))}
@@ -474,8 +474,8 @@ export default function SettingsPage() {
 
                     {/* Razorpay */}
                     <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center shrink-0">
-                        <FiCreditCard size={16} className="text-blue-400" />
+                      <div className="w-10 h-10 rounded-xl bg-surface-3 border border-border flex items-center justify-center shrink-0">
+                        <FiCreditCard size={16} className="text-secondary" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-primary">Payment Links (Razorpay)</p>

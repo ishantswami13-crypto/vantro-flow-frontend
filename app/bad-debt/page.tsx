@@ -16,10 +16,12 @@ interface BadDebtAccount {
   recommendation: string;
 }
 
+// Three severity tiers should not mean three different hues — "medium" is
+// the quiet/neutral tier here (not yet urgent), not a fourth alarm color.
 const RISK_CONFIG = {
   critical: { label: "Critical",  color: "#F5424D", bg: "bg-danger-dim",   border: "border-danger/30",   badge: "bg-danger/20 text-danger"    },
   high:     { label: "High Risk", color: "#F5A524", bg: "bg-warning/10",   border: "border-warning/30",  badge: "bg-warning/20 text-warning"  },
-  medium:   { label: "Medium",    color: "#9B6DFF", bg: "bg-purple-500/10",border: "border-purple-500/30", badge: "bg-purple-500/20 text-purple-400" },
+  medium:   { label: "Medium",    color: "#888888", bg: "bg-surface-2",    border: "border-border",      badge: "bg-surface-3 text-secondary" },
 };
 
 export default function BadDebtPage() {
@@ -203,7 +205,7 @@ export default function BadDebtPage() {
           <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-3">How Bad Debt Radar Works</p>
           <div className="space-y-2">
             {[
-              { risk: "Medium",   days: "60–89 days",  action: "Escalate — send firm WhatsApp + call yourself",     color: "text-purple-400" },
+              { risk: "Medium",   days: "60–89 days",  action: "Escalate — send firm WhatsApp + call yourself",     color: "text-secondary" },
               { risk: "High",     days: "90–119 days", action: "Personal call mandatory — consider settlement offer", color: "text-warning"   },
               { risk: "Critical", days: "120+ days",   action: "Send legal notice via CA — last chance before write-off", color: "text-danger" },
             ].map(r => (
