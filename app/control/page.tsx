@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -132,6 +133,7 @@ export default function ControlPage() {
       <PageHeader
         title="Control"
         subtitle="What Starlane can see, what it's doing, and whether it's right."
+        actions={<Link href="/control/audit" className="text-2xs text-secondary hover:text-primary transition-colors">Audit →</Link>}
       />
 
       {isLoading && <LoadingState label="Loading operating health" rows={3} />}

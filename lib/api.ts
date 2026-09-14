@@ -225,6 +225,16 @@ export const api = {
   // ─── Cortex health (track record of past recommendations, see server.js GET /api/cortex/health) ───
   cortexHealth: () => request<CortexHealthResponse>('/api/cortex/health'),
 
+  // Reads audit_logs — a real, already-populated table (see
+  // lib/services/orchestrator/audit.service.js on the backend) that had no
+  // read path exposed anywhere until this endpoint.
+  audit: {
+    list: (before?: string) =>
+      request<{ success: boolean; events: AuditEvent[] }>(
+        `/api/audit${before ? `?before=${encodeURIComponent(before)}` : ''}`
+      ),
+  },
+
   // ─── Customer intelligence (drawer: Business State → Receivables Risk → Customer) ───
   customers: {
     intelligence: (name: string, phone?: string) =>
@@ -1016,6 +1026,18 @@ export interface CortexHealthResponse {
   success: true;
   flags: Record<string, boolean>;
   stats: CortexHealthStats;
+}
+
+// Mirrors the real audit_logs row shape (migrations/001_cortex_foundation.sql
+// on the backend) — nothing here is invented.
+export interface AuditEvent {
+  id: string;
+  action: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  old_value_json: unknown;
+  new_value_json: unknown;
+  created_at: string;
 }
 
 // ─── Customer intelligence (drawer view) ─────────────────────────────────
