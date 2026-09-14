@@ -19,9 +19,12 @@
   --sl-ink-faint: #7A7873;
   --sl-line:      #E3E2DE;
   --sl-line-2:    #D2D0CA;
-  --sl-accent:    #6B4E1F;
-  --sl-accent-2:  #8A6A2E;
-  --sl-accent-soft: #B99A5C;
+  /* Black/white/graphite only — no brown/gold accent hue. sl-accent is
+     used for hover/selection/focus (pure ink); sl-accent-2 is the
+     eyebrow/kicker label color (graphite, not a color accent). */
+  --sl-accent:    #0F0E0D;
+  --sl-accent-2:  #46443F;
+  --sl-accent-soft: #7A7873;
 
   --sl-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --sl-sans:  'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -109,7 +112,7 @@
 }
 .sl-btn:active { transform: scale(0.97); }
 .sl-btn.sl-btn-solid { background: var(--sl-ink); color: var(--sl-bg-raised); }
-.sl-btn.sl-btn-solid:hover { background: var(--sl-accent); border-color: var(--sl-accent); color: var(--sl-bg-raised); }
+.sl-btn.sl-btn-solid:hover { background: var(--sl-ink-soft); border-color: var(--sl-ink-soft); color: var(--sl-bg-raised); }
 .sl-btn.sl-btn-outline { background: transparent; color: var(--sl-ink); border-color: var(--sl-line-2); }
 .sl-btn.sl-btn-outline:hover { border-color: var(--sl-ink); }
 .sl-btn:focus-visible { outline: 2px solid var(--sl-accent); outline-offset: 2px; }
@@ -138,8 +141,7 @@
    statement, one ending) and get noticeably more room than the informational
    sections between them. */
 .sl-section-monumental { padding: clamp(100px, 13vw, 176px) 0; }
-.sl-eyebrow { font-family: var(--sl-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sl-accent-2); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-.sl-eyebrow::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.85; flex-shrink: 0; }
+.sl-eyebrow { font-family: var(--sl-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sl-accent-2); margin-bottom: 20px; display: block; }
 .sl-dark .sl-eyebrow { color: rgba(250,250,249,0.72); }
 .sl-h1 { font-family: var(--sl-serif); font-weight: 700; line-height: 0.98; letter-spacing: -0.02em; font-size: var(--sl-type-display); color: var(--sl-ink); }
 .sl-h2 { font-family: var(--sl-serif); font-weight: 700; line-height: 1.06; letter-spacing: -0.012em; font-size: var(--sl-type-h2); color: var(--sl-ink); }
@@ -323,7 +325,7 @@ html:has(.sl) [aria-label="Cookie consent"] a,
 html:has(.sl) [aria-label="Cookie consent"] button { color: #46443f !important; }
 html:has(.sl) [aria-label="Cookie consent"] button { min-height: 44px; border-radius: 5px; }
 html:has(.sl) [aria-label="Cookie consent"] button:last-child { background: #0f0e0d !important; color: #fafaf9 !important; }
-html:has(.sl) [aria-label="Cookie consent"] :focus-visible { outline: 2px solid #6b4e1f; outline-offset: 3px; }
+html:has(.sl) [aria-label="Cookie consent"] :focus-visible { outline: 2px solid #0f0e0d; outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { html:has(.sl) [aria-label="Cookie consent"] { animation: none; } }
 
 .sl-product-capture { padding: clamp(12px, 2.2vw, 28px); }
