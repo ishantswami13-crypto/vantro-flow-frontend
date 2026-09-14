@@ -34,6 +34,20 @@
   min-height: 100vh;
   position: relative;
   --sl-gutter: clamp(20px, 4.5vw, 64px);
+
+  /* Type scale — six roles, each used everywhere it applies, rather than
+     a new clamp() invented per component. A previous pass had five
+     near-identical ~20-30px "sub-heading" sizes (including one class,
+     .sl-tri-title, with three separately-tuned values across different
+     breakpoints) — consolidated here to two: --sl-type-h3 for compact
+     component/card titles, --sl-type-statement for standalone declarative
+     lines that need more visual weight than a card title. */
+  --sl-type-display:   clamp(48px, 7.3vw, 104px);
+  --sl-type-h2:        clamp(30px, 3.6vw, 54px);
+  --sl-type-h3:        clamp(19px, 1.6vw, 22px);
+  --sl-type-statement: clamp(22px, 2.8vw, 30px);
+  --sl-type-body-lg:   clamp(16px, 1.5vw, 19px);
+  --sl-type-body:      15.5px;
 }
 
 .sl * { box-sizing: border-box; }
@@ -116,11 +130,11 @@
 .sl-section { padding: clamp(72px, 8vw, 116px) 0; }
 .sl-section + .sl-section { border-top: 1px solid var(--sl-line); }
 .sl-eyebrow { font-family: var(--sl-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sl-accent-2); margin-bottom: 20px; display: block; }
-.sl-h1 { font-family: var(--sl-serif); font-weight: 700; line-height: 0.98; letter-spacing: -0.02em; font-size: clamp(48px, 7.3vw, 104px); color: var(--sl-ink); }
-.sl-h2 { font-family: var(--sl-serif); font-weight: 700; line-height: 1.06; letter-spacing: -0.012em; font-size: clamp(30px, 3.6vw, 54px); color: var(--sl-ink); }
-.sl-h3 { font-family: var(--sl-serif); font-weight: 700; line-height: 1.15; font-size: clamp(20px, 2vw, 26px); color: var(--sl-ink); }
-.sl-sub { font-size: clamp(16px, 1.5vw, 19px); line-height: 1.55; color: var(--sl-ink-soft); font-weight: 400; }
-.sl-p { font-size: 15.5px; line-height: 1.7; color: var(--sl-ink-soft); }
+.sl-h1 { font-family: var(--sl-serif); font-weight: 700; line-height: 0.98; letter-spacing: -0.02em; font-size: var(--sl-type-display); color: var(--sl-ink); }
+.sl-h2 { font-family: var(--sl-serif); font-weight: 700; line-height: 1.06; letter-spacing: -0.012em; font-size: var(--sl-type-h2); color: var(--sl-ink); }
+.sl-h3 { font-family: var(--sl-serif); font-weight: 700; line-height: 1.15; font-size: var(--sl-type-h3); color: var(--sl-ink); }
+.sl-sub { font-size: var(--sl-type-body-lg); line-height: 1.55; color: var(--sl-ink-soft); font-weight: 400; }
+.sl-p { font-size: var(--sl-type-body); line-height: 1.7; color: var(--sl-ink-soft); }
 .sl-num { font-family: var(--sl-mono); }
 
 /* Content remains visible without JavaScript. Motion is reserved for convergence. */
@@ -134,7 +148,7 @@
 .sl-story-dot { position: absolute; left: 0; top: 2px; width: 31px; height: 31px; border-radius: 50%; background: var(--sl-bg-raised); border: 1px solid var(--sl-line-2); display: flex; align-items: center; justify-content: center; font-family: var(--sl-mono); font-size: 12px; color: var(--sl-ink-soft); }
 .sl-story-step.hi .sl-story-dot { border-color: var(--sl-accent); color: var(--sl-accent); }
 .sl-story-kicker { font-family: var(--sl-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sl-accent-2); }
-.sl-story-title { font-family: var(--sl-serif); font-size: 21px; font-weight: 700; margin: 6px 0 8px; }
+.sl-story-title { font-family: var(--sl-serif); font-size: var(--sl-type-h3); font-weight: 700; margin: 6px 0 8px; }
 
 /* ── Chain diagram (system flow) ─────────────────────────────── */
 .sl-chain { display: flex; align-items: stretch; gap: 0; }
@@ -153,7 +167,7 @@
 .sl-tri-marker { width: 9px; height: 9px; border-radius: 50%; background: var(--sl-ink); margin-bottom: 24px; position: relative; z-index: 1; }
 .sl-tri-col.future .sl-tri-marker { background: var(--sl-accent); }
 .sl-tri-tag { font-family: var(--sl-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sl-ink-faint); }
-.sl-tri-title { font-family: var(--sl-serif); font-size: 28px; font-weight: 700; margin: 10px 0 14px; }
+.sl-tri-title { font-family: var(--sl-serif); font-size: var(--sl-type-statement); font-weight: 700; margin: 10px 0 14px; }
 
 /* ── Evidence rows ────────────────────────────────────────────── */
 .sl-ev-row { display: grid; grid-template-columns: 160px 1fr; gap: 24px; padding: 20px 0; border-top: 1px solid var(--sl-line); align-items: baseline; }
@@ -161,7 +175,7 @@
 
 /* ── System flow (detect -> verify) ──────────────────────────── */
 .sl-flow { display: flex; flex-wrap: wrap; align-items: center; gap: 0; }
-.sl-flow-step { font-family: var(--sl-serif); font-size: clamp(20px, 2.6vw, 30px); font-weight: 700; color: var(--sl-ink-faint); transition: color 0.4s ease; }
+.sl-flow-step { font-family: var(--sl-serif); font-size: var(--sl-type-statement); font-weight: 700; color: var(--sl-ink-faint); transition: color 0.4s ease; }
 .sl-flow-step.hi { color: var(--sl-ink); }
 .sl-flow-sep { color: var(--sl-line-2); font-size: 20px; margin: 0 16px; font-family: var(--sl-serif); }
 
@@ -251,7 +265,6 @@
 .sl-converge.is-connected .sl-converge-link::after { transform: scaleX(1); }
 .sl-converge.is-connected .sl-converge-result { opacity: 1; }
 @media (min-width: 768px) and (max-width: 1180px) {
-  .sl-tri-title { font-size: clamp(23px, 2.3vw, 28px); }
   .sl-product-metrics .card-metric { padding: 16px; }
 }
 @media (max-width: 767px) {
@@ -270,7 +283,6 @@
   .sl-tri::before { top: 4px; bottom: 0; left: 4px; right: auto; width: 1px; height: auto; }
   .sl-tri-col { position: relative; padding: 0 0 0 32px; }
   .sl-tri-marker { position: absolute; left: 0; top: 4px; }
-  .sl-tri-title { font-size: 26px; }
   .sl-story-step { padding-left: 44px; }
   .sl-converge { grid-template-columns: 1fr; gap: 20px; }
   .sl-converge-col, .sl-converge-col.right { transform: none; text-align: left; }
@@ -340,7 +352,7 @@ html:has(.sl) [aria-label="Cookie consent"] :focus-visible { outline: 2px solid 
   pointer-events: none;
 }
 .sl-dark-lines { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.sl-dark-lines p { font-family: var(--sl-serif); font-size: clamp(20px, 2.4vw, 30px); color: rgba(250,250,249,0.88); margin: 0; }
+.sl-dark-lines p { font-family: var(--sl-serif); font-size: var(--sl-type-statement); color: rgba(250,250,249,0.88); margin: 0; }
 
 /* ── Measurement row (Outcome Measurement) ───────────────────────────── */
 .sl-measure-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
