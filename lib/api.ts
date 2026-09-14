@@ -255,6 +255,8 @@ export const api = {
     actions: (signalId: string) => request<IntelligenceActionsResponse>(`/api/intelligence/signals/${signalId}/actions`, { method: 'POST' }),
     approveAndExecute: (actionId: string) =>
       request<IntelligenceExecutionResponse>(`/api/intelligence/actions/${actionId}/approve-and-execute`, { method: 'POST' }),
+    verifyOutcome: (signalId: string) =>
+      request<IntelligenceVerifyOutcomeResponse>(`/api/intelligence/signals/${signalId}/verify-outcome`, { method: 'POST' }),
   },
 
   // ─── Demo control (2xA meeting slice) — internal use only, never surfaced as a normal product control ───
@@ -1325,4 +1327,15 @@ export interface IntelligenceExecutionResponse {
   success: boolean;
   executionMode: 'DEMO_ADAPTER' | 'LIVE_ODOO';
   execution: DemoExecutionResult;
+}
+
+// Mirrors lib/domain/intelligence/outcomeVerification.js's real return shape —
+// never resolves a prediction before its horizon has actually elapsed.
+export interface IntelligenceVerifyOutcomeResponse {
+  success: boolean;
+  signalId: string;
+  resolvedPredictions: Array<{ predictionId: string; target: string; horizonDays: number; actualValue: number; predicted: number; absError: number; pctError: number | null; coverageHit: boolean | null }>;
+  awaitingPredictions: Array<{ predictionId: string; target: string; horizonDays: number; horizonDate: string }>;
+  updatedActions: Array<{ actionId: string; outcome: 'effective' | 'ineffective' }>;
+  status: 'VERIFIED' | 'AWAITING_OBSERVATION' | 'NO_ACTION_TO_VERIFY';
 }

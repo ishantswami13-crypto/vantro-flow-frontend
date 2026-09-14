@@ -11,13 +11,18 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MetricCard } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { EvidenceDrawer } from "@/components/intelligence/EvidenceDrawer";
 import { CausalChain } from "@/components/intelligence/CausalChain";
 import { ForecastTimeline } from "@/components/intelligence/ForecastTimeline";
 import { DecisionSection } from "@/components/intelligence/DecisionSection";
+import { OutcomeVerification } from "@/components/intelligence/OutcomeVerification";
 import { formatINR, formatDateTime, confidenceFromScore } from "@/components/intelligence/format";
 import { api, type IntelligencePrediction, type IntelligenceAction } from "@/lib/api";
+
+function humanReason(signal: { why_exists?: string | null; event_type?: string | null }, supplierName?: string | null): string {
+  if (supplierName) return `This ${signal.event_type?.replace(/_/g, " ").toLowerCase() || "external event"} was matched to ${supplierName}'s verified location exposure through the recorded transmission rule.`;
+  return "This external event matched a recorded business exposure through the transmission rules.";
+}
 
 export default function SignalImpactPage() {
   const params = useParams<{ signalId: string }>();
@@ -123,7 +128,7 @@ export default function SignalImpactPage() {
             </div>
             <div className="card-premium p-4">
               <p className="section-label mb-2">Why it matters to this business</p>
-              <p className="text-2xs text-secondary leading-relaxed">{impact.signal.why_exists}</p>
+              <p className="text-2xs text-secondary leading-relaxed">{humanReason(impact.signal, impact.supplier?.name)}</p>
               {impact.signal.rule_explanation && (
                 <p className="text-2xs text-muted mt-2 italic">{impact.signal.rule_explanation}</p>
               )}
@@ -165,17 +170,12 @@ export default function SignalImpactPage() {
             </div>
           )}
 
-          {actions && actions.some((a) => a.status === "done") && (
-            <div className="card-premium p-4 mb-8">
-              <p className="section-label mb-2">Outcome verification</p>
-              <div className="flex items-center gap-2">
-                <Badge variant="muted">Awaiting observation</Badge>
-                <p className="text-2xs text-muted">
-                  Expected outcome: inventory coverage restored before the projected stockout date. Starlane will compare actual
-                  stock movement against this forecast once new data arrives.
-                </p>
-              </div>
-            </div>
+          {/* Always available once actions exist, not gated on local action
+              status (which never reflects execution that happened inside
+              DecisionSection's own state) — the backend itself reports
+              NO_ACTION_TO_VERIFY honestly when nothing has executed yet. */}
+          {actions && actions.length > 0 && (
+            <OutcomeVerification signalId={signalId} />
           )}
         </>
       )}
