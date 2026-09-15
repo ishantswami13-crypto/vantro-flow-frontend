@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -37,18 +36,18 @@ function ConnectionSection({ connections }: { connections: DataConnection[] }) {
     );
   }
   return (
-    <div className="divide-y divide-border border-t border-border">
+    <div>
       {connections.map(c => (
-        <div key={c.id} className="flex items-center justify-between py-3">
+        <div key={c.id} className="flex items-center justify-between py-4" style={{ borderBottom: "1px solid #E5E5E1" }}>
           <div>
-            <p className="text-sm font-medium text-primary">{c.source_type}</p>
-            {c.last_sync_error && <p className="text-2xs text-danger mt-0.5">{c.last_sync_error}</p>}
+            <p className="text-[14px] font-medium" style={{ color: "#171717" }}>{c.source_type}</p>
+            {c.last_sync_error && <p className="text-[12px] mt-0.5" style={{ color: "#C13B3B" }}>{c.last_sync_error}</p>}
           </div>
           <div className="text-right">
-            <p className={["text-xs font-medium", c.status === "connected" ? "text-success" : "text-muted"].join(" ")}>
+            <p className="text-[13px]" style={{ color: c.status === "connected" ? "#171717" : "#8A8A86" }}>
               {c.status === "connected" ? "Connected" : "Not connected"}
             </p>
-            <p className="text-2xs text-muted mt-0.5">Last synced {timeSince(c.last_sync_at)}</p>
+            <p className="text-[12px] mt-0.5" style={{ color: "#8A8A86" }}>Last synced {timeSince(c.last_sync_at)}</p>
           </div>
         </div>
       ))}
@@ -56,29 +55,26 @@ function ConnectionSection({ connections }: { connections: DataConnection[] }) {
   );
 }
 
+// Plain sans, tabular-nums — numbers carry hierarchy through size/weight,
+// not monospace (monospace is reserved for genuinely technical values).
+function Stat({ value, label, tone }: { value: React.ReactNode; label: string; tone?: "danger" | "warning" | "success" }) {
+  const color = tone === "danger" ? "#C13B3B" : tone === "warning" ? "#B8860B" : tone === "success" ? "#1A8F5C" : "#171717";
+  return (
+    <div>
+      <p className="text-[22px] leading-none" style={{ color, fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>{value}</p>
+      <p className="text-[12px] mt-1.5" style={{ color: "#8A8A86" }}>{label}</p>
+    </div>
+  );
+}
+
 function IntelligenceSection({ stats }: { stats: CortexHealthResponse["stats"] }) {
   return (
-    <div className="flex flex-wrap gap-x-8 gap-y-4 divide-x divide-border">
-      <div>
-        <p className="metric-value text-xl text-primary">{stats.pending_actions}</p>
-        <p className="text-2xs text-muted mt-0.5">Pending actions</p>
-      </div>
-      <div className="pl-8">
-        <p className="metric-value text-xl text-danger">{stats.pending_by_priority.urgent}</p>
-        <p className="text-2xs text-muted mt-0.5">Urgent</p>
-      </div>
-      <div className="pl-8">
-        <p className="metric-value text-xl text-warning">{stats.pending_by_priority.high}</p>
-        <p className="text-2xs text-muted mt-0.5">High priority</p>
-      </div>
-      <div className="pl-8">
-        <p className="metric-value text-xl text-primary">{stats.active_plans}</p>
-        <p className="text-2xs text-muted mt-0.5">Active plans</p>
-      </div>
-      <div className="pl-8">
-        <p className="metric-value text-xl text-primary">{stats.memory_entries}</p>
-        <p className="text-2xs text-muted mt-0.5">Memory entries</p>
-      </div>
+    <div className="flex flex-wrap gap-x-10 gap-y-5">
+      <Stat value={stats.pending_actions} label="Pending actions" />
+      <Stat value={stats.pending_by_priority.urgent} label="Urgent" tone="danger" />
+      <Stat value={stats.pending_by_priority.high} label="High priority" tone="warning" />
+      <Stat value={stats.active_plans} label="Active plans" />
+      <Stat value={stats.memory_entries} label="Memory entries" />
     </div>
   );
 }
@@ -86,29 +82,15 @@ function IntelligenceSection({ stats }: { stats: CortexHealthResponse["stats"] }
 function OutcomesSection({ stats }: { stats: CortexHealthResponse["stats"] }) {
   const enough = stats.evaluated_actions >= MIN_EVALUATED_FOR_RATE;
   return (
-    <div className="flex flex-wrap gap-x-8 gap-y-4 divide-x divide-border">
-      <div>
-        <p className="metric-value text-xl text-primary">{stats.evaluated_actions}</p>
-        <p className="text-2xs text-muted mt-0.5">Actions evaluated</p>
-      </div>
-      <div className="pl-8">
-        {enough && stats.effectiveness_rate !== null ? (
-          <p className={["metric-value text-xl", stats.effectiveness_rate >= 60 ? "text-success" : stats.effectiveness_rate >= 40 ? "text-warning" : "text-danger"].join(" ")}>
-            {stats.effectiveness_rate}%
-          </p>
-        ) : (
-          <p className="text-xl text-muted">—</p>
-        )}
-        <p className="text-2xs text-muted mt-0.5">{enough ? "Effectiveness rate" : "Not enough data yet"}</p>
-      </div>
-      <div className="pl-8">
-        <p className="metric-value text-xl text-success">{stats.effective_count}</p>
-        <p className="text-2xs text-muted mt-0.5">Verified effective</p>
-      </div>
-      <div className="pl-8">
-        <p className="metric-value text-xl text-danger">{stats.ineffective_count}</p>
-        <p className="text-2xs text-muted mt-0.5">Verified ineffective</p>
-      </div>
+    <div className="flex flex-wrap gap-x-10 gap-y-5">
+      <Stat value={stats.evaluated_actions} label="Actions evaluated" />
+      <Stat
+        value={enough && stats.effectiveness_rate !== null ? `${stats.effectiveness_rate}%` : "—"}
+        label={enough ? "Effectiveness rate" : "Not enough data yet"}
+        tone={enough && stats.effectiveness_rate !== null ? (stats.effectiveness_rate >= 60 ? "success" : stats.effectiveness_rate >= 40 ? "warning" : "danger") : undefined}
+      />
+      <Stat value={stats.effective_count} label="Verified effective" tone="success" />
+      <Stat value={stats.ineffective_count} label="Verified ineffective" tone="danger" />
     </div>
   );
 }
@@ -130,44 +112,54 @@ export default function ControlPage() {
 
   return (
     <DashboardLayout pageTitle="Control">
-      <PageHeader
-        title="Control"
-        subtitle="What Starlane can see, what it's doing, and whether it's right."
-        actions={<Link href="/control/audit" className="text-2xs text-secondary hover:text-primary transition-colors">Audit →</Link>}
-      />
-
-      {isLoading && <LoadingState label="Loading operating health" rows={3} />}
-
-      {isError && (
-        <ErrorState
-          title="Couldn't load operating health"
-          message="Check your connection and try again."
-          onRetry={() => { health.refetch(); connections.refetch(); }}
-        />
-      )}
-
-      {!isLoading && !isError && (
-        <div className="space-y-8">
+      <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
+        <div className="flex items-start justify-between gap-4 mb-9">
           <div>
-            <p className="section-label mb-3">Connection</p>
-            <ConnectionSection connections={connections.data?.connections || []} />
+            <h1 className="text-[28px] lg:text-[32px] leading-[1.15] mb-2" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>
+              Control
+            </h1>
+            <p className="text-[14px] max-w-[700px]" style={{ color: "#686868" }}>
+              What Starlane can see, what it's doing, and whether it's right.
+            </p>
           </div>
-
-          {health.data?.stats && (
-            <div className="border-t border-border pt-6">
-              <p className="section-label mb-3">Intelligence</p>
-              <IntelligenceSection stats={health.data.stats} />
-            </div>
-          )}
-
-          {health.data?.stats && (
-            <div className="border-t border-border pt-6">
-              <p className="section-label mb-3">Outcomes</p>
-              <OutcomesSection stats={health.data.stats} />
-            </div>
-          )}
+          <Link href="/control/audit" className="text-[13px] font-medium shrink-0 mt-1" style={{ color: "#171717" }}>
+            Audit →
+          </Link>
         </div>
-      )}
+
+        {isLoading && <LoadingState label="Loading operating health" rows={3} />}
+
+        {isError && (
+          <ErrorState
+            title="Couldn't load operating health"
+            message="Check your connection and try again."
+            onRetry={() => { health.refetch(); connections.refetch(); }}
+          />
+        )}
+
+        {!isLoading && !isError && (
+          <div className="space-y-10">
+            <div>
+              <p className="text-[11px] font-semibold uppercase mb-4" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>Connection</p>
+              <ConnectionSection connections={connections.data?.connections || []} />
+            </div>
+
+            {health.data?.stats && (
+              <div className="pt-8" style={{ borderTop: "1px solid #E5E5E1" }}>
+                <p className="text-[11px] font-semibold uppercase mb-4" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>Intelligence</p>
+                <IntelligenceSection stats={health.data.stats} />
+              </div>
+            )}
+
+            {health.data?.stats && (
+              <div className="pt-8" style={{ borderTop: "1px solid #E5E5E1" }}>
+                <p className="text-[11px] font-semibold uppercase mb-4" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>Outcomes</p>
+                <OutcomesSection stats={health.data.stats} />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </DashboardLayout>
   );
 }
