@@ -27,11 +27,14 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [signals, setSignals] = useState<IntelligenceSignal[] | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     setQuery("");
+    setActiveIndex(0);
     inputRef.current?.focus();
     if (signals === null) {
       api.intelligence.signals()
@@ -39,14 +42,6 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
         .catch(() => setSignals([]));
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && open) onClose();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -58,10 +53,43 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
     return [...matchedSignals, ...matchedRoutes];
   }, [query, routes, signals]);
 
+  // Reset the highlighted row whenever the result set itself changes
+  // (typing a new query, signals finishing their fetch) rather than
+  // leaving a stale index pointed at a row that may no longer exist.
+  useEffect(() => { setActiveIndex(0); }, [query, signals]);
+
   function go(href: string) {
     onClose();
     router.push(href);
   }
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (!open) return;
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex(i => (results.length === 0 ? 0 : (i + 1) % results.length));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex(i => (results.length === 0 ? 0 : (i - 1 + results.length) % results.length));
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        const target = results[activeIndex];
+        if (target) go(target.href);
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose, results, activeIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep the highlighted row scrolled into view as arrow keys move past
+  // the visible window of a long result list.
+  useEffect(() => {
+    if (!listRef.current) return;
+    const el = listRef.current.querySelector<HTMLElement>(`[data-index="${activeIndex}"]`);
+    el?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex]);
 
   if (!open) return null;
 
@@ -85,21 +113,28 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
             placeholder="Search Starlane"
             className="flex-1 bg-transparent text-sm outline-none"
             style={{ color: "#171717" }}
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="command-palette-results"
+            aria-activedescendant={results[activeIndex] ? `command-palette-row-${activeIndex}` : undefined}
           />
           <kbd className="text-[11px] px-1.5 py-0.5 rounded" style={{ color: "#8A8A86", background: "#F2F2EE" }}>Esc</kbd>
         </div>
-        <div className="max-h-[360px] overflow-y-auto py-1.5">
+        <div ref={listRef} id="command-palette-results" role="listbox" className="max-h-[360px] overflow-y-auto py-1.5">
           {results.length === 0 ? (
             <p className="text-sm py-8 text-center" style={{ color: "#8A8A86" }}>No results</p>
           ) : (
-            results.map(r => (
+            results.map((r, i) => (
               <button
                 key={r.href}
+                id={`command-palette-row-${i}`}
+                data-index={i}
+                role="option"
+                aria-selected={i === activeIndex}
                 onClick={() => go(r.href)}
+                onMouseEnter={() => setActiveIndex(i)}
                 className="w-full flex items-center justify-between gap-3 px-4 text-left transition-colors"
-                style={{ height: "40px" }}
-                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "#F7F7F4")}
-                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                style={{ height: "40px", background: i === activeIndex ? "#F7F7F4" : "transparent" }}
               >
                 <span className="text-sm truncate" style={{ color: "#171717" }}>{r.label}</span>
                 <span className="text-xs shrink-0" style={{ color: "#8A8A86" }}>{r.type}</span>

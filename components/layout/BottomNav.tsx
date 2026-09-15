@@ -2,73 +2,70 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiGrid, FiList, FiMessageSquare, FiPlus, FiCpu } from "react-icons/fi";
+import { FiGlobe, FiDatabase, FiShield, FiPlus, FiMenu } from "react-icons/fi";
 
+// Mirrors the sidebar's own primary IA (Intelligence / Sources / Control)
+// instead of the old Home/Karo/Bhejo/AI mobile-only navigation, which
+// pointed at routes (dashboard, collections, whatsapp, ai-chat) that no
+// longer match the product's real information architecture. "Menu" opens
+// the same mobile sidebar drawer the header hamburger already opens —
+// one source of truth for Recents/More/account, not a second copy of it.
 const TABS = [
-  { href: "/dashboard",   icon: FiGrid,          label: "Home",    key: "home"    },
-  { href: "/collections", icon: FiList,          label: "Karo",    key: "karo"    },
-  { href: null,           icon: FiPlus,          label: "Add",     key: "add"     }, // center FAB
-  { href: "/whatsapp",   icon: FiMessageSquare,  label: "Bhejo",   key: "bhejo"   },
-  { href: "/ai-chat",    icon: FiCpu,            label: "AI",      key: "ai"      },
-];
+  { href: "/intelligence", icon: FiGlobe,    label: "Intelligence" },
+  { href: "/connections",  icon: FiDatabase, label: "Sources" },
+  { href: null,            icon: FiPlus,     label: "New" }, // center action
+  { href: "/control",      icon: FiShield,   label: "Control" },
+] as const;
 
-export default function BottomNav() {
+interface BottomNavProps { onMenuToggle: () => void; }
+
+export default function BottomNav({ onMenuToggle }: BottomNavProps) {
   const pathname = usePathname();
 
   return (
     <nav
       className="lg:hidden fixed bottom-0 left-0 right-0 z-40"
-      style={{
-        background: "#080808",
-        borderTop: "1px solid rgba(255,255,255,0.07)",
-      }}
+      style={{ background: "#141414", borderTop: "1px solid rgba(255,255,255,0.08)" }}
     >
-      <div className="flex items-end px-1">
-        {TABS.map(({ href, icon: Icon, label, key }) => {
-          // ── Centre FAB — Add Invoice ─────────────────────────
-          if (key === "add") {
+      <div className="flex items-stretch px-1">
+        {TABS.map(({ href, icon: Icon, label }) => {
+          if (href === null) {
             return (
-              <div key="add" className="flex-1 flex justify-center">
+              <div key="new" className="flex-1 flex justify-center">
                 <Link
-                  href="/invoice/new"
-                  className="relative -top-5 flex flex-col items-center justify-center w-[60px] h-[60px] rounded-2xl text-white transition-all active:scale-95"
-                  style={{
-                    background: "linear-gradient(135deg, #FF6B35 0%, #F55A22 100%)",
-                    boxShadow: "0 4px 20px rgba(255,107,53,0.55), 0 2px 8px rgba(0,0,0,0.4)",
-                  }}
+                  href="/intelligence"
+                  className="relative -top-3 flex flex-col items-center justify-center w-12 h-12 rounded-full transition-colors active:scale-95"
+                  style={{ background: "#F7F7F4", color: "#171717" }}
+                  aria-label="New investigation"
                 >
-                  <Icon size={24} strokeWidth={2.5} />
+                  <Icon size={20} strokeWidth={2.25} />
                 </Link>
               </div>
             );
           }
-
-          // ── Regular tab ──────────────────────────────────────
-          const active = pathname === href || (href !== null && pathname.startsWith(href + "/"));
+          const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link
-              key={key}
-              href={href!}
-              className={[
-                "flex-1 flex flex-col items-center justify-center gap-1.5 py-3.5 min-h-[56px] relative transition-all active:scale-95",
-                active ? "text-accent" : "text-muted hover:text-secondary",
-              ].join(" ")}
+              key={href}
+              href={href}
+              className="flex-1 flex flex-col items-center justify-center gap-1 py-3 min-h-[56px] transition-colors active:scale-95"
+              style={{ color: active ? "#F7F7F5" : "#8A8A86" }}
             >
-              {/* Active top indicator */}
-              {active && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b-full bg-accent" />
-              )}
-              <Icon
-                size={22}
-                strokeWidth={active ? 2.5 : 2}
-                className={active ? "drop-shadow-[0_0_8px_rgba(79,110,247,0.9)]" : ""}
-              />
-              <span className={`text-[10px] font-bold tracking-tight ${active ? "text-accent" : "text-muted"}`}>
-                {label}
-              </span>
+              <Icon size={19} strokeWidth={active ? 2.25 : 1.75} />
+              <span className="text-[10px] font-medium">{label}</span>
             </Link>
           );
         })}
+        <button
+          type="button"
+          onClick={onMenuToggle}
+          className="flex-1 flex flex-col items-center justify-center gap-1 py-3 min-h-[56px] transition-colors active:scale-95"
+          style={{ color: "#8A8A86" }}
+          aria-label="Open menu"
+        >
+          <FiMenu size={19} strokeWidth={1.75} />
+          <span className="text-[10px] font-medium">Menu</span>
+        </button>
       </div>
       {/* iOS safe area */}
       <div style={{ height: "env(safe-area-inset-bottom)" }} />

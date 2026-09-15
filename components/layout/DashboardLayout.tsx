@@ -202,7 +202,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
         </main>
       </div>
 
-      <BottomNav />
+      <BottomNav onMenuToggle={() => setSidebarOpen(true)} />
       <InstallPrompt />
       {!isDemo && <PaymentCelebration />}
     </div>
