@@ -85,7 +85,7 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
       {Array.from({ length: total }).map((_, i) => (
         <div key={i} className={[
           "h-1 rounded-full transition-all duration-700",
-          i < step ? "bg-white flex-1" : i === step ? "bg-white/40 flex-[2]" : "bg-surface-3 flex-1",
+          i < step ? "bg-gray-900 flex-1" : i === step ? "bg-gray-400 flex-[2]" : "bg-surface-3 flex-1",
         ].join(" ")} />
       ))}
       <span className="text-2xs text-muted font-mono shrink-0 ml-1">{Math.min(step + 1, total)}/{total}</span>
@@ -331,7 +331,7 @@ export default function OnboardingPage() {
                     onKeyDown={e => e.key === "Enter" && ownerName.trim() && proceed()}
                     placeholder="Rajesh, Sunita, Priya..."
                     autoFocus
-                    className="w-full bg-surface-2 border border-border rounded-xl text-primary text-sm pl-9 pr-4 py-3.5 focus:outline-none focus:border-white/30 transition-colors"
+                    className="w-full bg-surface-2 border border-border rounded-xl text-primary text-sm pl-9 pr-4 py-3.5 focus:outline-none focus:border-border transition-colors"
                   />
                 </div>
               </div>
@@ -341,7 +341,7 @@ export default function OnboardingPage() {
                   <FiMapPin size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
                   <select
                     value={city} onChange={e => setCity(e.target.value)}
-                    className="w-full bg-surface-2 border border-border rounded-xl text-primary text-sm pl-9 pr-4 py-3.5 focus:outline-none focus:border-white/30 transition-colors appearance-none cursor-pointer">
+                    className="w-full bg-surface-2 border border-border rounded-xl text-primary text-sm pl-9 pr-4 py-3.5 focus:outline-none focus:border-border transition-colors appearance-none cursor-pointer">
                     <option value="">Select city</option>
                     {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -349,7 +349,7 @@ export default function OnboardingPage() {
               </div>
             </div>
             <button onClick={proceed} disabled={!ownerName.trim()}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 transition-all disabled:opacity-30 shadow-sm">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 transition-all disabled:opacity-30 shadow-sm">
               Let's Go <FiArrowRight size={15} />
             </button>
           </div>
@@ -374,7 +374,7 @@ export default function OnboardingPage() {
                   className={[
                     "flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all",
                     industry === ind.value
-                      ? "border-white/30 bg-white/5"
+                      ? "border-border bg-surface-2"
                       : "border-border bg-surface-2 hover:border-border/80 hover:bg-surface-3",
                   ].join(" ")}>
                   <span className="text-2xl shrink-0">{ind.emoji}</span>
@@ -390,7 +390,7 @@ export default function OnboardingPage() {
             {industry && <IndustryFeaturePreview industryKey={industry as BusinessTypeKey} />}
 
             <button onClick={proceed} disabled={!step1Valid}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 transition-all disabled:opacity-30 shadow-sm">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 transition-all disabled:opacity-30 shadow-sm">
               Activate {cfg?.label || "My"} Features <FiArrowRight size={15} />
             </button>
           </div>
@@ -419,7 +419,7 @@ export default function OnboardingPage() {
                   <button key={s.v} onClick={() => setBizSize(s.v as any)}
                     className={[
                       "p-3 rounded-xl border text-center transition-all",
-                      bizSize === s.v ? "border-white/30 bg-white/5" : "border-border bg-surface-2 hover:border-border/80",
+                      bizSize === s.v ? "border-border bg-surface-2" : "border-border bg-surface-2 hover:border-border/80",
                     ].join(" ")}>
                     <span className="text-xl block mb-1.5">{s.emoji}</span>
                     <p className="text-xs font-bold text-primary leading-tight">{s.label}</p>
@@ -442,7 +442,7 @@ export default function OnboardingPage() {
                       <button key={label} onClick={() => set(v)}
                         className={[
                           "py-2.5 px-3 rounded-xl border text-xs font-semibold transition-all text-left",
-                          val === v ? "border-white/30 bg-white/5 text-primary" : "border-border bg-surface-2 text-secondary hover:border-border/80",
+                          val === v ? "border-border bg-surface-2 text-primary" : "border-border bg-surface-2 text-secondary hover:border-border/80",
                         ].join(" ")}>
                         {label}
                       </button>
@@ -453,7 +453,7 @@ export default function OnboardingPage() {
             </div>
 
             <button onClick={proceed} disabled={!step2Valid}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 transition-all disabled:opacity-30 shadow-sm">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 transition-all disabled:opacity-30 shadow-sm">
               Build My Dashboard <FiArrowRight size={15} />
             </button>
           </div>
@@ -480,7 +480,7 @@ export default function OnboardingPage() {
                 <button key={id} onClick={() => setMode(id)}
                   className={[
                     "flex-1 py-2 rounded-lg text-xs font-semibold transition-all",
-                    mode === id ? "bg-white text-black" : "text-secondary hover:text-primary",
+                    mode === id ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
                   ].join(" ")}>
                   {label}
                 </button>
@@ -501,7 +501,7 @@ export default function OnboardingPage() {
                   onChange={e => setPasteText(e.target.value)}
                   rows={6}
                   placeholder={`Sharma Traders - 45000 - 60 days - 9876543210\nMehta Fabrics, 82000, 30\nGupta Steel 1.2L 45d\nPatel Agro - 28500 - 15 days`}
-                  className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-4 py-3 focus:outline-none focus:border-white/20 transition-colors resize-none font-mono placeholder-muted/40"
+                  className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-4 py-3 focus:outline-none focus:border-border transition-colors resize-none font-mono placeholder-muted/40"
                 />
                 {parsedEntries.length > 0 && (
                   <div className="space-y-2">
@@ -549,10 +549,10 @@ export default function OnboardingPage() {
                   onClick={() => fileRef.current?.click()}
                   className={[
                     "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all",
-                    dragOver ? "border-white/30 bg-white/5" : "border-border hover:border-white/20 hover:bg-surface-2",
+                    dragOver ? "border-border bg-surface-2" : "border-border hover:border-border hover:bg-surface-2",
                   ].join(" ")}>
                   {loading
-                    ? <><div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-2" /><p className="text-sm text-muted">Importing...</p></>
+                    ? <><div className="w-8 h-8 border-2 border-border border-t-white rounded-full animate-spin mx-auto mb-2" /><p className="text-sm text-muted">Importing...</p></>
                     : <><FiUpload size={22} className={`mx-auto mb-2 ${dragOver ? "text-white" : "text-muted"}`} /><p className="text-sm font-semibold text-primary mb-1">Drop Excel or CSV here</p><p className="text-xs text-muted">Supports .xlsx, .xls, .csv · Any column names</p></>}
                   <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
                     onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
@@ -560,7 +560,7 @@ export default function OnboardingPage() {
 
                 {/* Tally guide */}
                 <button onClick={() => setShowTallyGuide(v => !v)}
-                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-surface-2 border border-border hover:border-white/20 transition-all text-left">
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-surface-2 border border-border hover:border-border transition-all text-left">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">🏦</span>
                     <div>
@@ -605,17 +605,17 @@ export default function OnboardingPage() {
                   <div key={i} className="grid grid-cols-12 gap-1.5">
                     <input value={row.name} onChange={e => setManualRows(r => r.map((v, j) => j === i ? { ...v, name: e.target.value } : v))}
                       placeholder="Ramesh Traders"
-                      className="col-span-4 bg-surface-2 border border-border rounded-lg text-xs text-primary px-2.5 py-2 focus:outline-none focus:border-white/20" />
+                      className="col-span-4 bg-surface-2 border border-border rounded-lg text-xs text-primary px-2.5 py-2 focus:outline-none focus:border-border" />
                     <input value={row.amount} onChange={e => setManualRows(r => r.map((v, j) => j === i ? { ...v, amount: e.target.value } : v))}
                       placeholder="45000" type="number"
-                      className="col-span-3 bg-surface-2 border border-border rounded-lg text-xs text-primary px-2.5 py-2 focus:outline-none focus:border-white/20" />
+                      className="col-span-3 bg-surface-2 border border-border rounded-lg text-xs text-primary px-2.5 py-2 focus:outline-none focus:border-border" />
                     <input value={row.days} onChange={e => setManualRows(r => r.map((v, j) => j === i ? { ...v, days: e.target.value } : v))}
                       placeholder="30" type="number"
-                      className="col-span-2 bg-surface-2 border border-border rounded-lg text-xs text-primary px-2.5 py-2 focus:outline-none focus:border-white/20" />
+                      className="col-span-2 bg-surface-2 border border-border rounded-lg text-xs text-primary px-2.5 py-2 focus:outline-none focus:border-border" />
                     <div className="col-span-3 flex gap-1">
                       <input value={row.phone} onChange={e => setManualRows(r => r.map((v, j) => j === i ? { ...v, phone: e.target.value } : v))}
                         placeholder="9876543210"
-                        className="flex-1 bg-surface-2 border border-border rounded-lg text-xs text-primary px-2.5 py-2 focus:outline-none focus:border-white/20 min-w-0" />
+                        className="flex-1 bg-surface-2 border border-border rounded-lg text-xs text-primary px-2.5 py-2 focus:outline-none focus:border-border min-w-0" />
                       {manualRows.length > 1 && (
                         <button onClick={() => setManualRows(r => r.filter((_, j) => j !== i))} className="text-muted hover:text-danger transition-colors shrink-0">
                           <FiTrash2 size={12} />
@@ -633,7 +633,7 @@ export default function OnboardingPage() {
             )}
 
             <button onClick={proceed} disabled={loading || !canProceedStep3}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 transition-all disabled:opacity-30 shadow-sm">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 transition-all disabled:opacity-30 shadow-sm">
               {loading ? <FiRefreshCw size={15} className="animate-spin" /> : null}
               {loading ? "Processing..." : parsedEntries.length > 0 && mode === "paste" ? `Score ${parsedEntries.length} Customers →` : "Score & Prioritize →"}
             </button>
@@ -652,7 +652,7 @@ export default function OnboardingPage() {
               <div className="w-20 h-20 rounded-2xl bg-surface-2 border border-border flex items-center justify-center">
                 <FiZap size={28} className="text-white" />
               </div>
-              <div className="absolute inset-0 rounded-2xl border-2 border-white/20 animate-ping" />
+              <div className="absolute inset-0 rounded-2xl border-2 border-border animate-ping" />
             </div>
             <div>
               <h2 className="text-xl font-black text-primary">Building your workspace…</h2>
@@ -757,7 +757,7 @@ export default function OnboardingPage() {
             )}
 
             <button onClick={() => router.push("/dashboard")}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-white text-black font-black text-base hover:bg-white/90 transition-all shadow-sm">
+              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-gray-900 text-white font-black text-base hover:bg-gray-800 transition-all shadow-sm">
               Open My Dashboard <FiArrowRight size={16} />
             </button>
             <button onClick={() => router.push("/ai-chat")}

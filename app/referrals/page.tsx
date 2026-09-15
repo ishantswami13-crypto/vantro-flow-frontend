@@ -98,7 +98,7 @@ export default function ReferralsPage() {
                   <p className="text-success font-semibold text-sm">{newRewardsPending} free month{newRewardsPending > 1 ? "s" : ""} ready to claim!</p>
                   <p className="text-2xs text-muted">Your referrals have started paying</p>
                 </div>
-                <button onClick={claimReward} disabled={claiming} className="px-4 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-white/90 transition-colors disabled:opacity-50">
+                <button onClick={claimReward} disabled={claiming} className="px-4 py-2 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50">
                   {claiming ? "Claiming..." : "Claim Now"}
                 </button>
               </div>

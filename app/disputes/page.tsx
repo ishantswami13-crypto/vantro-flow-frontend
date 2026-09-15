@@ -108,7 +108,7 @@ export default function DisputesPage() {
             <h1 className="text-xl font-bold text-primary">Dispute Management</h1>
             <p className="text-sm text-secondary">Customer raised an issue? Track it here. Auto-pauses WhatsApp follow-up.</p>
           </div>
-          <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-white/90 transition-colors">
+          <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors">
             + New Dispute
           </button>
         </div>
@@ -159,7 +159,7 @@ export default function DisputesPage() {
               <p className="text-warning text-2xs">WhatsApp follow-up for this invoice will be paused automatically until dispute is resolved.</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={createDispute} disabled={saving} className="flex-1 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-white/90 transition-colors disabled:opacity-50">
+              <button onClick={createDispute} disabled={saving} className="flex-1 py-2 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50">
                 {saving ? "Saving..." : "Log Dispute"}
               </button>
               <button onClick={() => setShowCreate(false)} className="px-4 py-2 border border-border text-secondary text-sm rounded-xl hover:bg-surface-2 transition-colors">Cancel</button>
@@ -181,7 +181,7 @@ export default function DisputesPage() {
                 <input value={resolution.resolved_amount} onChange={e => setResolution(r => ({ ...r, resolved_amount: e.target.value }))} type="number" className="input-base" placeholder={String(selected.disputed_amount)} />
               </div>
               <div className="flex gap-3">
-                <button onClick={resolveDispute} disabled={saving} className="flex-1 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-white/90 transition-colors">
+                <button onClick={resolveDispute} disabled={saving} className="flex-1 py-2 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors">
                   {saving ? "Saving..." : "Mark Resolved"}
                 </button>
                 <button onClick={() => setSelected(null)} className="px-4 py-2 border border-border text-secondary text-sm rounded-xl hover:bg-surface-2 transition-colors">Cancel</button>

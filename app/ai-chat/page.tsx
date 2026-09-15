@@ -537,7 +537,7 @@ function AIFounderPageInner() {
             <button key={key} onClick={() => setTab(key)}
               className={[
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-                tab === key ? "bg-white text-black" : "text-secondary hover:text-primary",
+                tab === key ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
               ].join(" ")}>
               <Icon size={12} /> {label}
               {key === "callcenter" && (

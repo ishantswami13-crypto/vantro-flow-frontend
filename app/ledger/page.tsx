@@ -381,7 +381,7 @@ function AIMonitor({ userId }: { userId: string }) {
         <button
           onClick={run}
           disabled={loading}
-          className="px-4 py-2 rounded-xl bg-white text-black text-xs font-semibold hover:bg-white/90 disabled:opacity-60 transition-all shadow-button-accent"
+          className="px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-semibold hover:bg-gray-800 disabled:opacity-60 transition-all shadow-button-accent"
         >
           {loading ? "Analysing…" : expanded ? "Re-analyse" : "Run Analysis"}
         </button>
@@ -718,7 +718,7 @@ export default function LedgerPage() {
             </button>
             <button
               onClick={() => { setShowForm(f => !f); setError(""); }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold hover:bg-white/90 transition-all shadow-button-accent"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-all shadow-button-accent"
             >
               {showForm ? <><FiX size={14} /> Cancel</> : <><FiPlus size={14} /> Add Transaction</>}
             </button>
@@ -759,7 +759,7 @@ export default function LedgerPage() {
                   type="button"
                   onClick={importPdfRows}
                   disabled={importingPdf}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-white text-black hover:bg-white/90 disabled:opacity-60"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-60"
                 >
                   {importingPdf ? "Importing..." : `Import ${pdfRows.length}`}
                 </button>
@@ -955,7 +955,7 @@ export default function LedgerPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 rounded-xl text-sm font-semibold bg-white text-black hover:bg-white/90 disabled:opacity-60 transition-all shadow-button-accent"
+                  className="px-5 py-2 rounded-xl text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-60 transition-all shadow-button-accent"
                 >
                   {saving ? "Saving…" : "Save Transaction"}
                 </button>

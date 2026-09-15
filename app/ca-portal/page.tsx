@@ -92,7 +92,7 @@ export default function CAPortalPage() {
               </div>
             ))}
           </div>
-          <button onClick={() => setShowRegister(true)} className="px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-white/90 transition-colors">
+          <button onClick={() => setShowRegister(true)} className="px-8 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-colors">
             Register as CA Partner
           </button>
         </div>
@@ -122,7 +122,7 @@ export default function CAPortalPage() {
             </div>
           ))}
           <div className="flex gap-3">
-            <button onClick={register} disabled={saving || !regForm.firm_name} className="flex-1 py-2.5 bg-white text-black font-bold rounded-xl hover:bg-white/90 transition-colors disabled:opacity-50">
+            <button onClick={register} disabled={saving || !regForm.firm_name} className="flex-1 py-2.5 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50">
               {saving ? "Registering..." : "Register"}
             </button>
             <button onClick={() => setShowRegister(false)} className="px-4 py-2 border border-border text-secondary text-sm rounded-lg hover:bg-surface-2 transition-colors">Cancel</button>

@@ -92,7 +92,7 @@ export default function PublicProfilePage() {
   return (
     <div className="min-h-screen bg-bg">
       {/* Header */}
-      <nav className="sticky top-0 z-50 glass border-b border-white/5">
+      <nav className="sticky top-0 z-50 glass border-b border-border">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-gradient-accent flex items-center justify-center">
@@ -100,7 +100,7 @@ export default function PublicProfilePage() {
             </div>
             <span className="font-bold text-sm text-primary">Starlane</span>
           </div>
-          <Link href={`/signup?ref=${id}`} className="text-xs px-3 py-1.5 rounded-lg bg-white text-black font-semibold hover:bg-white/90 transition-all">
+          <Link href={`/signup?ref=${id}`} className="text-xs px-3 py-1.5 rounded-lg bg-gray-900 text-white font-semibold hover:bg-gray-800 transition-all">
             Get Your Free ID →
           </Link>
         </div>
@@ -186,7 +186,7 @@ export default function PublicProfilePage() {
             Join thousands of Indian businesses building verified financial identities. Free to start.
           </p>
           <Link href={`/signup?ref=${id}`}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-white/90 transition-all shadow-button-accent">
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-gray-800 transition-all shadow-button-accent">
             Create Free Account →
           </Link>
         </div>

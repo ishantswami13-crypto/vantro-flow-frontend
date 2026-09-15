@@ -184,7 +184,7 @@ export default function ForecastPage() {
             {([30, 60, 90] as const).map(r => (
               <button key={r} onClick={() => setRange(r)}
                 className={["px-5 py-2 text-xs font-bold rounded-lg transition-all",
-                  range === r ? "bg-white text-black" : "text-secondary hover:text-primary",
+                  range === r ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
                 ].join(" ")}>
                 {r}d
               </button>
@@ -205,12 +205,12 @@ export default function ForecastPage() {
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
             style={{ background: "rgba(0,102,255,0.08)", border: "1px solid rgba(0,102,255,0.2)" }}>
             <FiDollarSign size={15} style={{ color: "#0066FF", flexShrink: 0 }} />
-            <p className="text-sm flex-1" style={{ color: "rgba(255,255,255,0.7)" }}>
+            <p className="text-sm flex-1" style={{ color: "#171717" }}>
               Set your current cash balance to get an accurate forecast
             </p>
             {showCashInput ? (
               <div className="flex items-center gap-2">
-                <span className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>₹</span>
+                <span className="text-sm" style={{ color: "#8A8A86" }}>₹</span>
                 <input
                   type="number"
                   value={cashInput}
@@ -219,7 +219,7 @@ export default function ForecastPage() {
                   placeholder="e.g. 50000"
                   autoFocus
                   className="w-28 px-2 py-1 text-sm rounded-lg outline-none"
-                  style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff" }}
+                  style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", color: "#171717" }}
                 />
                 <button onClick={saveCash}
                   className="px-3 py-1 rounded-lg text-xs font-semibold"
@@ -272,7 +272,7 @@ export default function ForecastPage() {
             <p className="text-xs text-muted mb-4 max-w-xs">
               Upload your invoices and mark some payments as received — the forecast model needs at least a few data points to project scenarios.
             </p>
-            <Link href="/collections" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-black text-xs font-semibold hover:bg-white/90 transition-all shadow-sm">
+            <Link href="/collections" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-semibold hover:bg-gray-800 transition-all shadow-sm">
               <FiUpload size={13} /> Upload Invoices <FiArrowRight size={12} />
             </Link>
           </div>

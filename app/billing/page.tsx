@@ -212,7 +212,7 @@ export default function BillingPage() {
                 <p className="text-xs text-muted">Automation is running. Thank you for building with Starlane.</p>
               </div>
             </div>
-            <button className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-secondary hover:text-primary hover:border-white/20 transition-all">
+            <button className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-secondary hover:text-primary hover:border-border transition-all">
               Manage Payment
             </button>
           </div>
@@ -241,7 +241,7 @@ export default function BillingPage() {
                 className={[
                   "px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2",
                   billing === b
-                    ? "bg-white text-black shadow-sm"
+                    ? "bg-gray-900 text-white shadow-sm"
                     : "text-muted hover:text-primary",
                 ].join(" ")}>
                 {b.charAt(0).toUpperCase() + b.slice(1)}
@@ -314,7 +314,7 @@ export default function BillingPage() {
                     disabled={isCurrent || !!loading}
                     className="w-full py-3.5 rounded-xl text-sm font-black text-white bg-black hover:bg-black/85 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                     {loading === plan.id
-                      ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Processing...</>
+                      ? <><span className="w-4 h-4 border-2 border-border border-t-white rounded-full animate-spin" /> Processing...</>
                       : isCurrent
                       ? "✓ Current Plan"
                       : <>{plan.cta} <FiArrowRight size={14} /></>
@@ -335,7 +335,7 @@ export default function BillingPage() {
                     ? "border-success/30 bg-success/5"
                     : isPro
                     ? "border-accent/40 bg-surface-1 hover:border-accent/60"
-                    : "border-border bg-surface-1 hover:border-white/15",
+                    : "border-border bg-surface-1 hover:border-border",
                 ].join(" ")}
                 style={isPro && !isCurrent ? { boxShadow: "0 0 30px rgba(79,110,247,0.12)" } : {}}>
 
@@ -378,7 +378,7 @@ export default function BillingPage() {
                 <ul className="space-y-3 mb-7 flex-1">
                   {plan.outcomes.map((o) => (
                     <li key={o} className="flex items-start gap-3 text-sm text-secondary">
-                      <span className="w-4 h-4 rounded-full border border-white/15 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="w-4 h-4 rounded-full border border-border flex items-center justify-center shrink-0 mt-0.5">
                         <FiCheck size={9} className="text-white/70" />
                       </span>
                       {o}
@@ -393,7 +393,7 @@ export default function BillingPage() {
                     "w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50",
                     isCurrent
                       ? "bg-success/10 text-success border border-success/20 cursor-default"
-                      : "bg-white text-black hover:bg-white/90",
+                      : "bg-gray-900 text-white hover:bg-gray-800",
                   ].join(" ")}>
                   {loading === plan.id
                     ? <><span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" /> Processing...</>
@@ -437,7 +437,7 @@ export default function BillingPage() {
         {/* ── SOCIAL PROOF ─────────────────────────────────────── */}
         <div className="grid sm:grid-cols-2 gap-4">
           {TESTIMONIALS.map(({ quote, name, biz, avatar }) => (
-            <div key={name} className="rounded-2xl border border-border bg-surface-1 p-5 hover:border-white/15 transition-all">
+            <div key={name} className="rounded-2xl border border-border bg-surface-1 p-5 hover:border-border transition-all">
               <div className="flex gap-0.5 mb-3">
                 {[...Array(5)].map((_, i) => (
                   <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B">
@@ -491,7 +491,7 @@ export default function BillingPage() {
           </div>
           <a href="mailto:ishantswami13@gmail.com?subject=Starlane Enterprise Enquiry"
             target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-sm font-semibold text-secondary hover:text-primary hover:border-white/20 transition-all">
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-sm font-semibold text-secondary hover:text-primary hover:border-border transition-all">
             Talk to Us <FiArrowRight size={13} />
           </a>
         </div>

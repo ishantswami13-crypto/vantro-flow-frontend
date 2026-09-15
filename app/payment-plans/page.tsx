@@ -109,7 +109,7 @@ export default function PaymentPlansPage() {
             <h1 className="text-xl font-bold text-primary">Payment Plans</h1>
             <p className="text-sm text-secondary">EMI splits for customers who can&apos;t pay full amount</p>
           </div>
-          <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-white/90 transition-colors">
+          <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors">
             + New Plan
           </button>
         </div>
@@ -174,7 +174,7 @@ export default function PaymentPlansPage() {
               </div>
             )}
             <div className="flex gap-3">
-              <button onClick={createPlan} disabled={saving} className="flex-1 py-2 bg-white text-black text-sm font-bold rounded-xl hover:bg-white/90 transition-colors disabled:opacity-50">
+              <button onClick={createPlan} disabled={saving} className="flex-1 py-2 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50">
                 {saving ? "Creating..." : "Create Plan & Notify Customer"}
               </button>
               <button onClick={() => setShowCreate(false)} className="px-4 py-2 border border-border text-secondary text-sm rounded-xl hover:bg-surface-2 transition-colors">
