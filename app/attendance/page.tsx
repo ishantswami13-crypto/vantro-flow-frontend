@@ -100,8 +100,8 @@ export default function AttendancePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-primary">Staff Attendance</h1>
-          <p className="text-xs text-muted">Haazri aur salary calculator</p>
+          <h1 className="text-[26px] leading-[1.15]" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>Staff Attendance</h1>
+          <p className="text-xs text-muted mt-1">Haazri aur salary calculator</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={prevMonth} className="p-2 bg-surface-2 rounded-xl text-muted hover:text-primary transition-colors"><FiChevronLeft size={16} /></button>
@@ -129,10 +129,10 @@ export default function AttendancePage() {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-4">
-        {[{ k: "attendance", l: "📅 Attendance", i: FiCalendar }, { k: "salary", l: "💰 Salary", i: FiDollarSign }].map(t => (
+        {[{ k: "attendance", l: "Attendance", i: FiCalendar }, { k: "salary", l: "Salary", i: FiDollarSign }].map(t => (
           <button key={t.k} onClick={() => setTab(t.k as any)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${tab === t.k ? "bg-white text-black" : "bg-surface-2 text-muted hover:text-primary"}`}>
-            {t.l}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${tab === t.k ? "bg-gray-900 text-white" : "bg-surface-2 text-muted hover:text-primary"}`}>
+            <t.i size={13} /> {t.l}
           </button>
         ))}
       </div>
@@ -151,7 +151,7 @@ export default function AttendancePage() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs min-w-[600px]">
               <thead>
-                <tr className="border-b border-white/5">
+                <tr className="border-b border-border">
                   <th className="text-left px-4 py-3 text-muted font-semibold w-32">Worker</th>
                   {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
                     const dayOfWeek = new Date(year, month - 1, day).getDay();
@@ -208,7 +208,7 @@ export default function AttendancePage() {
             </table>
           </div>
           {/* Legend */}
-          <div className="px-4 py-3 border-t border-white/5 flex items-center gap-4 text-2xs text-muted">
+          <div className="px-4 py-3 border-t border-border flex items-center gap-4 text-2xs text-muted">
             <span>Click cell to cycle:</span>
             <span className="flex items-center gap-1"><span className="w-4 h-4 rounded bg-surface-2 inline-block" /> Empty</span>
             <span className="flex items-center gap-1"><span className="w-4 h-4 rounded bg-success inline-block" /> Present (P)</span>

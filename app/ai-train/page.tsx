@@ -105,13 +105,13 @@ export default function AITrainPage() {
     <DashboardLayout pageTitle="AI Training">
       <div className="max-w-2xl mx-auto space-y-5">
         {/* Tabs */}
-        <div className="flex gap-1 bg-surface-2/50 rounded-xl p-1 border border-white/5">
+        <div className="flex gap-1 bg-surface-2/50 rounded-xl p-1 border border-border">
           {[
-            { id: "vocab", label: "🧠 AI Vocabulary", count: vocab.length },
-            { id: "setup", label: "📞 Call Setup", count: null, dot: twilioConfigured },
+            { id: "vocab", label: "AI Vocabulary", count: vocab.length },
+            { id: "setup", label: "Call Setup", count: null, dot: twilioConfigured },
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id as any)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all ${tab === t.id ? "bg-surface-1 text-primary shadow-sm border border-white/5" : "text-muted hover:text-secondary"}`}>
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all ${tab === t.id ? "bg-surface-1 text-primary shadow-sm border border-border" : "text-muted hover:text-secondary"}`}>
               {t.label}
               {t.count !== null && <span className="text-2xs bg-surface-2 text-muted px-1.5 rounded-full">{t.count}</span>}
               {t.dot && <span className="w-1.5 h-1.5 rounded-full bg-success" />}
@@ -135,11 +135,11 @@ export default function AITrainPage() {
 
                 {/* Quick seed */}
                 <div className="card p-4">
-                  <p className="text-sm font-semibold text-primary mb-3">⚡ Quick Seed — apni industry choose karo</p>
+                  <p className="text-sm font-semibold text-primary mb-3">Quick Seed — apni industry choose karo</p>
                   <div className="grid grid-cols-2 gap-2">
                     {INDUSTRIES.map(ind => (
                       <button key={ind.id} onClick={() => seedVocab(ind.id)} disabled={seedLoading}
-                        className="text-sm text-left px-3 py-2.5 rounded-xl border border-white/8 bg-surface-2 hover:border-accent/40 hover:bg-accent/5 transition-all text-secondary hover:text-primary">
+                        className="text-sm text-left px-3 py-2.5 rounded-xl border border-border bg-surface-2 hover:border-accent/40 hover:bg-accent/5 transition-all text-secondary hover:text-primary">
                         {seedLoading ? <FiRefreshCw className="inline animate-spin mr-1" size={11} /> : null}
                         {ind.emoji} {ind.label}
                       </button>
@@ -157,12 +157,12 @@ export default function AITrainPage() {
                         <label className="text-2xs text-muted mb-1 block">Local Term *</label>
                         <input required value={vForm.term} onChange={e => setVForm(f => ({ ...f, term: e.target.value }))}
                           placeholder="e.g. Bajri"
-                          className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent/50" />
+                          className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent/50" />
                       </div>
                       <div>
                         <label className="text-2xs text-muted mb-1 block">Category</label>
                         <select value={vForm.category} onChange={e => setVForm(f => ({ ...f, category: e.target.value }))}
-                          className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent/50">
+                          className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent/50">
                           {VOCAB_CATEGORIES.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase()+c.slice(1)}</option>)}
                         </select>
                       </div>
@@ -171,16 +171,16 @@ export default function AITrainPage() {
                       <label className="text-2xs text-muted mb-1 block">Matlab (meaning) *</label>
                       <input required value={vForm.meaning} onChange={e => setVForm(f => ({ ...f, meaning: e.target.value }))}
                         placeholder="e.g. Fine river sand used for plastering"
-                        className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent/50" />
+                        className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent/50" />
                     </div>
                     <div>
                       <label className="text-2xs text-muted mb-1 block">Other names (comma separated)</label>
                       <input value={vForm.aliases} onChange={e => setVForm(f => ({ ...f, aliases: e.target.value }))}
                         placeholder="e.g. bairi, najri, rait"
-                        className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent/50" />
+                        className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2 text-sm text-primary focus:outline-none focus:border-accent/50" />
                     </div>
                     <button type="submit" disabled={addingVocab}
-                      className="flex items-center gap-1.5 bg-white text-black px-4 py-2 rounded-xl text-sm font-bold hover:bg-white/90 disabled:opacity-50 transition-colors">
+                      className="flex items-center gap-1.5 btn-primary px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-50">
                       {addingVocab ? <FiRefreshCw className="animate-spin" size={12} /> : <FiPlus size={12} />} Add Term
                     </button>
                   </form>
@@ -231,7 +231,7 @@ export default function AITrainPage() {
                   <div className="flex items-center gap-2 mb-1">
                     {twilioConfigured ? <FiCheck size={15} className="text-success" /> : <FiAlertCircle size={15} className="text-warning" />}
                     <p className={`font-semibold text-sm ${twilioConfigured ? "text-success" : "text-warning"}`}>
-                      {twilioConfigured ? "✅ AI Calling Active" : "⚠ Setup Required"}
+                      {twilioConfigured ? "AI Calling Active" : "Setup Required"}
                     </p>
                   </div>
                   <p className="text-xs text-secondary">
@@ -260,7 +260,7 @@ export default function AITrainPage() {
                       <label className="text-2xs text-muted font-semibold uppercase tracking-wider block mb-1">Account SID</label>
                       <input value={twilioForm.account_sid} onChange={e => setTwilioForm(f => ({ ...f, account_sid: e.target.value }))}
                         placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                        className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm font-mono text-primary focus:outline-none focus:border-accent/50 placeholder:text-muted/40" />
+                        className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm font-mono text-primary focus:outline-none focus:border-accent/50 placeholder:text-muted/40" />
                       <p className="text-2xs text-muted mt-0.5">Dashboard pe milega — AC... se shuru hota hai</p>
                     </div>
                     <div>
@@ -269,7 +269,7 @@ export default function AITrainPage() {
                         <input type={showToken ? "text" : "password"} value={twilioForm.auth_token}
                           onChange={e => setTwilioForm(f => ({ ...f, auth_token: e.target.value }))}
                           placeholder="••••••••••••••••••••••••••••••••"
-                          className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 pr-10 py-2.5 text-sm font-mono text-primary focus:outline-none focus:border-accent/50 placeholder:text-muted/40" />
+                          className="w-full bg-surface-2 border border-border rounded-xl px-3 pr-10 py-2.5 text-sm font-mono text-primary focus:outline-none focus:border-accent/50 placeholder:text-muted/40" />
                         <button type="button" onClick={() => setShowToken(t => !t)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary">
                           {showToken ? <FiEyeOff size={14} /> : <FiEye size={14} />}
@@ -281,11 +281,11 @@ export default function AITrainPage() {
                       <label className="text-2xs text-muted font-semibold uppercase tracking-wider block mb-1">Phone Number</label>
                       <input value={twilioForm.phone_number} onChange={e => setTwilioForm(f => ({ ...f, phone_number: e.target.value }))}
                         placeholder="+14155552671"
-                        className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm font-mono text-primary focus:outline-none focus:border-accent/50 placeholder:text-muted/40" />
+                        className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm font-mono text-primary focus:outline-none focus:border-accent/50 placeholder:text-muted/40" />
                       <p className="text-2xs text-muted mt-0.5">+E.164 format — e.g. +14155552671</p>
                     </div>
                     <button type="submit" disabled={savingTwilio || !twilioForm.account_sid || !twilioForm.auth_token || !twilioForm.phone_number}
-                      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40 ${twilioSaved ? "bg-success/20 text-success border border-success/30" : "bg-white text-black shadow-button-accent hover:bg-white/90"}`}>
+                      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40 ${twilioSaved ? "bg-success/20 text-success border border-success/30" : "btn-primary"}`}>
                       {twilioSaved ? <><FiCheck size={14} /> Saved! Calling Active</> : savingTwilio ? <><FiRefreshCw size={13} className="animate-spin" /> Saving…</> : <><FiSave size={14} /> Save & Activate</>}
                     </button>
                   </form>
@@ -297,9 +297,9 @@ export default function AITrainPage() {
                     <p className="font-semibold text-primary text-sm mb-1">Webhook URL — Twilio mein daalo</p>
                     <p className="text-xs text-muted mb-2">Console → Phone Numbers → Active Numbers → Voice → "A call comes in" → POST:</p>
                     <div className="flex items-center gap-2">
-                      <code className="flex-1 text-2xs bg-surface-2 rounded-xl px-3 py-2.5 text-accent font-mono break-all border border-white/5">{webhookUrl}</code>
+                      <code className="flex-1 text-2xs bg-surface-2 rounded-xl px-3 py-2.5 text-accent font-mono break-all border border-border">{webhookUrl}</code>
                       <button onClick={() => { navigator.clipboard.writeText(webhookUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-                        className="shrink-0 p-2.5 rounded-xl bg-surface-2 hover:bg-surface-1 text-muted hover:text-primary transition-colors border border-white/5">
+                        className="shrink-0 p-2.5 rounded-xl bg-surface-2 hover:bg-surface-1 text-muted hover:text-primary transition-colors border border-border">
                         {copied ? <FiCheck size={14} className="text-success" /> : <FiCopy size={14} />}
                       </button>
                     </div>

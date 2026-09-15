@@ -137,21 +137,21 @@ export default function TeamPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-primary">Team</h2>
-            <p className="text-sm text-muted">{active.length} active · {workers.length} total</p>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>Team</h2>
+            <p className="text-sm text-muted mt-1">{active.length} active · {workers.length} total</p>
           </div>
           <div className="flex gap-2">
             <button onClick={() => setShowSetup(s => !s)}
               className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
                 twilioActive
                   ? "bg-success/10 border-success/30 text-success hover:bg-success/20"
-                  : "bg-surface-2 border-white/10 text-muted hover:text-primary"
+                  : "bg-surface-2 border-border text-muted hover:text-primary"
               }`}>
               <FiSettings size={14} />
-              {twilioActive ? "✓ Calling Active" : "⚙️ Call Setup"}
+              {twilioActive ? "Calling Active" : "Call Setup"}
             </button>
             <button onClick={() => setShowAdd(true)}
-              className="flex items-center gap-1.5 bg-white text-black px-4 py-2.5 rounded-xl text-sm font-bold shadow-button-accent hover:bg-white/90 transition-colors">
+              className="flex items-center gap-1.5 btn-primary px-4 py-2.5 rounded-xl text-sm font-bold">
               <FiPlus size={15} /> Add Worker
             </button>
           </div>
@@ -197,7 +197,7 @@ export default function TeamPage() {
                   value={sid}
                   onChange={e => setSid(e.target.value)}
                   placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary font-mono focus:outline-none focus:border-accent/50 placeholder:text-muted/40"
+                  className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary font-mono focus:outline-none focus:border-accent/50 placeholder:text-muted/40"
                 />
               </div>
               <div>
@@ -208,7 +208,7 @@ export default function TeamPage() {
                     value={token}
                     onChange={e => setToken(e.target.value)}
                     placeholder="••••••••••••••••••••••••••••••••"
-                    className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 pr-10 text-sm text-primary font-mono focus:outline-none focus:border-accent/50 placeholder:text-muted/40"
+                    className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 pr-10 text-sm text-primary font-mono focus:outline-none focus:border-accent/50 placeholder:text-muted/40"
                   />
                   <button type="button" onClick={() => setShowToken(s => !s)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors">
@@ -222,14 +222,14 @@ export default function TeamPage() {
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   placeholder="+12015551234"
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary font-mono focus:outline-none focus:border-accent/50 placeholder:text-muted/40"
+                  className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary font-mono focus:outline-none focus:border-accent/50 placeholder:text-muted/40"
                 />
               </div>
 
               <button
                 onClick={saveTwilio}
                 disabled={saving || !sid || !token || !phone}
-                className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
+                className="w-full py-3 rounded-xl btn-primary font-bold text-sm disabled:opacity-40 flex items-center justify-center gap-2">
                 {saving ? (
                   <><FiRefreshCw size={14} className="animate-spin" /> Saving...</>
                 ) : saveStatus === "saved" ? (
@@ -244,11 +244,11 @@ export default function TeamPage() {
 
             {/* Webhook URL — only show after save */}
             {webhookUrl && (
-              <div className="pt-2 border-t border-white/5">
+              <div className="pt-2 border-t border-border">
                 <p className="text-xs text-muted mb-2">
-                  📋 <span className="font-semibold text-secondary">Twilio Dashboard</span> → Phone Numbers → Your Number → Voice → Webhook:
+                  <span className="font-semibold text-secondary">Twilio Dashboard</span> → Phone Numbers → Your Number → Voice → Webhook:
                 </p>
-                <div className="flex items-center gap-2 bg-surface-2 rounded-xl px-3 py-2.5 border border-white/8">
+                <div className="flex items-center gap-2 bg-surface-2 rounded-xl px-3 py-2.5 border border-border">
                   <code className="flex-1 text-xs text-accent font-mono truncate">{webhookUrl}</code>
                   <button onClick={copyWebhook}
                     className="shrink-0 text-muted hover:text-primary transition-colors">
@@ -271,7 +271,7 @@ export default function TeamPage() {
             <FiUser size={40} className="mx-auto mb-3 text-muted opacity-30" />
             <p className="font-semibold text-primary mb-1">Koi worker nahi abhi tak</p>
             <p className="text-sm text-muted mb-4">Delivery boy, driver, helper — sab add karo</p>
-            <button onClick={() => setShowAdd(true)} className="bg-white text-black px-4 py-2 rounded-xl text-sm font-bold">
+            <button onClick={() => setShowAdd(true)} className="btn-primary px-4 py-2 rounded-xl text-sm font-bold">
               <FiPlus size={14} className="inline mr-1.5" /> Add First Worker
             </button>
           </div>
@@ -307,7 +307,7 @@ export default function TeamPage() {
         {/* Calling tip — shown only when twilio is active */}
         {twilioActive && workers.length > 0 && (
           <div className="p-3 bg-success/5 border border-success/20 rounded-xl">
-            <p className="text-xs text-success font-semibold mb-0.5">✅ AI Calling is Live</p>
+            <p className="text-xs text-success font-semibold mb-0.5">AI Calling is Live</p>
             <p className="text-xs text-muted">
               Jab customer call karega, AI automatically
               <span className="text-primary font-medium"> {active[0]?.name || "first active worker"} </span>
@@ -320,8 +320,8 @@ export default function TeamPage() {
       {/* Add Worker Modal */}
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-white/10 overflow-hidden">
-            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+          <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-border overflow-hidden">
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <h3 className="font-bold text-primary">Add Worker</h3>
               <button onClick={() => setShowAdd(false)} className="text-muted hover:text-primary"><FiX size={16} /></button>
             </div>
@@ -330,19 +330,19 @@ export default function TeamPage() {
                 <label className="text-xs text-muted mb-1 block">Name *</label>
                 <input required value={wForm.name} onChange={e => setWForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="Ramu, Shyam..." autoFocus
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
+                  className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-muted mb-1 block">Phone</label>
                   <input value={wForm.phone} onChange={e => setWForm(f => ({ ...f, phone: e.target.value }))}
                     placeholder="9876543210" type="tel"
-                    className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
+                    className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
                 </div>
                 <div>
                   <label className="text-xs text-muted mb-1 block">Role</label>
                   <select value={wForm.role} onChange={e => setWForm(f => ({ ...f, role: e.target.value }))}
-                    className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50">
+                    className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50">
                     {ROLES.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
                   </select>
                 </div>
@@ -351,12 +351,12 @@ export default function TeamPage() {
                 <label className="text-xs text-muted mb-1 block">Monthly Salary (₹)</label>
                 <input value={wForm.monthly_salary} onChange={e => setWForm(f => ({ ...f, monthly_salary: e.target.value }))}
                   placeholder="15000" type="number"
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
+                  className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowAdd(false)} className="flex-1 py-2.5 rounded-xl bg-surface-2 text-secondary text-sm font-semibold">Cancel</button>
                 <button type="submit" disabled={addingWorker}
-                  className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-white/90 disabled:opacity-50 transition-colors">
+                  className="flex-1 py-2.5 rounded-xl btn-primary text-sm font-bold disabled:opacity-50">
                   {addingWorker ? "Adding..." : "Add Worker"}
                 </button>
               </div>
@@ -378,18 +378,18 @@ function WorkerCard({ w, editId, editData, setEditId, setEditData, onToggle, onD
             <input value={editData.name ?? w.name} onChange={e => setEditData((d: any) => ({ ...d, name: e.target.value }))}
               className="bg-surface-2 border border-accent/40 rounded-lg px-2.5 py-2 text-sm text-primary focus:outline-none" />
             <input value={editData.phone ?? w.phone ?? ""} onChange={e => setEditData((d: any) => ({ ...d, phone: e.target.value }))}
-              placeholder="Phone" className="bg-surface-2 border border-white/8 rounded-lg px-2.5 py-2 text-sm text-primary focus:outline-none" />
+              placeholder="Phone" className="bg-surface-2 border border-border rounded-lg px-2.5 py-2 text-sm text-primary focus:outline-none" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <select value={editData.role ?? w.role} onChange={e => setEditData((d: any) => ({ ...d, role: e.target.value }))}
-              className="bg-surface-2 border border-white/8 rounded-lg px-2.5 py-2 text-sm text-primary focus:outline-none">
+              className="bg-surface-2 border border-border rounded-lg px-2.5 py-2 text-sm text-primary focus:outline-none">
               {["delivery","sales","driver","manager","helper","accountant","supervisor","loader"].map(r =>
                 <option key={r} value={r}>{r.charAt(0).toUpperCase()+r.slice(1)}</option>
               )}
             </select>
             <input type="number" value={editData.monthly_salary ?? w.monthly_salary ?? ""}
               onChange={e => setEditData((d: any) => ({ ...d, monthly_salary: parseFloat(e.target.value) || 0 }))}
-              placeholder="Monthly ₹" className="bg-surface-2 border border-white/8 rounded-lg px-2.5 py-2 text-sm text-primary focus:outline-none" />
+              placeholder="Monthly ₹" className="bg-surface-2 border border-border rounded-lg px-2.5 py-2 text-sm text-primary focus:outline-none" />
           </div>
           <div className="flex gap-2">
             <button onClick={() => onSave(w.id)}

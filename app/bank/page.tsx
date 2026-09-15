@@ -290,16 +290,16 @@ export default function BankPage() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-primary">Bank Monitor</h2>
-            <p className="text-sm text-muted">Connect accounts · import statements · auto-match payments</p>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>Bank Monitor</h2>
+            <p className="text-sm text-muted mt-1">Connect accounts · import statements · auto-match payments</p>
           </div>
           <div className="flex gap-2">
             <button onClick={() => setShowAdd(true)}
-              className="flex items-center gap-1.5 bg-surface-2 border border-white/10 text-secondary px-3 py-2.5 rounded-xl text-sm font-semibold hover:text-primary transition-colors">
+              className="flex items-center gap-1.5 bg-surface-2 border border-border text-secondary px-3 py-2.5 rounded-xl text-sm font-semibold hover:text-primary transition-colors">
               <FiPlus size={14} /> Add Transaction
             </button>
             <button onClick={() => setShowAddAccount(true)}
-              className="flex items-center gap-1.5 bg-white text-black px-4 py-2.5 rounded-xl text-sm font-bold shadow-button-accent hover:bg-white/90 transition-colors">
+              className="flex items-center gap-1.5 btn-primary px-4 py-2.5 rounded-xl text-sm font-bold">
               <FiLink size={14} /> Connect Account
             </button>
           </div>
@@ -310,7 +310,7 @@ export default function BankPage() {
           <p className="text-xs font-bold text-muted uppercase tracking-wider mb-2">Connected Accounts</p>
           {accounts.length === 0 ? (
             <button onClick={() => setShowAddAccount(true)}
-              className="w-full card p-5 border-dashed border-white/15 flex items-center gap-3 text-left hover:border-accent/40 hover:bg-accent/5 transition-all group">
+              className="w-full card p-5 border-dashed border-border flex items-center gap-3 text-left hover:border-accent/40 hover:bg-accent/5 transition-all group">
               <div className="w-10 h-10 rounded-xl bg-surface-2 group-hover:bg-accent/10 flex items-center justify-center transition-colors">
                 <FiPlus size={18} className="text-muted group-hover:text-accent" />
               </div>
@@ -351,7 +351,7 @@ export default function BankPage() {
               ))}
               {/* Add another account */}
               <button onClick={() => setShowAddAccount(true)}
-                className="card p-4 border-dashed border-white/10 flex items-center gap-3 hover:border-accent/30 hover:bg-accent/5 transition-all group">
+                className="card p-4 border-dashed border-border flex items-center gap-3 hover:border-accent/30 hover:bg-accent/5 transition-all group">
                 <div className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center">
                   <FiPlus size={16} className="text-muted group-hover:text-accent transition-colors" />
                 </div>
@@ -367,7 +367,7 @@ export default function BankPage() {
         {/* ── CSV Preview ── */}
         {parsedRows.length > 0 && (
           <div className="card overflow-hidden border border-accent/20">
-            <div className="px-4 py-3 border-b border-white/5 bg-accent/5 flex items-center justify-between">
+            <div className="px-4 py-3 border-b border-border bg-accent/5 flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold text-primary">Import Preview — {importAcct?.bank_name}</p>
                 <p className="text-xs text-muted">{parsedRows.filter(r => r.selected).length} of {parsedRows.length} transactions selected</p>
@@ -378,11 +378,11 @@ export default function BankPage() {
                 <button onClick={deselectAllRows} className="text-xs text-muted font-semibold hover:underline">None</button>
               </div>
             </div>
-            <div className="max-h-72 overflow-y-auto divide-y divide-white/5">
+            <div className="max-h-72 overflow-y-auto divide-y divide-border">
               {parsedRows.map((row, i) => (
                 <div key={i} onClick={() => toggleRow(i)}
                   className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-surface-2/50 transition-colors ${!row.selected ? "opacity-40" : ""}`}>
-                  <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all ${row.selected ? "bg-accent border-accent" : "border-white/20"}`}>
+                  <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all ${row.selected ? "bg-accent border-accent" : "border-border"}`}>
                     {row.selected && <FiCheck size={10} className="text-white" />}
                   </div>
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${row.type === "credit" ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
@@ -398,11 +398,11 @@ export default function BankPage() {
                 </div>
               ))}
             </div>
-            <div className="px-4 py-3 border-t border-white/5 flex gap-3">
+            <div className="px-4 py-3 border-t border-border flex gap-3">
               <button onClick={() => { setParsedRows([]); setImportAcct(null); }}
                 className="flex-1 py-2.5 rounded-xl bg-surface-2 text-secondary text-sm font-semibold">Cancel</button>
               <button onClick={importRows} disabled={importing || parsedRows.filter(r => r.selected).length === 0}
-                className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-white/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                className="flex-1 py-2.5 rounded-xl btn-primary text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2">
                 {importing ? <><FiRefreshCw size={13} className="animate-spin" /> Importing...</> : <><FiUpload size={13} /> Import {parsedRows.filter(r => r.selected).length} Transactions</>}
               </button>
             </div>
@@ -446,7 +446,7 @@ export default function BankPage() {
             <p className="text-xs text-muted mb-3">Yeh payments exactly match kar rahi hain pending invoices se:</p>
             <div className="space-y-2">
               {autoMatches.map(({ txn, invoice }) => (
-                <div key={txn.id} className="flex items-center gap-3 bg-surface-2/50 rounded-xl p-3 border border-white/5">
+                <div key={txn.id} className="flex items-center gap-3 bg-surface-2/50 rounded-xl p-3 border border-border">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-success">{fmtINR(txn.amount)}</span>
@@ -480,7 +480,7 @@ export default function BankPage() {
             <p className="font-semibold text-primary mb-1">Koi transaction nahi abhi tak</p>
             <p className="text-sm text-muted mb-4">Bank account connect karo aur statement import karo — ya manually add karo</p>
             <div className="flex gap-3 justify-center">
-              <button onClick={() => setShowAddAccount(true)} className="bg-white text-black px-4 py-2 rounded-xl text-sm font-bold">
+              <button onClick={() => setShowAddAccount(true)} className="btn-primary px-4 py-2 rounded-xl text-sm font-bold">
                 <FiLink size={13} className="inline mr-1" /> Connect Account
               </button>
               <button onClick={() => setShowAdd(true)} className="bg-surface-2 text-secondary px-4 py-2 rounded-xl text-sm font-semibold">
@@ -490,11 +490,11 @@ export default function BankPage() {
           </div>
         ) : (
           <div className="card overflow-hidden">
-            <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <p className="text-sm font-bold text-primary">All Transactions</p>
               <p className="text-xs text-muted">{txns.length} entries</p>
             </div>
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-border">
               {txns.map(txn => (
                 <div key={txn.id} className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-2/30 group">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${txn.type === "credit" ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
@@ -510,7 +510,7 @@ export default function BankPage() {
                         </span>
                       )}
                       {txn.status === "ignored" && (
-                        <span className="text-2xs bg-white/5 text-muted px-1.5 py-0.5 rounded-full">Ignored</span>
+                        <span className="text-2xs bg-surface-2 text-muted px-1.5 py-0.5 rounded-full">Ignored</span>
                       )}
                     </div>
                   </div>
@@ -539,8 +539,8 @@ export default function BankPage() {
       {/* ── Add Account Modal ── */}
       {showAddAccount && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-white/10 overflow-hidden">
-            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+          <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-border overflow-hidden">
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-primary">Connect Bank Account</h3>
                 <p className="text-xs text-muted mt-0.5">Sirf details store karta hai — securely</p>
@@ -551,7 +551,7 @@ export default function BankPage() {
               <div>
                 <label className="text-xs text-muted mb-1 block">Bank *</label>
                 <select value={acctForm.bank_name} onChange={e => setAcctForm(f => ({ ...f, bank_name: e.target.value }))}
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50">
+                  className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50">
                   {BANKS.map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
               </div>
@@ -560,12 +560,12 @@ export default function BankPage() {
                   <label className="text-xs text-muted mb-1 block">Last 4 digits</label>
                   <input value={acctForm.account_last4} onChange={e => setAcctForm(f => ({ ...f, account_last4: e.target.value.slice(0, 4) }))}
                     placeholder="4321" maxLength={4} type="tel"
-                    className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
+                    className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
                 </div>
                 <div>
                   <label className="text-xs text-muted mb-1 block">Account Type</label>
                   <select value={acctForm.account_type} onChange={e => setAcctForm(f => ({ ...f, account_type: e.target.value }))}
-                    className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50">
+                    className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50">
                     <option value="current">Current</option>
                     <option value="savings">Savings</option>
                     <option value="od">OD/CC</option>
@@ -576,13 +576,13 @@ export default function BankPage() {
                 <label className="text-xs text-muted mb-1 block">Nickname (optional)</label>
                 <input value={acctForm.nickname} onChange={e => setAcctForm(f => ({ ...f, nickname: e.target.value }))}
                   placeholder="Main Account, GST Account..."
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
+                  className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
               </div>
               <div>
                 <label className="text-xs text-muted mb-1 block">IFSC (optional)</label>
                 <input value={acctForm.ifsc} onChange={e => setAcctForm(f => ({ ...f, ifsc: e.target.value.toUpperCase() }))}
                   placeholder="HDFC0001234"
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary font-mono focus:outline-none focus:border-accent/50" />
+                  className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary font-mono focus:outline-none focus:border-accent/50" />
               </div>
               <div className="p-3 bg-surface-2 rounded-xl flex items-start gap-2">
                 <FiAlertCircle size={13} className="text-muted shrink-0 mt-0.5" />
@@ -593,7 +593,7 @@ export default function BankPage() {
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowAddAccount(false)} className="flex-1 py-2.5 rounded-xl bg-surface-2 text-secondary text-sm font-semibold">Cancel</button>
                 <button type="submit" disabled={addingAcct || !acctForm.bank_name}
-                  className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-white/90 disabled:opacity-50 transition-colors">
+                  className="flex-1 py-2.5 rounded-xl btn-primary text-sm font-bold disabled:opacity-50">
                   {addingAcct ? "Saving..." : "Connect Account"}
                 </button>
               </div>
@@ -612,8 +612,8 @@ export default function BankPage() {
       {/* ── Manual Add Modal ── */}
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-white/10 overflow-hidden">
-            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+          <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-border overflow-hidden">
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <h3 className="font-bold text-primary">Add Transaction</h3>
               <button onClick={() => setShowAdd(false)} className="text-muted hover:text-primary"><FiX size={16} /></button>
             </div>
@@ -622,7 +622,7 @@ export default function BankPage() {
                 <div>
                   <label className="text-xs text-muted mb-1 block">Date</label>
                   <input type="date" value={addForm.date} onChange={e => setAddForm(f => ({ ...f, date: e.target.value }))}
-                    className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
+                    className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
                 </div>
                 <div>
                   <label className="text-xs text-muted mb-1 block">Type</label>
@@ -640,18 +640,18 @@ export default function BankPage() {
                 <label className="text-xs text-muted mb-1 block">Amount (₹) *</label>
                 <input required type="number" value={addForm.amount} onChange={e => setAddForm(f => ({ ...f, amount: e.target.value }))}
                   placeholder="50000" autoFocus
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
+                  className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
               </div>
               <div>
                 <label className="text-xs text-muted mb-1 block">Description</label>
                 <input value={addForm.description} onChange={e => setAddForm(f => ({ ...f, description: e.target.value }))}
                   placeholder="UPI from Sharma ji, NEFT..."
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
+                  className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50" />
               </div>
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowAdd(false)} className="flex-1 py-2.5 rounded-xl bg-surface-2 text-secondary text-sm font-semibold">Cancel</button>
                 <button type="submit" disabled={saving || !addForm.amount}
-                  className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-white/90 disabled:opacity-50 transition-colors">
+                  className="flex-1 py-2.5 rounded-xl btn-primary text-sm font-bold disabled:opacity-50">
                   {saving ? "Saving..." : "Add"}
                 </button>
               </div>
@@ -663,8 +663,8 @@ export default function BankPage() {
       {/* ── Manual Match Modal ── */}
       {matchModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-surface-1 rounded-2xl border border-white/10 overflow-hidden">
-            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+          <div className="w-full max-w-md bg-surface-1 rounded-2xl border border-border overflow-hidden">
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-primary">Match to Invoice</h3>
                 <p className="text-xs text-muted">Payment: <span className="text-success font-bold">{fmtINR(matchModal.amount)}</span></p>
@@ -675,7 +675,7 @@ export default function BankPage() {
               {pendingInvoices.length === 0 ? (
                 <p className="text-center text-sm text-muted py-4">No pending invoices</p>
               ) : pendingInvoices.map(inv => (
-                <div key={inv.id} className="flex items-center justify-between p-3 bg-surface-2 rounded-xl border border-white/5 hover:border-accent/30 transition-colors">
+                <div key={inv.id} className="flex items-center justify-between p-3 bg-surface-2 rounded-xl border border-border hover:border-accent/30 transition-colors">
                   <div>
                     <p className="text-sm font-semibold text-primary">{inv.customer_name}</p>
                     <p className="text-2xs text-muted">{inv.bill_number} · {fmtDate(inv.bill_date)}</p>
