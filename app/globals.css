@@ -8,11 +8,11 @@
    DESIGN TOKENS
    ============================================================ */
 :root {
-  --bg:          #080808;
-  --surface:     #0e0e0e;
-  --surface-1:   #111111;
-  --surface-2:   #161616;
-  --border:      #222222;
+  --bg:          #F7F7F4;
+  --surface:     #FFFFFF;
+  --surface-1:   #FFFFFF;
+  --surface-2:   #F2F2EF;
+  --border:      #E5E5E1;
   --accent:      #4F6EF7;
   --accent-rgb:  79, 110, 247;
   --cta:         #FF6B35;
@@ -68,14 +68,14 @@
   *, *::before, *::after { box-sizing: border-box; }
 
   html {
-    color-scheme: dark;
+    color-scheme: light;
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
   }
 
   body {
     background-color: var(--bg);
-    color: #F2F2F2;
+    color: #171717;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     font-size: 14px;
     font-weight: 400;
@@ -92,15 +92,15 @@
   }
 
   ::selection {
-    background: rgba(var(--accent-rgb), 0.25);
-    color: #E8EFF8;
+    background: rgba(var(--accent-rgb), 0.18);
+    color: #171717;
   }
 
   /* Scrollbar */
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.24); }
 }
 
 /* ============================================================
@@ -250,7 +250,7 @@
 
 .card-premium:hover,
 .card-metric:hover {
-  border-color: #2a2a2a; /* border-2 in tailwind.config.ts — no matching CSS var exists */
+  border-color: #D8D8D3; /* border-2 in tailwind.config.ts — no matching CSS var exists */
 }
 
 /* ============================================================
@@ -273,21 +273,21 @@
    surface/card primitive block — kept as one alias, not redefined here)
    ============================================================ */
 .input-base {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 6px;
+  background: #FFFFFF;
+  border: 1px solid #E5E5E1;
+  border-radius: 8px;
   padding: 8px 12px;
-  color: #F2F2F2;
+  color: #171717;
   font-size: 13px;
   outline: none;
   transition: border-color 0.2s, background 0.2s;
   width: 100%;
 }
 .input-base:focus {
-  border-color: rgba(255,255,255,0.30);
-  background: rgba(255,255,255,0.07);
+  border-color: #C7CFEF;
+  background: #FFFFFF;
 }
-.input-base::placeholder { color: rgba(255,255,255,0.28); }
+.input-base::placeholder { color: rgba(0,0,0,0.32); }
 
 /* ============================================================
    TABLE PREMIUM
@@ -298,7 +298,7 @@
 }
 .table-premium tbody tr:last-child { border-bottom: none; }
 .table-premium tbody tr:hover {
-  background: rgba(255,255,255,0.025);
+  background: rgba(0,0,0,0.02);
 }
 
 /* ============================================================
@@ -313,37 +313,26 @@
    BUTTONS
    ============================================================ */
 .btn-primary {
-  background: #ffffff;
-  color: #000000;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
-  transition: all 0.15s ease;
+  background: #171717;
+  color: #ffffff;
+  border: 1px solid #171717;
+  transition: background 0.15s ease;
 }
-.btn-primary:hover {
-  background: rgba(255,255,255,0.91);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.18), 0 4px 20px rgba(0,0,0,0.10);
-  transform: translateY(-1px);
-}
-.btn-primary:active { transform: translateY(0); }
+.btn-primary:hover { background: #2A2A2A; }
+.btn-primary:active { background: #000000; }
 
 /* ── Primary action button — monochrome, no brand-color CTA system.
    Kept as .btn-cta for now (call sites unchanged) but restyled to the
-   same restrained language as .btn-primary: near-black fill would be
-   wrong on this dark UI, so it uses the same white-fill treatment. ── */
+   same restrained near-black-fill language as .btn-primary. ── */
 .btn-cta {
-  background: #ffffff;
-  color: #000000;
+  background: #171717;
+  color: #ffffff;
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
-  transition: all 0.15s ease;
+  border: 1px solid #171717;
+  transition: background 0.15s ease;
 }
-.btn-cta:hover {
-  background: rgba(255,255,255,0.91);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.18), 0 4px 20px rgba(0,0,0,0.10);
-  transform: translateY(-1px);
-}
-.btn-cta:active { transform: translateY(0); }
+.btn-cta:hover { background: #2A2A2A; }
+.btn-cta:active { background: #000000; }
 
 /* ============================================================
    STATUS INDICATOR — a static dot, not an infinite pulsing glow.
@@ -428,10 +417,10 @@
    ============================================================ */
 .recharts-tooltip-wrapper { outline: none !important; }
 .recharts-default-tooltip {
-  background: var(--surface-2) !important;
-  border: 1px solid var(--border) !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E5E5E1 !important;
   border-radius: 8px !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
 }
 
 /* ============================================================
@@ -531,7 +520,7 @@ input:focus, select:focus, textarea:focus {
 /* ============================================================
    SCORE RING — SVG circular progress
    ============================================================ */
-.score-ring-track { fill: none; stroke: rgba(255,255,255,0.06); }
+.score-ring-track { fill: none; stroke: rgba(0,0,0,0.08); }
 .score-ring-fill  { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1); }
 
 /* ============================================================
