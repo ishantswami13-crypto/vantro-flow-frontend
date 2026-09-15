@@ -629,15 +629,15 @@ export default function PurchasesPage() {
       {/* ══════════ BULK SCAN PROGRESS MODAL ══════════ */}
       {mounted && bulkScanning && createPortal(
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 360 }}>
+          <div style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 360 }}>
             <p className="font-bold text-primary text-base mb-1">Scanning Bills…</p>
             <p className="text-xs text-muted mb-4">
               {bulkWaiting
                 ? `Cooling down between scans…`
                 : `${bulkDone} / ${bulkTotal} done${bulkCurrent ? ` — ${bulkCurrent}` : ""}`}
             </p>
-            <div className="w-full bg-white/5 rounded-full h-2 mb-5">
-              <div className="bg-white h-2 rounded-full transition-all duration-300"
+            <div className="w-full bg-surface-2 rounded-full h-2 mb-5">
+              <div className="bg-gray-900 h-2 rounded-full transition-all duration-300"
                 style={{ width: bulkTotal > 0 ? `${Math.round((bulkDone / bulkTotal) * 100)}%` : "0%" }} />
             </div>
             <button onClick={() => { bulkCancelRef.current = true; }}
@@ -653,7 +653,7 @@ export default function PurchasesPage() {
       {/* ══════════ BULK RESULTS MODAL ══════════ */}
       {mounted && bulkResults && createPortal(
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 520 }}>
+          <div style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 520 }}>
             <p className="font-bold text-primary text-base mb-4">Bulk Scan Complete</p>
             <div className="space-y-2.5 mb-5">
               <div className="flex items-center justify-between">
@@ -692,7 +692,7 @@ export default function PurchasesPage() {
                     : item.status === "not_processed" ? "Not processed"
                     : "Failed";
                   return (
-                    <div key={`${item.fileName}-${index}`} className="p-3 rounded-xl bg-surface-2/70 border border-white/5">
+                    <div key={`${item.fileName}-${index}`} className="p-3 rounded-xl bg-surface-2/70 border border-border">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-primary truncate">{item.title}</p>
@@ -711,7 +711,7 @@ export default function PurchasesPage() {
               </div>
             )}
             <button onClick={() => setBulkResults(null)}
-              className="w-full py-2.5 rounded-xl text-sm font-bold bg-white text-black">
+              className="w-full py-2.5 rounded-xl text-sm font-bold btn-primary">
               Done
             </button>
           </div>
@@ -1020,11 +1020,11 @@ export default function PurchasesPage() {
       {mounted && showAdd && createPortal(
         <div style={{ position: "fixed", inset: 0, zIndex: 99998 }}
              className="flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
-          <div className="w-full max-w-lg bg-surface-1 rounded-2xl border border-white/10 overflow-hidden"
+          <div className="w-full max-w-lg bg-surface-1 rounded-2xl border border-border overflow-hidden"
                style={{ maxHeight: "92vh", overflowY: "auto" }}>
 
             {/* Modal header */}
-            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between sticky top-0 bg-surface-1 z-10">
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between sticky top-0 bg-surface-1 z-10">
               <div>
                 <h3 className="font-bold text-primary">
                   {scanning
@@ -1047,7 +1047,7 @@ export default function PurchasesPage() {
             {/* Bill preview thumbnail */}
             {scanPreview && (
               <div className="px-5 pt-4">
-                <div className="relative rounded-xl overflow-hidden border border-white/8" style={{ maxHeight: 170 }}>
+                <div className="relative rounded-xl overflow-hidden border border-border" style={{ maxHeight: 170 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={scanPreview} alt="Bill" className="w-full object-cover object-top" style={{ maxHeight: 170 }} />
                   {scanning && (
@@ -1075,7 +1075,7 @@ export default function PurchasesPage() {
             {scanning && (
               <div className="p-5 space-y-3">
                 {[1, 2, 3, 4, 5].map(i => (
-                  <div key={i} className="h-9 bg-white/5 rounded-xl animate-pulse"
+                  <div key={i} className="h-9 bg-surface-2 rounded-xl animate-pulse"
                        style={{ width: i % 2 === 0 ? "75%" : "100%" }} />
                 ))}
               </div>
@@ -1095,10 +1095,10 @@ export default function PurchasesPage() {
                 <p className="text-2xs font-semibold text-muted uppercase tracking-widest mb-2">
                   Items Extracted ({scannedItems.length})
                 </p>
-                <div className="rounded-xl border border-white/8 overflow-x-auto">
+                <div className="rounded-xl border border-border overflow-x-auto">
                   <table className="w-full" style={{ minWidth: 420 }}>
                     <thead>
-                      <tr style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                      <tr style={{ background: "#FAFAF8", borderBottom: "1px solid #E5E5E1" }}>
                         <th className="text-left px-3 py-2 text-2xs font-semibold text-muted uppercase tracking-wide">Description</th>
                         <th className="text-center px-2 py-2 text-2xs font-semibold text-muted uppercase tracking-wide">HSN/SAC</th>
                         <th className="text-center px-2 py-2 text-2xs font-semibold text-muted uppercase tracking-wide">Qty</th>
@@ -1108,7 +1108,7 @@ export default function PurchasesPage() {
                     </thead>
                     <tbody>
                       {scannedItems.map((item, i) => (
-                        <tr key={i} style={{ borderTop: i > 0 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                        <tr key={i} style={{ borderTop: i > 0 ? "1px solid #EDEDE9" : "none" }}>
                           <td className="px-3 py-2.5" style={{ maxWidth: 200 }}>
                             <p className="text-xs text-primary font-medium leading-snug">{item.description}</p>
                           </td>
@@ -1129,7 +1129,7 @@ export default function PurchasesPage() {
                     {form.total_amount && (
                       <tfoot>
                         {scannedGst && (
-                          <tr style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                          <tr style={{ borderTop: "1px solid #E5E5E1" }}>
                             <td colSpan={3} className="px-3 py-2 text-xs text-muted text-right">
                               {scannedGst.type}{scannedGst.rate ? ` @ ${scannedGst.rate}%` : ""}
                             </td>
@@ -1139,7 +1139,7 @@ export default function PurchasesPage() {
                             </td>
                           </tr>
                         )}
-                        <tr style={{ borderTop: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)" }}>
+                        <tr style={{ borderTop: "1px solid #D8D8D3", background: "#FAFAF8" }}>
                           <td colSpan={4} className="px-3 py-2 text-xs font-semibold text-muted text-right">Grand Total</td>
                           <td className="px-3 py-2 text-right text-sm font-bold text-primary">
                             {fmtINR(parseFloat(form.total_amount))}
@@ -1164,7 +1164,7 @@ export default function PurchasesPage() {
                         value={form.supplier_name}
                         onChange={e => setForm(f => ({ ...f, supplier_name: e.target.value }))}
                         placeholder="Ram Traders…"
-                        className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
+                        className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
                       />
                     </div>
                     <div>
@@ -1173,7 +1173,7 @@ export default function PurchasesPage() {
                         value={form.supplier_phone}
                         onChange={e => setForm(f => ({ ...f, supplier_phone: e.target.value }))}
                         placeholder="9876543210" type="tel"
-                        className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
+                        className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
                       />
                     </div>
                   </div>
@@ -1184,7 +1184,7 @@ export default function PurchasesPage() {
                       onChange={e => setForm(f => ({ ...f, supplier_gstin: e.target.value.toUpperCase() }))}
                       placeholder="22AAAAA0000A1Z5"
                       maxLength={15}
-                      className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50 font-mono tracking-wide"
+                      className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50 font-mono tracking-wide"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -1194,7 +1194,7 @@ export default function PurchasesPage() {
                         value={form.bill_number}
                         onChange={e => setForm(f => ({ ...f, bill_number: e.target.value }))}
                         placeholder="INV-001"
-                        className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
+                        className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
                       />
                     </div>
                     <div>
@@ -1203,7 +1203,7 @@ export default function PurchasesPage() {
                         value={form.purchase_date}
                         onChange={e => setForm(f => ({ ...f, purchase_date: e.target.value }))}
                         type="date"
-                        className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
+                        className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
                       />
                     </div>
                   </div>
@@ -1214,7 +1214,7 @@ export default function PurchasesPage() {
                         value={form.total_amount}
                         onChange={e => setForm(f => ({ ...f, total_amount: e.target.value }))}
                         placeholder="50000" type="number"
-                        className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
+                        className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
                       />
                     </div>
                     <div>
@@ -1223,7 +1223,7 @@ export default function PurchasesPage() {
                         value={form.paid_amount}
                         onChange={e => setForm(f => ({ ...f, paid_amount: e.target.value }))}
                         placeholder="0" type="number"
-                        className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
+                        className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
                       />
                     </div>
                   </div>
@@ -1233,7 +1233,7 @@ export default function PurchasesPage() {
                       value={form.due_date}
                       onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))}
                       type="date"
-                      className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
+                      className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
                     />
                   </div>
                   <div>
@@ -1243,7 +1243,7 @@ export default function PurchasesPage() {
                       onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                       placeholder="Cement, rod, sand…"
                       rows={scannedItems.length > 0 ? 3 : 2}
-                      className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50 resize-none"
+                      className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50 resize-none"
                     />
                   </div>
                 </div>
@@ -1256,7 +1256,7 @@ export default function PurchasesPage() {
                   <button
                     onClick={save}
                     disabled={saving || !form.supplier_name || !form.total_amount}
-                    className="flex-1 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-white/90 disabled:opacity-50 transition-colors"
+                    className="flex-1 py-2.5 rounded-xl btn-primary text-sm font-bold disabled:opacity-50"
                   >
                     {saving ? "Saving…" : editId ? "Update" : "Add Purchase"}
                   </button>
@@ -1272,7 +1272,7 @@ export default function PurchasesPage() {
       {mounted && payModal && createPortal(
         <div style={{ position: "fixed", inset: 0, zIndex: 99998 }}
              className="flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-white/10 p-5">
+          <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-border p-5">
             <h3 className="font-bold text-primary mb-1">Record Payment</h3>
             <p className="text-xs text-muted mb-4">
               {payModal.supplier_name} · Remaining: {fmtINR(payModal.total_amount - payModal.paid_amount)}
@@ -1284,7 +1284,7 @@ export default function PurchasesPage() {
                 onChange={e => setPayAmount(e.target.value)}
                 placeholder={String(payModal.total_amount - payModal.paid_amount)}
                 type="number" autoFocus
-                className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
+                className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm text-primary focus:outline-none focus:border-accent/50"
               />
             </div>
             <div className="flex gap-3">
