@@ -129,7 +129,7 @@ export default function SignalImpactPage() {
       {!isLoading && !isError && impact && !impact.sufficientDataForQuantification && (
         <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
           <Breadcrumb router={router} title={impact.signal.event_title || "External signal"} />
-          <h1 className="text-[32px] leading-[1.15] mb-6" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>
+          <h1 className="text-[26px] lg:text-[32px] leading-[1.15] mb-6" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>
             {impact.signal.event_title || "External signal"}
           </h1>
           <EmptyState
@@ -144,7 +144,7 @@ export default function SignalImpactPage() {
           {/* HEADER — breadcrumb, editorial title, quiet metadata row. No hero,
               no giant badges: the investigation title itself carries weight. */}
           <Breadcrumb router={router} title={impact.signal.event_title || "Investigation"} />
-          <h1 className="text-[32px] leading-[1.15] mb-2" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>
+          <h1 className="text-[26px] lg:text-[32px] leading-[1.15] mb-2" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>
             {impact.signal.event_title || "External signal"}
           </h1>
           <p className="text-[13px] mb-10" style={{ color: "#686868" }}>
