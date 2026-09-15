@@ -822,8 +822,8 @@ export default function SalesPage() {
         {/* ══════════ PAGE HEADER ══════════ */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold text-primary">Sales</h1>
-            <p className="text-xs text-muted">What customers owe you</p>
+            <h1 className="text-[26px] leading-[1.15]" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>Sales</h1>
+            <p className="text-xs text-muted mt-1">What customers owe you</p>
           </div>
           <div className="flex items-center gap-2">
             {/* Hidden bulk file input */}
@@ -836,16 +836,16 @@ export default function SalesPage() {
               onChange={e => { if (e.target.files?.length) handleBulkScan(e.target.files); }}
             />
             <button onClick={() => bulkInputRef.current?.click()}
-              className="flex items-center gap-1.5 border border-white/10 text-white/70 px-3 py-2.5 rounded-xl text-sm font-semibold hover:border-white/25 hover:text-white transition-colors">
+              className="flex items-center gap-1.5 border border-border text-secondary px-3 py-2.5 rounded-xl text-sm font-semibold hover:border-border-2 hover:text-primary transition-colors">
               <FiUpload size={14} /> Bulk Upload
             </button>
             <button onClick={openCamera}
-              className="flex items-center gap-1.5 border border-white/10 text-white/70 px-3 py-2.5 rounded-xl text-sm font-semibold hover:border-white/25 hover:text-white transition-colors">
+              className="flex items-center gap-1.5 border border-border text-secondary px-3 py-2.5 rounded-xl text-sm font-semibold hover:border-border-2 hover:text-primary transition-colors">
               <FiCamera size={14} /> Scan
             </button>
             <button
               onClick={() => { setForm(emptyForm); setEditId(null); setScanPreview(null); setScannedItems([]); setScannedGst(null); setShowAdd(true); }}
-              className="flex items-center gap-1.5 bg-white text-black px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-white/90 transition-colors">
+              className="flex items-center gap-1.5 btn-primary px-4 py-2.5 rounded-xl text-sm font-bold">
               <FiPlus size={15} /> Add
             </button>
           </div>
@@ -853,19 +853,19 @@ export default function SalesPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-          <div className="card p-4">
+          <div className="card-premium p-4">
             <p className="text-xs text-muted mb-1">Total sales</p>
             <p className="text-xl font-bold text-success">{fmtINR(totalRevenue)}</p>
           </div>
-          <div className="card p-4">
+          <div className="card-premium p-4">
             <p className="text-xs text-muted mb-1">Customers still owe you</p>
             <p className="text-xl font-bold text-warning">{fmtINR(totalReceivable)}</p>
           </div>
-          <div className="card p-4">
+          <div className="card-premium p-4">
             <p className="text-xs text-muted mb-1">Number of sales</p>
             <p className="text-xl font-bold text-primary">{sales.length}</p>
           </div>
-          <div className="card p-4">
+          <div className="card-premium p-4">
             <p className="text-xs text-muted mb-1">Fully paid</p>
             <p className="text-xl font-bold text-success">{paidCount}</p>
             <p className="text-2xs text-muted">{sales.length > 0 ? Math.round((paidCount / sales.length) * 100) : 0}% collected</p>
@@ -890,7 +890,7 @@ export default function SalesPage() {
           </div>
         )}
 
-        <div className="mb-4 p-4 bg-surface-2/60 border border-white/8 rounded-xl">
+        <div className="mb-4 p-4 bg-surface-2 border border-border rounded-xl">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
             <div>
               <p className="text-sm font-bold text-primary">Product Sales Finder</p>
@@ -900,7 +900,7 @@ export default function SalesPage() {
               value={productQuery}
               onChange={e => setProductQuery(e.target.value)}
               placeholder="Search product sold..."
-              className="w-full sm:w-64 bg-surface-1 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-primary placeholder-muted focus:outline-none focus:border-accent/50"
+              className="w-full sm:w-64 bg-surface-1 border border-border rounded-xl px-3 py-2.5 text-sm text-primary placeholder-muted focus:outline-none focus:border-accent/50"
             />
           </div>
           <div className="grid grid-cols-3 gap-2 mb-3">
@@ -918,7 +918,7 @@ export default function SalesPage() {
             </div>
           </div>
           {productMatches.length > 0 ? (
-            <div className="max-h-44 overflow-y-auto divide-y divide-white/5">
+            <div className="max-h-44 overflow-y-auto divide-y divide-border">
               {productMatches.slice(0, 8).map((row, index) => (
                 <div key={`${row.recordId}-${row.productName}-${index}`} className="flex items-center justify-between gap-3 py-2">
                   <div className="min-w-0">
@@ -941,7 +941,7 @@ export default function SalesPage() {
         <div className="flex gap-2 mb-4">
           {["all", "unpaid", "partial", "paid"].map(s => (
             <button key={s} onClick={() => setFilterStatus(s)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${filterStatus === s ? "bg-white text-black" : "bg-surface-2 text-muted hover:text-primary"}`}>
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${filterStatus === s ? "bg-gray-900 text-white" : "bg-surface-2 text-muted hover:text-primary"}`}>
               {s === "all" ? "All" : statusConfig[s as keyof typeof statusConfig]?.label}
               {s !== "all" && <span className="ml-1 opacity-60">({sales.filter(x => x.status === s).length})</span>}
             </button>
@@ -965,7 +965,7 @@ export default function SalesPage() {
               const pending = s.total_amount - s.paid_amount;
               const isOverdue = s.status !== "paid" && s.due_date && new Date(s.due_date) < new Date();
               return (
-                <div key={s.id} className={`card p-4 border ${isOverdue ? "border-warning/20" : "border-transparent"}`}>
+                <div key={s.id} className={`card-premium p-4 border ${isOverdue ? "border-warning/20" : "border-transparent"}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
