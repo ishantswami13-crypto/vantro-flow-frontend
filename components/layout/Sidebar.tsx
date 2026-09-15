@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  FiGlobe, FiDatabase, FiShield, FiPlus, FiMoreHorizontal, FiSearch,
+  FiDatabase, FiShield, FiPlus, FiMoreHorizontal, FiSearch,
   FiList, FiTrendingUp, FiSettings, FiLogOut, FiX,
   FiMessageSquare, FiPackage, FiUsers, FiBarChart2,
   FiCamera, FiFileText, FiCreditCard, FiRepeat,
@@ -18,15 +18,13 @@ import { getBusinessType, getSmartHiddenRoutes, type BusinessTypeConfig } from "
 import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
 import { getRecents, timeAgo, type RecentEntry } from "@/lib/recents";
 import { CommandPalette, type SearchableRoute } from "./CommandPalette";
+import { PRIMARY_NAV } from "@/lib/navigation";
 
 // Three durable nouns in the permanent rail. Everything else that's real
 // still exists and is still reachable — it lives in the More flyout
-// instead of competing for space as first-class navigation.
-const PRIMARY = [
-  { href: "/intelligence", label: "Intelligence", icon: FiGlobe },
-  { href: "/connections",  label: "Sources",      icon: FiDatabase },
-  { href: "/control",      label: "Control",      icon: FiShield },
-];
+// instead of competing for space as first-class navigation. Shared with
+// BottomNav via lib/navigation.ts so the two surfaces cannot drift.
+const PRIMARY = PRIMARY_NAV;
 
 // Grouped for the More flyout only — never expanded inline in the rail.
 // CA Partner Portal / Refer & Earn / Payment Plans are deliberately absent:
