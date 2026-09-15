@@ -72,28 +72,27 @@ export default function CAPortalPage() {
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }
 
-  if (loading) return <DashboardLayout><div className="p-6 text-center text-gray-400">Loading...</div></DashboardLayout>;
+  if (loading) return <DashboardLayout pageTitle="CA Partner Portal"><div className="p-6 text-center text-secondary text-sm">Loading...</div></DashboardLayout>;
 
   if (notCA && !showRegister) return (
-    <DashboardLayout>
-      <div className="p-4 md:p-6 max-w-2xl mx-auto">
+    <DashboardLayout pageTitle="CA Partner Portal">
+      <div className="max-w-2xl">
         <div className="text-center py-16 space-y-5">
-          <div className="text-6xl">🏦</div>
-          <h1 className="text-2xl font-bold text-white">CA Partner Portal</h1>
-          <p className="text-gray-400">Are you a CA (Chartered Accountant) or business consultant? Register as a Vantro partner and earn commission for every client you bring.</p>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <h1 className="text-2xl font-bold text-primary">CA Partner Portal</h1>
+          <p className="text-secondary">Are you a CA (Chartered Accountant) or business consultant? Register as a Vantro partner and earn commission for every client you bring.</p>
+          <div className="flex divide-x divide-border justify-center max-w-md mx-auto">
             {[
               { value: "₹300/mo", label: "Per paying client" },
               { value: "Unlimited", label: "Clients you can refer" },
               { value: "Lifetime", label: "Commission duration" },
-            ].map(s => (
-              <div key={s.label} className="bg-[#1a1a2e] rounded-xl p-4 border border-white/5">
-                <div className="text-xl font-bold text-green-400">{s.value}</div>
-                <div className="text-xs text-gray-400 mt-1">{s.label}</div>
+            ].map((s, i) => (
+              <div key={s.label} className={["flex-1 text-center", i > 0 ? "pl-4" : "", i < 2 ? "pr-4" : ""].join(" ")}>
+                <p className="metric-value text-xl text-primary">{s.value}</p>
+                <p className="text-2xs text-muted mt-1">{s.label}</p>
               </div>
             ))}
           </div>
-          <button onClick={() => setShowRegister(true)} className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition">
+          <button onClick={() => setShowRegister(true)} className="px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-white/90 transition-colors">
             Register as CA Partner
           </button>
         </div>
@@ -102,10 +101,10 @@ export default function CAPortalPage() {
   );
 
   if (showRegister) return (
-    <DashboardLayout>
-      <div className="p-4 md:p-6 max-w-lg mx-auto">
-        <h1 className="text-xl font-bold text-white mb-5">Register as CA Partner</h1>
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-xl p-5 space-y-4">
+    <DashboardLayout pageTitle="CA Partner Portal">
+      <div className="max-w-lg">
+        <h1 className="text-xl font-bold text-primary mb-5">Register as CA Partner</h1>
+        <div className="card-premium p-5 space-y-4">
           {[
             { label: "CA Firm Name *", key: "firm_name", placeholder: "Sharma & Associates" },
             { label: "ICAI Membership No.", key: "license_no", placeholder: "123456" },
@@ -113,20 +112,20 @@ export default function CAPortalPage() {
             { label: "Specialization", key: "specialization", placeholder: "SME Accounting, GST, Tax" },
           ].map(f => (
             <div key={f.key}>
-              <label className="text-xs text-gray-400 block mb-1">{f.label}</label>
+              <label className="text-2xs text-muted block mb-1">{f.label}</label>
               <input
                 value={(regForm as Record<string, string>)[f.key]}
                 onChange={e => setRegForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                className="w-full bg-[#0f0f23] border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                className="input-base"
                 placeholder={f.placeholder}
               />
             </div>
           ))}
           <div className="flex gap-3">
-            <button onClick={register} disabled={saving || !regForm.firm_name} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition disabled:opacity-50">
+            <button onClick={register} disabled={saving || !regForm.firm_name} className="flex-1 py-2.5 bg-white text-black font-bold rounded-xl hover:bg-white/90 transition-colors disabled:opacity-50">
               {saving ? "Registering..." : "Register"}
             </button>
-            <button onClick={() => setShowRegister(false)} className="px-4 py-2 border border-white/10 text-gray-400 text-sm rounded-lg hover:bg-white/5">Cancel</button>
+            <button onClick={() => setShowRegister(false)} className="px-4 py-2 border border-border text-secondary text-sm rounded-lg hover:bg-surface-2 transition-colors">Cancel</button>
           </div>
         </div>
       </div>
@@ -134,58 +133,62 @@ export default function CAPortalPage() {
   );
 
   return (
-    <DashboardLayout>
-      <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-5">
+    <DashboardLayout pageTitle="CA Partner Portal">
+      <div className="max-w-4xl space-y-5">
         <div>
-          <h1 className="text-xl font-bold text-white">CA Partner Portal</h1>
-          <p className="text-sm text-gray-400">{dashboard?.ca.firm_name} · {dashboard?.ca.city}</p>
+          <h1 className="text-xl font-bold text-primary">CA Partner Portal</h1>
+          <p className="text-sm text-secondary">{dashboard?.ca.firm_name} · {dashboard?.ca.city}</p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: "Total Clients", value: dashboard?.stats.total_clients || 0, color: "text-blue-400" },
-            { label: "Paying Clients", value: dashboard?.stats.paid_clients || 0, color: "text-green-400" },
-            { label: "Monthly Commission", value: `₹${(dashboard?.stats.monthly_commission || 0).toLocaleString("en-IN")}`, color: "text-purple-400" },
-          ].map(s => (
-            <div key={s.label} className="bg-[#1a1a2e] rounded-xl p-4 border border-white/5 text-center">
-              <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-              <div className="text-xs text-gray-400 mt-1">{s.label}</div>
-            </div>
-          ))}
+        {/* Stats — three related counts, open typographic row instead of
+            three arbitrarily-hued cards (blue/green/purple for no semantic
+            reason). */}
+        <div className="flex divide-x divide-border">
+          <div className="flex-1 text-center">
+            <p className="metric-value text-2xl text-primary">{dashboard?.stats.total_clients || 0}</p>
+            <p className="text-2xs text-muted mt-1">Total clients</p>
+          </div>
+          <div className="flex-1 text-center">
+            <p className="metric-value text-2xl text-success">{dashboard?.stats.paid_clients || 0}</p>
+            <p className="text-2xs text-muted mt-1">Paying clients</p>
+          </div>
+          <div className="flex-1 text-center">
+            <p className="metric-value text-2xl text-primary">₹{(dashboard?.stats.monthly_commission || 0).toLocaleString("en-IN")}</p>
+            <p className="text-2xs text-muted mt-1">Monthly commission</p>
+          </div>
         </div>
 
         {/* Referral tools */}
-        <div className="bg-[#1a1a2e] border border-white/10 rounded-xl p-5 space-y-4">
-          <h2 className="text-white font-semibold">Share with Clients</h2>
-          <div className="bg-[#0f0f23] border border-white/10 rounded-lg px-4 py-3 flex items-center justify-between gap-2">
+        <div className="card-premium p-5 space-y-4">
+          <h2 className="text-primary font-semibold">Share with Clients</h2>
+          <div className="input-base flex items-center justify-between gap-2">
             <span className="text-sm text-accent truncate">
               {appOrigin}/signup?ref={dashboard?.stats.referral_code}
             </span>
-            <button onClick={() => copyCode(dashboard?.stats.referral_code || "")} className="text-xs px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg shrink-0">
+            <button onClick={() => copyCode(dashboard?.stats.referral_code || "")} className="text-xs px-3 py-1.5 bg-surface-2 hover:bg-surface-3 text-primary rounded-lg transition-colors shrink-0">
               {copied ? "Copied!" : "Copy Link"}
             </button>
           </div>
-          <button onClick={() => shareWhatsApp(dashboard?.stats.referral_code || "")} className="w-full py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-medium rounded-xl transition">
+          <button onClick={() => shareWhatsApp(dashboard?.stats.referral_code || "")} className="w-full py-3 bg-[#25D366] hover:bg-[#128C7E] text-white font-medium rounded-xl transition-colors">
             Share with Client on WhatsApp
           </button>
-          <p className="text-xs text-gray-500 text-center">You earn ₹300/month per paying client referred with your code</p>
+          <p className="text-2xs text-muted text-center">You earn ₹300/month per paying client referred with your code</p>
         </div>
 
         {/* Client list */}
-        <div className="bg-[#1a1a2e] border border-white/5 rounded-xl p-5">
-          <h2 className="text-white font-semibold mb-4">Your Clients ({clients.length})</h2>
+        <div className="card-premium p-5">
+          <h2 className="text-primary font-semibold mb-4">Your Clients ({clients.length})</h2>
           {clients.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-6">No clients referred yet. Share your link to get started.</p>
+            <p className="text-secondary text-sm text-center py-6">No clients referred yet. Share your link to get started.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="divide-y divide-border">
               {clients.map(c => (
-                <div key={c.id} className="flex items-center justify-between bg-[#0f0f23] rounded-lg px-4 py-3">
+                <div key={c.id} className="flex items-center justify-between py-3">
                   <div>
-                    <p className="text-white text-sm font-medium">{c.business_name}</p>
-                    <p className="text-xs text-gray-400">{c.industry || "General"} · Joined {new Date(c.created_at).toLocaleDateString("en-IN")}</p>
+                    <p className="text-primary text-sm font-medium">{c.business_name}</p>
+                    <p className="text-2xs text-muted">{c.industry || "General"} · Joined {new Date(c.created_at).toLocaleDateString("en-IN")}</p>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${c.plan !== "free" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"}`}>
+                  <span className={["text-2xs px-2 py-0.5 rounded-full", c.plan !== "free" ? "bg-success-dim text-success" : "bg-surface-2 text-muted"].join(" ")}>
                     {c.plan !== "free" ? "Paying" : "Free"}
                   </span>
                 </div>
