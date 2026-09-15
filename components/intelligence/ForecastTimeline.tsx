@@ -1,5 +1,4 @@
 import React from "react";
-import { Badge } from "@/components/ui/Badge";
 import type { IntelligencePrediction, ImpactComponent } from "@/lib/api";
 
 // "If nothing changes" — a plain horizon timeline rather than a chart,
@@ -10,7 +9,7 @@ function HorizonPoint({ label, willStockOut, dataQuality }: { label: string; wil
   const insufficient = dataQuality !== "sufficient" || willStockOut === null;
   return (
     <div className="flex-1 min-w-0">
-      <p className="text-2xs text-muted font-mono mb-2">{label}</p>
+      <p className="text-2xs text-muted mb-2">{label}</p>
       <div className={[
         "rounded-xl border p-3 text-center",
         insufficient ? "border-border bg-surface-2" : willStockOut ? "border-danger/30 bg-danger-dim" : "border-success/30 bg-success-dim",
@@ -32,12 +31,10 @@ export function ForecastTimeline({ predictions, component }: { predictions: Inte
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-3">
-        <Badge variant="warning">Forecast — if no action is taken</Badge>
-      </div>
+      <p className="text-[13px] mb-4" style={{ color: "#8A8A86" }}>If nothing changes</p>
       <div className="flex items-stretch gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-2xs text-muted font-mono mb-2">Today</p>
+          <p className="text-2xs text-muted mb-2">Today</p>
           <div className="rounded-xl border border-border bg-surface-2 p-3 text-center">
             <span className="text-xs font-bold text-primary">
               {component.coverage.sufficientData ? `${component.coverage.coverageDays}d coverage` : "—"}

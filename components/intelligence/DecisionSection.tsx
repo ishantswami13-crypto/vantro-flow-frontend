@@ -120,7 +120,7 @@ function ActionCard({ action, rank, dominant, onApprove, execState, execResult }
             <p className="text-2xs font-semibold text-secondary">What will happen</p>
             <p className="text-2xs text-muted mt-0.5">Create a draft purchase order for {action.title.toLowerCase()}.</p>
             <p className="text-2xs text-muted mt-0.5">
-              Execution mode: <span className="font-mono">Demo ERP Adapter</span> (Starlane connector layer — no live Odoo write occurs)
+              Simulated execution — writes to Starlane's demo ERP adapter only, no live Odoo write occurs.
             </p>
           </div>
         )}
@@ -129,7 +129,7 @@ function ActionCard({ action, rank, dominant, onApprove, execState, execResult }
           <div>
             <div className="flex items-center gap-2 mb-2">
               <FiCheckCircle className="text-success" size={16} />
-              <p className="text-xs font-bold text-success">Executed via Demo ERP Adapter</p>
+              <p className="text-xs font-bold text-success">Simulated execution complete</p>
             </div>
             <dl className="text-2xs text-secondary space-y-1">
               <div className="flex justify-between"><dt className="text-muted">Purchase order</dt><dd className="font-mono">#{execResult.purchaseOrder.id}</dd></div>

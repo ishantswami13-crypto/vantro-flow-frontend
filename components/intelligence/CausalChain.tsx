@@ -10,7 +10,7 @@ import type { SignalImpact, ImpactComponent } from "@/lib/api";
 // title, sourced directly from the real impact response. No node exists
 // without a real number or fact behind it.
 const TONE_COLOR: Record<"default" | "danger" | "warning", string> = {
-  default: "var(--border-2, #2a2a2a)",
+  default: "#D8D8D3",
   warning: "#F5A524",
   danger:  "#F5424D",
 };
@@ -30,8 +30,8 @@ function Node({ eyebrow, title, children, tone = "default", last = false }: {
         className="absolute left-0 top-1.5 rounded-full"
         style={{ width: 7, height: 7, border: `1.5px solid ${TONE_COLOR[tone]}`, background: tone === "default" ? "transparent" : TONE_COLOR[tone] }}
       />
-      <p className="text-2xs font-mono tracking-wider text-muted uppercase">{eyebrow}</p>
-      <p className="text-sm font-bold text-primary mt-0.5">{title}</p>
+      <p className="text-[11px] font-semibold tracking-wider text-muted uppercase" style={{ letterSpacing: "0.06em" }}>{eyebrow}</p>
+      <p className="text-sm font-medium text-primary mt-0.5">{title}</p>
       {children && <div className="mt-1 space-y-0.5">{children}</div>}
     </div>
   );

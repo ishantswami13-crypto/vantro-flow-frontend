@@ -80,7 +80,7 @@ export function Drawer({ titleId, title, onClose, onBack, children, breadcrumb }
           "fixed z-50 bg-surface flex flex-col",
           // Mobile: full-screen. Desktop (lg+): slide-over panel from the right.
           "inset-0",
-          "lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[480px] lg:border-l lg:border-border",
+          "lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[560px] lg:border-l lg:border-border",
           "motion-safe:animate-fade-in-scale",
         ].join(" ")}
       >
