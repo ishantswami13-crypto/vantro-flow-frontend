@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card } from "@/components/ui/Card";
 import { api, type DataConnection } from "@/lib/api";
-import { FiCheckCircle, FiAlertCircle, FiUploadCloud, FiClock } from "react-icons/fi";
+import { FiUploadCloud } from "react-icons/fi";
 
 function timeAgo(iso: string | null): string {
   if (!iso) return "";
@@ -25,7 +24,7 @@ function describeTally(conn: DataConnection | undefined): { text: string; tone: 
   if (!conn) return { text: "Not connected yet", tone: "muted" };
   if (conn.status === "CONNECTED") {
     const ago = timeAgo(conn.last_sync_at);
-    return { text: ago ? `Connected · last updated ${ago}` : "Connected", tone: "ok" };
+    return { text: ago ? `Connected · last synced ${ago}` : "Connected", tone: "ok" };
   }
   if (conn.status === "ERROR") {
     return { text: `Having trouble connecting${conn.last_sync_error ? ` — ${conn.last_sync_error}` : ""}`, tone: "warn" };
@@ -33,21 +32,44 @@ function describeTally(conn: DataConnection | undefined): { text: string; tone: 
   return { text: "Not connected yet", tone: "muted" };
 }
 
-const TONE_STYLE: Record<string, { bg: string; border: string; color: string; icon: React.ElementType }> = {
-  ok:    { bg: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A", icon: FiCheckCircle },
-  warn:  { bg: "rgba(245,66,77,0.1)",  border: "1px solid rgba(245,66,77,0.25)",  color: "#F5424D", icon: FiAlertCircle },
-  muted: { bg: "rgba(148,163,184,0.1)", border: "1px solid rgba(148,163,184,0.2)", color: "#94A3B8", icon: FiClock },
+const TONE_COLOR: Record<"ok" | "warn" | "muted", string> = {
+  ok: "#171717",
+  warn: "#C13B3B",
+  muted: "#8A8A86",
 };
 
-function StatusPill({ tone, text }: { tone: "ok" | "warn" | "muted"; text: string }) {
-  const s = TONE_STYLE[tone];
-  const Icon = s.icon;
+// One row style for every source — connected, not-yet-connected, and
+// coming-soon are all the same quiet row, distinguished by plain text
+// status rather than colored pills or app-store-style tiles.
+function SourceRow({ letter, name, status, action, muted }: {
+  letter: string;
+  name: string;
+  status: { text: string; tone: "ok" | "warn" | "muted" };
+  action?: React.ReactNode;
+  muted?: boolean;
+}) {
   return (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
-      style={{ background: s.bg, border: s.border, color: s.color }}>
-      <Icon size={11} /> {text}
+    <div className="flex items-center gap-4 py-5" style={{ borderBottom: "1px solid #E5E5E1", opacity: muted ? 0.55 : 1 }}>
+      <div
+        className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-[13px] font-medium"
+        style={{ background: "#F2F2EF", border: "1px solid #E5E5E1", color: "#686868" }}
+      >
+        {letter}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[14px] font-medium" style={{ color: "#171717" }}>{name}</p>
+        <p className="text-[12px] mt-0.5" style={{ color: TONE_COLOR[status.tone] }}>{status.text}</p>
+      </div>
+      {action}
     </div>
   );
+}
+
+function QuietButton({ children, onClick, href }: { children: React.ReactNode; onClick?: () => void; href?: string }) {
+  const cls = "text-[13px] font-medium shrink-0 transition-colors";
+  const style = { color: "#171717" };
+  if (href) return <Link href={href} className={cls} style={style}>{children}</Link>;
+  return <button type="button" onClick={onClick} className={cls} style={style}>{children}</button>;
 }
 
 export default function ConnectionsPage() {
@@ -68,7 +90,7 @@ export default function ConnectionsPage() {
   }, []);
 
   const tally = connections.find((c) => c.source_type === "TALLY");
-  const tallyStatus = describeTally(tally);
+  const tallyStatus = loading ? { text: "Checking…", tone: "muted" as const } : describeTally(tally);
 
   async function connectTally() {
     setConnectingTally(true); setConnectError(null);
@@ -83,98 +105,81 @@ export default function ConnectionsPage() {
   }
 
   return (
-    <DashboardLayout pageTitle="Connections">
-      <div className="space-y-5 max-w-2xl">
-        <div>
-          <p className="text-base font-black text-primary">Connections</p>
-          <p className="text-sm text-secondary mt-0.5">Where Vantro gets your business data from.</p>
-        </div>
+    <DashboardLayout pageTitle="Sources">
+      <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
+        <h1 className="text-[28px] lg:text-[32px] leading-[1.15] mb-2" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>
+          Sources
+        </h1>
+        <p className="text-[14px] max-w-[700px] mb-10" style={{ color: "#686868" }}>
+          Systems and external context Starlane uses to understand your organization.
+        </p>
 
         {loadError && (
-          <Card>
-            <p className="text-sm text-danger">{loadError}</p>
-          </Card>
+          <p className="text-[13px] mb-6" style={{ color: "#C13B3B" }}>{loadError}</p>
         )}
 
-        <Card>
-          <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">Accounting Software</p>
-          <div className="space-y-4">
-            {/* Tally */}
-            <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
-              <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/25 flex items-center justify-center shrink-0 text-lg font-black text-accent">
-                T
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-primary">Tally</p>
-                <p className="text-2xs text-muted">
-                  {loading ? "Checking..." : "Read-only — Vantro never changes anything in Tally"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={connectTally}
-                  className="px-3 py-1.5 rounded-full text-xs font-bold bg-accent/10 border border-accent/25 text-accent hover:bg-accent/20 transition-colors"
-                >
-                  {connectingTally ? "Connecting…" : "Connect Tally"}
-                </button>
-                {!loading && <StatusPill tone={tallyStatus.tone} text={tallyStatus.text} />}
-              </div>
-            </div>
-
-            {/* Upload a file */}
-            <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
-              <div className="w-10 h-10 rounded-xl bg-accent-dim border border-accent/20 flex items-center justify-center shrink-0">
-                <FiUploadCloud size={16} className="text-accent" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-primary">Upload a File</p>
-                <p className="text-2xs text-muted">Bring in a spreadsheet or CSV export any time — no setup needed</p>
-              </div>
-              <Link href="/collections"
-                className="px-3 py-1.5 rounded-full text-xs font-bold shrink-0 bg-accent/10 border border-accent/25 text-accent hover:bg-accent/20 transition-colors">
-                Upload
-              </Link>
-            </div>
-
-            {/* Coming soon */}
+        <section>
+          <p className="text-[11px] font-semibold uppercase mb-1" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>Business systems</p>
+          <div>
+            <SourceRow
+              letter="T"
+              name="Tally"
+              status={tallyStatus}
+              action={<QuietButton onClick={connectTally}>{connectingTally ? "Connecting…" : "Connect Tally"}</QuietButton>}
+            />
+            <SourceRow
+              letter=""
+              name="Upload a file"
+              status={{ text: "Bring in a spreadsheet or CSV export any time — no setup needed", tone: "muted" }}
+              action={<QuietButton href="/collections"><span className="inline-flex items-center gap-1.5"><FiUploadCloud size={13} /> Upload</span></QuietButton>}
+            />
             {[
               { name: "QuickBooks", letter: "Q" },
               { name: "Zoho Books", letter: "Z" },
               { name: "Xero", letter: "X" },
             ].map((s) => (
-              <div key={s.name}
-                className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border opacity-50">
-                <div className="w-10 h-10 rounded-xl bg-surface-3 border border-border flex items-center justify-center shrink-0 text-lg font-black text-muted">
-                  {s.letter}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-primary">{s.name}</p>
-                  <p className="text-2xs text-muted">We're working on this</p>
-                </div>
-                <div className="px-3 py-1.5 rounded-full text-xs font-bold shrink-0 bg-surface-3 border border-border text-muted">
-                  Coming soon
-                </div>
-              </div>
+              <SourceRow
+                key={s.name}
+                letter={s.letter}
+                name={s.name}
+                status={{ text: "We're working on this", tone: "muted" }}
+                action={<span className="text-[12px] shrink-0" style={{ color: "#B5B5B0" }}>Coming soon</span>}
+                muted
+              />
             ))}
           </div>
-        </Card>
+        </section>
 
         {showTallySetup && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label="Connecting Tally">
-            <div className="w-full max-w-xl rounded-2xl border border-border bg-surface shadow-2xl p-5 space-y-5">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.4)" }} role="dialog" aria-modal="true" aria-label="Connecting Tally">
+            <div className="w-full max-w-xl rounded-xl p-6 space-y-5" style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}>
               <div className="flex items-start justify-between gap-4">
-                <div><p className="text-base font-black text-primary">Connecting Tally</p><p className="text-xs text-secondary mt-1">The StarLane Connector is opening on this computer to securely pair and begin background synchronization.</p></div>
-                <button type="button" onClick={() => setShowTallySetup(false)} className="text-muted hover:text-primary text-xl leading-none" aria-label="Close connection dialog">×</button>
+                <div>
+                  <p className="text-[16px] font-medium" style={{ color: "#171717" }}>Connecting Tally</p>
+                  <p className="text-[12px] mt-1" style={{ color: "#8A8A86" }}>The Starlane connector is opening on this computer to securely pair and begin background synchronization.</p>
+                </div>
+                <button type="button" onClick={() => setShowTallySetup(false)} className="text-xl leading-none" style={{ color: "#8A8A86" }} aria-label="Close connection dialog">×</button>
               </div>
-              {connectError ? <p className="rounded-xl bg-danger-dim border border-danger/30 p-3 text-sm text-danger">{connectError}</p> : <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 text-sm text-secondary">If the connector is already installed, Windows will open it and pairing will continue automatically. Your workspace password is never shared with the connector.</div>}
-              <div className="rounded-xl border border-success/20 bg-success/5 p-3 text-xs text-success">StarLane reads Tally through local export requests only. It does not alter or delete data in Tally.</div>
-              <button type="button" onClick={() => setShowTallySetup(false)} className="w-full rounded-xl bg-accent py-2.5 text-sm font-bold text-white hover:bg-accent-hover transition-colors">Continue in connector</button>
+              {connectError ? (
+                <p className="rounded-lg p-3 text-[13px]" style={{ background: "#FBEFEF", border: "1px solid #F0D5D5", color: "#C13B3B" }}>{connectError}</p>
+              ) : (
+                <div className="rounded-lg p-4 text-[13px]" style={{ border: "1px solid #E5E5E1", color: "#686868" }}>
+                  If the connector is already installed, Windows will open it and pairing will continue automatically. Your workspace password is never shared with the connector.
+                </div>
+              )}
+              <p className="text-[12px]" style={{ color: "#8A8A86" }}>Starlane reads Tally through local export requests only. It does not alter or delete data in Tally.</p>
+              <button
+                type="button"
+                onClick={() => setShowTallySetup(false)}
+                className="w-full rounded-lg py-2.5 text-[13px] font-medium transition-colors"
+                style={{ background: "#171717", color: "#ffffff" }}
+              >
+                Continue in connector
+              </button>
             </div>
           </div>
-        )}      </div>
+        )}
+      </div>
     </DashboardLayout>
   );
 }
-
-
