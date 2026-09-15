@@ -67,8 +67,15 @@ export default function SignalImpactPage() {
   const impact = data?.impact;
   const primaryComponent = impact?.components?.[0];
 
+  // Recents (sidebar) records whatever pageTitle DashboardLayout receives -
+  // "Impact" would mean every investigation shows up with the same
+  // meaningless label. Use the real detected event's title once it's
+  // loaded; fall back to a plain generic label only while loading, so a
+  // recorded Recents entry is either the true title or nothing yet.
+  const pageTitle = impact?.signal.event_title || "Investigation";
+
   return (
-    <DashboardLayout pageTitle="Impact">
+    <DashboardLayout pageTitle={pageTitle}>
       <button
         type="button"
         onClick={() => router.push("/intelligence")}

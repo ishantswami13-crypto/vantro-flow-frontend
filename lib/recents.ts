@@ -12,8 +12,19 @@ export interface RecentEntry {
   at: string; // ISO timestamp
 }
 
+// Recents is meant to be working memory for actual investigations, not a
+// browser-history dump of every page visited. The only real "work object"
+// this product has today is an individual intelligence signal
+// (/intelligence/<id>) — the signal list page itself, and every other
+// route (settings, billing, legacy utility pages) is navigation, not work,
+// and must never be recorded. When a real Investigation/Workspace object
+// model exists this can widen; until then, narrow is more honest than
+// complete.
+const RECORDABLE = /^\/intelligence\/[^/]+$/;
+
 export function recordRecent(href: string, label?: string) {
   if (typeof window === "undefined" || !label) return;
+  if (!RECORDABLE.test(href)) return;
   try {
     const existing: RecentEntry[] = JSON.parse(localStorage.getItem(KEY) || "[]");
     const withoutThis = existing.filter(e => e.href !== href);
@@ -25,7 +36,12 @@ export function recordRecent(href: string, label?: string) {
 export function getRecents(): RecentEntry[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem(KEY) || "[]");
+    const stored: RecentEntry[] = JSON.parse(localStorage.getItem(KEY) || "[]");
+    // Defensive re-filter: entries recorded before this curation rule
+    // existed (e.g. CA Partner Portal, Payment Plans from earlier testing)
+    // may still be sitting in a real user's localStorage — never display
+    // those even if they were already written.
+    return stored.filter(e => RECORDABLE.test(e.href));
   } catch { return []; }
 }
 
