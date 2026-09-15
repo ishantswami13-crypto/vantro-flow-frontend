@@ -66,7 +66,7 @@ const fmtDate = (d?: string) =>
 
 const statusConfig = {
   paid:    { label: "Paid",    color: "text-success",    bg: "bg-success/10",    icon: FiCheckCircle },
-  partial: { label: "Partial", color: "text-yellow-400", bg: "bg-yellow-400/10", icon: FiClock },
+  partial: { label: "Partial", color: "text-warning", bg: "bg-warning/10", icon: FiClock },
   unpaid:  { label: "Unpaid",  color: "text-danger",     bg: "bg-danger/10",     icon: FiAlertCircle },
 };
 
@@ -662,7 +662,7 @@ export default function PurchasesPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted">Duplicates skipped</span>
-                <span className="text-sm font-bold text-yellow-400">{bulkResults.skipped}</span>
+                <span className="text-sm font-bold text-warning">{bulkResults.skipped}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted">Failed</span>
@@ -684,7 +684,7 @@ export default function PurchasesPage() {
               <div className="max-h-60 overflow-y-auto space-y-2 mb-5 pr-1">
                 {bulkResults.details.map((item, index) => {
                   const color = item.status === "added" ? "text-success"
-                    : item.status === "skipped" ? "text-yellow-400"
+                    : item.status === "skipped" ? "text-warning"
                     : item.status === "not_processed" ? "text-accent"
                     : "text-danger";
                   const badge = item.status === "added" ? "Added"
@@ -840,7 +840,7 @@ export default function PurchasesPage() {
         </div>
         <div className="card p-4">
           <p className="text-xs text-muted mb-1">Late bills</p>
-          <p className="text-xl font-bold text-yellow-400">{overdue.length}</p>
+          <p className="text-xl font-bold text-warning">{overdue.length}</p>
           <p className="text-2xs text-muted">past their due date</p>
         </div>
         <div className="card p-4">
@@ -851,10 +851,10 @@ export default function PurchasesPage() {
 
       {/* Overdue alert */}
       {overdue.length > 0 && (
-        <div className="mb-4 p-3 bg-yellow-400/5 border border-yellow-400/20 rounded-xl flex items-start gap-2.5">
-          <FiAlertCircle size={16} className="text-yellow-400 shrink-0 mt-0.5" />
+        <div className="mb-4 p-3 bg-warning/5 border border-warning/20 rounded-xl flex items-start gap-2.5">
+          <FiAlertCircle size={16} className="text-warning shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-yellow-400">⚠ {overdue.length} {overdue.length === 1 ? "bill is" : "bills are"} late</p>
+            <p className="text-sm font-semibold text-warning">⚠ {overdue.length} {overdue.length === 1 ? "bill is" : "bills are"} late</p>
             <p className="text-xs text-muted">{overdue.map(p => p.supplier_name).join(", ")}</p>
           </div>
         </div>
@@ -951,7 +951,7 @@ export default function PurchasesPage() {
             const pending  = p.total_amount - p.paid_amount;
             const isOverdue = p.status !== "paid" && p.due_date && new Date(p.due_date) < new Date();
             return (
-              <div key={p.id} className={`card p-4 border ${isOverdue ? "border-yellow-400/20" : "border-transparent"}`}>
+              <div key={p.id} className={`card p-4 border ${isOverdue ? "border-warning/20" : "border-transparent"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -959,14 +959,14 @@ export default function PurchasesPage() {
                       <span className={`inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.color}`}>
                         <StatusIcon size={10} /> {cfg.label}
                       </span>
-                      {isOverdue && <span className="text-2xs text-yellow-400 font-semibold">LATE</span>}
+                      {isOverdue && <span className="text-2xs text-warning font-semibold">LATE</span>}
                     </div>
                     {p.bill_number && <p className="text-xs text-muted">Bill #{p.bill_number}</p>}
                     {p.supplier_gstin && <p className="text-xs text-muted font-mono">GST: {p.supplier_gstin}</p>}
                     <div className="flex gap-3 mt-1">
                       <p className="text-xs text-muted">Purchase: {fmtDate(p.purchase_date)}</p>
                       {p.due_date && (
-                        <p className={`text-xs font-semibold ${isOverdue ? "text-yellow-400" : "text-muted"}`}>
+                        <p className={`text-xs font-semibold ${isOverdue ? "text-warning" : "text-muted"}`}>
                           Due: {fmtDate(p.due_date)}
                         </p>
                       )}

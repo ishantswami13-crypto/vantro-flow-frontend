@@ -31,11 +31,14 @@ interface AiAction {
 
 interface Counts { urgent?: number; high?: number; medium?: number; low?: number }
 
+// Four priority tiers don't need four hues. Only urgent/high are genuinely
+// alarming; medium/low are neutral grades, not a yellow/blue rainbow (blue
+// especially, since it's the app's own interactive-accent color elsewhere).
 const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; bg: string; border: string }> = {
-  urgent: { label: "Urgent",  color: "text-red-400",    bg: "bg-red-400/10",    border: "border-red-400/30" },
-  high:   { label: "High",    color: "text-orange-400", bg: "bg-orange-400/10", border: "border-orange-400/30" },
-  medium: { label: "Medium",  color: "text-yellow-400", bg: "bg-yellow-400/10", border: "border-yellow-400/30" },
-  low:    { label: "Low",     color: "text-blue-400",   bg: "bg-blue-400/10",   border: "border-blue-400/30" },
+  urgent: { label: "Urgent",  color: "text-danger",   bg: "bg-danger-dim",   border: "border-danger/30" },
+  high:   { label: "High",    color: "text-warning",  bg: "bg-warning/10",   border: "border-warning/30" },
+  medium: { label: "Medium",  color: "text-secondary",bg: "bg-surface-2",    border: "border-border" },
+  low:    { label: "Low",     color: "text-muted",    bg: "bg-surface-2",    border: "border-border" },
 };
 
 const ACTION_ICONS: Record<string, React.ReactNode> = {
@@ -122,36 +125,36 @@ function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: str
                 {pc.label}
               </span>
               {action.requires_approval && (
-                <span className="text-[10px] text-zinc-400 border border-zinc-600 rounded-full px-2 py-0.5">
+                <span className="text-[10px] text-secondary border border-border rounded-full px-2 py-0.5">
                   Needs approval
                 </span>
               )}
-              <span className="text-[11px] text-zinc-500">{timeAgo(action.created_at)}</span>
+              <span className="text-[11px] text-muted">{timeAgo(action.created_at)}</span>
             </div>
-            <p className="mt-1.5 text-sm font-medium text-white leading-snug">{action.title}</p>
+            <p className="mt-1.5 text-sm font-medium text-primary leading-snug">{action.title}</p>
             {action.customers && (
-              <p className="text-xs text-zinc-400 mt-0.5">
+              <p className="text-xs text-secondary mt-0.5">
                 {action.customers.name}{action.customers.phone ? ` · ${action.customers.phone}` : ""}
               </p>
             )}
             {action.description && (
-              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{action.description}</p>
+              <p className="text-xs text-secondary mt-1 leading-relaxed">{action.description}</p>
             )}
           </div>
         </div>
 
         <button
           onClick={() => setExpanded(v => !v)}
-          className="text-zinc-500 hover:text-zinc-300 flex-shrink-0 mt-0.5"
+          className="text-muted hover:text-secondary flex-shrink-0 mt-0.5"
         >
           {expanded ? <FiChevronUp size={16} /> : <FiChevronDown size={16} />}
         </button>
       </div>
 
       {expanded && action.recommended_message && (
-        <div className="mt-3 ml-7 p-3 bg-zinc-900/60 rounded-lg border border-zinc-700">
-          <p className="text-[11px] text-zinc-500 uppercase tracking-wide mb-1">Suggested message</p>
-          <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">{action.recommended_message}</p>
+        <div className="mt-3 ml-7 p-3 bg-surface-2 rounded-lg border border-border">
+          <p className="text-[11px] text-muted uppercase tracking-wide mb-1">Suggested message</p>
+          <p className="text-xs text-secondary leading-relaxed whitespace-pre-wrap">{action.recommended_message}</p>
         </div>
       )}
 
@@ -159,7 +162,7 @@ function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: str
         <button
           onClick={() => handleAction("approved")}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-xs font-medium hover:bg-emerald-600/30 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success-dim border border-success/30 text-success text-xs font-medium hover:bg-success/20 transition-colors disabled:opacity-50"
         >
           <FiCheckCircle size={13} /> Approve
         </button>
@@ -167,21 +170,21 @@ function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: str
           <button
             onClick={handleSendWhatsApp}
             disabled={waSending === "sending"}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 text-xs font-medium hover:bg-green-600/30 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success-dim border border-success/30 text-success text-xs font-medium hover:bg-success/20 transition-colors disabled:opacity-50"
           >
             <FiSend size={13} />
             {waSending === "sending" ? "Sending…" : "Send via WhatsApp"}
           </button>
         )}
         {waSending === "sent" && (
-          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 text-xs font-medium">
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success-dim border border-success/30 text-success text-xs font-medium">
             <FiCheckCircle size={13} /> Sent
           </span>
         )}
         {(waSending === "unconfigured" || waSending === "error") && (
           <button
             onClick={copyMessage}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-700/40 border border-zinc-600 text-zinc-300 text-xs font-medium hover:bg-zinc-700 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border text-secondary text-xs font-medium hover:bg-surface-3 transition-colors"
           >
             <FiCopy size={13} /> {waCopied ? "Copied!" : "Copy message"}
           </button>
@@ -189,20 +192,20 @@ function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: str
         <button
           onClick={() => handleAction("done")}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400 text-xs font-medium hover:bg-blue-600/30 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border text-secondary text-xs font-medium hover:bg-surface-3 transition-colors disabled:opacity-50"
         >
           Done
         </button>
         <button
           onClick={() => handleAction("rejected")}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-700/40 border border-zinc-600 text-zinc-400 text-xs font-medium hover:bg-zinc-700 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border text-muted text-xs font-medium hover:bg-surface-3 transition-colors disabled:opacity-50"
         >
           <FiXCircle size={13} /> Dismiss
         </button>
       </div>
       {waSending === "unconfigured" && (
-        <p className="ml-7 mt-1.5 text-[11px] text-amber-400/80">
+        <p className="ml-7 mt-1.5 text-[11px] text-warning">
           WhatsApp not configured — set TWILIO_WHATSAPP_NUMBER in Railway to enable sending.
         </p>
       )}
@@ -270,11 +273,11 @@ export default function AiActionsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              <FiZap className="text-yellow-400" size={20} />
+            <h1 className="text-xl font-bold text-primary flex items-center gap-2">
+              <FiZap className="text-warning" size={20} />
               Action Center
             </h1>
-            <p className="text-sm text-zinc-400 mt-0.5">
+            <p className="text-sm text-secondary mt-0.5">
               {totalPending > 0
                 ? `${totalPending} action${totalPending !== 1 ? "s" : ""} need your attention`
                 : "You're all caught up"}
@@ -282,7 +285,7 @@ export default function AiActionsPage() {
           </div>
           <button
             onClick={fetchActions}
-            className="p-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white transition-colors"
+            className="p-2 rounded-lg bg-surface-2 border border-border text-secondary hover:text-primary transition-colors"
           >
             <FiRefreshCw size={16} className={loading ? "animate-spin" : ""} />
           </button>
@@ -309,15 +312,15 @@ export default function AiActionsPage() {
         )}
 
         {/* Status tabs */}
-        <div className="flex gap-1 p-1 bg-zinc-900 rounded-xl border border-zinc-800">
+        <div className="flex gap-1 p-1 bg-surface-2 rounded-xl border border-border">
           {(["pending", "done"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => { setStatusTab(tab); setFilter("all"); }}
               className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors capitalize ${
                 statusTab === tab
-                  ? "bg-zinc-700 text-white"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-surface-3 text-primary"
+                  : "text-secondary hover:text-secondary"
               }`}
             >
               {tab === "pending" ? `Pending${totalPending > 0 ? ` (${totalPending})` : ""}` : "Completed"}
@@ -329,22 +332,22 @@ export default function AiActionsPage() {
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-28 rounded-xl bg-zinc-800/50 border border-zinc-700 animate-pulse" />
+              <div key={i} className="h-28 rounded-xl bg-surface-2 border border-border animate-pulse" />
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-12 text-zinc-400">
-            <FiAlertTriangle size={32} className="mx-auto mb-3 text-zinc-600" />
+          <div className="text-center py-12 text-secondary">
+            <FiAlertTriangle size={32} className="mx-auto mb-3 text-muted" />
             <p>{error}</p>
-            <button onClick={fetchActions} className="mt-3 text-sm text-blue-400 hover:underline">Retry</button>
+            <button onClick={fetchActions} className="mt-3 text-sm text-accent hover:underline">Retry</button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
-            <FiCheckCircle size={40} className="mx-auto mb-3 text-emerald-500/60" />
-            <p className="text-zinc-300 font-medium">
+            <FiCheckCircle size={40} className="mx-auto mb-3 text-success/60" />
+            <p className="text-secondary font-medium">
               {statusTab === "pending" ? "No pending actions" : "No completed actions"}
             </p>
-            <p className="text-sm text-zinc-500 mt-1">
+            <p className="text-sm text-muted mt-1">
               {statusTab === "pending"
                 ? "Cortex will surface actions here as your business generates data."
                 : "Approved and done actions will appear here."}

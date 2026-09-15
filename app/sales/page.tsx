@@ -72,7 +72,7 @@ const fmtDate = (d?: string) =>
 
 const statusConfig = {
   paid:    { label: "Paid",    color: "text-success",    bg: "bg-success/10",    icon: FiCheckCircle },
-  partial: { label: "Partial", color: "text-yellow-400", bg: "bg-yellow-400/10", icon: FiClock },
+  partial: { label: "Partial", color: "text-warning", bg: "bg-warning/10", icon: FiClock },
   unpaid:  { label: "Unpaid",  color: "text-danger",     bg: "bg-danger/10",     icon: FiAlertCircle },
 };
 
@@ -662,7 +662,7 @@ export default function SalesPage() {
               <p className="font-bold text-primary text-lg mb-1">Scanning Invoices…</p>
               <p className="text-3xl font-bold text-accent my-3">{bulkDone} <span className="text-lg text-muted font-normal">/ {bulkTotal}</span></p>
               {bulkWaiting
-                ? <p className="text-xs text-yellow-400 truncate mb-3">Cooling down between scans…</p>
+                ? <p className="text-xs text-warning truncate mb-3">Cooling down between scans…</p>
                 : bulkCurrent && <p className="text-xs text-muted truncate mb-3">{bulkCurrent}</p>}
               <div className="w-full h-2 bg-surface-2 rounded-full overflow-hidden">
                 <div className="h-full bg-accent rounded-full transition-all duration-300"
@@ -696,9 +696,9 @@ export default function SalesPage() {
                   <span className="text-sm font-semibold text-success">✓ Added</span>
                   <span className="text-2xl font-bold text-success">{bulkResults.added}</span>
                 </div>
-                <div className="flex items-center justify-between p-3.5 bg-yellow-400/10 rounded-xl border border-yellow-400/15">
-                  <span className="text-sm font-semibold text-yellow-400">⟳ Duplicates Skipped</span>
-                  <span className="text-2xl font-bold text-yellow-400">{bulkResults.skipped}</span>
+                <div className="flex items-center justify-between p-3.5 bg-warning/10 rounded-xl border border-warning/15">
+                  <span className="text-sm font-semibold text-warning">⟳ Duplicates Skipped</span>
+                  <span className="text-2xl font-bold text-warning">{bulkResults.skipped}</span>
                 </div>
                 {bulkResults.notProcessed > 0 && (
                   <div className="flex items-center justify-between p-3.5 bg-accent/10 rounded-xl border border-accent/15">
@@ -722,7 +722,7 @@ export default function SalesPage() {
                 <div className="max-h-60 overflow-y-auto space-y-2 mb-5 pr-1">
                   {bulkResults.details.map((item, index) => {
                     const color = item.status === "added" ? "text-success"
-                      : item.status === "skipped" ? "text-yellow-400"
+                      : item.status === "skipped" ? "text-warning"
                       : item.status === "not_processed" ? "text-accent"
                       : "text-danger";
                     const badge = item.status === "added" ? "Added"
@@ -859,7 +859,7 @@ export default function SalesPage() {
           </div>
           <div className="card p-4">
             <p className="text-xs text-muted mb-1">Customers still owe you</p>
-            <p className="text-xl font-bold text-yellow-400">{fmtINR(totalReceivable)}</p>
+            <p className="text-xl font-bold text-warning">{fmtINR(totalReceivable)}</p>
           </div>
           <div className="card p-4">
             <p className="text-xs text-muted mb-1">Number of sales</p>
@@ -965,7 +965,7 @@ export default function SalesPage() {
               const pending = s.total_amount - s.paid_amount;
               const isOverdue = s.status !== "paid" && s.due_date && new Date(s.due_date) < new Date();
               return (
-                <div key={s.id} className={`card p-4 border ${isOverdue ? "border-yellow-400/20" : "border-transparent"}`}>
+                <div key={s.id} className={`card p-4 border ${isOverdue ? "border-warning/20" : "border-transparent"}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -973,7 +973,7 @@ export default function SalesPage() {
                         <span className={`inline-flex items-center gap-1 text-2xs font-semibold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.color}`}>
                           <StatusIcon size={10} /> {cfg.label}
                         </span>
-                        {isOverdue && <span className="text-2xs text-yellow-400 font-semibold">LATE</span>}
+                        {isOverdue && <span className="text-2xs text-warning font-semibold">LATE</span>}
                       </div>
                       {s.invoice_number && <p className="text-xs text-muted">Invoice #{s.invoice_number}</p>}
                       {(myGstin || s.customer_gstin) && (
@@ -990,7 +990,7 @@ export default function SalesPage() {
                       <div className="flex gap-3 mt-1">
                         <p className="text-xs text-muted">Sale: {fmtDate(s.sale_date)}</p>
                         {s.due_date && (
-                          <p className={`text-xs font-semibold ${isOverdue ? "text-yellow-400" : "text-muted"}`}>
+                          <p className={`text-xs font-semibold ${isOverdue ? "text-warning" : "text-muted"}`}>
                             Due: {fmtDate(s.due_date)}
                           </p>
                         )}
@@ -1011,7 +1011,7 @@ export default function SalesPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-bold text-lg text-success">{fmtINR(s.total_amount)}</p>
-                      {s.status !== "paid" && <p className="text-xs text-yellow-400 font-semibold">{fmtINR(pending)} lena</p>}
+                      {s.status !== "paid" && <p className="text-xs text-warning font-semibold">{fmtINR(pending)} lena</p>}
                       <div className="flex gap-1.5 mt-2 justify-end">
                         {s.status !== "paid" && (
                           <button onClick={() => { setPayModal(s); setPayAmount(""); }}
