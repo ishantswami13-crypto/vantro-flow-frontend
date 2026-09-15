@@ -211,7 +211,7 @@ export default function NewInvoicePage() {
                   setCustomerName(""); setCustomerPhone(""); setCustomerEmail("");
                   setNotes(""); setItems([{ id: uid(), name: "", qty: "1", unit: "unit", rate: "" }]);
                 }}
-                className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-white/90 transition-all shadow-sm">
+                className="w-full py-3 rounded-xl btn-primary font-bold text-sm shadow-sm">
                 Create Another Invoice
               </button>
               <button
@@ -343,7 +343,7 @@ export default function NewInvoicePage() {
           <button
             type="submit"
             disabled={!customerName.trim()}
-            className="w-full py-4 rounded-xl bg-white text-black font-black text-base hover:bg-white/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
+            className="w-full py-4 rounded-xl btn-primary font-black text-base disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
             Next — Add Items <FiArrowRight size={16} />
           </button>
         </form>
@@ -460,7 +460,7 @@ export default function NewInvoicePage() {
           <button
             type="submit"
             disabled={!hasValidItems}
-            className="w-full py-4 rounded-xl bg-white text-black font-black text-base hover:bg-white/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
+            className="w-full py-4 rounded-xl btn-primary font-black text-base disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
             Review Invoice <FiArrowRight size={16} />
           </button>
         </form>
@@ -550,7 +550,7 @@ export default function NewInvoicePage() {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full py-4 rounded-xl bg-white text-black font-black text-base hover:bg-white/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
+            className="w-full py-4 rounded-xl btn-primary font-black text-base disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
             {loading ? (
               <><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Creating Invoice…</>
             ) : (

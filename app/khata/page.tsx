@@ -125,8 +125,8 @@ export default function KhataPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-primary">Customer Khata</h1>
-          <p className="text-xs text-muted">Udhaar aur bhugtan ka hisab</p>
+          <h1 className="text-[26px] leading-[1.15]" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>Customer Khata</h1>
+          <p className="text-xs text-muted mt-1">Udhaar aur bhugtan ka hisab</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => { setAddType("debit"); setShowAdd(true); }}
@@ -161,7 +161,7 @@ export default function KhataPage() {
             <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Customer dhundo..."
-              className="w-full bg-surface-2 border border-white/8 rounded-xl pl-8 pr-3 py-2.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent/50" />
+              className="w-full bg-surface-2 border border-border rounded-xl pl-8 pr-3 py-2.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent/50" />
           </div>
 
           {loading ? (
@@ -177,7 +177,7 @@ export default function KhataPage() {
               {filtered.map(c => (
                 <div key={c.customer_name}
                   onClick={() => selectCustomer(c.customer_name)}
-                  className={`card p-3.5 cursor-pointer transition-all border ${selected === c.customer_name ? "border-accent/50 bg-accent-dim" : "border-transparent hover:border-white/10"}`}>
+                  className={`card p-3.5 cursor-pointer transition-all border ${selected === c.customer_name ? "border-accent/50 bg-accent-dim" : "border-transparent hover:border-border-2"}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -223,7 +223,7 @@ export default function KhataPage() {
           ) : (
             <div className="card overflow-hidden">
               {/* Customer header */}
-              <div className="p-4 border-b border-white/5">
+              <div className="p-4 border-b border-border">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-bold text-primary">{selectedCustomer?.customer_name}</p>
@@ -248,7 +248,7 @@ export default function KhataPage() {
                   <div className="text-center py-6 text-muted text-sm">No entries yet</div>
                 ) : (
                   entries.map(entry => (
-                    <div key={entry.id} className="flex items-center gap-3 px-4 py-3 border-b border-white/5 hover:bg-surface-2/50 group">
+                    <div key={entry.id} className="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-surface-2/50 group">
                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${entry.type === "debit" ? "bg-danger/10 text-danger" : "bg-success/10 text-success"}`}>
                         {entry.type === "debit" ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
                       </div>
@@ -272,7 +272,7 @@ export default function KhataPage() {
               </div>
 
               {/* Quick add for selected customer */}
-              <div className="p-3 border-t border-white/5 flex gap-2">
+              <div className="p-3 border-t border-border flex gap-2">
                 <button onClick={() => { setForm(f => ({ ...f, customer_name: selected || "" })); setAddType("debit"); setShowAdd(true); }}
                   className="flex-1 py-2 rounded-xl bg-danger/10 text-danger text-xs font-semibold hover:bg-danger/20 transition-colors">
                   + Udhaar Diya

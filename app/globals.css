@@ -227,6 +227,13 @@
      card-metric  → inset     (a metric tile — recessed one shade darker)
      card-base    → inset     (grouped/nested content — same recessed role)
 
+   .card is a fourth alias, added after finding several pages (Sales,
+   Purchases, Khata, invoice/new, and others) reaching for a plain
+   className="card" that was never actually defined anywhere — those
+   elements had no background/border/radius at all, just padding. Rather
+   than hand-fix every call site, .card now resolves to the same surface
+   style so any existing or future use of it renders correctly.
+
    One radius (10px). No drop shadow — a border plus the surface/inset
    tonal step carries separation, per "almost no shadows, borders and
    tonal separation first." Hover is a border-tone shift only — no lift,
@@ -234,6 +241,7 @@
    actually clickable; a card that IS a real click target should add its
    own cursor-pointer/interactive affordance rather than get one for free.
    ============================================================ */
+.card,
 .card-premium,
 .card-metric,
 .card-base {
@@ -248,6 +256,7 @@
   background: var(--surface-2);
 }
 
+.card:hover,
 .card-premium:hover,
 .card-metric:hover {
   border-color: #D8D8D3; /* border-2 in tailwind.config.ts — no matching CSS var exists */

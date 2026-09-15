@@ -111,14 +111,14 @@ export default function CustomersPage() {
       <div className="space-y-5 page-enter">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-black text-primary tracking-tight">Customers</h2>
-            <p className="text-sm text-secondary mt-0.5">Auto-added from Sales, Invoices and Khata</p>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>Customers</h2>
+            <p className="text-sm text-secondary mt-1">Auto-added from Sales, Invoices and Khata</p>
           </div>
           <div className="flex gap-2">
             <button onClick={loadCustomers} className="px-4 py-2 rounded-xl bg-surface-2 text-secondary text-xs font-bold border border-border">
               Refresh
             </button>
-            <Link href="/khata" className="px-4 py-2 rounded-xl bg-white text-black text-xs font-bold">
+            <Link href="/khata" className="px-4 py-2 rounded-xl btn-primary text-xs font-bold">
               Open Khata
             </Link>
           </div>
@@ -153,7 +153,7 @@ export default function CustomersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search customer or phone..."
-            className="w-full bg-surface-2 border border-white/8 rounded-xl pl-9 pr-3 py-3 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent/50"
+            className="w-full bg-surface-2 border border-border rounded-xl pl-9 pr-3 py-3 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent/50"
           />
         </div>
 

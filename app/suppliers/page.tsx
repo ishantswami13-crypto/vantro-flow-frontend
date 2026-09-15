@@ -109,10 +109,10 @@ export default function SuppliersPage() {
       <div className="space-y-5 page-enter">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-black text-primary tracking-tight">Suppliers</h2>
-            <p className="text-sm text-secondary mt-0.5">Payables generated from your purchase bills</p>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>Suppliers</h2>
+            <p className="text-sm text-secondary mt-1">Payables generated from your purchase bills</p>
           </div>
-          <button onClick={loadSuppliers} className="px-4 py-2 rounded-xl bg-white text-black text-xs font-bold">
+          <button onClick={loadSuppliers} className="px-4 py-2 rounded-xl border border-border text-secondary text-xs font-bold hover:text-primary hover:border-border-2 transition-colors">
             Refresh
           </button>
         </div>
@@ -146,7 +146,7 @@ export default function SuppliersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search supplier, phone, GSTIN..."
-            className="w-full bg-surface-2 border border-white/8 rounded-xl pl-9 pr-3 py-3 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent/50"
+            className="w-full bg-surface-2 border border-border rounded-xl pl-9 pr-3 py-3 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent/50"
           />
         </div>
 
@@ -218,7 +218,7 @@ export default function SuppliersPage() {
                         <FiAlertTriangle size={12} /> inferred
                       </span>
                     )}
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/8 text-primary">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-2 text-primary">
                       View details <FiChevronRight size={12} />
                     </span>
                   </div>
@@ -230,7 +230,7 @@ export default function SuppliersPage() {
 
         {selectedSupplier && (
           <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="w-full max-w-5xl max-h-[88vh] overflow-hidden rounded-2xl bg-surface border border-white/10 shadow-2xl">
+            <div className="w-full max-w-5xl max-h-[88vh] overflow-hidden rounded-2xl bg-surface border border-border shadow-2xl">
               <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-border">
                 <div className="min-w-0">
                   <p className="text-lg font-black text-primary truncate">{selectedSupplier.name}</p>

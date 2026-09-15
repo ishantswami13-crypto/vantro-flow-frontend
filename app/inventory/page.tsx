@@ -332,7 +332,7 @@ export default function InventoryPage() {
           {(["products", "intelligence", "movements", "suppliers"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={["px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all",
-                tab === t ? "bg-white text-black" : "text-muted hover:text-primary",
+                tab === t ? "bg-gray-900 text-white" : "text-muted hover:text-primary",
               ].join(" ")}>{{ products: "Products", intelligence: "Stock Details", movements: "Movements", suppliers: "Suppliers" }[t]}</button>
           ))}
         </div>
