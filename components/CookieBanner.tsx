@@ -35,45 +35,41 @@ export default function CookieBanner() {
     <div
       role="dialog"
       aria-label="Cookie consent"
-      className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-[520px] z-[300] cookie-slide-up"
+      className="fixed bottom-4 right-4 left-4 sm:left-auto w-auto sm:w-[380px] z-[300] cookie-slide-up"
     >
       <div
-        className="flex flex-col sm:flex-row items-start sm:items-center gap-4 px-5 py-4 rounded-2xl"
+        className="flex flex-col gap-3 px-4 py-3.5 rounded-xl"
         style={{
-          background: "rgba(14,14,16,0.97)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          boxShadow: "0 8px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04) inset",
+          background: "#FFFFFF",
+          border: "1px solid #E5E5E1",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
         }}
       >
         {/* Text */}
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] leading-relaxed" style={{ color: "rgba(255,255,255,0.58)" }}>
-            We use cookies to improve your experience and analyse usage.{" "}
-            <Link
-              href="/privacy"
-              className="underline transition-colors hover:text-white"
-              style={{ color: "rgba(255,255,255,0.42)" }}
-            >
-              Privacy policy
-            </Link>
-          </p>
-        </div>
+        <p className="text-xs leading-relaxed" style={{ color: "#686868" }}>
+          We use cookies to improve your experience and analyse usage.{" "}
+          <Link
+            href="/privacy"
+            className="underline transition-colors hover:text-gray-900"
+            style={{ color: "#171717" }}
+          >
+            Privacy policy
+          </Link>
+        </p>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center justify-end gap-2 shrink-0">
           <button
             onClick={decline}
-            className="px-4 py-2 rounded-xl text-[13px] font-medium transition-colors hover:opacity-70"
-            style={{ color: "rgba(255,255,255,0.38)" }}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50"
+            style={{ color: "#686868" }}
           >
             Decline
           </button>
           <button
             onClick={accept}
-            className="px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-opacity hover:opacity-90"
-            style={{ background: "#ffffff", color: "#000000" }}
+            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-85"
+            style={{ background: "#171717", color: "#ffffff" }}
           >
             Accept all
           </button>

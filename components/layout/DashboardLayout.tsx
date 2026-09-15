@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { FiInfo } from "react-icons/fi";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
@@ -149,23 +150,23 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onMenuToggle={() => setSidebarOpen(true)} pageTitle={pageTitle} />
 
-        {/* Demo mode notice — must stay truthful and legible, but shouldn't
-            out-shout the product itself. A quiet bordered strip with plain
-            text reads as "simulated" without becoming the loudest thing on
-            the screen (previously a solid yellow alert-style bar). */}
+        {/* Demo mode notice — a quiet horizontal disclosure strip, not an
+            all-caps terminal-style alert. Truthful, low-key, sentence case. */}
         {isDemo && (
-          <div className="border-b border-border px-4 py-1.5 flex items-center justify-between gap-3 shrink-0" style={{ background: "rgba(255,255,255,0.02)" }}>
-            <span className="text-2xs text-muted font-mono tracking-wide">
-              SIMULATED DEMONSTRATION — sample data, not your business
+          <div className="flex items-center justify-between gap-3 px-4 py-1.5 shrink-0" style={{ background: "#FAFAF8", borderBottom: "1px solid #EDEDE9" }}>
+            <span className="text-xs flex items-center gap-1.5" style={{ color: "#8A8A86" }}>
+              <FiInfo size={11} />
+              Simulated demonstration — sample data, not your business
             </span>
             <div className="flex items-center gap-3 shrink-0">
               <Link href="/signup"
                 onClick={() => exitDemoMode()}
-                className="text-2xs font-semibold text-secondary hover:text-primary transition-colors">
+                className="text-xs font-medium transition-colors"
+                style={{ color: "#686868" }}>
                 Sign up to save real data →
               </Link>
               <button onClick={() => { exitDemoMode(); window.location.href = "/login"; }}
-                className="text-2xs text-muted hover:text-secondary transition-colors">
+                className="text-xs transition-colors" style={{ color: "#8A8A86" }}>
                 Exit
               </button>
             </div>

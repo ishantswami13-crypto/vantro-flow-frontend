@@ -26,8 +26,8 @@ import { getRecents, timeAgo, type RecentEntry } from "@/lib/recents";
 // Insights = "how am I doing over time".
 const NAV = [
   // ── Command Center
-  { href: "/business-state", label: "Business State",  icon: FiTarget,        badge: "NEW",  group: "core" },
-  { href: "/intelligence",   label: "Intelligence",    icon: FiGlobe,         badge: "NEW",  group: "core" },
+  { href: "/business-state", label: "Business State",  icon: FiTarget,        badge: null,  group: "core" },
+  { href: "/intelligence",   label: "Intelligence",    icon: FiGlobe,         badge: null,  group: "core" },
   { href: "/dashboard",      label: "Dashboard",       icon: FiGrid,          badge: null,   group: "core" },
   { href: "/invoice/new",    label: "New Invoice",     icon: FiPlus,          badge: null,   group: "core" },
   { href: "/connections",    label: "Sources",         icon: FiDatabase,      badge: null,   group: "core" },
@@ -37,15 +37,15 @@ const NAV = [
   { href: "/customers",      label: "Customers",       icon: FiUsers,         badge: null,   group: "money" },
   { href: "/suppliers",      label: "Suppliers",       icon: FiTruck,         badge: null,   group: "money" },
   { href: "/khata",          label: "Customer Khata",  icon: FiBook,          badge: null,   group: "money" },
-  { href: "/bills",          label: "GST Invoices",    icon: FiFile,          badge: "NEW",  group: "money" },
-  { href: "/bank",           label: "Bank Monitor",    icon: FiDatabase,      badge: "NEW",  group: "money" },
+  { href: "/bills",          label: "GST Invoices",    icon: FiFile,          badge: null,  group: "money" },
+  { href: "/bank",           label: "Bank Monitor",    icon: FiDatabase,      badge: null,  group: "money" },
   { href: "/ledger",         label: "Bank Ledger",     icon: FiDollarSign,    badge: null,   group: "money" },
   { href: "/forecast",       label: "Cash Forecast",   icon: FiTrendingUp,    badge: null,   group: "money" },
   { href: "/bad-debt",       label: "Bad Debt Radar",  icon: FiAlertTriangle, badge: null,   group: "money" },
   // ── Sales & Inventory
   { href: "/sales",          label: "Sales",           icon: FiTrendingUp,    badge: null,   group: "ops" },
   { href: "/purchases",      label: "Purchases",       icon: FiPackage,       badge: null,   group: "ops" },
-  { href: "/orders",         label: "Today's Orders",  icon: FiShoppingBag,   badge: "NEW",  group: "ops" },
+  { href: "/orders",         label: "Today's Orders",  icon: FiShoppingBag,   badge: null,  group: "ops" },
   { href: "/inventory",      label: "Inventory",       icon: FiArchive,       badge: null,   group: "ops" },
   { href: "/scanner",        label: "Invoice Scanner", icon: FiCamera,        badge: null,   group: "ops" },
   { href: "/attendance",     label: "Staff Attendance",icon: FiUserCheck,     badge: null,   group: "ops" },
@@ -53,17 +53,17 @@ const NAV = [
   // ── Automation
   { href: "/whatsapp",       label: "WhatsApp",        icon: FiMessageSquare, badge: null,   group: "automation" },
   { href: "/dunning",        label: "Auto Follow-Up",  icon: FiRepeat,        badge: null,   group: "automation" },
-  { href: "/ai-actions",     label: "Action Center",   icon: FiZap,           badge: "NEW",  group: "automation" },
-  { href: "/brain",          label: "Starlane Brain", icon: FiActivity,      badge: "AI",   group: "automation" },
+  { href: "/ai-actions",     label: "Action Center",   icon: FiZap,           badge: null,  group: "automation" },
+  { href: "/brain",          label: "Starlane Brain", icon: FiActivity,      badge: null,   group: "automation" },
   { href: "/ai-chat",        label: "AI Founder",      icon: FiCpu,           badge: null,   group: "automation" },
-  { href: "/ai-train",       label: "AI Training",     icon: FiSliders,       badge: "AI",   group: "automation" },
+  { href: "/ai-train",       label: "AI Training",     icon: FiSliders,       badge: null,   group: "automation" },
   { href: "/neural-engine",  label: "Neural Engine",   icon: FiZap,           badge: null,   group: "automation" },
   // ── Insights
   { href: "/today",          label: "Today's P&L",     icon: FiSun,           badge: null,   group: "insights" },
   { href: "/analytics",      label: "Analytics",       icon: FiBarChart2,     badge: null,   group: "insights" },
   { href: "/reports",        label: "Reports",         icon: FiFileText,      badge: null,   group: "insights" },
   // ── Network
-  { href: "/network",        label: "Starlane Network", icon: FiGlobe,       badge: "NEW",  group: "network" },
+  { href: "/network",        label: "Starlane Network", icon: FiGlobe,       badge: null,  group: "network" },
   { href: "/industry",       label: "My Industry",     icon: FiShoppingBag,   badge: null,   group: "network" },
   { href: "/crm",            label: "CRM",             icon: FiUsers,         badge: null,   group: "network" },
   // ── Account
@@ -73,7 +73,7 @@ const NAV = [
 ];
 
 const GROUPS = [
-  { key: "core",       label: "Command Center" },
+  { key: "core",       label: "Starlane" },
   { key: "money",      label: "Money & Collections" },
   { key: "ops",        label: "Sales & Inventory" },
   { key: "automation", label: "Automation" },
