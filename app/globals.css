@@ -189,29 +189,41 @@
 
 /* ============================================================
    METRIC & TYPOGRAPHY
+
+   Previously set in IBM Plex Mono — monospace on every financial figure
+   across the app read as "technical/cyberpunk" rather than editorial.
+   Monospace is now reserved for genuinely technical values (IDs, SKUs,
+   evidence). Metrics stay in the primary sans with tabular-nums so
+   digits still align in columns/tables without looking like a terminal.
+   Weight dialed back from 700 to 600 — size alone carries emphasis at
+   this scale; 700 read heavier than the rest of the restrained system.
    ============================================================ */
 .metric-value {
-  font-family: 'IBM Plex Mono', Menlo, monospace;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
 .metric-lg {
-  font-family: 'IBM Plex Mono', Menlo, monospace;
-  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-weight: 600;
   font-size: 2rem;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .metric-xl {
-  font-family: 'IBM Plex Mono', Menlo, monospace;
-  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-weight: 600;
   font-size: 2.5rem;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.02em;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 /* ============================================================
@@ -430,6 +442,29 @@
   border: 1px solid #E5E5E1 !important;
   border-radius: 8px !important;
   box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+  padding: 8px 10px !important;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+}
+.recharts-default-tooltip .recharts-tooltip-label {
+  font-size: 11px !important;
+  color: #8A8A86 !important;
+  margin-bottom: 2px !important;
+}
+.recharts-default-tooltip .recharts-tooltip-item {
+  font-size: 12px !important;
+  padding: 1px 0 !important;
+}
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: #EDEDE9 !important;
+}
+.recharts-cartesian-axis-tick-value {
+  font-size: 11px !important;
+  fill: #8A8A86 !important;
+}
+.recharts-cartesian-axis-line,
+.recharts-cartesian-axis-tick-line {
+  stroke: #E5E5E1 !important;
 }
 
 /* ============================================================
@@ -438,9 +473,9 @@
 .section-label {
   font-size: 0.625rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #556070;
+  color: #8A8A86;
 }
 
 /* ============================================================

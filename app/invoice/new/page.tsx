@@ -56,17 +56,16 @@ function StepBar({ current }: { current: number }) {
                 style={{
                   background: done   ? "#10D98A"
                             : active ? "#4F6EF7"
-                            : "rgba(255,255,255,0.06)",
-                  border: done || active ? "none" : "1px solid rgba(255,255,255,0.12)",
-                  color: done || active ? "#fff" : "#556070",
-                  boxShadow: active ? "0 0 16px rgba(79,110,247,0.45)" : "none",
+                            : "#F2F2EF",
+                  border: done || active ? "none" : "1px solid #E5E5E1",
+                  color: done || active ? "#fff" : "#8A8A86",
                 }}
               >
                 {done ? <FiCheck size={13} strokeWidth={3} /> : s.n}
               </div>
               <span
                 className="text-[9px] font-bold mt-1 tracking-wide uppercase"
-                style={{ color: done ? "#10D98A" : active ? "#4F6EF7" : "#556070" }}
+                style={{ color: done ? "#10D98A" : active ? "#4F6EF7" : "#8A8A86" }}
               >
                 {s.label}
               </span>

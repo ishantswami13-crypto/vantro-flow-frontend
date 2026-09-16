@@ -187,10 +187,10 @@ export default function DunningPage() {
                   ].join(" ")}>
                     <div className="shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center border z-10 relative"
                       style={{
-                        background:   rule.enabled ? `${ACTION_COLOR[rule.action as ActionType]}15` : "#1E2D4A",
-                        borderColor:  rule.enabled ? `${ACTION_COLOR[rule.action as ActionType]}40` : "#1E2D4A",
+                        background:   rule.enabled ? `${ACTION_COLOR[rule.action as ActionType]}15` : "#F2F2EF",
+                        borderColor:  rule.enabled ? `${ACTION_COLOR[rule.action as ActionType]}40` : "#E5E5E1",
                       }}>
-                      <p className="text-xs font-black" style={{ color: rule.enabled ? ACTION_COLOR[rule.action as ActionType] : "#4A6080" }}>
+                      <p className="text-xs font-black" style={{ color: rule.enabled ? ACTION_COLOR[rule.action as ActionType] : "#8A8A86" }}>
                         D+{rule.trigger_day}
                       </p>
                       <p className="text-2xs text-muted">days</p>

@@ -31,7 +31,7 @@ function TrustRing({ score }: { score: number }) {
   return (
     <div className="relative w-40 h-40 mx-auto">
       <svg width="160" height="160" viewBox="0 0 160 160" className="-rotate-90">
-        <circle cx="80" cy="80" r={r} fill="none" stroke="#1E2D4A" strokeWidth="12" />
+        <circle cx="80" cy="80" r={r} fill="none" stroke="#E5E5E1" strokeWidth="12" />
         <circle cx="80" cy="80" r={r} fill="none" stroke={color} strokeWidth="12"
           strokeDasharray={`${filled} ${circ}`} strokeLinecap="round"
           style={{ transition: "stroke-dasharray 1.2s ease" }} />

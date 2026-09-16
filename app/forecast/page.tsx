@@ -19,10 +19,10 @@ function fmt(v: number) {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-surface-2 border border-border rounded-xl px-4 py-3 shadow-card text-xs min-w-[160px]">
-      <p className="text-secondary font-medium mb-2.5">{label}</p>
+    <div className="bg-surface-1 border border-border rounded-lg px-3 py-2.5 shadow-card text-xs min-w-[150px]">
+      <p className="text-secondary font-medium mb-2">{label}</p>
       {payload.map((p: any) => (
-        <div key={p.dataKey} className="flex items-center justify-between gap-4 mb-1.5">
+        <div key={p.dataKey} className="flex items-center justify-between gap-4 mb-1">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.color }} />
             <span className="text-secondary">{p.name}</span>
@@ -312,9 +312,9 @@ export default function ForecastPage() {
                     <stop offset="100%" stopColor="#0066FF" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E2D4A" vertical={false} />
-                <XAxis dataKey="date" tick={{ fill: "#556070", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis tickFormatter={fmt} tick={{ fill: "#556070", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: "#8A8A86", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                <YAxis tickFormatter={fmt} tick={{ fill: "#8A8A86", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
                 <Tooltip content={<CustomTooltip />} />
                 <ReferenceLine y={0} stroke="#F5424D" strokeDasharray="4 2" strokeWidth={1}
                   label={{ value: "Zero Cash", fill: "#F5424D", fontSize: 9, position: "insideTopLeft" }} />

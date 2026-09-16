@@ -108,7 +108,7 @@ function HealthRing({ score }: { score: number }) {
   return (
     <div className="relative w-24 h-24">
       <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
-        <circle cx="48" cy="48" r={r} fill="none" stroke="#1E2D4A" strokeWidth="8" />
+        <circle cx="48" cy="48" r={r} fill="none" stroke="#E5E5E1" strokeWidth="8" />
         <circle cx="48" cy="48" r={r} fill="none" stroke={color} strokeWidth="8"
           strokeDasharray={`${filled} ${circ}`} strokeLinecap="round"
           style={{ transition: "stroke-dasharray 1s ease" }} />

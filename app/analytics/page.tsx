@@ -14,11 +14,12 @@ import { api, getUser } from "@/lib/api";
 import Link from "next/link";
 
 const TOOLTIP_STYLE = {
-  backgroundColor: "#0C1428",
-  border: "1px solid #1E2D4A",
-  borderRadius: 12,
+  backgroundColor: "#FFFFFF",
+  border: "1px solid #E5E5E1",
+  borderRadius: 8,
   fontSize: 12,
-  color: "#E8EFF8",
+  color: "#171717",
+  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
 };
 
 function SkeletonCard() {
@@ -168,8 +169,8 @@ export default function AnalyticsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-black text-primary tracking-tight">Analytics</h2>
-            <p className="text-sm text-secondary mt-0.5">Collections performance based on your real data</p>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>Analytics</h2>
+            <p className="text-sm text-secondary mt-1">Collections performance based on your real data</p>
           </div>
           <div className="flex gap-1 p-1 bg-surface-2 rounded-xl border border-border">
             {(["1m", "3m", "6m"] as const).map(r => (
@@ -239,9 +240,9 @@ export default function AnalyticsPage() {
                         <stop offset="95%" stopColor="#10D98A" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1E2D4A" />
-                    <XAxis dataKey="month" tick={{ fill: "#4A6080", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#4A6080", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
+                    <XAxis dataKey="month" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number, name: string) => [`₹${v}L`, name]} />
                     <Area type="monotone" dataKey="sales" name="Sales booked" stroke="#10D98A" strokeWidth={2} fill="url(#gc)" />
                     <Area type="monotone" dataKey="purchases" name="Purchases booked" stroke="#F5A524" strokeWidth={2} fill="transparent" />
@@ -261,11 +262,11 @@ export default function AnalyticsPage() {
                 {totalCalls > 0 ? (
                   <ResponsiveContainer width="100%" height={180}>
                     <BarChart data={callLogs} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1E2D4A" />
-                      <XAxis dataKey="day" tick={{ fill: "#4A6080", fontSize: 11 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: "#4A6080", fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
+                      <XAxis dataKey="day" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
                       <Tooltip contentStyle={TOOLTIP_STYLE} />
-                      <Bar dataKey="made"     name="Called"   fill="#1E2D4A" radius={[4,4,0,0]} />
+                      <Bar dataKey="made"     name="Called"   fill="#171717" radius={[4,4,0,0]} />
                       <Bar dataKey="answered" name="Answered" fill="#0066FF" radius={[4,4,0,0]} />
                       <Bar dataKey="promised" name="Promised" fill="#10D98A" radius={[4,4,0,0]} />
                     </BarChart>
@@ -362,12 +363,12 @@ export default function AnalyticsPage() {
                 <p className="text-xs text-muted mb-4">Collection trend based on logged call activity</p>
                 <ResponsiveContainer width="100%" height={160}>
                   <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1E2D4A" />
-                    <XAxis dataKey="month" tick={{ fill: "#4A6080", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#4A6080", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
+                    <XAxis dataKey="month" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} />
-                    <Legend wrapperStyle={{ fontSize: 12, color: "#4A6080" }} />
-                    <Line type="monotone" dataKey="collected" name="Collected ₹L" stroke="#10D98A" strokeWidth={2} dot={{ r: 3, fill: "#10D98A" }} />
+                    <Legend wrapperStyle={{ fontSize: 12, color: "#8A8A86" }} />
+                    <Line type="monotone" dataKey="collected" name="Collected ₹L" stroke="#10D98A" strokeWidth={2} dot={false} activeDot={{ r: 3, fill: "#10D98A" }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
