@@ -467,6 +467,7 @@ export interface WorldSourceHealth {
   source_id: string;
   provider: string;
   dataset: string;
+  is_internal: boolean;
   status: 'FRESH' | 'STALE' | 'NEVER_SUCCEEDED' | string;
   last_success: string | null;
   last_failure: string | null;

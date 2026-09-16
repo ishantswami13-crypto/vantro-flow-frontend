@@ -6,12 +6,11 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type DataConnection, type WorldSourceHealth } from "@/lib/api";
 import { FiUploadCloud } from "react-icons/fi";
 
-// world_sources includes internal/test registry rows (a fixture source used
-// by the automated test suite, and the local 2xA demo replay reference) that
-// were never meant to be customer-visible. Only real, live external
-// providers belong on this page — filtering here is display-only and never
-// touches the registry itself.
-const REAL_WORLD_PROVIDERS = new Set(["USGS", "Frankfurter/ECB"]);
+// World Intelligence Phase 3C: world_sources.is_internal (backend column,
+// migration 044) is now the source of truth for "is this a real customer-
+// visible connector" — GET /api/world/health excludes is_internal=true rows
+// (test fixtures, dev/demo reference sources) by default, so this page no
+// longer needs its own hardcoded provider allowlist to hide them.
 
 function describeWorldSource(s: WorldSourceHealth): { text: string; tone: "ok" | "warn" | "muted" } {
   if (s.status === "NEVER_SUCCEEDED") return { text: "Not yet synced", tone: "muted" };
@@ -108,7 +107,7 @@ export default function ConnectionsPage() {
     // failure domain, so a failure here never blocks the business-systems
     // section above.
     api.world.health()
-      .then((res) => { if (!cancelled) setWorldSources((res.sources || []).filter(s => REAL_WORLD_PROVIDERS.has(s.provider))); })
+      .then((res) => { if (!cancelled) setWorldSources(res.sources || []); })
       .catch(() => { if (!cancelled) setWorldSources([]); });
     return () => { cancelled = true; };
   }, []);
