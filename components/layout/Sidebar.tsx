@@ -11,7 +11,7 @@ import {
   FiCpu, FiBook, FiShoppingBag, FiUserCheck,
   FiSun, FiActivity, FiUser, FiSliders,
   FiArchive, FiFile, FiDollarSign, FiZap, FiLock, FiAlertTriangle, FiTruck, FiTarget,
-  FiChevronLeft, FiChevronRight,
+  FiChevronLeft, FiChevronRight, FiCommand,
 } from "react-icons/fi";
 import { api, getUser, clearAuth } from "@/lib/api";
 import { getBusinessType, getSmartHiddenRoutes, type BusinessTypeConfig } from "@/lib/businessTypes";
@@ -111,6 +111,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const [moreOpen, setMoreOpen]           = useState(false);
   const [accountOpen, setAccountOpen]     = useState(false);
   const [searchOpen, setSearchOpen]       = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [collapsed, setCollapsed]         = useState(false);
   const [recents, setRecents]             = useState<RecentEntry[]>([]);
   const accountRef = useRef<HTMLDivElement>(null);
@@ -153,6 +154,17 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  // Escape closes the keyboard-shortcuts reference (CommandPalette handles
+  // its own Escape internally).
+  useEffect(() => {
+    if (!shortcutsOpen) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setShortcutsOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [shortcutsOpen]);
 
   useEffect(() => {
     const loadBizType = () => {
@@ -455,11 +467,29 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               left: collapsed ? "68px" : "12px", right: collapsed ? "auto" : "12px", width: collapsed ? "220px" : "auto",
               bottom: "8px", background: "#1E1E1E", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
             }}>
-              <Link href="/settings" onClick={onClose}
+              <Link href="/settings?tab=profile" onClick={onClose}
                 className="flex items-center gap-2 px-3 h-9 text-[13px] transition-colors duration-150" style={{ color: "#B0B0AB" }}
                 onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)")}
                 onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}>
-                <FiSettings size={14} /> Settings
+                <FiUser size={14} /> Profile
+              </Link>
+              <Link href="/settings?tab=preferences" onClick={onClose}
+                className="flex items-center gap-2 px-3 h-9 text-[13px] transition-colors duration-150" style={{ color: "#B0B0AB" }}
+                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)")}
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}>
+                <FiSliders size={14} /> Preferences
+              </Link>
+              <button onClick={() => { setAccountOpen(false); setShortcutsOpen(true); }}
+                className="flex items-center gap-2 px-3 h-9 w-full text-[13px] transition-colors duration-150" style={{ color: "#B0B0AB" }}
+                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)")}
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}>
+                <FiCommand size={14} /> Keyboard shortcuts
+              </button>
+              <Link href="/settings" onClick={onClose}
+                className="flex items-center gap-2 px-3 h-9 text-[13px] transition-colors duration-150" style={{ color: "#B0B0AB", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)")}
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}>
+                <FiSettings size={14} /> All settings
               </Link>
               <button onClick={handleLogout}
                 className="flex items-center gap-2 px-3 h-9 w-full text-[13px] transition-colors duration-150" style={{ color: "#B0B0AB" }}
@@ -473,6 +503,36 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       </aside>
 
       <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} routes={searchableRoutes} />
+
+      {shortcutsOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center px-4" onClick={() => setShortcutsOpen(false)}>
+          <div className="fixed inset-0" style={{ background: "rgba(0,0,0,0.35)" }} />
+          <div
+            role="dialog" aria-modal="true" aria-label="Keyboard shortcuts"
+            className="relative w-full sm:w-[380px] rounded-xl overflow-hidden"
+            style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4" style={{ height: "48px", borderBottom: "1px solid #EDEDE9" }}>
+              <p className="text-sm font-medium" style={{ color: "#171717" }}>Keyboard shortcuts</p>
+              <button onClick={() => setShortcutsOpen(false)} aria-label="Close" style={{ color: "#8A8A86" }}><FiX size={16} /></button>
+            </div>
+            <div className="p-4 space-y-2.5">
+              {[
+                { keys: "Ctrl/Cmd K", desc: "Open search" },
+                { keys: "↑ / ↓", desc: "Move through results" },
+                { keys: "Enter", desc: "Open selected result" },
+                { keys: "Esc", desc: "Close search or dialog" },
+              ].map(s => (
+                <div key={s.keys} className="flex items-center justify-between">
+                  <span className="text-sm" style={{ color: "#686868" }}>{s.desc}</span>
+                  <kbd className="text-[11px] px-1.5 py-0.5 rounded font-mono" style={{ color: "#8A8A86", background: "#F2F2EE" }}>{s.keys}</kbd>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

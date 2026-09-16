@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card } from "@/components/ui/Card";
 import { Input, Select } from "@/components/ui/Input";
@@ -77,8 +78,22 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-export default function SettingsPage() {
-  const [tab, setTab]       = useState<Tab>("profile");
+const TAB_KEYS = new Set(TABS.map(t => t.key));
+
+function SettingsPageInner() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const requestedTab = searchParams.get("tab");
+  const initialTab: Tab = requestedTab && TAB_KEYS.has(requestedTab as Tab) ? (requestedTab as Tab) : "profile";
+  const [tab, setTabState] = useState<Tab>(initialTab);
+  // Keep the URL in sync so Settings sections (Profile, Preferences, ...)
+  // are real deep-linkable destinations — e.g. from the sidebar account
+  // menu — rather than only reachable by clicking a tab after landing here.
+  const setTab = (t: Tab) => {
+    setTabState(t);
+    router.replace(`${pathname}?tab=${t}`, { scroll: false });
+  };
   const [saved, setSaved]   = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState("");
@@ -772,5 +787,13 @@ export default function SettingsPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={null}>
+      <SettingsPageInner />
+    </Suspense>
   );
 }
