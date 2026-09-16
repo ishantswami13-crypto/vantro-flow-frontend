@@ -16,13 +16,13 @@ export function Input({ label, error, hint, prefix, icon, className = "", id, ..
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={inputId} className="text-xs font-medium text-secondary uppercase tracking-wider">
+        <label htmlFor={inputId} className="text-[12px] font-medium text-secondary">
           {label}
         </label>
       )}
       <div className="relative flex items-center">
         {prefix && (
-          <span className="absolute left-3 text-secondary text-sm font-mono select-none">{prefix}</span>
+          <span className="absolute left-3 text-secondary text-sm select-none">{prefix}</span>
         )}
         {icon && !prefix && (
           <span className="absolute left-3 text-secondary">{icon}</span>
@@ -59,7 +59,7 @@ export function Select({ label, error, hint, options, className = "", id, ...pro
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={selectId} className="text-xs font-medium text-secondary uppercase tracking-wider">
+        <label htmlFor={selectId} className="text-[12px] font-medium text-secondary">
           {label}
         </label>
       )}
