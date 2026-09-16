@@ -284,6 +284,10 @@ export const api = {
       request<IntelligenceExecutionResponse>(`/api/intelligence/actions/${actionId}/approve-and-execute`, { method: 'POST' }),
     verifyOutcome: (signalId: string) =>
       request<IntelligenceVerifyOutcomeResponse>(`/api/intelligence/signals/${signalId}/verify-outcome`, { method: 'POST' }),
+    actionDetail: (actionId: string) =>
+      request<IntelligenceActionDetailResponse>(`/api/intelligence/actions/${actionId}/detail`),
+    listActions: (actionType: string) =>
+      request<{ success: boolean; actions: IntelligenceAction[] }>(`/api/ai-actions?status=all&action_type=${encodeURIComponent(actionType)}&limit=100`),
   },
 
   // ─── Demo control (2xA meeting slice) — internal use only, never surfaced as a normal product control ───
@@ -1362,15 +1366,67 @@ export interface IntelligenceAction {
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'pending' | 'approved' | 'rejected' | 'done' | 'expired' | 'system_blocked';
+  // "Close the Loop" mission: widened (migration 045) with real in-flight/
+  // failure states — a failed or ambiguous execution is never left looking
+  // like it's still just 'approved'.
+  status: 'pending' | 'approved' | 'rejected' | 'done' | 'expired' | 'system_blocked' | 'executing' | 'failed' | 'execution_unknown' | 'cancelled';
   supplier_id: string | null;
   risk_level: 'low' | 'medium' | 'high';
   requires_approval: boolean;
   reason_json: { signalId: string; componentId: string; rankedOptions: RankedInterventionOption[] };
+  // Exact, frozen execution payload shown to the user before approval —
+  // never recomputed or modified after the row is created (migration 045).
+  parameters?: {
+    supplier: { id: string; name: string; phone: string | null };
+    products: Array<{ id: string; name: string; sku: string; quantity: number }>;
+    currency: string | null;
+    delivery_target_days: number | null;
+    notes: string;
+  } | null;
+  // What this action is predicted to accomplish, recorded BEFORE execution.
+  expected_effect?: { metric: string; baseline_value: number; target_value?: number; expected_value: number; revenue_protected: number } | null;
+  outcome?: 'effective' | 'ineffective' | null;
+  outcome_at?: string | null;
+  outcome_notes?: string | null;
+  last_execution_error?: string | null;
+  execution_attempts?: number;
   approved_by?: string | null;
   approved_at?: string | null;
   completed_at?: string | null;
   created_at: string;
+}
+
+export interface ActionExecutionRecord {
+  id: string;
+  channel: string;
+  provider_message_id: string | null;
+  status: string;
+  sent_at: string | null;
+  failed_reason: string | null;
+  idempotency_key: string | null;
+  created_at: string;
+}
+
+export interface ActionOutcomeRow {
+  id: string;
+  verification_type: string;
+  expected_metric: string;
+  expected_value: number | null;
+  observed_metric: string | null;
+  observed_value: number | null;
+  status: 'PENDING' | 'MET' | 'NOT_MET' | 'INCONCLUSIVE';
+  evidence: unknown;
+  verified_at: string | null;
+  created_at: string;
+}
+
+export interface IntelligenceActionDetailResponse {
+  success: boolean;
+  action: IntelligenceAction;
+  evidence: IntelligenceEvidenceItem[] | null;
+  executionRecords: ActionExecutionRecord[];
+  purchaseOrders: Array<{ id: string; supplier_name: string; items: unknown; estimated_amount: number | null; status: string; created_at: string }>;
+  outcomes: ActionOutcomeRow[];
 }
 
 export interface IntelligenceActionsResponse {
