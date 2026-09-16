@@ -221,7 +221,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         href={href}
         onClick={onClick}
         title={collapsedMode ? label : undefined}
-        className="flex items-center gap-2.5 h-9 rounded-[7px] text-[13.5px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1"
+        className="flex items-center gap-2.5 h-9 rounded-[6px] text-[13.5px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1"
         style={{
           paddingLeft: collapsedMode ? 0 : "10px",
           paddingRight: collapsedMode ? 0 : "10px",
@@ -289,7 +289,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             href="/intelligence"
             onClick={onClose}
             title={collapsed ? "New investigation" : undefined}
-            className="flex items-center gap-2.5 h-9 rounded-[7px] text-[13.5px] font-medium mb-4 transition-colors duration-150"
+            className="flex items-center gap-2.5 h-9 rounded-[6px] text-[13.5px] font-medium mb-4 transition-colors duration-150"
             style={{ paddingLeft: collapsed ? 0 : "10px", paddingRight: collapsed ? 0 : "10px", justifyContent: collapsed ? "center" : "flex-start", color: "#D4D4D0" }}
             onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
@@ -299,7 +299,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           </Link>
 
           {/* Primary nav */}
-          <div className="space-y-px">
+          <div className="space-y-0.5">
             {PRIMARY.map(n => (
               <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon}
                 active={pathname === n.href || pathname.startsWith(n.href + "/")}
@@ -312,7 +312,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 ref={moreBtnRef}
                 onClick={() => setMoreOpen(v => !v)}
                 title={collapsed ? "More" : undefined}
-                className="flex items-center gap-2.5 h-9 w-full rounded-[7px] text-[13.5px] font-medium transition-colors duration-150"
+                className="flex items-center gap-2.5 h-9 w-full rounded-[6px] text-[13.5px] font-medium transition-colors duration-150"
                 style={{
                   paddingLeft: collapsed ? 0 : "10px", paddingRight: collapsed ? 0 : "10px",
                   justifyContent: collapsed ? "center" : "flex-start",
@@ -337,7 +337,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     maxHeight: "70vh",
                     background: "#1B1B1B",
                     border: "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: "11px",
+                    borderRadius: "10px",
                     boxShadow: "0 12px 32px rgba(0,0,0,0.35)",
                   }}
                 >
@@ -350,7 +350,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                           <p className="px-2 mb-1" style={{ fontSize: "10.5px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#62625F" }}>
                             {label}
                           </p>
-                          <div className="space-y-px">
+                          <div className="space-y-0.5">
                             {visibleItems.map(({ href, label: itemLabel, icon: Icon, badge }) => {
                               const active = pathname === href || pathname.startsWith(href + "/");
                               const liveBadge = badge === "live"
@@ -394,7 +394,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               the normal scroll region since More is now an overlay and no
               longer pushes this down. */}
           {!collapsed && recents.length > 0 && (
-            <div className="mt-6">
+            <div className="mt-8">
               <p className="px-2.5 mb-1.5" style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#62625F" }}>
                 Recents
               </p>
@@ -404,7 +404,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     key={r.href}
                     href={r.href}
                     onClick={onClose}
-                    className="flex items-center justify-between gap-2 px-2.5 rounded-[7px] transition-colors duration-150"
+                    className="flex items-center justify-between gap-2 px-2.5 rounded-[6px] transition-colors duration-150"
                     style={{ height: "31px", color: "#B0B0AB" }}
                     onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)")}
                     onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
@@ -444,7 +444,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           <button
             onClick={() => setAccountOpen(v => !v)}
             title={collapsed ? userName : undefined}
-            className="flex items-center gap-2.5 w-full rounded-[7px] transition-colors duration-150"
+            className="flex items-center gap-2.5 w-full rounded-[6px] transition-colors duration-150"
             style={{ padding: "6px 8px", justifyContent: collapsed ? "center" : "flex-start" }}
             onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)")}
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
@@ -463,7 +463,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           </button>
 
           {accountOpen && (
-            <div className="absolute z-40 rounded-lg overflow-hidden" style={{
+            <div className="absolute z-40 rounded-[10px] overflow-hidden" style={{
               left: collapsed ? "68px" : "12px", right: collapsed ? "auto" : "12px", width: collapsed ? "220px" : "auto",
               bottom: "8px", background: "#1E1E1E", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
             }}>
