@@ -296,6 +296,19 @@ export default function SalesPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // Escape closes whichever modal is open — this modal is a raw portal,
+  // not the shared Drawer component, so it doesn't get Escape for free.
+  useEffect(() => {
+    if (!showAdd && !payModal) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (showAdd) closeModal();
+      else if (payModal) setPayModal(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [showAdd, payModal]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Bulk Scan ─────────────────────────────────────────────────────
   const bulkCancelRef = useRef(false);
 
@@ -1039,9 +1052,11 @@ export default function SalesPage() {
         {/* ══════════ ADD / EDIT / SCAN MODAL (portaled) ══════════ */}
         {mounted && showAdd && createPortal(
           <div style={{ position: "fixed", inset: 0, zIndex: 99998 }}
-               className="flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+               className="flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4"
+               onClick={closeModal}>
             <div className="w-full max-w-lg bg-surface-1 rounded-2xl border border-border overflow-hidden"
-                 style={{ maxHeight: "92vh", overflowY: "auto" }}>
+                 style={{ maxHeight: "92vh", overflowY: "auto" }}
+                 onClick={e => e.stopPropagation()}>
 
               {/* Modal header */}
               <div className="px-5 py-4 border-b border-border flex items-center justify-between sticky top-0 bg-surface-1 z-10">
@@ -1291,8 +1306,10 @@ export default function SalesPage() {
         {/* Quick Collect Modal (portaled) */}
         {mounted && payModal && createPortal(
           <div style={{ position: "fixed", inset: 0, zIndex: 99998 }}
-               className="flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-border p-5">
+               className="flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+               onClick={() => setPayModal(null)}>
+            <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-border p-5"
+                 onClick={e => e.stopPropagation()}>
               <h3 className="font-bold text-primary mb-1">Collect Payment</h3>
               <p className="text-xs text-muted mb-4">
                 {payModal.customer_name} · Pending: {fmtINR(payModal.total_amount - payModal.paid_amount)}
