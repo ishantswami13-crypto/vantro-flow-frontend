@@ -3,8 +3,25 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { api, type DataConnection } from "@/lib/api";
+import { api, type DataConnection, type WorldSourceHealth } from "@/lib/api";
 import { FiUploadCloud } from "react-icons/fi";
+
+// world_sources includes internal/test registry rows (a fixture source used
+// by the automated test suite, and the local 2xA demo replay reference) that
+// were never meant to be customer-visible. Only real, live external
+// providers belong on this page — filtering here is display-only and never
+// touches the registry itself.
+const REAL_WORLD_PROVIDERS = new Set(["USGS", "Frankfurter/ECB"]);
+
+function describeWorldSource(s: WorldSourceHealth): { text: string; tone: "ok" | "warn" | "muted" } {
+  if (s.status === "NEVER_SUCCEEDED") return { text: "Not yet synced", tone: "muted" };
+  const ago = s.last_success ? timeAgo(s.last_success) : null;
+  if (s.status === "FRESH") return { text: ago ? `Connected · last synced ${ago}` : "Connected", tone: "ok" };
+  // STALE: the source has synced before but not recently enough for its own
+  // cadence — real, honest signal that ingestion isn't running continuously
+  // yet, not an error.
+  return { text: ago ? `Last synced ${ago} — sync is overdue` : "Sync overdue", tone: "warn" };
+}
 
 function timeAgo(iso: string | null): string {
   if (!iso) return "";
@@ -79,6 +96,7 @@ export default function ConnectionsPage() {
   const [showTallySetup, setShowTallySetup] = useState(false);
   const [connectingTally, setConnectingTally] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
+  const [worldSources, setWorldSources] = useState<WorldSourceHealth[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,6 +104,12 @@ export default function ConnectionsPage() {
       .then((res) => { if (!cancelled) setConnections(res.connections || []); })
       .catch((e) => { if (!cancelled) setLoadError(e?.message || "Could not load connections."); })
       .finally(() => { if (!cancelled) setLoading(false); });
+    // Real-world event sources (USGS, FX) — separate registry, separate
+    // failure domain, so a failure here never blocks the business-systems
+    // section above.
+    api.world.health()
+      .then((res) => { if (!cancelled) setWorldSources((res.sources || []).filter(s => REAL_WORLD_PROVIDERS.has(s.provider))); })
+      .catch(() => { if (!cancelled) setWorldSources([]); });
     return () => { cancelled = true; };
   }, []);
 
@@ -149,6 +173,23 @@ export default function ConnectionsPage() {
             ))}
           </div>
         </section>
+
+        {worldSources !== null && worldSources.length > 0 && (
+          <section className="mt-10">
+            <p className="text-[11px] font-semibold uppercase mb-1" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>External context</p>
+            <p className="text-[12px] mb-1" style={{ color: "#B5B5B0" }}>Real-world events Starlane watches for relevance to your business — not a news feed.</p>
+            <div>
+              {worldSources.map((s) => (
+                <SourceRow
+                  key={s.source_id}
+                  letter={s.provider.charAt(0)}
+                  name={s.dataset === "significant_earthquakes_month" ? "Earthquakes (USGS)" : s.provider === "Frankfurter/ECB" ? "Exchange rates (ECB)" : s.provider}
+                  status={describeWorldSource(s)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {showTallySetup && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.4)" }} role="dialog" aria-modal="true" aria-label="Connecting Tally">

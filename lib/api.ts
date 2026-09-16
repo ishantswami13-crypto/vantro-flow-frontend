@@ -1,4 +1,4 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'https://vantro-flow-backend-production.up.railway.app';
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://vantro-flow-backend-production.up.railway.app';
 const SESSION_COOKIE = 'vantro_session';
 const LEGACY_TOKEN_COOKIE = 'vantro_token';
 const CSRF_COOKIE = 'vantro_csrf';
@@ -26,6 +26,22 @@ export function getToken(): string | null {
   return localStorage.getItem('vantro_token');
 }
 
+/**
+ * Compatibility bridge for older screens that still make direct requests.
+ * It supports the legacy bearer token during migration, while fully working
+ * with the secure httpOnly cookie session after it is enabled on the API.
+ */
+export async function authenticatedFetch(path: string, options: RequestInit = {}): Promise<Response> {
+  const token = getToken();
+  const csrf = getCsrfToken();
+  const headers = new Headers(options.headers);
+
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  if (!token && csrf && isUnsafeMethod(options.method)) headers.set('X-CSRF-Token', csrf);
+
+  return fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include' });
+}
+
 function getCsrfToken(): string | null {
   return getCookie(CSRF_COOKIE);
 }
@@ -48,7 +64,7 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(`${BASE}${path}`, { ...options, headers, credentials: 'include', signal: controller.signal });
+    const res = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include', signal: controller.signal });
     const data = await res.json();
     // Auto-logout on 401 — token expired or invalid, or 404 User not found
     if (res.status === 401 || (res.status === 404 && data?.error === 'User not found')) {
@@ -69,7 +85,7 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
       (errorObj as any).status = res.status;
 
       if (typeof window !== 'undefined') {
-        fetch(`${BASE}/api/client-errors`, {
+        authenticatedFetch('/api/client-errors', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           body: JSON.stringify({
@@ -114,6 +130,7 @@ export const api = {
 
   // ─── Dashboard ──────────────────────────────────────────
   metrics: (userId: string) => request<{ metrics: Metrics }>(`/api/metrics/${userId}`),
+  metricsTrend: (userId: string) => request<{ days: { date: string; sales: number; purchases: number; cashIn: number; cashOut: number }[] }>(`/api/metrics/${userId}/trend`),
   analytics: (userId: string) => request<{ analytics: Analytics }>(`/api/analytics/${userId}`),
   controlRoom: () => request<{
     success: boolean;
@@ -154,7 +171,7 @@ export const api = {
       fd.append('file', file);
       fd.append('user_id', userId);
       const token = getToken();
-      return fetch(`${BASE}/api/upload-csv`, {
+      return authenticatedFetch('/api/upload-csv', {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         credentials: 'include',
@@ -436,8 +453,35 @@ export const api = {
   // ─── Data connections (Tally, file upload, etc.) ────────
   connections: {
     list: () => request<{ success: boolean; connections: DataConnection[] }>('/api/connections'),
+    enrollTally: () => request<{ success: boolean; enrollmentCode: string; expiresAt: string }>('/api/connectors/tally/enrollment', { method: 'POST' }),
+  },
+
+  // Real-world event ingestion sources (USGS, FX, ...) — tenant-agnostic
+  // registry health, not per-user data. See lib/world/freshnessCheck.js.
+  world: {
+    health: () => request<WorldHealthResponse>('/api/world/health'),
   },
 };
+
+export interface WorldSourceHealth {
+  source_id: string;
+  provider: string;
+  dataset: string;
+  status: 'FRESH' | 'STALE' | 'NEVER_SUCCEEDED' | string;
+  last_success: string | null;
+  last_failure: string | null;
+  last_failure_reason: string | null;
+  staleness_hours: number | null;
+  cadence_hours: number;
+  threshold_hours: number;
+}
+
+export interface WorldHealthResponse {
+  success: boolean;
+  sources: WorldSourceHealth[];
+  stale_count: number;
+  timestamp: string;
+}
 
 export interface DataConnection {
   id: string;
@@ -482,7 +526,7 @@ export function clearAuth() {
   localStorage.removeItem('vantro_user');
   clearClientCookie(LEGACY_TOKEN_COOKIE);
   clearClientCookie(SESSION_COOKIE);
-  fetch(`${BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+  authenticatedFetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
 }
 
 export function isLoggedIn(): boolean {
@@ -498,6 +542,10 @@ export interface User {
   plan: string;
   gstin?: string;
   created_at: string;
+  industry?: string | null;
+  business_size?: string | null;
+  gst_registered?: boolean | null;
+  has_workers?: boolean | null;
 }
 
 export interface UserSettings extends User {
@@ -657,6 +705,10 @@ export interface BillingRecord {
   payment_id: string;
   status: string;
   created_at: string;
+  industry?: string | null;
+  business_size?: string | null;
+  gst_registered?: boolean | null;
+  has_workers?: boolean | null;
 }
 
 export interface RazorpayOrder {
@@ -941,8 +993,10 @@ export interface BrainSummary {
   setoff: Array<{ name: string; settle: number }>;
   actions: Array<{ sev: 'hi' | 'mid' | 'lo'; title: string; sub: string; value: number | null }>;
   approximations: { grossProfit: string; cash: string };
-  // salesTrend/products intentionally left untyped here — not consumed by Business State V1.
-  salesTrend: unknown[];
+  // Real 6-month sales trend (already computed by brainSummary.js, just not
+  // wired into the UI before now — see BusinessSummarySection.tsx's sparkline).
+  salesTrend: Array<{ key: string; m: string; s: number }>;
+  // products intentionally left untyped here — not consumed by Business State V1.
   products: unknown[];
 }
 
