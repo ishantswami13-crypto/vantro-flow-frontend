@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 
+const localApiOrigin = (process.env.NEXT_PUBLIC_API_URL || '').match(/^https?:\/\/(localhost|127\.0\.0\.1)(?::\d+)?/)?.[0] || '';
+const localConnectSrc = localApiOrigin ? ` ${localApiOrigin}` : '';
+
 const securityHeaders = [
   // Prevent the site being loaded in an iframe (clickjacking)
   { key: 'X-Frame-Options', value: 'DENY' },
@@ -22,7 +25,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      `connect-src 'self' https://vantro-flow-backend-production.up.railway.app https://*.posthog.com https://*.i.posthog.com https://*.supabase.co wss://*.supabase.co${process.env.NODE_ENV !== 'production' ? ' http://localhost:3001' : ''}`,
+      `connect-src 'self' https://vantro-flow-backend-production.up.railway.app https://*.posthog.com https://*.i.posthog.com https://*.supabase.co wss://*.supabase.co${localConnectSrc}`,
       "frame-src https://checkout.razorpay.com https://api.razorpay.com",
       "media-src 'self' blob:",
       "object-src 'none'",

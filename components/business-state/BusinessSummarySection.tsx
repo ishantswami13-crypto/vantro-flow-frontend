@@ -40,8 +40,16 @@ export function BusinessSummarySection({ brain, brainSection }: BusinessSummaryS
     );
   }
 
-  const { kpis, approximations } = brain;
+  const { kpis, approximations, salesTrend } = brain;
   const cashTrend: "up" | "down" | "neutral" = kpis.netCashFlow > 0 ? "up" : kpis.netCashFlow < 0 ? "down" : "neutral";
+
+  // Real 6-month series, already computed by brainSummary.js — just never
+  // wired into a chart before. Only shown once there's more than one
+  // non-zero month, otherwise a "trend" of five flat zeros and one real
+  // value reads as more history than actually exists.
+  const salesSeries = salesTrend && salesTrend.filter((m) => m.s > 0).length > 1
+    ? salesTrend.map((m) => m.s)
+    : undefined;
 
   // Q4 — one plain sentence, comparing the same number of days in each
   // month (the backend now bounds last month's total to the same
@@ -77,6 +85,7 @@ export function BusinessSummarySection({ brain, brainSection }: BusinessSummaryS
           value={fmtINR(kpis.salesThis)}
           sub="booked sales, whether or not paid yet"
           accent="default"
+          series={salesSeries}
         />
         <MetricCard
           label={kpis.hasCostData ? "Left after recorded purchases" : "Sales so far (no cost data yet)"}

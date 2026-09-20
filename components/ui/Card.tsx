@@ -1,4 +1,5 @@
 import React from "react";
+import { Sparkline } from "./Sparkline";
 
 interface CardProps {
   children:  React.ReactNode;
@@ -30,6 +31,10 @@ interface MetricCardProps {
   accent?:    "default" | "success" | "warning" | "danger" | "gold";
   icon?:      React.ReactNode;
   pct?:       number;
+  // Real day-by-day values only — never interpolated/estimated. Omit
+  // entirely rather than pass a fabricated series; a missing sparkline is
+  // honest, a fake trend line is not.
+  series?:    number[];
 }
 
 const ACCENT_COLOR: Record<string, string> = {
@@ -48,7 +53,7 @@ const ACCENT_GLOW: Record<string, string> = {
   gold:    "rgba(245,166,35,0.10)",
 };
 
-export function MetricCard({ label, value, sub, trend, trendValue, accent = "default", icon, pct }: MetricCardProps) {
+export function MetricCard({ label, value, sub, trend, trendValue, accent = "default", icon, pct, series }: MetricCardProps) {
   const color = ACCENT_COLOR[accent];
   const glow  = ACCENT_GLOW[accent];
 
@@ -66,18 +71,21 @@ export function MetricCard({ label, value, sub, trend, trendValue, accent = "def
         )}
       </div>
       <p className="metric-lg mb-1" style={{ color }}>{value}</p>
-      {(sub || trendValue) && (
-        <div className="flex items-center gap-2 mb-3">
-          {trendValue && trend && (
-            <span className={[
-              "text-2xs font-bold font-mono",
-              trend === "up"   ? "text-success" :
-              trend === "down" ? "text-danger"  : "text-secondary",
-            ].join(" ")}>
-              {trend === "up" ? "+" : trend === "down" ? "-" : ""}{trendValue}
-            </span>
-          )}
-          {sub && <span className="text-2xs text-muted">{sub}</span>}
+      {(sub || trendValue || series) && (
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            {trendValue && trend && (
+              <span className={[
+                "text-2xs font-bold font-mono shrink-0",
+                trend === "up"   ? "text-success" :
+                trend === "down" ? "text-danger"  : "text-secondary",
+              ].join(" ")}>
+                {trend === "up" ? "+" : trend === "down" ? "-" : ""}{trendValue}
+              </span>
+            )}
+            {sub && <span className="text-2xs text-muted truncate">{sub}</span>}
+          </div>
+          {series && <Sparkline values={series} color={color} />}
         </div>
       )}
       {pct !== undefined && (
