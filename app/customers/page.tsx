@@ -5,6 +5,7 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getToken, type CustomerPortfolioResponse } from "@/lib/api";
 import { FiBook, FiMessageSquare, FiPhone, FiSearch, FiUser, FiUsers, FiAlertTriangle } from "react-icons/fi";
+import { LensDrawer, type LensSection } from "@/components/ui/LensDrawer";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -33,6 +34,7 @@ export default function CustomersPage() {
   const [error, setError] = useState("");
   const [scoreMap, setScoreMap] = useState<Record<string, { score: number; tier: string; overdue_amount: number; health_label?: string | null }>>({});
   const [portfolio, setPortfolio] = useState<CustomerPortfolioResponse | null>(null);
+  const [lensCustomer, setLensCustomer] = useState<Customer | null>(null);
 
   const loadCustomers = async () => {
     setLoading(true);
@@ -233,7 +235,13 @@ export default function CustomersPage() {
                         <FiUser size={16} />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-primary truncate">{customer.customer_name}</p>
+                        <button
+                          type="button"
+                          onClick={() => setLensCustomer(customer)}
+                          className="font-bold text-primary truncate text-left hover:underline"
+                        >
+                          {customer.customer_name}
+                        </button>
                         <p className="text-2xs text-muted">{customer.entry_count || 0} entries · {fmtDate(customer.last_entry)}</p>
                       </div>
                     </div>
@@ -314,6 +322,53 @@ export default function CustomersPage() {
           </div>
         )}
       </div>
+
+      {lensCustomer && (() => {
+        const risk = scoreMap[lensCustomer.customer_name];
+        const balance = Number(lensCustomer.balance || 0);
+        const sections: LensSection[] = [
+          {
+            label: "Ledger",
+            rows: [
+              { label: "Given", value: fmtINR(Number(lensCustomer.total_debit || 0)) },
+              { label: "Paid", value: fmtINR(Number(lensCustomer.total_credit || 0)) },
+              { label: "Balance", value: `${balance > 0 ? "-" : balance < 0 ? "+" : ""}${fmtINR(Math.abs(balance))}` },
+              { label: "Ledger entries", value: String(lensCustomer.entry_count || 0) },
+              { label: "Last activity", value: fmtDate(lensCustomer.last_entry) },
+            ],
+          },
+          ...(risk
+            ? [{
+                label: "Risk",
+                rows: [
+                  { label: "Collection score", value: String(risk.score) },
+                  { label: "Tier", value: risk.tier === "HIGH_RISK" ? "High Risk" : risk.tier === "MEDIUM" ? "Medium" : "Low Risk" },
+                  ...(risk.health_label ? [{ label: "Health", value: risk.health_label }] : []),
+                  { label: "Overdue amount", value: fmtINR(Number(risk.overdue_amount || 0)) },
+                ],
+              }]
+            : []),
+          {
+            label: "Contact",
+            rows: [
+              { label: "Phone", value: lensCustomer.customer_phone || "Not on file" },
+            ],
+          },
+        ];
+        return (
+          <LensDrawer
+            entityType="Customer"
+            name={lensCustomer.customer_name}
+            statusLabel={balance > 0 ? "Balance owed" : balance < 0 ? "Advance on account" : "Account clear"}
+            sections={sections}
+            actions={[
+              { label: "Open Khata", onClick: () => { window.location.href = `/khata?customer=${encodeURIComponent(lensCustomer.customer_name)}`; } },
+              { label: "WhatsApp", onClick: () => whatsappStatement(lensCustomer) },
+            ]}
+            onClose={() => setLensCustomer(null)}
+          />
+        );
+      })()}
     </DashboardLayout>
   );
 }

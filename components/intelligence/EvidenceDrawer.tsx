@@ -19,11 +19,32 @@ const GROUP_ORDER: IntelligenceEvidenceItem["kind"][] = [
   "INTERNAL_EVIDENCE",
 ];
 
-export function EvidenceDrawer({ evidence, onClose }: { evidence: IntelligenceEvidenceItem[]; onClose: () => void }) {
+// Canonical Evidence drawer per STARLANE_FRONTEND_HANDOFF.md §10: same
+// Drawer.tsx shell as LensDrawer, "EVIDENCE" label + Fraunces title +
+// record subtitle, and the fixed trust-caption footer bar (verbatim
+// copy from the handoff). `title`/`record` are optional so the existing
+// call site (app/intelligence/[signalId]/page.tsx) keeps working
+// unchanged; new call sites can pass a real record/title pair.
+export function EvidenceDrawer({
+  evidence,
+  onClose,
+  title = "Why Starlane believes this",
+  record,
+}: {
+  evidence: IntelligenceEvidenceItem[];
+  onClose: () => void;
+  title?: string;
+  record?: string;
+}) {
   const grouped = GROUP_ORDER.map((kind) => ({ kind, items: evidence.filter((e) => e.kind === kind) })).filter((g) => g.items.length > 0);
 
   return (
-    <Drawer titleId="evidence-drawer-title" title="Why Starlane believes this" onClose={onClose}>
+    <Drawer titleId="evidence-drawer-title" title={title} onClose={onClose}>
+      <div className="-mx-4 -mt-4 mb-4 px-4 pt-4 pb-3" style={{ borderBottom: "1px solid #EBEAE6" }}>
+        <p className="v32-section-label mb-2">Evidence</p>
+        <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 19, color: "#191917" }}>{title}</p>
+        {record && <p className="text-[12.5px] mt-1" style={{ color: "#63635F" }}>{record}</p>}
+      </div>
       <p className="text-2xs text-muted mb-4 leading-relaxed">
         Every number on this screen traces back to one of the items below. Facts are things Starlane read directly from your
         records or the external event. Assumptions are planning parameters you or Starlane recorded. Forecasts are
@@ -57,6 +78,11 @@ export function EvidenceDrawer({ evidence, onClose }: { evidence: IntelligenceEv
             </ul>
           </div>
         ))}
+      </div>
+      <div className="-mx-4 -mb-4 mt-6 px-4 py-3.5" style={{ borderTop: "1px solid #EBEAE6" }}>
+        <p className="text-[11.5px]" style={{ color: "#63635F" }}>
+          Conclusion → analysis → evidence → source record. Every figure in Starlane can be traced back to here.
+        </p>
       </div>
     </Drawer>
   );
