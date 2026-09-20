@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getToken, getUser } from "@/lib/api";
 import { FiSearch, FiTruck, FiPhone, FiCalendar, FiAlertTriangle, FiX, FiFileText, FiChevronRight } from "react-icons/fi";
+import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -307,35 +308,24 @@ export default function SuppliersPage() {
                           </div>
 
                           {items.length > 0 ? (
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-xs table-premium">
-                                <thead>
-                                  <tr className="border-b border-border">
-                                    <th className="text-left px-4 py-2 section-label">Item</th>
-                                    <th className="text-left px-4 py-2 section-label">HSN</th>
-                                    <th className="text-right px-4 py-2 section-label">Qty</th>
-                                    <th className="text-right px-4 py-2 section-label">Rate</th>
-                                    <th className="text-right px-4 py-2 section-label">Amount</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {items.map((item, idx) => {
-                                    const qty = Number(item.qty ?? item.quantity ?? 0);
-                                    const rate = Number(item.rate ?? item.price ?? 0);
-                                    const amount = Number(item.amount || qty * rate || 0);
-                                    return (
-                                      <tr key={`${purchase.id}-${idx}`}>
-                                        <td className="px-4 py-2 text-primary font-medium">{item.description || item.name || "Item"}</td>
-                                        <td className="px-4 py-2 text-muted">{item.hsn_sac || item.hsn || "—"}</td>
-                                        <td className="px-4 py-2 text-right text-secondary metric-value">{qty} {item.unit || ""}</td>
-                                        <td className="px-4 py-2 text-right text-secondary metric-value">{fmtINR(rate)}</td>
-                                        <td className="px-4 py-2 text-right text-primary font-bold metric-value">{fmtINR(amount)}</td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
+                            // Starlane V32 shared table (handoff §12) — replaces the
+                            // previous hand-rolled .table-premium markup here.
+                            <DataTable
+                              rowKey={(_item, idx) => `${purchase.id}-${idx}`}
+                              rows={items.map((item: any) => {
+                                const qty = Number(item.qty ?? item.quantity ?? 0);
+                                const rate = Number(item.rate ?? item.price ?? 0);
+                                const amount = Number(item.amount || qty * rate || 0);
+                                return { item, qty, rate, amount };
+                              })}
+                              columns={[
+                                { key: "name", header: "Item", render: r => r.item.description || r.item.name || "Item" },
+                                { key: "hsn", header: "HSN", render: r => r.item.hsn_sac || r.item.hsn || "—" },
+                                { key: "qty", header: "Qty", numeric: true, render: r => `${r.qty} ${r.item.unit || ""}` },
+                                { key: "rate", header: "Rate", numeric: true, render: r => fmtINR(r.rate) },
+                                { key: "amount", header: "Amount", numeric: true, render: r => fmtINR(r.amount) },
+                              ] as DataTableColumn<{ item: any; qty: number; rate: number; amount: number }>[]}
+                            />
                           ) : (
                             <div className="px-4 py-4 text-xs text-muted">No item rows saved for this bill.</div>
                           )}
