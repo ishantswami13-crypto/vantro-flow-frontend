@@ -18,13 +18,16 @@ import { getBusinessType, getSmartHiddenRoutes, type BusinessTypeConfig } from "
 import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
 import { getRecents, timeAgo, type RecentEntry } from "@/lib/recents";
 import { CommandPalette, type SearchableRoute } from "./CommandPalette";
-import { PRIMARY_NAV } from "@/lib/navigation";
+import { V32_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, V32_SECONDARY_NAV_LABEL } from "@/lib/navigation";
 
-// Three durable nouns in the permanent rail. Everything else that's real
-// still exists and is still reachable — it lives in the More flyout
-// instead of competing for space as first-class navigation. Shared with
-// BottomNav via lib/navigation.ts so the two surfaces cannot drift.
-const PRIMARY = PRIMARY_NAV;
+// Starlane Version 32 (frozen design) primary nav — 8 items, exact order,
+// per STARLANE_FRONTEND_HANDOFF.md §2. Replaces the previous 3-item
+// PRIMARY_NAV as the desktop sidebar's primary rail; BottomNav keeps the
+// old 3-item PRIMARY_NAV for mobile (see lib/navigation.ts for why).
+// Everything that's real but outside this 8-item IA (and outside the
+// Sources/Agents/Control second group below) still exists and is still
+// reachable — it lives in the "More" flyout, unchanged.
+const PRIMARY = V32_NAV_ITEMS;
 
 // Grouped for the More flyout only — never expanded inline in the rail.
 // CA Partner Portal / Refer & Earn / Payment Plans are deliberately absent:
@@ -210,8 +213,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
   const searchableRoutes: SearchableRoute[] = [
     { href: "/intelligence", label: "Intelligence", type: "Page" },
-    { href: "/connections",  label: "Sources",      type: "Page" },
-    { href: "/control",      label: "Control",      type: "Page" },
+    ...V32_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
+    ...V32_SECONDARY_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
     ...MORE_GROUPS.flatMap(g => g.items.map(i => ({ href: i.href, label: i.label, type: "Page" as const }))),
   ];
 
@@ -305,7 +308,27 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 active={pathname === n.href || pathname.startsWith(n.href + "/")}
                 onClick={onClose} collapsedMode={collapsed} />
             ))}
+          </div>
 
+          {/* Second nav group — resolves the "Sources/Agents/Control exist
+              but never highlight" gap called out in handoff §2. A labelled
+              group below a divider (option (a) from the handoff), so these
+              three enterprise/governance surfaces get their own active
+              state instead of sharing the unrelated "More" flyout. */}
+          <div className="mt-5 pt-3 space-y-0.5" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+            {!collapsed && (
+              <p className="px-2.5 mb-1" style={{ fontSize: "10.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", fontWeight: 500 }}>
+                {V32_SECONDARY_NAV_LABEL}
+              </p>
+            )}
+            {V32_SECONDARY_NAV_ITEMS.map(n => (
+              <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon}
+                active={pathname === n.href || pathname.startsWith(n.href + "/")}
+                onClick={onClose} collapsedMode={collapsed} />
+            ))}
+          </div>
+
+          <div className="mt-3 space-y-0.5">
             {/* More — floating flyout, never expands inline */}
             <div className="relative">
               <button
