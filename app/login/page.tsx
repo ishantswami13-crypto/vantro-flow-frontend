@@ -54,7 +54,7 @@ export default function LoginPage() {
     } finally { setLoading(false); }
   };
 
-  const iBase = { background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.10)", borderRadius:"6px", padding:"13px 16px", fontFamily:"'Hanken Grotesk',system-ui", fontSize:"15px", color:"#fff", outline:"none", width:"100%", transition:"border-color .2s,background .2s" };
+  const iBase = { background:"rgba(255,255,255,.04)", borderWidth:"1px", borderStyle:"solid", borderColor:"rgba(255,255,255,.10)", borderRadius:"6px", padding:"13px 16px", fontFamily:"'Hanken Grotesk',system-ui", fontSize:"15px", color:"#fff", outline:"none", width:"100%", transition:"border-color .2s,background .2s" };
   const iFocus = { ...iBase, borderColor:"rgba(255,255,255,.38)", background:"rgba(255,255,255,.07)" };
 
   return (
