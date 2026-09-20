@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser } from "@/lib/api";
@@ -35,14 +35,13 @@ export default function ScanPage() {
   const [error, setError] = useState<string | null>(null);
   const [ownerName, setOwnerName] = useState<string>("there");
 
-  useState(() => {
-    if (typeof window === "undefined") return;
+  useEffect(() => {
     const user = getUser();
     const stored = (() => {
       try { return JSON.parse(localStorage.getItem("vantro_user") || "{}"); } catch { return {}; }
     })();
     setOwnerName((stored.owner_name || stored.business_name || user?.business_name || user?.email?.split("@")[0] || "there").split(" ")[0]);
-  });
+  }, []);
 
   const submit = async (q: string) => {
     const trimmed = q.trim();
