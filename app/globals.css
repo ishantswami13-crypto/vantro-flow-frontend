@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300..500;1,9..144,300..500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -162,18 +162,6 @@
   background-size: 28px 28px;
 }
 
-.bg-noise {
-  position: relative;
-}
-.bg-noise::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  border-radius: inherit;
-}
-
 /* ============================================================
    GLASSMORPHISM
    ============================================================ */
@@ -198,17 +186,22 @@
    Weight dialed back from 700 to 600 — size alone carries emphasis at
    this scale; 700 read heavier than the rest of the restrained system.
    ============================================================ */
+/* Reverted per Version 32 handoff (§3 Typography): every numeric/technical value
+   in the frozen design is IBM Plex Mono, never the UI sans. The prior rationale
+   comment above (sans + tabular-nums) is superseded by the V32 spec — kept the
+   sans/tabular-nums approach out because it directly conflicts with a frozen,
+   verbatim-extracted design decision, not because it was wrong in the abstract. */
 .metric-value {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  font-weight: 600;
+  font-family: 'IBM Plex Mono', Menlo, monospace;
+  font-weight: 500;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
 .metric-lg {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  font-weight: 600;
+  font-family: 'IBM Plex Mono', Menlo, monospace;
+  font-weight: 500;
   font-size: 2rem;
   letter-spacing: -0.02em;
   line-height: 1.1;
@@ -217,8 +210,8 @@
 }
 
 .metric-xl {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  font-weight: 600;
+  font-family: 'IBM Plex Mono', Menlo, monospace;
+  font-weight: 500;
   font-size: 2.5rem;
   letter-spacing: -0.02em;
   line-height: 1;
@@ -390,6 +383,124 @@
 }
 
 /* ============================================================
+   VERSION 32 DESIGN SYSTEM — motion, row-hover, buttons, tables
+   (handoff §3/§4/§9-12). Additive layer alongside the existing Atlas
+   system above; new Phase-3/4 pages should build on these rather than
+   the Atlas dark-theme primitives.
+   ============================================================ */
+.v32-ease { transition-timing-function: cubic-bezier(0.2,0.8,0.2,1); }
+
+@keyframes fadeInOnce {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-once {
+  animation: fadeInOnce 180ms cubic-bezier(0.2,0.8,0.2,1) both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card-in {
+  animation: fadeUp 420ms cubic-bezier(0.16,1,0.3,1) both;
+}
+.card-in:nth-child(1) { animation-delay: 0ms; }
+.card-in:nth-child(2) { animation-delay: 70ms; }
+.card-in:nth-child(3) { animation-delay: 140ms; }
+.card-in:nth-child(4) { animation-delay: 210ms; }
+.card-in:nth-child(5) { animation-delay: 280ms; }
+.card-in:nth-child(6) { animation-delay: 350ms; }
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+.pulse-dot { animation: pulseDot 2.4s ease-in-out infinite; }
+
+@keyframes drawerIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade-once, .card-in, .pulse-dot { animation: none; }
+}
+
+/* Canonical light-surface row hover (handoff §4) — used by every list/table
+   row except the dark sidebar, which uses .hover-fade instead. */
+.row-hover { transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1); }
+.row-hover:hover { background: #F5F4F1; }
+.row-chevron { transition: transform 120ms cubic-bezier(0.2,0.8,0.2,1), color 120ms cubic-bezier(0.2,0.8,0.2,1); color: #8A8A86; }
+.row-hover:hover .row-chevron { transform: translateX(2px); color: #343431; }
+
+.hover-fade { transition: color 120ms cubic-bezier(0.2,0.8,0.2,1), background-color 120ms cubic-bezier(0.2,0.8,0.2,1); }
+.hover-fade:hover { color: #F5F4F0; background: rgba(255,255,255,0.08); }
+.hover-dim { transition: opacity 120ms cubic-bezier(0.2,0.8,0.2,1); }
+.hover-dim:hover { opacity: 0.72; }
+.hover-lift { transition: transform 120ms cubic-bezier(0.2,0.8,0.2,1), box-shadow 180ms cubic-bezier(0.2,0.8,0.2,1), border-color 120ms cubic-bezier(0.2,0.8,0.2,1); }
+.hover-lift:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(25,25,23,0.07); border-color: rgba(25,25,23,0.16); }
+
+/* Buttons — page-local (.btn-primary-v32) vs on-dark-sidebar (.btn-primary-sidebar)
+   variants per §17.1: the two dark hexes (#191917 vs #1B1B18) are kept as two
+   distinct classes rather than forced to one, since the handoff explicitly notes
+   both usages can legitimately coexist (light-surface button vs. dark-sidebar CTA). */
+.btn-primary-v32 {
+  background: #191917; color: #F7F7F4; border: none; border-radius: 6px;
+  transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
+}
+.btn-primary-v32:hover { background: #2A2A2E; }
+.btn-primary-sidebar {
+  background: #1B1B18; color: #F5F4F0; border: 1px solid rgba(255,255,255,0.14); border-radius: 7px;
+  transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
+}
+.btn-primary-sidebar:hover { background: #2A2A2E; }
+.btn-secondary-v32 {
+  background: none; border: 1px solid rgba(25,25,23,0.14); color: #43433F; border-radius: 6px;
+  transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), border-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
+}
+.btn-secondary-v32:hover { background: rgba(25,25,23,0.04); border-color: rgba(25,25,23,0.22); }
+button:active { transform: scale(0.97); }
+
+/* Type scale (handoff §3) */
+.v32-page-title { font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: 26px; color: #191917; }
+.v32-section-label {
+  font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: #63635F; font-weight: 500;
+}
+.v32-meta { font-size: 11.5px; color: #8A8A86; }
+.v32-body { font-size: 13.5px; color: #43433F; }
+
+/* Table visual language (handoff §12) */
+.v32-table thead th {
+  background: #F3F2EE; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; color: #63635F;
+  text-align: left; padding: 10px 16px; font-weight: 500;
+}
+.v32-table tbody td { padding: 10px 16px; font-size: 13px; color: #191917; }
+.v32-table tbody td.v32-numeric { font-family: 'IBM Plex Mono', Menlo, monospace; }
+.v32-table tbody tr { border-bottom: 1px solid rgba(25,25,23,0.06); }
+
+/* Drawer shell (Lens / Evidence — handoff §9/§10) */
+.v32-drawer-backdrop {
+  position: fixed; inset: 0; background: rgba(20,20,18,0.28);
+  animation: backdropIn 200ms cubic-bezier(0.2,0.8,0.2,1) both;
+}
+.v32-drawer-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 560px; background: #FFFFFF;
+  border-left: 1px solid #E5E4DF; box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  animation: drawerIn 220ms cubic-bezier(0.2,0.8,0.2,1) both;
+  display: flex; flex-direction: column;
+}
+@media (prefers-reduced-motion: reduce) {
+  .v32-drawer-backdrop, .v32-drawer-panel { animation: none; }
+}
+@media (max-width: 768px) {
+  .v32-drawer-panel { width: 100vw; }
+}
+
+/* ============================================================
    FOCUS / ACCESSIBILITY
    ============================================================ */
 .focus-ring { outline: none; }
@@ -479,16 +590,6 @@
 }
 
 /* ============================================================
-   HERO GLOW (landing page)
-   ============================================================ */
-.hero-glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-}
-
-/* ============================================================
    INPUT FOCUS ENHANCEMENT
    ============================================================ */
 input:focus, select:focus, textarea:focus {
@@ -537,16 +638,6 @@ input:focus, select:focus, textarea:focus {
 /* ============================================================
    LANDING PAGE — NOISE OVERLAY
    ============================================================ */
-.noise-overlay::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 1;
-  border-radius: inherit;
-}
-
 /* ============================================================
    PAGE FADE (used in DashboardLayout)
    ============================================================ */
@@ -573,25 +664,6 @@ input:focus, select:focus, textarea:focus {
 .wa-bubble-bg {
   background-color: #0B1418;
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-}
-
-/* ============================================================
-   HERO — VIDEO BACKGROUND & AMBIENT GRADIENT
-   ============================================================ */
-
-/* Ambient gradient that plays behind the video (also serves as
-   the visual fallback when no /public/hero-bg.mp4 is provided) */
-.hero-ambient {
-  background:
-    radial-gradient(ellipse 90% 55% at 50% -8%,  rgba(79,110,247,0.09)  0%, transparent 65%),
-    radial-gradient(ellipse 55% 45% at 88% 55%,  rgba(16,217,138,0.05)  0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 12% 75%,  rgba(110,60,220,0.04)  0%, transparent 55%);
-  animation: hero-breathe 12s ease-in-out infinite alternate;
-}
-
-@keyframes hero-breathe {
-  0%   { opacity: 0.65; }
-  100% { opacity: 1;    }
 }
 
 /* ============================================================
