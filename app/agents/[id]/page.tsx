@@ -1,91 +1,40 @@
 "use client";
 
-import { useMemo } from "react";
-import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getAgent, getPack, canExecuteAgent, explainDecision, EXECUTABLE, type AtlasContext } from "@/lib/atlas";
-import { AtlasShell, StatusBadge, RiskBadge, GateChips } from "@/components/atlas/AtlasUI";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useParams } from "next/navigation";
+import { FiUsers } from "react-icons/fi";
 
-const DEMO_CTX: AtlasContext = {
-  userRole: "owner",
-  connectedDataSources: ["invoices", "collections", "customers", "suppliers", "inventory", "orders", "purchases", "ledger", "bank", "khata", "forecast", "analytics", "metrics", "business_profile", "evidence_vault", "audit_log"],
-  activeConnectors: [],
-  evidenceProvided: true, approvalGranted: false, auditEnabled: true, externalSendEnabled: false,
-};
-
+// Agent detail — STARLANE_FRONTEND_HANDOFF.md §1/§13.
+//
+// Previously rendered lib/atlas's hardcoded mock agent registry (getAgent()
+// from lib/atlas) as if `id` referred to a real, executable agent instance
+// with live status/risk/gates. There is no real per-user agent instance
+// backend (agent_registry, migration 007, is system-global metadata with
+// no owner/user_id and no run tracking — see app/agents/page.tsx), so no
+// `id` on this route can ever resolve to a real configured agent today.
+// Per the hard constraint against fabricated business data, this route
+// honestly reports "agent not found" for any id rather than rendering
+// fake detail chrome (breadcrumb/header/Overview/Runs/etc.) around data
+// that can't exist yet.
 export default function AgentDetail() {
   const params = useParams<{ id: string }>();
-  const id = params?.id || "";
-  const agent = getAgent(decodeURIComponent(id));
-  const decision = useMemo(() => (agent ? canExecuteAgent(agent, DEMO_CTX) : null), [agent]);
-
-  if (!agent) {
-    return (
-      <AtlasShell title="Agent not found" active="/agents">
-        <Link href="/agents" style={{ color: "var(--c-node)" }}>← Back to agents</Link>
-      </AtlasShell>
-    );
-  }
-  const live = EXECUTABLE(agent.execution_status);
-  const packs = agent.pack_ids.map((pid) => getPack(pid)).filter(Boolean);
+  const id = params?.id ? decodeURIComponent(params.id) : "";
 
   return (
-    <AtlasShell title={agent.name} subtitle={agent.description} active="/agents">
-      <Link href="/agents" style={{ color: "var(--c-node)", fontFamily: "var(--font-mono)", fontSize: 13 }}>← Agent mesh</Link>
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, margin: "16px 0" }}>
-        <StatusBadge status={agent.execution_status} />
-        <RiskBadge risk={agent.risk_level} />
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--faint)" }}>{agent.domain} · {agent.role}</span>
-        <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--faint)" }}>{agent.id}</code>
+    <DashboardLayout pageTitle="Agent">
+      <div className="max-w-xl mx-auto mt-16 text-center px-4">
+        <FiUsers size={28} className="mx-auto mb-4" style={{ color: "#8A8A86" }} />
+        <h1 className="v32-page-title mb-3">Agent not found</h1>
+        <p className="v32-body">
+          {id ? `No agent "${id}" exists for this workspace. ` : ""}
+          No agents have been configured yet, so there&apos;s no agent detail to show. Once you can create an
+          agent, its objective, owner, permissions, and run history will appear here.
+        </p>
+        <Link href="/agents" style={{ color: "#191917", fontSize: 13, fontWeight: 500, display: "inline-block", marginTop: 16 }}>
+          ← Back to Agents
+        </Link>
       </div>
-
-      <div style={{
-        border: `1px solid ${decision?.allowed ? "var(--c-node)" : "var(--c-safe)"}55`,
-        background: `${decision?.allowed ? "var(--c-node)" : "var(--c-safe)"}10`,
-        borderRadius: 12, padding: 14, marginBottom: 20,
-      }}>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, marginBottom: 6, color: decision?.allowed ? "var(--c-node)" : "var(--c-safe)" }}>
-          {decision?.allowed ? "▸ Ready to run (demo context)" : live ? "◌ Blocked by gates" : "◌ Not executable"}
-        </div>
-        <div style={{ fontSize: 13, color: "var(--muted)" }}>{decision ? explainDecision(decision) : ""}</div>
-        {agent.blocked_reason && <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 6 }}>Reason: {agent.blocked_reason}</div>}
-      </div>
-
-      <F label="Job to be done" v={agent.job_to_be_done} />
-      <F label="Input data" v={agent.input_data} />
-      <F label="Output / decision / action" v={agent.output_decision_or_action} />
-      <F label="Actions supported" v={agent.actions_supported.join(", ")} />
-      <F label="Proof gate" v={agent.proof_gate} />
-      <F label="Live route" v={agent.live_route || "— (not executable / insight-only)"} />
-
-      <div style={{ margin: "16px 0" }}>
-        <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--faint)", textTransform: "uppercase" }}>Gates</span>
-        <div style={{ marginTop: 6 }}>
-          <GateChips evidence={agent.evidence_required} approval={agent.approval_required} audit={agent.audit_required} connector={agent.connector_required} />
-        </div>
-      </div>
-
-      <div>
-        <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--faint)", textTransform: "uppercase" }}>In packs</span>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
-          {packs.length === 0 && <span style={{ color: "var(--faint)" }}>— composed into packs by dimension —</span>}
-          {packs.map((p) => p && (
-            <Link key={p.id} href={`/packs/${p.id}`} style={{ fontSize: 12, fontFamily: "var(--font-mono)", border: "1px solid var(--line)", borderRadius: 8, padding: "4px 10px", color: "var(--muted)" }}>
-              {p.name}
-            </Link>
-          ))}
-        </div>
-      </div>
-    </AtlasShell>
-  );
-}
-
-function F({ label, v }: { label: string; v: string }) {
-  return (
-    <div style={{ marginBottom: 10 }}>
-      <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--faint)", textTransform: "uppercase", letterSpacing: ".05em" }}>{label}</span>
-      <div style={{ fontSize: 14, color: "var(--fg)" }}>{v}</div>
-    </div>
+    </DashboardLayout>
   );
 }
