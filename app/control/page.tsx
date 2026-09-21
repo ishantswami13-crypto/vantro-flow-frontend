@@ -1,18 +1,37 @@
 "use client";
 
+import { Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { api, type CortexHealthResponse, type DataConnection } from "@/lib/api";
+import { ControlSubnav, type ControlTab } from "@/components/control/ControlSubnav";
+import { api, type CortexHealthResponse, type DataConnection, type UserSettings } from "@/lib/api";
 
 // Control — what Starlane can see, what it's doing, and whether it's
-// right. Deliberately built from ONLY two real endpoints that already
+// right. Overview is built from ONLY two real endpoints that already
 // exist (api.connections.list, api.cortexHealth). No "Understanding"
 // layer (entity/relationship coverage) is shown, because no backend
 // data backs it yet — omitted rather than faked with a placeholder.
+//
+// Users & Roles: today every business has exactly one owner (no
+// team/invite backend exists — confirmed: no team-members endpoint,
+// no roles table). The real owner row comes from api.settings.get().
+// The "no other users" copy below is STARLANE_FRONTEND_HANDOFF.md §8's
+// exact designed copy, not a fabricated feature.
+//
+// Permissions: the Observe/Prepare/Propose/Execute table is the
+// org-wide FIXED product policy per §13/§488 — L1-L3 always granted,
+// L4 Execute always requires human approval. This is a genuine,
+// permanent product rule (not per-org configurable — no override
+// mechanism exists in the backend), so hardcoding it is honest
+// content, not fabricated data.
+//
+// Automation / Monitoring / Security: §8 explicitly flags these tabs
+// have NO designed content anywhere in the source. New, honest,
+// tone-matched empty-state copy is written below rather than assumed.
 const MIN_EVALUATED_FOR_RATE = 3;
 
 function timeSince(iso: string | null): string {
@@ -95,7 +114,11 @@ function OutcomesSection({ stats }: { stats: CortexHealthResponse["stats"] }) {
   );
 }
 
-export default function ControlPage() {
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <p className="text-[11px] font-semibold uppercase mb-4" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>{children}</p>;
+}
+
+function OverviewTab() {
   const health = useQuery<CortexHealthResponse>({
     queryKey: ["control-cortex-health"],
     queryFn: () => api.cortexHealth(),
@@ -110,56 +133,194 @@ export default function ControlPage() {
   const isLoading = health.isLoading || connections.isLoading;
   const isError = health.isError || connections.isError;
 
+  if (isLoading) return <LoadingState label="Loading operating health" rows={3} />;
+  if (isError) {
+    return (
+      <ErrorState
+        title="Couldn't load operating health"
+        message="Check your connection and try again."
+        onRetry={() => { health.refetch(); connections.refetch(); }}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-10">
+      <div>
+        <SectionLabel>Connection</SectionLabel>
+        <ConnectionSection connections={connections.data?.connections || []} />
+      </div>
+
+      {health.data?.stats && (
+        <div className="pt-8" style={{ borderTop: "1px solid #E5E5E1" }}>
+          <SectionLabel>Intelligence</SectionLabel>
+          <IntelligenceSection stats={health.data.stats} />
+        </div>
+      )}
+
+      {health.data?.stats && (
+        <div className="pt-8" style={{ borderTop: "1px solid #E5E5E1" }}>
+          <SectionLabel>Outcomes</SectionLabel>
+          <OutcomesSection stats={health.data.stats} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function UsersTab() {
+  const { data, isLoading, isError, refetch } = useQuery<{ settings: UserSettings }>({
+    queryKey: ["control-users-settings"],
+    queryFn: () => api.settings.get(),
+    staleTime: 25_000,
+  });
+
+  if (isLoading) return <LoadingState label="Loading users" rows={2} />;
+  if (isError) return <ErrorState title="Couldn't load users" message="Check your connection and try again." onRetry={() => refetch()} />;
+
+  const u = data?.settings;
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <SectionLabel>Owner</SectionLabel>
+        <div className="flex items-center justify-between py-4" style={{ borderBottom: "1px solid #E5E5E1" }}>
+          <div>
+            <p className="text-[14px] font-medium" style={{ color: "#171717" }}>{u?.business_name || "Owner"}</p>
+            <p className="text-[12px] mt-0.5" style={{ color: "#8A8A86" }}>{u?.email}</p>
+          </div>
+          <p className="text-[13px]" style={{ color: "#171717" }}>Owner · full access</p>
+        </div>
+      </div>
+      <div>
+        <SectionLabel>Team</SectionLabel>
+        <EmptyState
+          title="No other users have been added yet"
+          message="Invited teammates will appear here with their own role and Agent permissions."
+        />
+      </div>
+    </div>
+  );
+}
+
+// §13/§488 — org-wide fixed policy, identical for every business, no
+// per-org override exists in the backend. L4 Execute always requires
+// approval: the core trust mechanism of the product.
+const POLICY_LEVELS: { level: string; name: string; description: string; granted: boolean }[] = [
+  { level: "L1", name: "Observe", description: "Read business data and surface findings.", granted: true },
+  { level: "L2", name: "Prepare", description: "Draft actions and recommendations for review.", granted: true },
+  { level: "L3", name: "Propose", description: "Put a specific action in front of you to decide on.", granted: true },
+  { level: "L4", name: "Execute", description: "Carry out an action that changes business data.", granted: false },
+];
+
+function PermissionsTab() {
+  return (
+    <div className="space-y-4">
+      <SectionLabel>Organization-wide policy</SectionLabel>
+      <p className="text-[13px] mb-4" style={{ color: "#63635F", maxWidth: 640 }}>
+        This governs every agent in Starlane. It applies the same way to all agents and cannot be changed per agent.
+      </p>
+      <div style={{ border: "1px solid #EBEAE6", borderRadius: 8, overflow: "hidden" }}>
+        {POLICY_LEVELS.map((p, i) => (
+          <div
+            key={p.level}
+            className="row-hover flex items-center justify-between"
+            style={{ padding: "14px 16px", borderBottom: i < POLICY_LEVELS.length - 1 ? "1px solid #EBEAE6" : "none" }}
+          >
+            <div className="flex items-center gap-3">
+              <span
+                style={{
+                  fontSize: 11, fontWeight: 600, color: "#63635F", background: "#F3F2EE",
+                  border: "1px solid #EBEAE6", borderRadius: 4, padding: "2px 6px",
+                }}
+              >
+                {p.level}
+              </span>
+              <div>
+                <p className="text-[14px] font-medium" style={{ color: "#171717" }}>{p.name}</p>
+                <p className="text-[12px] mt-0.5" style={{ color: "#8A8A86" }}>{p.description}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span
+                style={{
+                  width: 6, height: 6, borderRadius: "50%",
+                  background: p.granted ? "#1A8F5C" : "#8A8A86",
+                  display: "inline-block",
+                }}
+              />
+              <span className="text-[13px]" style={{ color: p.granted ? "#171717" : "#8A8A86" }}>
+                {p.granted ? "Allowed" : "Requires approval every time"}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PlaceholderTab({ title, body }: { title: string; body: string }) {
+  return <EmptyState title={title} message={body} />;
+}
+
+function ControlPageInner() {
+  const params = useSearchParams();
+  const tabParam = (params.get("tab") || "overview") as ControlTab;
+  const validInPageTabs: ControlTab[] = ["overview", "users", "permissions", "automation", "monitoring", "security"];
+  const tab: ControlTab = validInPageTabs.includes(tabParam) ? tabParam : "overview";
+
   return (
     <DashboardLayout pageTitle="Control">
-      <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
-        <div className="flex items-start justify-between gap-4 mb-9">
-          <div>
-            <h1 className="text-[28px] lg:text-[32px] leading-[1.15] mb-2" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>
-              Control
-            </h1>
-            <p className="text-[14px] max-w-[700px]" style={{ color: "#686868" }}>
-              What Starlane can see, what it's doing, and whether it's right.
-            </p>
-          </div>
-          <Link href="/control/audit" className="text-[13px] font-medium shrink-0 mt-1" style={{ color: "#171717" }}>
-            Audit →
-          </Link>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
+        <div>
+          <h1
+            style={{
+              margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26,
+              color: "#191917",
+            }}
+          >
+            Control
+          </h1>
+          <p className="text-[13.5px] mt-2 max-w-[640px]" style={{ color: "#63635F" }}>
+            What Starlane can see, what it&apos;s doing, and whether it&apos;s right.
+          </p>
         </div>
 
-        {isLoading && <LoadingState label="Loading operating health" rows={3} />}
+        <ControlSubnav active={tab} />
 
-        {isError && (
-          <ErrorState
-            title="Couldn't load operating health"
-            message="Check your connection and try again."
-            onRetry={() => { health.refetch(); connections.refetch(); }}
-          />
-        )}
-
-        {!isLoading && !isError && (
-          <div className="space-y-10">
-            <div>
-              <p className="text-[11px] font-semibold uppercase mb-4" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>Connection</p>
-              <ConnectionSection connections={connections.data?.connections || []} />
-            </div>
-
-            {health.data?.stats && (
-              <div className="pt-8" style={{ borderTop: "1px solid #E5E5E1" }}>
-                <p className="text-[11px] font-semibold uppercase mb-4" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>Intelligence</p>
-                <IntelligenceSection stats={health.data.stats} />
-              </div>
-            )}
-
-            {health.data?.stats && (
-              <div className="pt-8" style={{ borderTop: "1px solid #E5E5E1" }}>
-                <p className="text-[11px] font-semibold uppercase mb-4" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>Outcomes</p>
-                <OutcomesSection stats={health.data.stats} />
-              </div>
-            )}
-          </div>
-        )}
+        <div style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "8px 2px 24px" }}>
+          {tab === "overview" && <OverviewTab />}
+          {tab === "users" && <UsersTab />}
+          {tab === "permissions" && <PermissionsTab />}
+          {tab === "automation" && (
+            <PlaceholderTab
+              title="No automations configured yet"
+              body="When Starlane can run a task on a schedule or trigger, on your behalf, that setup will live here."
+            />
+          )}
+          {tab === "monitoring" && (
+            <PlaceholderTab
+              title="Nothing to monitor yet"
+              body="Once Starlane is watching a live process end-to-end, its running status and alerts will appear here."
+            />
+          )}
+          {tab === "security" && (
+            <PlaceholderTab
+              title="No security settings to show yet"
+              body="Session, access, and data-handling controls will appear here as they become configurable."
+            />
+          )}
+        </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function ControlPage() {
+  return (
+    <Suspense fallback={null}>
+      <ControlPageInner />
+    </Suspense>
   );
 }
