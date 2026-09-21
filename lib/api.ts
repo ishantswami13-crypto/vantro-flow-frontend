@@ -246,10 +246,16 @@ export const api = {
   // lib/services/orchestrator/audit.service.js on the backend) that had no
   // read path exposed anywhere until this endpoint.
   audit: {
-    list: (before?: string) =>
-      request<{ success: boolean; events: AuditEvent[] }>(
-        `/api/audit${before ? `?before=${encodeURIComponent(before)}` : ''}`
-      ),
+    // `limit` (server.js caps at 200) lets Memory pull enough history to
+    // group events by entity client-side — the route has no entity_id/type
+    // filter param, so that grouping happens in the browser, not the server.
+    list: (before?: string, limit?: number) => {
+      const params = new URLSearchParams();
+      if (before) params.set('before', before);
+      if (limit) params.set('limit', String(limit));
+      const qs = params.toString();
+      return request<{ success: boolean; events: AuditEvent[] }>(`/api/audit${qs ? `?${qs}` : ''}`);
+    },
   },
 
   // ─── Customer intelligence (drawer: Business State → Receivables Risk → Customer) ───
