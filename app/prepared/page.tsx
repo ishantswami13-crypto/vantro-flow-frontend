@@ -1,56 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { api, getUser, type PreparedCard, type PreparedResponse } from "@/lib/api";
 
-// Prepared — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
+// Prepared — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16, Priority 6.
 //
-// Audit finding (checked lib/api.ts in full — no "prepared"/"draft" match
-// anywhere — and lib/domain/intelligence/* on the backend): §16 defines
-// Prepared as "a trigger-generated draft-work queue: trigger source +
-// timestamp, summary, related entity, evidence used, what approving does,
-// approve/secondary/dismiss actions, counted per tab." That requires a real
-// pipeline that (a) detects a triggering event and (b) auto-generates a
-// draft work product (a note, a brief, revised terms) sitting in a queue
-// awaiting human approval — genuinely different from a forecast or a
-// monitored condition.
+// This is real, read-only curation over primitives that now exist and are
+// real: pending ai_actions (Control), triggered watches (Watch), real
+// BOUNDED_OPPORTUNITY chains (Opportunity Engine), and forecast risk from
+// the persisted predictions table (Forecast V2). It is deliberately NOT a
+// "trigger generates a draft work product" pipeline — that capability was
+// re-confirmed absent from this codebase during this priority and remains
+// out of scope. See lib/routes/prepared.js on the backend for the full
+// honesty rationale and exactly which real source backs each tab.
 //
-// No such pipeline exists or is reachable today. The two candidate modules
-// from the Missions/Simulate audits were re-checked here:
-//   - lib/domain/intelligence/opportunityPropagation.js computes a bounded
-//     upside chain (demand rising + supplier stable -> opportunity) and
-//     RETURNS a plain analysis object. It never writes a draft row, never
-//     produces an approvable artifact, and isn't wired to any server.js
-//     route.
-//   - lib/domain/intelligence/scenarioEngine.js builds named hypotheticals
-//     on top of a real cash-consequence baseline (buildScenario /
-//     compareScenarios). Also analysis-only — no persistence, no draft
-//     output, no route.
-// Neither module (nor anything else found) is the seed of a "trigger ->
-// draft work item awaiting approval" system. This is unbuilt, matching the
-// Watch/Missions/Simulate findings exactly: a real capability gap, not a
-// wiring gap.
+// needs_you = real pending ai_actions awaiting a decision.
+// for_you = real triggered watches + real opportunities + real forecast risk.
+// completed = real decided ai_actions (status='approved').
+// dismissed = real decided ai_actions (status='rejected').
+// upcoming = honest empty — no real backing exists for "work scheduled
+//   ahead of a known future event" anywhere in this codebase.
 //
-// Important distinction (§4 vs Control's real Approvals queue): Control's
-// /control/approvals (app/approvals/page.tsx) is a queue of AGENT ACTIONS
-// awaiting permission to execute (e.g. "send this email now") — that one
-// already renders honest empty states from a real backend endpoint. This
-// page, Prepared, is conceptually different: it would hold AI-DRAFTED WORK
-// PRODUCTS (a written note, a brief, a revised-terms document) that already
-// exist and are awaiting a human's review/approval before use — not a
-// permission gate on an action about to run. No backend capability produces
-// that kind of draft artifact today, so this page cannot be confused with,
-// or accidentally reuse, Control's approvals data — there is none to reuse.
-//
-// Result: every tab here is a genuine, fully honest V32 empty state: the
-// exact custom tab bar (NOT subnav() — Prepared uses its own component per
-// §14) with real per-tab counts (all zero, since nothing has ever been
-// generated), and the prepared_card shape described in prose rather than
-// rendered with fabricated content. Zero invented triggers, summaries,
-// evidence, or approve/dismiss actions.
-//
-// No sidebar CTA: Bridge/Discover/Memory/Prepared/Sources/Agents/Control do
-// not pass create_label per handoff §2 — omitted here for the same reason.
+// No fabricated preparedness score, no fabricated reasoning: every
+// summary/evidence field on a card traces to a real DB row or a real
+// deterministic computation already used by another connected page.
 
 type TabKey = "for_you" | "needs_you" | "upcoming" | "completed" | "dismissed";
 
@@ -62,46 +36,133 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "dismissed", label: "Dismissed" },
 ];
 
-const TAB_COPY: Record<TabKey, { title: string; body: string }> = {
+const EMPTY_COPY: Record<TabKey, { title: string; body: string }> = {
   for_you: {
-    title: "No prepared work generated yet",
-    body: "This tab would list draft work Starlane prepared for you to read at your own pace — a briefing, a summary — without needing a decision. That requires a trigger-detection pipeline that watches for meaningful events and drafts work product from them; no such pipeline is connected to this app today, so nothing has ever been generated here.",
+    title: "Nothing Starlane has flagged for you right now",
+    body: "This tab shows real triggered watches, real detected opportunities, and real forecast risk for your business. There isn't any right now — that's an accurate reflection of your current data, not a placeholder.",
   },
   needs_you: {
-    title: "No prepared work is waiting on a decision",
-    body: "This is the default tab: it would hold drafts that need your approval before they're used — for example, revised terms for a renewal triggered by a competitor's pricing move, or a customer note triggered by a fulfillment delay. Each card would show the trigger source and timestamp, a summary, the related entity, the evidence used to draft it, exactly what approving does, and Approve / secondary / Dismiss actions. No trigger-generated draft exists yet because the backend has no capability that detects an event and auto-drafts a work product from it — the closest real modules (opportunityPropagation.js, scenarioEngine.js) compute analysis, not approvable drafts, and neither is wired to a live route.",
+    title: "Nothing is waiting on a decision",
+    body: "This is the default tab: it lists real pending actions awaiting your approval (the same queue Control tracks). There are none right now.",
   },
   upcoming: {
     title: "Nothing scheduled to be prepared",
-    body: "This tab would show work Starlane expects to prepare ahead of a known future event — like a briefing readied before a scheduled meeting. Since nothing can be triggered or drafted yet, nothing is scheduled here either.",
+    body: "This tab would show work Starlane expects to prepare ahead of a known future event. No capability that schedules ahead-of-time preparation exists yet, so this tab is always honestly empty today.",
   },
   completed: {
     title: "No completed items",
-    body: "This tab would keep a history of prepared work you've already approved and acted on. Since no draft has ever been generated, none has been completed.",
+    body: "This tab lists real actions you've already approved. None have been approved yet.",
   },
   dismissed: {
     title: "Nothing dismissed",
-    body: "This tab would keep prepared work you chose not to act on. Since no draft has ever been generated, none has been dismissed.",
+    body: "This tab lists real actions you've already rejected. None have been rejected yet.",
   },
 };
 
-// Real per-tab counts: zero across the board — honest, not a placeholder
-// "0" chosen for visual balance. No prepared-work generation capability
-// exists, so no tab can ever have a non-zero count today.
-const TAB_COUNTS: Record<TabKey, number> = {
-  for_you: 0,
-  needs_you: 0,
-  upcoming: 0,
-  completed: 0,
-  dismissed: 0,
-};
+function formatTimestamp(ts: string | null): string {
+  if (!ts) return "";
+  try {
+    return new Date(ts).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  } catch {
+    return ts;
+  }
+}
+
+function PreparedCardView({ card }: { card: PreparedCard }) {
+  return (
+    <div
+      className="prepared_card"
+      style={{
+        border: "1px solid rgba(25,25,23,0.10)",
+        borderRadius: 8,
+        padding: "16px 18px",
+        marginBottom: 10,
+        background: "#FFFFFF",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+        <span
+          style={{
+            fontFamily: "'IBM Plex Mono', 'SFMono-Regular', monospace",
+            fontSize: 10,
+            letterSpacing: 0.4,
+            textTransform: "uppercase",
+            color: "#8A8A86",
+          }}
+        >
+          {card.trigger.replace(/_/g, " ")}
+        </span>
+        <span style={{ fontSize: 11, color: "#8A8A86" }}>{formatTimestamp(card.timestamp)}</span>
+      </div>
+      <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 15, color: "#191917", margin: "0 0 4px" }}>
+        {card.summary}
+      </p>
+      {card.detail ? (
+        <p className="v32-body" style={{ color: "#63635F", margin: "0 0 10px" }}>
+          {card.detail}
+        </p>
+      ) : null}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <button
+          className="hover-dim"
+          style={{
+            fontSize: 12,
+            padding: "6px 12px",
+            borderRadius: 6,
+            border: "1px solid #191917",
+            background: "#191917",
+            color: "#fff",
+            cursor: "default",
+          }}
+          title={card.approve_does}
+        >
+          {card.status === "pending" || !card.status ? "Approve" : "Open"}
+        </button>
+        <button
+          className="hover-dim"
+          style={{
+            fontSize: 12,
+            padding: "6px 12px",
+            borderRadius: 6,
+            border: "1px solid rgba(25,25,23,0.20)",
+            background: "none",
+            color: "#63635F",
+            cursor: "default",
+          }}
+        >
+          {card.secondary}
+        </button>
+        <span style={{ fontSize: 11, color: "#B4B3AE", marginLeft: "auto" }}>source: {card.source}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function PreparedPage() {
-  // Custom tab bar per §14 — Prepared does NOT use the shared subnav()
-  // component other pages use; its tab set (For you/Needs you/Upcoming/
-  // Completed/Dismissed) and per-tab counts are unique to this page.
   const [tab, setTab] = useState<TabKey>("needs_you");
-  const copy = TAB_COPY[tab];
+  const [data, setData] = useState<PreparedResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const user = getUser();
+    if (!user?.id) {
+      setData({ for_you: [], needs_you: [], upcoming: [], completed: [], dismissed: [], counts: { for_you: 0, needs_you: 0, upcoming: 0, completed: 0, dismissed: 0 }, generatedAt: "", sourcesChecked: {} });
+      return;
+    }
+    api.intelligence.prepared(user.id)
+      .then((res) => { if (!cancelled) setData(res); })
+      .catch(() => {
+        if (cancelled) return;
+        setError("Couldn't reach Starlane's intelligence backend.");
+        setData({ for_you: [], needs_you: [], upcoming: [], completed: [], dismissed: [], counts: { for_you: 0, needs_you: 0, upcoming: 0, completed: 0, dismissed: 0 }, generatedAt: "", sourcesChecked: {} });
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const counts = data?.counts ?? { for_you: 0, needs_you: 0, upcoming: 0, completed: 0, dismissed: 0 };
+  const cards: PreparedCard[] = data ? data[tab] : [];
+  const copy = EMPTY_COPY[tab];
 
   return (
     <DashboardLayout pageTitle="Prepared">
@@ -167,7 +228,7 @@ export default function PreparedPage() {
                   color: "#8A8A86",
                 }}
               >
-                {TAB_COUNTS[t.key]}
+                {counts[t.key]}
               </span>
             </button>
           ))}
@@ -181,26 +242,39 @@ export default function PreparedPage() {
             background: "#FFFFFF",
             border: "1px solid rgba(25,25,23,0.10)",
             borderRadius: 8,
-            overflow: "hidden",
+            overflow: cards.length ? "auto" : "hidden",
             display: "flex",
             flexDirection: "column",
+            padding: cards.length ? 16 : 0,
           }}
         >
-          <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
-            <p
-              style={{
-                fontFamily: "'Fraunces', Georgia, serif",
-                fontSize: 16,
-                color: "#191917",
-                marginBottom: 6,
-              }}
-            >
-              {copy.title}
-            </p>
-            <p className="v32-body max-w-md mx-auto" style={{ color: "#63635F" }}>
-              {copy.body}
-            </p>
-          </div>
+          {error ? (
+            <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
+              <p className="v32-body" style={{ color: "#63635F" }}>{error}</p>
+            </div>
+          ) : data === null ? (
+            <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
+              <p className="v32-body" style={{ color: "#63635F" }}>Loading…</p>
+            </div>
+          ) : cards.length === 0 ? (
+            <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
+              <p
+                style={{
+                  fontFamily: "'Fraunces', Georgia, serif",
+                  fontSize: 16,
+                  color: "#191917",
+                  marginBottom: 6,
+                }}
+              >
+                {copy.title}
+              </p>
+              <p className="v32-body max-w-md mx-auto" style={{ color: "#63635F" }}>
+                {copy.body}
+              </p>
+            </div>
+          ) : (
+            cards.map((card) => <PreparedCardView key={card.id} card={card} />)
+          )}
         </div>
       </div>
     </DashboardLayout>

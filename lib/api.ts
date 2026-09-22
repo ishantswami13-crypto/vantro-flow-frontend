@@ -306,6 +306,12 @@ export const api = {
     // else is folded into `summary` so the client never has to filter noise.
     opportunities: (userId: string) =>
       request<IntelligenceOpportunitiesResponse>(`/api/intelligence/opportunities/${encodeURIComponent(userId)}`),
+    // Prepared V1 (lib/routes/prepared.js on the backend): real read-only
+    // aggregation of pending ai_actions, triggered watches, real
+    // BOUNDED_OPPORTUNITY chains, and forecast risk. Not a draft-generation
+    // pipeline — no such capability exists.
+    prepared: (userId: string) =>
+      request<PreparedResponse>(`/api/intelligence/prepared/${encodeURIComponent(userId)}`),
     // Simulate V1 (lib/routes/scenarios.js / scenarioEngine.js / fxScenarioEngine.js
     // on the backend): baseline vs. hypothetical-scenario vs. delta, over the
     // tenant's own real invoices. Never computed client-side.
@@ -1384,6 +1390,35 @@ export interface IntelligenceOpportunitiesResponse {
   opportunities: IntelligenceOpportunity[];
   summary: { suppliersEvaluated: number; boundedOpportunities: number; noSignal: number; insufficientData: number };
   generatedAt: string;
+}
+
+// ─── Prepared V1 (lib/routes/prepared.js) ────────────────
+// Real read-only aggregation, not a draft-generation pipeline. See
+// lib/routes/prepared.js on the backend for the honesty rationale.
+export interface PreparedCard {
+  id: string;
+  trigger: string;
+  timestamp: string | null;
+  summary: string;
+  detail: string | null;
+  relates: Record<string, unknown>;
+  evidence: unknown;
+  approve_does: string;
+  secondary: string;
+  priority: string | null;
+  status?: string;
+  source: string;
+}
+
+export interface PreparedResponse {
+  for_you: PreparedCard[];
+  needs_you: PreparedCard[];
+  upcoming: PreparedCard[];
+  completed: PreparedCard[];
+  dismissed: PreparedCard[];
+  counts: { for_you: number; needs_you: number; upcoming: number; completed: number; dismissed: number };
+  generatedAt: string;
+  sourcesChecked: Record<string, unknown>;
 }
 
 // ─── Simulate V1 (lib/routes/scenarios.js) ────────────────
