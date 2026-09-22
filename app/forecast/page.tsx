@@ -10,6 +10,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
 } from "recharts";
 import { api, getUser } from "@/lib/api";
+import type { ForecastV2Response } from "@/lib/api";
 import Link from "next/link";
 
 function fmt(v: number) {
@@ -45,6 +46,11 @@ function SkeletonCard() {
 }
 
 export default function ForecastPage() {
+  const [mode, setMode]         = useState<"classic" | "v2">("classic");
+  const [v2Horizon, setV2Horizon] = useState<7 | 14 | 30>(30);
+  const [v2, setV2]             = useState<ForecastV2Response | null>(null);
+  const [v2Loading, setV2Loading] = useState(false);
+  const [v2Error, setV2Error]   = useState(false);
   const [range, setRange]       = useState<30 | 60 | 90>(30);
   const [loading, setLoading]   = useState(true);
   const [chartData, setChartData] = useState<{ date: string; optimistic: number; expected: number; pessimistic: number }[]>([]);
@@ -143,7 +149,25 @@ export default function ForecastPage() {
     }
   }, [openingCash]);
 
-  useEffect(() => { loadForecast(range); }, [range, loadForecast]);
+  useEffect(() => { if (mode === "classic") loadForecast(range); }, [range, loadForecast, mode]);
+
+  const loadForecastV2 = useCallback(async (horizon: 7 | 14 | 30) => {
+    const user = getUser();
+    if (!user?.id) { setV2Error(true); setV2Loading(false); return; }
+    setV2Loading(true);
+    setV2Error(false);
+    try {
+      const res = await api.forecastV2(user.id, horizon);
+      setV2(res);
+    } catch {
+      setV2Error(true);
+      setV2(null);
+    } finally {
+      setV2Loading(false);
+    }
+  }, []);
+
+  useEffect(() => { if (mode === "v2") loadForecastV2(v2Horizon); }, [mode, v2Horizon, loadForecastV2]);
 
   // Safety watchdog — the forecast skeleton must never persist forever, even if a
   // request hangs at the network layer below the API client's own timeout.
@@ -180,18 +204,44 @@ export default function ForecastPage() {
             <h2 className="text-2xl font-black text-primary tracking-tight">Cash Flow Forecast</h2>
             <p className="text-sm text-secondary mt-0.5">3-scenario projection based on your real purchases &amp; collections</p>
           </div>
-          <div className="flex gap-1 p-1 bg-surface-2 border border-border rounded-xl">
-            {([30, 60, 90] as const).map(r => (
-              <button key={r} onClick={() => setRange(r)}
-                className={["px-5 py-2 text-xs font-bold rounded-lg transition-all",
-                  range === r ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
-                ].join(" ")}>
-                {r}d
-              </button>
-            ))}
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex gap-1 p-1 bg-surface-2 border border-border rounded-xl">
+              {([{ k: "classic", label: "Classic" }, { k: "v2", label: "V2" }] as const).map(({ k, label }) => (
+                <button key={k} onClick={() => setMode(k)}
+                  className={["px-4 py-1.5 text-2xs font-bold rounded-lg transition-all",
+                    mode === k ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
+                  ].join(" ")}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            {mode === "classic" ? (
+              <div className="flex gap-1 p-1 bg-surface-2 border border-border rounded-xl">
+                {([30, 60, 90] as const).map(r => (
+                  <button key={r} onClick={() => setRange(r)}
+                    className={["px-5 py-2 text-xs font-bold rounded-lg transition-all",
+                      range === r ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
+                    ].join(" ")}>
+                    {r}d
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex gap-1 p-1 bg-surface-2 border border-border rounded-xl">
+                {([7, 14, 30] as const).map(r => (
+                  <button key={r} onClick={() => setV2Horizon(r)}
+                    className={["px-5 py-2 text-xs font-bold rounded-lg transition-all",
+                      v2Horizon === r ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
+                    ].join(" ")}>
+                    {r}d
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
+        {mode === "classic" && <>
         {/* Danger alert */}
         {!loading && isRunwayDanger && (
           <Alert variant="danger" title={`Cash Runway: ${kpis.runwayDays} Days — Action Required`}>
@@ -385,6 +435,99 @@ export default function ForecastPage() {
             <div className="h-4 w-48 bg-surface-3 rounded mb-2" />
             <div className="h-3 w-64 bg-surface-3 rounded mb-6" />
             <div className="bg-surface-3 rounded-xl h-[300px]" />
+          </div>
+        )}
+        </>}
+
+        {mode === "v2" && (
+          <div className="space-y-6">
+            {v2Loading && (
+              <div className="card-premium p-6 animate-pulse">
+                <div className="h-4 w-48 bg-surface-3 rounded mb-2" />
+                <div className="h-3 w-64 bg-surface-3 rounded mb-6" />
+                <div className="bg-surface-3 rounded-xl h-[300px]" />
+              </div>
+            )}
+
+            {!v2Loading && (v2Error || !v2) && (
+              <div className="card-premium p-10 flex flex-col items-center text-center">
+                <p className="text-sm font-bold text-primary mb-1">Forecast V2 unavailable</p>
+                <p className="text-xs text-muted">Could not load the V2 forecast. Try the Classic view.</p>
+              </div>
+            )}
+
+            {!v2Loading && v2 && v2.insufficientData && (
+              <div className="card-premium p-10 flex flex-col items-center text-center">
+                <div className="w-14 h-14 bg-accent-dim border border-accent/20 rounded-2xl flex items-center justify-center mb-4">
+                  <FiUpload size={24} className="text-accent" />
+                </div>
+                <p className="text-sm font-bold text-primary mb-1">Not enough data for a V2 forecast</p>
+                <p className="text-xs text-muted mb-4 max-w-xs">{v2.insufficientDataReason}</p>
+              </div>
+            )}
+
+            {!v2Loading && v2 && !v2.insufficientData && (
+              <>
+                <div className="card-premium p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+                    <div>
+                      <p className="text-sm font-bold text-primary">Net Daily Cash Change — Observed (last 30d) vs Predicted (next {v2.horizon_days}d)</p>
+                      <p className="text-xs text-secondary mt-0.5">Observed = real bank transactions. Predicted = same deterministic model as Classic, at a finer horizon.</p>
+                    </div>
+                    <Badge variant="default">{v2.model_metadata.name} v{v2.model_metadata.version}</Badge>
+                  </div>
+
+                  <ResponsiveContainer width="100%" height={280}>
+                    <ComposedChart
+                      data={[
+                        ...v2.observed.map(o => ({ label: o.date, observed: o.net_change })),
+                        ...v2.predicted.map((p, i) => ({
+                          label: `Day +${p.day}`,
+                          predicted: p.cash,
+                          low: v2.uncertainty_interval.low_curve[i]?.cash,
+                          high: v2.uncertainty_interval.high_curve[i]?.cash,
+                        })),
+                      ]}
+                      margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fill: "#8A8A86", fontSize: 9 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                      <YAxis tickFormatter={fmt} tick={{ fill: "#8A8A86", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line type="monotone" dataKey="observed" name="Observed" stroke="#8A8A86" strokeWidth={2} dot={false} connectNulls />
+                      <Line type="monotone" dataKey="predicted" name="Predicted" stroke="#0066FF" strokeWidth={2.5} dot={false} connectNulls />
+                      <Line type="monotone" dataKey="low" name="Uncertainty (low)" stroke="#F5424D" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
+                      <Line type="monotone" dataKey="high" name="Uncertainty (high)" stroke="#10D98A" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+
+                  <p className="text-2xs text-muted mt-3">{v2.uncertainty_interval.note}</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="card-metric p-5">
+                    <p className="section-label mb-2">Data Freshness</p>
+                    <p className="text-sm text-primary font-semibold">{v2.data_freshness ? new Date(v2.data_freshness).toLocaleString("en-IN") : "No bank transactions yet"}</p>
+                  </div>
+                  <div className="card-metric p-5">
+                    <p className="section-label mb-2">Generated At</p>
+                    <p className="text-sm text-primary font-semibold">{new Date(v2.generated_at).toLocaleString("en-IN")}</p>
+                  </div>
+                </div>
+
+                {v2.models.length > 0 && (
+                  <div className="card-premium p-5">
+                    <p className="text-sm font-bold text-primary mb-2">Naive Baseline Comparison</p>
+                    {v2.models.map(m => (
+                      <p key={m.name} className="text-xs text-secondary">
+                        {m.name} v{m.version}: predicted daily net change {fmt(m.daily_net_change_prediction)}
+                        {m.interval ? ` (range ${fmt(m.interval.low)} to ${fmt(m.interval.high)})` : ""}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 

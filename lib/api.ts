@@ -385,6 +385,10 @@ export const api = {
     return request<ForecastResponse>(`/api/cash-forecast/${userId}?${qs}`);
   },
 
+  // ─── Cash Forecast V2 (honest-contract, 7/14/30d) ────────
+  forecastV2: (userId: string, horizon: 7 | 14 | 30) =>
+    request<ForecastV2Response>(`/api/intelligence/forecast/v2/${userId}?horizon=${horizon}`),
+
   // ─── Inventory ───────────────────────────────────────────
   inventory: (userId: string) => request<{ products: Product[]; movements: Movement[]; summary: InventorySummary }>(`/api/inventory/${userId}`),
 
@@ -800,6 +804,24 @@ export interface ForecastResponse {
   avgDailyCollections: number;
   totalOutstanding: number;
   scenarios: Record<string, { curve: { day: number; cash: number }[]; endCash: number; runwayDays: number }>;
+}
+
+export interface ForecastV2Response {
+  success: boolean;
+  horizon_days: number;
+  observed: { date: string; net_change: number }[];
+  predicted: { day: number; cash: number }[];
+  uncertainty_interval: {
+    note: string;
+    low_curve: { day: number; cash: number }[];
+    high_curve: { day: number; cash: number }[];
+  };
+  model_metadata: { name: string; version: string };
+  models: { name: string; version: string; daily_net_change_prediction: number; interval: { low: number; high: number } | null }[];
+  generated_at: string;
+  data_freshness: string | null;
+  insufficientData: boolean;
+  insufficientDataReason: string | null;
 }
 
 export interface ExtractedInvoice {
