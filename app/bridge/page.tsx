@@ -64,6 +64,25 @@ export default function BridgePage() {
   const [evidenceSignalId, setEvidenceSignalId] = useState<string | null>(null);
   const [evidence, setEvidence] = useState<IntelligenceEvidenceItem[] | null>(null);
   const [evidenceLoading, setEvidenceLoading] = useState(false);
+  const [decisionPending, setDecisionPending] = useState(false);
+
+  // Approve/reject a "needs you" action from the Lens drawer. This is the
+  // same real PATCH /api/ai-actions/:id pathway ActionCard.tsx uses on
+  // business-state — recommendation only, never execution (see api.aiActions
+  // doc comment in lib/api.ts).
+  const decideAction = async (status: "approved" | "rejected") => {
+    if (!lensAction) return;
+    setDecisionPending(true);
+    try {
+      await api.aiActions.updateStatus(lensAction.id, status);
+      setNeedsYou(prev => (prev || []).filter(a => a.id !== lensAction.id));
+      setLensAction(null);
+    } catch {
+      // leave the drawer open so the person can retry
+    } finally {
+      setDecisionPending(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -205,6 +224,10 @@ export default function BridgePage() {
           statusLabel={priorityMeta(lensAction.priority).label}
           statusColor={lensAction.priority === "urgent" || lensAction.priority === "high" ? "#A64F4B" : undefined}
           sections={buildActionLensSections(lensAction)}
+          actions={[
+            { label: decisionPending ? "Approving…" : "Approve", onClick: () => decideAction("approved") },
+            { label: decisionPending ? "Rejecting…" : "Reject", onClick: () => decideAction("rejected") },
+          ]}
           onClose={() => setLensAction(null)}
         />
       )}
