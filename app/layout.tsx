@@ -24,9 +24,9 @@ export const metadata: Metadata = {
     "autopilot business software", "distributor automation India", "vyapar alternative",
     "receivables management India", "B2B collections India",
   ],
-  authors: [{ name: "Atlax", url: APP_URL }],
-  creator: "Atlax",
-  publisher: "Atlax",
+  authors: [{ name: "Starlane", url: APP_URL }],
+  creator: "Starlane",
+  publisher: "Starlane",
 
   openGraph: {
     type: "website",
@@ -97,11 +97,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              name: "Starlane by Atlax",
+              name: "Starlane",
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web",
               description:
-                "Starlane by Atlax is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+                "Starlane is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
               url: APP_URL,
               inLanguage: ["en", "hi"],
               audience: {

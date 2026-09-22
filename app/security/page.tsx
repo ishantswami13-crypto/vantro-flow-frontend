@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Security — Starlane by Atlax",
-  description: "How Atlax protects your business data inside Starlane.",
+  title: "Security — Starlane",
+  description: "How Starlane protects your business data.",
 };
 
 function StarlaneMark({ size = 22 }: { size?: number }) {
@@ -48,14 +48,14 @@ export default function SecurityPage() {
         <div className="wrap">
           <span className="s-label">Trust &amp; Safety</span>
           <h1>Security</h1>
-          <div className="lh-meta">Last updated: 31 May 2026 &middot; Starlane by Atlax</div>
+          <div className="lh-meta">Last updated: 31 May 2026 &middot; Starlane</div>
         </div>
       </section>
 
       <div className="legal-body">
         <div className="wrap">
           <div className="legal-content">
-            <p>Your business data is sensitive. Here&apos;s exactly how Atlax protects it inside Starlane — no vague claims.</p>
+            <p>Your business data is sensitive. Here&apos;s exactly how Starlane protects it — no vague claims.</p>
 
             <h2>Where your data lives</h2>
             <p>All Starlane data is stored on servers physically located in India. We do not transfer your data outside India. Backups are also stored within India.</p>
@@ -69,7 +69,7 @@ export default function SecurityPage() {
 
             <h2>Access controls</h2>
             <p><strong>Role-based access:</strong> You control who in your team sees what inside Starlane. Your accountant can have read-only access without seeing customer contacts or payment details.</p>
-            <p><strong>Atlax employee access:</strong> Production data access is restricted to a small number of engineers, requires multi-factor authentication, and every access is logged. We access your data only to resolve support issues you&apos;ve raised, and only with your knowledge.</p>
+            <p><strong>Employee access:</strong> Production data access is restricted to a small number of engineers, requires multi-factor authentication, and every access is logged. We access your data only to resolve support issues you&apos;ve raised, and only with your knowledge.</p>
             <p><strong>MFA:</strong> Multi-factor authentication is available for all Starlane accounts and strongly recommended for admins.</p>
 
             <h2>Audit trail</h2>
@@ -90,7 +90,7 @@ export default function SecurityPage() {
             <p>We target 99.9% uptime. Infrastructure uses automated failover, daily backups with point-in-time recovery, and continuous health monitoring. Planned maintenance is communicated in advance.</p>
 
             <h2>CERT-In compliance</h2>
-            <p>Atlax complies with CERT-In directions on information security practices, including mandatory incident reporting timelines under the IT (Amendment) Act.</p>
+            <p>Starlane complies with CERT-In directions on information security practices, including mandatory incident reporting timelines under the IT (Amendment) Act.</p>
 
             <h2>Responsible disclosure</h2>
             <p>If you discover a security vulnerability in Starlane, please report it to us before disclosing publicly. We will acknowledge within 48 hours and work to resolve confirmed findings promptly.</p>
@@ -114,7 +114,7 @@ export default function SecurityPage() {
               <Link href="/" className="brand" style={{display:"flex",alignItems:"center",gap:"9px",textDecoration:"none"}}>
                 <StarlaneMark/> <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
               </Link>
-              <p>Starlane by Atlax — the AI business control room for Indian founders.</p>
+              <p>Starlane — the AI business control room for Indian founders.</p>
               <p className="foot-made">Made in India &middot; Data stays in India</p>
             </div>
             <div className="foot-col"><h4>Product</h4><Link href="/#features">Features</Link><Link href="/#pricing">Pricing</Link><Link href="/#faq">FAQ</Link></div>
@@ -122,7 +122,7 @@ export default function SecurityPage() {
           </div>
           <div className="wm">STARLANE</div>
           <div className="foot-bottom">
-            <span>&copy; 2026 Atlax. Starlane is a product of Atlax.</span>
+            <span>&copy; 2026 Starlane.</span>
             <span className="foot-links"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link></span>
           </div>
         </div>

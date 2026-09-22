@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Starlane by Atlax",
-  description: "How Atlax collects, uses, and protects your business data inside Starlane.",
+  title: "Privacy Policy — Starlane",
+  description: "How Starlane collects, uses, and protects your business data.",
 };
 
 function StarlaneMark({ size = 22 }: { size?: number }) {
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
         <div className="wrap">
           <span className="s-label">Legal</span>
           <h1>Privacy Policy</h1>
-          <div className="lh-meta">Last updated: 31 May 2026 &middot; Starlane by Atlax</div>
+          <div className="lh-meta">Last updated: 31 May 2026 &middot; Starlane</div>
         </div>
       </section>
 
@@ -56,7 +56,7 @@ export default function PrivacyPage() {
         <div className="wrap">
           <div className="legal-content">
             <h2>Who we are</h2>
-            <p>Atlax is an AI business automation company. Atlax operates <strong>Starlane</strong> — an AI-powered collections, cashflow and inventory management app for Indian businesses.</p>
+            <p><strong>Starlane</strong> is an AI-powered collections, cashflow and inventory management app for Indian businesses.</p>
             <p>This policy explains what data we collect, how we use it, and what rights you have. It applies to all users of the Starlane app.</p>
 
             <h2>What we collect</h2>
@@ -105,7 +105,7 @@ export default function PrivacyPage() {
 
             <h2>Contact &amp; Grievance Officer</h2>
             <div className="notice">
-              <strong>Atlax</strong><br/>
+              <strong>Starlane</strong><br/>
               Mumbai, India<br/>
               Legal: <a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a><br/>
               Support: <a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a><br/>
@@ -123,7 +123,7 @@ export default function PrivacyPage() {
               <Link href="/" className="brand" style={{display:"flex",alignItems:"center",gap:"9px",textDecoration:"none"}}>
                 <StarlaneMark/> <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
               </Link>
-              <p>Starlane by Atlax — the AI business control room for Indian founders.</p>
+              <p>Starlane — the AI business control room for Indian founders.</p>
               <p className="foot-made">Made in India &middot; Data stays in India</p>
             </div>
             <div className="foot-col"><h4>Product</h4><Link href="/#features">Features</Link><Link href="/#pricing">Pricing</Link><Link href="/#faq">FAQ</Link></div>
@@ -131,7 +131,7 @@ export default function PrivacyPage() {
           </div>
           <div className="wm">STARLANE</div>
           <div className="foot-bottom">
-            <span>&copy; 2026 Atlax. Starlane is a product of Atlax.</span>
+            <span>&copy; 2026 Starlane.</span>
             <span className="foot-links"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link></span>
           </div>
         </div>

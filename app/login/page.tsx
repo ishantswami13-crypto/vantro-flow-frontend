@@ -158,7 +158,7 @@ export default function LoginPage() {
       </main>
 
       <footer className="page-foot">
-        <span>&copy; 2026 Atlax</span>
+        <span>&copy; 2026 Starlane</span>
         <div style={{display:"flex",gap:"24px"}}>
           <Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link>
         </div>
