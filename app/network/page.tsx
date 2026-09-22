@@ -178,7 +178,7 @@ export default function NetworkPage() {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && search()}
-                placeholder="Search business name or Vantro ID..."
+                placeholder="Search business name or Starlane ID..."
                 className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent transition-colors"
               />
             </div>
@@ -227,7 +227,7 @@ export default function NetworkPage() {
               <FiUsers size={20} className="text-muted" />
             </div>
             <p className="text-sm font-semibold text-primary mb-1">No businesses found</p>
-            <p className="text-xs text-muted">Try a different name, or invite businesses to join Vantro.</p>
+            <p className="text-xs text-muted">Try a different name, or invite businesses to join Starlane.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -247,7 +247,7 @@ export default function NetworkPage() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-bold text-primary">Grow the network</p>
-            <p className="text-xs text-muted">Invite your suppliers, retailers, and customers to get verified. The more businesses on Vantro, the more powerful the trust graph.</p>
+            <p className="text-xs text-muted">Invite your suppliers, retailers, and customers to get verified. The more businesses on Starlane, the more powerful the trust graph.</p>
           </div>
           <Link href="/my-id"
             className="shrink-0 px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all shadow-button-accent whitespace-nowrap">

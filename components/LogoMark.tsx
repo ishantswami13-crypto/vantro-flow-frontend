@@ -3,9 +3,6 @@ interface LogoMarkProps {
   className?: string;
 }
 
-/**
- * Starlane logomark — the branded mark image.
- */
 export default function LogoMark({ size = 32, className = "" }: LogoMarkProps) {
   return (
     <img
@@ -14,7 +11,16 @@ export default function LogoMark({ size = 32, className = "" }: LogoMarkProps) {
       width={size}
       height={size}
       className={className}
-      style={{ borderRadius: "4px", display: "inline-block" }}
+      role="img"
+      aria-label="Starlane"
+      style={{
+        display: "inline-block",
+        width: `${size}px`,
+        height: `${size}px`,
+        borderRadius: `${Math.max(4, Math.round(size * 0.18))}px`,
+        flexShrink: 0,
+        userSelect: "none",
+      }}
     />
   );
 }

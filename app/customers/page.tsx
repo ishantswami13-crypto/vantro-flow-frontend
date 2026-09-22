@@ -1,10 +1,9 @@
 "use client";
-
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { api, getToken, getUser, type CustomerPortfolioResponse } from "@/lib/api";
+import { api, authHeaders, getToken, getUser, type CustomerPortfolioResponse } from "@/lib/api";
 import { FiBook, FiMessageSquare, FiPhone, FiSearch, FiUser, FiUsers, FiAlertTriangle } from "react-icons/fi";
 import { LensDrawer, type LensSection } from "@/components/ui/LensDrawer";
 
@@ -48,7 +47,7 @@ export default function CustomersPage() {
     setError("");
     try {
       const res = await fetch(`${API}/api/khata`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        headers: authHeaders(), credentials: "include",
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Could not load customers");
@@ -62,7 +61,7 @@ export default function CustomersPage() {
 
   useEffect(() => {
     loadCustomers();
-    fetch(`${API}/api/customer-scores`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    fetch(`${API}/api/customer-scores`, { headers: authHeaders(), credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (!d?.scores) return;

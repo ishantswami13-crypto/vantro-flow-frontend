@@ -1,7 +1,35 @@
 /** @type {import('next').NextConfig} */
 
-const localApiOrigin = (process.env.NEXT_PUBLIC_API_URL || '').match(/^https?:\/\/(localhost|127\.0\.0\.1)(?::\d+)?/)?.[0] || '';
-const localConnectSrc = localApiOrigin ? ` ${localApiOrigin}` : '';
+const DEFAULT_API_URL = 'https://vantro-flow-backend-production.up.railway.app';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
+
+// The backend lives on a different origin (Railway) than the frontend (Vercel),
+// so every API call is cross-origin and must be listed in connect-src. Deriving
+// it from NEXT_PUBLIC_API_URL keeps CSP in step with whichever backend this
+// build actually talks to — a hardcoded origin silently blocks every request
+// (including login) the moment the backend URL changes.
+function originOf(url) {
+  try {
+    return new URL(url).origin;
+  } catch {
+    console.warn(`[next.config] NEXT_PUBLIC_API_URL is not a valid URL: "${url}" — falling back to ${DEFAULT_API_URL}`);
+    return new URL(DEFAULT_API_URL).origin;
+  }
+}
+
+const backendOrigin = originOf(API_URL);
+const isDev = process.env.NODE_ENV !== 'production';
+
+const connectSrc = [
+  "'self'",
+  backendOrigin,
+  // Local backend during `next dev`, regardless of what NEXT_PUBLIC_API_URL points at
+  ...(isDev ? ['http://localhost:3001', 'http://127.0.0.1:3001'] : []),
+  'https://*.posthog.com',
+  'https://*.i.posthog.com',
+  'https://*.supabase.co',
+  'wss://*.supabase.co',
+].filter((value, index, all) => all.indexOf(value) === index);
 
 const securityHeaders = [
   // Prevent the site being loaded in an iframe (clickjacking)
@@ -25,7 +53,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      `connect-src 'self' https://vantro-flow-backend-production.up.railway.app https://*.posthog.com https://*.i.posthog.com https://*.supabase.co wss://*.supabase.co${localConnectSrc}`,
+      `connect-src ${connectSrc.join(' ')}`,
       "frame-src https://checkout.razorpay.com https://api.razorpay.com",
       "media-src 'self' blob:",
       "object-src 'none'",
@@ -42,7 +70,7 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app",
+    NEXT_PUBLIC_API_URL: API_URL,
   },
   images: {
     domains: ['vantroflow.com', 'razorpay.com', 'res.cloudinary.com'],

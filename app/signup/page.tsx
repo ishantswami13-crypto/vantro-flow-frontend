@@ -13,8 +13,22 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-pro
 const businessTypes = [{ value: "", label: "Select type" }, ...INDUSTRY_OPTIONS];
 
 function StarlaneMark({ size = 26 }: { size?: number }) {
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src="/branding/starlane-mark.png" alt="Starlane" width={size} height={size} style={{ borderRadius: "4px" }} />;
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        display: "inline-block",
+        width: size,
+        height: size,
+        backgroundImage: 'url("/brand/starlane-icon.jpeg")',
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        backgroundSize: "contain",
+        borderRadius: Math.max(4, Math.round(size * 0.18)),
+        flexShrink: 0,
+      }}
+    />
+  );
 }
 
 const iBase = { background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.10)", borderRadius:"6px", padding:"13px 16px", fontFamily:"'Hanken Grotesk',system-ui", fontSize:"15px", color:"#fff", outline:"none", width:"100%", transition:"border-color .2s,background .2s", WebkitAppearance:"none" as const };
@@ -66,7 +80,7 @@ function OTPStep({ preToken, userEmail, userPhone, onVerified }: {
 
   async function handleResend() {
     setResending(true); setError(""); setResent(false);
-    try { await fetch(`${BASE}/api/auth/resend-otp`,{method:"POST",headers:{Authorization:`Bearer ${preToken}`}}); setResent(true); setCountdown(30); setOtp(["","","","","",""]); inputs.current[0]?.focus(); }
+    try { await fetch(`${BASE}/api/auth/resend-otp`,{method:"POST",headers:{Authorization:`Bearer ${preToken}`}, credentials:"include"}); setResent(true); setCountdown(30); setOtp(["","","","","",""]); inputs.current[0]?.focus(); }
     catch { setError("Could not resend."); }
     finally { setResending(false); }
   }
@@ -137,13 +151,13 @@ function SignupForm() {
       const data = await res.json();
       if (!res.ok||!data.success) throw new Error(data.error||"Signup failed");
       if (data.needs_otp) { setPreToken(data.pre_token); setVerifiedUser({email:data.user.email,phone:data.user.phone}); setOtpStep(true); }
-      else { saveAuth(data.token,data.user,true,data.csrf_token); posthog.identify(data.user.id,{email:data.user.email,plan:data.user.plan}); router.push("/dashboard"); }
+      else { await saveAuth(data.token,data.user,true,data.csrf_token); posthog.identify(data.user.id,{email:data.user.email,plan:data.user.plan}); router.push("/dashboard"); }
     } catch (err: unknown) { setError(err instanceof Error?err.message:"Signup failed"); }
     finally { setLoading(false); }
   }
 
-  const handleOTPVerified = (token: string, user: any, csrfToken?: string|null) => {
-    saveAuth(token,user,true,csrfToken);
+  const handleOTPVerified = async (token: string, user: any, csrfToken?: string|null) => {
+    await saveAuth(token,user,true,csrfToken);
     posthog.identify(user.id,{email:user.email,name:user.business_name,plan:user.plan});
     posthog.capture("user_signed_up",{business_type:form.business_type});
     router.push("/dashboard");
@@ -266,17 +280,17 @@ export default function SignupPage() {
   return (
     <div className="atlas-page auth-page">
       <header className="topbar">
-        <a href="/" style={{display:"flex",alignItems:"center",gap:"10px",textDecoration:"none",color:"#fff"}}>
+        <Link href="/" style={{display:"flex",alignItems:"center",gap:"10px",textDecoration:"none",color:"#fff"}}>
           <StarlaneMark size={26}/>
           <span className="brand-wm">Starlane</span>
-        </a>
+        </Link>
         <div className="topbar-right">Already have an account? <Link href="/login">Log in</Link></div>
       </header>
       <main className="center">
         <Suspense fallback={null}><SignupForm/></Suspense>
       </main>
       <footer className="page-foot">
-        <span>&copy; 2026 Vantro Technologies</span>
+        <span>&copy; 2026 Atlax</span>
         <div style={{display:"flex",gap:"24px"}}>
           <Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link>
         </div>

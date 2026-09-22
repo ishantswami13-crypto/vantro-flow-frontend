@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
@@ -43,10 +44,9 @@ export default function BrainPage() {
   const [addingRule, setAddingRule] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
-  const token = () => localStorage.getItem("vantro_token") || "";
 
   const loadRules = async () => {
-    const res = await fetch(`${API}/api/ai/brain/rules`, { headers: { Authorization: `Bearer ${token()}` } });
+    const res = await fetch(`${API}/api/ai/brain/rules`, { headers: { ...authHeaders() }, credentials: "include" });
     const d = await res.json();
     setRules(d.rules || []);
   };
@@ -73,7 +73,7 @@ export default function BrainPage() {
     try {
       const res = await fetch(`${API}/api/ai/brain`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ message: msg, history }),
       });
       const data = await res.json();
@@ -100,7 +100,7 @@ export default function BrainPage() {
     try {
       const res = await fetch(`${API}/api/ai/brain/rules`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify(ruleForm),
       });
       const d = await res.json();
@@ -109,7 +109,7 @@ export default function BrainPage() {
   };
 
   const deleteRule = async (id: string) => {
-    await fetch(`${API}/api/ai/brain/rules/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token()}` } });
+    await fetch(`${API}/api/ai/brain/rules/${id}`, { method: "DELETE", headers: { ...authHeaders() }, credentials: "include" });
     setRules(r => r.filter(x => x.id !== id));
   };
 

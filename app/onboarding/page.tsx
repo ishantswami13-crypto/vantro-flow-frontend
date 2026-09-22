@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { api, getUser } from "@/lib/api";
+import { api, getUser, authHeaders } from "@/lib/api";
 import {
   FiZap, FiArrowRight, FiCheck, FiUpload, FiUser,
   FiMapPin, FiRefreshCw, FiPlus, FiTrash2, FiPhone,
@@ -137,7 +137,9 @@ function IndustryFeaturePreview({ industryKey }: { industryKey: BusinessTypeKey 
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") || "" : "";
+  // Session lives in an HttpOnly cookie or localStorage depending on mode;
+
+  // this component authenticates through authHeaders() either way.
 
   const TOTAL_STEPS = 5;
   const [step, setStep]           = useState(0);
@@ -181,11 +183,11 @@ export default function OnboardingPage() {
     try {
       await fetch(`${BASE}/api/settings`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ owner_name: ownerName, city, industry }),
       });
     } catch {}
-  }, [ownerName, city, industry, token]);
+  }, [ownerName, city, industry]);
 
   const setupOnboarding = useCallback(async () => {
     localStorage.setItem("vantro_industry",      industry);
@@ -205,13 +207,13 @@ export default function OnboardingPage() {
     try {
       const r = await fetch(`${BASE}/api/onboarding/setup`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ industry, business_size: bizSize, gst_registered: gstReg, sells_on_credit: sellsCredit, has_workers: hasWorkers }),
       });
       const d = await r.json();
       if (d.success && d.feature_flags) localStorage.setItem("vantro_features", JSON.stringify(d.feature_flags));
     } catch {}
-  }, [industry, bizSize, gstReg, sellsCredit, hasWorkers, token]);
+  }, [industry, bizSize, gstReg, sellsCredit, hasWorkers]);
 
   const handleFile = useCallback(async (file: File) => {
     setLoading(true); setImportMsg("");
@@ -219,14 +221,14 @@ export default function OnboardingPage() {
       const form = new FormData();
       form.append("file", file);
       const r = await fetch(`${BASE}/api/import/excel`, {
-        method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form,
+        method: "POST", headers: { ...authHeaders() }, credentials: "include", body: form,
       });
       const d = await r.json();
       if (d.success) { setImportMsg(`✅ ${d.imported} customers imported${d.skipped ? ` (${d.skipped} skipped)` : ""}`); setImportOk(true); }
       else setImportMsg(`❌ ${d.error || "Import failed"}${d.hint ? "\n💡 " + d.hint : ""}`);
     } catch { setImportMsg("❌ Upload failed. Check your connection."); }
     finally { setLoading(false); }
-  }, [token]);
+  }, []);
 
   const submitManual = useCallback(async (entries: ManualEntry[]) => {
     const valid = entries.filter(r => r.name.trim() && r.amount.trim());
@@ -235,7 +237,7 @@ export default function OnboardingPage() {
     try {
       const r = await fetch(`${BASE}/api/import/manual`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ entries: valid.map(e => ({
           customer_name: e.name,
           invoice_amount: parseFloat(e.amount.replace(/[₹,]/g, "")),
@@ -248,20 +250,20 @@ export default function OnboardingPage() {
       else { setImportMsg(`❌ ${d.error}`); return false; }
     } catch { setImportMsg("❌ Failed."); return false; }
     finally { setLoading(false); }
-  }, [token]);
+  }, []);
 
   const runScoring = useCallback(async () => {
     goNext(4); // scoring animation step
     try {
       const r = await fetch(`${BASE}/api/ml/briefing`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
       });
       const d = await r.json();
       if (d.success) { setScored(d.debtors?.slice(0, 5) || []); setBriefing(d.briefing || ""); }
     } catch {}
     goNext(5); // results step
-  }, [token, goNext]);
+  }, [goNext]);
 
   const skipDataForNow = useCallback(async () => {
     await saveSettings();
@@ -303,7 +305,7 @@ export default function OnboardingPage() {
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
           <LogoMark size={32} />
-          <span className="font-black text-primary text-base tracking-tight">Vantro</span>
+          <span className="font-black text-primary text-base tracking-tight">Starlane</span>
         </div>
 
         {step < 4 && <ProgressBar step={step} total={TOTAL_STEPS} />}
@@ -314,7 +316,7 @@ export default function OnboardingPage() {
         {step === 0 && (
           <div className="space-y-6">
             <div>
-              <p className="text-2xs font-bold text-muted uppercase tracking-widest mb-1">Welcome to Vantro</p>
+              <p className="text-2xs font-bold text-muted uppercase tracking-widest mb-1">Welcome to Starlane</p>
               <h1 className="text-3xl font-black text-primary leading-tight">Namaste! 👋</h1>
               <p className="text-sm text-secondary mt-1.5">
                 Let's build your business OS. Takes 3 minutes — and your first AI briefing is ready at the end.
@@ -575,7 +577,7 @@ export default function OnboardingPage() {
                     {[
                       { step: "1", title: "Go to Reports", desc: "Gateway → Display → Statements of Accounts → Outstandings → Receivables" },
                       { step: "2", title: "Export Excel", desc: "Set date range to current. Press Alt+E to export." },
-                      { step: "3", title: "Upload here", desc: "Drop that file above — Vantro auto-detects columns." },
+                      { step: "3", title: "Upload here", desc: "Drop that file above — Starlane auto-detects columns." },
                     ].map(({ step: s, title, desc }) => (
                       <div key={s} className="flex gap-3">
                         <div className="w-6 h-6 rounded-full bg-surface-3 border border-border flex items-center justify-center shrink-0">

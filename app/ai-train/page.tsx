@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders } from "@/lib/api";
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
@@ -38,15 +39,14 @@ export default function AITrainPage() {
   const [savingTwilio, setSavingTwilio]   = useState(false);
   const [twilioSaved, setTwilioSaved]     = useState(false);
 
-  const tok = () => typeof window !== "undefined" ? localStorage.getItem("vantro_token") || "" : "";
-  const hdr = () => ({ "Content-Type": "application/json", Authorization: `Bearer ${tok()}` });
+  const hdr = () => ({ ...authHeaders(), "Content-Type": "application/json" });
 
   const load = async () => {
     setLoading(true);
     try {
       const [vRes, urlRes] = await Promise.all([
-        fetch(`${API}/api/vocabulary`, { headers: hdr() }),
-        fetch(`${API}/api/voice/webhook-url`, { headers: hdr() }),
+        fetch(`${API}/api/vocabulary`, { headers: hdr(), credentials: "include" as RequestCredentials }),
+        fetch(`${API}/api/voice/webhook-url`, { headers: hdr(), credentials: "include" as RequestCredentials }),
       ]);
       const [v, u] = await Promise.all([vRes.json(), urlRes.json()]);
       setVocab(v.vocabulary || []);
@@ -61,7 +61,7 @@ export default function AITrainPage() {
   const seedVocab = async (industry: string) => {
     setSeedLoad(true);
     try {
-      await fetch(`${API}/api/vocabulary/seed`, { method: "POST", headers: hdr(), body: JSON.stringify({ industry }) });
+      await fetch(`${API}/api/vocabulary/seed`, { method: "POST", headers: hdr(), credentials: "include" as RequestCredentials, body: JSON.stringify({ industry }) });
       await load();
       setSeedDone(true);
       setTimeout(() => setSeedDone(false), 3000);
@@ -73,14 +73,14 @@ export default function AITrainPage() {
     setAddingV(true);
     try {
       const aliases = vForm.aliases ? vForm.aliases.split(",").map(s => s.trim()).filter(Boolean) : [];
-      const r = await fetch(`${API}/api/vocabulary`, { method: "POST", headers: hdr(), body: JSON.stringify({ ...vForm, aliases }) });
+      const r = await fetch(`${API}/api/vocabulary`, { method: "POST", headers: hdr(), credentials: "include" as RequestCredentials, body: JSON.stringify({ ...vForm, aliases }) });
       const d = await r.json();
       if (d.item) { setVocab(v => [...v, d.item]); setVForm({ term: "", meaning: "", category: "product", aliases: "" }); }
     } finally { setAddingV(false); }
   };
 
   const deleteVocab = async (id: string) => {
-    await fetch(`${API}/api/vocabulary/${id}`, { method: "DELETE", headers: hdr() });
+    await fetch(`${API}/api/vocabulary/${id}`, { method: "DELETE", headers: hdr(), credentials: "include" as RequestCredentials });
     setVocab(v => v.filter(x => x.id !== id));
   };
 
@@ -89,7 +89,7 @@ export default function AITrainPage() {
     if (!twilioForm.account_sid || !twilioForm.auth_token || !twilioForm.phone_number) return;
     setSavingTwilio(true);
     try {
-      const r = await fetch(`${API}/api/settings/twilio`, { method: "POST", headers: hdr(), body: JSON.stringify(twilioForm) });
+      const r = await fetch(`${API}/api/settings/twilio`, { method: "POST", headers: hdr(), credentials: "include" as RequestCredentials, body: JSON.stringify(twilioForm) });
       const d = await r.json();
       if (d.success) { setTwilioConf(true); setTwilioSaved(true); setTimeout(() => setTwilioSaved(false), 3000); load(); }
     } finally { setSavingTwilio(false); }

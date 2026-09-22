@@ -160,7 +160,7 @@ export default function PaymentCelebration() {
               if (navigator.share) {
                 navigator.share({
                   title: "Payment received!",
-                  text:  `${celebration.name} ne ${fmtAmt(celebration.amount)} pay kar diya! 🎉 #Vantro`,
+                  text:  `${celebration.name} ne ${fmtAmt(celebration.amount)} pay kar diya! 🎉 #Starlane`,
                 }).catch(() => {});
               }
             }}

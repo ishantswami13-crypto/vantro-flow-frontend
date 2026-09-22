@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders } from "@/lib/api";
 
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -92,7 +93,6 @@ export default function ReportsPage() {
     const key = `${reportId}-${format}`;
     setDownloading(key);
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") : null;
       const days = DATE_RANGE_DAYS[dateRange] || 30;
       const toDate   = new Date().toISOString().split("T")[0];
       const fromDate = new Date(Date.now() - days * 86400000).toISOString().split("T")[0];
@@ -100,7 +100,7 @@ export default function ReportsPage() {
       // PDF: fetch the backend HTML report and open in a new print tab
       if (format.toLowerCase() === "pdf") {
         const url = `${BASE}/api/reports/export?report=${reportId}&format=html&from=${fromDate}&to=${toDate}`;
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(url, { headers: { ...authHeaders() }, credentials: "include" });
         if (!res.ok) { alert("Export failed"); return; }
         const html = await res.text();
         const blob = new Blob([html], { type: "text/html" });
@@ -115,7 +115,7 @@ export default function ReportsPage() {
 
       const fmt = format.toLowerCase() === "excel" ? "xlsx" : "csv";
       const url = `${BASE}/api/reports/export?report=${reportId}&format=${fmt}&from=${fromDate}&to=${toDate}`;
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(url, { headers: { ...authHeaders() }, credentials: "include" });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Export failed" }));
         alert(err.error || "Export failed");

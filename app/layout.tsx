@@ -12,40 +12,47 @@ const APP_URL = "https://vantro-flow-frontend.vercel.app";
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Starlane | Know what happens next.",
+    default: "Starlane | AI BusinessOS",
     template: "%s | Starlane",
   },
   description:
-    "Starlane connects your business to the world around it, traces consequences, and helps you act with evidence.",
-  keywords: ["Starlane", "business intelligence", "supply chain intelligence", "evidence-based decisions"],
-  authors: [{ name: "Vantro Technologies", url: APP_URL }],
-  creator: "Vantro Technologies",
-  publisher: "Vantro Technologies",
+    "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
+  keywords: [
+    "business automation India", "MSME automation software", "collections automation India",
+    "WhatsApp business automation", "invoice automation India", "Hinglish WhatsApp reminders",
+    "Tally ERP sync", "cash flow automation India", "Indian business OS",
+    "autopilot business software", "distributor automation India", "vyapar alternative",
+    "receivables management India", "B2B collections India",
+  ],
+  authors: [{ name: "Atlax", url: APP_URL }],
+  creator: "Atlax",
+  publisher: "Atlax",
 
   openGraph: {
     type: "website",
     locale: "en_IN",
     url: APP_URL,
     siteName: "Starlane",
-    title: "Starlane | Know what happens next.",
+    title: "Starlane — The operating layer every modern business runs on",
     description:
-      "Starlane connects your business to the world around it, traces consequences, and helps you act with evidence.",
+      "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Starlane — Know what happens next.",
+        alt: "Starlane — the operating layer every modern business runs on",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Starlane | Know what happens next.",
+    title: "Starlane — The operating layer every modern business runs on",
     description:
-      "Starlane connects your business to the world around it, traces consequences, and helps you act with evidence.",
+      "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
     images: ["/opengraph-image"],
+    creator: "@ishantswami13",
   },
 
   icons: {
@@ -58,7 +65,7 @@ export const metadata: Metadata = {
 
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Starlane",
   },
 
@@ -90,11 +97,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              name: "Starlane by Vantro",
+              name: "Starlane by Atlax",
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web",
               description:
-                "Starlane connects your business to the world around it, traces consequences, and helps you act with evidence.",
+                "Starlane by Atlax is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
               url: APP_URL,
               inLanguage: ["en", "hi"],
               audience: {

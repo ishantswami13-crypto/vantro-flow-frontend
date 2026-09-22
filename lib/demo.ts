@@ -1,4 +1,4 @@
-// ─── Vantro Demo Mode ────────────────────────────────────────────────────────
+// ─── Starlane Demo Mode ────────────────────────────────────────────────────────
 // Lets visitors try the app without signing up.
 // Sets a demo flag + fake token → app shows demo data everywhere.
 
@@ -10,7 +10,7 @@ export function enableDemoMode() {
   localStorage.setItem("vantro_token", DEMO_TOKEN);
   localStorage.setItem("vantro_user", JSON.stringify({
     id: "demo",
-    email: "demo@vantro.in",
+    email: "demo@starlane.app",
     business_name: "Demo Business (Sharma Traders)",
     phone: "9876543210",
     gstin: "07AABCU9603R1ZX",

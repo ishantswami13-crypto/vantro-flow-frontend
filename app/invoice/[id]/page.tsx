@@ -30,7 +30,6 @@ function toWords(n: number): string {
   const dec = Math.round((n - int) * 100);
   return convert(int) + " Rupees" + (dec > 0 ? " and " + convert(dec) + " Paise" : "") + " Only";
 }
-
 export default function InvoiceViewPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -59,7 +58,7 @@ export default function InvoiceViewPage() {
   const handleWhatsApp = () => {
     if (!invoice) return;
     const phone = invoice.customer_phone;
-    const biz_name = biz.business_name || "Vantro";
+    const biz_name = biz.business_name || "Starlane";
     const msg = `${invoice.customer_name.split(" ")[0]} ji 🙏\n\nYour invoice *${invoice.invoice_number || id}* of ${fmtINR(invoice.invoice_amount)} from ${biz_name} is ready.\n\nView it here:\n${window.location.href}\n\n${invoice.payment_link ? `Pay online: ${invoice.payment_link}` : `Please pay at your earliest convenience.`}\n\n— ${biz_name}`;
     const url = phone
       ? `https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`
@@ -92,6 +91,12 @@ export default function InvoiceViewPage() {
 
   const isPaid = invoice.payment_status === "Paid";
   const items = Array.isArray(invoice.items) && invoice.items.length > 0 ? invoice.items : null;
+  const hasHsn = !!items?.some(it => it.hsn);
+  // subtotal/cgst/sgst/igst only exist on invoices that came from the GST
+  // bills flow (POST /api/bills) — plain invoices show a single Total row.
+  const hasGstBreakdown = invoice.subtotal != null && (
+    (invoice.cgst || 0) > 0 || (invoice.sgst || 0) > 0 || (invoice.igst || 0) > 0
+  );
 
   return (
     <>
@@ -199,6 +204,12 @@ export default function InvoiceViewPage() {
                 {invoice.customer_email && (
                   <p className="text-gray-500 text-xs">✉ {invoice.customer_email}</p>
                 )}
+                {invoice.customer_address && (
+                  <p className="text-gray-500 text-xs mt-1">{invoice.customer_address}</p>
+                )}
+                {invoice.customer_gstin && (
+                  <p className="text-gray-500 text-xs font-mono mt-1">GSTIN: {invoice.customer_gstin}</p>
+                )}
               </div>
 
               {/* Quick stats */}
@@ -228,6 +239,7 @@ export default function InvoiceViewPage() {
                   <tr className="text-xs text-gray-400 uppercase tracking-wider border-b border-gray-100">
                     <th className="text-left pb-3 font-semibold w-8">#</th>
                     <th className="text-left pb-3 font-semibold">Item / Service</th>
+                    {hasHsn && <th className="text-left pb-3 font-semibold w-20">HSN</th>}
                     <th className="text-right pb-3 font-semibold w-16">Qty</th>
                     <th className="text-left pb-3 font-semibold w-16 pl-3">Unit</th>
                     <th className="text-right pb-3 font-semibold w-28">Rate</th>
@@ -239,6 +251,7 @@ export default function InvoiceViewPage() {
                     <tr key={i} className={`border-b ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
                       <td className="py-3 text-gray-400 text-xs">{i + 1}</td>
                       <td className="py-3 text-gray-800 font-medium">{item.name}</td>
+                      {hasHsn && <td className="py-3 text-gray-400 text-xs font-mono">{item.hsn || "—"}</td>}
                       <td className="py-3 text-right text-gray-600">{item.qty}</td>
                       <td className="py-3 text-gray-400 text-xs pl-3">{item.unit}</td>
                       <td className="py-3 text-right text-gray-600">{fmtINR(item.rate)}</td>
@@ -272,6 +285,32 @@ export default function InvoiceViewPage() {
             {/* Total */}
             <div className="flex justify-end mt-4">
               <div className="w-64">
+                {hasGstBreakdown && (
+                  <div className="space-y-1.5 pb-2 border-b border-gray-100">
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <span>Subtotal</span>
+                      <span>{fmtINR(invoice.subtotal || 0)}</span>
+                    </div>
+                    {(invoice.cgst || 0) > 0 && (
+                      <div className="flex justify-between text-sm text-gray-500">
+                        <span>CGST {invoice.gst_rate != null ? `(${invoice.gst_rate / 2}%)` : ""}</span>
+                        <span>{fmtINR(invoice.cgst || 0)}</span>
+                      </div>
+                    )}
+                    {(invoice.sgst || 0) > 0 && (
+                      <div className="flex justify-between text-sm text-gray-500">
+                        <span>SGST {invoice.gst_rate != null ? `(${invoice.gst_rate / 2}%)` : ""}</span>
+                        <span>{fmtINR(invoice.sgst || 0)}</span>
+                      </div>
+                    )}
+                    {(invoice.igst || 0) > 0 && (
+                      <div className="flex justify-between text-sm text-gray-500">
+                        <span>IGST {invoice.gst_rate != null ? `(${invoice.gst_rate}%)` : ""}</span>
+                        <span>{fmtINR(invoice.igst || 0)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex justify-between items-center py-3 border-t-2 border-gray-900">
                   <span className="font-black text-gray-900 text-base">Total</span>
                   <span className="font-black text-gray-900 text-xl">{fmtINR(invoice.invoice_amount)}</span>
@@ -320,8 +359,7 @@ export default function InvoiceViewPage() {
               <div>
                 <p className="text-xs text-gray-400">
                   Generated by{" "}
-                  <span className="font-semibold text-gray-600">Vantro Flow</span>
-                  {" · "}vantroflow.com
+                  <span className="font-semibold text-gray-600">Starlane</span>
                 </p>
                 {isPaid && invoice.payment_date && (
                   <p className="text-xs text-green-600 font-semibold mt-1">

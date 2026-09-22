@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
-import { api, getUser, type ChatMessage } from "@/lib/api";
+import { api, getUser, type ChatMessage, authHeaders, isLoggedIn } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import {
   getSpeechRecognitionConstructor,
@@ -224,7 +224,7 @@ function CallScriptModal({ debtor, script, onClose }: {
 }
 
 // ─── Debtor Call Card ─────────────────────────────────────────────────────────
-function DebtorCallCard({ d, rank, token, twilioReady }: { d: Debtor; rank: number; token: string; twilioReady: boolean }) {
+function DebtorCallCard({ d, rank, twilioReady }: { d: Debtor; rank: number; twilioReady: boolean }) {
   const [script, setScript]       = useState<CallScript | null>(null);
   const [loading, setLoading]     = useState(false);
   const [calling, setCalling]     = useState(false);
@@ -237,7 +237,7 @@ function DebtorCallCard({ d, rank, token, twilioReady }: { d: Debtor; rank: numb
     try {
       const r = await fetch(`${BASE}/api/ai/call-script`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ customer_name: d.customer_name, invoice_amount: d.invoice_amount,
           days_overdue: d.days_overdue, call_count: d.callCount, has_promise: d.hasPromise, tone }),
       });
@@ -253,7 +253,7 @@ function DebtorCallCard({ d, rank, token, twilioReady }: { d: Debtor; rank: numb
     try {
       const r = await fetch(`${BASE}/api/voice/call`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ customer_name: d.customer_name, customer_phone: d.customer_phone,
           invoice_amount: d.invoice_amount, days_overdue: d.days_overdue, tone }),
       });
@@ -357,7 +357,9 @@ function AIFounderPageInner() {
   const bottomRef  = useRef<HTMLDivElement>(null);
   const recogRef   = useRef<WebSpeechRecognition | null>(null);
   const user = getUser();
-  const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") || "" : "";
+  // Session lives in an HttpOnly cookie or localStorage depending on mode;
+
+  // this component authenticates through authHeaders() either way.
 
   // Voice support check
   useEffect(() => {
@@ -379,29 +381,29 @@ function AIFounderPageInner() {
     setMlLoading(true);
     fetch(`${BASE}/api/ml/briefing`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
     })
       .then(r => r.json())
       .then(d => { if (d.success) setBriefing(d); })
       .catch(() => {})
       .finally(() => setMlLoading(false));
-  }, [user?.id, token]);
+  }, [user?.id]);
 
   useEffect(() => { fetchBriefing(); }, [fetchBriefing]);
 
   // Load voice profile + Twilio config
   useEffect(() => {
-    if (!token) return;
-    fetch(`${BASE}/api/settings`, { headers: { Authorization: `Bearer ${token}` } })
+    if (!isLoggedIn()) return;
+    fetch(`${BASE}/api/settings`, { headers: { ...authHeaders() }, credentials: "include" })
       .then(r => r.json()).then(d => {
         if (d.settings?.owner_name) { setOwnerName(d.settings.owner_name); setOwnerVoiceActive(!!(d.settings.owner_name && d.settings.ai_persona)); }
       }).catch(() => {});
-    fetch(`${BASE}/api/voice/config`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${BASE}/api/voice/config`, { headers: { ...authHeaders() }, credentials: "include" })
       .then(r => r.json()).then(d => {
         setTwilioReady(d.configured || false);
         setTwilioMissing(d.missing || []);
       }).catch(() => {});
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -473,7 +475,7 @@ function AIFounderPageInner() {
     try {
       const r = await fetch(`${BASE}/api/ai/bulk-whatsapp`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
       });
       const data = await r.json();
       if (data.success) setBulkMsgs(data.messages);
@@ -821,7 +823,7 @@ function AIFounderPageInner() {
                 )}
 
                 {briefing.debtors.slice(0, 12).map((d, i) => (
-                  <DebtorCallCard key={i} d={d} rank={i + 1} token={token} twilioReady={twilioReady} />
+                  <DebtorCallCard key={i} d={d} rank={i + 1} twilioReady={twilioReady} />
                 ))}
               </div>
             )}

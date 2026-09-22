@@ -12,7 +12,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[Vantro Error]', error);
+    console.error('[Starlane Error]', error);
   }, [error]);
 
   const errorId = error.requestId || 'UNKNOWN';

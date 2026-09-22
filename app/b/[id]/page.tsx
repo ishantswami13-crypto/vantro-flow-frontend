@@ -20,7 +20,6 @@ interface Profile {
   member_days: number;
   badges: string[];
 }
-
 function TrustRing({ score }: { score: number }) {
   const r = 54;
   const circ = 2 * Math.PI * r;

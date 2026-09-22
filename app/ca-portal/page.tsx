@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders, isLoggedIn } from "@/lib/api";
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
@@ -23,15 +24,14 @@ export default function CAPortalPage() {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("vantro_token") : null;
 
   async function fetchDashboard() {
-    if (!token) return;
+    if (!isLoggedIn()) return;
     setLoading(true);
     try {
       const [dashRes, clientRes] = await Promise.all([
-        fetch(`${BASE}/api/ca-partners/dashboard`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${BASE}/api/ca-partners/clients`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${BASE}/api/ca-partners/dashboard`, { headers: { ...authHeaders() }, credentials: "include" }),
+        fetch(`${BASE}/api/ca-partners/clients`, { headers: { ...authHeaders() }, credentials: "include" }),
       ]);
       const dashData = await dashRes.json();
       const clientData = await clientRes.json();
@@ -50,7 +50,7 @@ export default function CAPortalPage() {
     try {
       const r = await fetch(`${BASE}/api/ca-partners/register`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify(regForm),
       });
       const d = await r.json();
@@ -68,7 +68,7 @@ export default function CAPortalPage() {
   }
 
   function shareWhatsApp(code: string) {
-    const msg = `Namaskar! Main ek CA hoon aur mere clients ke liye Starlane by Vantro recommend karta hoon — outstanding payments WhatsApp se automatically collect hote hain. Free trial ke liye signup karein: ${appOrigin}/signup?ref=${code}`;
+    const msg = `Namaskar! Main ek CA hoon aur mere clients ke liye Starlane recommend karta hoon — outstanding payments WhatsApp se automatically collect hote hain. Free trial ke liye signup karein: ${appOrigin}/signup?ref=${code}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }
 
@@ -79,7 +79,7 @@ export default function CAPortalPage() {
       <div className="max-w-2xl">
         <div className="text-center py-16 space-y-5">
           <h1 className="text-2xl font-bold text-primary">CA Partner Portal</h1>
-          <p className="text-secondary">Are you a CA (Chartered Accountant) or business consultant? Register as a Vantro partner and earn commission for every client you bring.</p>
+          <p className="text-secondary">Are you a CA (Chartered Accountant) or business consultant? Register as a Starlane partner and earn commission for every client you bring.</p>
           <div className="flex divide-x divide-border justify-center max-w-md mx-auto">
             {[
               { value: "₹300/mo", label: "Per paying client" },

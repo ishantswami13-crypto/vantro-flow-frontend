@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { FiInfo } from "react-icons/fi";
 import Sidebar from "./Sidebar";
@@ -10,7 +9,7 @@ import PaymentCelebration from "@/components/PaymentCelebration";
 import { usePathname } from "next/navigation";
 import { isDemoMode, exitDemoMode } from "@/lib/demo";
 import { hydrateUserContext } from "@/lib/featureGating";
-import { api, authenticatedFetch } from "@/lib/api";
+import { api, authenticatedFetch, authHeaders, isLoggedIn } from "@/lib/api";
 import { recordRecent } from "@/lib/recents";
 import Link from "next/link";
 
@@ -49,7 +48,7 @@ async function subscribeToPush() {
       // Already subscribed — just re-send to backend in case it changed
       await authenticatedFetch('/api/notifications/subscribe', {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ subscription: existing.toJSON() }),
       });
       return;
@@ -63,7 +62,7 @@ async function subscribeToPush() {
 
     await authenticatedFetch('/api/notifications/subscribe', {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
       body: JSON.stringify({ subscription: subscription.toJSON() }),
     });
   } catch (err) {
@@ -89,6 +88,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
   // Hydrate feature-gating context from DB on every app load
   // This ensures cross-device correctness — localStorage may be stale or empty
   useEffect(() => {
+    if (!isLoggedIn()) return;
     api.auth.me()
       .then(d => {
         if (d.user) {
@@ -131,7 +131,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
     }
     if (Notification.permission === "granted") {
       // Auto-subscribe in background
-      subscribeToPush();
+      if (isLoggedIn()) subscribeToPush();
     }
   }, []);
 
@@ -139,7 +139,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
     setShowNotifBanner(false);
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
-      subscribeToPush();
+      if (isLoggedIn()) subscribeToPush();
     }
   };
 

@@ -23,7 +23,7 @@ const STEPS: Step[] = [
     id: "whatsapp",
     icon: FiMessageSquare,
     title: "WhatsApp AutoPilot — Active",
-    desc: "Vantro sends Hinglish reminders via WhatsApp automatically. No setup needed.",
+    desc: "Starlane sends Hinglish reminders via WhatsApp automatically. No setup needed.",
     action: "View Settings",
     href: "/settings?tab=integrations",
     color: "#25D366",

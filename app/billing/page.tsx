@@ -95,7 +95,7 @@ const FAQS = [
   },
   {
     q: "Do I need to set up any WhatsApp API or account?",
-    a: "No. Starlane AutoPilot handles everything — WhatsApp reminders are sent via Vantro's managed system. Zero setup. Works the moment you upgrade.",
+    a: "No. Starlane AutoPilot handles everything — WhatsApp reminders are sent via Starlane's managed system. Zero setup. Works the moment you upgrade.",
   },
 ];
 

@@ -8,8 +8,22 @@ import { api, saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 
 function StarlaneMark({ size = 26 }: { size?: number }) {
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src="/branding/starlane-mark.png" alt="Starlane" width={size} height={size} style={{ borderRadius: "4px" }} />;
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        display: "inline-block",
+        width: size,
+        height: size,
+        backgroundImage: 'url("/brand/starlane-icon.jpeg")',
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        backgroundSize: "contain",
+        borderRadius: Math.max(4, Math.round(size * 0.18)),
+        flexShrink: 0,
+      }}
+    />
+  );
 }
 
 export default function LoginPage() {
@@ -45,7 +59,7 @@ export default function LoginPage() {
       const data = await api.auth.login(form);
       if (rememberMe) { localStorage.setItem("vantro_saved_email", form.email); localStorage.setItem("vantro_remember", "1"); }
       else { localStorage.removeItem("vantro_saved_email"); localStorage.removeItem("vantro_remember"); }
-      saveAuth(data.token, data.user, rememberMe, data.csrf_token);
+      await saveAuth(data.token, data.user, rememberMe, data.csrf_token);
       posthog.identify(data.user.id, { email: data.user.email, name: data.user.business_name, plan: data.user.plan });
       posthog.capture("user_logged_in");
       router.push("/dashboard");
@@ -144,7 +158,7 @@ export default function LoginPage() {
       </main>
 
       <footer className="page-foot">
-        <span>&copy; 2026 Vantro Technologies</span>
+        <span>&copy; 2026 Atlax</span>
         <div style={{display:"flex",gap:"24px"}}>
           <Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link>
         </div>

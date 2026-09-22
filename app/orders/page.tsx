@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders } from "@/lib/api";
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
@@ -52,13 +53,12 @@ export default function OrdersPage() {
     rawItems: "1 bag cement, 2 CFT bajri",
   });
 
-  const token = () => typeof window !== "undefined" ? localStorage.getItem("vantro_token") || "" : "";
 
   const load = async (d = date) => {
     setLoading(true);
     try {
       const res = await fetch(`${API}/api/orders?date=${d}`, {
-        headers: { Authorization: `Bearer ${token()}` },
+        headers: { ...authHeaders() }, credentials: "include",
       });
       const data = await res.json();
       setOrders(data.orders || []);
@@ -66,7 +66,7 @@ export default function OrdersPage() {
   };
 
   const loadWorkers = async () => {
-    const res = await fetch(`${API}/api/workers`, { headers: { Authorization: `Bearer ${token()}` } });
+    const res = await fetch(`${API}/api/workers`, { headers: { ...authHeaders() }, credentials: "include" });
     const d = await res.json();
     setWorkers(d.workers || []);
   };
@@ -76,7 +76,7 @@ export default function OrdersPage() {
   const changeStatus = async (id: string, status: string) => {
     await fetch(`${API}/api/orders/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
+      headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
       body: JSON.stringify({ status }),
     });
     setOrders(o => o.map(x => x.id === id ? { ...x, status } : x));
@@ -84,7 +84,7 @@ export default function OrdersPage() {
 
   const deleteOrder = async (id: string) => {
     if (!confirm("Delete this order?")) return;
-    await fetch(`${API}/api/orders/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token()}` } });
+    await fetch(`${API}/api/orders/${id}`, { method: "DELETE", headers: { ...authHeaders() }, credentials: "include" });
     setOrders(o => o.filter(x => x.id !== id));
   };
 
@@ -105,7 +105,7 @@ export default function OrdersPage() {
     const items = parseRawItems(form.rawItems);
     await fetch(`${API}/api/orders`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token()}` },
+      headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
       body: JSON.stringify({ ...form, items }),
     });
     setShowAdd(false);

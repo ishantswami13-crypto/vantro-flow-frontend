@@ -1,4 +1,5 @@
 "use client";
+import { authHeaders } from "@/lib/api";
 import { useEffect, useState, useCallback, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
@@ -93,14 +94,13 @@ export default function TodayPage() {
   const [submitting, setSubmitting] = useState(false);
   const [expanded, setExpanded] = useState<string|null>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
-  const token = () => typeof window !== "undefined" ? localStorage.getItem("vantro_token") || "" : "";
 
   const load = useCallback(async (d = date) => {
     if (isDemoMode()) { setSummary(DEMO_SUMMARY); setLoading(false); return; }
     setLoading(true);
     try {
       const res = await fetch(`${API}/api/today/summary?date=${d}`, {
-        headers: { Authorization: `Bearer ${token()}` },
+        headers: { ...authHeaders() }, credentials: "include",
       });
       const data = await res.json();
       if (data.success) setSummary(data);
@@ -121,7 +121,7 @@ export default function TodayPage() {
     try {
       await fetch(`${API}/api/expenses`, {
         method:"POST",
-        headers:{"Content-Type":"application/json", Authorization:`Bearer ${token()}`},
+        headers: { ...authHeaders(), "Content-Type":"application/json" }, credentials: "include",
         body: JSON.stringify(expForm),
       });
       setExpForm({ description:"", amount:"", category:"misc" });
@@ -137,7 +137,7 @@ export default function TodayPage() {
     try {
       await fetch(`${API}/api/orders`, {
         method:"POST",
-        headers:{"Content-Type":"application/json", Authorization:`Bearer ${token()}`},
+        headers: { ...authHeaders(), "Content-Type":"application/json" }, credentials: "include",
         body: JSON.stringify({
           customer_name: saleForm.customer_name,
           total_amount: parseFloat(saleForm.amount),
@@ -154,7 +154,7 @@ export default function TodayPage() {
 
   const deleteExpense = async (id: string) => {
     if (isDemoMode()) return;
-    await fetch(`${API}/api/expenses/${id}`, { method:"DELETE", headers:{ Authorization:`Bearer ${token()}` } });
+    await fetch(`${API}/api/expenses/${id}`, { method:"DELETE", headers: { ...authHeaders() }, credentials: "include" });
     load(date);
   };
 

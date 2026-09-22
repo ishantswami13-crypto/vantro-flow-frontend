@@ -264,7 +264,7 @@ export default function DunningPage() {
                 <FiMessageSquare size={12} className="text-white" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-white">Vantro Collections</p>
+                <p className="text-xs font-semibold text-white">Starlane Collections</p>
                 <p className="text-2xs text-[#8696A0]">Business Account</p>
               </div>
             </div>

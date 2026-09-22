@@ -193,7 +193,7 @@ export default function MyIdPage() {
           <p className="text-xs text-muted mb-4">Share this link with customers, suppliers, and partners to build instant trust.</p>
           <div className="flex gap-2">
             <div className="flex-1 bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-xs text-muted font-mono truncate">
-              {profileUrl || "vantroflow.com/b/..."}
+              {profileUrl || "starlane.app/b/..."}
             </div>
             <button onClick={copyLink}
               className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-surface-2 border border-border text-xs font-semibold text-secondary hover:text-primary hover:border-accent/40 transition-all shrink-0">
@@ -245,7 +245,7 @@ export default function MyIdPage() {
             {[
               { label: "Collection Rate",   weight: "40%", desc: "% of invoices collected successfully" },
               { label: "Invoice Volume",    weight: "20%", desc: "Number of invoices tracked on Starlane" },
-              { label: "Time on Platform",  weight: "20%", desc: "How long you've been an Starlane member" },
+              { label: "Time on Platform",  weight: "20%", desc: "How long you've been a Starlane member" },
               { label: "Calls & Follow-ups",weight: "20%", desc: "Active collection efforts logged" },
             ].map(({ label, weight, desc }) => (
               <div key={label} className="flex items-start gap-3">

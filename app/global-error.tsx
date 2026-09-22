@@ -10,7 +10,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('[Starlane Error]', error);
+    console.error('[Starlane Global Error]', error);
   }, [error]);
 
   const errorId = error.requestId || 'UNKNOWN';
