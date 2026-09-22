@@ -27,7 +27,7 @@ export default function ControlApprovalsPage() {
   return (
     <DashboardLayout pageTitle="Approvals">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
-        <div>
+        <div className="fade-once">
           <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
             Control
           </h1>

@@ -273,7 +273,7 @@ function ControlPageInner() {
   return (
     <DashboardLayout pageTitle="Control">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
-        <div>
+        <div className="fade-once">
           <h1
             style={{
               margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26,

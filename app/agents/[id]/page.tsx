@@ -23,7 +23,7 @@ export default function AgentDetail() {
 
   return (
     <DashboardLayout pageTitle="Agent">
-      <div className="max-w-xl mx-auto mt-16 text-center px-4">
+      <div className="max-w-xl mx-auto mt-16 text-center px-4 fade-once">
         <FiUsers size={28} className="mx-auto mb-4" style={{ color: "#8A8A86" }} />
         <h1 className="v32-page-title mb-3">Agent not found</h1>
         <p className="v32-body">

@@ -11,7 +11,7 @@ import {
   FiCpu, FiBook, FiShoppingBag, FiUserCheck,
   FiSun, FiActivity, FiUser, FiSliders,
   FiArchive, FiFile, FiDollarSign, FiZap, FiLock, FiAlertTriangle, FiTruck, FiTarget,
-  FiChevronLeft, FiChevronRight, FiCommand,
+  FiChevronLeft, FiChevronRight, FiCommand, FiBell,
 } from "react-icons/fi";
 import { api, getUser, clearAuth } from "@/lib/api";
 import { getBusinessType, getSmartHiddenRoutes, type BusinessTypeConfig } from "@/lib/businessTypes";
@@ -263,23 +263,37 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/branding/starlane-mark.png" alt="" width={21} height={21} style={{ borderRadius: "5px", flexShrink: 0 }} />
             {!collapsed && (
-              <span className="truncate" style={{ fontSize: "15px", fontWeight: 600, letterSpacing: "-0.01em", color: "#F7F7F5" }}>
+              <span className="truncate" style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: "20px", letterSpacing: "-0.3px", color: "#F5F4F0" }}>
                 Starlane
               </span>
             )}
           </div>
           {!collapsed && (
-            <button
-              onClick={() => setSearchOpen(true)}
-              aria-label="Search Starlane (Ctrl+K)"
-              title="Search (Ctrl+K)"
-              className="p-1.5 rounded-md shrink-0 transition-colors duration-150"
-              style={{ color: "#8A8A86" }}
-              onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
-              onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
-            >
-              <FiSearch size={16} strokeWidth={1.75} />
-            </button>
+            <div className="flex items-center shrink-0" style={{ gap: "4px" }}>
+              <button
+                aria-label="Notifications"
+                title="Notifications"
+                className="hover-fade relative flex items-center justify-center rounded-[6px]"
+                style={{ width: "26px", height: "26px", color: "#63635F" }}
+              >
+                <FiBell size={15} strokeWidth={1.75} />
+                {pendingCount !== null && pendingCount > 0 && (
+                  <span
+                    className="pulse-dot absolute rounded-full"
+                    style={{ width: "5px", height: "5px", top: "4px", right: "5px", background: "var(--accent)" }}
+                  />
+                )}
+              </button>
+              <button
+                onClick={() => setSearchOpen(true)}
+                aria-label="Search Starlane (Ctrl+K)"
+                title="Search (Ctrl+K)"
+                className="hover-fade flex items-center justify-center rounded-[6px]"
+                style={{ width: "26px", height: "26px", color: "#63635F" }}
+              >
+                <FiSearch size={15} strokeWidth={1.75} />
+              </button>
+            </div>
           )}
           <button onClick={onClose} className="lg:hidden p-1.5 rounded-lg" style={{ color: "#6F6F6B" }}>
             <FiX size={15} />

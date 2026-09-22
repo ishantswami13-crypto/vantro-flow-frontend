@@ -114,7 +114,7 @@ export default function BridgePage() {
 
   return (
     <DashboardLayout pageTitle="The Bridge">
-      <div className="mb-5">
+      <div className="mb-5 fade-once">
         <h1 className="v32-page-title mb-1">The Bridge</h1>
         <p className="v32-body">
           {loading

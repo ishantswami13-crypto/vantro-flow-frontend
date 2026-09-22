@@ -83,7 +83,7 @@ export default function ScanPage() {
           minHeight: "calc(100vh - 140px)",
         }}
       >
-        <div style={{ width: 680, maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div className="fade-once" style={{ width: 680, maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <h1
             style={{
               margin: "0 0 28px 0",

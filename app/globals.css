@@ -430,6 +430,18 @@
   .fade-once, .card-in, .pulse-dot { animation: none; }
 }
 
+/* Global base transitions (handoff §3 Motion) — applied to every interactive
+   element so hover/active state changes are never instant, even where a
+   component doesn't opt into a named animation class above. */
+a, button, input, textarea {
+  transition: opacity 120ms cubic-bezier(0.2,0.8,0.2,1),
+              background-color 120ms cubic-bezier(0.2,0.8,0.2,1),
+              border-color 120ms cubic-bezier(0.2,0.8,0.2,1),
+              color 120ms cubic-bezier(0.2,0.8,0.2,1),
+              transform 120ms cubic-bezier(0.2,0.8,0.2,1),
+              box-shadow 180ms cubic-bezier(0.2,0.8,0.2,1);
+}
+
 /* Canonical light-surface row hover (handoff §4) — used by every list/table
    row except the dark sidebar, which uses .hover-fade instead. */
 .row-hover { transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1); }
