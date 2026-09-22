@@ -260,8 +260,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         {/* Brand + search + collapse control */}
         <div className="flex items-center justify-between px-3.5 shrink-0" style={{ height: "56px" }}>
           <div className="flex items-center gap-2 min-w-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/branding/starlane-mark.png" alt="" width={21} height={21} style={{ borderRadius: "5px", flexShrink: 0 }} />
             {!collapsed && (
               <span className="truncate" style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: "20px", letterSpacing: "-0.3px", color: "#F5F4F0" }}>
                 Starlane
