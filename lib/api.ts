@@ -271,6 +271,12 @@ export const api = {
 
   // ─── AI Actions (approve/reject only — execution is a separate, existing pathway) ───
   aiActions: {
+    // Priority 5 — Control Approvals. Real GET /api/ai-actions, tenant-scoped
+    // server-side. Defaults to status=pending, matching the route's default.
+    list: (status: 'pending' | 'all' = 'pending') =>
+      request<{ success: boolean; actions: RankedAction[]; counts: Record<string, number>; total: number }>(
+        `/api/ai-actions?status=${status}`
+      ),
     updateStatus: (id: string, status: 'approved' | 'rejected' | 'done') =>
       request<{ success: boolean; action: RankedAction }>(`/api/ai-actions/${id}`, {
         method: 'PATCH',
@@ -1059,6 +1065,18 @@ export interface RankedAction {
   related_entity_id: string | null;
   customer: RankedActionCustomer | null;
   created_at: string;
+  // Present on rows returned by GET /api/ai-actions (Priority 5 — Control
+  // Approvals list) but not on businessState()'s rankedActions shape, which
+  // is why these are optional rather than required.
+  status?: 'pending' | 'approved' | 'rejected' | 'done' | 'cancelled' | 'executing' | 'failed' | 'execution_unknown' | string;
+  approved_at?: string | null;
+  completed_at?: string | null;
+  updated_at?: string | null;
+  suggested_by?: string | null;
+  reason_json?: Record<string, unknown> | null;
+  // Raw shape from the list route's server-side join hydration ({name, phone}
+  // or null) — distinct from the richer `customer` field above.
+  customers?: { name: string; phone: string } | null;
   // Day 7 — additive enrichment (lib/domain/intelligence/businessState.js's
   // enrichRowsWithDay7Intelligence). Only present when a customer is attached
   // AND the underlying evidence honestly cleared the bar (insufficientEvidence
