@@ -296,6 +296,26 @@ export const api = {
       request<{ success: boolean; actions: IntelligenceAction[] }>(`/api/ai-actions?status=all&action_type=${encodeURIComponent(actionType)}&limit=100`),
   },
 
+  // ─── Watch (migration 046 / lib/routes/watches.js on the backend) ───
+  // Real persisted watch conditions: create/list/update/pause/resume/delete
+  // (soft — sets status='archived') plus an on-demand evaluate-now call.
+  // Backend also runs these on a 15-min cron; this client layer never
+  // computes triggered/nominal itself.
+  watches: {
+    list: (status?: string) =>
+      request<{ watches: Watch[] }>(`/api/watches${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+    get: (id: string) => request<{ watch: Watch }>(`/api/watches/${id}`),
+    create: (body: { name: string; description?: string; metric_key: string; condition_config: WatchConditionConfig; severity?: string }) =>
+      request<{ watch: Watch }>('/api/watches', { method: 'POST', body: JSON.stringify(body) }),
+    update: (id: string, body: Partial<{ name: string; description: string; metric_key: string; condition_config: WatchConditionConfig; severity: string; status: string }>) =>
+      request<{ watch: Watch }>(`/api/watches/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+    remove: (id: string) => request<{ watch: Watch }>(`/api/watches/${id}`, { method: 'DELETE' }),
+    evaluate: (id: string) =>
+      request<{ watch: Watch; evaluation: { value: number | null; triggered: boolean; detail: unknown; error: string | null } }>(
+        `/api/watches/${id}/evaluate`, { method: 'POST' }
+      ),
+  },
+
   // ─── Demo control (2xA meeting slice) — internal use only, never surfaced as a normal product control ───
   // Long timeout: the backend shells out to two CLI scripts (seed + trigger),
   // and cold Node process spawn on this host can take well over the default
@@ -545,6 +565,33 @@ export function isLoggedIn(): boolean {
 }
 
 // ─── Types ────────────────────────────────────────────────
+// Mirrors watches/watch_evaluations columns exactly (migrations/046_watches.sql).
+export interface WatchConditionConfig {
+  operator: 'gt' | 'gte' | 'lt' | 'lte' | 'eq';
+  threshold: number;
+  min_days?: number;
+  days?: number;
+  current_cash?: number;
+  entity_name?: string;
+  [key: string]: unknown;
+}
+
+export interface Watch {
+  id: string;
+  user_id: string;
+  created_by: string;
+  name: string;
+  description: string | null;
+  metric_key: 'receivables_overdue_amount' | 'cash_forecast_runway_days' | 'customer_exposure_amount';
+  condition_config: WatchConditionConfig;
+  status: 'active' | 'paused' | 'archived';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  created_at: string;
+  updated_at: string;
+  last_evaluated_at: string | null;
+  last_triggered_at: string | null;
+}
+
 export interface User {
   id: string;
   email: string;

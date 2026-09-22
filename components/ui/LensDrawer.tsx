@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { Drawer } from "@/components/ui/Drawer";
 
 // Canonical Lens drawer — the universal right-side entity drawer described
@@ -52,10 +53,25 @@ export function LensDrawer({
   onClose,
 }: LensDrawerProps) {
   const titleId = "lens-drawer-title";
+  const router = useRouter();
+  // Watch's default action (when the caller doesn't override `actions`)
+  // opens the real Watch page's "New watch" flow pre-filled with this
+  // entity, via query params /watch reads on mount — see app/watch/page.tsx.
+  // Only wired for entityType "Customer" today, since that's the only
+  // metric_key (customer_exposure_amount) the backend evaluator supports
+  // an entity_name filter for; other entity types fall back to a no-op so
+  // this never claims a capability that doesn't exist for them yet.
+  const defaultWatchAction: LensAction = {
+    label: "Watch",
+    onClick: () => {
+      if (entityType !== "Customer") return;
+      router.push(`/watch?prefill_metric=customer_exposure_amount&prefill_entity=${encodeURIComponent(name)}`);
+    },
+  };
   const resolvedActions: LensAction[] =
     actions && actions.length > 0
       ? actions
-      : ["Ask", "Watch", "Simulate", "Create Mission"].map(label => ({ label, onClick: () => {} }));
+      : [{ label: "Ask", onClick: () => {} }, defaultWatchAction, { label: "Simulate", onClick: () => {} }, { label: "Create Mission", onClick: () => {} }];
 
   return (
     <Drawer titleId={titleId} title={name} onClose={onClose}>
