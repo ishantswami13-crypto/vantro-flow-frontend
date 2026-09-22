@@ -300,6 +300,19 @@ export const api = {
     // else is folded into `summary` so the client never has to filter noise.
     opportunities: (userId: string) =>
       request<IntelligenceOpportunitiesResponse>(`/api/intelligence/opportunities/${encodeURIComponent(userId)}`),
+    // Simulate V1 (lib/routes/scenarios.js / scenarioEngine.js / fxScenarioEngine.js
+    // on the backend): baseline vs. hypothetical-scenario vs. delta, over the
+    // tenant's own real invoices. Never computed client-side.
+    scenarioInvoices: (userId: string) =>
+      request<{ invoices: ScenarioInvoice[] }>(`/api/intelligence/scenarios/${encodeURIComponent(userId)}/invoices`),
+    simulateScenario: (
+      userId: string,
+      params: { targetInvoiceId: string; daysEarlier?: number; remainsUnpaid?: boolean }
+    ) =>
+      request<SimulateScenarioResponse>(`/api/intelligence/scenarios/${encodeURIComponent(userId)}`, {
+        method: 'POST',
+        body: JSON.stringify(params),
+      }),
   },
 
   // ─── Watch (migration 046 / lib/routes/watches.js on the backend) ───
@@ -1330,6 +1343,76 @@ export interface IntelligenceOpportunity {
 export interface IntelligenceOpportunitiesResponse {
   opportunities: IntelligenceOpportunity[];
   summary: { suppliersEvaluated: number; boundedOpportunities: number; noSignal: number; insufficientData: number };
+  generatedAt: string;
+}
+
+// ─── Simulate V1 (lib/routes/scenarios.js) ────────────────
+export interface ScenarioInvoice {
+  id: string;
+  customer_id: string | null;
+  customer_name: string | null;
+  invoice_amount: number;
+  payment_status: string | null;
+  days_overdue: number | null;
+  due_date: string | null;
+  invoice_date: string | null;
+  currency: string | null;
+}
+
+export interface CashConsequenceCase {
+  label: string;
+  cashImpact: number;
+  horizonDays: number;
+  reason: string;
+  keyDependency: { invoiceId: string; customerName: string; amount?: number; daysOverdue?: number } | null;
+}
+
+export interface CashConsequenceBaseline {
+  userId: string;
+  status: 'PROJECTED' | 'NO_OPEN_RECEIVABLES';
+  totalOpenReceivables?: number;
+  totalOverdue?: number;
+  cases?: { baseline: CashConsequenceCase; bestReasonable: CashConsequenceCase; stress: CashConsequenceCase } | null;
+  projection?: unknown;
+  generatedAt: string;
+  reason?: string;
+}
+
+export interface ScenarioProjection {
+  kind: 'SCENARIO';
+  label?: string;
+  scenarioName?: string;
+  baseline_state: { totalOpenReceivables: number; totalOverdue: number };
+  assumptions: { assumption: string; basis: string; strength: string }[];
+  projected_state: { cashImpactDelta: number; projectedTotalOverdue: number; narrative: string };
+  uncertainty: unknown;
+  evidence: unknown[];
+  invalidation_conditions: string[];
+}
+
+export interface ScenarioComparison {
+  baselineLabel: string;
+  scenarioLabel: string;
+  baselineTotalOverdue: number;
+  scenarioProjectedTotalOverdue: number;
+  delta: number;
+  direction: 'IMPROVEMENT_VS_BASELINE' | 'WORSE_VS_BASELINE' | 'NO_CHANGE_VS_BASELINE';
+  uncertainty: unknown;
+  note: string;
+}
+
+export interface FxScenarioResult {
+  impact_mode: 'NO_EFFECT' | 'INSUFFICIENT_CONTEXT' | 'SCENARIO_ONLY' | string;
+  label?: string;
+  chain?: unknown;
+  reason: string;
+}
+
+export interface SimulateScenarioResponse {
+  baseline: CashConsequenceBaseline;
+  simulated: ScenarioProjection;
+  delta: ScenarioComparison;
+  fx: FxScenarioResult;
   generatedAt: string;
 }
 

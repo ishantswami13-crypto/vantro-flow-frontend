@@ -1,50 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { api, getUser, type ScenarioInvoice, type SimulateScenarioResponse } from "@/lib/api";
 
 // Simulate — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§6/§14/§16.
 //
-// Audit finding (checked lib/api.ts in full, and server.js + lib/domain/*
-// on the backend): §16 defines Simulate as "a deterministic scenario-
-// simulation engine accepting assumption deltas (e.g. fuel cost %, lead
-// time weeks, demand %) and returning computed downstream effects (revenue,
-// cash, customers, inventory, suppliers, commitments) with confidence/
-// methodology metadata — never LLM-estimated." That is a genuinely
-// different capability from a standard forecast: it requires adjustable
-// assumption inputs that drive a recomputation, not just a projection of
-// the future from current trends.
+// Priority 3 (Simulate V1): the "New" tab is now wired to a real, reachable
+// endpoint — POST /api/intelligence/scenarios/:userId (lib/routes/scenarios.js)
+// — which runs scenarioEngine.js's buildScenario/compareScenarios over a
+// real BASELINE cash consequence (cashConsequenceEngine.js) and the tenant's
+// own real open invoice, plus fxScenarioEngine.js's buildFxScenarioChain for
+// whatever real currency-exposure data exists (honestly NO_EFFECT/
+// INSUFFICIENT_CONTEXT for tenants with none today — no fabricated FX number
+// is ever shown). Saved/Comparisons/Forecasts remain genuine V32 empty
+// states: no persistence layer exists for saved simulations yet.
 //
-// The one real forecast surface, api.forecast() -> GET /api/cash-forecast/
-// :userId (server.js ~6047, calculateCashFlowForecast), accepts
-// current_cash / daily_expenses / days and returns a fixed 3-scenario
-// (pessimistic/expected/optimistic) cash curve. Those "scenarios" are
-// canned multipliers baked into calculateCashFlowForecast, not something a
-// user can parameterize with an arbitrary assumption delta (there is no
-// fuel-cost/lead-time/demand knob, or any equivalent real knob, exposed by
-// that endpoint or any other). It is a fixed-parameter forecast, not an
-// assumption-driven what-if engine — it cannot honestly back this page.
-//
-// The backend also contains lib/domain/intelligence/scenarioEngine.js
-// (buildScenario/compareScenarios — "invoice paid earlier" / "invoice
-// remains unpaid" hypotheticals) and fxScenarioEngine.js (FX-move cost
-// scenarios). Both are real, deterministic, evidence-based scenario
-// calculators — but neither is wired to any server.js route. No API
-// endpoint calls them, so nothing in the running system can reach them from
-// the frontend. They are dead code from the UI's perspective, exactly like
-// Watch's missing persistence layer: a genuine capability that exists in
-// isolation but was never connected, so it cannot honestly back live UI.
-//
-// Result: no real, reachable assumption-driven simulation capability exists
-// today. Every subnav tab here is a genuine, fully honest V32 empty state:
-// exact visual shell (assumption pills, 3-column/2-row sim_card grid,
-// subnav), zero fabricated deltas, zero invented sim_card results.
-//
-// "New simulation" sidebar CTA: omitted, same reasoning as Watch/Missions.
-// There is no reachable endpoint behind it — showing any button here would
-// overstate what exists. The empty-state copy explains what would need to
-// exist (a live route onto scenarioEngine.js / a parameterized forecast)
-// for this page to compute anything real.
+// The generic fuel-cost/lead-time/demand assumption-pill engine described in
+// the handoff still doesn't exist — this tab implements the real, narrower
+// capability that scenarioEngine.js + fxScenarioEngine.js actually support
+// today (named invoice hypotheticals), not the broader one that was never
+// built.
 
 type TabKey = "new" | "saved" | "comparisons" | "forecasts";
 
@@ -55,79 +32,106 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "forecasts", label: "Forecasts" },
 ];
 
-const TAB_COPY: Record<TabKey, { title: string; body: string }> = {
-  new: {
-    title: "No simulation engine connected yet",
-    body: "Simulate is for assumption-driven what-ifs — \"what happens to cash, revenue, and suppliers if fuel cost rises 15%?\" — computed deterministically from real data, never an AI guess. That engine isn't reachable from the app today: the closest real capability, the cash forecast, takes a fixed set of inputs and returns a canned 3-scenario curve — it has no assumption deltas to turn. A separate scenario calculator exists in the backend code but isn't wired to any API route, so nothing here can call it yet. The assumption pills and result cards below are shown as the exact V32 shell, with no computed values, until a live route exists.",
-  },
+const TAB_COPY: Record<Exclude<TabKey, "new">, { title: string; body: string }> = {
   saved: {
     title: "No saved simulations",
-    body: "This tab would list simulations you've saved for later. Since no simulation can be run yet, none exist to save.",
+    body: "This tab would list simulations you've saved for later. Since simulations aren't persisted yet, none exist to save.",
   },
   comparisons: {
     title: "No comparisons yet",
-    body: "This tab would let you compare two or more simulation runs side by side. Since no simulation can be run yet, there's nothing to compare.",
+    body: "This tab would let you compare two or more simulation runs side by side. Since simulations aren't persisted yet, there's nothing to compare.",
   },
   forecasts: {
     title: "No linked forecasts",
-    body: "This tab would show simulations linked back to the cash forecast they were run against. Since no simulation can be run yet, there are no links to show.",
+    body: "This tab would show simulations linked back to the cash forecast they were run against. That linkage doesn't exist yet.",
   },
 };
 
-const ASSUMPTION_PILLS = [
-  { label: "Fuel cost", suffix: "%" },
-  { label: "Lead time", suffix: " wk" },
-  { label: "Demand", suffix: "%" },
-];
-
-const SIM_CARDS: { label: string; note: string }[] = [
-  { label: "Revenue", note: "Would show projected revenue change" },
-  { label: "Cash", note: "Would show projected cash-position change" },
-  { label: "Customers", note: "Would show projected customer impact" },
-  { label: "Inventory", note: "Would show projected inventory impact" },
-  { label: "Suppliers", note: "Would show projected supplier impact" },
-  { label: "Commitments", note: "Would show projected commitment impact" },
-];
+const fmt = (n: number | null | undefined) => {
+  if (n === null || n === undefined || Number.isNaN(n)) return "—";
+  const abs = Math.abs(n);
+  const sign = n < 0 ? "-" : "";
+  return abs >= 100000 ? `${sign}₹${(abs / 100000).toFixed(1)}L` : `${sign}₹${Math.round(abs).toLocaleString("en-IN")}`;
+};
 
 export default function SimulatePage() {
+  return (
+    <Suspense fallback={null}>
+      <SimulatePageInner />
+    </Suspense>
+  );
+}
+
+function SimulatePageInner() {
   const [tab, setTab] = useState<TabKey>("new");
-  const copy = TAB_COPY[tab];
+  const searchParams = useSearchParams();
+
+  const [userId, setUserId] = useState<string | null>(null);
+  const [invoices, setInvoices] = useState<ScenarioInvoice[]>([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(true);
+  const [invoicesError, setInvoicesError] = useState("");
+
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>("");
+  const [mode, setMode] = useState<"earlier" | "unpaid">("earlier");
+  const [daysEarlier, setDaysEarlier] = useState<number>(7);
+
+  const [result, setResult] = useState<SimulateScenarioResponse | null>(null);
+  const [running, setRunning] = useState(false);
+  const [runError, setRunError] = useState("");
+
+  useEffect(() => {
+    const user = getUser();
+    setUserId(user?.id || null);
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    setInvoicesLoading(true);
+    setInvoicesError("");
+    api.intelligence.scenarioInvoices(userId)
+      .then((res) => {
+        setInvoices(res.invoices || []);
+        const prefill = searchParams?.get("invoiceId");
+        if (prefill && (res.invoices || []).some((inv) => inv.id === prefill)) {
+          setSelectedInvoiceId(prefill);
+        } else if ((res.invoices || []).length > 0) {
+          setSelectedInvoiceId(res.invoices[0].id);
+        }
+      })
+      .catch((e) => setInvoicesError(e instanceof Error ? e.message : "Could not load invoices"))
+      .finally(() => setInvoicesLoading(false));
+  }, [userId, searchParams]);
+
+  const runSimulation = useCallback(async () => {
+    if (!userId || !selectedInvoiceId) return;
+    setRunning(true);
+    setRunError("");
+    setResult(null);
+    try {
+      const res = await api.intelligence.simulateScenario(userId, {
+        targetInvoiceId: selectedInvoiceId,
+        ...(mode === "unpaid" ? { remainsUnpaid: true } : { daysEarlier }),
+      });
+      setResult(res);
+    } catch (e) {
+      setRunError(e instanceof Error ? e.message : "Could not run simulation");
+    } finally {
+      setRunning(false);
+    }
+  }, [userId, selectedInvoiceId, mode, daysEarlier]);
+
+  const selectedInvoice = invoices.find((inv) => inv.id === selectedInvoiceId) || null;
 
   return (
     <DashboardLayout pageTitle="Simulate">
-      <div
-        style={{
-          flex: 1,
-          minHeight: 0,
-          display: "flex",
-          flexDirection: "column",
-          gap: 20,
-        }}
-      >
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1
-            style={{
-              margin: 0,
-              fontFamily: "'Fraunces', Georgia, serif",
-              fontWeight: 400,
-              fontSize: 26,
-              color: "#191917",
-            }}
-          >
+          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
             Simulate
           </h1>
         </div>
 
-        <nav
-          aria-label="Secondary"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 22,
-            borderBottom: "1px solid #EBEAE6",
-            marginBottom: 4,
-          }}
-        >
+        <nav aria-label="Secondary" style={{ display: "flex", alignItems: "center", gap: 22, borderBottom: "1px solid #EBEAE6", marginBottom: 4 }}>
           {TABS.map((t) => (
             <button
               key={t.key}
@@ -151,106 +155,168 @@ export default function SimulatePage() {
           ))}
         </nav>
 
-        {tab === "new" ? (
+        {tab !== "new" ? (
           <div
             style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 10,
+              flex: 1, minHeight: 0, boxSizing: "border-box", background: "#FFFFFF",
+              border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, overflow: "hidden",
+              display: "flex", flexDirection: "column",
             }}
           >
-            {ASSUMPTION_PILLS.map((p) => (
-              <div
-                key={p.label}
-                title="No simulation engine is connected — this control is inert."
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "8px 14px",
-                  borderRadius: 999,
-                  border: "1px solid rgba(25,25,23,0.10)",
-                  background: "#F3F2EE",
-                  fontSize: 12.5,
-                  color: "#9A9A94",
-                  cursor: "not-allowed",
-                }}
-              >
-                <span>{p.label}</span>
-                <span style={{ color: "#B9B9B3" }}>+0{p.suffix}</span>
-              </div>
-            ))}
-          </div>
-        ) : null}
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, minmax(0,1fr))",
-            gap: 16,
-          }}
-        >
-          {SIM_CARDS.map((c) => (
-            <div
-              key={c.label}
-              style={{
-                boxSizing: "border-box",
-                background: "#FFFFFF",
-                border: "1px solid rgba(25,25,23,0.10)",
-                borderRadius: 8,
-                padding: "16px 18px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 6,
-              }}
-            >
-              <span style={{ fontSize: 11, letterSpacing: 0.5, color: "#63635F" }}>
-                {c.label.toUpperCase()}
-              </span>
-              <span
-                style={{
-                  fontFamily: "'IBM Plex Mono', 'SFMono-Regular', monospace",
-                  fontSize: 22,
-                  color: "#9A9A94",
-                }}
-              >
-                &mdash;
-              </span>
-              <span style={{ fontSize: 12, color: "#9A9A94" }}>{c.note}</span>
+            <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
+              <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, color: "#191917", marginBottom: 6 }}>
+                {TAB_COPY[tab].title}
+              </p>
+              <p className="v32-body max-w-md mx-auto" style={{ color: "#63635F" }}>{TAB_COPY[tab].body}</p>
             </div>
-          ))}
-        </div>
-
-        <div
-          style={{
-            flex: 1,
-            minHeight: 0,
-            boxSizing: "border-box",
-            background: "#FFFFFF",
-            border: "1px solid rgba(25,25,23,0.10)",
-            borderRadius: 8,
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
-            <p
-              style={{
-                fontFamily: "'Fraunces', Georgia, serif",
-                fontSize: 16,
-                color: "#191917",
-                marginBottom: 6,
-              }}
-            >
-              {copy.title}
-            </p>
-            <p className="v32-body max-w-md mx-auto" style={{ color: "#63635F" }}>
-              {copy.body}
-            </p>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Real picker: the tenant's own open/overdue invoices. */}
+            <div style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+              {invoicesLoading ? (
+                <p className="v32-body" style={{ color: "#63635F" }}>Loading your open invoices…</p>
+              ) : invoicesError ? (
+                <p className="v32-body" style={{ color: "#B3261E" }}>{invoicesError}</p>
+              ) : invoices.length === 0 ? (
+                <p className="v32-body" style={{ color: "#63635F" }}>No open (non-Paid) invoices to simulate against yet.</p>
+              ) : (
+                <>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+                    <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "#63635F", flex: "1 1 260px" }}>
+                      Invoice
+                      <select
+                        value={selectedInvoiceId}
+                        onChange={(e) => { setSelectedInvoiceId(e.target.value); setResult(null); }}
+                        style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid rgba(25,25,23,0.16)", fontSize: 13, color: "#191917", background: "#FBFAF7" }}
+                      >
+                        {invoices.map((inv) => (
+                          <option key={inv.id} value={inv.id}>
+                            {inv.customer_name || "Unknown customer"} — {fmt(inv.invoice_amount)}
+                            {inv.days_overdue != null ? ` (${inv.days_overdue}d overdue)` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "#63635F" }}>
+                      Assumption
+                      <select
+                        value={mode}
+                        onChange={(e) => { setMode(e.target.value as "earlier" | "unpaid"); setResult(null); }}
+                        style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid rgba(25,25,23,0.16)", fontSize: 13, color: "#191917", background: "#FBFAF7" }}
+                      >
+                        <option value="earlier">Paid X days earlier</option>
+                        <option value="unpaid">Remains unpaid</option>
+                      </select>
+                    </label>
+
+                    {mode === "earlier" && (
+                      <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "#63635F" }}>
+                        Days earlier
+                        <input
+                          type="number"
+                          min={0}
+                          value={daysEarlier}
+                          onChange={(e) => { setDaysEarlier(Number(e.target.value) || 0); setResult(null); }}
+                          style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid rgba(25,25,23,0.16)", fontSize: 13, color: "#191917", width: 90, background: "#FBFAF7" }}
+                        />
+                      </label>
+                    )}
+
+                    <button
+                      onClick={runSimulation}
+                      disabled={!selectedInvoiceId || running}
+                      className="btn-secondary-v32"
+                      style={{ padding: "9px 18px", fontSize: 13, opacity: !selectedInvoiceId || running ? 0.5 : 1 }}
+                    >
+                      {running ? "Running…" : "Run simulation"}
+                    </button>
+                  </div>
+                  {selectedInvoice && (
+                    <p style={{ fontSize: 12, color: "#9A9A94" }}>
+                      Real invoice amount: {fmt(selectedInvoice.invoice_amount)} {selectedInvoice.currency || ""}
+                    </p>
+                  )}
+                  {runError && <p style={{ fontSize: 12, color: "#B3261E" }}>{runError}</p>}
+                </>
+              )}
+            </div>
+
+            {result && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 16 }}>
+                <SimCard
+                  title="CURRENT BASELINE"
+                  accent="#63635F"
+                  rows={[
+                    ["Total open receivables", fmt(result.baseline.totalOpenReceivables)],
+                    ["Total overdue", fmt(result.baseline.totalOverdue)],
+                  ]}
+                  note="Real, observed pattern — from cashConsequenceEngine.js"
+                />
+                <SimCard
+                  title="SIMULATED RESULT"
+                  accent="#3B6E4F"
+                  rows={[
+                    ["Projected total overdue", fmt(result.simulated.projected_state.projectedTotalOverdue)],
+                    ["Cash impact delta", fmt(result.simulated.projected_state.cashImpactDelta)],
+                  ]}
+                  note={result.simulated.projected_state.narrative}
+                />
+                <SimCard
+                  title="DELTA"
+                  accent={result.delta.direction === "IMPROVEMENT_VS_BASELINE" ? "#3B6E4F" : result.delta.direction === "WORSE_VS_BASELINE" ? "#B3261E" : "#63635F"}
+                  rows={[
+                    ["Overdue delta vs baseline", fmt(result.delta.delta)],
+                    ["Direction", result.delta.direction.replace(/_/g, " ")],
+                  ]}
+                  note={result.delta.note}
+                />
+              </div>
+            )}
+
+            {result && (
+              <div style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 16 }}>
+                <p style={{ fontSize: 11, letterSpacing: 0.5, color: "#63635F", marginBottom: 8 }}>FX SCENARIO</p>
+                {result.fx.impact_mode === "NO_EFFECT" || result.fx.impact_mode === "INSUFFICIENT_CONTEXT" ? (
+                  <p className="v32-body" style={{ color: "#9A9A94" }}>
+                    No FX exposure data available for this scenario yet — {result.fx.reason}
+                  </p>
+                ) : (
+                  <p className="v32-body" style={{ color: "#191917" }}>{result.fx.reason}</p>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </DashboardLayout>
+  );
+}
+
+function SimCard({ title, accent, rows, note }: { title: string; accent: string; rows: [string, string][]; note: string }) {
+  return (
+    <div
+      style={{
+        boxSizing: "border-box",
+        background: "#FFFFFF",
+        border: `1px solid ${accent}33`,
+        borderTop: `3px solid ${accent}`,
+        borderRadius: 8,
+        padding: "16px 18px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+      }}
+    >
+      <span style={{ fontSize: 11, letterSpacing: 0.5, color: accent, fontWeight: 600 }}>{title}</span>
+      {rows.map(([label, value]) => (
+        <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+          <span style={{ fontSize: 12, color: "#63635F" }}>{label}</span>
+          <span style={{ fontFamily: "'IBM Plex Mono', 'SFMono-Regular', monospace", fontSize: 13, color: "#191917" }}>{value}</span>
+        </div>
+      ))}
+      <span style={{ fontSize: 11.5, color: "#9A9A94", marginTop: 4 }}>{note}</span>
+    </div>
   );
 }

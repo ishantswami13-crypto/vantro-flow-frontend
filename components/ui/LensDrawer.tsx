@@ -68,10 +68,16 @@ export function LensDrawer({
       router.push(`/watch?prefill_metric=customer_exposure_amount&prefill_entity=${encodeURIComponent(name)}`);
     },
   };
+  // Simulate has no default action here: Simulate V1 (lib/routes/scenarios.js)
+  // only makes sense pre-filled with a real invoice, and this generic drawer
+  // has no entity-specific invoice to offer by default. Callers that do have
+  // a real associated invoice (e.g. app/customers/page.tsx) add their own
+  // "Simulate" action via the `actions` prop instead of relying on this
+  // default list — see the dead-button audit note in that file.
   const resolvedActions: LensAction[] =
     actions && actions.length > 0
       ? actions
-      : [{ label: "Ask", onClick: () => {} }, defaultWatchAction, { label: "Simulate", onClick: () => {} }, { label: "Create Mission", onClick: () => {} }];
+      : [{ label: "Ask", onClick: () => {} }, defaultWatchAction, { label: "Create Mission", onClick: () => {} }];
 
   return (
     <Drawer titleId={titleId} title={name} onClose={onClose}>

@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { api, getToken, type CustomerPortfolioResponse } from "@/lib/api";
+import { api, getToken, getUser, type CustomerPortfolioResponse } from "@/lib/api";
 import { FiBook, FiMessageSquare, FiPhone, FiSearch, FiUser, FiUsers, FiAlertTriangle } from "react-icons/fi";
 import { LensDrawer, type LensSection } from "@/components/ui/LensDrawer";
 
@@ -35,6 +36,12 @@ export default function CustomersPage() {
   const [scoreMap, setScoreMap] = useState<Record<string, { score: number; tier: string; overdue_amount: number; health_label?: string | null }>>({});
   const [portfolio, setPortfolio] = useState<CustomerPortfolioResponse | null>(null);
   const [lensCustomer, setLensCustomer] = useState<Customer | null>(null);
+  // Real invoice, if any, this Lens customer maps to — used to pre-fill the
+  // Simulate flow honestly (Simulate V1). Stays null (button omitted) when
+  // this customer has no matching real open invoice, rather than opening an
+  // empty simulate form pretending it's contextual.
+  const [lensSimInvoiceId, setLensSimInvoiceId] = useState<string | null>(null);
+  const router = useRouter();
 
   const loadCustomers = async () => {
     setLoading(true);
@@ -68,6 +75,25 @@ export default function CustomersPage() {
     // errors — this section is purely additive and never blocks the base page.
     api.customers.portfolio().then(setPortfolio).catch(() => {});
   }, []);
+
+  // When a Lens customer is opened, look up whether they have a real open
+  // invoice to pre-fill Simulate with (matched by customer_name — the same
+  // key the khata/customer_scores views use, since invoices don't carry a
+  // customer FK on this schema).
+  useEffect(() => {
+    if (!lensCustomer) { setLensSimInvoiceId(null); return; }
+    const user = getUser();
+    if (!user?.id) { setLensSimInvoiceId(null); return; }
+    let cancelled = false;
+    api.intelligence.scenarioInvoices(user.id)
+      .then(res => {
+        if (cancelled) return;
+        const match = (res.invoices || []).find(inv => inv.customer_name === lensCustomer.customer_name);
+        setLensSimInvoiceId(match ? match.id : null);
+      })
+      .catch(() => { if (!cancelled) setLensSimInvoiceId(null); });
+    return () => { cancelled = true; };
+  }, [lensCustomer]);
 
   const HEALTH_LABEL_TEXT: Record<string, string> = {
     DORMANT: "Dormant", AT_RISK: "At Risk", WATCH: "Watch", GROWING: "Growing", HEALTHY: "Healthy",
@@ -364,6 +390,12 @@ export default function CustomersPage() {
             actions={[
               { label: "Open Khata", onClick: () => { window.location.href = `/khata?customer=${encodeURIComponent(lensCustomer.customer_name)}`; } },
               { label: "WhatsApp", onClick: () => whatsappStatement(lensCustomer) },
+              // Simulate: only offered when a real open invoice for this
+              // customer was found (lensSimInvoiceId) — otherwise omitted,
+              // matching the dead-button audit's honesty requirement.
+              ...(lensSimInvoiceId
+                ? [{ label: "Simulate", onClick: () => router.push(`/simulate?invoiceId=${encodeURIComponent(lensSimInvoiceId)}`) }]
+                : []),
             ]}
             onClose={() => setLensCustomer(null)}
           />
