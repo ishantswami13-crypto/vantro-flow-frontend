@@ -294,6 +294,12 @@ export const api = {
       request<IntelligenceActionDetailResponse>(`/api/intelligence/actions/${actionId}/detail`),
     listActions: (actionType: string) =>
       request<{ success: boolean; actions: IntelligenceAction[] }>(`/api/ai-actions?status=all&action_type=${encodeURIComponent(actionType)}&limit=100`),
+    // Opportunity Engine (lib/routes/opportunities.js / opportunityPropagation.js
+    // on the backend): real demand-rising + supplier-stable AND chain per
+    // supplier. Only BOUNDED_OPPORTUNITY chains come back as rows; everything
+    // else is folded into `summary` so the client never has to filter noise.
+    opportunities: (userId: string) =>
+      request<IntelligenceOpportunitiesResponse>(`/api/intelligence/opportunities/${encodeURIComponent(userId)}`),
   },
 
   // ─── Watch (migration 046 / lib/routes/watches.js on the backend) ───
@@ -1299,6 +1305,32 @@ export interface IntelligenceSignal {
 export interface IntelligenceSignalsResponse {
   success: boolean;
   signals: IntelligenceSignal[];
+}
+
+// Opportunity Engine step-level result (see checkDemandRisingStep /
+// checkSupplierStableStep in lib/domain/intelligence/opportunityPropagation.js).
+export interface OpportunityChainStep {
+  step: string;
+  label: 'OBSERVED' | 'DERIVED' | 'INSUFFICIENT_DATA' | 'ERROR' | string;
+  supported: boolean;
+  reason: string;
+  evidence?: { recentTotal: number; priorTotal: number; recentCount: number; priorCount: number; pctChange: number };
+}
+
+export interface IntelligenceOpportunity {
+  opportunity: string;
+  affectedEntities: { supplierId: string; supplierName: string };
+  evidence: OpportunityChainStep[];
+  sourceState: string;
+  materiality: number | null;
+  reasoning: string;
+  timestamp: string;
+}
+
+export interface IntelligenceOpportunitiesResponse {
+  opportunities: IntelligenceOpportunity[];
+  summary: { suppliersEvaluated: number; boundedOpportunities: number; noSignal: number; insufficientData: number };
+  generatedAt: string;
 }
 
 // Every claim in the causal chain is tagged with one of these kinds — the
