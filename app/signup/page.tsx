@@ -112,7 +112,7 @@ function SignupForm() {
   const [otpStep, setOtpStep]   = useState(false);
   const [preToken, setPreToken] = useState("");
   const [verifiedUser, setVerifiedUser] = useState<{email:string;phone:string}|null>(null);
-  const [form, setForm] = useState({ name:"", phone:"", email:"", business_name:"", business_type:"", amount_stuck:"", password:"", confirm_password:"" });
+  const [form, setForm] = useState({ name:"", phone:"", email:"", business_name:"", business_type:"", password:"", confirm_password:"" });
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement|HTMLSelectElement>) => setForm(f=>({...f,[key]:e.target.value}));
 
   function goStep2(e: React.FormEvent) {
@@ -202,8 +202,8 @@ function SignupForm() {
         <form onSubmit={handleSubmit}>
           <div className="step-head">
             <div className="step-num">Step 2 of 2</div>
-            <h2>Set your password<br/>&amp; go live.</h2>
-            <p>Starlane adapts to your business from day one.</p>
+            <h2>Create your<br/>workspace.</h2>
+            <p>Starlane will learn how your business works once you're inside.</p>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
             {/* Phone */}
@@ -211,15 +211,7 @@ function SignupForm() {
               <label>Phone (WhatsApp — OTP sent here)</label>
               <div style={{display:"flex"}}>
                 <span style={{display:"flex",alignItems:"center",padding:"0 14px",background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.1)",borderRight:"none",borderRadius:"6px 0 0 6px",fontSize:"13px",fontFamily:"'JetBrains Mono',monospace",color:"rgba(255,255,255,.45)",flexShrink:0}}>+91</span>
-                <FocusInput type="tel" placeholder="9876543210" value={form.phone} onChange={set("phone")} required maxLength={10} pattern="\d{10}" style={{borderRadius:"0 6px 6px 0"} as React.CSSProperties}/>
-              </div>
-            </div>
-            {/* Amount */}
-            <div className="field">
-              <label>Amount stuck in receivables (approx)</label>
-              <div style={{position:"relative"}}>
-                <span style={{position:"absolute",left:"14px",top:"50%",transform:"translateY(-50%)",fontSize:"13px",fontFamily:"'JetBrains Mono',monospace",color:"rgba(255,255,255,.35)"}}>₹</span>
-                <FocusInput type="number" placeholder="2500000" value={form.amount_stuck} onChange={set("amount_stuck")} required style={{paddingLeft:"28px"} as React.CSSProperties}/>
+                <FocusInput type="tel" placeholder="9876543210" value={form.phone} onChange={set("phone")} required maxLength={10} pattern="\d{10}" autoComplete="tel" style={{borderRadius:"0 6px 6px 0"} as React.CSSProperties}/>
               </div>
             </div>
             {/* Password */}
@@ -244,7 +236,7 @@ function SignupForm() {
             <div className="btn-row">
               <button type="button" className="btn-back" onClick={()=>{setStep(1);setError("");}}>Back</button>
               <button type="submit" className="btn-main" disabled={loading} style={{opacity:loading?.6:1,position:"relative"}}>
-                {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid #F5F4F0",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Creating account…</>:<><span className="btn-txt">Create free account</span><FiArrowRight size={16}/></>}
+                {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid #F5F4F0",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Creating workspace…</>:<><span className="btn-txt">Create workspace</span><FiArrowRight size={16}/></>}
               </button>
             </div>
             <p style={{marginTop:"8px",fontSize:"12px",color:"rgba(255,255,255,.28)",textAlign:"center",lineHeight:1.6}}>
