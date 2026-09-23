@@ -22,10 +22,12 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 // agent's stated purpose, not a user-defined outcome with blockers and
 // progress computed from underlying data — it belongs to the Agents page's
 // domain, not Missions', and reusing it here would misrepresent what it is.
-// businessState() and lib/domain/intelligence/opportunityPropagation.js
-// (dead/unwired, found during the Discover audit) were also checked — Neither
-// stores or computes a user-defined goal, a blocker entity, or a progress
-// percentage. So, exactly like Watch, there is no adjacent real capability to
+// businessState() and lib/domain/intelligence/opportunityPropagation.js were
+// also checked (the latter is now wired for real via lib/routes/opportunities.js
+// as Discover's Opportunity Engine — it was unwired at the time of this
+// audit, since fixed) — neither stores or computes a user-defined goal, a
+// blocker entity, or a progress percentage. So, exactly like Watch, there is
+// no adjacent real capability to
 // partially back any subnav tab with. Every tab here is a genuine, fully
 // honest V32 empty state: exact visual shell (3-card flex row, mission_card
 // styling incl. progress bar and avatar-stack treatment, subnav), zero
