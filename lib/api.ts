@@ -131,6 +131,22 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
   try {
     const res = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include', signal: controller.signal });
     const data = await res.json();
+
+    // Self-heal an existing cookie-mode session that predates saveAuth()
+    // mirroring vantro_csrf_token into localStorage: the backend now echoes
+    // the CSRF cookie's value back as an X-CSRF-Token response header on
+    // every authenticated cookie-mode request (see authMiddleware in
+    // server.js), which — unlike the vantro_csrf cookie itself — a
+    // cross-origin fetch() CAN read (it's an exposed response header, not a
+    // cookie). So any already-logged-in user gets backfilled on the very
+    // next authenticated API call this page makes, no re-login needed.
+    if (typeof window !== 'undefined') {
+      const headerCsrf = res.headers.get('x-csrf-token');
+      if (headerCsrf && localStorage.getItem(CSRF_TOKEN_KEY) !== headerCsrf) {
+        localStorage.setItem(CSRF_TOKEN_KEY, headerCsrf);
+      }
+    }
+
     // Auto-logout on 401 — token expired or invalid, or 404 User not found
     if (res.status === 401 || (res.status === 404 && data?.error === 'User not found')) {
       if (typeof window !== 'undefined') {
@@ -193,7 +209,11 @@ export const api = {
       request<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
     login: (body: { email: string; password: string }) =>
       request<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
-    me: () => request<{ user: User }>('/api/auth/me'),
+    // csrf_token is a secondary self-heal path (see the X-CSRF-Token
+    // response-header mirror in request() above, which fires on every
+    // authenticated call, not just this one) — kept here too since this
+    // endpoint now also echoes it in the body, same shape as login/signup.
+    me: () => request<{ user: User; csrf_token?: string | null }>('/api/auth/me'),
   },
 
   // ─── Dashboard ──────────────────────────────────────────
