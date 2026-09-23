@@ -7,7 +7,6 @@ import {
   FiMapPin, FiRefreshCw, FiPlus, FiTrash2, FiPhone,
   FiAlertCircle, FiChevronRight,
 } from "react-icons/fi";
-import LogoMark from "@/components/LogoMark";
 import { BUSINESS_TYPES, INDUSTRY_OPTIONS, type BusinessTypeKey } from "@/lib/businessTypes";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -300,12 +299,13 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-lg">
+      <div className="w-full max-w-lg fade-once">
 
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-2.5 mb-8">
-          <LogoMark size={32} />
-          <span className="font-black text-primary text-base tracking-tight">Starlane</span>
+        {/* Wordmark */}
+        <div className="flex items-center justify-center mb-8">
+          <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: "22px", letterSpacing: "-0.3px", color: "#191917" }}>
+            Starlane
+          </span>
         </div>
 
         {step < 4 && <ProgressBar step={step} total={TOTAL_STEPS} />}
@@ -351,7 +351,7 @@ export default function OnboardingPage() {
               </div>
             </div>
             <button onClick={proceed} disabled={!ownerName.trim()}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 transition-all disabled:opacity-30 shadow-sm">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg btn-primary font-bold text-sm transition-all disabled:opacity-30">
               Let's Go <FiArrowRight size={15} />
             </button>
           </div>
@@ -392,7 +392,7 @@ export default function OnboardingPage() {
             {industry && <IndustryFeaturePreview industryKey={industry as BusinessTypeKey} />}
 
             <button onClick={proceed} disabled={!step1Valid}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 transition-all disabled:opacity-30 shadow-sm">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg btn-primary font-bold text-sm transition-all disabled:opacity-30">
               Activate {cfg?.label || "My"} Features <FiArrowRight size={15} />
             </button>
           </div>
@@ -455,7 +455,7 @@ export default function OnboardingPage() {
             </div>
 
             <button onClick={proceed} disabled={!step2Valid}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 transition-all disabled:opacity-30 shadow-sm">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg btn-primary font-bold text-sm transition-all disabled:opacity-30">
               Build My Dashboard <FiArrowRight size={15} />
             </button>
           </div>
@@ -635,7 +635,7 @@ export default function OnboardingPage() {
             )}
 
             <button onClick={proceed} disabled={loading || !canProceedStep3}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 transition-all disabled:opacity-30 shadow-sm">
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg btn-primary font-bold text-sm transition-all disabled:opacity-30">
               {loading ? <FiRefreshCw size={15} className="animate-spin" /> : null}
               {loading ? "Processing..." : parsedEntries.length > 0 && mode === "paste" ? `Score ${parsedEntries.length} Customers →` : "Score & Prioritize →"}
             </button>
@@ -759,7 +759,7 @@ export default function OnboardingPage() {
             )}
 
             <button onClick={() => router.push("/dashboard")}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-gray-900 text-white font-black text-base hover:bg-gray-800 transition-all shadow-sm">
+              className="w-full flex items-center justify-center gap-2 py-4 rounded-lg btn-primary font-black text-base transition-all">
               Open My Dashboard <FiArrowRight size={16} />
             </button>
             <button onClick={() => router.push("/ai-chat")}

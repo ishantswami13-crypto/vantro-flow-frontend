@@ -7,8 +7,6 @@ import {
   FiMail, FiLock, FiEye, FiEyeOff,
   FiArrowRight, FiCheckCircle, FiRefreshCw,
 } from "react-icons/fi";
-import LogoMark from "@/components/LogoMark";
-
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
 type Step = "email" | "otp" | "done";
@@ -127,15 +125,13 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen bg-bg bg-grid-pattern flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm fade-once">
 
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-2.5 mb-8">
-          <LogoMark size={36} />
-          <div>
-            <p className="font-bold text-base text-primary leading-none tracking-tight">Starlane</p>
-            <p className="text-2xs text-muted">Business OS</p>
-          </div>
+        {/* Wordmark */}
+        <div className="flex items-center justify-center mb-8">
+          <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: "22px", letterSpacing: "-0.3px", color: "#191917" }}>
+            Starlane
+          </span>
         </div>
 
         <div className="card-premium p-6">
@@ -146,13 +142,13 @@ export default function ForgotPasswordPage() {
               <div className="w-16 h-16 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center mx-auto">
                 <FiCheckCircle size={28} className="text-success" />
               </div>
-              <h1 className="text-xl font-bold text-primary">Password reset!</h1>
+              <h1 className="text-xl text-primary" style={{fontFamily:"'Fraunces', Georgia, serif", fontWeight:400}}>Password reset!</h1>
               <p className="text-sm text-secondary leading-relaxed">
                 Your password has been updated. Sign in with your new password.
               </p>
               <button
                 onClick={() => router.push("/login")}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-900 text-white font-bold text-sm shadow-button-accent hover:bg-gray-800 transition-all"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg btn-primary font-bold text-sm transition-all"
               >
                 Go to Sign In <FiArrowRight size={14} />
               </button>
@@ -163,14 +159,14 @@ export default function ForgotPasswordPage() {
           {step === "email" && (
             <>
               <div className="mb-6">
-                <h1 className="text-xl font-bold text-primary">Forgot password?</h1>
+                <h1 className="text-xl text-primary" style={{fontFamily:"'Fraunces', Georgia, serif", fontWeight:400}}>Forgot password?</h1>
                 <p className="text-sm text-secondary mt-1">
                   Enter your email — we&apos;ll send a reset OTP.
                 </p>
               </div>
 
               {error && (
-                <div className="mb-4 px-3 py-2.5 bg-danger-dim border border-danger/30 rounded-xl text-sm text-danger">
+                <div className="mb-4 px-3 py-2.5 bg-danger-dim border border-danger/30 rounded-lg text-sm text-danger">
                   {error}
                 </div>
               )}
@@ -186,13 +182,13 @@ export default function ForgotPasswordPage() {
                       value={email}
                       onChange={e => { setEmail(e.target.value); setError(""); }}
                       required
-                      className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary pl-9 pr-4 py-3 focus:outline-none focus:border-accent transition-colors"
+                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary pl-9 pr-4 py-3 focus:outline-none focus:border-accent transition-colors"
                     />
                   </div>
                 </div>
 
                 <button type="submit" disabled={loading || !email}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-900 text-white font-bold text-sm shadow-button-accent hover:bg-gray-800 transition-all disabled:opacity-40">
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-lg btn-primary font-bold text-sm transition-all disabled:opacity-40">
                   {loading
                     ? <><div className="w-4 h-4 border-2 border-border border-t-white rounded-full animate-spin" /> Sending…</>
                     : <>Send OTP <FiArrowRight size={14} /></>}
@@ -205,7 +201,7 @@ export default function ForgotPasswordPage() {
           {step === "otp" && (
             <>
               <div className="mb-6">
-                <h1 className="text-xl font-bold text-primary">Reset password</h1>
+                <h1 className="text-xl text-primary" style={{fontFamily:"'Fraunces', Georgia, serif", fontWeight:400}}>Reset password</h1>
                 <p className="text-sm text-secondary mt-1">
                   We sent a 6-digit OTP to{" "}
                   <span className="font-semibold text-primary">{maskedEmail}</span>.
@@ -214,7 +210,7 @@ export default function ForgotPasswordPage() {
               </div>
 
               {error && (
-                <div className="mb-4 px-3 py-2.5 bg-danger-dim border border-danger/30 rounded-xl text-sm text-danger">
+                <div className="mb-4 px-3 py-2.5 bg-danger-dim border border-danger/30 rounded-lg text-sm text-danger">
                   {error}
                 </div>
               )}
@@ -233,7 +229,7 @@ export default function ForgotPasswordPage() {
                         onChange={e => handleDigit(i, e.target.value)}
                         onKeyDown={e => handleKeyDown(i, e)}
                         className={[
-                          "w-11 h-14 text-center text-xl font-bold rounded-xl border transition-all",
+                          "w-11 h-14 text-center text-xl font-bold rounded-lg border transition-all",
                           "bg-surface-2 text-primary focus:outline-none",
                           digit ? "border-accent bg-accent-dim" : "border-border focus:border-accent",
                         ].join(" ")}
@@ -265,7 +261,7 @@ export default function ForgotPasswordPage() {
                       value={newPass}
                       onChange={e => { setNewPass(e.target.value); setError(""); }}
                       required minLength={8}
-                      className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary pl-9 pr-10 py-3 focus:outline-none focus:border-accent transition-colors"
+                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary pl-9 pr-10 py-3 focus:outline-none focus:border-accent transition-colors"
                     />
                     <button type="button" onClick={() => setShowPass(v => !v)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors">
@@ -288,7 +284,7 @@ export default function ForgotPasswordPage() {
                       value={confirm}
                       onChange={e => { setConfirm(e.target.value); setError(""); }}
                       required
-                      className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary pl-9 pr-10 py-3 focus:outline-none focus:border-accent transition-colors"
+                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary pl-9 pr-10 py-3 focus:outline-none focus:border-accent transition-colors"
                     />
                     <button type="button" onClick={() => setShowConf(v => !v)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors">
@@ -305,7 +301,7 @@ export default function ForgotPasswordPage() {
 
                 <button type="submit"
                   disabled={loading || otp.join("").length < 6 || newPass.length < 8 || newPass !== confirm}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-900 text-white font-bold text-sm shadow-button-accent hover:bg-gray-800 transition-all disabled:opacity-40">
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-lg btn-primary font-bold text-sm transition-all disabled:opacity-40">
                   {loading
                     ? <><div className="w-4 h-4 border-2 border-border border-t-white rounded-full animate-spin" /> Resetting…</>
                     : <>Reset Password <FiArrowRight size={14} /></>}

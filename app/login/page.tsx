@@ -7,25 +7,6 @@ import { FiEye, FiEyeOff, FiArrowRight, FiCheck } from "react-icons/fi";
 import { api, saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 
-function StarlaneMark({ size = 26 }: { size?: number }) {
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        display: "inline-block",
-        width: size,
-        height: size,
-        backgroundImage: 'url("/brand/starlane-icon.jpeg")',
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
-        backgroundSize: "contain",
-        borderRadius: Math.max(4, Math.round(size * 0.18)),
-        flexShrink: 0,
-      }}
-    />
-  );
-}
-
 export default function LoginPage() {
   const router = useRouter();
   const [showPass, setShowPass]     = useState(false);
@@ -68,20 +49,19 @@ export default function LoginPage() {
     } finally { setLoading(false); }
   };
 
-  const iBase = { background:"rgba(255,255,255,.04)", borderWidth:"1px", borderStyle:"solid", borderColor:"rgba(255,255,255,.10)", borderRadius:"6px", padding:"13px 16px", fontFamily:"'Hanken Grotesk',system-ui", fontSize:"15px", color:"#fff", outline:"none", width:"100%", transition:"border-color .2s,background .2s" };
-  const iFocus = { ...iBase, borderColor:"rgba(255,255,255,.38)", background:"rgba(255,255,255,.07)" };
+  const iBase = { background:"rgba(255,255,255,.05)", borderWidth:"1px", borderStyle:"solid", borderColor:"rgba(255,255,255,.12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Plus Jakarta Sans',system-ui", fontSize:"15px", color:"#F5F4F0", outline:"none", width:"100%", transition:"border-color .2s,background .2s" };
+  const iFocus = { ...iBase, borderColor:"rgba(255,255,255,.34)", background:"rgba(255,255,255,.08)" };
 
   return (
     <div className="atlas-page auth-page">
       <header className="topbar">
-        <Link href="/" style={{display:"flex",alignItems:"center",gap:"10px",textDecoration:"none",color:"#fff"}}>
-          <StarlaneMark size={26}/>
+        <Link href="/" style={{display:"flex",alignItems:"center",textDecoration:"none",color:"#fff"}}>
           <span className="brand-wm">Starlane</span>
         </Link>
         <div className="topbar-right">No account? <Link href="/signup">Start free</Link></div>
       </header>
 
-      <main className="center">
+      <main className="center fade-once">
         <div className="auth-head">
           <h1>Welcome back.</h1>
           <p style={{fontFamily:"'Hanken Grotesk',system-ui"}}>{step === "email" ? "Sign in to your Starlane workspace." : form.email}</p>
@@ -146,7 +126,7 @@ export default function LoginPage() {
             </label>
             <button type="submit" className="btn-login" disabled={loading||!form.password} style={{marginTop:"8px",opacity:loading||!form.password?0.4:1,position:"relative"}}>
               {loading
-                ? <><div style={{width:"16px",height:"16px",border:"2px solid rgba(0,0,0,.2)",borderTop:"2px solid #000",borderRadius:"50%",animation:"lspin .7s linear infinite"}}/> Signing in…</>
+                ? <><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid #F5F4F0",borderRadius:"50%",animation:"lspin .7s linear infinite"}}/> Signing in…</>
                 : <><span className="btn-txt">Sign in</span><FiArrowRight size={16}/></>}
             </button>
           </form>

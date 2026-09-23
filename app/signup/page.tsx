@@ -12,27 +12,8 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-pro
 
 const businessTypes = [{ value: "", label: "Select type" }, ...INDUSTRY_OPTIONS];
 
-function StarlaneMark({ size = 26 }: { size?: number }) {
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        display: "inline-block",
-        width: size,
-        height: size,
-        backgroundImage: 'url("/brand/starlane-icon.jpeg")',
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
-        backgroundSize: "contain",
-        borderRadius: Math.max(4, Math.round(size * 0.18)),
-        flexShrink: 0,
-      }}
-    />
-  );
-}
-
-const iBase = { background:"rgba(255,255,255,.04)", border:"1px solid rgba(255,255,255,.10)", borderRadius:"6px", padding:"13px 16px", fontFamily:"'Hanken Grotesk',system-ui", fontSize:"15px", color:"#fff", outline:"none", width:"100%", transition:"border-color .2s,background .2s", WebkitAppearance:"none" as const };
-const iFocus = { ...iBase, borderColor:"rgba(255,255,255,.38)", background:"rgba(255,255,255,.07)" };
+const iBase = { background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Plus Jakarta Sans',system-ui", fontSize:"15px", color:"#F5F4F0", outline:"none", width:"100%", transition:"border-color .2s,background .2s", WebkitAppearance:"none" as const };
+const iFocus = { ...iBase, borderColor:"rgba(255,255,255,.34)", background:"rgba(255,255,255,.08)" };
 
 function FocusInput(p: React.InputHTMLAttributes<HTMLInputElement>) {
   const [f, setF] = useState(false);
@@ -97,7 +78,7 @@ function OTPStep({ preToken, userEmail, userPhone, onVerified }: {
           <input key={i} ref={el=>{inputs.current[i]=el;}} type="tel" inputMode="numeric" maxLength={1}
             value={d} autoFocus={i===0}
             onChange={e=>handleDigit(i,e.target.value)} onKeyDown={e=>handleKeyDown(i,e)}
-            style={{width:"44px",height:"52px",textAlign:"center",fontSize:"20px",fontWeight:700,background:d?"rgba(255,255,255,.08)":"rgba(255,255,255,.04)",border:`1px solid ${d?"rgba(255,255,255,.35)":"rgba(255,255,255,.1)"}`,borderRadius:"6px",color:"#fff",outline:"none",opacity:loading?.5:1,fontFamily:"'Space Grotesk',system-ui"}}
+            style={{width:"44px",height:"52px",textAlign:"center",fontSize:"20px",fontWeight:700,background:d?"rgba(255,255,255,.09)":"rgba(255,255,255,.05)",border:`1px solid ${d?"rgba(255,255,255,.34)":"rgba(255,255,255,.12)"}`,borderRadius:"7px",color:"#F5F4F0",outline:"none",opacity:loading?.5:1,fontFamily:"'Plus Jakarta Sans',system-ui"}}
           />
         ))}
       </div>
@@ -105,7 +86,7 @@ function OTPStep({ preToken, userEmail, userPhone, onVerified }: {
       {resent&&<div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"6px",fontSize:"12px",color:"#10D98A",marginBottom:"16px"}}><FiCheckCircle size={13}/> New code sent</div>}
       <button disabled={loading||otp.join("").length<6} onClick={()=>handleVerify()}
         className="btn-main" style={{opacity:loading||otp.join("").length<6?.4:1}}>
-        {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(0,0,0,.2)",borderTop:"2px solid #000",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Verifying…</>:<><span className="btn-txt">Verify &amp; continue</span><FiArrowRight size={16}/></>}
+        {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid #F5F4F0",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Verifying…</>:<><span className="btn-txt">Verify &amp; continue</span><FiArrowRight size={16}/></>}
       </button>
       <div style={{textAlign:"center",marginTop:"20px"}}>
         {countdown>0
@@ -199,7 +180,7 @@ function SignupForm() {
               <label>Business type</label>
               <select value={form.business_type} onChange={set("business_type")}
                 style={{...iBase,backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")",backgroundRepeat:"no-repeat",backgroundPosition:"right 14px center",paddingRight:"38px",cursor:"pointer",color:form.business_type?"#fff":"rgba(255,255,255,.22)"}}>
-                {businessTypes.map(o=><option key={o.value} value={o.value} style={{background:"#111",color:"#fff"}}>{o.label}</option>)}
+                {businessTypes.map(o=><option key={o.value} value={o.value} style={{background:"#1B1B18",color:"#F5F4F0"}}>{o.label}</option>)}
               </select>
             </div>
             <button type="submit" className="btn-main">
@@ -263,7 +244,7 @@ function SignupForm() {
             <div className="btn-row">
               <button type="button" className="btn-back" onClick={()=>{setStep(1);setError("");}}>Back</button>
               <button type="submit" className="btn-main" disabled={loading} style={{opacity:loading?.6:1,position:"relative"}}>
-                {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(0,0,0,.2)",borderTop:"2px solid #000",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Creating account…</>:<><span className="btn-txt">Create free account</span><FiArrowRight size={16}/></>}
+                {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid #F5F4F0",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Creating account…</>:<><span className="btn-txt">Create free account</span><FiArrowRight size={16}/></>}
               </button>
             </div>
             <p style={{marginTop:"8px",fontSize:"12px",color:"rgba(255,255,255,.28)",textAlign:"center",lineHeight:1.6}}>
@@ -280,13 +261,12 @@ export default function SignupPage() {
   return (
     <div className="atlas-page auth-page">
       <header className="topbar">
-        <Link href="/" style={{display:"flex",alignItems:"center",gap:"10px",textDecoration:"none",color:"#fff"}}>
-          <StarlaneMark size={26}/>
+        <Link href="/" style={{display:"flex",alignItems:"center",textDecoration:"none",color:"#fff"}}>
           <span className="brand-wm">Starlane</span>
         </Link>
         <div className="topbar-right">Already have an account? <Link href="/login">Log in</Link></div>
       </header>
-      <main className="center">
+      <main className="center fade-once">
         <Suspense fallback={null}><SignupForm/></Suspense>
       </main>
       <footer className="page-foot">
