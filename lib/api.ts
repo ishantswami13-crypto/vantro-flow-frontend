@@ -3,6 +3,15 @@ const BASE = API_BASE;
 const SESSION_COOKIE = 'vantro_session';
 const LEGACY_TOKEN_COOKIE = 'vantro_token';
 const CSRF_COOKIE = 'vantro_csrf';
+// The backend (Railway) and frontend (Vercel) are different origins, so the
+// `vantro_csrf` cookie the backend sets is a THIRD-PARTY cookie from the
+// frontend page's point of view: `document.cookie` on this origin can never
+// see it, no matter how permissive the browser's cookie settings are — that's
+// same-origin storage isolation, not a cookie-blocking issue. The backend
+// also returns the same value as `csrf_token` in the login/signup JSON body,
+// which the page CAN read (it's the response, not a cookie), so that value is
+// mirrored into localStorage here and treated as the source of truth.
+const CSRF_TOKEN_KEY = 'vantro_csrf_token';
 
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -44,7 +53,12 @@ export async function authenticatedFetch(path: string, options: RequestInit = {}
 }
 
 function getCsrfToken(): string | null {
-  return getCookie(CSRF_COOKIE);
+  if (typeof window === 'undefined') return null;
+  // Primary: the value mirrored from the login/signup response body (works
+  // cross-origin). Fallback: reading the cookie directly, which only ever
+  // succeeds when frontend and backend share an origin (e.g. local dev
+  // through a same-origin proxy) — harmless to keep as a fallback there.
+  return localStorage.getItem(CSRF_TOKEN_KEY) || getCookie(CSRF_COOKIE);
 }
 
 function isUnsafeMethod(method?: string) {
@@ -123,6 +137,7 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
         localStorage.removeItem('vantro_token');
         localStorage.removeItem('vantro_user');
         localStorage.removeItem(AUTH_MODE_KEY);
+        localStorage.removeItem(CSRF_TOKEN_KEY);
         clearClientCookie(LEGACY_TOKEN_COOKIE);
         clearClientCookie(SESSION_COOKIE);
         window.location.href = '/login';
@@ -672,6 +687,9 @@ export async function saveAuth(
   }
 
   // The cookie alone authenticated a request, so the readable copies can go.
+  // Mirror the CSRF value into localStorage first — see the CSRF_TOKEN_KEY
+  // comment above for why `document.cookie` can't read it back on its own.
+  localStorage.setItem(CSRF_TOKEN_KEY, csrfToken);
   setAuthMode('cookie');
   localStorage.removeItem('vantro_token');
   clearClientCookie(LEGACY_TOKEN_COOKIE);
@@ -686,9 +704,13 @@ export function getUser(): User | null {
 }
 
 export function clearAuth() {
+  // Read auth headers before wiping storage — clearing first would drop the
+  // CSRF header the logout call itself needs in cookie mode.
+  const headers = authHeaders();
   localStorage.removeItem('vantro_token');
   localStorage.removeItem('vantro_user');
   localStorage.removeItem(AUTH_MODE_KEY);
+  localStorage.removeItem(CSRF_TOKEN_KEY);
   clearClientCookie(LEGACY_TOKEN_COOKIE);
   clearClientCookie(SESSION_COOKIE);
   // The HttpOnly cookie can only be cleared server-side, so this call is what
@@ -696,7 +718,7 @@ export function clearAuth() {
   fetch(`${BASE}/api/auth/logout`, {
     method: 'POST',
     credentials: 'include',
-    headers: authHeaders(),
+    headers,
   }).catch(() => {});
 }
 
