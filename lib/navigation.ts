@@ -1,5 +1,5 @@
 import {
-  FiGlobe, FiDatabase, FiShield, FiCompass, FiSearch, FiEye, FiTarget,
+  FiDatabase, FiShield, FiCompass, FiSearch, FiEye, FiTarget,
   FiSliders, FiClock, FiCheckSquare, FiUsers,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
@@ -9,25 +9,6 @@ export interface PrimaryNavItem {
   label: string;
   icon: IconType;
 }
-
-// The single source of truth for Starlane's primary information
-// architecture. Both the desktop Sidebar and the mobile BottomNav render
-// their primary nav from this same array — previously each maintained
-// its own copy, which is exactly how the BottomNav drifted out of sync
-// with the sidebar's real IA in the first place (see git history: the
-// old BottomNav pointed at /dashboard, /collections, /whatsapp, /ai-chat,
-// none of which are part of the product's real navigation anymore).
-//
-// KEPT AS-IS for the mobile BottomNav (see BottomNav.tsx) — a 3-item
-// compact IA is what fits a bottom tab bar. The desktop Sidebar's primary
-// nav now renders V32_NAV_ITEMS instead (see below); redesigning the
-// mobile bottom nav to the 8-item V32 IA is out of scope for this pass
-// and flagged for the next phase.
-export const PRIMARY_NAV: PrimaryNavItem[] = [
-  { href: "/intelligence", label: "Intelligence", icon: FiGlobe },
-  { href: "/sources",      label: "Sources",      icon: FiDatabase },
-  { href: "/control",      label: "Control",      icon: FiShield },
-];
 
 // Starlane Version 32 (frozen design) primary nav — see
 // STARLANE_FRONTEND_HANDOFF.md §2 NAV_ITEMS, in exact order. Bridge/Scan/
@@ -60,9 +41,3 @@ export const V32_SECONDARY_NAV_ITEMS: PrimaryNavItem[] = [
   { href: "/agents",  label: "Agents",  icon: FiUsers },
   { href: "/control", label: "Control", icon: FiShield },
 ];
-
-// Shared active-route check: exact match, or a sub-route of a primary
-// item (e.g. /intelligence/abc123 is still "Intelligence" active).
-export function isPrimaryNavActive(pathname: string, href: string): boolean {
-  return pathname === href || pathname.startsWith(href + "/");
-}

@@ -21,9 +21,10 @@ import { CommandPalette, type SearchableRoute } from "./CommandPalette";
 import { V32_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, V32_SECONDARY_NAV_LABEL } from "@/lib/navigation";
 
 // Starlane Version 32 (frozen design) primary nav — 8 items, exact order,
-// per STARLANE_FRONTEND_HANDOFF.md §2. Replaces the previous 3-item
-// PRIMARY_NAV as the desktop sidebar's primary rail; BottomNav keeps the
-// old 3-item PRIMARY_NAV for mobile (see lib/navigation.ts for why).
+// per STARLANE_FRONTEND_HANDOFF.md §2. This is the sidebar's primary rail
+// for both desktop and mobile — the old 3-item mobile bottom nav
+// (Intelligence/Sources/Control) was removed; mobile now uses the same
+// slide-out sidebar drawer as desktop via the header hamburger.
 // Everything that's real but outside this 8-item IA (and outside the
 // Sources/Agents/Control second group below) still exists and is still
 // reachable — it lives in the "More" flyout, unchanged.

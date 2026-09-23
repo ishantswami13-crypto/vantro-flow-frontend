@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { FiInfo } from "react-icons/fi";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import BottomNav from "./BottomNav";
 import InstallPrompt from "@/components/ui/InstallPrompt";
 import PaymentCelebration from "@/components/PaymentCelebration";
 import { usePathname } from "next/navigation";
@@ -196,13 +195,11 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
           </div>
         )}
 
-        {/* pb-20 on mobile to clear bottom nav */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-5 pb-24 lg:pb-5 page-fade">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-5 page-fade">
           {children}
         </main>
       </div>
 
-      <BottomNav onMenuToggle={() => setSidebarOpen(true)} />
       <InstallPrompt />
       {!isDemo && <PaymentCelebration />}
     </div>
