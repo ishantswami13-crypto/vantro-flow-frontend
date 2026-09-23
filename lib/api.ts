@@ -572,6 +572,28 @@ export const api = {
   connections: {
     list: () => request<{ success: boolean; connections: DataConnection[] }>('/api/connections'),
     enrollTally: () => request<{ success: boolean; enrollmentCode: string; expiresAt: string }>('/api/connectors/tally/enrollment', { method: 'POST' }),
+    tallyDevices: () => request<{ success: boolean; devices: Array<{ id: string; device_name?: string; created_at?: string; revoked_at?: string | null }> }>('/api/connectors/tally/devices'),
+  },
+
+  // ─── Onboarding V2 (Business / Priorities / Connect) ────
+  onboarding: {
+    state: () =>
+      request<{
+        success: boolean;
+        onboarding_done: boolean;
+        hasBusinessData: boolean;
+        shouldOnboard: boolean;
+        profile: { company_name: string; company_website: string; country: string; role: string };
+        priority_areas: string[];
+      }>('/api/onboarding/state'),
+    // Wire field is job_role, not role — the backend's authMiddleware
+    // strips any req.body.role as a privilege-escalation guard, so a field
+    // named `role` would silently vanish before the handler sees it.
+    saveBusiness: (body: { company_name: string; company_website?: string; country: string; job_role?: string }) =>
+      request<{ success: boolean }>('/api/onboarding/business', { method: 'POST', body: JSON.stringify(body) }),
+    savePriorities: (priority_areas: string[]) =>
+      request<{ success: boolean }>('/api/onboarding/priorities', { method: 'POST', body: JSON.stringify({ priority_areas }) }),
+    complete: () => request<{ success: boolean }>('/api/onboarding/complete', { method: 'POST' }),
   },
 
   // Real-world event ingestion sources (USGS, FX, ...) — tenant-agnostic
