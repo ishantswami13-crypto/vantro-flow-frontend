@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type PreparedCard, type PreparedResponse } from "@/lib/api";
 
@@ -68,7 +69,35 @@ function formatTimestamp(ts: string | null): string {
   }
 }
 
-function PreparedCardView({ card }: { card: PreparedCard }) {
+// Only ai_actions-backed cards have a real decide pathway (PATCH
+// /api/ai-actions/:id, the same one Bridge's Lens drawer and
+// Control/Approvals already use). Cards from watches, predictions, or the
+// opportunity engine have no real approve/reject/dismiss endpoint behind
+// them — their primary action can only honestly be "open the real page
+// that explains them," and their secondary action stays disabled rather
+// than pretending to dismiss something the backend can't persist.
+function targetPathForCard(card: PreparedCard): string {
+  if (card.source === "ai_actions") return "/control/approvals";
+  if (card.source === "watches") return "/watch";
+  if (card.source === "predictions") return "/forecast";
+  if (card.source === "opportunityPropagation") return "/discover?tab=opportunities";
+  return "/control/approvals";
+}
+
+function PreparedCardView({
+  card, busy, onApprove, onReject, onOpen,
+}: {
+  card: PreparedCard;
+  busy: boolean;
+  onApprove: () => void;
+  onReject: () => void;
+  onOpen: () => void;
+}) {
+  const isAiAction = card.source === "ai_actions";
+  const isPending = card.status === "pending" || !card.status;
+  const primaryIsApprove = isAiAction && isPending;
+  const secondaryEnabled = isAiAction && isPending;
+
   return (
     <div
       className="prepared_card"
@@ -105,6 +134,8 @@ function PreparedCardView({ card }: { card: PreparedCard }) {
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <button
           className="hover-dim"
+          onClick={primaryIsApprove ? onApprove : onOpen}
+          disabled={busy}
           style={{
             fontSize: 12,
             padding: "6px 12px",
@@ -112,22 +143,26 @@ function PreparedCardView({ card }: { card: PreparedCard }) {
             border: "1px solid #191917",
             background: "#191917",
             color: "#fff",
-            cursor: "default",
+            cursor: busy ? "default" : "pointer",
+            opacity: busy ? 0.6 : 1,
           }}
           title={card.approve_does}
         >
-          {card.status === "pending" || !card.status ? "Approve" : "Open"}
+          {primaryIsApprove ? (busy ? "Approving…" : "Approve") : "Open"}
         </button>
         <button
-          className="hover-dim"
+          className={secondaryEnabled ? "hover-dim" : undefined}
+          onClick={secondaryEnabled ? onReject : undefined}
+          disabled={!secondaryEnabled || busy}
+          title={secondaryEnabled ? undefined : "Not available yet — there's no real dismiss action for this source yet"}
           style={{
             fontSize: 12,
             padding: "6px 12px",
             borderRadius: 6,
             border: "1px solid rgba(25,25,23,0.20)",
             background: "none",
-            color: "#63635F",
-            cursor: "default",
+            color: secondaryEnabled ? "#63635F" : "#B5B5B0",
+            cursor: secondaryEnabled && !busy ? "pointer" : "not-allowed",
           }}
         >
           {card.secondary}
@@ -139,15 +174,38 @@ function PreparedCardView({ card }: { card: PreparedCard }) {
 }
 
 export default function PreparedPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<TabKey>("needs_you");
   const [data, setData] = useState<PreparedResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const emptyResponse = (): PreparedResponse => ({
+    for_you: [], needs_you: [], upcoming: [], completed: [], dismissed: [],
+    counts: { for_you: 0, needs_you: 0, upcoming: 0, completed: 0, dismissed: 0 },
+    generatedAt: "", sourcesChecked: {},
+  });
+
+  const load = () => {
+    const user = getUser();
+    if (!user?.id) {
+      setData(emptyResponse());
+      return;
+    }
+    return api.intelligence.prepared(user.id)
+      .then((res) => { setData(res); setError(null); })
+      .catch(() => {
+        setError("Couldn't reach Starlane's intelligence backend.");
+        setData(emptyResponse());
+      });
+  };
 
   useEffect(() => {
     let cancelled = false;
     const user = getUser();
     if (!user?.id) {
-      setData({ for_you: [], needs_you: [], upcoming: [], completed: [], dismissed: [], counts: { for_you: 0, needs_you: 0, upcoming: 0, completed: 0, dismissed: 0 }, generatedAt: "", sourcesChecked: {} });
+      setData(emptyResponse());
       return;
     }
     api.intelligence.prepared(user.id)
@@ -155,10 +213,23 @@ export default function PreparedPage() {
       .catch(() => {
         if (cancelled) return;
         setError("Couldn't reach Starlane's intelligence backend.");
-        setData({ for_you: [], needs_you: [], upcoming: [], completed: [], dismissed: [], counts: { for_you: 0, needs_you: 0, upcoming: 0, completed: 0, dismissed: 0 }, generatedAt: "", sourcesChecked: {} });
+        setData(emptyResponse());
       });
     return () => { cancelled = true; };
   }, []);
+
+  async function decide(card: PreparedCard, status: "approved" | "rejected") {
+    setActionError(null);
+    setBusyId(card.id);
+    try {
+      await api.aiActions.updateStatus(card.id, status);
+      await load();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : `Couldn't ${status === "approved" ? "approve" : "reject"} this — try again.`);
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   const counts = data?.counts ?? { for_you: 0, needs_you: 0, upcoming: 0, completed: 0, dismissed: 0 };
   const cards: PreparedCard[] = data ? data[tab] : [];
@@ -273,7 +344,21 @@ export default function PreparedPage() {
               </p>
             </div>
           ) : (
-            cards.map((card) => <PreparedCardView key={card.id} card={card} />)
+            <>
+              {actionError && (
+                <p style={{ fontSize: 12.5, color: "#B3261E", marginBottom: 10 }}>{actionError}</p>
+              )}
+              {cards.map((card) => (
+                <PreparedCardView
+                  key={card.id}
+                  card={card}
+                  busy={busyId === card.id}
+                  onApprove={() => decide(card, "approved")}
+                  onReject={() => decide(card, "rejected")}
+                  onOpen={() => router.push(targetPathForCard(card))}
+                />
+              ))}
+            </>
           )}
         </div>
       </div>
