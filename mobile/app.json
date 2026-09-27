@@ -1,0 +1,70 @@
+{
+  "expo": {
+    "name": "Starlane",
+    "slug": "starlane",
+    "scheme": "starlane",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F7F7F4",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.starlane.mobile",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Starlane asks for Face ID before you approve a high-risk action.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "app.starlane.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#1B1B18",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "POST_NOTIFICATIONS"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 96,
+          "backgroundColor": "#1B1B18"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Starlane asks for Face ID before you approve a high-risk action."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#1B1B18"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "extra": {
+      "apiUrl": "https://vantro-flow-backend-production.up.railway.app"
+    }
+  }
+}
