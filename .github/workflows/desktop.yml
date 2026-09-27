@@ -1,0 +1,122 @@
+name: Desktop
+
+# Starlane desktop (desktop/, Tauri) and the shared contracts it is built on.
+#   check    every PR/push touching them: typecheck, web build, Rust tests
+#   windows  builds the installable Windows app (NSIS .exe + .msi) and uploads
+#            it as a workflow artifact; on a desktop-v* tag it also publishes a
+#            GitHub Release (+ latest.json for in-app updates when signing is set up)
+#
+# Signing is optional and configured only through secrets/variables:
+#   secrets.TAURI_SIGNING_PRIVATE_KEY (+ _PASSWORD)  updater signing key
+#   vars.TAURI_UPDATER_PUBKEY                        its public half
+#   secrets.WINDOWS_CERTIFICATE (base64 .pfx) + WINDOWS_CERTIFICATE_PASSWORD
+# Without them the installer builds and runs, but is unsigned (SmartScreen
+# warning) and cannot update itself.
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+    tags: ["desktop-v*"]
+    paths: ["desktop/**", "packages/contracts/**", ".github/workflows/desktop.yml"]
+  pull_request:
+    paths: ["desktop/**", "packages/contracts/**", ".github/workflows/desktop.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: desktop } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: desktop/package-lock.json }
+      - run: npm ci
+      - name: Typecheck + web build
+        run: npm run build
+      - name: Linux system libraries for the Tauri shell
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libdbus-1-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: desktop/src-tauri }
+      - name: Rust tests (deep links, keyring allowlist)
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+  windows:
+    needs: check
+    if: github.event_name != 'pull_request'
+    runs-on: windows-latest
+    permissions:
+      contents: write   # only used on desktop-v* tags to publish the release
+    defaults: { run: { working-directory: desktop, shell: bash } }
+    env:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      TAURI_UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: desktop/package-lock.json }
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: desktop/src-tauri }
+      - run: npm ci
+
+      - name: Import Windows code-signing certificate (if provided)
+        id: cert
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if (-not $env:WINDOWS_CERTIFICATE) { Write-Output "No certificate secret: the build will be unsigned."; exit 0 }
+          $pfx = Join-Path $env:RUNNER_TEMP "cert.pfx"
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+          $pw = ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -Force -AsPlainText
+          $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $pw
+          Remove-Item $pfx
+          "thumbprint=$($cert.Thumbprint)" >> $env:GITHUB_OUTPUT
+
+      - name: Configure signing and updates
+        env:
+          WINDOWS_CERT_THUMBPRINT: ${{ steps.cert.outputs.thumbprint }}
+        run: node scripts/configure-release.mjs
+
+      - name: Build installers
+        if: ${{ !startsWith(github.ref, 'refs/tags/desktop-v') }}
+        run: npx tauri build --bundles nsis,msi
+
+      - name: Publish release (desktop-v* tags)
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WINDOWS_CERT_THUMBPRINT: ${{ steps.cert.outputs.thumbprint }}
+        with:
+          projectPath: desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: Starlane ${{ github.ref_name }}
+          releaseBody: See the assets below to install Starlane for Windows.
+          releaseDraft: true
+          includeUpdaterJson: ${{ vars.TAURI_UPDATER_PUBKEY != '' }}
+          args: --bundles nsis,msi
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: starlane-windows-${{ github.sha }}
+          path: |
+            desktop/src-tauri/target/release/bundle/nsis/*.exe
+            desktop/src-tauri/target/release/bundle/nsis/*.sig
+            desktop/src-tauri/target/release/bundle/msi/*.msi
+            desktop/src-tauri/target/release/bundle/msi/*.sig
+          if-no-files-found: error
+          retention-days: 30
