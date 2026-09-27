@@ -1,388 +1,186 @@
 "use client";
 
+// The Bridge on the web — the same view as the desktop and phone apps, from
+// GET /api/client/bridge: the business's position from its own books (with
+// how current they are), what needs a decision, what Watch raised, missions
+// and what is coming. No sample data: an empty company sees how to connect.
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { LensDrawer, type LensSection } from "@/components/ui/LensDrawer";
-import { EvidenceDrawer } from "@/components/intelligence/EvidenceDrawer";
-import { formatDateTime } from "@/components/intelligence/format";
-import {
-  api,
-  type IntelligenceSignal,
-  type RankedAction,
-  type DataConnection,
-  type WorldSourceHealth,
-  type IntelligenceEvidenceItem,
-} from "@/lib/api";
-import { FiActivity, FiCheckCircle, FiFileText, FiCalendar } from "react-icons/fi";
+import { request } from "@/lib/api";
+import type { BridgeView } from "../../packages/contracts/src/features";
 
-// The Bridge — STARLANE_FRONTEND_HANDOFF.md §1/§4/§6/§16. Real data only:
-// left column ("what changed") reads api.intelligence.signals(), right
-// column reads api.businessState() for the needs-you decision queue and
-// api.connections.list() + api.world.health() for source freshness. There
-// is no real "prepared work" queue or calendar integration anywhere in the
-// backend yet (grepped lib/api.ts in full — no such endpoint exists), so
-// those two sections render the honest empty-state pattern from §8 rather
-// than fabricated content. Every entity mention opens the real LensDrawer;
-// every signal's evidence mark opens the real EvidenceDrawer fed by
-// api.intelligence.impact() — nothing here is demo copy (§15).
+const inr = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
+const INK = "#191917", GRAPHITE = "#63635F", FAINT = "#6E6D67", RULE = "rgba(25,25,23,0.10)";
+const FRESH: Record<BridgeView["freshness"], [string, string]> = {
+  fresh: ["Up to date", "#2F6B4F"], delayed: ["A few hours behind", "#8A5A12"], stale: ["More than a day behind", "#A23B3B"], none: ["No books synced yet", GRAPHITE],
+};
+const SEV: Record<string, string> = { critical: "#A23B3B", high: "#A23B3B", normal: "#C7962F", low: "#D9D7D0" };
 
-function dotColorForStatus(status: string): string {
-  if (status === "ACTIVE") return "#A64F4B"; // critical
-  if (status === "UPDATED") return "#4F6EF7"; // accent
-  return "#8A8A86"; // CANDIDATE / neutral
-}
-
-function relativeTime(iso: string | null | undefined): string {
+function ago(iso: string | null) {
   if (!iso) return "—";
-  const ms = Date.now() - new Date(iso).getTime();
-  if (!Number.isFinite(ms) || ms < 0) return formatDateTime(iso);
-  const mins = Math.floor(ms / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  const m = Math.floor((Date.now() - Date.parse(iso)) / 60000);
+  if (m < 1) return "just now"; if (m < 60) return `${m} min ago`;
+  const h = Math.floor(m / 60); if (h < 24) return `${h} h ago`;
+  return `${Math.floor(h / 24)} d ago`;
 }
 
-function priorityMeta(priority: RankedAction["priority"]): { label: string; emphasized: boolean } {
-  if (priority === "urgent") return { label: "Urgent", emphasized: true };
-  if (priority === "high") return { label: "High priority", emphasized: true };
-  if (priority === "medium") return { label: "Medium priority", emphasized: false };
-  return { label: "Low priority", emphasized: false };
+function sentenceFor(b: BridgeView): string {
+  if (!b.hasData || !b.state) return "Starlane has no books to read yet.";
+  const s = b.state;
+  let out = `You are owed ${inr(s.openReceivables)}${s.overdueReceivables > 0 ? `, and ${inr(s.overdueReceivables)} of it is overdue.` : ", none of it overdue."}`;
+  const n = b.attention.decisions, w = b.attention.watch.open;
+  if (n || w) out += ` ${n ? `${n} decision${n > 1 ? "s" : ""} wait${n > 1 ? "" : "s"} for you` : ""}${n && w ? " and " : ""}${w ? `Watch has ${w} new thing${w > 1 ? "s" : ""}` : ""}.`;
+  else out += " Nothing needs you right now.";
+  return out;
+}
+
+const card: React.CSSProperties = { background: "#fff", border: `1px solid ${RULE}`, borderRadius: 8, overflow: "hidden" };
+const row: React.CSSProperties = { display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderTop: `1px solid ${RULE}` };
+const h2: React.CSSProperties = { fontSize: 14, fontWeight: 600, color: INK, margin: "0 0 8px" };
+
+function Bar({ ratio, color }: { ratio: number; color: string }) {
+  return (
+    <span style={{ display: "block", height: 6, borderRadius: 3, background: "rgba(25,25,23,0.07)", overflow: "hidden", flex: 1 }}>
+      <span style={{ display: "block", height: "100%", width: `${Math.max(0, Math.min(1, ratio)) * 100}%`, background: color }} />
+    </span>
+  );
 }
 
 export default function BridgePage() {
-  const [signals, setSignals] = useState<IntelligenceSignal[] | null>(null);
-  const [needsYou, setNeedsYou] = useState<RankedAction[] | null>(null);
-  const [connections, setConnections] = useState<DataConnection[] | null>(null);
-  const [worldSources, setWorldSources] = useState<WorldSourceHealth[] | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  // Lens / Evidence drawer state
-  const [lensAction, setLensAction] = useState<RankedAction | null>(null);
-  const [evidenceSignalId, setEvidenceSignalId] = useState<string | null>(null);
-  const [evidence, setEvidence] = useState<IntelligenceEvidenceItem[] | null>(null);
-  const [evidenceLoading, setEvidenceLoading] = useState(false);
-  const [decisionPending, setDecisionPending] = useState(false);
-
-  // Approve/reject a "needs you" action from the Lens drawer. This is the
-  // same real PATCH /api/ai-actions/:id pathway ActionCard.tsx uses on
-  // business-state — recommendation only, never execution (see api.aiActions
-  // doc comment in lib/api.ts).
-  const decideAction = async (status: "approved" | "rejected") => {
-    if (!lensAction) return;
-    setDecisionPending(true);
-    try {
-      await api.aiActions.updateStatus(lensAction.id, status);
-      setNeedsYou(prev => (prev || []).filter(a => a.id !== lensAction.id));
-      setLensAction(null);
-    } catch {
-      // leave the drawer open so the person can retry
-    } finally {
-      setDecisionPending(false);
-    }
-  };
-
+  const [b, setB] = useState<BridgeView | null>(null);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    let cancelled = false;
-    Promise.allSettled([
-      api.intelligence.signals(),
-      api.businessState(),
-      api.connections.list(),
-      api.world.health(),
-    ]).then(([signalsRes, stateRes, connRes, worldRes]) => {
-      if (cancelled) return;
-      if (signalsRes.status === "fulfilled") setSignals(signalsRes.value.signals || []);
-      else setSignals([]);
-
-      if (stateRes.status === "fulfilled") {
-        setNeedsYou((stateRes.value.businessState.rankedActions || []).filter(a => a.requires_approval));
-      } else {
-        setNeedsYou([]);
-      }
-
-      if (connRes.status === "fulfilled") setConnections(connRes.value.connections || []);
-      else setConnections([]);
-
-      if (worldRes.status === "fulfilled") setWorldSources(worldRes.value.sources || []);
-      else setWorldSources([]);
-
-      if (signalsRes.status === "rejected" && stateRes.status === "rejected") {
-        setLoadError("Couldn't reach Starlane's intelligence backend — showing what's cached, if anything.");
-      }
-    });
-    return () => { cancelled = true; };
+    const load = () => request<BridgeView>("/api/client/bridge").then(setB).catch((e: Error) => setError(e.message || "Could not load the Bridge"));
+    load();
+    const t = setInterval(load, 60_000);
+    return () => clearInterval(t);
   }, []);
-
-  const openEvidence = async (signalId: string) => {
-    setEvidenceSignalId(signalId);
-    setEvidence(null);
-    setEvidenceLoading(true);
-    try {
-      const res = await api.intelligence.impact(signalId);
-      setEvidence(res.impact.evidence || []);
-    } catch {
-      setEvidence([]);
-    } finally {
-      setEvidenceLoading(false);
-    }
-  };
-
-  const loading = signals === null || needsYou === null || connections === null || worldSources === null;
+  // Set after mount: server and browser can disagree on the date (time zone), which would break hydration.
+  const [today, setToday] = useState("");
+  useEffect(() => { setToday(new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })); }, []);
 
   return (
-    <DashboardLayout pageTitle="The Bridge">
-      <div className="mb-5 fade-once">
-        <h1 className="v32-page-title mb-1">The Bridge</h1>
-        <p className="v32-body">
-          {loading
-            ? "Loading what changed since your last visit…"
-            : `${signals!.length} tracked signal${signals!.length === 1 ? "" : "s"} · ${needsYou!.length} need${needsYou!.length === 1 ? "s" : ""} a decision`}
-        </p>
-        {loadError && <p className="v32-meta mt-1" style={{ color: "#A64F4B" }}>{loadError}</p>}
-      </div>
-
-      <div className="flex" style={{ gap: 32 }}>
-        {/* Left column — What changed (flex:1.2) */}
-        <div style={{ flex: 1.2, minWidth: 0 }}>
-          <p className="v32-section-label mb-3">What changed</p>
-          {!loading && signals!.length === 0 && (
-            <EmptyPanel
-              icon={<FiActivity size={20} style={{ color: "#8A8A86" }} />}
-              title="No changes detected yet"
-              body="Starlane watches your connected data for meaningful shifts — payment behavior, pricing signals, delivery risk — and lists them here as soon as it's confident enough to say something happened. Nothing has cleared that bar yet."
-            />
-          )}
-          {!loading && signals!.length > 0 && (
-            <div>
-              {signals!.map(sig => (
-                <IntelRow
-                  key={sig.id}
-                  signal={sig}
-                  onOpenEvidence={() => openEvidence(sig.id)}
-                />
-              ))}
-            </div>
-          )}
+    <DashboardLayout>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 48px", display: "grid", gap: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, letterSpacing: ".06em", textTransform: "uppercase", color: GRAPHITE }}>The Bridge{today ? ` · ${today}` : ""}</span>
+          {b ? <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 600, color: FRESH[b.freshness][1], background: "#F1F0EC", borderRadius: 999, padding: "3px 9px" }} title={b.dataAsOf ? `Books last synced ${ago(b.dataAsOf)}` : undefined}>{FRESH[b.freshness][0]}</span> : null}
         </div>
-
-        {/* Right column — Needs you / Prepared / Upcoming (flex:1, max-width 320) */}
-        <div style={{ flex: 1, maxWidth: 320, minWidth: 0 }} className="space-y-6">
-          <div>
-            <p className="v32-section-label mb-3">Needs you</p>
-            {!loading && needsYou!.length === 0 && (
-              <p className="v32-body" style={{ color: "#63635F" }}>
-                No other actions are waiting for a decision right now.
-              </p>
+        {error ? <p role="alert" style={{ color: "#A23B3B" }}>{error}</p> : null}
+        {!b && !error ? <p style={{ color: GRAPHITE }}>Loading…</p> : null}
+        {b ? (
+          <>
+            <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: "clamp(26px, 3.4vw, 34px)", lineHeight: 1.25, color: INK, margin: 0, maxWidth: "30ch" }}>{sentenceFor(b)}</h1>
+            {!b.hasData ? (
+              <div style={{ ...card, padding: "20px 22px", maxWidth: 640 }}>
+                <p style={{ fontWeight: 600, margin: "0 0 6px" }}>Connect your books to start.</p>
+                <p className="v32-body" style={{ color: GRAPHITE, margin: "0 0 12px" }}>Starlane works from your company’s own records. Install Starlane for Windows on the computer that runs Tally, or import a sheet from Busy, Marg, Zoho Books, QuickBooks, Xero or any other system. Nothing here is sample data.</p>
+                <Link href="/sources" style={{ fontWeight: 600, color: INK }}>Sources ›</Link>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24, alignItems: "start" }}>
+                <section style={{ display: "grid", gap: 22 }}>
+                  <div>
+                    <h2 style={h2}>Needs you · {b.attention.decisions}</h2>
+                    <div style={card}>
+                      {b.attention.topDecisions.length === 0 ? <p style={{ padding: 16, margin: 0 }}>Nothing is waiting for your decision.</p>
+                        : b.attention.topDecisions.map((a, i) => (
+                          <div key={a.id} style={{ ...row, borderTop: i ? row.borderTop : 0 }}>
+                            <span style={{ width: 3, alignSelf: "stretch", borderRadius: 2, background: a.riskLevel === "high" ? "#A23B3B" : a.riskLevel === "medium" ? "#C7962F" : "#D9D7D0" }} />
+                            <span style={{ minWidth: 0, flex: 1 }}><strong style={{ fontWeight: 500 }}>{a.title}</strong><br /><span style={{ color: GRAPHITE, fontSize: 13 }}>{a.description}</span></span>
+                          </div>
+                        ))}
+                    </div>
+                    {b.attention.decisions ? <p style={{ fontSize: 13, color: FAINT, marginTop: 8 }}>Approve in Starlane for Windows or on your phone, where each decision shows its evidence.</p> : null}
+                  </div>
+                  <div>
+                    <h2 style={h2}>Watch · {b.attention.watch.open} new · {b.attention.watch.urgent} urgent</h2>
+                    <div style={card}>
+                      {b.attention.watch.latest.length === 0 ? <p style={{ padding: 16, margin: 0 }}>Nothing needs watching right now.</p>
+                        : b.attention.watch.latest.map((e, i) => (
+                          <div key={e.id} style={{ ...row, borderTop: i ? row.borderTop : 0 }}>
+                            <span style={{ width: 3, alignSelf: "stretch", borderRadius: 2, background: SEV[e.severity] }} />
+                            <span style={{ minWidth: 0, flex: 1 }}><strong style={{ fontWeight: 500 }}>{e.title}</strong><br /><span style={{ color: GRAPHITE, fontSize: 13 }}>{e.detail} · {ago(e.firstSeenAt)}</span></span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h2 style={h2}>Missions</h2>
+                    <div style={card}>
+                      {b.missions.length === 0 ? <p style={{ padding: 16, margin: 0 }}>No mission is running.</p>
+                        : b.missions.map((m, i) => (
+                          <Link key={m.id} href="/missions" style={{ ...row, borderTop: i ? row.borderTop : 0, color: INK, textDecoration: "none", display: "grid", gap: 6 }}>
+                            <strong style={{ fontWeight: 500 }}>{m.title}</strong>
+                            <Bar ratio={m.progress?.ratio || 0} color="#2F6B4F" />
+                            <span style={{ color: GRAPHITE, fontSize: 13 }}>{inr(m.progress?.collected || 0)} of {inr(m.target.amount)}{m.status === "active" && m.progress?.daysLeft != null ? ` · ${m.progress.daysLeft} days left` : ` · ${m.status}`}</span>
+                          </Link>
+                        ))}
+                    </div>
+                  </div>
+                </section>
+                <section style={{ display: "grid", gap: 22 }}>
+                  {b.state ? (
+                    <div>
+                      <h2 style={h2}>Receivables</h2>
+                      <div style={{ ...card, display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                        {[["Owed to you", b.state.openReceivables, `${b.state.openInvoiceCount} open invoices`], ["Overdue", b.state.overdueReceivables, `${b.state.overdueInvoiceCount} invoices`]].map(([l, v, s], i) => (
+                          <div key={String(l)} style={{ padding: "14px 16px", borderLeft: i ? `1px solid ${RULE}` : 0 }}>
+                            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: "uppercase", color: GRAPHITE }}>{l}</div>
+                            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 20, fontVariantNumeric: "tabular-nums", marginTop: 6 }}>{inr(Number(v))}</div>
+                            <div style={{ fontSize: 13, color: GRAPHITE }}>{s}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: "grid", gap: 8, marginTop: 14 }} aria-label="Ageing">
+                        {b.state.ageing.filter((a) => a.count).map((a) => {
+                          const max = Math.max(...b.state!.ageing.map((x) => x.amount), 1);
+                          return (
+                            <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 13, color: GRAPHITE }}>
+                              <span style={{ width: 96 }}>{a.label}</span>
+                              <Bar ratio={a.amount / max} color={a.id === "current" ? "#D9D7D0" : a.id === "31_90" || a.id === "90_plus" ? "#A23B3B" : "#C7962F"} />
+                              <span style={{ fontFamily: "'IBM Plex Mono', monospace", whiteSpace: "nowrap" }}>{inr(a.amount)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p style={{ fontSize: 13, color: FAINT, marginTop: 8 }}>{b.dataAsOf ? `From your books, last synced ${ago(b.dataAsOf)}.` : "From invoices in Starlane; no sync has been recorded."}</p>
+                    </div>
+                  ) : null}
+                  {b.state?.topOverdue.length ? (
+                    <div>
+                      <h2 style={h2}>Who owes the most overdue</h2>
+                      <div style={card}>
+                        {b.state.topOverdue.map((c, i) => (
+                          <div key={c.key} style={{ ...row, borderTop: i ? row.borderTop : 0 }}>
+                            <span style={{ minWidth: 0, flex: 1 }}><strong style={{ fontWeight: 500 }}>{c.name}</strong><br /><span style={{ color: GRAPHITE, fontSize: 13 }}>{c.count} invoice{c.count > 1 ? "s" : ""} · oldest {c.oldestDays} days</span></span>
+                            <span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{inr(c.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  {b.prepared ? (
+                    <div>
+                      <h2 style={h2}>Coming up</h2>
+                      <div style={card}>
+                        {b.prepared.map((h, i) => (
+                          <Link key={h.horizon} href="/prepared" style={{ ...row, borderTop: i ? row.borderTop : 0, color: INK, textDecoration: "none" }}>
+                            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: GRAPHITE, width: 34 }}>{h.horizon}</span>
+                            <span style={{ flex: 1 }}>{h.first ? h.first.title : h.status === "insufficient_data" ? "Not enough data to prepare" : "Nothing due"}{h.count > 1 ? <span style={{ color: GRAPHITE, fontSize: 13 }}> · and {h.count - 1} more</span> : null}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </section>
+              </div>
             )}
-            {!loading && needsYou!.map(action => {
-              const meta = priorityMeta(action.priority);
-              return (
-                <NeedsYouRow
-                  key={action.id}
-                  action={action}
-                  emphasized={meta.emphasized}
-                  metaLabel={meta.label}
-                  onClick={() => setLensAction(action)}
-                />
-              );
-            })}
-          </div>
-
-          <div>
-            <p className="v32-section-label mb-3">Prepared</p>
-            <EmptyPanel
-              compact
-              icon={<FiFileText size={18} style={{ color: "#8A8A86" }} />}
-              title="Nothing prepared yet"
-              body="Starlane hasn't drafted any work for your review yet. Once an agent prepares something — a note, a revised term, a summary — it will show up here before it's sent anywhere."
-            />
-          </div>
-
-          <div>
-            <p className="v32-section-label mb-3">Upcoming</p>
-            <EmptyPanel
-              compact
-              icon={<FiCalendar size={18} style={{ color: "#8A8A86" }} />}
-              title="No calendar connected"
-              body="Starlane isn't connected to a calendar yet, so it can't show what's coming up or link prepared work to it."
-            />
-          </div>
-
-          <div>
-            <p className="v32-section-label mb-3">Sources</p>
-            <SourceStatusList connections={connections} worldSources={worldSources} loading={loading} />
-          </div>
-        </div>
+            {b.partial ? <p style={{ fontSize: 13, color: GRAPHITE }}>Part of this could not be loaded just now; what is shown is real.</p> : null}
+          </>
+        ) : null}
       </div>
-
-      {lensAction && (
-        <LensDrawer
-          entityType={lensAction.related_entity_type || "Action"}
-          name={lensAction.customer?.name || lensAction.title}
-          statusLabel={priorityMeta(lensAction.priority).label}
-          statusColor={lensAction.priority === "urgent" || lensAction.priority === "high" ? "#A64F4B" : undefined}
-          sections={buildActionLensSections(lensAction)}
-          actions={[
-            { label: decisionPending ? "Approving…" : "Approve", onClick: () => decideAction("approved") },
-            { label: decisionPending ? "Rejecting…" : "Reject", onClick: () => decideAction("rejected") },
-          ]}
-          onClose={() => setLensAction(null)}
-        />
-      )}
-
-      {evidenceSignalId && (
-        evidenceLoading || evidence === null ? (
-          <LoadingEvidencePlaceholder onClose={() => setEvidenceSignalId(null)} />
-        ) : (
-          <EvidenceDrawer
-            evidence={evidence}
-            title="Why Starlane flagged this"
-            onClose={() => { setEvidenceSignalId(null); setEvidence(null); }}
-          />
-        )
-      )}
     </DashboardLayout>
   );
-}
-
-function buildActionLensSections(action: RankedAction): LensSection[] {
-  const sections: LensSection[] = [
-    {
-      label: "Recommended action",
-      rows: [
-        { label: "Type", value: action.action_type },
-        { label: "Priority", value: priorityMeta(action.priority).label },
-        ...(action.risk_level ? [{ label: "Risk level", value: action.risk_level }] : []),
-        { label: "Detected", value: relativeTime(action.created_at) },
-      ],
-    },
-  ];
-  if (action.customer) {
-    sections.push({
-      label: "Customer",
-      rows: [
-        { label: "Name", value: action.customer.name || "—" },
-        ...(action.customer.phone ? [{ label: "Phone", value: action.customer.phone }] : []),
-        ...(action.customer.credit_risk_score != null
-          ? [{ label: "Credit risk score", value: String(action.customer.credit_risk_score) }]
-          : []),
-        ...(action.customer.collection_priority_score != null
-          ? [{ label: "Collection priority", value: String(action.customer.collection_priority_score) }]
-          : []),
-      ],
-    });
-  }
-  return sections;
-}
-
-function IntelRow({ signal, onOpenEvidence }: { signal: IntelligenceSignal; onOpenEvidence: () => void }) {
-  return (
-    <div
-      className="row-hover py-3 px-2 -mx-2 cursor-pointer"
-      style={{ borderBottom: "1px solid #EDEDE9" }}
-      onClick={onOpenEvidence}
-      role="button"
-      tabIndex={0}
-    >
-      <div className="flex items-start gap-2.5">
-        <span
-          className="mt-1.5 shrink-0 rounded-full"
-          style={{ width: 6, height: 6, background: dotColorForStatus(signal.status) }}
-          aria-hidden="true"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="v32-meta uppercase tracking-wide mb-0.5">
-            {signal.related_entity_type || signal.event_type || "Signal"}
-          </p>
-          <p style={{ fontSize: 13.5, color: "#191917" }}>
-            {signal.event_title || signal.why_exists}
-          </p>
-          {signal.event_title && signal.why_exists && (
-            <p className="v32-body mt-0.5" style={{ color: "#63635F" }}>{signal.why_exists}</p>
-          )}
-          <p className="v32-meta mt-1">
-            {signal.impact_status} · {relativeTime(signal.last_updated_at || signal.first_detected_at)}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NeedsYouRow({
-  action, emphasized, metaLabel, onClick,
-}: { action: RankedAction; emphasized: boolean; metaLabel: string; onClick: () => void }) {
-  return (
-    <div
-      className="row-hover py-2.5 px-3 -mx-1 mb-2 rounded-lg cursor-pointer"
-      style={{ border: emphasized ? "1px solid rgba(25,25,23,0.16)" : "1px solid transparent" }}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-    >
-      <p style={{ fontSize: 13, color: "#191917" }}>{action.title}</p>
-      <p className="v32-body mt-0.5" style={{ color: "#63635F" }}>{action.description}</p>
-      <p className="v32-meta mt-1">{metaLabel}{action.customer?.name ? ` · ${action.customer.name}` : ""}</p>
-    </div>
-  );
-}
-
-function SourceStatusList({
-  connections, worldSources, loading,
-}: { connections: DataConnection[] | null; worldSources: WorldSourceHealth[] | null; loading: boolean }) {
-  if (loading) return <p className="v32-meta">Checking source status…</p>;
-  const hasAny = (connections && connections.length > 0) || (worldSources && worldSources.length > 0);
-  if (!hasAny) {
-    return (
-      <p className="v32-body" style={{ color: "#63635F" }}>
-        Starlane hasn't connected any data or world-intelligence sources yet.
-      </p>
-    );
-  }
-  return (
-    <div className="space-y-2">
-      {connections?.map(c => (
-        <div key={c.id} className="flex items-center justify-between gap-2">
-          <span className="v32-body truncate" style={{ color: "#191917" }}>{c.source_type}</span>
-          <span className="v32-meta shrink-0">
-            {c.status === "connected" ? <FiCheckCircle size={11} style={{ display: "inline", marginRight: 3, color: "#1FB870" }} /> : null}
-            {c.last_sync_at ? `Synced ${relativeTime(c.last_sync_at)}` : c.status}
-          </span>
-        </div>
-      ))}
-      {worldSources?.map(s => (
-        <div key={s.source_id} className="flex items-center justify-between gap-2">
-          <span className="v32-body truncate" style={{ color: "#191917" }}>{s.provider}</span>
-          <span className="v32-meta shrink-0" style={{ color: s.status === "FRESH" ? "#8A8A86" : "#A64F4B" }}>
-            {s.status === "FRESH" ? `Synced ${relativeTime(s.last_success)}` : s.status.replace(/_/g, " ").toLowerCase()}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function EmptyPanel({
-  icon, title, body, compact,
-}: { icon: React.ReactNode; title: string; body: string; compact?: boolean }) {
-  return (
-    <div className={compact ? "py-3" : "py-8 text-center"}>
-      {!compact && <div className="mb-3 flex justify-center">{icon}</div>}
-      {compact && <div className="mb-1.5">{icon}</div>}
-      <p style={{ fontFamily: compact ? undefined : "'Fraunces', Georgia, serif", fontSize: compact ? 13 : 16, color: "#191917" }} className={compact ? "" : "mb-1.5"}>
-        {title}
-      </p>
-      <p className="v32-body" style={{ color: "#63635F" }}>{body}</p>
-    </div>
-  );
-}
-
-function LoadingEvidencePlaceholder({ onClose }: { onClose: () => void }) {
-  // Reuses the Drawer shell indirectly by rendering EvidenceDrawer with an
-  // empty evidence array while the real fetch is in flight, rather than a
-  // fifth ad-hoc overlay — the drawer's own copy already reads sensibly
-  // with zero items ("nothing to trace yet") for the brief loading window.
-  return <EvidenceDrawer evidence={[]} title="Loading evidence…" onClose={onClose} />;
 }
