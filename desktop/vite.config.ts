@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 export default defineConfig({
   plugins: [react()],
   clearScreen: false,
+  // Self-contained: don't inherit the Next.js app's PostCSS/Tailwind config from the repo root.
+  css: { postcss: { plugins: [] } },
   resolve: {
     alias: { '@starlane/contracts': fileURLToPath(new URL('../packages/contracts/src/index.ts', import.meta.url)) },
   },
