@@ -10,7 +10,7 @@ export const color = {
   sunk: '#F1F0EC',
   ink: '#191917',
   graphite: '#63635F',
-  faint: '#8D8C86',     // ≥4.5:1 on paper for 13px+ text
+  faint: '#6E6D67',     // 5.0:1 on paper (WCAG AA for body text); was #8D8C86 at 3.3:1
   rule: '#EBEAE6',
   ruleStrong: '#D9D7D0',
   rail: '#1B1B18',

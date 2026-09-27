@@ -9,7 +9,7 @@
 /* Tokens mirror packages/contracts/src/tokens.ts */
 :root {
   --paper: #F7F7F4; --surface: #FFFFFF; --sunk: #F1F0EC;
-  --ink: #191917; --graphite: #63635F; --faint: #8D8C86;
+  --ink: #191917; --graphite: #63635F; --faint: #6E6D67;
   --rule: #EBEAE6; --rule-strong: #D9D7D0;
   --rail: #1B1B18; --rail-ink: #F2F1EC; --rail-faint: #A09F98; --rail-hover: #2A2A26;
   --accent: #4B5170; --accent-soft: #E8E9F0;
@@ -35,7 +35,7 @@ button { font: inherit; color: inherit; }
 .nav-item:hover { background: var(--rail-hover); color: var(--rail-ink); }
 .nav-item[aria-current='page'] { background: var(--rail-hover); color: var(--rail-ink); box-shadow: inset 2px 0 0 var(--rail-ink); }
 .nav-item .count { margin-left: auto; font: 500 11.5px var(--mono); color: var(--rail-ink); background: #3A3A35; padding: 0 6px; border-radius: 999px; }
-.nav-group { font: 500 10.5px/1 var(--ui); letter-spacing: .08em; text-transform: uppercase; color: #6F6E68; padding: 16px 10px 6px; }
+.nav-group { font: 500 10.5px/1 var(--ui); letter-spacing: .08em; text-transform: uppercase; color: #9A9992; padding: 16px 10px 6px; }
 .rail-foot { margin-top: auto; border-top: 1px solid #2E2E2A; padding: 12px 10px 0; display: grid; gap: 8px; font-size: 12px; color: var(--rail-faint); }
 .rail-foot .who { color: var(--rail-ink); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; background: var(--faint); flex: none; }

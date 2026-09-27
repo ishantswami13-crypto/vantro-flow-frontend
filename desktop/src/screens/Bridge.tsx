@@ -40,7 +40,7 @@ export function BridgeScreen({ businessName }: { businessName: string | null }) 
       <Loaded r={r}>
         {(b) => (
           <>
-            <p className="sentence">{sentenceFor(b)}</p>
+            <h1 className="sentence">{sentenceFor(b)}</h1>
             {b.partial ? <p className="small muted" style={{ marginTop: 8 }}>Part of this could not be loaded just now; what is shown is real.</p> : null}
             {!b.hasData ? (
               <div className="panel panel-pad" style={{ marginTop: 26, maxWidth: 620 }}>
