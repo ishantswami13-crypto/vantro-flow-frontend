@@ -7,6 +7,7 @@ import { OfflineError } from '@starlane/contracts';
 import { api, track } from '../../lib/api';
 import { useSession } from '../../lib/session';
 import { Button, T, c, f } from '../../components/ui';
+import { TypingDots } from '../../components/motion';
 
 interface Turn { role: 'user' | 'assistant'; content: string }
 const STARTERS = ['Who owes me the most?', 'Who is more than 30 days overdue?', 'Cash for the next 30 days?'];
@@ -49,7 +50,7 @@ export default function Ask() {
             <T style={{ color: t.role === 'user' ? c.paper : c.ink }}>{t.content}</T>
           </View>
         ))}
-        {busy ? <T v="small">Starlane is looking…</T> : null}
+        {busy ? <View style={{ alignSelf: 'flex-start', backgroundColor: c.surface, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: c.rule }}><TypingDots /></View> : null}
         {err ? <T v="error">{err}</T> : null}
       </ScrollView>
       <View style={{ flexDirection: 'row', gap: 8, padding: 12, borderTopWidth: 1, borderTopColor: c.rule, backgroundColor: c.surface }}>

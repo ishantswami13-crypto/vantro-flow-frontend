@@ -5,7 +5,7 @@ import { ago, greeting, inr, nowSentence, type Now as NowData } from '@starlane/
 import { api, track } from '../api';
 import { useRouter } from '../lib/router';
 import { useResource } from '../lib/useResource';
-import { Chevron, Empty, Health, Loaded, Stale } from '../ui';
+import { Bar, Chevron, Empty, Figure, Health, Loaded, Stale } from '../ui';
 
 const KIND_LABEL: Record<string, string> = {
   recommendation: 'Recommendation', watch: 'Watch', signal: 'Signal', outcome: 'Outcome', action_done: 'Done', action_failed: 'Failed',
@@ -75,10 +75,19 @@ export function NowScreen({ businessName }: { businessName: string | null }) {
                   <div>
                     <h2 className="section">Receivables</h2>
                     {now.state && now.state.openInvoiceCount > 0 ? (
-                      <div className="figures">
-                        <div className="figure"><div className="eyebrow">Open</div><div className="v">{inr(now.state.openReceivables)}</div><div className="small muted">{now.state.openInvoiceCount} invoices</div></div>
-                        <div className="figure"><div className="eyebrow">Overdue</div><div className="v">{inr(now.state.overdueReceivables)}</div><div className="small muted">{now.state.over30Count} over 30 days</div></div>
-                      </div>
+                      <>
+                        <div className="figures">
+                          <div className="figure"><div className="eyebrow">Open</div><div className="v"><Figure value={now.state.openReceivables} format={inr} /></div><div className="small muted">{now.state.openInvoiceCount} invoices</div></div>
+                          <div className="figure"><div className="eyebrow">Overdue</div><div className="v"><Figure value={now.state.overdueReceivables} format={inr} /></div><div className="small muted">{now.state.over30Count} over 30 days</div></div>
+                        </div>
+                        {now.state.openReceivables > 0 ? (
+                          <div style={{ marginTop: 12 }}>
+                            <Bar ratio={now.state.overdueReceivables / now.state.openReceivables} tone={now.state.overdueReceivables / now.state.openReceivables > 0.5 ? 'bad' : 'warn'}
+                              label={`${Math.round((now.state.overdueReceivables / now.state.openReceivables) * 100)}% of open receivables is overdue`} />
+                            <div className="small faint" style={{ marginTop: 6 }}>{Math.round((now.state.overdueReceivables / now.state.openReceivables) * 100)}% of what you're owed is overdue.</div>
+                          </div>
+                        ) : null}
+                      </>
                     ) : (
                       <div className="panel"><Empty title="No open invoices yet.">Connect Tally or import invoices and Starlane will compute this from your records.</Empty></div>
                     )}

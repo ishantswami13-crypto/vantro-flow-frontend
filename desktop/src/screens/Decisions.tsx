@@ -6,7 +6,7 @@ import { ApiError, ago, type ActionDetail, type ActionSummary, type DecisionResu
 import { api, track } from '../api';
 import { useRouter } from '../lib/router';
 import { useResource } from '../lib/useResource';
-import { Chevron, Empty, Loaded, Page, Spinner, Stale } from '../ui';
+import { Chevron, DoneCheck, Empty, Loaded, Page, Spinner, Stale } from '../ui';
 
 const TABS = [
   { key: 'pending', label: 'Waiting' },
@@ -159,7 +159,11 @@ export function ActionScreen({ id }: { id: string }) {
                     </div>
                   )}
                   {busy ? <div style={{ marginTop: 10 }}><Spinner label={busy === 'approve' ? 'Approving and running…' : 'Declining…'} /></div> : null}
-                  {result && result.status !== 'rejected' ? <div className={`small ${result.status === 'done' ? '' : 'err'}`} style={{ marginTop: 10 }}>{result.message}</div> : null}
+                  {result && result.status !== 'rejected' ? (
+                    <div className={`small ${result.status === 'done' ? '' : 'err'} fade-in`} style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
+                      {result.status === 'done' ? <DoneCheck /> : null}<span>{result.message}</span>
+                    </div>
+                  ) : null}
                   {err ? <div className="err" style={{ marginTop: 10 }}>{err}</div> : null}
                   {a.lastError ? <div className="err" style={{ marginTop: 10 }}>Last run failed: {a.lastError}</div> : null}
                 </div>

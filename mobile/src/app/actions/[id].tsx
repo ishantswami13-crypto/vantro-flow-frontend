@@ -10,6 +10,7 @@ import { ApiError, ago, type ActionDetail, type DecisionResult } from '@starlane
 import { api, track } from '../../lib/api';
 import { useResource } from '../../lib/useResource';
 import { Button, Card, Chip, Empty, Loaded, Screen, Section, Stale, T, c } from '../../components/ui';
+import { DoneCheck, haptic } from '../../components/motion';
 
 const show = (v: unknown) => v === null || v === undefined || v === '' ? '—' : typeof v === 'number' ? v.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : typeof v === 'object' ? JSON.stringify(v) : String(v);
 const KIND_TONE = { observed: 'ok', calculated: 'accent', assumption: 'warn', forecast: 'warn', external: 'muted' } as const;
@@ -42,10 +43,13 @@ export default function ActionScreen() {
     }
     setBusy(decision);
     try {
-      setResult(await api.decide(a.id, decision, high));
+      const out = await api.decide(a.id, decision, high);
+      setResult(out);
+      if (out.status === 'failed') haptic.warning(); else haptic.success();
       track('client.approval_completed', { screen: 'action' });
       await r.reload();
     } catch (e) {
+      haptic.warning();
       if (e instanceof ApiError && e.status === 409) { setErr('Already decided on another device.'); await r.reload(); }
       else setErr((e as Error).message);
     } finally { setBusy(null); }
@@ -94,7 +98,12 @@ export default function ActionScreen() {
                 <Button label="Decline" kind="secondary" busy={busy === 'reject'} disabled={!!busy} onPress={() => void decide(a, 'reject')} />
               </View>
             ) : <Card style={{ padding: 14 }}><T v="medium">Decided — {a.status.replace(/_/g, ' ')}</T><T v="small">Updated {ago(a.updatedAt || a.createdAt)}.</T></Card>}
-            {result && result.status !== 'rejected' ? <T v={result.status === 'done' ? 'small' : 'error'}>{result.message}</T> : null}
+            {result && result.status !== 'rejected' ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {result.status === 'done' ? <DoneCheck /> : null}
+                <T v={result.status === 'done' ? 'small' : 'error'} style={{ flex: 1 }}>{result.message}</T>
+              </View>
+            ) : null}
             {err ? <T v="error">{err}</T> : null}
             {a.lastError ? <T v="error">Last run failed: {a.lastError}</T> : null}
           </>

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ApiError, ago, inr, type Opportunity, type Watch } from '@starlane/contracts';
 import { api } from '../api';
 import { useResource } from '../lib/useResource';
-import { Empty, Loaded, Page, Spinner, Stale } from '../ui';
+import { Bar, Empty, Figure, Loaded, Page, Spinner, Stale } from '../ui';
 
 export function WatchScreen() {
   const r = useResource<Watch[]>('watches', () => api().watches());
@@ -135,8 +135,14 @@ export function SimulateScreen() {
               {out ? (
                 <div className="fade-in">
                   <div className="figures">
-                    <div className="figure"><div className="eyebrow">Today (real)</div><div className="v">{inr(out.baselineTotalOverdue)}</div></div>
-                    <div className="figure"><div className="eyebrow">Scenario</div><div className="v">{inr(out.scenarioProjectedTotalOverdue)}</div></div>
+                    <div className="figure"><div className="eyebrow">Today (real)</div><div className="v"><Figure value={out.baselineTotalOverdue} format={inr} /></div></div>
+                    <div className="figure"><div className="eyebrow">Scenario</div><div className="v"><Figure value={out.scenarioProjectedTotalOverdue} format={inr} /></div></div>
+                  </div>
+                  <div className="compare">
+                    {(() => { const max = Math.max(out.baselineTotalOverdue, out.scenarioProjectedTotalOverdue, 1); return (<>
+                      <div className="compare-row"><span>Today</span><Bar ratio={out.baselineTotalOverdue / max} tone="faint" /><span className="fig">{inr(out.baselineTotalOverdue)}</span></div>
+                      <div className="compare-row"><span>Scenario</span><Bar ratio={out.scenarioProjectedTotalOverdue / max} tone={out.delta < 0 ? 'ok' : out.delta > 0 ? 'bad' : 'ink'} /><span className="fig">{inr(out.scenarioProjectedTotalOverdue)}</span></div>
+                    </>); })()}
                   </div>
                   <p className="sentence" style={{ fontSize: 22, lineHeight: '30px' }}>
                     Overdue cash would {out.delta < 0 ? 'fall' : out.delta > 0 ? 'rise' : 'not change'}{out.delta ? <> by <span className="fig">{inr(Math.abs(out.delta))}</span></> : null}.

@@ -50,6 +50,10 @@ export interface HostState {
 interface StoredDevice extends DeviceClaim { pairedAt: string }
 
 const CHUNK = 2000;
+// TallyPrime's "Act as Server" port: 9000 by default; offices that run two
+// Tally instances usually pick the next few. The app's HTTP permission allows
+// exactly these (src-tauri/capabilities/default.json).
+export const TALLY_PORTS = [9000, 9001, 9002, 9003, 9004, 9005];
 const TALLY_TIMEOUT_MS = 60_000;
 
 class TallyHost {
@@ -74,13 +78,13 @@ class TallyHost {
 
   stop() { if (this.timer) clearTimeout(this.timer); this.timer = null; }
 
-  private tallyUrl() { return `http://127.0.0.1:${getPrefs().tally.port}`; }
+  private tallyUrl(port = getPrefs().tally.port) { return `http://127.0.0.1:${port}`; }
 
-  private async tallyPost(xml: string): Promise<string> {
+  private async tallyPost(xml: string, port?: number, timeoutMs = TALLY_TIMEOUT_MS): Promise<string> {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), TALLY_TIMEOUT_MS);
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
-      const res = await platformFetch(this.tallyUrl(), { method: 'POST', headers: { 'Content-Type': 'text/xml' }, body: xml, signal: ctrl.signal });
+      const res = await platformFetch(this.tallyUrl(port), { method: 'POST', headers: { 'Content-Type': 'text/xml' }, body: xml, signal: ctrl.signal });
       const buf = new Uint8Array(await res.arrayBuffer());
       // TallyPrime answers UTF-8 by default and UTF-16LE when configured to.
       const utf16 = (buf[0] === 0xff && buf[1] === 0xfe) || (buf.length > 1 && buf[1] === 0 && buf[0] === 0x3c);
@@ -90,16 +94,27 @@ class TallyHost {
     } finally { clearTimeout(t); }
   }
 
-  /** Is TallyPrime answering on this computer, and which companies are open? */
-  async discover(): Promise<{ reachable: boolean; companies: string[]; message: string | null }> {
-    try {
-      const xml = await this.tallyPost(companyListRequestXML());
-      const err = tallyErrorOf(xml);
-      if (err) return { reachable: true, companies: [], message: err };
-      return { reachable: true, companies: parseCompanies(xml), message: null };
-    } catch (e) {
-      return { reachable: false, companies: [], message: (e as Error).message };
+  /**
+   * Is TallyPrime answering on this computer, and which companies are open?
+   * Tries the remembered port first, then the other usual ones, and remembers
+   * whichever answers — so a changed Tally port needs no settings.
+   */
+  async discover(): Promise<{ reachable: boolean; companies: string[]; message: string | null; port: number | null }> {
+    const saved = getPrefs().tally.port;
+    const order = [saved, ...TALLY_PORTS.filter((p) => p !== saved)];
+    let lastError: string | null = null;
+    for (const port of order) {
+      try {
+        const xml = await this.tallyPost(companyListRequestXML(), port, port === saved ? 8000 : 2500);
+        if (port !== saved) await savePrefs({ tally: { ...getPrefs().tally, port } });
+        const err = tallyErrorOf(xml);
+        if (err) return { reachable: true, companies: [], message: err, port };
+        return { reachable: true, companies: parseCompanies(xml), message: null, port };
+      } catch (e) {
+        lastError = (e as Error).message;
+      }
     }
+    return { reachable: false, companies: [], message: lastError, port: null };
   }
 
   /** Pair this computer as the owner's Tally device (owner must be signed in). */
@@ -172,7 +187,17 @@ class TallyHost {
       runId = await api().device.startRun(token);
 
       const { company } = getPrefs().tally;
-      const xml = await this.tallyPost(dayBookRequestXML(financialYearStart(), tallyDate(new Date()), company));
+      const request = dayBookRequestXML(financialYearStart(), tallyDate(new Date()), company);
+      let xml: string;
+      try {
+        xml = await this.tallyPost(request);
+      } catch (e) {
+        // Tally may have moved to another port: find it once, then retry.
+        if (!(e instanceof TallyUnreachable)) throw e;
+        const found = await this.discover();
+        if (!found.reachable) throw e;
+        xml = await this.tallyPost(request);
+      }
       const tallyErr = tallyErrorOf(xml);
       if (tallyErr) throw new TallyRefused(tallyErr);
       const { rows, skipped } = toApiVouchers(parseVouchers(xml));

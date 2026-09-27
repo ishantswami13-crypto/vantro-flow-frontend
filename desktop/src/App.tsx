@@ -141,7 +141,7 @@ function Shell({ boot, onSignOut }: { boot: Bootstrap | null; onSignOut: () => v
         ))}
         <div className="rail-foot">
           <button className="nav-item" style={{ padding: 0, fontSize: 12 }} onClick={() => go('/sources/tally')}>
-            <span className={`dot ${tallyTone}`} />
+            <span className={`dot ${tallyTone}${host.phase === 'syncing' ? ' pulse' : ''}`} />
             {host.phase === 'unpaired' ? 'Tally not set up here' : host.phase === 'syncing' ? 'Syncing Tally…' : host.phase === 'idle' ? 'Tally syncing on this PC' : 'Tally needs attention'}
           </button>
           <div className="who" title={boot?.user?.email}>{boot?.organization.name || boot?.user?.email || ''}</div>

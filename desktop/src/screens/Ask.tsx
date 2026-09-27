@@ -4,7 +4,7 @@
 import { useRef, useState } from 'react';
 import { OfflineError } from '@starlane/contracts';
 import { api, track } from '../api';
-import { Page } from '../ui';
+import { Page, TypingDots } from '../ui';
 
 interface Turn { role: 'user' | 'assistant'; content: string; actions?: string[] }
 
@@ -50,7 +50,7 @@ export function AskScreen({ businessName }: { businessName: string | null }) {
             {t.actions?.length ? <div className="small muted" style={{ marginTop: 8 }}>{t.actions.join(' · ')}</div> : null}
           </div>
         ))}
-        {busy ? <div className="bubble assistant"><span className="spin" /></div> : null}
+        {busy ? <div className="bubble assistant fade-in"><TypingDots label="Starlane is looking this up" /></div> : null}
         <div ref={end} />
       </div>
       <form onSubmit={(e) => { e.preventDefault(); void send(text); }} style={{ display: 'flex', gap: 8, marginTop: 20, position: 'sticky', bottom: 16 }}>

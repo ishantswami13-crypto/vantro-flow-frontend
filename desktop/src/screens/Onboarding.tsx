@@ -155,7 +155,7 @@ function ConnectTally({ onNext, onSkip }: { onNext: () => void; onSkip: () => vo
       <div className="panel panel-pad small" style={{ display: 'grid', gap: 10 }}>
         {!probe ? <Spinner label="Looking for TallyPrime on this computer…" /> : probe.reachable ? (
           <>
-            <div><span className="dot ok" style={{ marginRight: 8 }} />TallyPrime is answering on port 9000.</div>
+            <div><span className="dot ok" style={{ marginRight: 8 }} />TallyPrime is answering on port {probe.port}.</div>
             {probe.companies.length ? (
               <div className="field">
                 <label htmlFor="co">Company</label>

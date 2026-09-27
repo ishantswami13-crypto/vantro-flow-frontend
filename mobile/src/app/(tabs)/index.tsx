@@ -8,6 +8,7 @@ import { useSession } from '../../lib/session';
 import { useResource } from '../../lib/useResource';
 import { mobileRoute } from '../../lib/routes';
 import { Card, Empty, Health, Loaded, RiskBar, Row, Screen, Section, Stale, T, c } from '../../components/ui';
+import { Bar, Figure } from '../../components/motion';
 
 export default function Today() {
   const { state } = useSession();
@@ -39,10 +40,16 @@ export default function Today() {
               {now.state && now.state.openInvoiceCount > 0 ? (
                 <Section title="Receivables">
                   <Card style={{ flexDirection: 'row' }}>
-                    <View style={{ flex: 1, padding: 14, gap: 4 }}><T v="eyebrow">Open</T><T v="figure">{inrShort(now.state.openReceivables)}</T><T v="small">{now.state.openInvoiceCount} invoices</T></View>
+                    <View style={{ flex: 1, padding: 14, gap: 4 }}><T v="eyebrow">Open</T><Figure value={now.state.openReceivables} format={inrShort} style={{ fontSize: 20, lineHeight: 26, color: c.ink }} /><T v="small">{now.state.openInvoiceCount} invoices</T></View>
                     <View style={{ width: 1, backgroundColor: c.rule }} />
-                    <View style={{ flex: 1, padding: 14, gap: 4 }}><T v="eyebrow">Overdue</T><T v="figure">{inrShort(now.state.overdueReceivables)}</T><T v="small">{now.state.over30Count} over 30 days</T></View>
+                    <View style={{ flex: 1, padding: 14, gap: 4 }}><T v="eyebrow">Overdue</T><Figure value={now.state.overdueReceivables} format={inrShort} style={{ fontSize: 20, lineHeight: 26, color: c.ink }} /><T v="small">{now.state.over30Count} over 30 days</T></View>
                   </Card>
+                  {now.state.openReceivables > 0 ? (() => { const share = now.state.overdueReceivables / now.state.openReceivables; return (
+                    <View style={{ gap: 6 }}>
+                      <Bar ratio={share} color={share > 0.5 ? c.bad : '#C7962F'} label={`${Math.round(share * 100)}% of open receivables is overdue`} />
+                      <T v="small">{Math.round(share * 100)}% of what you're owed is overdue.</T>
+                    </View>
+                  ); })() : null}
                   {now.dataAsOf ? <T v="small" style={{ color: c.faint }}>From your records, updated {ago(now.dataAsOf)}.</T> : null}
                 </Section>
               ) : null}
