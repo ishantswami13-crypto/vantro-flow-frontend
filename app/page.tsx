@@ -15,13 +15,13 @@ import { HowItThinks } from "@/components/marketing/landing/HowItThinks";
 // sample data that is labelled as such. No logos, testimonials or metrics.
 
 const SURFACES = [
-  { name: "The Bridge", href: "/product/bridge", body: "Today’s state of the business and the few things that need a decision." },
-  { name: "Scan", href: "/product/scan", body: "Ask about your business in plain words; answers come from your own records." },
-  { name: "Watch", href: "/product/watch", body: "Conditions you care about, re-evaluated every 15 minutes against live data." },
-  { name: "Missions", href: "/product/missions", body: "Goals you set, tracked to done. Not built yet — and labelled so." },
-  { name: "Simulate", href: "/product/simulate", body: "What happens to overdue cash if an invoice is paid earlier or not at all — from your real baseline." },
-  { name: "Memory", href: "/product/memory", body: "Every change and every decision, with before, after and when." },
-  { name: "Prepared", href: "/product/prepared", body: "Decisions waiting, watches that fired and opportunities, lined up for you." },
+  { name: "The Bridge", href: "/product/bridge", body: "What you are owed, what is overdue and the few things that need a decision — from your own books." },
+  { name: "Scan", href: "/product/scan", body: "Look into any customer or invoice and see why it matters, with the evidence." },
+  { name: "Watch", href: "/product/watch", body: "Invoices slipping, promises missed, syncs failing — raised once, closed when resolved." },
+  { name: "Missions", href: "/product/missions", body: "“Collect ₹1.2 lakh in 14 days” — proposed step by step, measured against your books." },
+  { name: "Simulate", href: "/product/simulate", body: "Likely collections, with every assumption visible and yours to change." },
+  { name: "Memory", href: "/product/memory", body: "How each customer really pays, where Starlane learned it, and your say on it." },
+  { name: "Prepared", href: "/product/prepared", body: "The next 24 hours, 7 days and 30 days, worked out ahead." },
 ];
 
 const CONNECTIONS = [
@@ -115,13 +115,13 @@ export default function LandingPage() {
               <p className="sl-p">Starlane opens on what needs a decision. Every number can be opened to the rows and events behind it.</p>
             </div>
             <figure className="sl-frame sl-product-ui">
-              <div className="sl-product-heading"><span>Impact view</span><span>Real product, fictional demo company</span></div>
+              <div className="sl-product-heading"><span>The Bridge · Starlane for Windows</span><span>Real product, fictional demo company</span></div>
               <div className="sl-product-capture">
-                <Image src="/product/intelligence-impact-2xa.png" width={2368} height={448} sizes="(max-width: 767px) 100vw, 1180px"
-                  alt="Starlane impact view for a replayed earthquake event: revenue exposed, time to stockout, affected orders and confidence for a fictional demo company." />
+                <Image src="/product/bridge-desktop.webp" width={2880} height={1800} sizes="(max-width: 767px) 100vw, 1180px"
+                  alt="The Bridge in the Starlane desktop app for a fictional demo company: what it is owed and how much is overdue, two reminders waiting for approval, Watch alerts for invoices slipping past 30 and 90 days, two collection missions with progress, receivables by overdue band and who owes the most." />
               </div>
             </figure>
-            <p className="sl-product-caption"><span><strong>Real product view.</strong> A historical earthquake replayed against a fictional demo company’s suppliers and orders; not customer results.</span></p>
+            <p className="sl-product-caption"><span><strong>Real product view.</strong> The desktop app’s first screen, on a fictional demo company’s books. Every figure opens to the invoices behind it; nothing here is customer data.</span></p>
             <ul className="sl-surfaces">
               {SURFACES.map((s) => (
                 <li key={s.name}><h3 className="sl-h3"><Link href={s.href}>{s.name}</Link></h3><p className="sl-p">{s.body}</p></li>

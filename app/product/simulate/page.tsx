@@ -9,16 +9,23 @@ export default function SimulatePage() {
       eyebrow="Feature 5 of 7"
       title="Simulate"
       status="live"
-      lede="Pick one of your open invoices and ask: what if this were paid 15 days earlier — or not at all? Starlane projects overdue cash both ways and shows the difference."
+      lede="What is likely to come in over the next weeks — and how that changes if customers pay better or worse than assumed."
     >
-      <Section title="How it works">
+      <Section title="Every number says what it is">
         <Facts items={[
-          ["Baseline", "Your real overdue position, projected from how your customers actually pay."],
-          ["Scenario", "The same projection with one change: the chosen invoice paid earlier, or never."],
-          ["Comparison", "Overdue cash today versus the scenario, and whether it improves or worsens — with the uncertainty stated."],
+          ["Facts", "What your books say you are owed, by overdue band."],
+          ["Assumptions", "The chance an invoice in each band gets paid in time. Change any of them."],
+          ["Estimates", "Expected collection and a range, following from those assumptions."],
         ]} />
       </Section>
-      <Note>A simulation never changes your real numbers. If there is not enough payment history to project cash for your company yet, Simulate says so rather than showing a guess.</Note>
+      <Section title="Where assumptions come from">
+        <Facts items={[
+          ["Your history", "Where your own paid invoices give enough history, their real payment rates."],
+          ["Starting assumptions", "Otherwise Starlane’s starting values, marked as such — not learned from your business."],
+          ["Missions", "Simulate a mission to see whether its target is likely, possible or unlikely."],
+        ]} />
+      </Section>
+      <Note>A simulation never changes your books.</Note>
     </GuidePage>
   );
 }

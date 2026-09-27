@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { GuidePage, Note, Section } from "@/components/marketing/product/Guide";
+import { Facts, GuidePage, Note, Section } from "@/components/marketing/product/Guide";
 
 export const metadata: Metadata = { title: "Scan" };
 
@@ -9,19 +9,22 @@ export default function ScanPage() {
       eyebrow="Feature 2 of 7"
       title="Scan"
       status="live"
-      lede="Ask in plain words — “who owes me the most?”, “who is more than 30 days late?”, “what does cash look like next month?” — and get an answer worked out from your own invoices, customers, suppliers, stock and forecast."
+      lede="Look into any customer or invoice and see why it matters — or ask in plain words. Every answer comes from your own records."
     >
-      <Section title="What it looks things up in">
-        <p>Invoices and overdue customers, a business summary, your cash forecast, inventory levels, suppliers, prospects and call history. It answers in rupees with Indian number grouping.</p>
+      <Section title="Look into something">
+        <Facts items={[
+          ["A customer", "What they owe, how much is overdue, how they usually pay, any disputes, whether a phone number is on file, and what is already being done."],
+          ["An invoice", "Its amount, dates, days overdue, reminders sent and where it came from — each figure labelled as a fact from your books or a calculation from them."],
+          ["Next step", "The collections stage that fits, and a one-tap start of a mission to collect."],
+        ]} />
       </Section>
-      <Section title="What it will not do">
-        <ul>
-          <li>It does not invent data. If your records cannot answer a question — a competitor's prices, say — it says so.</li>
-          <li>It cannot change your records: no marking invoices paid, no edits, no orders.</li>
-          <li>It can draft a WhatsApp reminder for you to send yourself; it never sends anything.</li>
-        </ul>
+      <Section title="Ask">
+        <Facts items={[
+          ["In words", "“Who owes me the most?”, “who is more than 30 days late?” — answered from invoices, customers, suppliers, stock and your cash forecast."],
+          ["Read-only", "Scan cannot change anything: no marking paid, no edits, no orders. It says so when your records cannot answer."],
+        ]} />
       </Section>
-      <Note>In the desktop and phone apps the same feature is read-only — it looks things up and does not draft messages.</Note>
+      <Note>On the web, Scan can also draft a WhatsApp reminder for you to send yourself. It never sends anything.</Note>
     </GuidePage>
   );
 }

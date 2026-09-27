@@ -5,7 +5,7 @@
 export type Status = "live" | "not_built";
 
 export const STATUS: Record<Status, { label: string; note: string }> = {
-  live: { label: "Live", note: "Available to every Starlane company today." },
+  live: { label: "Live", note: "Built and working in Starlane, on your company’s own data." },
   not_built: { label: "Not built yet", note: "Part of Starlane's design; there is nothing behind it yet, and Starlane does not pretend otherwise." },
 };
 
@@ -19,7 +19,7 @@ export const GUIDE: { group: string; links: GuideLink[] }[] = [
       { href: "/product/bridge", label: "The Bridge", status: "live" },
       { href: "/product/scan", label: "Scan", status: "live" },
       { href: "/product/watch", label: "Watch", status: "live" },
-      { href: "/product/missions", label: "Missions", status: "not_built" },
+      { href: "/product/missions", label: "Missions", status: "live" },
       { href: "/product/simulate", label: "Simulate", status: "live" },
       { href: "/product/memory", label: "Memory", status: "live" },
       { href: "/product/prepared", label: "Prepared", status: "live" },

@@ -12,16 +12,16 @@ export default function ProductOverview() {
     >
       <Section title="The seven">
         <Cards items={[
-          { title: "The Bridge", status: "live", href: "/product/bridge", body: "What needs you, what changed, and whether your data is current — on one screen." },
-          { title: "Scan", status: "live", href: "/product/scan", body: "Ask about your business in plain words; answers come from your own records." },
-          { title: "Watch", status: "live", href: "/product/watch", body: "Conditions you define, checked every 15 minutes against your real numbers." },
-          { title: "Missions", status: "not_built", href: "/product/missions", body: "Goals you set, tracked to done. Not built yet." },
-          { title: "Simulate", status: "live", href: "/product/simulate", body: "What happens to overdue cash if an invoice is paid earlier — or not at all." },
-          { title: "Memory", status: "live", href: "/product/memory", body: "Your company's history as Starlane recorded it: every change and every decision." },
-          { title: "Prepared", status: "live", href: "/product/prepared", body: "Work Starlane has lined up for you: decisions waiting, watches that fired, opportunities." },
+          { title: "The Bridge", status: "live", href: "/product/bridge", body: "What you are owed, what is overdue, what needs you and what is coming — from your own books." },
+          { title: "Scan", status: "live", href: "/product/scan", body: "Look into any customer or invoice and see why it matters, or ask in plain words." },
+          { title: "Watch", status: "live", href: "/product/watch", body: "Invoices slipping, promises missed, syncs failing — raised once, with evidence, closed when resolved." },
+          { title: "Missions", status: "live", href: "/product/missions", body: "One objective with a deadline, proposed step by step and measured against your books." },
+          { title: "Simulate", status: "live", href: "/product/simulate", body: "Likely collections, with every assumption visible and yours to change." },
+          { title: "Memory", status: "live", href: "/product/memory", body: "What Starlane learned about how you get paid, where from, and your say on it." },
+          { title: "Prepared", status: "live", href: "/product/prepared", body: "The next 24 hours, 7 days and 30 days, worked out from the dates in your books." },
         ]} />
       </Section>
-      <Note>Each page says plainly whether a feature is live or not built yet. Starlane never shows sample data as if it were yours.</Note>
+      <Note>The seven features are in Starlane for Windows and the phone app; the web app is catching up. Starlane never shows sample data as if it were yours.</Note>
     </GuidePage>
   );
 }

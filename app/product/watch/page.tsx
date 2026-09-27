@@ -9,20 +9,25 @@ export default function WatchPage() {
       eyebrow="Feature 3 of 7"
       title="Watch"
       status="live"
-      lede="Tell Starlane what should never slip past you — overdue receivables above a limit, too many invoices past 30 days — and it checks the condition every 15 minutes against your real numbers."
+      lede="Starlane watches your books for what should not slip past you and raises each thing once, with the evidence — then closes it itself when it stops being true."
     >
-      <Section title="A watch is">
+      <Section title="What Watch notices">
         <Facts items={[
-          ["A metric", "One of Starlane's supported business measures, computed from your records."],
-          ["A condition", "Greater than, at least, less than, at most, or equal to a value you choose."],
-          ["A severity", "Low, medium, high or critical — it decides how loudly a trigger is shown."],
-          ["A history", "When it was last checked and when it last fired. Pause, resume or delete it at any time."],
+          ["Invoices slipping", "An invoice becoming overdue, passing 7, 30 and 90 days — one event per step, not a daily repeat."],
+          ["Missed promises", "A customer’s promised payment date passing with the promise still open."],
+          ["Sync problems", "A failed sync, or books that have not synced for a day."],
+          ["Your own conditions", "Limits you set, checked every 15 minutes."],
         ]} />
       </Section>
-      <Section title="When a watch fires">
-        <p>It appears on the Bridge and in Prepared, with the value that crossed the line.</p>
+      <Section title="What happens next">
+        <Facts items={[
+          ["Evidence", "Why it was raised: the invoice, its due date, days overdue, where it came from."],
+          ["States", "Open, seen, resolved by Starlane (paid, moved on, sync recovered) or dismissed by you."],
+          ["Your phone", "Urgent events reach your phone once. A first sync of an older business sends one summary, not a burst."],
+          ["From here", "Scan why it is happening, or start a mission to collect."],
+        ]} />
       </Section>
-      
+      <Note>Push notifications carry no customer names or amounts — those stay in the app.</Note>
     </GuidePage>
   );
 }

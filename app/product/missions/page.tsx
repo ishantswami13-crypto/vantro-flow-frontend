@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { GuidePage, Note, Section } from "@/components/marketing/product/Guide";
+import { Facts, GuidePage, Note, Section } from "@/components/marketing/product/Guide";
 
 export const metadata: Metadata = { title: "Missions" };
 
@@ -8,17 +8,26 @@ export default function MissionsPage() {
     <GuidePage
       eyebrow="Feature 4 of 7"
       title="Missions"
-      status="not_built"
-      lede="A mission will turn a goal — “recover what Mehta Hardware owes”, “cut slow-moving stock by 15%” — into a piece of work Starlane tracks to done."
+      status="live"
+      lede="A mission gives Starlane one objective with a deadline — “collect ₹1,20,000 from Mehta Hardware within 14 days” — and measures progress against your books, not against what was sent."
     >
-      <Section title="What a mission is meant to be">
-        <ul>
-          <li>A goal you set, in your words.</li>
-          <li>Progress worked out from your real records, not ticked by hand.</li>
-          <li>The blockers standing in the way, and who is on it.</li>
-        </ul>
+      <Section title="How a mission works">
+        <Facts items={[
+          ["You set it", "Who, how much and by when. Starlane shows the likely outcome before you start."],
+          ["It proposes", "One reminder per customer, drafted and checked by the policy guard. Nothing is sent without your approval."],
+          ["It measures", "Progress is the money that actually came in on the mission’s invoices since it started, from your books."],
+          ["It closes itself", "Completed when the target is reached; missed when the deadline passes first. The result is remembered."],
+        ]} />
       </Section>
-      <Note>Missions is not built yet. It has a place in the sidebar, and the page there says honestly that there is nothing behind it today — no example missions, no invented progress.</Note>
+      <Section title="What keeps it safe">
+        <Facts items={[
+          ["Disputes", "Disputed invoices are always left out."],
+          ["Escalation", "Reminders only, unless you allow calls and bad-debt review."],
+          ["Pause", "Pausing a mission holds approval of its actions everywhere."],
+          ["Blockers", "Shown plainly: waiting for you, no phone number, messaging switched off, books behind."],
+        ]} />
+      </Section>
+      <Note>Collections is the first kind of mission. With message sending switched off, approving a reminder records it and you send the drafted message yourself.</Note>
     </GuidePage>
   );
 }
