@@ -1,0 +1,74 @@
+name: Mobile
+
+# Starlane for iPhone and Android (mobile/, Expo) and the shared contracts.
+#   check    every PR/push touching them: typecheck + native JS bundles (iOS and Android)
+#   android  builds an installable APK for internal testing and attaches it to the run
+#
+# Signing: if ANDROID_KEYSTORE (base64 .jks) + ANDROID_KEYSTORE_PASSWORD +
+# ANDROID_KEY_ALIAS + ANDROID_KEY_PASSWORD secrets exist, the APK is signed
+# with that key (the one Play would use). Otherwise it is signed with the
+# Android debug key: installable for testing ("install unknown apps"), never
+# for distribution. iOS builds need an Apple Developer account (EAS or Xcode)
+# and are not produced here; see mobile/README.md for the fastest iPhone path.
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+    paths: ["mobile/**", "packages/contracts/**", ".github/workflows/mobile.yml"]
+  pull_request:
+    paths: ["mobile/**", "packages/contracts/**", ".github/workflows/mobile.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: mobile } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: mobile/package-lock.json }
+      - run: npm ci
+      - name: Typecheck (app + shared contracts)
+        run: npx tsc --noEmit
+      - name: Build the iOS and Android JavaScript bundles
+        run: npx expo export --platform ios --platform android --output-dir /tmp/export
+
+  android:
+    needs: check
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: mobile } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: mobile/package-lock.json }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - name: Generate the Android project
+        run: npx expo prebuild --platform android --no-install
+      - name: Use the release keystore (if provided)
+        env:
+          ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: node scripts/android-signing.mjs
+      - name: Build APK
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: starlane-android-${{ github.sha }}
+          path: mobile/android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 30
