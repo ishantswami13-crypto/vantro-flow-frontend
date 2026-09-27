@@ -362,3 +362,38 @@ html:has(.sl) [aria-label="Cookie consent"] button:last-child { background: #0f0
   .sl-cards { grid-template-columns: minmax(0, 1fr); }
   .sl-fact { grid-template-columns: minmax(0, 1fr); gap: 4px; }
 }
+
+/* ── Ask Starlane demo (landing) ────────────────────────────── */
+.sl-ask { background: var(--sl-bg-raised); border: 1px solid var(--sl-line); border-radius: 10px; box-shadow: 0 30px 60px -38px rgba(15, 14, 13, 0.35); overflow: hidden; }
+.sl-ask-badge { font-size: 11px; font-weight: 600; color: var(--sl-ok); border: 1px solid #CFE2D6; border-radius: 999px; padding: 2px 8px; }
+.sl-ask-log { padding: 18px 18px 8px; min-height: 368px; display: flex; flex-direction: column; gap: 12px; }
+.sl-ask-q { align-self: flex-end; max-width: 82%; margin: 0; background: var(--sl-ink); color: var(--sl-bg-raised); padding: 9px 13px; border-radius: 12px 12px 3px 12px; font-size: 14px; line-height: 1.45; min-height: 38px; }
+.sl-ask-caret { display: inline-block; width: 1.5px; height: 1em; background: currentColor; margin-left: 2px; vertical-align: -2px; animation: sl-caret 1s steps(1) infinite; }
+@keyframes sl-caret { 50% { opacity: 0; } }
+.sl-ask-thinking { display: flex; align-items: center; gap: 10px; min-height: 28px; }
+.sl-ask-dots { display: inline-flex; gap: 4px; padding: 9px 12px; border: 1px solid var(--sl-line); border-radius: 12px; background: var(--sl-bg); }
+.sl-ask-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--sl-ink-faint); animation: sl-dot 1.1s var(--sl-ease) infinite; }
+.sl-ask-dots i:nth-child(2) { animation-delay: .15s; } .sl-ask-dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes sl-dot { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-3px); opacity: 1; } }
+.sl-ask-chip { font-size: 11.5px; color: var(--sl-ink-soft); border: 1px dashed var(--sl-line-2); border-radius: 999px; padding: 3px 9px; }
+.sl-ask-a { max-width: 94%; border: 1px solid var(--sl-line); border-radius: 12px 12px 12px 3px; padding: 12px 14px; background: var(--sl-bg); }
+.sl-ask-sentence { margin: 0; font-family: var(--sl-serif); font-size: 16px; line-height: 1.5; color: var(--sl-ink); }
+.sl-ask-fig { display: inline-block; font-family: var(--sl-mono); font-variant-numeric: tabular-nums; font-size: .9em; text-align: right; white-space: nowrap; }
+.sl-ask-rows { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 7px; }
+.sl-ask-row { display: grid; grid-template-columns: minmax(0, 118px) minmax(0, 1fr) auto 30px; gap: 10px; align-items: center; font-size: 12.5px; color: var(--sl-ink-soft); animation: sl-rise .42s var(--sl-ease) both; }
+.sl-ask-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sl-ask-bar { height: 6px; background: var(--sl-bg-sunk); border-radius: 3px; overflow: hidden; }
+.sl-ask-bar span { display: block; height: 100%; background: var(--sl-ink); border-radius: 3px; transform-origin: left center; }
+.sl-ask-bar span.grow { animation: sl-grow .6s var(--sl-ease) both; }
+.sl-ask-days { font-family: var(--sl-mono); font-size: 11px; color: var(--sl-ink-faint); text-align: right; }
+.sl-ask-source { margin: 10px 0 0; font-size: 11.5px; color: var(--sl-ink-faint); }
+.sl-ask-in { animation: sl-rise .32s var(--sl-ease) both; }
+@keyframes sl-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes sl-grow { from { transform: scaleX(0); } }
+.sl-ask-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
+@media (max-width: 860px) { .sl-ask-split { grid-template-columns: minmax(0, 1fr); } .sl-ask-log { min-height: 400px; } }
+@media (prefers-reduced-motion: reduce) { .sl-ask-dots i, .sl-ask-caret, .sl-ask-row, .sl-ask-in, .sl-ask-bar span.grow { animation: none !important; } }
+@media (max-width: 520px) {
+  .sl-ask-row { grid-template-columns: minmax(0, 1fr) auto 30px; row-gap: 5px; }
+  .sl-ask-row .sl-ask-bar { grid-column: 1 / -1; grid-row: 2; }
+}

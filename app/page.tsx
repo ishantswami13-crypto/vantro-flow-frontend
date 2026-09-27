@@ -5,6 +5,7 @@ import { Nav } from "@/components/marketing/Nav";
 import { Footer } from "@/components/marketing/Footer";
 import { PlatformAvailability } from "@/components/marketing/PlatformAvailability";
 import { DecisionTrace } from "@/components/marketing/landing/DecisionTrace";
+import { AskDemo } from "@/components/marketing/landing/AskDemo";
 import { HowItThinks } from "@/components/marketing/landing/HowItThinks";
 
 // Starlane — public landing. Seven sections, one argument:
@@ -127,6 +128,26 @@ export default function LandingPage() {
             <div className="sl-hero-ctas">
               <Link href="/product" className="sl-link-arrow">Read the product guide — every feature, agent and app, with its real status</Link>
             </div>
+          </div>
+        </section>
+
+        {/* Ask Starlane */}
+        <section id="ask" className="sl-section" aria-labelledby="ask-h">
+          <div className="sl-wrap sl-ask-split">
+            <div>
+              <h2 id="ask-h" className="sl-h2">Ask it anything about your business. It answers from your books.</h2>
+              <p className="sl-sub" style={{ marginTop: 22, maxWidth: 520 }}>
+                Who owes the most, what cash looks like next month, which stock is running low — Starlane looks it up in your
+                own invoices, customers, suppliers and forecast, and shows what it looked at.
+              </p>
+              <ul className="sl-reasons" style={{ marginTop: 22 }}>
+                <li>When your records can’t answer a question, it says so instead of guessing.</li>
+                <li>It can draft a WhatsApp reminder for you to send; it never sends anything itself.</li>
+                <li>It cannot change your records — no marking paid, no edits, no orders.</li>
+              </ul>
+              <div className="sl-hero-ctas"><Link href="/product/ask" className="sl-link-arrow">How Ask Starlane works</Link></div>
+            </div>
+            <AskDemo />
           </div>
         </section>
 
