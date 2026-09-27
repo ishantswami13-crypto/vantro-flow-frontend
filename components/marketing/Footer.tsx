@@ -6,18 +6,19 @@ export function Footer() {
       <div className="sl-footer-grid">
         <div>
           <span className="sl-wordmark">Starlane</span>
-          <p className="sl-p" style={{ marginTop: 14, maxWidth: 280 }}>Intelligence and execution infrastructure, by Vantro Technologies.</p>
+          <p className="sl-p" style={{ marginTop: 14, maxWidth: 280 }}>Decision and execution intelligence for operating companies.</p>
         </div>
         <div className="sl-footer-col">
           <h3>Product</h3>
-          <a href="#product">Intelligence</a>
-          <a href="#story">How it reasons</a>
-          <a href="#capabilities">Capabilities</a>
+          <Link href="/#how">How it works</Link>
+          <Link href="/#product">Product</Link>
+          <Link href="/#connect">Connection</Link>
         </div>
         <div className="sl-footer-col">
           <h3>Company</h3>
           <Link href="/security">Security</Link>
-          <a href="#trust">Evidence &amp; controls</a>
+          <Link href="/#trust">Evidence &amp; controls</Link>
+          <Link href="/access">Request access</Link>
           <Link href="/login">Sign in</Link>
         </div>
         <div className="sl-footer-col">

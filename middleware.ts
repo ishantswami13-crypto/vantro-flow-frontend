@@ -10,7 +10,16 @@ const PROTECTED = [
   '/ai-train', '/industry', '/invoice',
   '/bad-debt', '/disputes', '/referrals', '/ca-portal', '/payment-plans',
   '/onboarding', '/ai-actions',
+  // Starlane V32 product surfaces (lib/navigation.ts) — previously unguarded
+  // server-side, so a signed-out visitor saw each page's shell before the
+  // client-side 401 bounce.
+  '/bridge', '/scan', '/discover', '/watch', '/missions', '/simulate', '/memory',
+  '/prepared', '/sources', '/agents', '/control', '/intelligence', '/approvals',
+  '/connections',
 ];
+
+// Home of the signed-in product (the V32 Bridge).
+const APP_HOME = '/bridge';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -29,14 +38,9 @@ export function middleware(request: NextRequest) {
     request.cookies.get('vantro_token')?.value
   );
 
-  // Logged-in users visiting root → send to their dashboard
-  if (pathname === '/' && hasSession) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
-  // Logged-in users visiting login/signup → send to dashboard
-  if ((pathname === '/login' || pathname === '/signup') && hasSession) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // Logged-in users visiting root, login or signup → the product home
+  if ((pathname === '/' || pathname === '/login' || pathname === '/signup') && hasSession) {
+    return NextResponse.redirect(new URL(APP_HOME, request.url));
   }
 
   // Protected routes without token → send to login

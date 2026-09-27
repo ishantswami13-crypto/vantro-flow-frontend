@@ -43,7 +43,7 @@ export default function LoginPage() {
       await saveAuth(data.token, data.user, rememberMe, data.csrf_token);
       posthog.identify(data.user.id, { email: data.user.email, name: data.user.business_name, plan: data.user.plan });
       posthog.capture("user_logged_in");
-      router.push("/dashboard");
+      router.push("/bridge");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Invalid email or password");
     } finally { setLoading(false); }

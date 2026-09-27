@@ -25,10 +25,10 @@ export function ErrorFallback({ errorId, retryAction }: { errorId: string, retry
           style={{ background: "#4F6EF7", color: "#ffffff" }}>
           Try Again
         </button>
-        <a href="/dashboard"
+        <a href="/bridge"
           className="px-5 py-2 rounded-xl text-sm font-medium transition-colors"
           style={{ background: "#161616", border: "1px solid #222222", color: "#888888" }}>
-          Go to Dashboard
+          Back to The Bridge
         </a>
       </div>
     </div>

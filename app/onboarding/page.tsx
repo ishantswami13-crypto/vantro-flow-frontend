@@ -104,7 +104,7 @@ export default function OnboardingPage() {
         if (res.onboarding_done || res.hasBusinessData) {
           // Already onboarded, or an existing account with real data
           // (e.g. Kumar Traders) — never force this flow on them.
-          router.replace("/dashboard");
+          router.replace("/bridge");
           return;
         }
         if (res.profile.company_name) setCompanyName(res.profile.company_name);
@@ -208,7 +208,7 @@ export default function OnboardingPage() {
     finally { setLoading(false); }
   }
 
-  const goToWorkspace = () => router.push("/dashboard");
+  const goToWorkspace = () => router.push("/bridge");
 
   if (!ready) {
     return (
