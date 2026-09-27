@@ -1,0 +1,30 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "What the Starlane web view may do. Network access is limited to the Starlane API and TallyPrime's local XML port on this computer.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
+    "notification:default",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
+    "process:allow-restart",
+    "opener:allow-open-url",
+    "deep-link:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://*.up.railway.app/*" },
+        { "url": "https://*.starlane.app/*" },
+        { "url": "http://localhost:8787/*" },
+        { "url": "http://127.0.0.1:8787/*" },
+        { "url": "http://localhost:9000/*" },
+        { "url": "http://127.0.0.1:9000/*" }
+      ]
+    }
+  ]
+}
