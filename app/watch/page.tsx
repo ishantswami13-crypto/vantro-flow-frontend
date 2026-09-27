@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import WatchEvents from "@/components/features/WatchEvents";
 import { api, Watch, WatchConditionConfig } from "@/lib/api";
 
 // Watch — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
@@ -190,6 +191,9 @@ function WatchPageInner() {
           </button>
         </div>
 
+        <WatchEvents />
+
+        <h2 style={{ margin: "8px 0 0", fontSize: 15, fontWeight: 600, color: "#191917" }}>Your own conditions</h2>
         <div style={{ fontSize: 13.5, color: "#63635F" }}>
           {loading
             ? "Loading watch conditions…"
