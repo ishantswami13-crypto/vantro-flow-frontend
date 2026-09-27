@@ -87,7 +87,7 @@ export default function ScanPage() {
         <div className="fade-once" style={{ width: 680, maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <h1
             style={{
-              margin: "0 0 28px 0",
+              margin: 0,
               fontFamily: "'Fraunces', Georgia, serif",
               fontWeight: 400,
               fontSize: 38,
@@ -95,8 +95,11 @@ export default function ScanPage() {
               textAlign: "center",
             }}
           >
-            {getGreeting()}, {ownerName}
+            Scan
           </h1>
+          <p style={{ margin: "8px 0 28px", color: "#63635F", textAlign: "center" }}>
+            {getGreeting()}, {ownerName}. Look into any customer or invoice, or ask about your receivables.
+          </p>
 
           <ScanLookup />
 
