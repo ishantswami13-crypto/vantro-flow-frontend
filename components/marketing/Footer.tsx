@@ -10,9 +10,12 @@ export function Footer() {
         </div>
         <div className="sl-footer-col">
           <h3>Product</h3>
-          <Link href="/#how">How it works</Link>
-          <Link href="/#product">Product</Link>
-          <Link href="/#connect">Connection</Link>
+          <Link href="/product">Product guide</Link>
+          <Link href="/product/bridge">The Bridge</Link>
+          <Link href="/product/briefing">Owner briefing</Link>
+          <Link href="/product/agents">Agents</Link>
+          <Link href="/product/sources">Sources</Link>
+          <Link href="/product/apps">Desktop &amp; mobile</Link>
         </div>
         <div className="sl-footer-col">
           <h3>Company</h3>

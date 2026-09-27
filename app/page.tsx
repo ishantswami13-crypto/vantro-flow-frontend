@@ -14,11 +14,11 @@ import { HowItThinks } from "@/components/marketing/landing/HowItThinks";
 // sample data that is labelled as such. No logos, testimonials or metrics.
 
 const SURFACES = [
-  { name: "The Bridge", body: "Today’s state of the business and the few things that need a decision." },
-  { name: "Discover", body: "Signals and opportunities, each linked to the rows and events behind it." },
-  { name: "Watch", body: "Conditions you care about, re-evaluated every 15 minutes against live data." },
-  { name: "Simulate", body: "What happens to cash if a customer pays late or a rate moves — from your real baseline." },
-  { name: "Control", body: "Approvals, the frozen payload of every action, and the audit trail." },
+  { name: "The Bridge", href: "/product/bridge", body: "Today’s state of the business and the few things that need a decision." },
+  { name: "Discover", href: "/product/discover", body: "Signals and opportunities, each linked to the rows and events behind it." },
+  { name: "Watch", href: "/product/watch", body: "Conditions you care about, re-evaluated every 15 minutes against live data." },
+  { name: "Simulate", href: "/product/simulate", body: "What happens to overdue cash if an invoice is paid earlier or not at all — from your real baseline." },
+  { name: "Control", href: "/product/control", body: "Approvals, the frozen payload of every action, and the audit trail." },
 ];
 
 const CONNECTIONS = [
@@ -121,9 +121,12 @@ export default function LandingPage() {
             <p className="sl-product-caption"><span><strong>Real product view.</strong> A historical earthquake replayed against a fictional demo company’s suppliers and orders; not customer results.</span></p>
             <ul className="sl-surfaces">
               {SURFACES.map((s) => (
-                <li key={s.name}><h3 className="sl-h3">{s.name}</h3><p className="sl-p">{s.body}</p></li>
+                <li key={s.name}><h3 className="sl-h3"><Link href={s.href}>{s.name}</Link></h3><p className="sl-p">{s.body}</p></li>
               ))}
             </ul>
+            <div className="sl-hero-ctas">
+              <Link href="/product" className="sl-link-arrow">Read the product guide — every feature, agent and app, with its real status</Link>
+            </div>
           </div>
         </section>
 
