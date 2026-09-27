@@ -2,7 +2,7 @@
 // frontend + backend (e.g. local: backend on :8787 with a migrated Postgres,
 // `next start` on :3000 built with NEXT_PUBLIC_API_URL=http://localhost:8787).
 //
-//   Flow A  visitor: landing -> Request access -> 3 steps -> deterministic result -> status page
+//   Flow A  visitor: landing -> Get Starlane -> 3 steps -> deterministic result -> status page
 //   Admin   review queue -> approve -> one-time download link
 //   Flow B  applicant: status shows approved -> setup page -> bridge download
 //   Flow C  owner: Sources -> Connect Tally -> download bridge -> pairing code ->
@@ -46,7 +46,7 @@ console.log('— Flow A: visitor applies');
 const v = await (await ctxFor()).newPage();
 v.on('pageerror', (e) => errs.push('visitor: ' + e.message));
 await v.goto(APP + '/', { waitUntil: 'networkidle' });
-await v.getByRole('link', { name: 'Request access' }).first().click();
+await v.getByRole('link', { name: 'Get Starlane' }).first().click();
 await v.waitForURL('**/access');
 await v.getByRole('button', { name: 'Continue' }).click();
 check('empty step shows field errors', await v.getByText('Name is required').isVisible());
@@ -91,7 +91,7 @@ await v.goto(statusUrl); await v.reload({ waitUntil: 'networkidle' });
 check('status page now approved with note', await v.getByText('Approved', { exact: true }).isVisible() && await v.getByText('Welcome — onboarding call').isVisible());
 await v.goto(dlUrl, { waitUntil: 'networkidle' });
 await v.getByText('Install the Starlane Tally bridge').waitFor();
-check('desktop builds honestly "Not published yet"', await v.getByText('Not published yet').first().isVisible());
+check('no app download offered while no build is published', (await v.getByRole('button', { name: 'Download for Windows' }).count()) === 0 && (await v.getByText('Starlane on your other devices').count()) === 0);
 const [dl] = await Promise.all([v.waitForEvent('download'), v.getByRole('button', { name: /Download tally-sync.mjs/ }).click()]);
 const dlPath = await dl.path();
 check('bridge downloaded from setup page', rf(dlPath, 'utf8').includes('Starlane Tally Connector'));
