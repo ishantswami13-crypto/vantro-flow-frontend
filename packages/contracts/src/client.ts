@@ -47,6 +47,8 @@ export interface StarlaneClientOptions {
 export function createStarlaneClient(opts: StarlaneClientOptions) {
   const base = opts.baseUrl.replace(/\/+$/, '');
   const timeoutMs = opts.timeoutMs ?? 20000;
+  // Called unbound: a browser's fetch throws "Illegal invocation" when called as a method of another object.
+  const doFetch = opts.fetch;
   let session: Session | null = null;
   let loaded = false;
   let refreshing: Promise<Session> | null = null;
@@ -63,7 +65,7 @@ export function createStarlaneClient(opts: StarlaneClientOptions) {
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
     try {
-      return await opts.fetch(`${base}${path}`, {
+      return await doFetch(`${base}${path}`, {
         method: init.method || 'GET', headers, body: init.body !== undefined ? JSON.stringify(init.body) : undefined, signal: ctrl?.signal,
       });
     } catch {
