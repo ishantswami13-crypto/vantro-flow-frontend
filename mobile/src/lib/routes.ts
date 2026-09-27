@@ -1,11 +1,17 @@
-// Backend notification routes are client-agnostic (/actions/<id>,
-// /sources/tally, /watch/<id>, /discover/<id>); map them to this app's screens.
+// Backend routes are client-agnostic (/actions/<id>, /watch/<id>,
+// /missions/<id>, /scan/invoice/<id>, /sources/tally, …); map them to this
+// app's screens. Unknown or retired routes land on the Bridge.
 export function mobileRoute(route: string): string {
-  const [a, b] = route.split('/').filter(Boolean);
+  const [path, query] = route.split('?');
+  const [a, b, c] = path.split('/').filter(Boolean);
+  const q = query ? `?${query}` : '';
   if (a === 'actions' && b) return `/actions/${b}`;
-  if (a === 'sources') return '/sources';
-  if (a === 'watch') return '/watch';
-  if (a === 'discover') return '/discover';
-  if (a === 'inbox') return '/inbox';
+  if (a === 'watch') return b ? `/event/${b}` : '/watch';
+  if (a === 'missions') return b === 'new' ? `/mission/new${q}` : b ? `/mission/${b}` : '/missions';
+  if (a === 'scan' && b === 'invoice' && c) return `/invoice/${c}`;
+  if (a === 'scan' && b === 'customer' && c) return `/customer/${c}`;
+  if (a === 'scan') return '/scan';
+  if (['simulate', 'memory', 'prepared', 'sources', 'settings'].includes(a)) return `/${a}`;
+  if (a === 'inbox') return '/watch';
   return '/';
 }

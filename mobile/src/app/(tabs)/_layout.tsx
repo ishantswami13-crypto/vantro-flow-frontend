@@ -26,10 +26,10 @@ export default function TabsLayout() {
         tabBarLabel: ({ focused, children }) => <Label focused={focused}>{children}</Label>,
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Today' }} />
-      <Tabs.Screen name="approvals" options={{ title: 'Approvals' }} />
-      <Tabs.Screen name="discover" options={{ title: 'Discover' }} />
-      <Tabs.Screen name="ask" options={{ title: 'Ask' }} />
+      <Tabs.Screen name="index" options={{ title: 'Bridge' }} />
+      <Tabs.Screen name="watch" options={{ title: 'Watch' }} />
+      <Tabs.Screen name="scan" options={{ title: 'Scan' }} />
+      <Tabs.Screen name="missions" options={{ title: 'Missions' }} />
       <Tabs.Screen name="more" options={{ title: 'More' }} />
     </Tabs>
   );

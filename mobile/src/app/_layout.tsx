@@ -53,6 +53,11 @@ function Gate() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="sign-in" />
       <Stack.Screen name="actions/[id]" options={{ presentation: 'card' }} />
+      <Stack.Screen name="event/[id]" />
+      <Stack.Screen name="mission/[id]" />
+      <Stack.Screen name="mission/new" />
+      <Stack.Screen name="customer/[key]" />
+      <Stack.Screen name="invoice/[id]" />
     </Stack>
   );
 }

@@ -11,6 +11,7 @@ import { api, track } from '../../lib/api';
 import { useResource } from '../../lib/useResource';
 import { Button, Card, Chip, Empty, Loaded, Screen, Section, Stale, T, c } from '../../components/ui';
 import { DoneCheck, haptic } from '../../components/motion';
+import { LifecycleChip } from '../../components/feature';
 
 const show = (v: unknown) => v === null || v === undefined || v === '' ? '—' : typeof v === 'number' ? v.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : typeof v === 'object' ? JSON.stringify(v) : String(v);
 const KIND_TONE = { observed: 'ok', calculated: 'accent', assumption: 'warn', forecast: 'warn', external: 'muted' } as const;
@@ -50,7 +51,8 @@ export default function ActionScreen() {
       await r.reload();
     } catch (e) {
       haptic.warning();
-      if (e instanceof ApiError && e.status === 409) { setErr('Already decided on another device.'); await r.reload(); }
+      if (e instanceof ApiError && e.status === 409 && e.code === 'MISSION_NOT_ACTIVE') setErr(e.message);
+      else if (e instanceof ApiError && e.status === 409) { setErr('Already decided on another device.'); await r.reload(); }
       else setErr((e as Error).message);
     } finally { setBusy(null); }
   }
@@ -63,11 +65,12 @@ export default function ActionScreen() {
           <>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
               <Chip label={`${a.riskLevel} risk`} tone={a.riskLevel === 'high' ? 'bad' : a.riskLevel === 'medium' ? 'warn' : 'muted'} />
-              <Chip label={a.status.replace(/_/g, ' ')} />
+              {a.lifecycle ? <LifecycleChip state={a.lifecycle} /> : <Chip label={a.status.replace(/_/g, ' ')} />}
               <Stale r={r} />
             </View>
             <T v="title">{a.title}</T>
             {a.description ? <T v="small">{a.description}</T> : null}
+            {a.missionId ? <Pressable onPress={() => router.push(`/mission/${a.missionId}`)} hitSlop={8}><T v="small" style={{ color: c.accent }}>Part of a mission ›</T></Pressable> : null}
 
             <Section title="If you approve">
               {a.proposal.message ? (
@@ -97,7 +100,7 @@ export default function ActionScreen() {
                 <Button label={a.riskLevel === 'high' ? 'Approve with confirmation' : 'Approve'} busy={busy === 'approve'} disabled={!!busy} onPress={() => void decide(a, 'approve')} />
                 <Button label="Decline" kind="secondary" busy={busy === 'reject'} disabled={!!busy} onPress={() => void decide(a, 'reject')} />
               </View>
-            ) : <Card style={{ padding: 14 }}><T v="medium">Decided — {a.status.replace(/_/g, ' ')}</T><T v="small">Updated {ago(a.updatedAt || a.createdAt)}.</T></Card>}
+            ) : <Card style={{ padding: 14 }}><T v="medium">{a.lifecycleNote || `Decided — ${a.status.replace(/_/g, ' ')}`}</T><T v="small">Updated {ago(a.updatedAt || a.createdAt)}.</T></Card>}
             {result && result.status !== 'rejected' ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 {result.status === 'done' ? <DoneCheck /> : null}
