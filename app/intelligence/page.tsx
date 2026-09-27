@@ -73,6 +73,8 @@ function SignalRow({ signal, onOpen }: { signal: IntelligenceSignal; onOpen: () 
   );
 }
 
+const DEMO_CONTROLS_ENABLED = process.env.NEXT_PUBLIC_DEMO_CONTROLS === "true";
+
 export default function IntelligencePage() {
   const router = useRouter();
   const [resetting, setResetting] = useState(false);
@@ -166,9 +168,11 @@ export default function IntelligencePage() {
         )}
       </div>
 
-      {/* Internal demo control — not a customer-facing product feature.
-          Deliberately understated (muted text link, not a button) so it
-          never reads as part of the normal product surface. */}
+      {/* Internal demo control — not a customer-facing product feature. The
+          backend only honours it for admins on non-production deployments
+          with DEMO_RESET_ENABLED=true, so it is rendered only where the
+          deployment opts in; otherwise it would be a dead control. */}
+      {DEMO_CONTROLS_ENABLED && (<>
       <div className="max-w-[1100px] mx-auto px-6 lg:px-10 pb-8 mt-2 pt-4 border-t border-border flex items-center justify-between">
         <p className="text-2xs text-muted">Internal — 2xA meeting demo control</p>
         <Button
@@ -182,6 +186,7 @@ export default function IntelligencePage() {
         </Button>
       </div>
       {resetMessage && <p className="text-2xs text-muted mt-2">{resetMessage}</p>}
+      </>)}
     </DashboardLayout>
   );
 }
