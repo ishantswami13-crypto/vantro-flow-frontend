@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-// Landing visual for Ask Starlane: a question, the tool it looks up, an
+// Landing visual for Scan (the assistant): a question, the tool it looks up, an
 // answer built from records — then a request to change something, and the
 // assistant declining, because it cannot change records (server-enforced,
 // lib/ai/assistantTools.js). Fictional demo company; labelled as such.
@@ -101,7 +101,7 @@ export function AskDemo() {
   return (
     <div ref={ref} className="sl-ask" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
       <div className="sl-trace-bar">
-        <span className="sl-trace-title">Ask Starlane</span>
+        <span className="sl-trace-title">Scan</span>
         <span className="sl-ask-badge">Read-only</span>
         <span style={{ flex: 1 }} />
         {!reduced ? (

@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Simulate" };
 export default function SimulatePage() {
   return (
     <GuidePage
-      eyebrow="Intelligence"
+      eyebrow="Feature 5 of 7"
       title="Simulate"
       status="live"
       lede="Pick one of your open invoices and ask: what if this were paid 15 days earlier — or not at all? Starlane projects overdue cash both ways and shows the difference."

@@ -31,11 +31,11 @@ export function Nav() {
       <nav aria-label="Main navigation" className="sl-nav" ref={navRef}>
         <Link href="/" aria-label="Starlane home" className="sl-wordmark">Starlane</Link>
         <div className="sl-navlinks">
-          <Link href="/product" className="hidden md:inline">Product</Link>
-          <Link href="/product/briefing" className="hidden md:inline">Briefing</Link>
-          <Link href="/product/agents" className="hidden md:inline">Agents</Link>
-          <Link href="/product/apps" className="hidden md:inline">Apps</Link>
-          <Link href="/product/control" className="hidden md:inline">Trust</Link>
+          <Link href="/product" className="hidden md:inline">Features</Link>
+          <Link href="/product/bridge" className="hidden md:inline">The Bridge</Link>
+          <Link href="/product/scan" className="hidden md:inline">Scan</Link>
+          <Link href="/#how" className="hidden md:inline">How it works</Link>
+          <Link href="/#trust" className="hidden md:inline">Trust</Link>
           <Link href="/login" className="hidden md:inline">Sign in</Link>
           <Link href="/access" className="sl-btn sl-btn-solid">Get Starlane</Link>
           <button
@@ -51,11 +51,11 @@ export function Nav() {
         </div>
       </nav>
       <div id="sl-mobile-menu" className={`sl-mobile-menu${menuOpen ? " open" : ""}`}>
-        <Link href="/product" onClick={close}>Product guide</Link>
-        <Link href="/product/briefing" onClick={close}>Owner briefing</Link>
-        <Link href="/product/agents" onClick={close}>Agents</Link>
-        <Link href="/product/apps" onClick={close}>Desktop &amp; mobile</Link>
-        <Link href="/product/control" onClick={close}>Trust</Link>
+        <Link href="/product" onClick={close}>Features</Link>
+        <Link href="/product/bridge" onClick={close}>The Bridge</Link>
+        <Link href="/product/scan" onClick={close}>Scan</Link>
+        <Link href="/#how" onClick={close}>How it works</Link>
+        <Link href="/#trust" onClick={close}>Trust</Link>
         <Link href="/login" onClick={close}>Sign in</Link>
       </div>
     </>

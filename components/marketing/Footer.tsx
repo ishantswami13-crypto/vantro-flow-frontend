@@ -9,13 +9,14 @@ export function Footer() {
           <p className="sl-p" style={{ marginTop: 14, maxWidth: 280 }}>Decision and execution intelligence for operating companies.</p>
         </div>
         <div className="sl-footer-col">
-          <h3>Product</h3>
-          <Link href="/product">Product guide</Link>
+          <h3>Features</h3>
           <Link href="/product/bridge">The Bridge</Link>
-          <Link href="/product/briefing">Owner briefing</Link>
-          <Link href="/product/agents">Agents</Link>
-          <Link href="/product/sources">Sources</Link>
-          <Link href="/product/apps">Desktop &amp; mobile</Link>
+          <Link href="/product/scan">Scan</Link>
+          <Link href="/product/watch">Watch</Link>
+          <Link href="/product/missions">Missions</Link>
+          <Link href="/product/simulate">Simulate</Link>
+          <Link href="/product/memory">Memory</Link>
+          <Link href="/product/prepared">Prepared</Link>
         </div>
         <div className="sl-footer-col">
           <h3>Company</h3>

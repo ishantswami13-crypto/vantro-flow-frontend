@@ -16,10 +16,12 @@ import { HowItThinks } from "@/components/marketing/landing/HowItThinks";
 
 const SURFACES = [
   { name: "The Bridge", href: "/product/bridge", body: "Today’s state of the business and the few things that need a decision." },
-  { name: "Discover", href: "/product/discover", body: "Signals and opportunities, each linked to the rows and events behind it." },
+  { name: "Scan", href: "/product/scan", body: "Ask about your business in plain words; answers come from your own records." },
   { name: "Watch", href: "/product/watch", body: "Conditions you care about, re-evaluated every 15 minutes against live data." },
+  { name: "Missions", href: "/product/missions", body: "Goals you set, tracked to done. Not built yet — and labelled so." },
   { name: "Simulate", href: "/product/simulate", body: "What happens to overdue cash if an invoice is paid earlier or not at all — from your real baseline." },
-  { name: "Control", href: "/product/control", body: "Approvals, the frozen payload of every action, and the audit trail." },
+  { name: "Memory", href: "/product/memory", body: "Every change and every decision, with before, after and when." },
+  { name: "Prepared", href: "/product/prepared", body: "Decisions waiting, watches that fired and opportunities, lined up for you." },
 ];
 
 const CONNECTIONS = [
@@ -126,12 +128,12 @@ export default function LandingPage() {
               ))}
             </ul>
             <div className="sl-hero-ctas">
-              <Link href="/product" className="sl-link-arrow">Read the product guide — every feature, agent and app, with its real status</Link>
+              <Link href="/product" className="sl-link-arrow">All seven features, each with its real status</Link>
             </div>
           </div>
         </section>
 
-        {/* Ask Starlane */}
+        {/* Scan */}
         <section id="ask" className="sl-section" aria-labelledby="ask-h">
           <div className="sl-wrap sl-ask-split">
             <div>
@@ -145,7 +147,7 @@ export default function LandingPage() {
                 <li>It can draft a WhatsApp reminder for you to send; it never sends anything itself.</li>
                 <li>It cannot change your records — no marking paid, no edits, no orders.</li>
               </ul>
-              <div className="sl-hero-ctas"><Link href="/product/ask" className="sl-link-arrow">How Ask Starlane works</Link></div>
+              <div className="sl-hero-ctas"><Link href="/product/scan" className="sl-link-arrow">How Scan works</Link></div>
             </div>
             <AskDemo />
           </div>

@@ -186,7 +186,7 @@
 .sl-product-capture img { display: block; width: 100%; height: auto; }
 .sl-product-caption { margin-top: 14px; color: var(--sl-ink-faint); font-size: 12px; line-height: 1.6; }
 .sl-product-caption strong { color: var(--sl-ink); font-weight: 600; }
-.sl-surfaces { list-style: none; padding: 0; margin: clamp(40px, 5vw, 64px) 0 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px; }
+.sl-surfaces { list-style: none; padding: 0; margin: clamp(40px, 5vw, 64px) 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 28px; }
 .sl-surfaces li { border-top: 1px solid var(--sl-ink); padding-top: 16px; }
 .sl-surfaces .sl-p { font-size: 14px; margin-top: 8px; }
 
@@ -257,7 +257,7 @@
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 1080px) {
   .sl-hero-split { grid-template-columns: 1fr; }
-  .sl-surfaces { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sl-surfaces { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 860px) {
   .sl-split-head, .sl-problem-grid { grid-template-columns: 1fr; }
