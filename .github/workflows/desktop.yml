@@ -105,6 +105,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           function Test-Launch([string]$exe) {
             if (-not (Test-Path $exe)) { throw "Installed app not found at $exe" }
+            Write-Output "Launching $exe"
             $p = Start-Process -FilePath $exe -PassThru
             Start-Sleep -Seconds 15
             if ($p.HasExited) { throw "Starlane exited within 15 s (exit code $($p.ExitCode))" }
@@ -116,20 +117,34 @@ jobs:
           Write-Output "NSIS installer: $($nsis.Name) ($([math]::Round($nsis.Length / 1MB, 1)) MB)"
           $proc = Start-Process -FilePath $nsis.FullName -ArgumentList '/S' -Wait -PassThru
           if ($proc.ExitCode -ne 0) { throw "NSIS installer exited with $($proc.ExitCode)" }
-          $dir = @("$env:LOCALAPPDATA\Starlane", "$env:ProgramFiles\Starlane") | Where-Object { Test-Path "$_\Starlane.exe" } | Select-Object -First 1
-          if (-not $dir) { Get-ChildItem "$env:LOCALAPPDATA" -Filter Starlane.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 3 | Format-List FullName; throw 'NSIS install produced no Starlane.exe' }
-          Test-Launch "$dir\Starlane.exe"
+          # The app binary is named after the Cargo package (starlane-desktop.exe);
+          # take whatever non-uninstaller .exe the installer put in the Starlane folder.
+          function Find-App([string[]]$dirs) {
+            foreach ($d in $dirs) {
+              if (-not (Test-Path $d)) { continue }
+              $e = Get-ChildItem $d -Filter *.exe | Where-Object { $_.Name -notmatch '^uninstall' } | Select-Object -First 1
+              if ($e) { return $e }
+            }
+            return $null
+          }
+          $app = Find-App @("$env:LOCALAPPDATA\Starlane", "$env:LOCALAPPDATA\Programs\Starlane", "$env:ProgramFiles\Starlane")
+          if (-not $app) { Get-ChildItem "$env:LOCALAPPDATA" -Directory | Select-Object -ExpandProperty Name; throw 'NSIS install produced no Starlane executable' }
+          Test-Launch $app.FullName
+          $dir = $app.DirectoryName
           $un = Get-ChildItem $dir -Filter 'uninstall*.exe' | Select-Object -First 1
-          if ($un) { Start-Process -FilePath $un.FullName -ArgumentList '/S' -Wait; Start-Sleep -Seconds 3 }
-          if (Test-Path "$dir\Starlane.exe") { throw 'NSIS uninstall left Starlane.exe behind' }
+          if (-not $un) { throw 'No uninstaller next to the installed app' }
+          Start-Process -FilePath $un.FullName -ArgumentList '/S' -Wait
+          # NSIS uninstallers re-launch a temp copy and return early; poll.
+          for ($i = 0; $i -lt 30 -and (Test-Path $app.FullName); $i++) { Start-Sleep -Seconds 1 }
+          if (Test-Path $app.FullName) { throw 'NSIS uninstall left the app behind' }
           Write-Output 'NSIS: installed, launched, uninstalled.'
 
           $msi = Get-ChildItem src-tauri/target/release/bundle/msi/*.msi | Select-Object -First 1
           Write-Output "MSI: $($msi.Name) ($([math]::Round($msi.Length / 1MB, 1)) MB)"
           $proc = Start-Process msiexec.exe -ArgumentList "/i `"$($msi.FullName)`" /qn /norestart /l*v `"$env:RUNNER_TEMP\msi.log`"" -Wait -PassThru
           if ($proc.ExitCode -ne 0) { Get-Content "$env:RUNNER_TEMP\msi.log" -Tail 40; throw "msiexec exited with $($proc.ExitCode)" }
-          $exe = Get-ChildItem "$env:ProgramFiles\Starlane", "${env:ProgramFiles(x86)}\Starlane", "$env:LOCALAPPDATA\Programs\Starlane" -Filter Starlane.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $exe) { throw 'MSI install produced no Starlane.exe' }
+          $exe = Find-App @("$env:ProgramFiles\Starlane", "${env:ProgramFiles(x86)}\Starlane", "$env:LOCALAPPDATA\Programs\Starlane")
+          if (-not $exe) { throw 'MSI install produced no Starlane executable' }
           Test-Launch $exe.FullName
           $proc = Start-Process msiexec.exe -ArgumentList "/x `"$($msi.FullName)`" /qn /norestart" -Wait -PassThru
           if ($proc.ExitCode -ne 0) { throw "MSI uninstall exited with $($proc.ExitCode)" }
