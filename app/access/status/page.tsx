@@ -75,7 +75,7 @@ export default function AccessStatusPage() {
           return (
             <>
               <h1 className="sl-h2">{a.company}</h1>
-              <p className="sl-p" style={{ marginTop: 6 }}>Applied as {a.email} · {new Date(a.submittedAt).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}</p>
+              <p className="sl-p" style={{ marginTop: 6 }}>Applied as {a.email} on {new Date(a.submittedAt).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}</p>
               <div className="sl-panel" style={{ marginTop: 28 }}>
                 <span className={`sl-badge ${c.tone}`}>{c.label}</span>
                 <p className="sl-sub" style={{ marginTop: 14 }}>{c.body}</p>

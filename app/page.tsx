@@ -7,8 +7,8 @@ import { DecisionTrace } from "@/components/marketing/landing/DecisionTrace";
 import { HowItThinks } from "@/components/marketing/landing/HowItThinks";
 
 // Starlane — public landing. Seven sections, one argument:
-//   1 hero · 2 problem · 3 how it thinks · 4 real product · 5 connection
-//   6 trust & control · 7 access.
+//   hero, problem, how it thinks, real product, connection,
+//   trust and control, access.
 // Everything shown is either the real product, the real connector list, or
 // sample data that is labelled as such. No logos, testimonials or metrics.
 
@@ -64,7 +64,7 @@ export default function LandingPage() {
         {/* 1 — Hero */}
         <header className="sl-wrap sl-hero sl-hero-split">
           <div className="sl-hero-copy">
-            <span className="sl-eyebrow">Private rollout</span>
+            <span className="sl-eyebrow">Now onboarding a small number of companies</span>
             <h1 className="sl-h1">Your company’s state, turned into decisions — and carried out.</h1>
             <p className="sl-sub" style={{ marginTop: 28, maxWidth: 520 }}>
               Starlane connects to the systems your business already runs on, builds one current picture of it, weighs
@@ -87,7 +87,7 @@ export default function LandingPage() {
               <p><span>Dashboards</span> show what already happened.</p>
               <p><span>Reports</span> arrive after it mattered.</p>
               <p><span>Automations</span> do exactly what they were told, whether or not it still makes sense.</p>
-              <p className="sl-problem-last">None of them answers the question an owner faces every morning: <em>what should we do today, and why?</em></p>
+              <p className="sl-problem-last">None of them answers the question an owner faces every morning: what should we do today, and why?</p>
             </div>
           </div>
         </section>
@@ -95,7 +95,6 @@ export default function LandingPage() {
         {/* 3 — How Starlane thinks */}
         <section id="how" className="sl-section" aria-labelledby="how-h">
           <div className="sl-wrap">
-            <span className="sl-eyebrow">How Starlane thinks</span>
             <h2 id="how-h" className="sl-h2" style={{ maxWidth: 760, marginBottom: 48 }}>From the rows in your books to an outcome you can check.</h2>
             <HowItThinks />
           </div>
@@ -106,13 +105,12 @@ export default function LandingPage() {
           <div className="sl-wrap">
             <div className="sl-split-head">
               <div>
-                <span className="sl-eyebrow">The product</span>
                 <h2 id="product-h" className="sl-h2">An operating surface, not another dashboard.</h2>
               </div>
               <p className="sl-p">Starlane opens on what needs a decision. Every number can be opened to the rows and events behind it.</p>
             </div>
             <figure className="sl-frame sl-product-ui">
-              <div className="sl-product-heading"><span>Intelligence · Impact</span><span>Real product view · fictional demo company</span></div>
+              <div className="sl-product-heading"><span>Impact view</span><span>Real product, fictional demo company</span></div>
               <div className="sl-product-capture">
                 <Image src="/product/intelligence-impact-2xa.png" width={2368} height={448} sizes="(max-width: 767px) 100vw, 1180px"
                   alt="Starlane impact view for a replayed earthquake event: revenue exposed, time to stockout, affected orders and confidence for a fictional demo company." />
@@ -132,7 +130,6 @@ export default function LandingPage() {
           <div className="sl-wrap">
             <div className="sl-split-head">
               <div>
-                <span className="sl-eyebrow">Connection</span>
                 <h2 id="connect-h" className="sl-h2">Connected the way each system allows — and no further.</h2>
               </div>
               <p className="sl-p">Every connection states what Starlane receives before you grant it. Nothing is connected without your consent, and nothing is scraped.</p>
@@ -141,7 +138,7 @@ export default function LandingPage() {
               {CONNECTIONS.map((c) => (
                 <article key={c.kind} className="sl-connect">
                   <div className="sl-connect-top">
-                    <span className="sl-eyebrow" style={{ marginBottom: 0 }}>{c.kind}</span>
+                    <span className="sl-connect-kind">{c.kind}</span>
                     <span className={`sl-connect-state${c.state === "Available" ? " ok" : ""}`}>{c.state}</span>
                   </div>
                   <h3 className="sl-h3">{c.head}</h3>
@@ -157,7 +154,6 @@ export default function LandingPage() {
           <div className="sl-wrap">
             <div className="sl-split-head">
               <div>
-                <span className="sl-eyebrow">Trust and control</span>
                 <h2 id="trust-h" className="sl-h2">You stay in charge of every consequential step.</h2>
               </div>
               <p className="sl-p">Starlane is built to be checked. The parts that matter most are the ones it will not do without you.</p>
@@ -180,7 +176,7 @@ export default function LandingPage() {
             </p>
             <div className="sl-hero-ctas">
               <Link href="/access" className="sl-btn sl-btn-solid">Request access</Link>
-              <Link href="/access/status" className="sl-link-arrow">Check an application</Link>
+              <Link href="/access/status" className="sl-link-arrow">Check on an application</Link>
             </div>
           </div>
         </section>

@@ -29,7 +29,6 @@ export function Footer() {
       </div>
       <div style={{ paddingTop: 28, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <span style={{ fontSize: 12.5, color: "var(--sl-ink-faint)" }}>© {new Date().getFullYear()} Vantro Technologies</span>
-        <span style={{ fontFamily: "var(--sl-mono)", fontSize: 11, color: "var(--sl-ink-faint)" }}>Decisions grounded in evidence.</span>
       </div>
     </footer>
   );

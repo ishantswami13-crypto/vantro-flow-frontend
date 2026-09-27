@@ -81,26 +81,28 @@ export function DecisionTrace() {
         <section className={`sl-trace-cell ${on(0) ? "on" : ""}`} aria-label="Sources">
           <h4>Sources</h4>
           <dl className="sl-kv">
-            <div><dt>TallyPrime · local bridge</dt><dd>5 vouchers</dd></div>
+            <div><dt>TallyPrime bridge</dt><dd>5 vouchers</dd></div>
             <div><dt>Sales</dt><dd className="sl-num">2</dd></div>
-            <div><dt>Receipts · Purchases · Payments</dt><dd className="sl-num">1 · 1 · 1</dd></div>
+            <div><dt>Receipts</dt><dd className="sl-num">1</dd></div>
+            <div><dt>Purchases</dt><dd className="sl-num">1</dd></div>
+            <div><dt>Payments</dt><dd className="sl-num">1</dd></div>
           </dl>
         </section>
 
         {/* 2 — State */}
         <section className={`sl-trace-cell ${on(1) ? "on" : ""}`} aria-label="State">
-          <h4>Normalized state</h4>
+          <h4>Current state</h4>
           <dl className="sl-kv">
             <div><dt>Open receivables</dt><dd className="sl-num">{inr(153500.5)}</dd></div>
             <div><dt>Gupta &amp; Sons</dt><dd className="sl-num">{inr(128500.5)}</dd></div>
             <div><dt>Sharma Traders <span className="sl-muted">(after {inr(20000)} received)</span></dt><dd className="sl-num">{inr(25000)}</dd></div>
-            <div><dt>Open payables · Metro Wholesale</dt><dd className="sl-num">{inr(37000)}</dd></div>
+            <div><dt>Owed to Metro Wholesale</dt><dd className="sl-num">{inr(37000)}</dd></div>
           </dl>
         </section>
 
         {/* 3 — Paths */}
         <section className={`sl-trace-cell sl-trace-wide ${on(2) ? "on" : ""}`} aria-label="Paths">
-          <h4>Paths for Gupta &amp; Sons · {inr(128500.5)}</h4>
+          <h4>Options for Gupta &amp; Sons, {inr(128500.5)} open</h4>
           <ol className="sl-paths">
             <li className={on(3) ? "chosen" : ""}><span className="sl-rank">1</span>Firm reminder on WhatsApp<span className="sl-why">20 days overdue sits in the 8–30 day band</span></li>
             <li><span className="sl-rank">2</span>Owner call<span className="sl-why">reserved for 36–89 days</span></li>
@@ -117,7 +119,7 @@ export function DecisionTrace() {
             <div><dt><span className="sl-tag sl-tag-assume">Assumption</span> Payment terms</dt><dd className="sl-num">30 days</dd></div>
             <div><dt><span className="sl-tag">Calculated</span> Days overdue</dt><dd className="sl-num">20</dd></div>
           </dl>
-          <p className="sl-trace-rule">rule · collections_stage_by_days_overdue</p>
+          <p className="sl-trace-rule">Rule applied: <span className="sl-num">collections_stage_by_days_overdue</span></p>
         </section>
 
         {/* 5 — Approval */}

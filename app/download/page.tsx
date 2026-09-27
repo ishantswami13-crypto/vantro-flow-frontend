@@ -86,7 +86,7 @@ export default function DownloadPage() {
 
               {bridge && (
                 <li className="sl-panel">
-                  <span className="sl-eyebrow" style={{ marginBottom: 10 }}>Step 2 · if you use TallyPrime</span>
+                  <span className="sl-eyebrow" style={{ marginBottom: 10 }}>Step 2, if you use TallyPrime</span>
                   <p className="sl-h3">Install the Starlane Tally bridge</p>
                   <p className="sl-p" style={{ marginTop: 8 }}>
                     A small, read-only program for the computer that runs Tally. It reads vouchers and stock from Tally’s local export port and sends them to Starlane. {bridge.requirements}
@@ -98,7 +98,7 @@ export default function DownloadPage() {
                     {done === bridge.id && <span className="sl-badge ok" role="status">Downloaded</span>}
                   </div>
                   <p style={{ fontSize: 12, color: "var(--sl-ink-faint)", marginTop: 14, wordBreak: "break-all" }}>
-                    SHA-256 <span className="sl-num">{bridge.sha256}</span>{bridge.bytes ? ` · ${(bridge.bytes / 1024).toFixed(0)} KB` : ""}
+                    SHA-256 <span className="sl-num">{bridge.sha256}</span>{bridge.bytes ? `, ${(bridge.bytes / 1024).toFixed(0)} KB` : ""}
                   </p>
                   <details style={{ marginTop: 16 }}>
                     <summary style={{ cursor: "pointer", fontSize: 14, fontWeight: 600 }}>How pairing works</summary>
@@ -113,7 +113,7 @@ export default function DownloadPage() {
               )}
 
               <li className="sl-panel">
-                <span className="sl-eyebrow" style={{ marginBottom: 10 }}>Step 2 · any other system</span>
+                <span className="sl-eyebrow" style={{ marginBottom: 10 }}>Step 2, for any other system</span>
                 <p className="sl-h3">Upload an export</p>
                 <p className="sl-p" style={{ marginTop: 8 }}>Export invoices from your system as CSV or Excel and upload them from Sources after signing in. Identical files are never imported twice.</p>
               </li>
