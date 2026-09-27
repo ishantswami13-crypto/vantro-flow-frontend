@@ -3,6 +3,8 @@
 // Change these together with the backend; the API is versioned by
 // Bootstrap.apiVersion.
 
+import type { ActionLifecycle } from './features';
+
 export type ClientKind = 'desktop' | 'mobile' | 'web' | 'cli';
 
 export interface Session {
@@ -45,6 +47,11 @@ export interface ActionSummary {
   requiresApproval: boolean;
   createdAt: string;
   updatedAt: string | null;
+  /** The shared action lifecycle (servers from 2026-09 on). */
+  lifecycle?: ActionLifecycle;
+  lifecycleNote?: string | null;
+  canDecide?: boolean;
+  missionId?: string | null;
 }
 
 export type FactKind = 'observed' | 'calculated' | 'assumption' | 'forecast' | 'external';

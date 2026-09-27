@@ -3,8 +3,11 @@
 // notification and an in-app link all land on the same screen.
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
-export interface Route { path: string; parts: string[] }
-const parse = (path: string): Route => ({ path, parts: path.split('/').filter(Boolean) });
+export interface Route { path: string; parts: string[]; query: URLSearchParams }
+const parse = (path: string): Route => {
+  const [pathname, qs = ''] = path.split('?');
+  return { path, parts: pathname.split('/').filter(Boolean), query: new URLSearchParams(qs) };
+};
 
 interface RouterCtx { route: Route; go: (path: string) => void; back: () => void }
 const Ctx = createContext<RouterCtx | null>(null);

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { asOf, healthLabel, healthTone } from '@starlane/contracts';
+import { asOf, healthLabel, healthTone, LIFECYCLE_LABEL, LIFECYCLE_TONE, type ActionLifecycle, type EvidenceItem, type EvidenceSet, type FeatureAction } from '@starlane/contracts';
 import type { Resource } from './lib/useResource';
 
 export function Mark({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
@@ -114,3 +114,77 @@ export function DoneCheck() {
     </svg>
   );
 }
+
+// ── Shared feature primitives ─────────────────────────────────────────────
+
+const KIND_TITLE: Record<string, string> = {
+  fact: 'From your records', calculated: 'Worked out from your records', assumption: 'An assumption — change it if you know better',
+  estimate: 'A projection that depends on assumptions', model: 'Inferred by Starlane — may be wrong', observed: 'From your records', forecast: 'A projection',
+};
+
+export function showValue(v: unknown, unit?: string): string {
+  if (v === null || v === undefined || v === '') return '—';
+  if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+  if (typeof v === 'number') {
+    if (unit === 'INR') return `₹${Math.round(v).toLocaleString('en-IN')}`;
+    const s = Number.isInteger(v) ? v.toLocaleString('en-IN') : v.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return unit && unit !== 'INR' ? `${s} ${unit}` : s;
+  }
+  if (typeof v === 'object') return JSON.stringify(v);
+  return String(v);
+}
+
+export function KindTag({ kind }: { kind: string }) {
+  return <span className={`kind ${kind}`} title={KIND_TITLE[kind] || kind}>{kind}</span>;
+}
+
+export function FactRow({ f }: { f: EvidenceItem }) {
+  return (
+    <div className="fact">
+      <span>{f.label}{f.note ? <span className="faint small"> · {f.note}</span> : null}</span>
+      <span className="fig">{showValue(f.value, f.unit)}</span>
+      <KindTag kind={f.kind} />
+    </div>
+  );
+}
+
+/** Evidence is one primitive across features: what, what kind, from where. */
+export function EvidencePanel({ ev, title = 'Evidence' }: { ev: EvidenceSet | null | undefined; title?: string }) {
+  if (!ev) return null;
+  return (
+    <div>
+      <h2 className="section">{title}</h2>
+      <div className="panel">{ev.facts.length ? ev.facts.map((f, i) => <FactRow key={i} f={f} />) : <Empty title="No evidence was recorded." />}</div>
+      <div className="small faint" style={{ marginTop: 8 }}>
+        {ev.summary}{ev.method ? ` ${ev.method}.` : ''}{ev.sources.length ? ` Source: ${ev.sources.join(', ')}.` : ''}
+      </div>
+    </div>
+  );
+}
+
+export function LifecycleChip({ state }: { state: ActionLifecycle }) {
+  const tone = LIFECYCLE_TONE[state] || 'muted';
+  return <span className={`chip ${tone === 'muted' ? '' : tone}`}>{LIFECYCLE_LABEL[state] || state}</span>;
+}
+
+export function ActionList({ actions, onOpen, empty }: { actions: FeatureAction[]; onOpen: (id: string) => void; empty?: ReactNode }) {
+  if (!actions.length) return <>{empty ?? <Empty title="No actions." />}</>;
+  return (
+    <ul className="rows">
+      {actions.map((a) => (
+        <li key={a.id}>
+          <button className="row" onClick={() => onOpen(a.id)}>
+            <span className={`risk ${a.riskLevel}`} aria-label={`${a.riskLevel} risk`} />
+            <span style={{ minWidth: 0 }}>
+              <div className="t">{a.title}</div>
+              <div className="s">{a.description || a.type.replace(/_/g, ' ')}</div>
+            </span>
+            <LifecycleChip state={a.lifecycle} />
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export const inrShort = (v: number) => `₹${Math.round(v).toLocaleString('en-IN')}`;

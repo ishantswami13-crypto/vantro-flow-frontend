@@ -15,6 +15,10 @@ import type {
   ActionDetail, ActionSummary, AskReply, Bootstrap, ClientKind, Connector, DecisionResult, DeviceClaim, DeviceToken,
   LoginResponse, Now, Opportunity, Session, StarlaneNotification, TelemetryEvent, Watch,
 } from './types';
+import type {
+  BridgeView, CustomerScan, InvoiceScan, MemoryRecord, Mission, MissionDraft, MissionInput, PreparedHorizon, ScanSearch,
+  SimulateInput, Simulation, WatchDetail, WatchList, WatchState,
+} from './features';
 
 export interface TokenStore {
   load(): Promise<Session | null>;
@@ -173,6 +177,29 @@ export function createStarlaneClient(opts: StarlaneClientOptions) {
       authed<Record<string, unknown>>(`/api/intelligence/scenarios/${await userId()}`, { method: 'POST', body }),
     ask: (messages: Array<{ role: 'user' | 'assistant'; content: string }>, businessName?: string | null) =>
       authed<AskReply>('/api/ai-chat', { method: 'POST', body: { messages, business_name: businessName || '' } }),
+
+    // ── The seven features ────────────────────────────────────────────────
+    bridge: () => authed<BridgeView & { success: boolean }>('/api/client/bridge'),
+    scanSearch: (q: string) => authed<ScanSearch>(`/api/client/scan/search?q=${encodeURIComponent(q)}`),
+    scanCustomer: (key: string) => authed<{ scan: CustomerScan }>(`/api/client/scan/customer/${encodeURIComponent(key)}`).then((r) => r.scan),
+    scanInvoice: (id: string) => authed<{ scan: InvoiceScan }>(`/api/client/scan/invoice/${encodeURIComponent(id)}`).then((r) => r.scan),
+    watchEvents: (state: 'active' | 'open' | 'acknowledged' | 'closed' = 'active', refresh = false) =>
+      authed<WatchList>(`/api/client/watch?state=${state}${refresh ? '&refresh=1' : ''}`),
+    watchEvent: (id: string) => authed<WatchDetail>(`/api/client/watch/${encodeURIComponent(id)}`),
+    setWatchState: (id: string, state: Exclude<WatchState, 'resolved'>) =>
+      authed<{ event: WatchDetail['event'] }>(`/api/client/watch/${encodeURIComponent(id)}/state`, { method: 'POST', body: { state } }).then((r) => r.event),
+    missions: () => authed<{ missions: Mission[] }>('/api/client/missions').then((r) => r.missions),
+    mission: (id: string) => authed<{ mission: Mission }>(`/api/client/missions/${encodeURIComponent(id)}`).then((r) => r.mission),
+    previewMission: (input: MissionInput) => authed<{ errors: string[]; draft: MissionDraft; simulation: Simulation | null }>('/api/client/missions/preview', { method: 'POST', body: input }),
+    createMission: (input: MissionInput) => authed<{ mission: Mission; excluded: MissionDraft['excluded'] }>('/api/client/missions', { method: 'POST', body: { type: 'collections', ...input } }),
+    missionAction: (id: string, verb: 'activate' | 'pause' | 'cancel') =>
+      authed<{ mission: Mission; proposed: { created: number; adopted: number; blocked: number } | null }>(`/api/client/missions/${encodeURIComponent(id)}/${verb}`, { method: 'POST', body: {} }),
+    simulateCash: (input: SimulateInput) => authed<{ scope: string; invoiceCount: number; simulation: Simulation | null; emptyReason: string | null }>('/api/client/simulate', { method: 'POST', body: input }),
+    memory: (removed = false) => authed<{ records: MemoryRecord[] }>(`/api/client/memory${removed ? '?status=removed' : ''}`).then((r) => r.records),
+    remember: (statement: string, subject?: string) => authed<{ record: MemoryRecord }>('/api/client/memory', { method: 'POST', body: { statement, subject } }).then((r) => r.record),
+    memoryDecide: (id: string, verb: 'confirm' | 'correct' | 'remove', statement?: string) =>
+      authed<{ record: MemoryRecord }>(`/api/client/memory/${encodeURIComponent(id)}/${verb}`, { method: 'POST', body: statement ? { statement } : {} }).then((r) => r.record),
+    prepared: () => authed<{ generatedAt: string; horizons: PreparedHorizon[] }>('/api/client/prepared'),
 
     telemetry: async (events: TelemetryEvent[]) => {
       const s = await current();

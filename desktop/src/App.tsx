@@ -5,14 +5,17 @@ import { tallyHost } from './connector/tallyHost';
 import { RouterProvider, useRouter } from './lib/router';
 import { clearResourceCache } from './lib/useResource';
 import { isDesktop, notifyNative, onShellEvent } from './platform';
-import { AskScreen } from './screens/Ask';
-import { ActionScreen, DecisionsScreen } from './screens/Decisions';
-import { InboxScreen } from './screens/Inbox';
-import { DiscoverScreen, SimulateScreen, WatchScreen } from './screens/Intelligence';
-import { NowScreen } from './screens/Now';
+import { BridgeScreen } from './screens/Bridge';
+import { ActionScreen } from './screens/Decisions';
+import { MemoryScreen } from './screens/Memory';
+import { MissionScreen, MissionsScreen, NewMissionScreen } from './screens/Missions';
 import { Onboarding, SignIn } from './screens/Onboarding';
+import { PreparedScreen } from './screens/Prepared';
+import { ScanCustomerScreen, ScanInvoiceScreen, ScanScreen } from './screens/Scan';
 import { SettingsScreen } from './screens/Settings';
+import { SimulateScreen } from './screens/Simulate';
 import { SourceScreen, SourcesScreen, useHost } from './screens/Sources';
+import { WatchEventScreen, WatchScreen } from './screens/Watch';
 import { Mark, Spinner } from './ui';
 
 type Phase = 'loading' | 'signed_out' | 'onboarding' | 'ready';
@@ -73,27 +76,29 @@ export function App() {
   if (phase === 'loading') return <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}><Spinner label="Opening Starlane…" /></div>;
   if (phase === 'signed_out') return <SignIn onSignedIn={() => void load()} />;
   if (phase === 'onboarding') return <Onboarding boot={boot} onDone={() => setPhase('ready')} />;
-  return <RouterProvider initial="/now"><Shell boot={boot} onSignOut={() => void signOut()} /></RouterProvider>;
+  return <RouterProvider initial="/bridge"><Shell boot={boot} onSignOut={() => void signOut()} /></RouterProvider>;
 }
 
+// Starlane is seven features; Sources and Settings are utilities.
 const NAV = [
-  { path: '/now', label: 'Now' },
-  { path: '/decisions', label: 'Decisions', badge: 'decisions' as const },
-  { path: '/inbox', label: 'Inbox', badge: 'inbox' as const },
-  { group: 'Intelligence' },
-  { path: '/watch', label: 'Watch' },
-  { path: '/discover', label: 'Discover' },
+  { path: '/bridge', label: 'The Bridge' },
+  { path: '/scan', label: 'Scan' },
+  { path: '/watch', label: 'Watch', badge: 'watch' as const },
+  { path: '/missions', label: 'Missions', badge: 'decisions' as const },
   { path: '/simulate', label: 'Simulate' },
-  { path: '/ask', label: 'Ask Starlane' },
-  { group: 'Company' },
+  { path: '/memory', label: 'Memory' },
+  { path: '/prepared', label: 'Prepared' },
+  { group: 'Utilities' },
   { path: '/sources', label: 'Sources' },
   { path: '/settings', label: 'Settings' },
 ];
+// Older links (notifications, deep links) keep landing somewhere sensible.
+const ALIAS: Record<string, string> = { now: 'bridge', decisions: 'missions', inbox: 'watch', discover: 'bridge', ask: 'scan' };
 
 function Shell({ boot, onSignOut }: { boot: Bootstrap | null; onSignOut: () => void }) {
   const { route, go } = useRouter();
   const host = useHost();
-  const [counts, setCounts] = useState({ decisions: 0, inbox: 0 });
+  const [counts, setCounts] = useState({ decisions: 0, watch: 0 });
   const [offline, setOffline] = useState(false);
   const seen = useRef<Set<string> | null>(null);
 
@@ -101,9 +106,9 @@ function Shell({ boot, onSignOut }: { boot: Bootstrap | null; onSignOut: () => v
   // anything new since the app started (never a replay of old items).
   const poll = useCallback(async () => {
     try {
-      const [inbox, now] = await Promise.all([api().inbox(), api().now()]);
+      const [inbox, bridge] = await Promise.all([api().inbox(), api().bridge()]);
       setOffline(false);
-      setCounts({ decisions: now.needsYou.length, inbox: inbox.unread });
+      setCounts({ decisions: bridge.attention.decisions, watch: bridge.attention.watch.open });
       const fresh = inbox.notifications.filter((n) => !n.readAt && !(seen.current?.has(n.id)));
       if (seen.current && getPrefs().notifications) for (const n of fresh.slice(0, 3)) await notifyNative(n.title, n.body);
       seen.current = new Set([...(seen.current || []), ...inbox.notifications.map((n) => n.id)]);
@@ -123,10 +128,11 @@ function Shell({ boot, onSignOut }: { boot: Bootstrap | null; onSignOut: () => v
     return () => { offs.forEach((p) => void p.then((off) => off())); };
   }, [go]);
 
-  useEffect(() => { track('client.screen_opened', { screen: route.parts[0] || 'now' }); }, [route.parts]);
+  useEffect(() => { track('client.screen_opened', { screen: route.parts[0] || 'bridge' }); }, [route.parts]);
 
-  const top = `/${route.parts[0] || 'now'}`;
-  const active = top === '/actions' ? '/decisions' : top;
+  const first = route.parts[0] || 'bridge';
+  const top = `/${ALIAS[first] || first}`;
+  const active = top === '/actions' ? '/missions' : top;
   const tallyTone = host.phase === 'idle' ? 'ok' : host.phase === 'syncing' ? 'accent' : host.phase === 'unpaired' ? '' : host.phase === 'revoked' || host.phase === 'error' ? 'bad' : 'warn';
 
   return (
@@ -158,18 +164,24 @@ function Shell({ boot, onSignOut }: { boot: Bootstrap | null; onSignOut: () => v
 
 function Screen({ boot, onSignOut, onRead }: { boot: Bootstrap | null; onSignOut: () => void; onRead: () => void }) {
   const { route } = useRouter();
-  const [a, b] = route.parts;
+  const [raw, b, c] = route.parts;
+  const a = ALIAS[raw] || raw;
   const name = boot?.organization.name || null;
   switch (a) {
-    case 'decisions': return <DecisionsScreen />;
-    case 'actions': return b ? <ActionScreen key={b} id={b} /> : <DecisionsScreen />;
-    case 'inbox': return <InboxScreen onRead={onRead} />;
-    case 'watch': return <WatchScreen />;
-    case 'discover': return <DiscoverScreen />;
-    case 'simulate': return <SimulateScreen />;
-    case 'ask': return <AskScreen businessName={name} />;
+    case 'scan':
+      if (b === 'customer' && c) return <ScanCustomerScreen key={c} customerKey={decodeURIComponent(c)} />;
+      if (b === 'invoice' && c) return <ScanInvoiceScreen key={c} id={c} />;
+      return <ScanScreen businessName={name} />;
+    case 'watch': return b ? <WatchEventScreen key={b} id={b} /> : <WatchScreen onRead={onRead} />;
+    case 'missions':
+      if (b === 'new') return <NewMissionScreen key={route.path} invoice={route.query.get('invoice')} customer={route.query.get('customer')} />;
+      return b ? <MissionScreen key={b} id={b} /> : <MissionsScreen />;
+    case 'actions': return b ? <ActionScreen key={b} id={b} /> : <MissionsScreen />;
+    case 'simulate': return <SimulateScreen key={route.path} missionId={route.query.get('mission')} />;
+    case 'memory': return <MemoryScreen />;
+    case 'prepared': return <PreparedScreen />;
     case 'sources': return b ? <SourceScreen key={b} id={b} /> : <SourcesScreen />;
     case 'settings': return <SettingsScreen boot={boot} onSignOut={onSignOut} />;
-    default: return <NowScreen businessName={name} />;
+    default: return <BridgeScreen businessName={name} />;
   }
 }

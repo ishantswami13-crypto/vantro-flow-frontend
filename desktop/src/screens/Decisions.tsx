@@ -1,56 +1,13 @@
-// Decisions (list) and one action with its evidence. Approval is a single
-// server-side claim; a high-risk action asks for explicit confirmation here
-// and the server enforces it again (428 without it).
+// One action with its evidence, whichever feature proposed it (a mission,
+// the collections agent, Watch). Approval is a single server-side claim; a
+// high-risk action asks for explicit confirmation here and the server
+// enforces it again (428 without it). A paused mission's actions are held.
 import { useEffect, useState } from 'react';
-import { ApiError, ago, type ActionDetail, type ActionSummary, type DecisionResult } from '@starlane/contracts';
+import { ApiError, ago, type ActionDetail, type DecisionResult } from '@starlane/contracts';
 import { api, track } from '../api';
 import { useRouter } from '../lib/router';
 import { useResource } from '../lib/useResource';
-import { Chevron, DoneCheck, Empty, Loaded, Page, Spinner, Stale } from '../ui';
-
-const TABS = [
-  { key: 'pending', label: 'Waiting' },
-  { key: 'done', label: 'Done' },
-  { key: 'failed', label: 'Failed' },
-  { key: 'rejected', label: 'Declined' },
-] as const;
-
-export function DecisionsScreen() {
-  const [tab, setTab] = useState<(typeof TABS)[number]['key']>('pending');
-  const r = useResource<ActionSummary[]>(`actions:${tab}`, () => api().actions(tab));
-  const { go } = useRouter();
-  return (
-    <Page title="Decisions" aside={<Stale r={r} />}>
-      <div className="tabs" role="tablist">
-        {TABS.map((t) => <button key={t.key} className="tab" role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}>{t.label}</button>)}
-      </div>
-      <div className="panel">
-        <Loaded r={r}>
-          {(list) => list.length === 0 ? (
-            <Empty title={tab === 'pending' ? 'Nothing is waiting for you.' : 'Nothing here yet.'}>
-              {tab === 'pending' ? 'Starlane proposes actions from your records; the ones that need your approval appear here.' : null}
-            </Empty>
-          ) : (
-            <ul className="rows">
-              {list.map((a) => (
-                <li key={a.id}>
-                  <button className="row" onClick={() => go(`/actions/${a.id}`)}>
-                    <span className={`risk ${a.riskLevel}`} />
-                    <span style={{ minWidth: 0 }}>
-                      <div className="t">{a.title}</div>
-                      <div className="s">{a.type.replace(/_/g, ' ')} · {a.riskLevel} risk · {ago(a.updatedAt || a.createdAt)}</div>
-                    </span>
-                    <Chevron />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Loaded>
-      </div>
-    </Page>
-  );
-}
+import { DoneCheck, Empty, LifecycleChip, Loaded, Spinner, Stale } from '../ui';
 
 const humanStage = (t: string) => t.charAt(0) + t.slice(1).toLowerCase().replace(/_/g, ' ');
 
@@ -63,7 +20,7 @@ function show(v: unknown): string {
 
 export function ActionScreen({ id }: { id: string }) {
   const r = useResource<ActionDetail>(`action:${id}`, () => api().action(id));
-  const { back } = useRouter();
+  const { back, go } = useRouter();
   const [busy, setBusy] = useState<null | 'approve' | 'reject'>(null);
   const [confirming, setConfirming] = useState(false);
   const [result, setResult] = useState<DecisionResult | null>(null);
@@ -80,7 +37,8 @@ export function ActionScreen({ id }: { id: string }) {
       track('client.approval_completed', { screen: 'action' });
       await r.reload();
     } catch (e) {
-      if (e instanceof ApiError && e.status === 409) { setErr(`Already decided elsewhere (${(e.body as { status?: string })?.status || 'updated'}).`); await r.reload(); }
+      if (e instanceof ApiError && e.status === 409 && e.code === 'MISSION_NOT_ACTIVE') setErr(e.message);
+      else if (e instanceof ApiError && e.status === 409) { setErr(`Already decided elsewhere (${(e.body as { status?: string })?.status || 'updated'}).`); await r.reload(); }
       else setErr((e as Error).message);
     } finally { setBusy(null); setConfirming(false); }
   }
@@ -94,7 +52,8 @@ export function ActionScreen({ id }: { id: string }) {
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <span className="eyebrow">{a.type.replace(/_/g, ' ')}</span>
               <span className={`chip ${a.riskLevel === 'high' ? 'bad' : a.riskLevel === 'medium' ? 'warn' : ''}`}>{a.riskLevel} risk</span>
-              <span className="chip">{a.status.replace(/_/g, ' ')}</span>
+              {a.lifecycle ? <LifecycleChip state={a.lifecycle} /> : <span className="chip">{a.status.replace(/_/g, ' ')}</span>}
+              {a.missionId ? <button className="btn ghost sm" onClick={() => go(`/missions/${a.missionId}`)}>Part of a mission ›</button> : null}
               <span style={{ marginLeft: 'auto' }}><Stale r={r} /></span>
             </div>
             <h1 className="page-title" style={{ margin: '12px 0 6px', fontSize: 28, lineHeight: '36px', maxWidth: '32ch' }}>{a.title}</h1>
@@ -154,7 +113,7 @@ export function ActionScreen({ id }: { id: string }) {
                     </>
                   ) : (
                     <div className="small">
-                      <div className="t" style={{ fontWeight: 500, marginBottom: 4 }}>Decided — {a.status.replace(/_/g, ' ')}</div>
+                      <div className="t" style={{ fontWeight: 500, marginBottom: 4 }}>{a.lifecycleNote || `Decided — ${a.status.replace(/_/g, ' ')}`}</div>
                       <div className="muted">Updated {ago(a.updatedAt || a.createdAt)}.</div>
                     </div>
                   )}
