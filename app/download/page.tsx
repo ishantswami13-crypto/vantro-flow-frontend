@@ -5,9 +5,10 @@ import { PublicShell } from "@/components/marketing/PublicShell";
 import { accessApi, tokenFromHash, type Artifact } from "@/lib/access";
 
 // Private setup page for approved applicants (#token=<entitlement>).
-// Shows only what genuinely exists: the Tally bridge is a real file with a
-// published checksum; desktop builds say "not published yet" until a signed
-// build is configured on the server. Every download is recorded server-side.
+// Shows only what genuinely exists: when the Windows app is published it is
+// the way to connect Tally (step 2) and the command-line bridge becomes the
+// advanced option; otherwise the bridge is step 2. Apps without a published
+// build are not shown as downloads. Every download is recorded server-side.
 
 type Loaded = { company?: string; name?: string; expiresAt?: string; artifacts: Artifact[] };
 
@@ -52,7 +53,8 @@ export default function DownloadPage() {
   };
 
   const bridge = state.data?.artifacts.find((a) => a.id === "tally-bridge");
-  const desktop = state.data?.artifacts.filter((a) => a.kind === "desktop") || [];
+  const windowsApp = state.data?.artifacts.find((a) => a.kind === "desktop" && a.os === "windows" && a.available);
+  const otherApps = (state.data?.artifacts || []).filter((a) => (a.kind === "desktop" || a.kind === "mobile") && a.available && a !== windowsApp);
 
   return (
     <PublicShell>
@@ -80,13 +82,29 @@ export default function DownloadPage() {
               <li className="sl-panel">
                 <span className="sl-eyebrow" style={{ marginBottom: 10 }}>Step 1</span>
                 <p className="sl-h3">Create your Starlane account</p>
-                <p className="sl-p" style={{ marginTop: 8 }}>Use the same email address you applied with. Starlane runs in your browser.</p>
+                <p className="sl-p" style={{ marginTop: 8 }}>Use the same email address you applied with. The same account signs you in on the web{windowsApp || otherApps.length ? " and in the apps" : ""}.</p>
                 <div className="sl-hero-ctas" style={{ marginTop: 16 }}><Link className="sl-btn sl-btn-solid" href="/signup">Create account</Link><Link className="sl-link-arrow" href="/login">I already have one</Link></div>
               </li>
 
-              {bridge && (
+              {windowsApp && (
                 <li className="sl-panel">
                   <span className="sl-eyebrow" style={{ marginBottom: 10 }}>Step 2, if you use TallyPrime</span>
+                  <p className="sl-h3">Install Starlane for Windows on the computer that runs Tally</p>
+                  <p className="sl-p" style={{ marginTop: 8 }}>
+                    Sign in, choose TallyPrime, and the app finds Tally on that computer and keeps your books in sync — including when its window is closed. It only reads from Tally.
+                  </p>
+                  <div className="sl-hero-ctas" style={{ marginTop: 16 }}>
+                    <button className="sl-btn sl-btn-solid" onClick={() => download(windowsApp)} disabled={busy === windowsApp.id} aria-busy={busy === windowsApp.id}>
+                      {busy === windowsApp.id ? "Preparing…" : "Download for Windows"}
+                    </button>
+                  </div>
+                  <p style={{ fontSize: 12, color: "var(--sl-ink-faint)", marginTop: 14 }}>Windows 10 or 11. Installs for your user only; no administrator rights needed.</p>
+                </li>
+              )}
+
+              {bridge && (
+                <li className="sl-panel">
+                  <span className="sl-eyebrow" style={{ marginBottom: 10 }}>{windowsApp ? "Advanced: without the app" : "Step 2, if you use TallyPrime"}</span>
                   <p className="sl-h3">Install the Starlane Tally bridge</p>
                   <p className="sl-p" style={{ marginTop: 8 }}>
                     A small, read-only program for the computer that runs Tally. It reads vouchers and stock from Tally’s local export port and sends them to Starlane. {bridge.requirements}
@@ -118,21 +136,18 @@ export default function DownloadPage() {
                 <p className="sl-p" style={{ marginTop: 8 }}>Export invoices from your system as CSV or Excel and upload them from Sources after signing in. Identical files are never imported twice.</p>
               </li>
 
-              {desktop.length > 0 && (
+              {otherApps.length > 0 && (
                 <li className="sl-panel">
-                  <span className="sl-eyebrow" style={{ marginBottom: 10 }}>Desktop app</span>
-                  <p className="sl-h3">Starlane for desktop</p>
+                  <span className="sl-eyebrow" style={{ marginBottom: 10 }}>Apps</span>
+                  <p className="sl-h3">Starlane on your other devices</p>
                   <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0", display: "grid", gap: 10 }}>
-                    {desktop.map((a) => (
+                    {otherApps.map((a) => (
                       <li key={a.id} style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
                         <span className="sl-p" style={{ color: "var(--sl-ink)" }}>{a.name}</span>
-                        {a.available
-                          ? <button className="sl-btn sl-btn-outline" onClick={() => download(a)} disabled={busy === a.id}>Download</button>
-                          : <span className="sl-badge">Not published yet</span>}
+                        <button className="sl-btn sl-btn-outline" onClick={() => download(a)} disabled={busy === a.id}>{a.kind === "mobile" ? "Get the app" : "Download"}</button>
                       </li>
                     ))}
                   </ul>
-                  {desktop.every((a) => !a.available) && <p className="sl-p" style={{ marginTop: 12, fontSize: 14 }}>{desktop[0].note}</p>}
                 </li>
               )}
             </ol>

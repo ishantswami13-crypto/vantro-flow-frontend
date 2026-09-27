@@ -36,7 +36,7 @@ export function Nav() {
           <Link href="/#connect" className="hidden md:inline">Connection</Link>
           <Link href="/#trust" className="hidden md:inline">Trust</Link>
           <Link href="/login" className="hidden md:inline">Sign in</Link>
-          <Link href="/access" className="sl-btn sl-btn-solid">Request access</Link>
+          <Link href="/access" className="sl-btn sl-btn-solid">Get Starlane</Link>
           <button
             type="button"
             className="sl-nav-toggle"

@@ -18,7 +18,7 @@ export function Footer() {
           <h3>Company</h3>
           <Link href="/security">Security</Link>
           <Link href="/#trust">Evidence &amp; controls</Link>
-          <Link href="/access">Request access</Link>
+          <Link href="/access">Get Starlane</Link>
           <Link href="/login">Sign in</Link>
         </div>
         <div className="sl-footer-col">
