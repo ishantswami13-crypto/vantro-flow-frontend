@@ -18,6 +18,8 @@ import { getBusinessType, getSmartHiddenRoutes, type BusinessTypeConfig } from "
 import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
 import { getRecents, timeAgo, type RecentEntry } from "@/lib/recents";
 import { CommandPalette, type SearchableRoute } from "./CommandPalette";
+import { IdentityAvatar } from "@/components/identity/IdentityAvatar";
+import { IdentityPicker } from "@/components/identity/IdentityPicker";
 import { V32_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, V32_SECONDARY_NAV_LABEL } from "@/lib/navigation";
 
 // Starlane Version 32 (frozen design) primary nav — 8 items, exact order,
@@ -84,7 +86,6 @@ const MORE_GROUPS: { label: string; items: { href: string; label: string; icon: 
   {
     label: "Insights",
     items: [
-      { href: "/today",     label: "Today's P&L", icon: FiSun },
       { href: "/analytics", label: "Analytics",    icon: FiBarChart2 },
       { href: "/reports",   label: "Reports",      icon: FiFileText },
     ],
@@ -225,7 +226,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         href={href}
         onClick={onClick}
         title={collapsedMode ? label : undefined}
-        className="flex items-center gap-2.5 h-9 rounded-[6px] text-[13.5px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1"
+        className="relative flex items-center gap-2.5 h-9 rounded-[6px] text-[13.5px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1"
         style={{
           paddingLeft: collapsedMode ? 0 : "10px",
           paddingRight: collapsedMode ? 0 : "10px",
@@ -236,6 +237,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)"; }}
         onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
       >
+        {/* Active marker carries the user's own gradient. */}
+        {active && <span aria-hidden="true" className="absolute left-0 top-2 bottom-2 w-[2.5px] rounded-full" style={{ background: "var(--id-gradient, #F7F7F5)" }} />}
         <Icon size={16} strokeWidth={1.75} className="shrink-0" style={{ color: active ? "#F7F7F5" : "#8A8A86" }} />
         {!collapsedMode && <span className="flex-1 truncate">{label}</span>}
       </Link>
@@ -485,9 +488,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)")}
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
           >
-            <div className="w-7 h-7 rounded-md flex items-center justify-center text-[11px] font-semibold shrink-0" style={{ background: "rgba(255,255,255,0.1)", color: "#F7F7F5" }}>
-              {userName.charAt(0).toUpperCase()}
-            </div>
+            <IdentityAvatar name={userName} size={28} />
             {!collapsed && (
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-[13px] font-medium truncate leading-tight" style={{ color: "#F7F7F5" }}>{userName}</p>
@@ -503,6 +504,9 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               left: collapsed ? "68px" : "12px", right: collapsed ? "auto" : "12px", width: collapsed ? "220px" : "auto",
               bottom: "8px", background: "#1E1E1E", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
             }}>
+              <div className="px-3 pt-3 pb-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <IdentityPicker dark />
+              </div>
               <Link href="/settings?tab=profile" onClick={onClose}
                 className="flex items-center gap-2 px-3 h-9 text-[13px] transition-colors duration-150" style={{ color: "#B0B0AB" }}
                 onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)")}

@@ -30,7 +30,12 @@ export default function PreparedPage() {
     <DashboardLayout pageTitle="Prepared">
       <div style={{ maxWidth: 980, margin: "0 auto", padding: "32px 24px 48px", display: "grid", gap: 22 }}>
         <div>
-          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 30, fontWeight: 400, color: "#191917", margin: 0 }}>Prepared</h1>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 30, fontWeight: 400, color: "#191917", margin: 0 }}>Prepared</h1>
+            {/* Control › Approvals is the one place that lists every decision
+                waiting on the owner; this page only shows what is coming. */}
+            <Link href="/control/approvals" className="hover-dim" style={{ fontSize: 13, color: GRAPHITE }}>All approvals →</Link>
+          </div>
           <p className="v32-body" style={{ color: GRAPHITE, maxWidth: "66ch", marginTop: 8 }}>
             Starlane looks ahead so nothing arrives as a surprise: what falls due, who is about to slip into a worse overdue band, promises coming due, missions ending.
           </p>

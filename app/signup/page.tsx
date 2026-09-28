@@ -12,7 +12,7 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-pro
 
 const businessTypes = [{ value: "", label: "Select type" }, ...INDUSTRY_OPTIONS];
 
-const iBase = { background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Plus Jakarta Sans',system-ui", fontSize:"15px", color:"#F5F4F0", outline:"none", width:"100%", transition:"border-color .2s,background .2s", WebkitAppearance:"none" as const };
+const iBase = { background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Geist', 'Plus Jakarta Sans',system-ui", fontSize:"15px", color:"#F5F4F0", outline:"none", width:"100%", transition:"border-color .2s,background .2s", WebkitAppearance:"none" as const };
 const iFocus = { ...iBase, borderColor:"rgba(255,255,255,.34)", background:"rgba(255,255,255,.08)" };
 
 function FocusInput(p: React.InputHTMLAttributes<HTMLInputElement>) {
@@ -78,7 +78,7 @@ function OTPStep({ preToken, userEmail, userPhone, onVerified }: {
           <input key={i} ref={el=>{inputs.current[i]=el;}} type="tel" inputMode="numeric" maxLength={1}
             value={d} autoFocus={i===0}
             onChange={e=>handleDigit(i,e.target.value)} onKeyDown={e=>handleKeyDown(i,e)}
-            style={{width:"44px",height:"52px",textAlign:"center",fontSize:"20px",fontWeight:700,background:d?"rgba(255,255,255,.09)":"rgba(255,255,255,.05)",border:`1px solid ${d?"rgba(255,255,255,.34)":"rgba(255,255,255,.12)"}`,borderRadius:"7px",color:"#F5F4F0",outline:"none",opacity:loading?.5:1,fontFamily:"'Plus Jakarta Sans',system-ui"}}
+            style={{width:"44px",height:"52px",textAlign:"center",fontSize:"20px",fontWeight:700,background:d?"rgba(255,255,255,.09)":"rgba(255,255,255,.05)",border:`1px solid ${d?"rgba(255,255,255,.34)":"rgba(255,255,255,.12)"}`,borderRadius:"7px",color:"#F5F4F0",outline:"none",opacity:loading?.5:1,fontFamily:"'Geist', 'Plus Jakarta Sans',system-ui"}}
           />
         ))}
       </div>

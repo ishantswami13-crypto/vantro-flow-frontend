@@ -21,7 +21,7 @@
   --sl-danger:    #A23B3B;
 
   --sl-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
-  --sl-sans:  'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --sl-sans:  'Space Grotesk', 'Geist', 'Plus Jakarta Sans', system-ui, sans-serif;
   --sl-mono:  'IBM Plex Mono', ui-monospace, monospace;
 
   --sl-gutter: clamp(20px, 4.5vw, 64px);

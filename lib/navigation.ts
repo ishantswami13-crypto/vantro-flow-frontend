@@ -1,6 +1,6 @@
 import {
   FiDatabase, FiCompass, FiSearch, FiEye, FiTarget,
-  FiSliders, FiClock, FiCheckSquare, FiSettings,
+  FiSliders, FiClock, FiCheckSquare, FiSettings, FiSun,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
 
@@ -14,7 +14,10 @@ export interface PrimaryNavItem {
 // desktop and phone apps. Discover, Agents and Control are no longer in the
 // sidebar (their pages still answer at their URLs); what was useful in them
 // lives in Watch, Missions and Sources.
+// "Today" sits first, ahead of the seven: it is the owner's daily starting
+// point (main, PR #25).
 export const V32_NAV_ITEMS: PrimaryNavItem[] = [
+  { href: "/today",    label: "Today",      icon: FiSun },
   { href: "/bridge",   label: "The Bridge", icon: FiCompass },
   { href: "/scan",     label: "Scan",       icon: FiSearch },
   { href: "/watch",    label: "Watch",      icon: FiEye },

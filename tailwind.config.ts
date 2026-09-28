@@ -74,7 +74,7 @@ const config: Config = {
         "accent-deep-sand":      "#847661",
       },
       fontFamily: {
-        sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
+        sans: ["Geist", "Plus Jakarta Sans", "system-ui", "sans-serif"],
         mono: ["IBM Plex Mono", "Menlo", "monospace"],
         serif: ["Fraunces", "Georgia", "serif"],
       },

@@ -128,7 +128,7 @@ export default function ScanPage() {
                 }}
                 placeholder="Ask about your receivables, customers or cash"
                 disabled={submitting}
-                style={{ width: "100%", boxSizing: "border-box", border: "none", outline: "none", resize: "none", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, color: "#191917", background: "none" }}
+                style={{ width: "100%", boxSizing: "border-box", border: "none", outline: "none", resize: "none", fontFamily: "'Geist', 'Plus Jakarta Sans', sans-serif", fontSize: 15, color: "#191917", background: "none" }}
               />
             </div>
 
