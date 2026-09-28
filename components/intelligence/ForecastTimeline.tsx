@@ -31,7 +31,6 @@ export function ForecastTimeline({ predictions, component }: { predictions: Inte
 
   return (
     <div>
-      <p className="text-[13px] mb-4" style={{ color: "#8A8A86" }}>If nothing changes</p>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="min-w-0">
           <p className="text-2xs text-muted mb-2">Today</p>
