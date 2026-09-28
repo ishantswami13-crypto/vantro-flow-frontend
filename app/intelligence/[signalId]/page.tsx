@@ -14,8 +14,8 @@ import { CausalChain } from "@/components/intelligence/CausalChain";
 import { ForecastTimeline } from "@/components/intelligence/ForecastTimeline";
 import { DecisionSection } from "@/components/intelligence/DecisionSection";
 import { OutcomeVerification } from "@/components/intelligence/OutcomeVerification";
-import { formatINR, formatDateTime, confidenceFromScore } from "@/components/intelligence/format";
-import { api, type IntelligencePrediction, type IntelligenceAction, type IntelligenceEvidenceItem } from "@/lib/api";
+import { formatINR, formatDate, formatDateTime, confidenceLabel, humanizeCode } from "@/components/intelligence/format";
+import { api, type IntelligencePrediction, type IntelligenceAction, type IntelligenceEvidenceItem, type ImpactComponent } from "@/lib/api";
 
 // Real counts from the real evidence array — not a fabricated coverage
 // score. Groups by the same kind vocabulary EvidenceDrawer already uses.
@@ -28,9 +28,25 @@ function kindLabel(kind: string): string {
   return kind.replace(/_/g, " ").toLowerCase().replace(/^./, c => c.toUpperCase());
 }
 
-function humanReason(signal: { why_exists?: string | null; event_type?: string | null }, supplierName?: string | null): string {
-  if (supplierName) return `This ${signal.event_type?.replace(/_/g, " ").toLowerCase() || "external event"} was matched to ${supplierName}'s verified location exposure through the recorded transmission rule.`;
-  return "This external event matched a recorded business exposure through the transmission rules.";
+function humanReason(signal: { event_type?: string | null; channel_code?: string | null }, supplierName?: string | null): string {
+  const event = humanizeCode(signal.event_type).toLowerCase() || "external event";
+  const channel = humanizeCode(signal.channel_code).toLowerCase();
+  const via = channel ? ` (${channel})` : "";
+  if (supplierName) return `This ${event} affects ${supplierName}, one of your suppliers${via}.`;
+  return `This ${event} matches a recorded exposure in your business${via}.`;
+}
+
+// Earliest stockout across every affected component — the header must not
+// silently report only the first component when a supplier provides several.
+function earliestStockout(components: ImpactComponent[]): { component: ImpactComponent; days: number } | null {
+  let best: { component: ImpactComponent; days: number } | null = null;
+  for (const c of components) {
+    if (!c.stockout.sufficientData) continue;
+    const days = c.stockout.alreadyBelowSafetyStock ? 0 : c.stockout.daysUntilStockout;
+    if (days == null || !Number.isFinite(days)) continue;
+    if (!best || days < best.days) best = { component: c, days };
+  }
+  return best;
 }
 
 // Breadcrumb doubles as back-navigation — one line, no separate button,
@@ -40,7 +56,7 @@ function Breadcrumb({ router, title }: { router: ReturnType<typeof useRouter>; t
     <button
       type="button"
       onClick={() => router.push("/intelligence")}
-      className="text-[12px] mb-2 hover:underline"
+      className="block text-left text-[12px] mb-2 hover:underline"
       style={{ color: "#8A8A86" }}
     >
       Intelligence / {title}
@@ -72,6 +88,7 @@ export default function SignalImpactPage() {
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [predictions, setPredictions] = useState<IntelligencePrediction[] | null>(null);
   const [actions, setActions] = useState<IntelligenceAction[] | null>(null);
+  const [componentIndex, setComponentIndex] = useState(0);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["intelligence-impact", signalId],
@@ -95,7 +112,19 @@ export default function SignalImpactPage() {
   });
 
   const impact = data?.impact;
-  const primaryComponent = impact?.components?.[0];
+  const components = impact?.components ?? [];
+  const primaryComponent = components[Math.min(componentIndex, components.length - 1)];
+  const soonest = earliestStockout(components);
+  const affectedOrderCount = new Set(components.flatMap(c => c.affectedDemand.affectedOrderIds)).size;
+  // Forecast rows and actions are written per component; show only the
+  // selected component's rows. Fall back to everything if the backend
+  // didn't tag them (keeps older rows visible rather than hiding them).
+  const componentPredictions = predictions && primaryComponent
+    ? (predictions.some(p => p.entity_id === primaryComponent.component.id) ? predictions.filter(p => p.entity_id === primaryComponent.component.id) : predictions)
+    : predictions;
+  const componentActions = actions && primaryComponent
+    ? (actions.some(a => a.reason_json?.componentId === primaryComponent.component.id) ? actions.filter(a => a.reason_json?.componentId === primaryComponent.component.id) : actions)
+    : actions;
 
   // Recents (sidebar) records whatever pageTitle DashboardLayout receives -
   // "Impact" would mean every investigation shows up with the same
@@ -122,7 +151,7 @@ export default function SignalImpactPage() {
           >
             <FiArrowLeft size={12} /> Back to Intelligence
           </button>
-          <ErrorState title="Couldn't load this signal" message="It may not exist, or it may belong to a different tenant." onRetry={() => refetch()} />
+          <ErrorState title="Couldn't load this signal" message="It may have been removed, or your account may not have access to it." onRetry={() => refetch()} />
         </div>
       )}
 
@@ -148,7 +177,7 @@ export default function SignalImpactPage() {
             {impact.signal.event_title || "External signal"}
           </h1>
           <p className="text-[13px] mb-10" style={{ color: "#686868" }}>
-            {impact.supplier?.name}{impact.supplier?.country ? ` · ${impact.supplier.country}` : ""} · Detected {formatDateTime(impact.signal.first_detected_at)} · {confidenceFromScore(impact.signal.event_confidence).charAt(0)}{confidenceFromScore(impact.signal.event_confidence).slice(1).toLowerCase()} confidence
+            {impact.supplier?.name}{impact.supplier?.country ? ` · ${impact.supplier.country}` : ""} · Detected {formatDateTime(impact.signal.first_detected_at)} · {confidenceLabel(impact.signal.event_confidence)} confidence
           </p>
 
           {/* SITUATION — the "what happened / why it matters" summary,
@@ -168,19 +197,27 @@ export default function SignalImpactPage() {
             {/* Open exposure row — no per-metric boxes, no rainbow colors.
                 Numbers themselves carry the hierarchy. */}
             <div className="flex flex-wrap gap-x-12 gap-y-6 mt-8 pt-8" style={{ borderTop: "1px solid #E5E5E1" }}>
-              <Exposure value={formatINR(impact.totalRevenueExposure)} label="Revenue exposed" tone="danger" />
               <Exposure
-                value={primaryComponent.stockout.sufficientData
-                  ? primaryComponent.stockout.alreadyBelowSafetyStock ? "Now" : `${primaryComponent.stockout.daysUntilStockout}d`
-                  : "—"}
-                label="Time to stockout"
-                sub={primaryComponent.stockout.sufficientData && !primaryComponent.stockout.alreadyBelowSafetyStock ? primaryComponent.stockout.stockoutDate : undefined}
+                value={formatINR(impact.totalRevenueExposure)}
+                label="Revenue exposed"
+                tone="danger"
+                sub={components.length > 1 ? `Across ${components.length} parts` : undefined}
               />
-              <Exposure value={String(primaryComponent.affectedDemand.affectedOrderCount)} label="Affected orders" />
               <Exposure
-                value={confidenceFromScore(impact.signal.event_confidence)}
+                value={soonest ? (soonest.days === 0 ? "Now" : `${soonest.days}d`) : "—"}
+                label="Time to stockout"
+                sub={soonest
+                  ? [
+                      soonest.days === 0 ? "Below safety stock" : `Below safety stock ${formatDate(soonest.component.stockout.stockoutDate)}`,
+                      components.length > 1 ? soonest.component.component.name : null,
+                    ].filter(Boolean).join(" · ")
+                  : undefined}
+              />
+              <Exposure value={String(affectedOrderCount)} label="Affected orders" />
+              <Exposure
+                value={confidenceLabel(impact.signal.event_confidence)}
                 label="Confidence"
-                sub={impact.signal.channel_code || undefined}
+                sub={humanizeCode(impact.signal.channel_code) || undefined}
               />
             </div>
           </section>
@@ -214,6 +251,27 @@ export default function SignalImpactPage() {
           {/* CAUSAL CHAIN — Starlane's signature trace */}
           <section className="mb-12">
             <p className="text-[11px] font-semibold uppercase mb-4" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>Dependency chain</p>
+            {components.length > 1 && (
+              <div className="flex flex-wrap gap-2 mb-6" role="tablist" aria-label="Affected parts">
+                {components.map((c, i) => {
+                  const selected = c === primaryComponent;
+                  return (
+                    <button
+                      key={c.component.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      onClick={() => setComponentIndex(i)}
+                      className="text-left rounded-lg px-3 py-2 text-[12px] focus-ring"
+                      style={{ border: `1px solid ${selected ? "#171717" : "#E5E5E1"}`, color: "#171717", background: selected ? "#FFFFFF" : "transparent" }}
+                    >
+                      <span className="font-medium">{c.component.name}</span>
+                      <span className="ml-2" style={{ color: "#8A8A86", fontVariantNumeric: "tabular-nums" }}>{formatINR(c.revenueExposure.totalRevenueExposure)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             <CausalChain impact={impact} component={primaryComponent} />
           </section>
 
@@ -233,16 +291,18 @@ export default function SignalImpactPage() {
             </section>
           )}
 
-          {predictions && (
+          {componentPredictions && (
             <section className="mb-12">
-              <p className="text-[11px] font-semibold uppercase mb-4" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>Forecast</p>
-              <ForecastTimeline predictions={predictions} component={primaryComponent} />
+              <p className="text-[11px] font-semibold uppercase mb-4" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>
+                Forecast{components.length > 1 ? ` · ${primaryComponent.component.name}` : ""}
+              </p>
+              <ForecastTimeline predictions={componentPredictions} component={primaryComponent} />
             </section>
           )}
 
-          {actions && (
+          {componentActions && (
             <section className="mb-12">
-              <DecisionSection actions={actions} component={primaryComponent} />
+              <DecisionSection actions={componentActions} component={primaryComponent} />
             </section>
           )}
 

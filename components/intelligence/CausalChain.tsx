@@ -1,6 +1,6 @@
 import React from "react";
 import { Badge } from "@/components/ui/Badge";
-import { formatINR } from "./format";
+import { formatINR, formatDate, humanizeCode } from "./format";
 import type { SignalImpact, ImpactComponent } from "@/lib/api";
 
 // Starlane's signature causal-trace primitive — cause to consequence as one
@@ -42,7 +42,7 @@ export function CausalChain({ impact, component }: { impact: SignalImpact; compo
 
   return (
     <div className="max-w-md">
-      <Node eyebrow={impact.signal.event_type || "External event"} title={impact.signal.event_title || "External event"} tone="danger">
+      <Node eyebrow={humanizeCode(impact.signal.event_type) || "External event"} title={impact.signal.event_title || "External event"} tone="danger">
         {impact.signal.magnitude != null && (
           <p className="text-2xs text-muted">Magnitude {impact.signal.magnitude} {impact.signal.magnitude_unit}</p>
         )}
@@ -56,12 +56,17 @@ export function CausalChain({ impact, component }: { impact: SignalImpact; compo
       </Node>
       <Node
         eyebrow="Calculated coverage"
-        title={component.coverage.sufficientData ? `${component.coverage.coverageDays} days of coverage` : "Insufficient data"}
-        tone={component.stockout.sufficientData && (component.stockout.daysUntilStockout ?? 99) <= 14 ? "danger" : "warning"}
+        title={component.coverage.sufficientData ? `${component.coverage.coverageDays} days of stock on hand` : "Insufficient data"}
+        tone={component.stockout.sufficientData && (component.stockout.alreadyBelowSafetyStock || (component.stockout.daysUntilStockout ?? 99) <= 14) ? "danger" : "warning"}
       >
+        {/* Stock on hand runs out later than the stockout date because the
+            stockout date is when stock hits the safety-stock floor. Say so,
+            so the two numbers don't read as a contradiction. */}
         {component.stockout.sufficientData && (
           <p className="text-2xs text-muted">
-            {component.stockout.alreadyBelowSafetyStock ? "Already below safety stock" : `Projected stockout ${component.stockout.stockoutDate}`}
+            {component.stockout.alreadyBelowSafetyStock
+              ? "Already below safety stock"
+              : `Stockout (below safety stock) in ${component.stockout.daysUntilStockout} days, ${formatDate(component.stockout.stockoutDate)}`}
           </p>
         )}
       </Node>

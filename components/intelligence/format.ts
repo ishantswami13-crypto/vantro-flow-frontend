@@ -30,3 +30,15 @@ export function confidenceFromScore(value: number | null | undefined): "HIGH" | 
   if (value >= 0.5) return "MEDIUM";
   return "LOW";
 }
+
+// Turns backend enum codes (PORT_CLOSURE, PORT_DISRUPTION) into plain words
+// for display. Returns "" for empty input so callers can fall back.
+export function humanizeCode(code: string | null | undefined): string {
+  if (!code) return "";
+  const words = code.replace(/[_-]+/g, " ").trim().toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+export function confidenceLabel(value: number | null | undefined): string {
+  return humanizeCode(confidenceFromScore(value));
+}
