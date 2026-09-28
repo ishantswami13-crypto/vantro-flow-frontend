@@ -1,6 +1,6 @@
 import {
   FiDatabase, FiShield, FiCompass, FiSearch, FiEye, FiTarget,
-  FiSliders, FiClock, FiCheckSquare, FiUsers, FiSun,
+  FiSliders, FiClock, FiCheckSquare, FiUsers, FiSun, FiGitBranch,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
 
@@ -20,6 +20,7 @@ export interface PrimaryNavItem {
 // starting point and was previously buried under More as "Today's P&L".
 export const V32_NAV_ITEMS: PrimaryNavItem[] = [
   { href: "/today",    label: "Today",      icon: FiSun },
+  { href: "/decisions", label: "Decisions", icon: FiGitBranch },
   { href: "/bridge",   label: "The Bridge", icon: FiCompass },
   { href: "/scan",     label: "Scan",       icon: FiSearch },
   { href: "/discover", label: "Discover",   icon: FiEye },

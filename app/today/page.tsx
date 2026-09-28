@@ -9,6 +9,7 @@ import {
   FiCalendar, FiZap,
 } from "react-icons/fi";
 import { isDemoMode } from "@/lib/demo";
+import TodayDecisionsCard from "@/components/decisions/TodayDecisionsCard";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -168,6 +169,7 @@ export default function TodayPage() {
 
   return (
     <DashboardLayout pageTitle="Aaj ka Hisaab">
+      <TodayDecisionsCard />
 
       {/* ── PREMIUM DATE NAVIGATOR ──────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-5 gap-3">
