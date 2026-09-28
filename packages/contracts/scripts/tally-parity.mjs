@@ -11,7 +11,7 @@ const backend = process.argv[2] || '../../../vantro-flow-backend';
 let ok = true;
 // The plain day book, and one with bill-wise details (credit periods, receipts and
 // a credit note against named bills, an on-account receipt, element-order quirks).
-for (const sample of ['sample-daybook.xml', 'sample-daybook-billwise.xml']) {
+for (const sample of ['sample-daybook.xml', 'sample-daybook-billwise.xml', 'sample-daybook-corrections.xml']) {
   const xml = readFileSync(join(backend, 'tally-connector', sample), 'utf8');
   const ts = toApiVouchers(parseVouchers(xml)).rows;
   const out = execFileSync(process.execPath, ['tally-connector/tally-sync.mjs', '--test', `--sample=${sample}`], { cwd: backend, encoding: 'utf8' });

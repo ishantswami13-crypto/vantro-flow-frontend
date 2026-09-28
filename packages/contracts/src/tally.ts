@@ -16,10 +16,15 @@ export interface TallyVoucher {
   /** ISO due date from the bill's credit period (or the voucher's), when Tally has one. */
   dueDate: string | null;
   bills: TallyBill[];
+  /** Cancelled in Tally (ISCANCELLED): kept so Starlane can withdraw what it had imported. */
+  cancelled: boolean;
+  /** Optional voucher (a memorandum, not in the books): never imported. */
+  optional: boolean;
 }
 export interface ApiVoucher {
   type: string; date: string; party: string; voucherNo: string; amount: number; items: TallyVoucher['items'];
   dueDate: string | null; bills: Array<{ name: string; type: TallyBill['type']; amount: number }>;
+  cancelled?: true;
 }
 
 export const DEFAULT_VOUCHER_TYPES = ['Sales', 'Purchase', 'Receipt', 'Payment', 'Credit Note', 'Debit Note'];
@@ -236,7 +241,9 @@ export function parseVouchers(xml: string): TallyVoucher[] {
       if (name && !isNaN(qty) && qty > 0) items.push({ name, qty, rate: isNaN(rate) ? 0 : Math.abs(rate) });
     }
 
-    out.push({ type: decode(vchType), date, party, voucherNo: vchNo, amount: isNaN(amount) ? null : Math.abs(amount), items, dueDate, bills });
+    const flag = (name: string) => /^yes$/i.test(tag(b, name) || '');
+    out.push({ type: decode(vchType), date, party, voucherNo: vchNo, amount: isNaN(amount) ? null : Math.abs(amount), items, dueDate, bills,
+      cancelled: flag('ISCANCELLED'), optional: flag('ISOPTIONAL') });
   }
   return out;
 }
@@ -293,7 +300,14 @@ export function toApiVouchers(vouchers: TallyVoucher[], wantedTypes: string[] = 
   for (const v of vouchers) {
     const typeMatch = wanted.some((w) => (v.type || '').toLowerCase().includes(w));
     const iso = tallyDateToISO(v.date);
-    if (!typeMatch || !v.party || !v.amount || !iso || v.amount <= 0) { skipped.push(v); continue; }
+    if (v.optional || !typeMatch || !v.party || !iso) { skipped.push(v); continue; }
+    // A cancelled voucher keeps its type, number, date and party but usually loses
+    // its amounts; it is sent so Starlane can withdraw what it imported before.
+    if (v.cancelled) {
+      rows.push({ type: v.type, date: iso, party: v.party, voucherNo: v.voucherNo, amount: v.amount || 0, items: [], dueDate: null, bills: [], cancelled: true });
+      continue;
+    }
+    if (!v.amount || v.amount <= 0) { skipped.push(v); continue; }
     rows.push({ type: v.type, date: iso, party: v.party, voucherNo: v.voucherNo, amount: v.amount, items: v.items,
       dueDate: v.dueDate, bills: v.bills.map((x) => ({ name: x.name, type: x.type, amount: x.amount })) });
   }
