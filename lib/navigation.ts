@@ -1,6 +1,6 @@
 import {
   FiDatabase, FiShield, FiCompass, FiSearch, FiEye, FiTarget,
-  FiSliders, FiClock, FiCheckSquare, FiUsers,
+  FiSliders, FiClock, FiCheckSquare, FiUsers, FiSun,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
 
@@ -16,7 +16,10 @@ export interface PrimaryNavItem {
 // content (out of scope this pass) — each route currently renders a thin
 // honest "not built yet" stub (see app/<route>/page.tsx) rather than
 // 404ing, so the sidebar is fully clickable today.
+// "Today" sits first, ahead of the V32 list: it is the owner's daily
+// starting point and was previously buried under More as "Today's P&L".
 export const V32_NAV_ITEMS: PrimaryNavItem[] = [
+  { href: "/today",    label: "Today",      icon: FiSun },
   { href: "/bridge",   label: "The Bridge", icon: FiCompass },
   { href: "/scan",     label: "Scan",       icon: FiSearch },
   { href: "/discover", label: "Discover",   icon: FiEye },

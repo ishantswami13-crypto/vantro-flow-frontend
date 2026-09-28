@@ -86,7 +86,6 @@ const MORE_GROUPS: { label: string; items: { href: string; label: string; icon: 
   {
     label: "Insights",
     items: [
-      { href: "/today",     label: "Today's P&L", icon: FiSun },
       { href: "/analytics", label: "Analytics",    icon: FiBarChart2 },
       { href: "/reports",   label: "Reports",      icon: FiFileText },
     ],
