@@ -123,14 +123,14 @@ export default function ScanPage() {
               <button
                 type="button"
                 disabled
-                style={{ display: "flex", alignItems: "center", gap: 7, background: "none", border: "none", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#43433F", cursor: "default", padding: 0, opacity: 0.7 }}
+                style={{ display: "flex", alignItems: "center", gap: 7, background: "none", border: "none", fontFamily: "'Geist', 'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#43433F", cursor: "default", padding: 0, opacity: 0.7 }}
               >
                 <IconWorld /> Select your world <IconChevronDown />
               </button>
               <button
                 type="button"
                 disabled
-                style={{ display: "flex", alignItems: "center", gap: 7, background: "none", border: "none", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#43433F", cursor: "default", padding: 0, opacity: 0.7 }}
+                style={{ display: "flex", alignItems: "center", gap: 7, background: "none", border: "none", fontFamily: "'Geist', 'Plus Jakarta Sans', sans-serif", fontSize: 13, color: "#43433F", cursor: "default", padding: 0, opacity: 0.7 }}
               >
                 <IconGlobe /> Field scope: Global <IconChevronDown />
               </button>
@@ -150,7 +150,7 @@ export default function ScanPage() {
                 }}
                 placeholder="Scan the field for what's moving your world"
                 disabled={submitting}
-                style={{ width: "100%", boxSizing: "border-box", border: "none", outline: "none", resize: "none", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 15, color: "#191917", background: "none" }}
+                style={{ width: "100%", boxSizing: "border-box", border: "none", outline: "none", resize: "none", fontFamily: "'Geist', 'Plus Jakarta Sans', sans-serif", fontSize: 15, color: "#191917", background: "none" }}
               />
             </div>
 
@@ -218,7 +218,7 @@ function ScopePill({ icon, label }: { icon: React.ReactNode; label: string }) {
       style={{
         display: "flex", alignItems: "center", gap: 8, padding: "8px 14px",
         border: "1px solid rgba(25,25,23,0.12)", borderRadius: 20, background: "#FFFFFF",
-        fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12.5, color: "#43433F",
+        fontFamily: "'Geist', 'Plus Jakarta Sans', sans-serif", fontSize: 12.5, color: "#43433F",
         cursor: "default", opacity: 0.85,
       }}
     >

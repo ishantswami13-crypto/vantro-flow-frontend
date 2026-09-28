@@ -1,5 +1,7 @@
 "use client";
 
+import { IdentityAvatar } from "@/components/identity/IdentityAvatar";
+import { IdentityPicker } from "@/components/identity/IdentityPicker";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -270,12 +272,13 @@ function SettingsPageInner() {
                 <h3 className="text-sm font-semibold text-primary mb-5">User Profile</h3>
                 <form onSubmit={handleProfileSave} className="space-y-4 max-w-lg">
                   <div className="flex items-center gap-4 pb-4 border-b border-border">
-                    <div className="w-14 h-14 rounded-xl bg-accent-dim border border-accent/20 flex items-center justify-center shrink-0">
-                      <span className="text-xl font-bold text-accent">{initials}</span>
-                    </div>
+                    <IdentityAvatar name={initials} size={56} />
                     <div>
                       <p className="text-sm font-semibold text-primary">{profile.full_name || "—"}</p>
                       <p className="text-xs text-secondary">{profile.email}</p>
+                    </div>
+                    <div className="ml-auto hidden sm:block">
+                      <IdentityPicker />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">

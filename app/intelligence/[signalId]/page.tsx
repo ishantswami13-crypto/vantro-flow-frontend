@@ -308,7 +308,7 @@ export default function SignalImpactPage() {
                       Runs Starlane's deterministic forecast and ranks interventions for {components.length > 1 ? "each part" : primaryComponent.component.name}.
                     </span>
                   </span>
-                  <span className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full" style={{ background: "#191917", color: "#FFFFFF" }}>
+                  <span className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full id-gradient" style={{ color: "#FFFFFF", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.25)" }}>
                     {analyzeMutation.isPending ? <FiLoader size={15} className="animate-spin" /> : <FiArrowUp size={16} />}
                   </span>
                 </button>

@@ -21,7 +21,7 @@ export function SourcesRail({ evidence, highlighted }: { evidence: IntelligenceE
               key={n}
               id={`source-${n}`}
               className="rounded-lg px-3 py-2.5 transition-colors"
-              style={{ background: active ? "#FFFFFF" : "transparent", border: `1px solid ${active ? "#D7D6D0" : "transparent"}` }}
+              style={{ background: active ? "#FFFFFF" : "transparent", border: `1px solid ${active ? "var(--id-b, #D7D6D0)" : "transparent"}` }}
             >
               <div className="flex items-start gap-2.5">
                 <span
