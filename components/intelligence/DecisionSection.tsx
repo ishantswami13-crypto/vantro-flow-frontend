@@ -66,22 +66,32 @@ function ActionCard({ action, rank, dominant, onApprove, execState, execResult }
 }) {
   const top = action.reason_json.rankedOptions[0];
   const alreadyDone = action.status === "done" || execState === "EXECUTED";
+  const product = action.parameters?.products?.[0];
+  const orderLine = product
+    ? `Order ${product.quantity.toLocaleString("en-IN")} units of ${product.name} (${product.sku})`
+    : null;
 
   return (
     <div className={["card-premium p-5", dominant ? "border-accent/40" : ""].join(" ")}>
       <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="w-6 h-6 rounded-full bg-surface-2 border border-border flex items-center justify-center text-2xs font-bold text-secondary shrink-0">
             {rank}
           </span>
           <Badge variant={action.priority === "urgent" ? "danger" : action.priority === "high" ? "warning" : "default"}>{action.priority}</Badge>
           {dominant && <Badge variant="accent">Recommended</Badge>}
         </div>
-        <Badge variant={action.risk_level === "high" ? "danger" : action.risk_level === "medium" ? "warning" : "success"}>{action.risk_level} risk</Badge>
+        <Badge variant={action.risk_level === "high" ? "danger" : action.risk_level === "medium" ? "warning" : "success"} className="whitespace-nowrap shrink-0">{action.risk_level} risk</Badge>
       </div>
 
       <p className="text-sm font-bold text-primary">{action.title}</p>
-      <p className="text-2xs text-secondary mt-1 leading-relaxed">{action.description}</p>
+      {/* The backend description repeats the figures shown just below, so
+          show the order itself instead when the frozen parameters carry it. */}
+      {orderLine ? (
+        <p className="text-2xs text-secondary mt-1 leading-relaxed">{orderLine}</p>
+      ) : (
+        <p className="text-2xs text-secondary mt-1 leading-relaxed">{action.description}</p>
+      )}
 
       <div className="grid grid-cols-3 gap-3 mt-4">
         <div>
@@ -118,7 +128,7 @@ function ActionCard({ action, rank, dominant, onApprove, execState, execResult }
         {!alreadyDone && (
           <div className="card-premium p-3 mb-3 bg-surface-2">
             <p className="text-2xs font-semibold text-secondary">What will happen</p>
-            <p className="text-2xs text-muted mt-0.5">Create a draft purchase order for {action.title.toLowerCase()}.</p>
+            <p className="text-2xs text-muted mt-0.5">Create a draft purchase order: {action.title}.</p>
             <p className="text-2xs text-muted mt-0.5">
               Simulated execution — writes to Starlane's demo ERP adapter only, no live Odoo write occurs.
             </p>

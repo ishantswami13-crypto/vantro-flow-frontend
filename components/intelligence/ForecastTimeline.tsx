@@ -8,10 +8,10 @@ import type { IntelligencePrediction, ImpactComponent } from "@/lib/api";
 function HorizonPoint({ label, willStockOut, dataQuality }: { label: string; willStockOut: boolean | null; dataQuality: string }) {
   const insufficient = dataQuality !== "sufficient" || willStockOut === null;
   return (
-    <div className="flex-1 min-w-0">
+    <div className="min-w-0">
       <p className="text-2xs text-muted mb-2">{label}</p>
       <div className={[
-        "rounded-xl border p-3 text-center",
+        "rounded-xl border px-2 py-3 text-center whitespace-nowrap",
         insufficient ? "border-border bg-surface-2" : willStockOut ? "border-danger/30 bg-danger-dim" : "border-success/30 bg-success-dim",
       ].join(" ")}>
         {insufficient ? (
@@ -32,12 +32,12 @@ export function ForecastTimeline({ predictions, component }: { predictions: Inte
   return (
     <div>
       <p className="text-[13px] mb-4" style={{ color: "#8A8A86" }}>If nothing changes</p>
-      <div className="flex items-stretch gap-3">
-        <div className="flex-1 min-w-0">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="min-w-0">
           <p className="text-2xs text-muted mb-2">Today</p>
-          <div className="rounded-xl border border-border bg-surface-2 p-3 text-center">
+          <div className="rounded-xl border border-border bg-surface-2 px-2 py-3 text-center whitespace-nowrap">
             <span className="text-xs font-bold text-primary">
-              {component.coverage.sufficientData ? `${component.coverage.coverageDays}d coverage` : "—"}
+              {component.coverage.sufficientData ? `${component.coverage.coverageDays}d of stock` : "—"}
             </span>
           </div>
         </div>
@@ -51,7 +51,7 @@ export function ForecastTimeline({ predictions, component }: { predictions: Inte
         ))}
       </div>
       <p className="text-2xs text-muted mt-2">
-        Based on current inventory, average daily demand, and safety stock — see evidence for the underlying figures. This is a forecast, not an observation.
+        "Stocked out" means below safety stock. Based on current inventory, average daily demand, and safety stock — see evidence for the underlying figures. This is a forecast, not an observation.
       </p>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
 
 interface DrawerProps {
@@ -61,7 +62,11 @@ export function Drawer({ titleId, title, onClose, onBack, children, breadcrumb }
     return () => document.removeEventListener("keydown", onKeyDown, true);
   }, [onBack, onClose]);
 
-  return (
+  // Portalled to <body> so the fixed backdrop covers the whole app (sidebar
+  // and header included) instead of being trapped in the page's stacking
+  // context.
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <>
       {/* Backdrop — click-to-close on desktop only; no visible backdrop on the
           full-screen mobile variant, so it's hidden below `lg`. */}
@@ -107,6 +112,7 @@ export function Drawer({ titleId, title, onClose, onBack, children, breadcrumb }
         </div>
         <div className="flex-1 overflow-y-auto p-4">{children}</div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
