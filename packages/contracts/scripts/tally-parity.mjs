@@ -5,7 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
-import { parseVouchers, toApiVouchers, parseCompanies, parseOpeningBills, openingBillVouchers, dayBefore, financialYearStart, parseLedgerContacts } from '../src/tally.ts';
+import { parseVouchers, toApiVouchers, parseCompanies, parseOpeningBills, openingBillVouchers, dayBefore, financialYearStart, parseLedgerContacts, voucherIdentities } from '../src/tally.ts';
 
 const backend = process.argv[2] || '../../../vantro-flow-backend';
 let ok = true;
@@ -44,6 +44,17 @@ for (const sample of ['sample-daybook.xml', 'sample-daybook-billwise.xml', 'samp
   const same = JSON.stringify(ts) === JSON.stringify(cli) && ts.length === 4 && ts.some((c) => c.party === 'Gupta & Sons');
   ok = ok && same;
   console.log(same ? `PASS parity (${file}): ${ts.length} contacts identical` : `FAIL parity (${file}): ${JSON.stringify(ts)} vs ${JSON.stringify(cli)}`);
+}
+// Voucher identities sent after a sync to detect deletions (optional vouchers left out).
+{
+  const sample = 'sample-daybook-corrections.xml';
+  const ts = voucherIdentities(parseVouchers(readFileSync(join(backend, 'tally-connector', sample), 'utf8')));
+  const out = execFileSync(process.execPath, ['tally-connector/tally-sync.mjs', '--test', `--sample=${sample}`], { cwd: backend, encoding: 'utf8' });
+  const line = out.split('\n').find((l) => l.includes('WOULD be checked for deletions')) || '';
+  const cli = JSON.parse(line.slice(line.indexOf('[')) || '[]');
+  const same = JSON.stringify(ts) === JSON.stringify(cli) && ts.length === 7 && !ts.some((v) => v.voucherNo === 'S/204');
+  ok = ok && same;
+  console.log(same ? `PASS parity (${sample} identities): ${ts.length} identical, optional voucher left out` : `FAIL parity (${sample} identities)`);
 }
 const companies = parseCompanies('<ENVELOPE><BODY><DATA><COLLECTION><COMPANY NAME="Rao Distributors"><NAME>Rao Distributors</NAME></COMPANY><COMPANY NAME="Rao &amp; Sons"/></COLLECTION></DATA></BODY></ENVELOPE>');
 const cOk = companies.join('|') === 'Rao Distributors|Rao & Sons';

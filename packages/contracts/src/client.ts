@@ -221,6 +221,9 @@ export function createStarlaneClient(opts: StarlaneClientOptions) {
       importTally: (deviceToken: string, runId: string, vouchers: unknown[], contacts?: Array<{ party: string; phone: string }>) =>
         raw('/api/import/tally', { method: 'POST', auth: `StarlaneDevice ${deviceToken}`, headers: { 'X-Sync-Run-Id': runId }, body: contacts?.length ? { vouchers, contacts } : { vouchers } })
           .then((r) => parse<{ imported: Record<string, number>; rejected: unknown[]; message: string; syncRunId: string }>(r)),
+      reconcileTally: (deviceToken: string, body: { from: string; to: string; present: Array<{ type: string; voucherNo: string; date: string }> }) =>
+        raw('/api/import/tally/reconcile', { method: 'POST', auth: `StarlaneDevice ${deviceToken}`, body })
+          .then((r) => parse<{ held: boolean; message: string; deleted: { bills: number; settlements: number; bank_lines: number } }>(r)),
       disconnect: (deviceToken: string) =>
         raw('/api/connectors/device/disconnect', { method: 'POST', auth: `StarlaneDevice ${deviceToken}`, body: {} }).then((r) => parse(r)),
     },

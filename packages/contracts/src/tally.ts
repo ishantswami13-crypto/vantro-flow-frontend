@@ -293,6 +293,21 @@ export function parseLedgerContacts(xml: string): LedgerContact[] {
   return out;
 }
 
+/**
+ * Every voucher Tally exported for a synced range, by identity only (type,
+ * number, date), whatever the voucher-type filter: Starlane treats what it
+ * imported in the range and is absent here as deleted in Tally. Optional
+ * vouchers are not in the books, so they are not listed.
+ */
+export function voucherIdentities(vouchers: TallyVoucher[]): Array<{ type: string; voucherNo: string; date: string }> {
+  const out: Array<{ type: string; voucherNo: string; date: string }> = [];
+  for (const v of vouchers) {
+    const date = tallyDateToISO(v.date);
+    if (date && !v.optional) out.push({ type: v.type, voucherNo: v.voucherNo, date });
+  }
+  return out;
+}
+
 export function toApiVouchers(vouchers: TallyVoucher[], wantedTypes: string[] = DEFAULT_VOUCHER_TYPES) {
   const wanted = wantedTypes.map((t) => t.toLowerCase());
   const rows: ApiVoucher[] = [];

@@ -22,7 +22,7 @@
 //   reason), so Sources/Now show the real state, never a hopeful one.
 import {
   ApiError, OfflineError, billsReceivableRequestXML, companyListRequestXML, dayBefore, dayBookRequestXML, debtorContactsRequestXML,
-  financialYearStart, openingBillVouchers, parseCompanies, parseLedgerContacts, parseOpeningBills,
+  financialYearStart, openingBillVouchers, parseCompanies, parseLedgerContacts, parseOpeningBills, tallyDateToISO, voucherIdentities,
   parseVouchers, tallyDate, tallyErrorOf, toApiVouchers, type DeviceClaim,
 } from '@starlane/contracts';
 import { api, getPrefs, savePrefs, track } from '../api';
@@ -188,7 +188,8 @@ class TallyHost {
       runId = await api().device.startRun(token);
 
       const { company } = getPrefs().tally;
-      const request = dayBookRequestXML(financialYearStart(), tallyDate(new Date()), company);
+      const rangeFrom = financialYearStart(), rangeTo = tallyDate(new Date());
+      const request = dayBookRequestXML(rangeFrom, rangeTo, company);
       let xml: string;
       try {
         xml = await this.tallyPost(request);
@@ -201,7 +202,8 @@ class TallyHost {
       }
       const tallyErr = tallyErrorOf(xml);
       if (tallyErr) throw new TallyRefused(tallyErr);
-      const parsed = toApiVouchers(parseVouchers(xml));
+      const allVouchers = parseVouchers(xml);
+      const parsed = toApiVouchers(allVouchers);
       const skipped = parsed.skipped;
       // Bills from earlier years still unpaid when the day book starts, sent first
       // so receipts in the range can settle them. The day book is the sync; if
@@ -235,9 +237,15 @@ class TallyHost {
         imported += sum(r.imported);
         rejected += r.rejected?.length || 0;
       }
+      // Everything imported, so what Tally no longer has in the range was deleted there.
+      // Starlane holds back (and says so) when an export looks partial.
+      const recon = await api().device.reconcileTally(token, {
+        from: tallyDateToISO(rangeFrom) || rangeFrom, to: tallyDateToISO(rangeTo) || rangeTo, present: voucherIdentities(allVouchers),
+      }).catch(() => null);
       this.failures = 0;
       const now = new Date().toISOString();
-      this.set({ phase: 'idle', lastSuccessAt: now, last: { received: rows.length + skipped.length, imported, rejected, skipped: skipped.length }, message: null });
+      this.set({ phase: 'idle', lastSuccessAt: now, last: { received: rows.length + skipped.length, imported, rejected, skipped: skipped.length },
+        message: recon?.held ? recon.message : null });
       track('client.local_sync_succeeded', { connector: 'tally', duration_ms: Date.now() - started });
     } catch (e) {
       this.failures++;
