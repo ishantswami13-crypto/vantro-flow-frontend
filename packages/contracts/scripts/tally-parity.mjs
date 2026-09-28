@@ -5,7 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
-import { parseVouchers, toApiVouchers, parseCompanies, parseOpeningBills, openingBillVouchers, dayBefore, financialYearStart } from '../src/tally.ts';
+import { parseVouchers, toApiVouchers, parseCompanies, parseOpeningBills, openingBillVouchers, dayBefore, financialYearStart, parseLedgerContacts } from '../src/tally.ts';
 
 const backend = process.argv[2] || '../../../vantro-flow-backend';
 let ok = true;
@@ -33,6 +33,17 @@ for (const sample of ['sample-daybook.xml', 'sample-daybook-billwise.xml']) {
   const same = JSON.stringify(ts) === JSON.stringify(cli) && ts.filter((v) => v.type === 'Opening Bill').length === 3;
   ok = ok && same;
   console.log(same ? `PASS parity (${opening} + ${sample}): ${ts.length} vouchers identical` : `FAIL parity (${opening}): outputs differ`);
+}
+// Customers' phone numbers from the debtor ledgers.
+{
+  const file = 'sample-ledger-contacts.xml';
+  const ts = parseLedgerContacts(readFileSync(join(backend, 'tally-connector', file), 'utf8'));
+  const out = execFileSync(process.execPath, ['tally-connector/tally-sync.mjs', '--test', `--contacts=${file}`], { cwd: backend, encoding: 'utf8' });
+  const line = out.split('\n').find((l) => l.includes('customer phone numbers that WOULD be sent')) || '';
+  const cli = JSON.parse(line.slice(line.indexOf('[')) || '[]');
+  const same = JSON.stringify(ts) === JSON.stringify(cli) && ts.length === 4 && ts.some((c) => c.party === 'Gupta & Sons');
+  ok = ok && same;
+  console.log(same ? `PASS parity (${file}): ${ts.length} contacts identical` : `FAIL parity (${file}): ${JSON.stringify(ts)} vs ${JSON.stringify(cli)}`);
 }
 const companies = parseCompanies('<ENVELOPE><BODY><DATA><COLLECTION><COMPANY NAME="Rao Distributors"><NAME>Rao Distributors</NAME></COMPANY><COMPANY NAME="Rao &amp; Sons"/></COLLECTION></DATA></BODY></ENVELOPE>');
 const cOk = companies.join('|') === 'Rao Distributors|Rao & Sons';

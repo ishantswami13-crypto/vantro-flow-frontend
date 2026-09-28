@@ -95,6 +95,23 @@ export function billsReceivableRequestXML(asOf: string, company?: string | null)
 </ENVELOPE>`;
 }
 
+/**
+ * Asks Tally for its customers' ledgers (everything under Sundry Debtors), with
+ * only the name and phone fields — no addresses, tax numbers or balances.
+ */
+export function debtorContactsRequestXML(company?: string | null): string {
+  const companyTag = company ? `<SVCURRENTCOMPANY>${escapeXml(company)}</SVCURRENTCOMPANY>` : '';
+  return `<ENVELOPE>
+ <HEADER><VERSION>1</VERSION><TALLYREQUEST>Export</TALLYREQUEST><TYPE>Collection</TYPE><ID>StarlaneDebtorContacts</ID></HEADER>
+ <BODY><DESC>
+  <STATICVARIABLES><SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>${companyTag}</STATICVARIABLES>
+  <TDL><TDLMESSAGE>
+   <COLLECTION NAME="StarlaneDebtorContacts" ISMODIFY="No"><TYPE>Ledger</TYPE><CHILDOF>$$GroupSundryDebtors</CHILDOF><BELONGSTO>Yes</BELONGSTO><FETCH>NAME, LEDGERMOBILE, LEDGERPHONE</FETCH></COLLECTION>
+  </TDLMESSAGE></TDL>
+ </DESC></BODY>
+</ENVELOPE>`;
+}
+
 /** Asks Tally which companies are loaded — used to discover and confirm the connection. */
 export function companyListRequestXML(): string {
   return `<ENVELOPE>
@@ -255,6 +272,18 @@ export function parseOpeningBills(xml: string, asOf: string): { bills: OpeningBi
 /** Opening bills as import rows: sent before the day book so later receipts find them. */
 export function openingBillVouchers(bills: OpeningBill[]): ApiVoucher[] {
   return bills.map((b) => ({ type: 'Opening Bill', date: b.billDate, party: b.party, voucherNo: b.billName, amount: b.pending, items: [], dueDate: b.dueDate, bills: [] }));
+}
+
+export interface LedgerContact { party: string; phone: string }
+/** Customers' phone numbers from the debtor ledgers (mobile first). Starlane keeps only valid mobiles. */
+export function parseLedgerContacts(xml: string): LedgerContact[] {
+  const out: LedgerContact[] = [];
+  for (const block of xml.match(/<LEDGER\b[^>]*>[\s\S]*?<\/LEDGER>/gi) || []) {
+    const party = decode(block.match(/^<LEDGER\b[^>]*\bNAME="([^"]*)"/i)?.[1] || '') || tag(block, 'NAME');
+    const phone = tag(block, 'LEDGERMOBILE') || tag(block, 'LEDGERPHONE');
+    if (party && phone) out.push({ party, phone });
+  }
+  return out;
 }
 
 export function toApiVouchers(vouchers: TallyVoucher[], wantedTypes: string[] = DEFAULT_VOUCHER_TYPES) {

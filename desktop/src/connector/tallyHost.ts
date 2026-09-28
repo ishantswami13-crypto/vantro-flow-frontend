@@ -21,8 +21,8 @@
 //   Every attempt becomes a sync run on the server (succeeded or failed with a
 //   reason), so Sources/Now show the real state, never a hopeful one.
 import {
-  ApiError, OfflineError, billsReceivableRequestXML, companyListRequestXML, dayBefore, dayBookRequestXML, financialYearStart,
-  openingBillVouchers, parseCompanies, parseOpeningBills,
+  ApiError, OfflineError, billsReceivableRequestXML, companyListRequestXML, dayBefore, dayBookRequestXML, debtorContactsRequestXML,
+  financialYearStart, openingBillVouchers, parseCompanies, parseLedgerContacts, parseOpeningBills,
   parseVouchers, tallyDate, tallyErrorOf, toApiVouchers, type DeviceClaim,
 } from '@starlane/contracts';
 import { api, getPrefs, savePrefs, track } from '../api';
@@ -216,15 +216,22 @@ class TallyHost {
         track('client.opening_bills_failed', { connector: 'tally', error_code: 'unreachable' });
       }
       const rows = [...opening, ...parsed.rows];
+      // Customers' mobile numbers from their Tally ledgers, so reminders can reach
+      // them; Starlane uses them only where it has no number. Optional, like the above.
+      let contacts: ReturnType<typeof parseLedgerContacts> = [];
+      try {
+        const contactsXml = await this.tallyPost(debtorContactsRequestXML(company));
+        if (!tallyErrorOf(contactsXml)) contacts = parseLedgerContacts(contactsXml);
+      } catch { /* the sync goes on without them */ }
 
       let imported = 0, rejected = 0;
       if (rows.length === 0) {
         // An empty day book is a real answer; record it rather than inventing activity.
-        const r = await api().device.importTally(token, runId, []);
+        const r = await api().device.importTally(token, runId, [], contacts);
         imported = sum(r.imported);
       }
       for (let i = 0; i < rows.length; i += CHUNK) {
-        const r = await api().device.importTally(token, i === 0 ? runId : await api().device.startRun(token), rows.slice(i, i + CHUNK));
+        const r = await api().device.importTally(token, i === 0 ? runId : await api().device.startRun(token), rows.slice(i, i + CHUNK), i === 0 ? contacts : undefined);
         imported += sum(r.imported);
         rejected += r.rejected?.length || 0;
       }
