@@ -102,7 +102,7 @@ export default function SecurityPage() {
 
             <h2>Questions</h2>
             <p>For security questions, email <a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a>. For general privacy matters, see our <Link href="/privacy">Privacy Policy</Link>.</p>
-            <p style={{marginTop:"32px",fontSize:"13px",color:"rgba(255,255,255,.3)"}}>This is a draft template and should be reviewed by a qualified legal professional before paid public launch.</p>
+            <p style={{marginTop:"32px",fontSize:"13px",color:"rgba(255,255,255,.55)"}}>This is a draft template and should be reviewed by a qualified legal professional before paid public launch.</p>
           </div>
         </div>
       </div>

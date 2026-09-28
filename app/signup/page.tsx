@@ -90,8 +90,8 @@ function OTPStep({ preToken, userEmail, userPhone, onVerified }: {
       </button>
       <div style={{textAlign:"center",marginTop:"20px"}}>
         {countdown>0
-          ? <p style={{fontSize:"11px",color:"rgba(255,255,255,.25)",fontFamily:"'JetBrains Mono',monospace"}}>Resend in {countdown}s</p>
-          : <button onClick={handleResend} disabled={resending} style={{fontSize:"12px",color:"rgba(255,255,255,.45)",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+          ? <p style={{fontSize:"11px",color:"rgba(255,255,255,.55)",fontFamily:"'JetBrains Mono',monospace"}}>Resend in {countdown}s</p>
+          : <button onClick={handleResend} disabled={resending} style={{fontSize:"12px",color:"rgba(255,255,255,.66)",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>
               {resending?<><FiRefreshCw size={11} style={{display:"inline",marginRight:"4px",animation:"sspin .7s linear infinite"}}/>Sending…</>:"Resend code"}
             </button>}
       </div>
@@ -183,7 +183,7 @@ function SignupForm() {
             <div className="field">
               <label>Business type</label>
               <select value={form.business_type} onChange={set("business_type")}
-                style={{...iBase,backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")",backgroundRepeat:"no-repeat",backgroundPosition:"right 14px center",paddingRight:"38px",cursor:"pointer",color:form.business_type?"#fff":"rgba(255,255,255,.22)"}}>
+                style={{...iBase,backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")",backgroundRepeat:"no-repeat",backgroundPosition:"right 14px center",paddingRight:"38px",cursor:"pointer",color:form.business_type?"#fff":"rgba(255,255,255,.55)"}} aria-label="Business type">
                 {businessTypes.map(o=><option key={o.value} value={o.value} style={{background:"#1B1B18",color:"#F5F4F0"}}>{o.label}</option>)}
               </select>
             </div>
@@ -214,7 +214,7 @@ function SignupForm() {
             <div className="field">
               <label>Phone (WhatsApp — OTP sent here)</label>
               <div style={{display:"flex"}}>
-                <span style={{display:"flex",alignItems:"center",padding:"0 14px",background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.1)",borderRight:"none",borderRadius:"6px 0 0 6px",fontSize:"13px",fontFamily:"'JetBrains Mono',monospace",color:"rgba(255,255,255,.45)",flexShrink:0}}>+91</span>
+                <span style={{display:"flex",alignItems:"center",padding:"0 14px",background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.1)",borderRight:"none",borderRadius:"6px 0 0 6px",fontSize:"13px",fontFamily:"'JetBrains Mono',monospace",color:"rgba(255,255,255,.66)",flexShrink:0}}>+91</span>
                 <FocusInput type="tel" placeholder="9876543210" value={form.phone} onChange={set("phone")} required maxLength={10} pattern="\d{10}" autoComplete="tel" style={{borderRadius:"0 6px 6px 0"} as React.CSSProperties}/>
               </div>
             </div>
@@ -223,7 +223,7 @@ function SignupForm() {
               <label>Password</label>
               <div style={{position:"relative"}}>
                 <FocusInput type={showPassword?"text":"password"} placeholder="Min 8 characters" value={form.password} onChange={set("password")} required minLength={8} style={{paddingRight:"44px"} as React.CSSProperties}/>
-                <button type="button" onClick={()=>setShowPassword(v=>!v)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.3)"}}>{showPassword?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>
+                <button type="button" onClick={()=>setShowPassword(v=>!v)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.55)"}} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>
               </div>
               {form.password.length>0&&form.password.length<8&&<p style={{fontSize:"10px",marginTop:"4px",color:"rgba(255,80,80,.8)",fontFamily:"'JetBrains Mono',monospace"}}>At least 8 characters</p>}
             </div>
@@ -232,7 +232,7 @@ function SignupForm() {
               <label>Confirm password</label>
               <div style={{position:"relative"}}>
                 <FocusInput type={showConfirm?"text":"password"} placeholder="Re-enter password" value={form.confirm_password} onChange={set("confirm_password")} required style={{paddingRight:"44px"} as React.CSSProperties}/>
-                <button type="button" onClick={()=>setShowConfirm(v=>!v)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.3)"}}>{showConfirm?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>
+                <button type="button" onClick={()=>setShowConfirm(v=>!v)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.55)"}} aria-label={showConfirm?"Hide password":"Show password"}>{showConfirm?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>
               </div>
               {form.confirm_password.length>0&&form.password!==form.confirm_password&&<p style={{fontSize:"10px",marginTop:"4px",color:"rgba(255,80,80,.8)",fontFamily:"'JetBrains Mono',monospace"}}>Passwords do not match</p>}
               {form.confirm_password.length>0&&form.password===form.confirm_password&&form.password.length>=8&&<p style={{fontSize:"10px",marginTop:"4px",color:"#10D98A",fontFamily:"'JetBrains Mono',monospace"}}>✓ Looks good</p>}
@@ -243,7 +243,7 @@ function SignupForm() {
                 {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid #F5F4F0",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Creating workspace…</>:<><span className="btn-txt">Create workspace</span><FiArrowRight size={16}/></>}
               </button>
             </div>
-            <p style={{marginTop:"8px",fontSize:"12px",color:"rgba(255,255,255,.28)",textAlign:"center",lineHeight:1.6}}>
+            <p style={{marginTop:"8px",fontSize:"12px",color:"rgba(255,255,255,.55)",textAlign:"center",lineHeight:1.6}}>
               By creating an account you agree to our <Link href="/terms" style={{color:"rgba(255,255,255,.55)"}}>Terms</Link> and <Link href="/privacy" style={{color:"rgba(255,255,255,.55)"}}>Privacy Policy</Link>.
             </p>
           </div>

@@ -99,12 +99,12 @@ export default function LoginPage() {
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",borderRadius:"6px",background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.08)"}}>
               <span style={{fontSize:"13px",color:"rgba(255,255,255,.7)"}}>{form.email}</span>
               <button type="button" onClick={()=>{setStep("email");setForm(f=>({...f,password:""}));setError("");}}
-                style={{fontSize:"12px",color:"rgba(255,255,255,.4)",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>Change</button>
+                style={{fontSize:"12px",color:"rgba(255,255,255,.62)",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>Change</button>
             </div>
             <div className="field">
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:"8px"}}>
                 <label htmlFor="password">Password</label>
-                <Link href="/forgot-password" style={{fontSize:"12px",color:"rgba(255,255,255,.32)",textDecoration:"none"}}>Forgot password?</Link>
+                <Link href="/forgot-password" style={{fontSize:"12px",color:"rgba(255,255,255,.62)",textDecoration:"none"}}>Forgot password?</Link>
               </div>
               <div style={{position:"relative"}}>
                 <input ref={passRef} id="password" type={showPass?"text":"password"} placeholder="••••••••••••"
@@ -112,8 +112,8 @@ export default function LoginPage() {
                   onFocus={()=>setPassFocused(true)} onBlur={()=>setPassFocused(false)}
                   autoComplete="current-password" required style={{...(passFocused?iFocus:iBase),paddingRight:"44px"}}
                 />
-                <button type="button" onClick={()=>setShowPass(!showPass)}
-                  style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.3)"}}>
+                <button type="button" onClick={()=>setShowPass(!showPass)} aria-label={showPass?"Hide password":"Show password"}
+                  style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.55)"}}>
                   {showPass?<FiEyeOff size={14}/>:<FiEye size={14}/>}
                 </button>
               </div>
@@ -122,7 +122,7 @@ export default function LoginPage() {
               <div onClick={()=>setRememberMe(r=>!r)} style={{width:"36px",height:"20px",borderRadius:"10px",background:rememberMe?"rgba(255,255,255,.9)":"rgba(255,255,255,.1)",position:"relative",transition:"background .2s",cursor:"pointer",flexShrink:0}}>
                 <div style={{position:"absolute",top:"2px",width:"16px",height:"16px",background:"#000",borderRadius:"50%",transition:"transform .2s",transform:rememberMe?"translateX(18px)":"translateX(2px)"}}/>
               </div>
-              <span style={{fontSize:"13px",color:"rgba(255,255,255,.45)"}}>Stay signed in for 30 days</span>
+              <span style={{fontSize:"13px",color:"rgba(255,255,255,.66)"}}>Stay signed in for 30 days</span>
             </label>
             <button type="submit" className="btn-login" disabled={loading||!form.password} style={{marginTop:"8px",opacity:loading||!form.password?0.4:1,position:"relative"}}>
               {loading
