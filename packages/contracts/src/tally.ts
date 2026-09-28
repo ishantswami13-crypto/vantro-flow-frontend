@@ -4,6 +4,8 @@
 // parity test (scripts/tally-parity.mjs) checks both produce identical
 // vouchers for the bundled sample day book. Pure functions: no I/O here.
 
+/** A bill-wise allocation on the party's ledger entry ("New Ref" raises a bill; "Agst Ref" settles one). */
+export interface TallyBill { name: string; type: 'new' | 'against' | 'advance' | 'on_account' | 'other'; amount: number; creditPeriod: string | null }
 export interface TallyVoucher {
   type: string;
   date: string | null;
@@ -11,8 +13,14 @@ export interface TallyVoucher {
   voucherNo: string;
   amount: number | null;
   items: Array<{ name: string; qty: number; rate: number }>;
+  /** ISO due date from the bill's credit period (or the voucher's), when Tally has one. */
+  dueDate: string | null;
+  bills: TallyBill[];
 }
-export interface ApiVoucher { type: string; date: string; party: string; voucherNo: string; amount: number; items: TallyVoucher['items'] }
+export interface ApiVoucher {
+  type: string; date: string; party: string; voucherNo: string; amount: number; items: TallyVoucher['items'];
+  dueDate: string | null; bills: Array<{ name: string; type: TallyBill['type']; amount: number }>;
+}
 
 export const DEFAULT_VOUCHER_TYPES = ['Sales', 'Purchase', 'Receipt', 'Payment', 'Credit Note', 'Debit Note'];
 export const DEFAULT_TALLY_PORT = 9000;
@@ -88,6 +96,35 @@ function qtyNum(v: string | null): number {
   return m ? Math.abs(parseFloat(m[0])) : NaN;
 }
 
+const MONTHS: Record<string, number> = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+/** Tally writes a credit period as "30 Days" or as the due date itself ("20-Sep-2026", "20260920"). */
+export function dueDateFrom(voucherDate: string | null, period: string | null): string | null {
+  if (!period) return null;
+  const p = period.trim();
+  const days = p.match(/^(\d+)\s*days?$/i);
+  const start = tallyDateToISO(voucherDate);
+  if (days) {
+    if (!start) return null;
+    const d = new Date(`${start}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + Number(days[1]));
+    return d.toISOString().slice(0, 10);
+  }
+  if (/^\d{8}$/.test(p)) return tallyDateToISO(p);
+  const m = p.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2}|\d{4})$/);
+  const mon = m ? MONTHS[m[2].toLowerCase()] : undefined;
+  if (m && mon) return `${m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3])}-${pad(mon)}-${pad(Number(m[1]))}`;
+  return null;
+}
+function billType(s: string | null): TallyBill['type'] {
+  const t = String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  if (t === 'new ref') return 'new';
+  if (t === 'agst ref') return 'against';
+  if (t === 'advance') return 'advance';
+  if (t === 'on account') return 'on_account';
+  return 'other';
+}
+const BILLS_RE = /<BILLALLOCATIONS\.LIST>[\s\S]*?<\/BILLALLOCATIONS\.LIST>/gi;
+
 export function parseCompanies(xml: string): string[] {
   const names = new Set<string>();
   for (const m of xml.matchAll(/<COMPANY\b[^>]*\bNAME="([^"]+)"/gi)) names.add(decode(m[1]));
@@ -111,9 +148,14 @@ export function parseVouchers(xml: string): TallyVoucher[] {
     const entries = b.match(/<ALLLEDGERENTRIES\.LIST>[\s\S]*?<\/ALLLEDGERENTRIES\.LIST>/gi)
       || b.match(/<LEDGERENTRIES\.LIST>[\s\S]*?<\/LEDGERENTRIES\.LIST>/gi) || [];
     let maxAbs = NaN;
+    let partyEntry: string | null = null;
     for (const e of entries) {
-      const ln = tag(e, 'LEDGERNAME');
-      const amt = num(tag(e, 'AMOUNT'));
+      // Read the entry's own tags with its bill allocations removed: Tally does not
+      // guarantee the ledger AMOUNT comes before BILLALLOCATIONS.LIST.
+      const own = e.replace(BILLS_RE, '');
+      const ln = tag(own, 'LEDGERNAME');
+      const amt = num(tag(own, 'AMOUNT'));
+      if (party && ln && ln.toLowerCase() === party.toLowerCase()) partyEntry = e;
       if (!isNaN(amt)) {
         if (isNaN(maxAbs) || Math.abs(amt) > Math.abs(maxAbs)) maxAbs = amt;
         if (party && ln && ln.toLowerCase() === party.toLowerCase()) amount = amt;
@@ -121,6 +163,15 @@ export function parseVouchers(xml: string): TallyVoucher[] {
     }
     if (isNaN(amount)) amount = maxAbs;
     if (isNaN(amount)) amount = num(tag(b, 'AMOUNT'));
+
+    const bills: TallyBill[] = [];
+    for (const bl of (partyEntry || '').match(BILLS_RE) || []) {
+      const name = tag(bl, 'NAME') || '';
+      const amt = Math.abs(num(tag(bl, 'AMOUNT')));
+      if (name && amt > 0) bills.push({ name, type: billType(tag(bl, 'BILLTYPE')), amount: amt, creditPeriod: tag(bl, 'BILLCREDITPERIOD') });
+    }
+    const raised = bills.find((x) => x.type === 'new' && x.creditPeriod);
+    const dueDate = dueDateFrom(date, raised?.creditPeriod ?? null) ?? dueDateFrom(date, tag(b, 'BASICDUEDATEOFPYMT'));
 
     const items: TallyVoucher['items'] = [];
     const invEntries = b.match(/<ALLINVENTORYENTRIES\.LIST>[\s\S]*?<\/ALLINVENTORYENTRIES\.LIST>/gi)
@@ -132,7 +183,7 @@ export function parseVouchers(xml: string): TallyVoucher[] {
       if (name && !isNaN(qty) && qty > 0) items.push({ name, qty, rate: isNaN(rate) ? 0 : Math.abs(rate) });
     }
 
-    out.push({ type: decode(vchType), date, party, voucherNo: vchNo, amount: isNaN(amount) ? null : Math.abs(amount), items });
+    out.push({ type: decode(vchType), date, party, voucherNo: vchNo, amount: isNaN(amount) ? null : Math.abs(amount), items, dueDate, bills });
   }
   return out;
 }
@@ -145,7 +196,8 @@ export function toApiVouchers(vouchers: TallyVoucher[], wantedTypes: string[] = 
     const typeMatch = wanted.some((w) => (v.type || '').toLowerCase().includes(w));
     const iso = tallyDateToISO(v.date);
     if (!typeMatch || !v.party || !v.amount || !iso || v.amount <= 0) { skipped.push(v); continue; }
-    rows.push({ type: v.type, date: iso, party: v.party, voucherNo: v.voucherNo, amount: v.amount, items: v.items });
+    rows.push({ type: v.type, date: iso, party: v.party, voucherNo: v.voucherNo, amount: v.amount, items: v.items,
+      dueDate: v.dueDate, bills: v.bills.map((x) => ({ name: x.name, type: x.type, amount: x.amount })) });
   }
   return { rows, skipped };
 }
