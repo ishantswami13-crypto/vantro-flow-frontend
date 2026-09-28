@@ -7,13 +7,16 @@
 // support says so instead of showing an empty "all clear".
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import Link from "next/link";
 import { request } from "@/lib/api";
-import type { PreparedHorizon } from "../../packages/contracts/src/features";
+import type { PreparedHorizon, PreparedItem } from "../../packages/contracts/src/features";
 
 const RULE = "rgba(25,25,23,0.10)", GRAPHITE = "#63635F";
 const KIND: Record<string, string> = {
   invoices_due: "Falling due", crossing_band: "About to slip", promise_due: "Promise due", mission_ending: "Mission ends", decisions_waiting: "Waiting on you",
 };
+// Where each item leads on the web. Waiting decisions are answered on the Bridge.
+const hrefFor = (i: PreparedItem) => (i.kind === "decisions_waiting" ? "/bridge" : i.route || "/watch");
 const inr = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
 
 export default function PreparedPage() {
@@ -47,8 +50,10 @@ export default function PreparedPage() {
                 <div key={i.id} style={{ display: "flex", gap: 14, alignItems: "baseline", padding: "12px 18px", borderTop: n ? `1px solid ${RULE}` : 0, flexWrap: "wrap" }}>
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: "uppercase", color: GRAPHITE, width: 110 }}>{KIND[i.kind] || i.kind}</span>
                   <span style={{ flex: "1 1 280px", minWidth: 0 }}>
-                    <strong style={{ fontWeight: 500 }}>{i.title}</strong>
-                    <br /><span style={{ fontSize: 13, color: GRAPHITE }}>{i.reason}{i.customers?.length ? ` · ${i.customers.join(", ")}` : ""}</span>
+                    <Link href={hrefFor(i)} style={{ fontWeight: 500, color: "#191917" }}>{i.title}</Link>
+                    <br /><span style={{ fontSize: 13, color: GRAPHITE }}>{i.reason}
+                      {i.customers?.map((c, k) => <span key={c}>{k ? ", " : " · "}<Link href={`/scan?customer=${encodeURIComponent(c)}`} style={{ color: GRAPHITE }}>{c}</Link></span>)}
+                    </span>
                   </span>
                   {i.amount != null ? <span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{inr(i.amount)}</span> : null}
                 </div>

@@ -160,6 +160,13 @@ try {
   check('Memory loaded (records or an honest empty state)', !(await p.getByText('Loading…').isVisible()));
   check('Memory shows no error', await noAlert());
   await shot('memory');
+  const scanFromMemory = p.getByRole('link', { name: /^Scan / }).first();
+  if (await scanFromMemory.count()) {
+    await scanFromMemory.click();
+    await p.waitForURL('**/scan?customer=*');
+    await p.getByText(/owes|overdue/i).first().waitFor({ timeout: 10000 });
+    check('a remembered customer opens in Scan', true);
+  }
 
   console.log('— Prepared');
   await p.goto(APP + '/prepared', { waitUntil: 'networkidle' });
@@ -168,6 +175,13 @@ try {
   check('Prepared shows the three horizons', (await p.locator('section[aria-labelledby^="h-"]').count()) === 3);
   check('Prepared shows no error', await noAlert());
   await shot('prepared');
+  const item = p.locator('section[aria-labelledby^="h-"] a').first();
+  if (await item.count()) {
+    const href = await item.getAttribute('href');
+    await item.click();
+    await p.waitForURL((u) => u.pathname + u.search === href, { timeout: 10000 }).catch(() => {});
+    check(`a Prepared item leads to where it is handled (${href})`, new URL(p.url()).pathname + new URL(p.url()).search === href, p.url());
+  }
 } catch (e) {
   check('flow completed', false, e.message.split('\n')[0]);
 } finally {

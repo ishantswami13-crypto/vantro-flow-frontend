@@ -7,6 +7,7 @@
 // re-inferred). Every change is also kept in the audit log.
 import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import Link from "next/link";
 import { request } from "@/lib/api";
 import type { MemoryRecord } from "../../packages/contracts/src/features";
 
@@ -54,6 +55,7 @@ function Item({ m, onChange }: { m: MemoryRecord; onChange: () => void }) {
           {m.status === "inferred" ? <button style={btn} onClick={() => void decide("confirm")}>That’s right</button> : null}
           <button style={btn} onClick={() => setEditing(true)}>Correct</button>
           <button style={btn} onClick={() => void decide("remove")}>Forget this</button>
+          {m.subject.type === "customer" ? <Link href={`/scan?customer=${encodeURIComponent(m.subject.key)}`} style={{ ...btn, color: "#191917", textDecoration: "none", marginLeft: "auto" }}>Scan {m.subject.label}</Link> : null}
         </div>
       ) : null}
       {err ? <p role="alert" style={{ color: "#A23B3B", margin: 0 }}>{err}</p> : null}
