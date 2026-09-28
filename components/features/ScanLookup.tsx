@@ -3,7 +3,7 @@
 // Scan look-up on the web — the same explanations as the desktop and phone
 // apps: type a customer or invoice number, open why it matters, with every
 // fact labelled (GET /api/client/scan/search, /scan/customer/:key,
-// /scan/invoice/:id). Read-only.
+// /scan/invoice/:id). Read-only; it links to starting a mission.
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { request } from "@/lib/api";
@@ -32,6 +32,14 @@ export default function ScanLookup() {
     const t = setTimeout(() => { request<ScanSearch>(`/api/client/scan/search?q=${encodeURIComponent(term)}`).then((h) => live && setHits(h)).catch(() => live && setHits(null)); }, 220);
     return () => { live = false; clearTimeout(t); };
   }, [q]);
+
+  // /scan?invoice=<id> or ?customer=<key> (from Watch, Bridge) opens it directly.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const inv = q.get("invoice"), cust = q.get("customer");
+    if (inv) void openInvoice(inv); else if (cust) void openCustomer(cust);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function openCustomer(key: string) {
     setError(null); setInvoice(null);

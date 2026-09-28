@@ -4,6 +4,7 @@
 // apps (GET /api/client/watch): each raised once with its evidence, closed by
 // Starlane when it stops being true, or dismissed by the owner here.
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { request } from "@/lib/api";
 import type { WatchEvent, WatchList } from "../../packages/contracts/src/features";
 
@@ -76,6 +77,16 @@ export default function WatchEvents() {
                       </div>
                     ))}
                   </dl>
+                  {e.entity?.type === "invoice" ? (
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <Link href={`/scan?invoice=${encodeURIComponent(e.entity.id)}`} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "#fff", color: "#191917", textDecoration: "none" }}>Why — open in Scan</Link>
+                      {e.missionId ? (
+                        <Link href={`/missions/${e.missionId}`} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "#fff", color: "#191917", textDecoration: "none" }}>Open its mission</Link>
+                      ) : e.state === "open" || e.state === "acknowledged" ? (
+                        <Link href={`/missions/new?invoice=${encodeURIComponent(e.entity.id)}`} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, background: "#191917", color: "#fff", textDecoration: "none" }}>Start a mission to collect</Link>
+                      ) : null}
+                    </div>
+                  ) : null}
                   {e.state === "open" || e.state === "acknowledged" ? (
                     <div style={{ display: "flex", gap: 8 }}>
                       {e.state === "open" ? <button onClick={() => void move(e, "acknowledged")} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "#fff", cursor: "pointer" }}>Mark as seen</button> : null}

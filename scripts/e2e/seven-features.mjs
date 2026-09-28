@@ -82,6 +82,18 @@ try {
   check('Watch lists what it raised', await p.locator('#watch-events-h').isVisible());
   check('Watch shows no error', await noAlert());
   await shot('watch');
+  const firstEvent = p.locator('section[aria-labelledby="watch-events-h"] button[aria-expanded]').first();
+  if (await firstEvent.count()) {
+    await firstEvent.click();
+    const why = p.getByRole('link', { name: 'Why — open in Scan' }).first();
+    if (await why.isVisible()) {
+      check('an overdue invoice in Watch offers a mission', await p.getByRole('link', { name: /Start a mission to collect|Open its mission/ }).first().isVisible());
+      await why.click();
+      await p.waitForURL('**/scan?invoice=*');
+      await p.getByText(/overdue/i).first().waitFor({ timeout: 10000 });
+      check('Watch opens the invoice in Scan with the explanation', await p.getByRole('link', { name: /Start a mission to collect/ }).first().isVisible());
+    }
+  }
 
   console.log('— Missions');
   await p.goto(APP + '/missions', { waitUntil: 'networkidle' });
