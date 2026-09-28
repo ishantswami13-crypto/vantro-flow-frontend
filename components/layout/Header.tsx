@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { FiMenu, FiRefreshCw } from "react-icons/fi";
 import Link from "next/link";
 import { getUser } from "@/lib/api";
+import { IdentityAvatar } from "@/components/identity/IdentityAvatar";
 
 interface HeaderProps { onMenuToggle: () => void; pageTitle?: string; }
 
@@ -27,7 +28,7 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
 
   return (
     <header
-      className="flex items-center justify-between px-4 lg:px-5 shrink-0 z-10"
+      className="relative flex items-center justify-between px-4 lg:px-5 shrink-0 z-10"
       style={{ height: "56px", background: "#F7F7F4", borderBottom: "1px solid rgba(20,20,20,0.07)" }}
     >
       {/* Left — contextual breadcrumb, not a giant title */}
@@ -68,9 +69,7 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
           onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(20,20,20,0.05)")}
           onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
         >
-          <div className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-medium shrink-0" style={{ background: "#EDEDE9", color: "#171717" }}>
-            {displayName.charAt(0).toUpperCase()}
-          </div>
+          <IdentityAvatar name={displayName} size={24} />
           <div className="hidden sm:block">
             <p className="text-[11px] font-medium leading-none truncate max-w-[80px]" style={{ color: "#171717" }}>
               {displayName}
@@ -78,6 +77,8 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
           </div>
         </Link>
       </div>
+      {/* Hairline in the user's colour — quiet, but present on every page. */}
+      <span aria-hidden="true" className="pointer-events-none absolute left-0 right-0 bottom-[-1px] h-[1.5px]" style={{ background: "var(--id-gradient-h, transparent)", opacity: 0.85 }} />
     </header>
   );
 }

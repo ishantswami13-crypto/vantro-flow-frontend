@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300..500;1,9..144,300..500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300..500;1,9..144,300..500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -76,7 +76,7 @@
   body {
     background-color: var(--bg);
     color: #171717;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Geist', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     font-size: 14px;
     font-weight: 400;
     line-height: 1.6;
@@ -566,7 +566,7 @@ button:active { transform: scale(0.97); }
   border-radius: 8px !important;
   box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
   padding: 8px 10px !important;
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  font-family: 'Geist', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
 }
 .recharts-default-tooltip .recharts-tooltip-label {
   font-size: 11px !important;
@@ -695,4 +695,48 @@ input:focus, select:focus, textarea:focus {
   .card-metric .metric-lg { font-size: clamp(1.35rem, 7vw, 2rem); line-height: 1.15; overflow-wrap: anywhere; word-break: break-word; }
   .card-metric .section-label { min-width: 0; overflow-wrap: anywhere; }
   .card-metric .text-2xs { min-width: 0; overflow-wrap: anywhere; }
+}
+
+/* ============================================================
+   EDITORIAL TYPE + USER IDENTITY
+   Page titles set in the Fraunces display serif (light optical size) over
+   a Geist UI sans; the signed-in user's gradient (--id-* on :root, see
+   lib/identity.ts) tints selection and identity marks across the app.
+   ============================================================ */
+body {
+  letter-spacing: -0.006em;
+  font-feature-settings: "ss01", "cv11";
+}
+
+main h1 {
+  font-family: 'Fraunces', Georgia, serif !important;
+  font-weight: 380 !important;
+  font-variation-settings: "opsz" 72;
+  letter-spacing: -0.022em !important;
+  line-height: 1.12;
+}
+
+main h2 {
+  letter-spacing: -0.012em;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--id-b, #8E97DA) 28%, transparent);
+  color: #171717;
+}
+
+.id-gradient { background: var(--id-gradient, linear-gradient(135deg, #C3C8F0, #8E97DA, #5C5F9E)); }
+.id-gradient-text {
+  background: var(--id-gradient-h, linear-gradient(90deg, #C3C8F0, #8E97DA, #5C5F9E));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Faint wash of the user's colour across the top of every page. */
+.id-wash {
+  background-image: radial-gradient(1100px 300px at 88% -120px, color-mix(in srgb, var(--id-b, transparent) 16%, transparent), transparent 72%),
+                    radial-gradient(900px 260px at 10% -140px, color-mix(in srgb, var(--id-a, transparent) 14%, transparent), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: local;
 }

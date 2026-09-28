@@ -49,7 +49,7 @@ export default function LoginPage() {
     } finally { setLoading(false); }
   };
 
-  const iBase = { background:"rgba(255,255,255,.05)", borderWidth:"1px", borderStyle:"solid", borderColor:"rgba(255,255,255,.12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Plus Jakarta Sans',system-ui", fontSize:"15px", color:"#F5F4F0", outline:"none", width:"100%", transition:"border-color .2s,background .2s" };
+  const iBase = { background:"rgba(255,255,255,.05)", borderWidth:"1px", borderStyle:"solid", borderColor:"rgba(255,255,255,.12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Geist', 'Plus Jakarta Sans',system-ui", fontSize:"15px", color:"#F5F4F0", outline:"none", width:"100%", transition:"border-color .2s,background .2s" };
   const iFocus = { ...iBase, borderColor:"rgba(255,255,255,.34)", background:"rgba(255,255,255,.08)" };
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FiCheckCircle, FiClock, FiPackage } from "react-icons/fi";
+import { FiCheckCircle, FiPackage } from "react-icons/fi";
 import { useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -196,10 +196,6 @@ export function DecisionSection({ actions, component }: { actions: IntelligenceA
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-3">
-        <FiClock className="text-muted" size={14} />
-        <p className="section-label">Recommended interventions</p>
-      </div>
       <ComparisonCard component={component} topAction={dominant} />
       <div className="mt-4 space-y-3">
         {actions.map((a, i) => (

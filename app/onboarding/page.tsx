@@ -39,7 +39,7 @@ const PRIORITIES = [
   { key: "forecasting", label: "Forecasting" },
 ];
 
-const iBase: React.CSSProperties = { background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 7, padding: "13px 16px", fontFamily: "'Plus Jakarta Sans',system-ui", fontSize: 15, color: "#F5F4F0", outline: "none", width: "100%", transition: "border-color .2s,background .2s" };
+const iBase: React.CSSProperties = { background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 7, padding: "13px 16px", fontFamily: "'Geist', 'Plus Jakarta Sans',system-ui", fontSize: 15, color: "#F5F4F0", outline: "none", width: "100%", transition: "border-color .2s,background .2s" };
 const iFocus: React.CSSProperties = { ...iBase, borderColor: "rgba(255,255,255,.34)", background: "rgba(255,255,255,.08)" };
 
 function FocusInput(p: React.InputHTMLAttributes<HTMLInputElement>) {
@@ -57,7 +57,7 @@ function OptionCard({ selected, onClick, children }: { selected: boolean; onClic
         textAlign: "left", padding: "13px 16px", borderRadius: 7, cursor: "pointer",
         border: `1px solid ${selected ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.12)"}`,
         background: selected ? "rgba(255,255,255,.10)" : "rgba(255,255,255,.03)",
-        color: "#F5F4F0", fontSize: 14, fontFamily: "'Plus Jakarta Sans',system-ui",
+        color: "#F5F4F0", fontSize: 14, fontFamily: "'Geist', 'Plus Jakarta Sans',system-ui",
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
         transition: "border-color .15s, background .15s", width: "100%",
       }}

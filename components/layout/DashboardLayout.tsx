@@ -10,6 +10,7 @@ import { isDemoMode, exitDemoMode } from "@/lib/demo";
 import { hydrateUserContext } from "@/lib/featureGating";
 import { api, authenticatedFetch, authHeaders, isLoggedIn } from "@/lib/api";
 import { recordRecent } from "@/lib/recents";
+import { useApplyIdentity } from "@/components/identity/useIdentity";
 import Link from "next/link";
 
 
@@ -75,6 +76,8 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
   const [showNotifBanner, setShowNotifBanner] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
   const pathname = usePathname();
+  // Keeps the user's colour identity (--id-* CSS variables) on :root.
+  useApplyIdentity();
 
   useEffect(() => { setIsDemo(isDemoMode()); }, []);
 
@@ -195,7 +198,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-5 page-fade">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-5 page-fade id-wash">
           {children}
         </main>
       </div>

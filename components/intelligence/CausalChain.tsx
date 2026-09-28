@@ -1,80 +1,97 @@
 import React from "react";
-import { Badge } from "@/components/ui/Badge";
 import { formatINR, formatDate, humanizeCode } from "./format";
+import { Cite } from "./Cite";
+import type { ComponentCitations, Citations } from "./citations";
 import type { SignalImpact, ImpactComponent } from "@/lib/api";
 
-// Starlane's signature causal-trace primitive — cause to consequence as one
-// continuous editorial composition, not a flowchart. Deliberately NOT boxes
-// connected by arrow icons: a single thin vertical rule runs through every
-// node, each node is a small state marker + mono eyebrow + typographic
-// title, sourced directly from the real impact response. No node exists
-// without a real number or fact behind it.
-const TONE_COLOR: Record<"default" | "danger" | "warning", string> = {
-  default: "#D8D8D3",
-  warning: "#F5A524",
-  danger:  "#F5424D",
-};
-
-function Node({ eyebrow, title, children, tone = "default", last = false }: {
-  eyebrow: string; title: string; children?: React.ReactNode; tone?: "default" | "danger" | "warning"; last?: boolean;
+// "How Starlane got here" — the cause-to-consequence trace written as
+// numbered reasoning steps, each carrying a citation into the Sources
+// rail. No step exists without a real number or fact behind it.
+function Step({ index, title, detail, cites, last = false, tone }: {
+  index: number;
+  title: React.ReactNode;
+  detail?: React.ReactNode;
+  cites?: React.ReactNode;
+  last?: boolean;
+  tone?: "danger";
 }) {
   return (
-    <div className="relative pl-6" style={{ paddingBottom: last ? 0 : 28 }}>
-      {/* the continuous trace line */}
-      {!last && (
-        <span aria-hidden="true" className="absolute left-[3px] top-3 bottom-0" style={{ width: 1, background: "var(--border)" }} />
-      )}
-      {/* state marker */}
+    <li className="relative pl-9" style={{ paddingBottom: last ? 0 : 20 }}>
+      {!last && <span aria-hidden="true" className="absolute left-[11px] top-7 bottom-0" style={{ width: 1, background: "#E5E4DF" }} />}
       <span
         aria-hidden="true"
-        className="absolute left-0 top-1.5 rounded-full"
-        style={{ width: 7, height: 7, border: `1.5px solid ${TONE_COLOR[tone]}`, background: tone === "default" ? "transparent" : TONE_COLOR[tone] }}
-      />
-      <p className="text-[11px] font-semibold tracking-wider text-muted uppercase" style={{ letterSpacing: "0.06em" }}>{eyebrow}</p>
-      <p className="text-sm font-medium text-primary mt-0.5">{title}</p>
-      {children && <div className="mt-1 space-y-0.5">{children}</div>}
-    </div>
+        className="absolute left-0 top-0 inline-flex items-center justify-center w-[23px] h-[23px] rounded-full text-[11px] font-semibold"
+        style={{
+          background: tone === "danger" ? "rgba(166,79,75,0.10)" : "#F3F2EE",
+          color: tone === "danger" ? "#A64F4B" : "#63635F",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {index}
+      </span>
+      <p className="text-[14px] leading-[1.55]" style={{ color: "#191917" }}>
+        {title}
+        {cites}
+      </p>
+      {detail && <p className="text-[12.5px] mt-0.5 leading-snug" style={{ color: "#8A8A86" }}>{detail}</p>}
+    </li>
   );
 }
 
-export function CausalChain({ impact, component }: { impact: SignalImpact; component: ImpactComponent }) {
-  const affectedProductCount = component.affectedFinishedProducts.length;
+export function CausalChain({ impact, component, citations, onCite }: {
+  impact: SignalImpact;
+  component: ImpactComponent;
+  citations: Citations;
+  onCite: (n: number) => void;
+}) {
+  const c: ComponentCitations = citations.byComponent[component.component.id] || {};
+  const products = component.affectedFinishedProducts.length;
+  const orders = component.affectedDemand.affectedOrderCount;
+  const eventType = humanizeCode(impact.signal.event_type) || "External event";
 
   return (
-    <div className="max-w-md">
-      <Node eyebrow={humanizeCode(impact.signal.event_type) || "External event"} title={impact.signal.event_title || "External event"} tone="danger">
-        {impact.signal.magnitude != null && (
-          <p className="text-2xs text-muted">Magnitude {impact.signal.magnitude} {impact.signal.magnitude_unit}</p>
-        )}
-      </Node>
-      <Node eyebrow="Connected supplier" title={impact.supplier?.name || "Unknown supplier"} tone="warning">
-        <p className="text-2xs text-muted">{impact.supplier?.country} · directly exposed to the event</p>
-      </Node>
-      <Node eyebrow="Dependency" title={component.component.name}>
-        <p className="text-2xs text-muted font-mono">{component.component.sku}</p>
-        {component.alternateSource && <Badge variant="muted" className="mt-1">Alternate source on record: {component.alternateSource.name}</Badge>}
-      </Node>
-      <Node
-        eyebrow="Calculated coverage"
-        title={component.coverage.sufficientData ? `${component.coverage.coverageDays} days of stock on hand` : "Insufficient data"}
-        tone={component.stockout.sufficientData && (component.stockout.alreadyBelowSafetyStock || (component.stockout.daysUntilStockout ?? 99) <= 14) ? "danger" : "warning"}
-      >
-        {/* Stock on hand runs out later than the stockout date because the
-            stockout date is when stock hits the safety-stock floor. Say so,
-            so the two numbers don't read as a contradiction. */}
-        {component.stockout.sufficientData && (
-          <p className="text-2xs text-muted">
-            {component.stockout.alreadyBelowSafetyStock
-              ? "Already below safety stock"
-              : `Stockout (below safety stock) in ${component.stockout.daysUntilStockout} days, ${formatDate(component.stockout.stockoutDate)}`}
-          </p>
-        )}
-      </Node>
-      <Node eyebrow="Affected products" title={`${affectedProductCount} finished product${affectedProductCount === 1 ? "" : "s"} affected`} />
-      <Node eyebrow="Exposed orders" title={`${component.affectedDemand.affectedOrderCount} order${component.affectedDemand.affectedOrderCount === 1 ? "" : "s"} exposed`} />
-      <Node eyebrow="Potential revenue exposure" title={formatINR(component.revenueExposure.totalRevenueExposure)} tone="danger" last>
-        <p className="text-2xs text-muted">Revenue exposed across at-risk open orders{component.revenueExposure.excludedLineCount ? ` (${component.revenueExposure.excludedLineCount} line excluded — missing price data)` : ""}</p>
-      </Node>
-    </div>
+    <ol>
+      <Step
+        index={1}
+        title={<>{eventType}: {impact.signal.event_title || "external event"}</>}
+        detail={impact.signal.magnitude != null ? `Magnitude ${impact.signal.magnitude} ${impact.signal.magnitude_unit ?? ""}`.trim() : undefined}
+        cites={<Cite n={citations.event} onCite={onCite} />}
+      />
+      <Step
+        index={2}
+        title={<>It reaches {impact.supplier?.name || "a supplier"}{impact.supplier?.country ? ` (${impact.supplier.country})` : ""}, who supplies you directly.</>}
+        cites={<><Cite n={citations.supplier} onCite={onCite} /><Cite n={citations.exposure} onCite={onCite} /></>}
+      />
+      <Step
+        index={3}
+        title={<>They supply {component.component.name} <span className="font-mono text-[12px]" style={{ color: "#8A8A86" }}>{component.component.sku}</span>.</>}
+        detail={component.alternateSource ? `Alternate source on record: ${component.alternateSource.name}` : "No alternate source on record."}
+        cites={<><Cite n={c.inventory} onCite={onCite} /><Cite n={c.alternate} onCite={onCite} /></>}
+      />
+      <Step
+        index={4}
+        tone={component.stockout.sufficientData ? "danger" : undefined}
+        title={component.coverage.sufficientData ? <>You have {component.coverage.coverageDays} days of stock on hand.</> : <>Not enough data to calculate stock coverage.</>}
+        detail={component.stockout.sufficientData
+          ? component.stockout.alreadyBelowSafetyStock
+            ? "Already below safety stock."
+            : `Stockout (below safety stock) in ${component.stockout.daysUntilStockout} days, ${formatDate(component.stockout.stockoutDate)}.`
+          : undefined}
+        cites={<><Cite n={c.coverage} onCite={onCite} /><Cite n={c.stockout} onCite={onCite} /></>}
+      />
+      <Step
+        index={5}
+        title={<>{products} finished product{products === 1 ? "" : "s"} use it, across {orders} open order{orders === 1 ? "" : "s"}.</>}
+        cites={<><Cite n={c.downstream} onCite={onCite} /><Cite n={c.orders} onCite={onCite} /></>}
+      />
+      <Step
+        index={6}
+        last
+        tone="danger"
+        title={<>{formatINR(component.revenueExposure.totalRevenueExposure)} of revenue is exposed.</>}
+        detail={component.revenueExposure.excludedLineCount ? `${component.revenueExposure.excludedLineCount} order line(s) excluded for missing price data.` : undefined}
+        cites={<Cite n={c.revenue} onCite={onCite} />}
+      />
+    </ol>
   );
 }
