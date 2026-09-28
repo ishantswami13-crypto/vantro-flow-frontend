@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type PreparedCard, type PreparedResponse } from "@/lib/api";
@@ -258,6 +259,11 @@ export default function PreparedPage() {
           >
             Prepared
           </h1>
+          {/* Control › Approvals is the one place that lists every decision
+              waiting on the owner; this page only shows the prepared subset. */}
+          <Link href="/control/approvals" className="hover-dim" style={{ fontSize: 13, color: "#63635F" }}>
+            All approvals →
+          </Link>
         </div>
 
         <nav

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { getUser, authHeaders } from "@/lib/api";
 import {
@@ -64,6 +65,7 @@ function timeAgo(iso: string) {
 function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: string, status: Status) => void }) {
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [waSending, setWaSending] = useState<"idle" | "sending" | "sent" | "error" | "unconfigured">("idle");
   const [waCopied, setWaCopied] = useState(false);
   const pc = PRIORITY_CONFIG[action.priority] || PRIORITY_CONFIG.medium;
@@ -72,13 +74,24 @@ function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: str
 
   const handleAction = async (status: Status) => {
     setLoading(true);
+    setActionError(null);
     try {
       const res = await fetch(`${BASE}/api/ai-actions/${action.id}`, {
         method: "PATCH",
         headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ status }),
       });
-      if (res.ok) onUpdate(action.id, status);
+      if (res.ok) {
+        onUpdate(action.id, status);
+      } else if (res.status === 409) {
+        // Already decided elsewhere (another screen or device) — say so
+        // instead of leaving the card looking undecided.
+        setActionError("This was already decided elsewhere. Refresh to see its current state.");
+      } else {
+        setActionError("Couldn't save that. Nothing was changed — try again.");
+      }
+    } catch {
+      setActionError("Couldn't reach Starlane. Nothing was changed — try again.");
     } finally {
       setLoading(false);
     }
@@ -202,6 +215,9 @@ function ActionCard({ action, onUpdate }: { action: AiAction; onUpdate: (id: str
           <FiXCircle size={13} /> Dismiss
         </button>
       </div>
+      {actionError && (
+        <p role="alert" className="ml-7 mt-1.5 text-[11px] text-danger">{actionError}</p>
+      )}
       {waSending === "unconfigured" && (
         <p className="ml-7 mt-1.5 text-[11px] text-warning">
           WhatsApp not configured — set TWILIO_WHATSAPP_NUMBER in Railway to enable sending.
@@ -279,6 +295,10 @@ export default function AiActionsPage() {
                 ? `${totalPending} action${totalPending !== 1 ? "s" : ""} need your attention`
                 : "You're all caught up"}
             </p>
+            {/* Control › Approvals is the one home for owner decisions. */}
+            <Link href="/control/approvals" className="text-xs text-accent hover:underline mt-1 inline-block">
+              All approvals in Control →
+            </Link>
           </div>
           <button
             onClick={fetchActions}
