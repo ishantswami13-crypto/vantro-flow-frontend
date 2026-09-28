@@ -2,10 +2,11 @@
 
 // Missions on the web: follow the company's missions — objective, progress
 // measured from the books, status and blockers — from the same API the
-// desktop and phone apps use (GET /api/client/missions). Creating, starting
-// and pausing missions, and approving their actions, happen in the apps.
+// desktop and phone apps use (GET /api/client/missions). Each opens its own
+// page (/missions/[id]); /missions/new starts one.
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import Link from "next/link";
 import { request } from "@/lib/api";
 import type { Mission } from "../../packages/contracts/src/features";
 
@@ -28,25 +29,28 @@ export default function MissionsPage() {
   return (
     <DashboardLayout>
       <div style={{ maxWidth: 980, margin: "0 auto", padding: "32px 24px", display: "grid", gap: 20 }}>
-        <div>
+        <div style={{ display: "flex", gap: 16, alignItems: "start", flexWrap: "wrap" }}>
+         <div style={{ flex: "1 1 400px" }}>
           <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 30, fontWeight: 400, color: "#191917", margin: 0 }}>Missions</h1>
           <p className="v32-body" style={{ color: "#63635F", maxWidth: "64ch", marginTop: 8 }}>
-            One objective with a deadline, measured against your books. Start, pause and approve missions in Starlane for Windows or the phone app; follow them here.
+            One objective with a deadline, measured against your books. Starlane proposes the steps; nothing goes out without your approval.
           </p>
+         </div>
+          <Link href="/missions/new" style={{ fontSize: 13.5, padding: "8px 14px", borderRadius: 6, background: "#191917", color: "#fff", textDecoration: "none" }}>New mission</Link>
         </div>
         {error ? <p style={{ color: "#A23B3B" }}>{error}</p> : null}
         {!missions && !error ? <p style={{ color: "#63635F" }}>Loading…</p> : null}
         {missions && missions.length === 0 ? (
           <div style={{ background: "#fff", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: "28px 24px" }}>
             <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 17, color: "#191917", margin: 0 }}>No missions yet.</p>
-            <p className="v32-body" style={{ color: "#63635F", marginTop: 6 }}>Start one from an overdue invoice in Watch, in the desktop or phone app. Nothing here is an example.</p>
+            <p className="v32-body" style={{ color: "#63635F", marginTop: 6 }}>Start one for everyone overdue, or from a customer in Scan. Nothing here is an example.</p>
           </div>
         ) : null}
         {missions?.map((m) => {
           const p = m.progress;
           const [label, color] = STATUS[m.status] || [m.status, "#63635F"];
           return (
-            <article key={m.id} style={{ background: "#fff", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: "18px 20px", display: "grid", gap: 10 }}>
+            <Link key={m.id} href={`/missions/${m.id}`} style={{ color: "inherit", textDecoration: "none", background: "#fff", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: "18px 20px", display: "grid", gap: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0, flex: 1 }}>{m.title}</h2>
                 <span style={{ fontSize: 12, fontWeight: 600, color, background: "#F1F0EC", borderRadius: 999, padding: "3px 9px" }}>{label}</span>
@@ -64,7 +68,7 @@ export default function MissionsPage() {
                 </>
               ) : null}
               {m.outcome ? <p style={{ margin: 0, color }}>{m.outcome.text}</p> : null}
-            </article>
+            </Link>
           );
         })}
       </div>

@@ -24,6 +24,8 @@ export default function SimulatePage() {
   const [out, setOut] = useState<{ simulation: Simulation | null; emptyReason: string | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // ?mission=<id> (from a mission's page) opens the simulation for that mission.
+  useEffect(() => { const q = new URLSearchParams(window.location.search).get("mission"); if (q) setMissionId(q); }, []);
   useEffect(() => { request<{ missions: Mission[] }>("/api/client/missions").then((r) => setMissions(r.missions.filter((m) => m.status === "active" || m.status === "paused"))).catch(() => {}); }, []);
   useEffect(() => {
     let live = true;

@@ -5,6 +5,7 @@
 // fact labelled (GET /api/client/scan/search, /scan/customer/:key,
 // /scan/invoice/:id). Read-only.
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { request } from "@/lib/api";
 import type { CustomerScan, InvoiceScan, ScanSearch } from "../../packages/contracts/src/features";
 
@@ -77,7 +78,12 @@ export default function ScanLookup() {
               </div>
             ))}
           </dl>
-          <p style={{ margin: 0, fontSize: 13, color: GRAPHITE }}>To start a collections mission for {scan.subject.name}, use Starlane for Windows or the phone app.</p>
+          {scan.invoices.some((i) => i.daysOverdue > 0 && !i.disputed) ? (
+            <Link href={invoice ? `/missions/new?invoice=${encodeURIComponent(invoice.subject.id)}` : `/missions/new?customer=${encodeURIComponent(scan.subject.name)}`}
+              style={{ justifySelf: "start", fontSize: 13.5, padding: "7px 12px", borderRadius: 6, background: "#191917", color: "#fff", textDecoration: "none" }}>
+              Start a mission to collect{invoice ? " this invoice" : ""}
+            </Link>
+          ) : null}
         </article>
       ) : null}
     </section>

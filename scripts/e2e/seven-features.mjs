@@ -2,7 +2,8 @@
 // running frontend + backend (backend on :8787 with a migrated test Postgres,
 // `next start` on :3000 built with NEXT_PUBLIC_API_URL=http://localhost:8787).
 //
-//   sign in -> The Bridge -> Scan a customer -> Watch -> Missions ->
+//   sign in -> The Bridge -> Scan a customer -> Watch -> Missions (start one
+//   from Scan, approve its first step, cancel it) ->
 //   Simulate (move an assumption, the estimate changes) -> Memory -> Prepared,
 //   and the sidebar lists exactly the seven features plus Sources and Settings.
 //
@@ -87,6 +88,36 @@ try {
   check('Missions heading', await h1('Missions'));
   check('Missions shows no error', await noAlert());
   await shot('missions');
+
+  console.log('— Start a mission from Scan, approve its first step');
+  await p.goto(APP + '/scan', { waitUntil: 'networkidle' });
+  await p.getByLabel('Customer or invoice number').fill(QUERY);
+  await p.locator('section[aria-labelledby="scan-lookup-h"] button').first().click();
+  await p.getByRole('link', { name: /Start a mission to collect/ }).click();
+  await p.waitForURL('**/missions/new?**');
+  await p.getByRole('heading', { level: 2, name: 'Objective' }).waitFor({ timeout: 15000 });
+  check('new mission previews its objective from the books', await p.getByText(new RegExp(QUERY, 'i')).first().isVisible());
+  const start = p.getByRole('button', { name: 'Start mission' });
+  await p.waitForFunction(() => { const b = [...document.querySelectorAll('button')].find((x) => x.textContent === 'Start mission'); return b && !b.disabled; }, null, { timeout: 15000 });
+  await shot('mission-new');
+  await start.click();
+  await p.waitForURL(/\/missions\/[0-9a-f-]{36}$/, { timeout: 15000 });
+  await p.getByText('Active', { exact: true }).first().waitFor({ timeout: 15000 });
+  check('starting a mission opens it as Active', true);
+  const approve = p.getByRole('button', { name: 'Approve' }).first();
+  const proposed = await approve.waitFor({ timeout: 15000 }).then(() => true, () => false);
+  check('starting proposes a step for approval', proposed);
+  if (proposed) {
+    const confirmBox = p.getByLabel('I have checked this high-risk action').first();
+    if (await confirmBox.isVisible()) await confirmBox.check();
+    await approve.click();
+    await p.getByRole('status').filter({ hasText: /Recorded|Approved|nothing went/i }).first().waitFor({ timeout: 15000 });
+    check('approving records the decision and says nothing was sent', await p.getByText(/nothing went to|Sending messages is switched off/i).first().isVisible());
+  }
+  await shot('mission');
+  await p.getByRole('button', { name: 'Cancel mission' }).click();
+  await p.getByText('Cancelled', { exact: true }).first().waitFor({ timeout: 15000 });
+  check('the mission can be cancelled (keeps this check re-runnable)', true);
 
   console.log('— Simulate');
   await p.goto(APP + '/simulate', { waitUntil: 'networkidle' });
