@@ -64,6 +64,37 @@ export function dayBookRequestXML(fromDate: string, toDate: string, company?: st
 </ENVELOPE>`;
 }
 
+/** The day before a Tally date (YYYYMMDD): the "as of" date for bills still open when a sync range starts. */
+export function dayBefore(yyyymmdd: string): string {
+  const iso = tallyDateToISO(yyyymmdd);
+  if (!iso) return yyyymmdd;
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10).replace(/-/g, '');
+}
+
+/** Tally's Bills Receivable report as of a date: every sales bill still unpaid then. */
+export function billsReceivableRequestXML(asOf: string, company?: string | null): string {
+  const companyTag = company ? `<SVCURRENTCOMPANY>${escapeXml(company)}</SVCURRENTCOMPANY>` : '';
+  return `<ENVELOPE>
+ <HEADER>
+  <VERSION>1</VERSION>
+  <TALLYREQUEST>Export</TALLYREQUEST>
+  <TYPE>Data</TYPE>
+  <ID>Bills Receivable</ID>
+ </HEADER>
+ <BODY>
+  <DESC>
+   <STATICVARIABLES>
+    <SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>
+    <SVTODATE TYPE="Date">${asOf}</SVTODATE>
+    ${companyTag}
+   </STATICVARIABLES>
+  </DESC>
+ </BODY>
+</ENVELOPE>`;
+}
+
 /** Asks Tally which companies are loaded — used to discover and confirm the connection. */
 export function companyListRequestXML(): string {
   return `<ENVELOPE>
@@ -97,6 +128,15 @@ function qtyNum(v: string | null): number {
 }
 
 const MONTHS: Record<string, number> = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+/** A date as Tally writes it in reports: "20260920", "20-Sep-2026" or "20-Sep-26". */
+export function tallyAnyDateToISO(s: string | null): string | null {
+  const p = String(s || '').trim();
+  if (/^\d{8}$/.test(p)) return tallyDateToISO(p);
+  const m = p.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2}|\d{4})$/);
+  const mon = m ? MONTHS[m[2].toLowerCase()] : undefined;
+  if (m && mon) return `${m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3])}-${pad(mon)}-${pad(Number(m[1]))}`;
+  return null;
+}
 /** Tally writes a credit period as "30 Days" or as the due date itself ("20-Sep-2026", "20260920"). */
 export function dueDateFrom(voucherDate: string | null, period: string | null): string | null {
   if (!period) return null;
@@ -109,11 +149,7 @@ export function dueDateFrom(voucherDate: string | null, period: string | null): 
     d.setUTCDate(d.getUTCDate() + Number(days[1]));
     return d.toISOString().slice(0, 10);
   }
-  if (/^\d{8}$/.test(p)) return tallyDateToISO(p);
-  const m = p.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2}|\d{4})$/);
-  const mon = m ? MONTHS[m[2].toLowerCase()] : undefined;
-  if (m && mon) return `${m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3])}-${pad(mon)}-${pad(Number(m[1]))}`;
-  return null;
+  return tallyAnyDateToISO(p);
 }
 function billType(s: string | null): TallyBill['type'] {
   const t = String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -186,6 +222,39 @@ export function parseVouchers(xml: string): TallyVoucher[] {
     out.push({ type: decode(vchType), date, party, voucherNo: vchNo, amount: isNaN(amount) ? null : Math.abs(amount), items, dueDate, bills });
   }
   return out;
+}
+
+export interface OpeningBill { party: string; billName: string; billDate: string; dueDate: string | null; pending: number }
+/**
+ * Parses the Bills Receivable report. Tally writes each bill as a BILLFIXED
+ * block (date, reference, party) followed by its pending amount (BILLCL) and
+ * due date (BILLDUE). Debit amounts are negative in Tally XML, so a bill owed
+ * to the business is negative; anything else (an advance or credit balance)
+ * is counted in `credits`, never turned into a receivable.
+ */
+export function parseOpeningBills(xml: string, asOf: string): { bills: OpeningBill[]; credits: number; unreadable: number } {
+  const bills: OpeningBill[] = [];
+  let credits = 0, unreadable = 0;
+  const limit = tallyDateToISO(asOf);
+  const parts = xml.split(/<BILLFIXED>/i).slice(1);
+  for (const part of parts) {
+    const end = part.search(/<\/BILLFIXED>/i);
+    if (end < 0) { unreadable++; continue; }
+    const fixed = part.slice(0, end);
+    const rest = part.slice(end);
+    const party = tag(fixed, 'BILLPARTY');
+    const billName = tag(fixed, 'BILLREF');
+    const billDate = tallyAnyDateToISO(tag(fixed, 'BILLDATE'));
+    const amount = num(tag(rest, 'BILLCL'));
+    if (!party || !billName || !billDate || isNaN(amount) || (limit && billDate > limit)) { unreadable++; continue; }
+    if (amount >= 0) { credits++; continue; }
+    bills.push({ party, billName, billDate, dueDate: tallyAnyDateToISO(tag(rest, 'BILLDUE')), pending: Math.round(-amount * 100) / 100 });
+  }
+  return { bills, credits, unreadable };
+}
+/** Opening bills as import rows: sent before the day book so later receipts find them. */
+export function openingBillVouchers(bills: OpeningBill[]): ApiVoucher[] {
+  return bills.map((b) => ({ type: 'Opening Bill', date: b.billDate, party: b.party, voucherNo: b.billName, amount: b.pending, items: [], dueDate: b.dueDate, bills: [] }));
 }
 
 export function toApiVouchers(vouchers: TallyVoucher[], wantedTypes: string[] = DEFAULT_VOUCHER_TYPES) {

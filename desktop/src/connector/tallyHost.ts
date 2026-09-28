@@ -21,7 +21,8 @@
 //   Every attempt becomes a sync run on the server (succeeded or failed with a
 //   reason), so Sources/Now show the real state, never a hopeful one.
 import {
-  ApiError, OfflineError, companyListRequestXML, dayBookRequestXML, financialYearStart, parseCompanies,
+  ApiError, OfflineError, billsReceivableRequestXML, companyListRequestXML, dayBefore, dayBookRequestXML, financialYearStart,
+  openingBillVouchers, parseCompanies, parseOpeningBills,
   parseVouchers, tallyDate, tallyErrorOf, toApiVouchers, type DeviceClaim,
 } from '@starlane/contracts';
 import { api, getPrefs, savePrefs, track } from '../api';
@@ -200,7 +201,21 @@ class TallyHost {
       }
       const tallyErr = tallyErrorOf(xml);
       if (tallyErr) throw new TallyRefused(tallyErr);
-      const { rows, skipped } = toApiVouchers(parseVouchers(xml));
+      const parsed = toApiVouchers(parseVouchers(xml));
+      const skipped = parsed.skipped;
+      // Bills from earlier years still unpaid when the day book starts, sent first
+      // so receipts in the range can settle them. The day book is the sync; if
+      // Tally will not export this report, the sync goes on without it.
+      let opening: ReturnType<typeof openingBillVouchers> = [];
+      try {
+        const asOf = dayBefore(financialYearStart());
+        const billsXml = await this.tallyPost(billsReceivableRequestXML(asOf, company));
+        if (!tallyErrorOf(billsXml)) opening = openingBillVouchers(parseOpeningBills(billsXml, asOf).bills);
+        else track('client.opening_bills_failed', { connector: 'tally', error_code: 'tally_error' });
+      } catch {
+        track('client.opening_bills_failed', { connector: 'tally', error_code: 'unreachable' });
+      }
+      const rows = [...opening, ...parsed.rows];
 
       let imported = 0, rejected = 0;
       if (rows.length === 0) {

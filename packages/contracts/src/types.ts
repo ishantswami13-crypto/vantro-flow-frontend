@@ -170,7 +170,7 @@ export interface AskReply { message: string; actions: string[]; navigate: string
 export type TelemetryEventName =
   | 'client.app_started' | 'client.app_crashed' | 'client.startup_failed' | 'client.screen_opened'
   | 'client.connector_setup_started' | 'client.connector_setup_completed' | 'client.connector_setup_failed'
-  | 'client.local_sync_succeeded' | 'client.local_sync_failed' | 'client.recommendation_opened' | 'client.evidence_opened'
+  | 'client.local_sync_succeeded' | 'client.local_sync_failed' | 'client.opening_bills_failed' | 'client.recommendation_opened' | 'client.evidence_opened'
   | 'client.approval_completed' | 'client.update_available' | 'client.update_installed' | 'client.update_failed'
   | 'client.notification_opened' | 'client.ask_submitted' | 'client.offline' | 'client.session_expired';
 export interface TelemetryEvent {
