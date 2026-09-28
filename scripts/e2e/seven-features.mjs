@@ -120,6 +120,12 @@ try {
   const proposed = await approve.waitFor({ timeout: 15000 }).then(() => true, () => false);
   check('starting proposes a step for approval', proposed);
   if (proposed) {
+    const missionUrl = p.url();
+    await p.goto(APP + '/bridge', { waitUntil: 'networkidle' });
+    await p.getByRole('heading', { level: 2, name: /Needs you/ }).waitFor({ timeout: 15000 });
+    check('the Bridge shows the waiting step with Approve and Decline', await p.getByRole('button', { name: 'Approve' }).first().isVisible() && await p.getByRole('button', { name: 'Decline' }).first().isVisible());
+    await p.goto(missionUrl, { waitUntil: 'networkidle' });
+    await approve.waitFor({ timeout: 15000 });
     const confirmBox = p.getByLabel('I have checked this high-risk action').first();
     if (await confirmBox.isVisible()) await confirmBox.check();
     await approve.click();

@@ -5,9 +5,10 @@
 // how current they are), what needs a decision, what Watch raised, missions
 // and what is coming. No sample data: an empty company sees how to connect.
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { request } from "@/lib/api";
+import { FeatureActionRow } from "@/components/features/FeatureActionRow";
 import type { BridgeView } from "../../packages/contracts/src/features";
 
 const inr = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
@@ -50,12 +51,12 @@ function Bar({ ratio, color }: { ratio: number; color: string }) {
 export default function BridgePage() {
   const [b, setB] = useState<BridgeView | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const load = useCallback(() => { request<BridgeView>("/api/client/bridge").then(setB).catch((e: Error) => setError(e.message || "Could not load the Bridge")); }, []);
   useEffect(() => {
-    const load = () => request<BridgeView>("/api/client/bridge").then(setB).catch((e: Error) => setError(e.message || "Could not load the Bridge"));
     load();
     const t = setInterval(load, 60_000);
     return () => clearInterval(t);
-  }, []);
+  }, [load]);
   // Set after mount: server and browser can disagree on the date (time zone), which would break hydration.
   const [today, setToday] = useState("");
   useEffect(() => { setToday(new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })); }, []);
@@ -85,33 +86,40 @@ export default function BridgePage() {
                     <h2 style={h2}>Needs you · {b.attention.decisions}</h2>
                     <div style={card}>
                       {b.attention.topDecisions.length === 0 ? <p style={{ padding: 16, margin: 0 }}>Nothing is waiting for your decision.</p>
-                        : b.attention.topDecisions.map((a, i) => (
-                          <div key={a.id} style={{ ...row, borderTop: i ? row.borderTop : 0 }}>
-                            <span style={{ width: 3, alignSelf: "stretch", borderRadius: 2, background: a.riskLevel === "high" ? "#A23B3B" : a.riskLevel === "medium" ? "#C7962F" : "#D9D7D0" }} />
-                            <span style={{ minWidth: 0, flex: 1 }}><strong style={{ fontWeight: 500 }}>{a.title}</strong><br /><span style={{ color: GRAPHITE, fontSize: 13 }}>{a.description}</span></span>
-                          </div>
-                        ))}
+                        // After a decision, leave the result on screen a moment before the list refreshes.
+                        : b.attention.topDecisions.map((a, i) => <FeatureActionRow key={a.id} a={a} first={i === 0} onDecided={() => setTimeout(load, 4000)} />)}
                     </div>
-                    {b.attention.decisions ? <p style={{ fontSize: 13, color: FAINT, marginTop: 8 }}>Approve in Starlane for Windows or on your phone, where each decision shows its evidence.</p> : null}
+                    {b.attention.decisions ? (
+                      <p style={{ fontSize: 13, color: FAINT, marginTop: 8 }}>
+                        {b.attention.decisions > b.attention.topDecisions.length ? `Showing the first ${b.attention.topDecisions.length} of ${b.attention.decisions}. ` : ""}
+                        Approving records your decision; sending messages to customers is switched off, so nothing goes out from here.
+                      </p>
+                    ) : null}
                   </div>
                   <div>
                     <h2 style={h2}>Watch · {b.attention.watch.open} new · {b.attention.watch.urgent} urgent</h2>
                     <div style={card}>
                       {b.attention.watch.latest.length === 0 ? <p style={{ padding: 16, margin: 0 }}>Nothing needs watching right now.</p>
                         : b.attention.watch.latest.map((e, i) => (
-                          <div key={e.id} style={{ ...row, borderTop: i ? row.borderTop : 0 }}>
+                          <Link key={e.id} href="/watch" style={{ ...row, borderTop: i ? row.borderTop : 0, color: INK, textDecoration: "none" }}>
                             <span style={{ width: 3, alignSelf: "stretch", borderRadius: 2, background: SEV[e.severity] }} />
                             <span style={{ minWidth: 0, flex: 1 }}><strong style={{ fontWeight: 500 }}>{e.title}</strong><br /><span style={{ color: GRAPHITE, fontSize: 13 }}>{e.detail} · {ago(e.firstSeenAt)}</span></span>
-                          </div>
+                          </Link>
                         ))}
                     </div>
                   </div>
                   <div>
                     <h2 style={h2}>Missions</h2>
                     <div style={card}>
-                      {b.missions.length === 0 ? <p style={{ padding: 16, margin: 0 }}>No mission is running.</p>
+                      {b.missions.length === 0 ? (
+                        <div style={{ padding: 16 }}>
+                          <p style={{ margin: 0 }}>No mission is running.</p>
+                          <p style={{ margin: "4px 0 10px", color: GRAPHITE, fontSize: 13 }}>A mission gives Starlane one objective — collect a sum within a time — and measures progress against your books.</p>
+                          <Link href="/missions/new" style={{ fontSize: 13, padding: "6px 12px", borderRadius: 6, border: "1px solid rgba(25,25,23,0.12)", color: INK, textDecoration: "none" }}>Start a collections mission</Link>
+                        </div>
+                      )
                         : b.missions.map((m, i) => (
-                          <Link key={m.id} href="/missions" style={{ ...row, borderTop: i ? row.borderTop : 0, color: INK, textDecoration: "none", display: "grid", gap: 6 }}>
+                          <Link key={m.id} href={`/missions/${m.id}`} style={{ ...row, borderTop: i ? row.borderTop : 0, color: INK, textDecoration: "none", display: "grid", gap: 6 }}>
                             <strong style={{ fontWeight: 500 }}>{m.title}</strong>
                             <Bar ratio={m.progress?.ratio || 0} color="#2F6B4F" />
                             <span style={{ color: GRAPHITE, fontSize: 13 }}>{inr(m.progress?.collected || 0)} of {inr(m.target.amount)}{m.status === "active" && m.progress?.daysLeft != null ? ` · ${m.progress.daysLeft} days left` : ` · ${m.status}`}</span>
