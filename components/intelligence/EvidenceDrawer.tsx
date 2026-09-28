@@ -40,11 +40,13 @@ export function EvidenceDrawer({
 
   return (
     <Drawer titleId="evidence-drawer-title" title={title} onClose={onClose}>
-      <div className="-mx-4 -mt-4 mb-4 px-4 pt-4 pb-3" style={{ borderBottom: "1px solid #EBEAE6" }}>
-        <p className="v32-section-label mb-2">Evidence</p>
-        <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 19, color: "#191917" }}>{title}</p>
-        {record && <p className="text-[12.5px] mt-1" style={{ color: "#63635F" }}>{record}</p>}
-      </div>
+      {/* The drawer header already shows `title`; only the record line is
+          added here so the title never appears twice. */}
+      {record && (
+        <div className="-mx-4 -mt-4 mb-4 px-4 pt-4 pb-3" style={{ borderBottom: "1px solid #EBEAE6" }}>
+          <p className="text-[12.5px]" style={{ color: "#63635F" }}>{record}</p>
+        </div>
+      )}
       <p className="text-2xs text-muted mb-4 leading-relaxed">
         Every number on this screen traces back to one of the items below. Facts are things Starlane read directly from your
         records or the external event. Assumptions are planning parameters you or Starlane recorded. Forecasts are
