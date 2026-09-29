@@ -3,6 +3,7 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { MissionsList } from "@/components/os/MissionsList";
 import { WorkflowsPanel } from "@/components/os/MissionsPanels";
+import { OutreachSummary } from "@/components/outreach/OutreachPanels";
 
 // Missions answers one question: what is Starlane handling? The list comes
 // from GET /api/os/missions (decisions you told Starlane to handle and
@@ -19,6 +20,7 @@ export default function MissionsPage() {
           <p style={{ margin: "6px 0 0", fontSize: 13.5, color: "#63635F" }}>What Starlane is handling, and whether it worked.</p>
         </div>
         <MissionsList />
+        <OutreachSummary context="missions" />
         <WorkflowsPanel />
       </div>
     </DashboardLayout>
