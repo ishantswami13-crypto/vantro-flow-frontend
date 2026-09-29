@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, Watch, WatchConditionConfig } from "@/lib/api";
+import { WatchBrief, ObjectivesPanel } from "@/components/os/WatchPanels";
 
 // Watch — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
 //
@@ -197,6 +198,9 @@ function WatchPageInner() {
               ? "No watch conditions configured yet."
               : `${list.length} watch condition${list.length === 1 ? "" : "s"} configured.`}
         </div>
+
+        <WatchBrief />
+        <ObjectivesPanel />
 
         <nav
           aria-label="Secondary"

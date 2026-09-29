@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { WorkflowsPanel } from "@/components/os/MissionsPanels";
 
 // Missions — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§6/§14/§16.
 //
@@ -39,6 +40,10 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 // persistence endpoint behind it at all, so showing any button here —
 // enabled or disabled — would overstate what exists. The empty-state copy
 // below explains what Missions will do once this is built instead.
+//
+// Seven-surface update: the workflow engine (lib/routes/os.js) is real, so
+// the workflows Starlane runs are listed above the mission shells. Goal
+// workspaces with progress, blockers and people are still not built.
 
 type TabKey = "active" | "at_risk" | "completed" | "templates";
 
@@ -97,8 +102,10 @@ export default function MissionsPage() {
           </h1>
         </div>
 
+        <WorkflowsPanel />
+
         <div style={{ fontSize: 13.5, color: "#63635F" }}>
-          No missions configured yet.
+          Goal workspaces with progress, blockers and people are not built yet.
         </div>
 
         <nav

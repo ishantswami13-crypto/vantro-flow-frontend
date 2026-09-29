@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type ScenarioInvoice, type SimulateScenarioResponse } from "@/lib/api";
+import { WorkflowReplays } from "@/components/os/SimulatePanels";
 
 // Simulate — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§6/§14/§16.
 //
@@ -130,6 +131,8 @@ function SimulatePageInner() {
             Simulate
           </h1>
         </div>
+
+        <WorkflowReplays />
 
         <nav aria-label="Secondary" style={{ display: "flex", alignItems: "center", gap: 22, borderBottom: "1px solid #EBEAE6", marginBottom: 4 }}>
           {TABS.map((t) => (

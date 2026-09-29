@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type AuditEvent } from "@/lib/api";
+import { MemoryLearning } from "@/components/os/MemoryPanels";
 
 // Memory — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
 //
@@ -236,6 +237,8 @@ export default function MemoryPage() {
             Memory
           </h1>
         </div>
+
+        <MemoryLearning />
 
         <nav
           aria-label="Secondary"

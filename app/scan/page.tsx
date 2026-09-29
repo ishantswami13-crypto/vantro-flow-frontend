@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { ScanFindings } from "@/components/os/ScanFindings";
 import { api, getUser } from "@/lib/api";
 import { saveScanResult } from "@/lib/scanStore";
 
@@ -80,7 +81,7 @@ export default function ScanPage() {
           justifyContent: "center",
           padding: 40,
           boxSizing: "border-box",
-          minHeight: "calc(100vh - 140px)",
+          minHeight: "min(calc(100vh - 140px), 560px)",
         }}
       >
         <div className="fade-once" style={{ width: 680, maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -204,6 +205,9 @@ export default function ScanPage() {
 
           {submitting && <p style={{ fontSize: 12, color: "#63635F", marginTop: 16 }}>Checking your connected data…</p>}
         </div>
+      </div>
+      <div style={{ width: 880, maxWidth: "100%", margin: "0 auto", paddingBottom: 40 }}>
+        <ScanFindings />
       </div>
     </DashboardLayout>
   );

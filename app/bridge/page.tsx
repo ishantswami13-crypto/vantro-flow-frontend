@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { BridgeHealthPanel, TeachStarlanePanel } from "@/components/os/BridgePanels";
 import { LensDrawer, type LensSection } from "@/components/ui/LensDrawer";
 import { EvidenceDrawer } from "@/components/intelligence/EvidenceDrawer";
 import { formatDateTime } from "@/components/intelligence/format";
@@ -215,6 +216,11 @@ export default function BridgePage() {
             <SourceStatusList connections={connections} worldSources={worldSources} loading={loading} />
           </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-8">
+        <BridgeHealthPanel />
+        <TeachStarlanePanel />
       </div>
 
       {lensAction && (
