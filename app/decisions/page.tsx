@@ -99,6 +99,7 @@ export default function DecisionsPage() {
         <div className="flex flex-wrap items-end justify-between gap-4 mb-2">
           <h1 className="text-[30px] lg:text-[34px]" style={{ color: C.ink }}>Decisions</h1>
           <div className="flex items-center gap-3">
+            <Link href="/decisions/import" className="text-[13px] hover-dim" style={{ color: C.muted }}>Bring data</Link>
             <Link href="/decisions/proof" className="text-[13px] hover-dim" style={{ color: C.muted }}>Track record</Link>
             <Button variant="secondary" size="sm" loading={discover.isPending} icon={<FiRefreshCw size={13} />} onClick={() => discover.mutate()}>
               Refresh
@@ -183,9 +184,12 @@ export default function DecisionsPage() {
               <>
                 <p className="text-[15px]" style={{ color: C.ink, fontWeight: 500 }}>No data to decide on yet</p>
                 <p className="text-[13px] mt-1.5 max-w-[460px] mx-auto" style={{ color: C.faint }}>
-                  Import invoices from Tally, CSV or Excel. Starlane needs your own history to find decisions; it never invents one.
+                  Upload the receivables file you already have (CSV or Excel), or connect Tally. Starlane needs your own history to find decisions; it never invents one.
                 </p>
-                <div className="mt-4"><Button size="sm" onClick={() => router.push("/sources")}>Connect or import data</Button></div>
+                <div className="mt-4 flex justify-center gap-3">
+                  <Button size="sm" onClick={() => router.push("/decisions/import")}>Upload a file</Button>
+                  <Button size="sm" variant="secondary" onClick={() => router.push("/sources")}>Connect Tally</Button>
+                </div>
               </>
             ) : (
               <>

@@ -25,7 +25,7 @@ export default function TodayDecisionsCard() {
   const top = t.top[0];
   const waiting = t.command.open + t.command.needsInformation + t.command.awaitingApproval + t.command.readyToRun;
   return (
-    <Link href={top ? `/decisions/${top.id}` : "/decisions"} className="block rounded-2xl px-5 py-4 mb-5 transition-colors" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+    <Link href={top ? `/decisions/${top.id}` : t.receivables.invoices ? "/decisions" : "/decisions/import"} className="block rounded-2xl px-5 py-4 mb-5 transition-colors" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
       <div className="flex items-center gap-2 text-[12px]" style={{ color: C.faint }}>
         <span aria-hidden="true" className="w-[7px] h-[7px] rounded-full id-gradient" />
         <span>{waiting ? `${waiting} decision${waiting === 1 ? "" : "s"} need you` : "No decisions waiting"}</span>
@@ -47,7 +47,7 @@ export default function TodayDecisionsCard() {
         <p className="text-[13px] mt-1.5" style={{ color: C.muted }}>
           {t.command.underWatch
             ? `${t.command.underWatch} decision${t.command.underWatch === 1 ? " is" : "s are"} being checked against what actually happens.`
-            : t.receivables.invoices ? "Nothing material changed in your receivables." : "Import invoices so Starlane can find decisions in your own data."}
+            : t.receivables.invoices ? "No material decision currently requires attention." : "Upload your receivables file so Starlane can find decisions in your own data."}
         </p>
       )}
     </Link>

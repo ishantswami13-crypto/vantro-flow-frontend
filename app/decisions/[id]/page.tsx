@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FiArrowLeft, FiCheck, FiX } from "react-icons/fi";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import FeedbackBar from "@/components/decisions/FeedbackBar";
 import { ErrorState } from "@/components/ui/ErrorState";
 import Button from "@/components/ui/Button";
 import { C, ConfidencePill, Notice, Pill, RangeBar, SectionLabel, Skeleton } from "@/components/decisions/ui";
@@ -369,6 +370,8 @@ export default function DecisionDetailPage() {
             </Notice>
           )}
         </div>
+
+        <FeedbackBar decisionId={d.id} />
 
         {/* Why now + do nothing */}
         <section className="grid md:grid-cols-2 gap-8 mt-10">
