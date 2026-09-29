@@ -279,6 +279,109 @@ async function call<T>(method: 'GET' | 'POST' | 'PUT', path: string, body?: unkn
   }
 }
 
+// ── Bring your own data (backend: lib/domain/decisions/ledgerImport.js) ──
+
+export type LedgerField =
+  | 'customer' | 'invoice_number' | 'invoice_date' | 'due_date' | 'amount' | 'paid_amount'
+  | 'outstanding' | 'payment_date' | 'status' | 'currency' | 'credit_days' | 'phone';
+
+export interface Limitation { key: string; severity: 'blocking' | 'reduces' | 'info'; message: string; affects: string }
+
+export interface LedgerProfile {
+  asOf: string;
+  counts: {
+    customers: number; invoices: number; paid: number; paidWithPaymentDate: number; open: number; overdue: number;
+    openWithoutDueDate: number; customersWithPaymentHistory: number; rowsRejected: number;
+  };
+  period: { from: string | null; to: string | null; historyDays: number; newestRecordAgeDays: number | null };
+  byCurrency: Record<string, { invoiced: number; open: number; overdue: number; openCount: number; overdueCount: number }>;
+  rejectedByReason: { reason: string; count: number; rows: number[]; example: string }[];
+  warnings: Record<string, { count: number; rows: number[] }>;
+  possibleSameCustomer: string[][];
+  limitations: Limitation[];
+  canDetect: { overdue: boolean; paymentTrends: boolean; historicalReplay: boolean };
+}
+
+export interface ImportOptions {
+  mapping: Partial<Record<LedgerField, string | null>>;
+  dateOrders: Record<string, 'DMY' | 'MDY'>;
+  allOpen?: boolean;
+  currency?: string | null;
+  defaultCreditDays?: number | null;
+}
+
+export interface ImportPreview {
+  ok: true;
+  file: { name: string; type: string; sheet: string | null; rows: number; columns: string[]; sampleRows: string[][]; hash: string };
+  proposal: {
+    fields: Partial<Record<LedgerField, { header: string; verdict: 'CONFIRMED' | 'SUGGESTED'; reason: string; fit: number }>>;
+    dateOrders: Record<string, { order: 'DMY' | 'MDY' | null; verdict: 'PROVEN' | 'ASSUMED' | 'CONFLICT' | 'NOT_NEEDED'; reason: string }>;
+    unmapped: string[];
+    needsConfirmation: { key: string; message: string; reason: string; field?: string; header?: string }[];
+    missingRequired: LedgerField[];
+  };
+  suggestedInput: ImportOptions;
+  mappingErrors: string[];
+  profile: LedgerProfile | null;
+  sampleRecords: Record<string, unknown>[];
+}
+
+export interface FirstLook {
+  lines: string[];
+  needYou: number;
+  watched: number;
+  watchedBalances: number;
+  insufficientInformation: boolean;
+  top: DecisionListItem[];
+  limitations: Limitation[];
+}
+
+export interface ImportCommit {
+  import: { batchId: string; alreadyImported: boolean; counts: { inserted: number; updated: number; unchanged: number; skippedOtherSource: number; customersCreated?: number; customersMatched?: number } };
+  profile: LedgerProfile;
+  discovery: { status: string; discovered: number; revised: number; resolved: number } | null;
+  discoveryError: string | null;
+  firstLook: FirstLook;
+}
+
+export interface DataProfile extends LedgerProfile {
+  freshness: { status: string; lastUpdateAt: string | null; detail: string };
+  sources: Record<string, number>;
+  recentImports: { filename: string; status: string; completed_at: string | null; rows_total: number; rows_accepted: number; rows_rejected: number }[];
+}
+
+export const FEEDBACK_KINDS = [
+  { kind: 'USEFUL', label: 'Useful' },
+  { kind: 'MATTERS', label: 'This matters' },
+  { kind: 'ALREADY_KNEW', label: 'Already knew this' },
+  { kind: 'NOT_IMPORTANT', label: 'Not important' },
+  { kind: 'WRONG', label: 'Wrong' },
+  { kind: 'MISSING_CONTEXT', label: 'Missing context' },
+  { kind: 'OPTION_IMPOSSIBLE', label: 'An option is impossible' },
+] as const;
+export type FeedbackKind = typeof FEEDBACK_KINDS[number]['kind'];
+
+async function upload<T>(path: string, file: File, options?: ImportOptions | null): Promise<T> {
+  const form = new FormData();
+  form.append('file', file);
+  if (options) form.append('options', JSON.stringify(options));
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 180_000);
+  try {
+    const res = await fetch(`${API_BASE}/api/decisions${path}`, { method: 'POST', headers: { ...authHeaders() }, credentials: 'include', body: form, signal: controller.signal });
+    let data: Record<string, unknown> = {};
+    try { data = await res.json(); } catch { data = {}; }
+    if (res.status === 401 && typeof window !== 'undefined') window.location.href = '/login';
+    if (!res.ok) throw new DecisionApiError(res.status, data);
+    return data as T;
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw new DecisionApiError(0, { error: 'The upload timed out. Check your connection and try again.' });
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export const decisionsApi = {
   today: () => call<TodayResponse>('GET', '/today'),
   list: (scope: 'active' | 'closed' | 'all' = 'active') => call<{ decisions: DecisionListItem[]; lastDiscovery: { at: string; status: string } | null }>('GET', `?scope=${scope}`),
@@ -296,6 +399,11 @@ export const decisionsApi = {
   setControls: (body: { pilotMode?: 'SHADOW' | 'LIVE'; scope?: string; scopeKey?: string; stopped?: boolean; reason?: string }) => call<Record<string, unknown>>('POST', '/controls', body),
   trackRecord: () => call<TrackRecord>('GET', '/track-record'),
   backtest: (horizonDays = 60) => call<BacktestResponse>('POST', '/backtest', { horizonDays }, 120_000),
+  importPreview: (file: File, options?: ImportOptions | null) => upload<ImportPreview>('/import/preview', file, options),
+  importCommit: (file: File, options: ImportOptions) => upload<ImportCommit>('/import/commit', file, options),
+  dataProfile: () => call<DataProfile>('GET', '/data-profile'),
+  feedback: (id: string, kind: FeedbackKind, note?: string, optionKey?: string) => call<{ recorded: boolean; label: string }>('POST', `/${encodeURIComponent(id)}/feedback`, { kind, note, optionKey }),
+  getFeedback: (id: string) => call<{ feedback: { kind: FeedbackKind; label: string; note: string | null; optionKey: string | null; at: string }[] }>('GET', `/${encodeURIComponent(id)}/feedback`),
 };
 
 // ── Formatting (display only) ─────────────────────────────────────────────
