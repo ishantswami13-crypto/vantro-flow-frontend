@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { AutomationProposals, ReminderApprovals, DecisionsNeedingYou } from "@/components/os/PreparedPanels";
+import { OutreachSummary } from "@/components/outreach/OutreachPanels";
 import { api, getUser, type PreparedCard, type PreparedResponse } from "@/lib/api";
 
 // Prepared — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16, Priority 6.
@@ -276,6 +277,7 @@ export default function PreparedPage() {
         </div>
 
         <DecisionsNeedingYou />
+        <OutreachSummary context="prepared" />
         <AutomationProposals />
         <ReminderApprovals />
 
