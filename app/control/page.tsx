@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -29,9 +30,11 @@ import { api, type CortexHealthResponse, type DataConnection, type UserSettings 
 // mechanism exists in the backend), so hardcoding it is honest
 // content, not fabricated data.
 //
-// Automation / Monitoring / Security: §8 explicitly flags these tabs
-// have NO designed content anywhere in the source. New, honest,
-// tone-matched empty-state copy is written below rather than assumed.
+// Automation: automations are the workflows deployed from Prepared; their
+// runs live on Missions and their stop switches on Control > Decisions, so
+// this tab points there instead of keeping a second, empty copy.
+// Monitoring and Security had no backend behind them and were removed from
+// the subnav; old links to them fall back to Overview.
 const MIN_EVALUATED_FOR_RATE = 3;
 
 function timeSince(iso: string | null): string {
@@ -63,8 +66,8 @@ function ConnectionSection({ connections }: { connections: DataConnection[] }) {
             {c.last_sync_error && <p className="text-[12px] mt-0.5" style={{ color: "#C13B3B" }}>{c.last_sync_error}</p>}
           </div>
           <div className="text-right">
-            <p className="text-[13px]" style={{ color: c.status === "connected" ? "#171717" : "#8A8A86" }}>
-              {c.status === "connected" ? "Connected" : "Not connected"}
+            <p className="text-[13px]" style={{ color: String(c.status).toUpperCase() === "CONNECTED" ? "#171717" : "#8A8A86" }}>
+              {String(c.status).toUpperCase() === "CONNECTED" ? "Connected" : "Not connected"}
             </p>
             <p className="text-[12px] mt-0.5" style={{ color: "#8A8A86" }}>Last synced {timeSince(c.last_sync_at)}</p>
           </div>
@@ -260,14 +263,27 @@ function PermissionsTab() {
   );
 }
 
-function PlaceholderTab({ title, body }: { title: string; body: string }) {
-  return <EmptyState title={title} message={body} />;
+function AutomationTab() {
+  return (
+    <div className="max-w-[640px] space-y-3 text-[13.5px]" style={{ color: "#63635F" }}>
+      <p>
+        Automations in Starlane are workflows you deploy from a proposal on{" "}
+        <Link className="underline" href="/prepared">Prepared</Link>. Each one starts in shadow mode, never sends a message on its own,
+        and has an action budget per run.
+      </p>
+      <p>
+        Their runs, what is waiting for you and what was verified are on{" "}
+        <Link className="underline" href="/missions">Missions</Link>. To stop everything or one agent, use the switches on{" "}
+        <Link className="underline" href="/control/decisions">Control, Decisions</Link>.
+      </p>
+    </div>
+  );
 }
 
 function ControlPageInner() {
   const params = useSearchParams();
   const tabParam = (params.get("tab") || "overview") as ControlTab;
-  const validInPageTabs: ControlTab[] = ["overview", "users", "permissions", "automation", "monitoring", "security"];
+  const validInPageTabs: ControlTab[] = ["overview", "users", "permissions", "automation"];
   const tab: ControlTab = validInPageTabs.includes(tabParam) ? tabParam : "overview";
 
   return (
@@ -293,24 +309,7 @@ function ControlPageInner() {
           {tab === "overview" && <OverviewTab />}
           {tab === "users" && <UsersTab />}
           {tab === "permissions" && <PermissionsTab />}
-          {tab === "automation" && (
-            <PlaceholderTab
-              title="No automations configured yet"
-              body="When Starlane can run a task on a schedule or trigger, on your behalf, that setup will live here."
-            />
-          )}
-          {tab === "monitoring" && (
-            <PlaceholderTab
-              title="Nothing to monitor yet"
-              body="Once Starlane is watching a live process end-to-end, its running status and alerts will appear here."
-            />
-          )}
-          {tab === "security" && (
-            <PlaceholderTab
-              title="No security settings to show yet"
-              body="Session, access, and data-handling controls will appear here as they become configurable."
-            />
-          )}
+          {tab === "automation" && <AutomationTab />}
         </div>
       </div>
     </DashboardLayout>

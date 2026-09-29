@@ -43,7 +43,11 @@ export function BridgeHealthPanel() {
             })}
           </div>
           {k.lastError && <p className="text-[12px] mt-2" style={{ color: C.bad }}>{k.lastError}</p>}
-          {k.limitations.length > 0 && <p className="text-[12px] mt-2" style={{ color: C.muted }}>{k.limitations.join(" ")}</p>}
+          {k.limitations.length > 0 && (
+            <ul className="text-[12px] mt-2 space-y-0.5" style={{ color: C.muted }}>
+              {k.limitations.map((l) => <li key={l}>{l}</li>)}
+            </ul>
+          )}
           {k.confidenceEffect !== "n/a" && k.confidenceEffect !== "none" && (
             <p className="text-[12px] mt-1" style={{ color: C.warn }}>Confidence in findings from this source is {k.confidenceEffect}.</p>
           )}

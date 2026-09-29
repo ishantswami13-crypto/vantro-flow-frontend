@@ -283,6 +283,14 @@ export default function DecisionDetailPage() {
   const approve = useMutation(act(() => decisionsApi.approve(id), () => "Approved."));
   const execute = useMutation(act((live: boolean) => decisionsApi.execute(id, live), (r) => (r.mode === "SHADOW" ? "Recorded in shadow mode. Nothing was changed outside Starlane." : "Done. Each step was checked in the system it changed.")));
   const reject = useMutation(act(() => decisionsApi.reject(id, note || undefined), () => "Rejected."));
+  // "Handle it": the server selects the recommended option, records your
+  // approval and runs it in your account's pilot mode, with every policy
+  // and precondition check a step-by-step run would have.
+  const handle = useMutation(act(() => decisionsApi.handle(id, { approve: true, optionKey: detail?.decision.recommendation?.key, note: note || undefined }), (r) => {
+    const ran = r.steps.find((s) => s.step === "EXECUTED");
+    if (!ran) return r.next || "Mission started.";
+    return ran.mode === "SHADOW" ? "Mission started in shadow mode. Nothing was changed outside Starlane. Track it in Missions." : "Mission started. Track it in Missions.";
+  }));
   const requestInfo = useMutation(act((key: string | undefined) => decisionsApi.requestInformation(id, key), (r) => `Task created: ${r.request.label}`));
   const observe = useMutation(act(() => decisionsApi.observe(id, obs, "MEDIUM"), () => { setObs(""); return "Added to the evidence as your observation."; }));
   const verify = useMutation(act(() => decisionsApi.verify(id)));
@@ -307,6 +315,7 @@ export default function DecisionDetailPage() {
   }
 
   const rec = d.recommendation;
+  const recOption = rec ? d.options.find((o) => o.key === rec.key) : undefined;
   const chosen = d.options.find((o) => o.key === d.selectedOption) || null;
   const canChoose = ["OPEN", "NEEDS_INFORMATION", "SELECTED"].includes(d.status);
   const days = daysUntil(d.deadline || d.window?.latestSafeAt || null);
@@ -423,6 +432,23 @@ export default function DecisionDetailPage() {
                   ))}
                 </ul>
               </details>
+            )}
+            {canChoose && !rec.informationFirst && recOption && recOption.valid !== false && (
+              <div className="mt-5 pt-4" style={{ borderTop: "1px solid #E2E3F1" }}>
+                <p className="text-[13px] max-w-[760px]" style={{ color: C.body }}>
+                  <span style={{ fontWeight: 500 }}>Handle it</span> approves &ldquo;{rec.label}&rdquo; and starts a mission.{" "}
+                  {recOption.isDoNothing
+                    ? "Nothing is changed; Starlane checks what happens."
+                    : detail.pilotMode === "SHADOW"
+                      ? "Your account is in shadow mode, so Starlane records exactly what it would do and changes nothing outside Starlane."
+                      : "Your account is live: approved internal steps are carried out and checked. Customer messages stay drafts for you to send."}
+                  {" "}If you reject it, nothing happens and the decision stays open.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <Button size="sm" loading={handle.isPending} onClick={() => handle.mutate()}>Handle it</Button>
+                  <Link href="/missions" className="text-[12.5px] self-center hover-dim" style={{ color: C.muted }}>See missions</Link>
+                </div>
+              </div>
             )}
           </section>
         )}

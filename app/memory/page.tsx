@@ -99,19 +99,19 @@ function reasonFor(e: AuditEvent): string {
 const EMPTY_COPY: Record<TabKey, { title: string; body: string }> = {
   timeline: {
     title: "No audit events yet",
-    body: "Memory's Timeline reads directly from your real audit trail (audit_logs) — every financial change Starlane records. That table exists and is already wired end-to-end, but has no rows yet for this account. As soon as a change is logged, it appears here as a real memory_event node — nothing here is invented ahead of time.",
+    body: "The timeline shows every change Starlane records for your account: approvals, status changes and edits. Nothing has been recorded yet. As soon as something changes, it appears here.",
   },
   decisions: {
     title: "No decisions recorded yet",
-    body: "This tab filters the same real audit trail down to events that look like a decision — an approval, rejection, or status change. With zero audit rows recorded so far, there's nothing to filter yet.",
+    body: "This tab shows the approvals, rejections and status changes from your timeline. None have been recorded yet.",
   },
   replay: {
     title: "No entity history to replay yet",
-    body: "Replay reconstructs a real \"how did we get here\" sequence for one entity, ordered from the real audit trail's old/new value pairs — never a fabricated narrative. It needs at least one entity with recorded audit events; none exist yet for this account.",
+    body: "Replay shows how one customer or invoice got to where it is, step by step, from recorded changes. No record has a history yet.",
   },
   "turning-points": {
     title: "No turning points yet",
-    body: "Turning Points are audit events whose action deterministically maps to a significant outcome (approved, rejected, went overdue, paid, and similar) — classified from the real action field, never guessed. None have been recorded yet.",
+    body: "Turning points are the recorded moments that changed an outcome: an approval, a rejection, an invoice going overdue or getting paid. None have been recorded yet.",
   },
 };
 

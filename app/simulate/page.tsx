@@ -15,38 +15,15 @@ import { WorkflowReplays } from "@/components/os/SimulatePanels";
 // own real open invoice, plus fxScenarioEngine.js's buildFxScenarioChain for
 // whatever real currency-exposure data exists (honestly NO_EFFECT/
 // INSUFFICIENT_CONTEXT for tenants with none today — no fabricated FX number
-// is ever shown). Saved/Comparisons/Forecasts remain genuine V32 empty
-// states: no persistence layer exists for saved simulations yet.
+// is ever shown). The Saved/Comparisons/Forecasts tabs were removed: no
+// persistence layer exists for saved simulations, so they could only ever
+// be empty. Decision simulations are saved with their decision instead.
 //
 // The generic fuel-cost/lead-time/demand assumption-pill engine described in
 // the handoff still doesn't exist — this tab implements the real, narrower
 // capability that scenarioEngine.js + fxScenarioEngine.js actually support
 // today (named invoice hypotheticals), not the broader one that was never
 // built.
-
-type TabKey = "new" | "saved" | "comparisons" | "forecasts";
-
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "new", label: "New" },
-  { key: "saved", label: "Saved" },
-  { key: "comparisons", label: "Comparisons" },
-  { key: "forecasts", label: "Forecasts" },
-];
-
-const TAB_COPY: Record<Exclude<TabKey, "new">, { title: string; body: string }> = {
-  saved: {
-    title: "No saved simulations",
-    body: "This tab would list simulations you've saved for later. Since simulations aren't persisted yet, none exist to save.",
-  },
-  comparisons: {
-    title: "No comparisons yet",
-    body: "This tab would let you compare two or more simulation runs side by side. Since simulations aren't persisted yet, there's nothing to compare.",
-  },
-  forecasts: {
-    title: "No linked forecasts",
-    body: "This tab would show simulations linked back to the cash forecast they were run against. That linkage doesn't exist yet.",
-  },
-};
 
 const fmt = (n: number | null | undefined) => {
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
@@ -64,7 +41,6 @@ export default function SimulatePage() {
 }
 
 function SimulatePageInner() {
-  const [tab, setTab] = useState<TabKey>("new");
   const searchParams = useSearchParams();
 
   const [userId, setUserId] = useState<string | null>(null);
@@ -134,46 +110,9 @@ function SimulatePageInner() {
 
         <WorkflowReplays />
 
-        <nav aria-label="Secondary" style={{ display: "flex", alignItems: "center", gap: 22, borderBottom: "1px solid #EBEAE6", marginBottom: 4 }}>
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className="hover-dim"
-              style={{
-                padding: "8px 2px",
-                fontSize: 13,
-                fontWeight: t.key === tab ? 500 : 400,
-                color: t.key === tab ? "#191917" : "#63635F",
-                background: "none",
-                border: "none",
-                borderBottomColor: t.key === tab ? "#696D86" : "transparent",
-                borderBottomWidth: 2,
-                borderBottomStyle: "solid",
-                cursor: "pointer",
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
+        <p className="v32-section-label" style={{ marginTop: 4 }}>Test a change to one invoice</p>
 
-        {tab !== "new" ? (
-          <div
-            style={{
-              flex: 1, minHeight: 0, boxSizing: "border-box", background: "#FFFFFF",
-              border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, overflow: "hidden",
-              display: "flex", flexDirection: "column",
-            }}
-          >
-            <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
-              <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, color: "#191917", marginBottom: 6 }}>
-                {TAB_COPY[tab].title}
-              </p>
-              <p className="v32-body max-w-md mx-auto" style={{ color: "#63635F" }}>{TAB_COPY[tab].body}</p>
-            </div>
-          </div>
-        ) : (
+        {(
           <>
             {/* Real picker: the tenant's own open/overdue invoices. */}
             <div style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -255,7 +194,7 @@ function SimulatePageInner() {
                     ["Total open receivables", fmt(result.baseline.totalOpenReceivables)],
                     ["Total overdue", fmt(result.baseline.totalOverdue)],
                   ]}
-                  note="Real, observed pattern — from cashConsequenceEngine.js"
+                  note="Observed from your ledger: what happens if nothing changes"
                 />
                 <SimCard
                   title="SIMULATED RESULT"

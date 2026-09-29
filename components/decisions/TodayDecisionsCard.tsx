@@ -28,7 +28,7 @@ export default function TodayDecisionsCard() {
     <Link href={top ? `/decisions/${top.id}` : t.receivables.invoices ? "/decisions" : "/decisions/import"} className="block rounded-2xl px-5 py-4 mb-5 transition-colors" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
       <div className="flex items-center gap-2 text-[12px]" style={{ color: C.faint }}>
         <span aria-hidden="true" className="w-[7px] h-[7px] rounded-full id-gradient" />
-        <span>{waiting ? `${waiting} decision${waiting === 1 ? "" : "s"} need you` : "No decisions waiting"}</span>
+        <span>{waiting ? `${waiting} decision${waiting === 1 ? " needs" : "s need"} you` : "No decisions waiting"}</span>
         {t.pilotMode === "SHADOW" && <Pill tone="accent">Shadow mode</Pill>}
         <FiChevronRight className="ml-auto" size={14} />
       </div>

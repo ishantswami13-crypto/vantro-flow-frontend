@@ -10,7 +10,10 @@ const PROTECTED = [
   '/ai-train', '/industry', '/invoice',
   '/bad-debt', '/disputes', '/referrals', '/ca-portal', '/payment-plans',
   '/onboarding', '/ai-actions',
-  '/decisions', '/control/decisions',
+  '/decisions', '/control',
+  // The seven surfaces and their supporting pages.
+  '/bridge', '/scan', '/watch', '/simulate', '/prepared', '/missions', '/memory',
+  '/agents', '/sources', '/discover', '/intelligence',
 ];
 
 export function middleware(request: NextRequest) {

@@ -9,7 +9,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { C, Pill, Skeleton } from "@/components/decisions/ui";
 import { osApi, Workflow, WorkflowItem, ITEM_STATUS_LABEL } from "@/lib/os";
-import { money, pct, shortDate } from "@/lib/decisions";
+import { money, pct, shortDate, daysUntil, decisionsApi, STATUS_LABEL } from "@/lib/decisions";
 import { Panel, Btn, Row, Muted, ErrorLine, errorText, useLoad } from "./shared";
 
 export function AutomationProposals() {
@@ -131,5 +131,47 @@ function ItemRow({ item, onDone, onStale }: { item: WorkflowItem; onDone: (i: Wo
       </div>
       <ErrorLine error={err} />
     </Row>
+  );
+}
+
+// Decisions waiting on a person: the first thing Prepared shows. Each one
+// says what it is, why now, how much money it touches and by when; the
+// decision page holds the evidence, unknowns, options and Handle it.
+export function DecisionsNeedingYou() {
+  const { data, error, loading, reload } = useLoad(() => decisionsApi.list("active"));
+  const waiting = (data?.decisions || []).filter((d) => ["OPEN", "NEEDS_INFORMATION", "SELECTED", "APPROVED"].includes(d.status));
+  return (
+    <Panel
+      title="Decisions"
+      subtitle="Each one shows why now, what is at stake, what Starlane does not know, every option against doing nothing, and Handle it."
+      right={<Link href="/decisions" className="text-[12.5px] hover-dim" style={{ color: C.muted }}>All decisions</Link>}
+    >
+      {loading && <Skeleton rows={2} />}
+      <ErrorLine error={error ? `Decisions could not be loaded: ${errorText(error)}` : null} />
+      {error ? <Btn onClick={reload}>Try again</Btn> : null}
+      {!loading && !error && waiting.length === 0 && (
+        <Muted>No decision needs you. Starlane only raises one when something material changed and there is still time to act.</Muted>
+      )}
+      {waiting.map((d) => {
+        const left = daysUntil(d.deadline);
+        const stake = d.materiality ? Object.values(d.materiality).find((v) => typeof v === "number" && v > 0) : null;
+        return (
+          <Row key={d.id}>
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <Link href={`/decisions/${d.id}`} className="hover-dim" style={{ minWidth: 0, flex: "1 1 320px" }}>
+                <p className="text-[14px]" style={{ color: C.ink, fontWeight: 600 }}>{d.title}</p>
+                {d.whyNow && d.whyNow[0] && <p className="text-[12.5px] mt-1" style={{ color: C.body }}>{d.whyNow[0]}</p>}
+                <p className="text-[12px] mt-1" style={{ color: C.faint }}>
+                  {stake ? `${money(stake, d.currency || "INR")} at stake` : "Amount not estimated"}
+                  {left != null ? ` · ${left < 0 ? "past its latest safe date" : left === 0 ? "act today" : `${left} day${left === 1 ? "" : "s"} left to act`}` : ""}
+                  {d.recommendation ? ` · Starlane suggests: ${d.recommendation.label}` : ""}
+                </p>
+              </Link>
+              <Pill tone={d.status === "NEEDS_INFORMATION" ? "warn" : d.status === "APPROVED" ? "good" : "accent"}>{STATUS_LABEL[d.status] || d.status}</Pill>
+            </div>
+          </Row>
+        );
+      })}
+    </Panel>
   );
 }

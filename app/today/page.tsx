@@ -8,8 +8,8 @@ import {
   FiChevronDown, FiChevronUp, FiChevronLeft, FiChevronRight,
   FiCalendar, FiZap,
 } from "react-icons/fi";
-import { isDemoMode } from "@/lib/demo";
 import TodayDecisionsCard from "@/components/decisions/TodayDecisionsCard";
+import { TodaySummary } from "@/components/os/TodaySummary";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -24,12 +24,14 @@ function fmtINR(n: number, short = false) {
   if (short && n >= 1000)   return "₹" + (n/1000).toFixed(0) + "K";
   return "₹" + Number(n).toLocaleString("en-IN");
 }
-function todayStr() { return new Date().toISOString().split("T")[0]; }
+// Local calendar date (IST for Indian users), not the UTC date.
+function localIso(dt: Date) { return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`; }
+function todayStr() { return localIso(new Date()); }
 function fmtDateFull(d: string) {
   const dt = new Date(d + "T00:00:00");
   const isToday   = d === todayStr();
   const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
-  const isYday    = d === yesterday.toISOString().split("T")[0];
+  const isYday    = d === localIso(yesterday);
   const label     = isToday ? "Aaj" : isYday ? "Kal" : "";
   const weekday   = dt.toLocaleDateString("en-IN", { weekday: "long" });
   const dayMonth  = dt.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
@@ -41,41 +43,8 @@ function fmtTime(iso: string) {
 function addDays(d: string, n: number) {
   const dt = new Date(d + "T00:00:00");
   dt.setDate(dt.getDate() + n);
-  return dt.toISOString().split("T")[0];
+  return localIso(dt);
 }
-
-// ── Demo data ──────────────────────────────────────────────────────────────
-const DEMO_SUMMARY = {
-  summary: {
-    income: { total: 87500, orders: 62500, invoices: 25000 },
-    expenses: { total: 18200, by_category: { fuel: 3200, salary: 8000, material: 5000, misc: 2000 } },
-    net_profit: 69300,
-    order_count: 7,
-    invoices_collected: 3,
-    calls_made: 5,
-    orders_by_status: { delivered: 5, new: 1, confirmed: 1, dispatched: 0, cancelled: 0 },
-  },
-  orders: [
-    { id:"d1", customer_name:"Mehta Fabrics",      total_amount: 24000, status:"delivered", created_at: new Date().toISOString(), items:[{quantity:8,unit:"roll",name:"Grey Cloth"}] },
-    { id:"d2", customer_name:"Sharma Steel Works", total_amount: 18500, status:"delivered", created_at: new Date().toISOString(), items:[{quantity:3,unit:"ton",name:"TMT Rod 12mm"}] },
-    { id:"d3", customer_name:"Patel Agro",         total_amount: 12000, status:"dispatched", created_at: new Date().toISOString(), items:[{quantity:20,unit:"bag",name:"Urea Fertilizer"}] },
-    { id:"d4", customer_name:"Gupta Construction", total_amount:  8000, status:"confirmed",  created_at: new Date().toISOString(), items:[{quantity:50,unit:"bag",name:"Cement PPC 53"}] },
-  ],
-  expenses: [
-    { id:"e1", description:"Truck fuel — delivery run", amount:3200, category:"fuel",     created_at: new Date().toISOString() },
-    { id:"e2", description:"Driver salary — Ramesh",    amount:8000, category:"salary",   created_at: new Date().toISOString() },
-    { id:"e3", description:"Raw material — steel rods", amount:5000, category:"material", created_at: new Date().toISOString() },
-    { id:"e4", description:"Misc office expenses",      amount:2000, category:"misc",      created_at: new Date().toISOString() },
-  ],
-  paid_invoices: [
-    { id:"i1", customer_name:"Joshi Electronics", invoice_amount:25000 },
-  ],
-  top_items: [
-    { name:"TMT Rod 12mm", qty:8 },
-    { name:"Cement PPC 53", qty:50 },
-    { name:"Grey Cloth", qty:8 },
-  ],
-};
 
 const STATUS_COLORS: Record<string,string> = {
   new:"text-accent bg-accent/10", confirmed:"text-warning bg-warning/10",
@@ -93,18 +62,24 @@ export default function TodayPage() {
   const [expForm, setExpForm]   = useState({ description:"", amount:"", category:"misc" });
   const [saleForm, setSaleForm] = useState({ customer_name:"", amount:"", description:"", payment_mode:"cash" });
   const [submitting, setSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string|null>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async (d = date) => {
-    if (isDemoMode()) { setSummary(DEMO_SUMMARY); setLoading(false); return; }
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch(`${API}/api/today/summary?date=${d}`, {
         headers: { ...authHeaders() }, credentials: "include",
       });
-      const data = await res.json();
-      if (data.success) setSummary(data);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) setSummary(data);
+      else { setSummary(null); setLoadError(data.error || `The server answered ${res.status}.`); }
+    } catch {
+      setSummary(null);
+      setLoadError("Could not reach Starlane. Check your connection.");
     } finally { setLoading(false); }
   }, [date]);
 
@@ -117,26 +92,29 @@ export default function TodayPage() {
 
   const addExpense = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isDemoMode()) { setShowExpForm(false); return; }
     setSubmitting(true);
+    setFormError(null);
     try {
-      await fetch(`${API}/api/expenses`, {
+      const res = await fetch(`${API}/api/expenses`, {
         method:"POST",
         headers: { ...authHeaders(), "Content-Type":"application/json" }, credentials: "include",
         body: JSON.stringify(expForm),
       });
+      if (!res.ok) { setFormError("The expense was not saved. Check the amount and try again."); return; }
       setExpForm({ description:"", amount:"", category:"misc" });
       setShowExpForm(false);
       load(date);
+    } catch {
+      setFormError("The expense was not saved: Starlane could not be reached.");
     } finally { setSubmitting(false); }
   };
 
   const addSale = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isDemoMode()) { setShowSaleForm(false); return; }
     setSubmitting(true);
+    setFormError(null);
     try {
-      await fetch(`${API}/api/orders`, {
+      const res = await fetch(`${API}/api/orders`, {
         method:"POST",
         headers: { ...authHeaders(), "Content-Type":"application/json" }, credentials: "include",
         body: JSON.stringify({
@@ -147,15 +125,18 @@ export default function TodayPage() {
           status:"delivered", source:"manual",
         }),
       });
+      if (!res.ok) { setFormError("The sale was not saved. Check the amount and try again."); return; }
       setSaleForm({ customer_name:"", amount:"", description:"", payment_mode:"cash" });
       setShowSaleForm(false);
       load(date);
+    } catch {
+      setFormError("The sale was not saved: Starlane could not be reached.");
     } finally { setSubmitting(false); }
   };
 
   const deleteExpense = async (id: string) => {
-    if (isDemoMode()) return;
-    await fetch(`${API}/api/expenses/${id}`, { method:"DELETE", headers: { ...authHeaders() }, credentials: "include" });
+    const res = await fetch(`${API}/api/expenses/${id}`, { method:"DELETE", headers: { ...authHeaders() }, credentials: "include" }).catch(() => null);
+    if (!res || !res.ok) { setLoadError("That expense was not deleted. Try again."); return; }
     load(date);
   };
 
@@ -169,6 +150,7 @@ export default function TodayPage() {
 
   return (
     <DashboardLayout pageTitle="Aaj ka Hisaab">
+      <TodaySummary />
       <TodayDecisionsCard />
 
       {/* ── PREMIUM DATE NAVIGATOR ──────────────────────────────────────── */}
@@ -228,9 +210,16 @@ export default function TodayPage() {
         </div>
       </div>
 
+      {formError && <p role="alert" className="text-sm text-danger mb-3">{formError}</p>}
       {loading && !summary ? (
         <div className="flex items-center justify-center h-48 text-muted">
           <FiRefreshCw className="animate-spin mr-2" size={18} /> Loading…
+        </div>
+      ) : loadError && !summary ? (
+        <div role="alert" className="rounded-2xl p-5 mb-5 border border-danger/20 bg-danger/5">
+          <p className="text-sm font-semibold text-danger">This day&apos;s sales and expenses could not be loaded.</p>
+          <p className="text-sm text-secondary mt-1">{loadError} Nothing has been changed. The figures are hidden rather than shown as zero.</p>
+          <button type="button" onClick={() => load(date)} className="mt-3 px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-bold">Try again</button>
         </div>
       ) : (
         <>
@@ -246,7 +235,7 @@ export default function TodayPage() {
                 : <FiTrendingDown size={80} className="text-danger" />}
             </div>
             <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-              Net {isProfit ? "Profit" : "Loss"} Today
+              Net {isProfit ? "Profit" : "Loss"} {isToday ? "Today" : "on this day"}
             </p>
             <p className={`text-5xl font-black tracking-tight mb-4 ${isProfit ? "text-success" : "text-danger"}`}>
               {isProfit ? "+" : ""}{fmtINR(net)}
@@ -307,7 +296,8 @@ export default function TodayPage() {
                   {[
                     { icon: FiShoppingBag, label:"Orders Income",       color:"#0066FF", value: s?.income?.orders   || 0 },
                     { icon: FiFileText,    label:"Invoices Collected",   color:"#10D98A", value: s?.income?.invoices || 0 },
-                  ].map(({ icon: Icon, label, color, value }) => (
+                    { icon: FiDollarSign,  label:"Sales Recorded",       color:"#7C5CFC", value: s?.sales_total || 0 },
+                  ].filter((r) => r.label !== "Sales Recorded" || r.value > 0).map(({ icon: Icon, label, color, value }) => (
                     <div key={label} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg flex items-center justify-center"
@@ -337,6 +327,12 @@ export default function TodayPage() {
                         <span className="font-semibold text-danger text-sm">-{fmtINR(amt as number)}</span>
                       </div>
                     ))}
+                    {(s?.expenses?.purchases || 0) > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-secondary">📦 Purchases</span>
+                        <span className="font-semibold text-danger text-sm">-{fmtINR(s.expenses.purchases)}</span>
+                      </div>
+                    )}
                     <div className="h-px bg-border" />
                     <div className="flex justify-between text-sm font-bold">
                       <span className="text-primary">Total Expenses</span>
