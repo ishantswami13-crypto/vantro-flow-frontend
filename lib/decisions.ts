@@ -391,6 +391,7 @@ export const decisionsApi = {
   select: (id: string, optionKey: string, note?: string) => call<{ contract: Contract }>('POST', `/${encodeURIComponent(id)}/select`, { optionKey, note }),
   approve: (id: string, note?: string) => call<{ status: string }>('POST', `/${encodeURIComponent(id)}/approve`, { note }),
   execute: (id: string, authorizeLive = false) => call<{ mode: string; status: string; runs: ActionRun[] }>('POST', `/${encodeURIComponent(id)}/execute`, { authorizeLive }),
+  handle: (id: string, body: { optionKey?: string; approve?: boolean; note?: string }) => call<{ steps: { step: string; mode?: string; status?: string }[]; mission: import('./os').Mission | null; next?: string }>('POST', `/${encodeURIComponent(id)}/handle`, body),
   reject: (id: string, reason?: string) => call<{ status: string }>('POST', `/${encodeURIComponent(id)}/reject`, { reason }),
   requestInformation: (id: string, unknownKey?: string, note?: string) => call<{ request: { taskId: string; label: string } }>('POST', `/${encodeURIComponent(id)}/request-information`, { unknownKey, note }),
   observe: (id: string, text: string, confidence: 'LOW' | 'MEDIUM' | 'HIGH') => call<{ observation: { id: string } }>('POST', `/${encodeURIComponent(id)}/observations`, { text, confidence }),

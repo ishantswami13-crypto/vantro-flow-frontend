@@ -1,5 +1,5 @@
 import {
-  FiDatabase, FiShield, FiCompass, FiSearch, FiEye, FiTarget,
+  FiDatabase, FiShield, FiCompass, FiSearch, FiTarget,
   FiSliders, FiClock, FiCheckSquare, FiUsers, FiSun, FiGitBranch,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
@@ -10,25 +10,20 @@ export interface PrimaryNavItem {
   icon: IconType;
 }
 
-// Starlane Version 32 (frozen design) primary nav — see
-// STARLANE_FRONTEND_HANDOFF.md §2 NAV_ITEMS, in exact order. Bridge/Scan/
-// Discover/Watch/Missions/Simulate/Memory/Prepared are Phase 3/4 page
-// content (out of scope this pass) — each route currently renders a thin
-// honest "not built yet" stub (see app/<route>/page.tsx) rather than
-// 404ing, so the sidebar is fully clickable today.
-// "Today" sits first, ahead of the V32 list: it is the owner's daily
-// starting point and was previously buried under More as "Today's P&L".
+// Primary nav: Today, then the seven surfaces in the order of the loop
+// (Bridge -> Scan -> Watch -> Simulate -> Prepared -> Missions -> Memory).
+// Each surface answers one question. Decisions live inside Prepared (the
+// queue of things that need a person) and open at /decisions/[id];
+// Discover (supplier and customer lenses) is under More.
 export const V32_NAV_ITEMS: PrimaryNavItem[] = [
   { href: "/today",    label: "Today",      icon: FiSun },
-  { href: "/decisions", label: "Decisions", icon: FiGitBranch },
-  { href: "/bridge",   label: "The Bridge", icon: FiCompass },
+  { href: "/bridge",   label: "Bridge",     icon: FiCompass },
   { href: "/scan",     label: "Scan",       icon: FiSearch },
-  { href: "/discover", label: "Discover",   icon: FiEye },
   { href: "/watch",    label: "Watch",      icon: FiTarget },
-  { href: "/missions", label: "Missions",   icon: FiCheckSquare },
   { href: "/simulate", label: "Simulate",   icon: FiSliders },
-  { href: "/memory",   label: "Memory",     icon: FiClock },
   { href: "/prepared", label: "Prepared",   icon: FiCheckSquare },
+  { href: "/missions", label: "Missions",   icon: FiGitBranch },
+  { href: "/memory",   label: "Memory",     icon: FiClock },
 ];
 
 // Second nav group (handoff §2 "open architecture gap"): Sources, Agents,

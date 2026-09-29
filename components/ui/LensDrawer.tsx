@@ -35,7 +35,7 @@ export interface LensDrawerProps {
   statusLabel?: string;
   statusColor?: string; // defaults to the accent color
   sections: LensSection[];
-  actions?: LensAction[]; // defaults to Ask/Watch/Simulate/Create Mission per §9, no-ops unless supplied
+  actions?: LensAction[]; // defaults to Watch (customers only) and Open Prepared; never a button that does nothing
   accent?: string; // hex, defaults to DEFAULT_ACCENT indigo
   onClose: () => void;
 }
@@ -57,17 +57,16 @@ export function LensDrawer({
   // Watch's default action (when the caller doesn't override `actions`)
   // opens the real Watch page's "New watch" flow pre-filled with this
   // entity, via query params /watch reads on mount — see app/watch/page.tsx.
-  // Only wired for entityType "Customer" today, since that's the only
+  // Only offered for entityType "Customer", since that's the only
   // metric_key (customer_exposure_amount) the backend evaluator supports
-  // an entity_name filter for; other entity types fall back to a no-op so
+  // an entity_name filter for; other entity types get no Watch button so
   // this never claims a capability that doesn't exist for them yet.
-  const defaultWatchAction: LensAction = {
-    label: "Watch",
-    onClick: () => {
-      if (entityType !== "Customer") return;
-      router.push(`/watch?prefill_metric=customer_exposure_amount&prefill_entity=${encodeURIComponent(name)}`);
-    },
-  };
+  const defaultWatchAction: LensAction | null = entityType === "Customer"
+    ? {
+        label: "Watch",
+        onClick: () => router.push(`/watch?prefill_metric=customer_exposure_amount&prefill_entity=${encodeURIComponent(name)}`),
+      }
+    : null;
   // Simulate has no default action here: Simulate V1 (lib/routes/scenarios.js)
   // only makes sense pre-filled with a real invoice, and this generic drawer
   // has no entity-specific invoice to offer by default. Callers that do have
@@ -77,7 +76,12 @@ export function LensDrawer({
   const resolvedActions: LensAction[] =
     actions && actions.length > 0
       ? actions
-      : [{ label: "Ask", onClick: () => {} }, defaultWatchAction, { label: "Create Mission", onClick: () => {} }];
+      : [
+          ...(defaultWatchAction ? [defaultWatchAction] : []),
+          // Missions start from a decision (Handle it), so the honest
+          // default is to open the decisions that need you.
+          { label: "Open Prepared", onClick: () => router.push("/prepared") },
+        ];
 
   return (
     <Drawer titleId={titleId} title={name} onClose={onClose}>

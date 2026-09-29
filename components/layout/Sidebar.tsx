@@ -45,6 +45,7 @@ const MORE_GROUPS: { label: string; items: { href: string; label: string; icon: 
       { href: "/dashboard",      label: "Overview",       icon: FiSun },
       { href: "/customers",      label: "Customers",      icon: FiUsers },
       { href: "/suppliers",      label: "Suppliers",      icon: FiTruck },
+      { href: "/discover",       label: "Discover",       icon: FiSearch },
     ],
   },
   {
@@ -321,7 +322,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           <div className="space-y-0.5">
             {PRIMARY.map(n => (
               <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon}
-                active={pathname === n.href || pathname.startsWith(n.href + "/")}
+                active={pathname === n.href || pathname.startsWith(n.href + "/") || (n.href === "/prepared" && pathname.startsWith("/decisions"))}
                 onClick={onClose} collapsedMode={collapsed} />
             ))}
           </div>

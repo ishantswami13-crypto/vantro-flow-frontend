@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { AutomationProposals, ReminderApprovals } from "@/components/os/PreparedPanels";
+import { AutomationProposals, ReminderApprovals, DecisionsNeedingYou } from "@/components/os/PreparedPanels";
 import { api, getUser, type PreparedCard, type PreparedResponse } from "@/lib/api";
 
 // Prepared — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16, Priority 6.
@@ -76,13 +76,20 @@ function formatTimestamp(ts: string | null): string {
 // Control/Approvals already use). Cards from watches, predictions, or the
 // opportunity engine have no real approve/reject/dismiss endpoint behind
 // them — their primary action can only honestly be "open the real page
-// that explains them," and their secondary action stays disabled rather
-// than pretending to dismiss something the backend can't persist.
+// that explains them," and they get no dismiss button at all rather than
+// one that pretends to dismiss something the backend can't persist.
+const SOURCE_LABEL: Record<string, string> = {
+  ai_actions: "Prepared action",
+  watches: "From a watch",
+  predictions: "From the cash forecast",
+  opportunityPropagation: "From an opportunity",
+};
+
 function targetPathForCard(card: PreparedCard): string {
   if (card.source === "ai_actions") return "/control/approvals";
   if (card.source === "watches") return "/watch";
   if (card.source === "predictions") return "/forecast";
-  if (card.source === "opportunityPropagation") return "/discover?tab=opportunities";
+  if (card.source === "opportunityPropagation") return "/discover";
   return "/control/approvals";
 }
 
@@ -152,24 +159,25 @@ function PreparedCardView({
         >
           {primaryIsApprove ? (busy ? "Approving…" : "Approve") : "Open"}
         </button>
-        <button
-          className={secondaryEnabled ? "hover-dim" : undefined}
-          onClick={secondaryEnabled ? onReject : undefined}
-          disabled={!secondaryEnabled || busy}
-          title={secondaryEnabled ? undefined : "Not available yet — there's no real dismiss action for this source yet"}
-          style={{
-            fontSize: 12,
-            padding: "6px 12px",
-            borderRadius: 6,
-            border: "1px solid rgba(25,25,23,0.20)",
-            background: "none",
-            color: secondaryEnabled ? "#63635F" : "#B5B5B0",
-            cursor: secondaryEnabled && !busy ? "pointer" : "not-allowed",
-          }}
-        >
-          {card.secondary}
-        </button>
-        <span style={{ fontSize: 11, color: "#B4B3AE", marginLeft: "auto" }}>source: {card.source}</span>
+        {secondaryEnabled && (
+          <button
+            className="hover-dim"
+            onClick={onReject}
+            disabled={busy}
+            style={{
+              fontSize: 12,
+              padding: "6px 12px",
+              borderRadius: 6,
+              border: "1px solid rgba(25,25,23,0.20)",
+              background: "none",
+              color: "#63635F",
+              cursor: busy ? "default" : "pointer",
+            }}
+          >
+            {card.secondary}
+          </button>
+        )}
+        <span style={{ fontSize: 11, color: "#B4B3AE", marginLeft: "auto" }}>{SOURCE_LABEL[card.source] || "Starlane"}</span>
       </div>
     </div>
   );
@@ -267,6 +275,7 @@ export default function PreparedPage() {
           </Link>
         </div>
 
+        <DecisionsNeedingYou />
         <AutomationProposals />
         <ReminderApprovals />
 

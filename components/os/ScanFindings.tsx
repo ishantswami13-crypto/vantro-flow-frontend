@@ -31,7 +31,7 @@ export function ScanFindings() {
       >
         {loading && <Skeleton rows={3} />}
         <ErrorLine error={err || (error ? errorText(error) : null)} />
-        {!loading && !scan && !err && <Muted>No scan yet. Import a receivables file on the Bridge, then run a scan.</Muted>}
+        {!loading && !scan && !err && <Muted>No scan yet. <Link className="underline" href="/decisions/import">Import a receivables file</Link> or <Link className="underline" href="/sources">connect Tally</Link>, then run a scan.</Muted>}
         {scan && (
           <ul className="space-y-1">
             {scan.summary.map((l) => <li key={l} className="text-[13.5px] leading-[1.55]" style={{ color: C.ink }}>{l}</li>)}

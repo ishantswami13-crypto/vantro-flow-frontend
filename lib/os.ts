@@ -251,6 +251,89 @@ export interface MemoryResponse {
   decisionContracts: { status: string; n: number }[];
 }
 
+// ── Missions (decisions being handled + deployed workflows) ─────────────
+
+export type MissionState = 'PLANNING' | 'WAITING_FOR_INFORMATION' | 'WAITING_FOR_APPROVAL' | 'RUNNING' | 'BLOCKED' | 'VERIFYING' | 'COMPLETED' | 'FAILED' | 'STOPPED';
+export type MissionOutcome = 'PENDING' | 'VERIFIED_SUCCESS' | 'VERIFIED_FAILURE' | 'OUTCOME_UNKNOWN';
+export interface Mission {
+  id: string;
+  source: 'DECISION' | 'WORKFLOW';
+  sourceId: string;
+  title: string;
+  objective: string | null;
+  state: MissionState;
+  stateReason: string | null;
+  mode: string | null;
+  outcome: { status: MissionOutcome; detail: string | null; attribution?: string | null; attributionNote?: string | null; met?: number; notMet?: number };
+  steps: { index: number; intent: string; label?: string; adapter?: string; performer?: string; capability?: string; status?: string; mode?: string; error?: string | null }[];
+  counts?: Record<string, number>;
+  assigned: { agent: string; model: string; owner: string };
+  lastRun?: { status: string; startedAt: string } | null;
+  href: string;
+  startedAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface TodayLine { key: string; tone: 'attention' | 'positive' | 'neutral'; text: string; href?: string }
+export interface OsToday {
+  lines: TodayLine[];
+  counts: Record<string, number | null>;
+  pilotMode: 'SHADOW' | 'LIVE';
+  generatedAt: string;
+}
+
+export interface FunnelStep { key: string; label: string; at: string | null }
+export interface Funnel {
+  steps: FunnelStep[];
+  reached: number;
+  metrics: {
+    minutesToFirstFinding: number | null;
+    minutesToFirstDecisionOpened: number | null;
+    decisionsDiscovered: number | null;
+    decisionsApproved: number | null;
+    humanAcceptance: number | null;
+    falsePositiveRate: number | null;
+    actionsPrepared: number | null;
+    outcomesVerified: number;
+    activeDaysLast28: number | null;
+  };
+}
+
+export interface AgentInfo {
+  key: string;
+  name: string;
+  purpose: string;
+  model: string;
+  performs: string[];
+  permissions: string[];
+  cannot: string[];
+  status: 'ACTIVE' | 'STOPPED' | 'IDLE';
+  stoppedReason: string | null;
+  runs: number;
+  lastRunAt: string | null;
+  performance: string | null;
+  budget: string | null;
+}
+
+export const MISSION_STATE_LABEL: Record<MissionState, string> = {
+  PLANNING: 'Ready to start',
+  WAITING_FOR_INFORMATION: 'Waiting for information',
+  WAITING_FOR_APPROVAL: 'Waiting for approval',
+  RUNNING: 'Running',
+  BLOCKED: 'Blocked',
+  VERIFYING: 'Checking the outcome',
+  COMPLETED: 'Completed',
+  FAILED: 'Failed',
+  STOPPED: 'Stopped',
+};
+
+export const MISSION_OUTCOME_LABEL: Record<MissionOutcome, string> = {
+  PENDING: 'Outcome not checked yet',
+  VERIFIED_SUCCESS: 'Outcome verified: it worked',
+  VERIFIED_FAILURE: 'Outcome verified: it did not work',
+  OUTCOME_UNKNOWN: 'Outcome unknown',
+};
+
 export const osApi = {
   bridge: () => call<BridgeOverview>('GET', '/bridge'),
   knowledge: () => call<{ knowledge: KnowledgeItem[] }>('GET', '/knowledge'),
@@ -279,6 +362,11 @@ export const osApi = {
   verify: () => call<{ checked: number; met: number; notMet: number; pending: number; unknown: number }>('POST', '/workflows/verify'),
 
   memory: () => call<MemoryResponse>('GET', '/memory'),
+
+  missions: () => call<{ missions: Mission[]; byState: Record<string, number> }>('GET', '/missions'),
+  today: () => call<OsToday>('GET', '/today'),
+  funnel: () => call<Funnel>('GET', '/funnel'),
+  agents: () => call<{ agents: AgentInfo[]; notBuilt: { name: string; reason: string }[] }>('GET', '/agents'),
 };
 
 export const HEALTH_LABEL: Record<string, string> = {

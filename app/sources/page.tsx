@@ -5,6 +5,7 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type DataConnection, type WorldSourceHealth } from "@/lib/api";
 import { FiUploadCloud } from "react-icons/fi";
+import { decisionsApi, type DataProfile } from "@/lib/decisions";
 
 // Sources — STARLANE_FRONTEND_HANDOFF.md §1/§3/§4/§5/§6/§8/§14/§16.
 //
@@ -18,31 +19,26 @@ import { FiUploadCloud } from "react-icons/fi";
 // V32 visual system (Fraunces headings, #191917/#63635F text tokens,
 // #EBEAE6 borders, .row-hover, subnav()) and adds the `source_row` +
 // `subnav` structure the handoff specifies (§5, §14: Connected/Available/
-// Sync Activity/Data Quality/Reconciliation, default Connected).
+// Sync Activity/Data Quality, default Connected).
 //
 // Per-tab honesty (§8, §16):
 // - Connected: real — same api.connections.list()/api.world.health() data
 //   as before, now rendered as source_row.
-// - Available: real — the same "Coming soon" business-system connectors
-//   (QuickBooks/Zoho/Xero) plus file upload, already true today.
+// - Available: file upload (to /decisions/import) plus Busy, QuickBooks,
+//   Zoho Books and Xero, which have no connector and say so: export a file.
 // - Sync Activity: derived from the same real last_sync_at/status fields
-//   already fetched — a real per-source sync log entry per connection,
-//   not a separate table. No fabricated events.
-// - Data Quality / Reconciliation: no real computation backs these yet
-//   (no duplicate-entity detection, no receivables/payables/sales
-//   cross-check against Tally exists in the backend). Per §8's exact
-//   pre-written designed copy for SourcesTally's panels — reused verbatim
-//   here since Sources.dc.html's own subnav references the same concepts
-//   and no separate copy was found for the list-level tabs.
+//   already fetched, not a separate table. No fabricated events.
+// - Data Quality: the real ledger profile (GET /api/decisions/data-profile).
+// - Reconciliation was removed: nothing in the backend cross-checks totals
+//   against Tally yet, so the tab could only ever be empty.
 
-type TabKey = "connected" | "available" | "sync" | "quality" | "reconciliation";
+type TabKey = "connected" | "available" | "sync" | "quality";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "connected", label: "Connected" },
   { key: "available", label: "Available" },
   { key: "sync", label: "Sync Activity" },
   { key: "quality", label: "Data Quality" },
-  { key: "reconciliation", label: "Reconciliation" },
 ];
 
 function timeAgo(iso: string | null): string {
@@ -83,16 +79,6 @@ const TONE_COLOR: Record<"ok" | "warn" | "muted", string> = {
   muted: "#9A9A94",
 };
 
-const EMPTY_COPY: Record<"quality" | "reconciliation", { title: string; body: string }> = {
-  reconciliation: {
-    title: "Reconciliation data isn't available yet.",
-    body: "Once enabled, Starlane will compare receivables, payables, and sales totals directly against Tally and flag any difference before using those numbers elsewhere in the product.",
-  },
-  quality: {
-    title: "No data-quality issues have been surfaced yet.",
-    body: "Starlane checks for missing relationships, duplicate entities, and unmapped ledgers as more history syncs.",
-  },
-};
 
 function SourceRow({ letter, name, status, action, muted, href }: {
   letter: string;
@@ -226,10 +212,11 @@ export default function SourcesPage() {
         </div>
 
         <p style={{ fontSize: 13.5, color: "#63635F", maxWidth: 640 }}>
-          Systems and external context Starlane uses to understand your organization. Starlane hasn&apos;t connected a banking, inventory, or customer-communication source yet — Reduce inventory 15% and cash-related findings rely on what Tally and Simulate can infer today, not a direct feed.
+          The systems Starlane reads to understand your business. Today that is Tally (read-only, through the desktop connector) or a receivables file you upload. Bank, inventory and messaging feeds are not connected, so findings only use what these sources contain.
         </p>
 
         {loadError && <p style={{ fontSize: 13, color: "#C13B3B" }}>{loadError}</p>}
+        {connectError && !showTallySetup && <p role="alert" style={{ fontSize: 13, color: "#C13B3B" }}>{connectError}</p>}
 
         <nav
           aria-label="Secondary"
@@ -287,11 +274,12 @@ export default function SourcesPage() {
             <div style={{ padding: "8px 20px 20px" }}>
               <SourceRow
                 letter=""
-                name="Upload a file"
-                status={{ text: "Bring in a spreadsheet or CSV export any time — no setup needed", tone: "muted" }}
-                action={<QuietButton href="/collections"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><FiUploadCloud size={13} /> Upload</span></QuietButton>}
+                name="Upload a receivables file"
+                status={{ text: "CSV or Excel export of invoices from any ledger. Starlane shows what it read and what it rejected before using it.", tone: "muted" }}
+                action={<QuietButton href="/decisions/import"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><FiUploadCloud size={13} /> Upload</span></QuietButton>}
               />
               {[
+                { name: "Busy", letter: "B" },
                 { name: "QuickBooks", letter: "Q" },
                 { name: "Zoho Books", letter: "Z" },
                 { name: "Xero", letter: "X" },
@@ -300,8 +288,8 @@ export default function SourcesPage() {
                   key={s.name}
                   letter={s.letter}
                   name={s.name}
-                  status={{ text: "We're working on this", tone: "muted" }}
-                  action={<span style={{ fontSize: 12, color: "#B5B5B0" }}>Coming soon</span>}
+                  status={{ text: "No direct connector. Export outstanding invoices to CSV or Excel and upload the file.", tone: "muted" }}
+                  action={<QuietButton href="/decisions/import">Upload export</QuietButton>}
                   muted
                 />
               ))}
@@ -323,8 +311,7 @@ export default function SourcesPage() {
             )
           )}
 
-          {tab === "quality" && <EmptyPanel {...EMPTY_COPY.quality} />}
-          {tab === "reconciliation" && <EmptyPanel {...EMPTY_COPY.reconciliation} />}
+          {tab === "quality" && <DataQuality />}
         </div>
 
         {showTallySetup && (
@@ -358,5 +345,79 @@ export default function SourcesPage() {
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+// Data Quality: the same ledger profile the import and decision engine use
+// (GET /api/decisions/data-profile): what was read, what was rejected and
+// why, and what Starlane cannot detect with the data it has.
+function DataQuality() {
+  const [profile, setProfile] = useState<DataProfile | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    decisionsApi.dataProfile()
+      .then((p) => { if (!cancelled) setProfile(p); })
+      .catch((e) => { if (!cancelled) setError(e?.message || "Could not load the data profile."); });
+    return () => { cancelled = true; };
+  }, []);
+  if (error) return <p style={{ padding: 20, fontSize: 13, color: "#C13B3B" }}>{error}</p>;
+  if (!profile) return <p style={{ padding: 20, fontSize: 13, color: "#63635F" }}>Checking your data…</p>;
+  const c = profile.counts;
+  if (!c.invoices) {
+    return (
+      <EmptyPanel
+        title="No ledger data yet"
+        body="Connect Tally or upload a receivables file, and this tab will show what Starlane read, what it rejected and what it cannot detect."
+      />
+    );
+  }
+  const facts: [string, string][] = [
+    ["Customers", String(c.customers)],
+    ["Invoices", String(c.invoices)],
+    ["Open / overdue", `${c.open} / ${c.overdue}`],
+    ["Paid with a payment date", `${c.paidWithPaymentDate} of ${c.paid}`],
+    ["Open without a due date", String(c.openWithoutDueDate)],
+    ["Rows rejected on import", String(c.rowsRejected)],
+    ["History", profile.period.historyDays ? `${profile.period.historyDays} days` : "none"],
+    ["Freshness", profile.freshness.detail],
+  ];
+  return (
+    <div style={{ padding: "12px 20px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
+        {facts.map(([k, v]) => (
+          <div key={k} className="flex justify-between gap-3" style={{ fontSize: 13 }}>
+            <span style={{ color: "#63635F" }}>{k}</span>
+            <span style={{ color: "#191917", textAlign: "right" }}>{v}</span>
+          </div>
+        ))}
+      </div>
+      {profile.limitations.length > 0 && (
+        <div>
+          <p className="v32-section-label mb-2">What this limits</p>
+          <ul className="space-y-1" style={{ fontSize: 13, color: "#191917" }}>
+            {profile.limitations.map((l) => (
+              <li key={l.key}><span style={{ color: l.severity === "blocking" ? "#C13B3B" : "#63635F" }}>{l.severity === "blocking" ? "Blocks" : l.severity === "reduces" ? "Reduces" : "Note"}:</span> {l.message}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {profile.rejectedByReason.length > 0 && (
+        <div>
+          <p className="v32-section-label mb-2">Rejected rows</p>
+          <ul className="space-y-1" style={{ fontSize: 13, color: "#191917" }}>
+            {profile.rejectedByReason.map((r) => <li key={r.reason}>{r.count} × {r.reason}{r.example ? ` (e.g. ${r.example})` : ""}</li>)}
+          </ul>
+        </div>
+      )}
+      {profile.possibleSameCustomer.length > 0 && (
+        <div>
+          <p className="v32-section-label mb-2">Possibly the same customer</p>
+          <ul className="space-y-1" style={{ fontSize: 13, color: "#191917" }}>
+            {profile.possibleSameCustomer.map((g) => <li key={g.join("|")}>{g.join(" · ")}</li>)}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
