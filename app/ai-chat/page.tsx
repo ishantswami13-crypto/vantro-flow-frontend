@@ -89,7 +89,7 @@ const tierColor: Record<string, string> = {
 
 const INITIAL_MESSAGES: Message[] = [{
   role: "assistant",
-  content: "Namaste! Main aapka AI Founder hoon — aapka business data dekh sakta hoon, invoices mark kar sakta hoon, WhatsApp messages likh sakta hoon, call scripts generate kar sakta hoon, aur strategic advice de sakta hoon.\n\nKya poochna hai? Aap bolke bhi pooch sakte hain — mic button press karein.",
+  content: "Namaste! Main aapka AI Founder hoon — aapka business data dekh sakta hoon, WhatsApp messages ka draft likh sakta hoon (bhejenge aap khud), call scripts generate kar sakta hoon, aur strategic advice de sakta hoon.\n\nKya poochna hai? Aap bolke bhi pooch sakte hain — mic button press karein.",
 }];
 
 const QUICK_PROMPTS = [

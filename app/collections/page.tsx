@@ -122,6 +122,10 @@ export default function CollectionsPage() {
   const [importing, setImporting]     = useState(false);
   const [importMsg, setImportMsg]     = useState("");
   const [showImport, setShowImport]   = useState(false);
+  // Deep link from Sources/onboarding: /collections?import=1 opens the importer.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("import") === "1") setShowImport(true);
+  }, []);
   const [showTallyGuide, setShowTallyGuide] = useState(false);
   const importFileRef = useRef<HTMLInputElement>(null);
 

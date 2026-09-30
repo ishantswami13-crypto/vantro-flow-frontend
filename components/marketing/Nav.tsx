@@ -31,11 +31,13 @@ export function Nav() {
       <nav aria-label="Main navigation" className="sl-nav" ref={navRef}>
         <Link href="/" aria-label="Starlane home" className="sl-wordmark">Starlane</Link>
         <div className="sl-navlinks">
-          <a href="#product" className="hidden md:inline">Product</a>
-          <a href="#story" className="hidden md:inline">Intelligence</a>
-          <a href="#capabilities" className="hidden md:inline">Capabilities</a>
+          <Link href="/product" className="hidden md:inline">Features</Link>
+          <Link href="/product/bridge" className="hidden md:inline">The Bridge</Link>
+          <Link href="/product/scan" className="hidden md:inline">Scan</Link>
+          <Link href="/#how" className="hidden md:inline">How it works</Link>
+          <Link href="/#trust" className="hidden md:inline">Trust</Link>
           <Link href="/login" className="hidden md:inline">Sign in</Link>
-          <Link href="/signup" className="sl-btn sl-btn-solid">Request access</Link>
+          <Link href="/access" className="sl-btn sl-btn-solid">Get Starlane</Link>
           <button
             type="button"
             className="sl-nav-toggle"
@@ -49,9 +51,11 @@ export function Nav() {
         </div>
       </nav>
       <div id="sl-mobile-menu" className={`sl-mobile-menu${menuOpen ? " open" : ""}`}>
-        <a href="#product" onClick={close}>Product</a>
-        <a href="#story" onClick={close}>Intelligence</a>
-        <a href="#capabilities" onClick={close}>Capabilities</a>
+        <Link href="/product" onClick={close}>Features</Link>
+        <Link href="/product/bridge" onClick={close}>The Bridge</Link>
+        <Link href="/product/scan" onClick={close}>Scan</Link>
+        <Link href="/#how" onClick={close}>How it works</Link>
+        <Link href="/#trust" onClick={close}>Trust</Link>
         <Link href="/login" onClick={close}>Sign in</Link>
       </div>
     </>

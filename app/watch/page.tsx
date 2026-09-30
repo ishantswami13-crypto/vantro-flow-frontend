@@ -191,6 +191,10 @@ function WatchPageInner() {
           </button>
         </div>
 
+        <WatchBrief />
+        <ObjectivesPanel />
+
+        <h2 style={{ margin: "8px 0 0", fontSize: 15, fontWeight: 600, color: "#191917" }}>Your own conditions</h2>
         <div style={{ fontSize: 13.5, color: "#63635F" }}>
           {loading
             ? "Loading watch conditions…"
@@ -198,9 +202,6 @@ function WatchPageInner() {
               ? "No watch conditions configured yet."
               : `${list.length} watch condition${list.length === 1 ? "" : "s"} configured.`}
         </div>
-
-        <WatchBrief />
-        <ObjectivesPanel />
 
         <nav
           aria-label="Secondary"

@@ -1,5 +1,5 @@
 import {
-  FiDatabase, FiShield, FiCompass, FiSearch, FiTarget,
+  FiDatabase, FiShield, FiCompass, FiSearch, FiTarget, FiSettings,
   FiSliders, FiClock, FiCheckSquare, FiUsers, FiSun, FiGitBranch,
 } from "react-icons/fi";
 import type { IconType } from "react-icons";
@@ -26,17 +26,12 @@ export const V32_NAV_ITEMS: PrimaryNavItem[] = [
   { href: "/memory",   label: "Memory",     icon: FiClock },
 ];
 
-// Second nav group (handoff §2 "open architecture gap"): Sources, Agents,
-// and Control are real pages that were reachable with no sidebar row ever
-// highlighting, per the handoff's explicit callout. Resolved here via
-// option (a) from the handoff: a labelled second group below a divider.
-// Label chosen: "ENTERPRISE" (uppercase small-caps, matching the V32
-// section-label style) — these three surfaces are org-wide/governance
-// concerns rather than day-to-day investigation work, which is what the
-// 8 V32_NAV_ITEMS above are for.
+// Second group: org-wide and governance surfaces (connected systems, the
+// agents that work for the company, controls and approvals), then settings.
 export const V32_SECONDARY_NAV_LABEL = "ENTERPRISE";
 export const V32_SECONDARY_NAV_ITEMS: PrimaryNavItem[] = [
-  { href: "/sources", label: "Sources", icon: FiDatabase },
-  { href: "/agents",  label: "Agents",  icon: FiUsers },
-  { href: "/control", label: "Control", icon: FiShield },
+  { href: "/sources",  label: "Sources",  icon: FiDatabase },
+  { href: "/agents",   label: "Agents",   icon: FiUsers },
+  { href: "/control",  label: "Control",  icon: FiShield },
+  { href: "/settings", label: "Settings", icon: FiSettings },
 ];
