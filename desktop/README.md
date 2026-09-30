@@ -40,12 +40,15 @@ VITE_STARLANE_API_URL=http://localhost:8787 npx vite --port 1420
 npm run e2e:preview                                         # see the script header for the test account
 ```
 
-## Build an installer
+## Build, release and download
 
-CI builds it (`.github/workflows/desktop.yml`, job `windows`) on every push that touches `desktop/` or `packages/contracts/`:
+CI builds and tests the installers (`.github/workflows/desktop.yml`) on every push that touches `desktop/`, `packages/contracts/` or the download route:
 
-- The `.exe` (NSIS, per-user install, no admin rights) and the `.msi` are attached to the workflow run as `starlane-windows-<sha>`.
-- A tag `desktop-vX.Y.Z` publishes a draft GitHub Release.
+- It builds the NSIS `.exe` (per-user install, no admin rights) and the `.msi`. They are staged as `Starlane-Setup-x64.exe` and `Starlane-x64.msi`, with `SHA256SUMS.txt` and `starlane-release.json` (see `scripts/release-manifest.mjs`).
+- The installed app is `Starlane.exe`. The installer smoke test covers install, launch, the window title, single instance, the Start Menu shortcut, the Apps-list name and version, reinstall and uninstall, and the MSI. It also upgrades over the currently published release when one exists.
+- A rehearsal job runs the website's `/download/windows` against the staged installer and checks the downloaded file is the binary with the right SHA-256.
+- **Release:** push the tag `desktop-vX.Y.Z`, where X.Y.Z must equal the version in `tauri.conf.json`, `package.json` and `Cargo.toml`. The release job then waits for the web and backend gates and publishes a GitHub Release with the fixed-name assets. It downloads the files back through `releases/latest` to check them. Pushing the tag `desktop-beta` publishes a rolling beta as a prerelease, never "latest".
+- **Download:** `https://<site>/download/windows` redirects to the current stable installer, and `/download/latest.json` serves the manifest. The website never names a version.
 
 To build locally on Windows: `npm ci && npx tauri build --bundles nsis,msi`.
 

@@ -7,6 +7,13 @@
 // Without them the build still succeeds, but the app reports "updates not
 // configured" and Windows shows an unknown-publisher warning. Prints what it
 // configured, never the values.
+//
+// Always, for a release build:
+//   - the local development server (localhost:8787) is removed from the app's
+//     HTTP permission, so a shipped app can only reach Starlane over HTTPS and
+//     TallyPrime on this computer;
+//   - with RELEASE_TAG=desktop-vX.Y.Z, the tag must equal the version in
+//     tauri.conf.json, package.json and Cargo.toml, or the build stops.
 import { readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 
 const path = new URL('../src-tauri/tauri.conf.json', import.meta.url);
@@ -26,5 +33,34 @@ if (thumb) {
   conf.bundle.windows = { ...conf.bundle.windows, certificateThumbprint: thumb, digestAlgorithm: 'sha256', timestampUrl: 'http://timestamp.digicert.com' };
 }
 writeFileSync(path, JSON.stringify(conf, null, 2) + '\n');
+
+// No development server in a release build.
+const capPath = new URL('../src-tauri/capabilities/default.json', import.meta.url);
+const cap = JSON.parse(readFileSync(capPath, 'utf8'));
+let removed = 0;
+for (const p of cap.permissions) {
+  if (p && typeof p === 'object' && p.identifier === 'http:default') {
+    const before = p.allow.length;
+    p.allow = p.allow.filter((a) => !/^http:\/\/(localhost|127\.0\.0\.1):8787\//.test(a.url));
+    removed += before - p.allow.length;
+  }
+}
+writeFileSync(capPath, JSON.stringify(cap, null, 2) + '\n');
+console.log(`development server permission: removed (${removed} entries)`);
+
+// One version everywhere.
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const cargo = readFileSync(new URL('../src-tauri/Cargo.toml', import.meta.url), 'utf8').match(/^version\s*=\s*"([^"]+)"/m)?.[1];
+const versions = { 'tauri.conf.json': conf.version, 'package.json': pkg.version, 'Cargo.toml': cargo };
+if (new Set(Object.values(versions)).size !== 1) {
+  console.error(`version mismatch: ${JSON.stringify(versions)}`);
+  process.exit(1);
+}
+const tag = (process.env.RELEASE_TAG || '').trim();
+if (tag && tag !== 'desktop-beta' && tag !== `desktop-v${conf.version}`) {
+  console.error(`tag ${tag} does not match app version ${conf.version} (expected desktop-v${conf.version})`);
+  process.exit(1);
+}
+console.log(`version: ${conf.version}${tag ? ` (tag ${tag})` : ''}`);
 console.log(`updater: ${updater ? 'configured (signed update artifacts)' : 'NOT configured — app cannot self-update'}`);
 console.log(`windows code signing: ${thumb ? 'configured' : 'NOT configured — installer will show an unknown-publisher warning'}`);

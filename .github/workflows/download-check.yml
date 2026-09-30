@@ -1,0 +1,34 @@
+name: Download health
+
+# Proves, on a schedule and on demand, that the public download hands out the
+# real Starlane installer: follows redirects, downloads the whole file and
+# checks status, content type, size, the Windows executable signature and the
+# SHA-256 against the published manifest. A 404, a page, JSON or an empty file
+# fails the run.
+#   - the release storage itself (GitHub Releases, releases/latest)
+#   - the website's /download/windows, when vars.STARLANE_SITE_URL is set
+#     (for example https://starlane.example); it is skipped with a warning otherwise
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Release storage (GitHub Releases, latest stable)
+        run: |
+          base="https://github.com/${{ github.repository }}/releases/latest/download"
+          node scripts/check-download.mjs "$base/Starlane-Setup-x64.exe" --type exe --manifest "$base/starlane-release.json"
+      - name: Website /download/windows
+        run: |
+          if [ -z "${{ vars.STARLANE_SITE_URL }}" ]; then echo "::warning::vars.STARLANE_SITE_URL is not set; the website endpoint was not checked"; exit 0; fi
+          node scripts/check-download.mjs "${{ vars.STARLANE_SITE_URL }}/download/windows" --type exe --manifest "https://github.com/${{ github.repository }}/releases/latest/download/starlane-release.json"

@@ -13,6 +13,10 @@
 //   - Updates: the channel (stable/beta) is chosen at runtime; artifacts are
 //     signature-verified by the updater plugin against the public key baked
 //     into the build. Builds without a key report "updates not configured".
+//   - Support logs: one rotating file in the app's log folder
+//     (%LOCALAPPDATA%\app.starlane.desktop\logs on Windows). Only lifecycle
+//     events, error codes and messages go there, never tokens, passwords or
+//     business records; Settings > Diagnostics opens the folder.
 //
 // Everything the user sees is the web view (desktop/src), built on the shared
 // Starlane API client (packages/contracts).
@@ -23,6 +27,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Emitter, Manager, WindowEvent,
 };
+use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_updater::UpdaterExt;
 
 const KEYRING_SERVICE: &str = "app.starlane.desktop";
@@ -121,7 +126,11 @@ async fn check_update(app: AppHandle, channel: String) -> Result<UpdateInfo, Str
         .map_err(|e| e.to_string())?
         .build()
         .map_err(|e| e.to_string())?;
-    match updater.check().await.map_err(|e| e.to_string())? {
+    let found = updater.check().await.map_err(|e| {
+        log::warn!("update check failed on {channel}: {e}");
+        e.to_string()
+    })?;
+    match found {
         Some(u) => Ok(UpdateInfo { available: true, version: Some(u.version.clone()), notes: u.body.clone(), configured: true }),
         None => Ok(UpdateInfo { available: false, version: None, notes: None, configured: true }),
     }
@@ -142,11 +151,26 @@ async fn install_update(app: AppHandle, channel: String) -> Result<String, Strin
         .map_err(|e| e.to_string())?;
     let update = updater.check().await.map_err(|e| e.to_string())?.ok_or("No update available")?;
     let version = update.version.clone();
+    log::info!("installing update {version} from {channel}");
     update
         .download_and_install(|_, _| {}, || {})
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| {
+            log::error!("update {version} failed: {e}");
+            e.to_string()
+        })?;
+    log::info!("update {version} installed; restarting");
     Ok(version)
+}
+
+/// Opens the folder that holds Starlane's support log.
+#[tauri::command]
+fn open_logs(app: AppHandle) -> Result<(), String> {
+    let dir = app.path().app_log_dir().map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    app.opener()
+        .open_path(dir.to_string_lossy().to_string(), None::<&str>)
+        .map_err(|e| e.to_string())
 }
 
 fn show_main(app: &AppHandle) {
@@ -173,7 +197,20 @@ fn route_from_url(raw: &str) -> Option<String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // First, so the other plugins' start-up is logged too.
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .level(log::LevelFilter::Info)
+                .level_for("tao", log::LevelFilter::Warn)
+                .level_for("wry", log::LevelFilter::Warn)
+                .level_for("reqwest", log::LevelFilter::Warn)
+                .level_for("hyper", log::LevelFilter::Warn)
+                .max_file_size(2 * 1024 * 1024)
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(3))
+                .build(),
+        )
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            log::info!("second launch forwarded to the running Starlane");
             show_main(app);
             if let Some(route) = argv.iter().find_map(|a| route_from_url(a)) {
                 let _ = app.emit("starlane://route", route);
@@ -195,9 +232,16 @@ pub fn run() {
             secret_delete,
             app_info,
             check_update,
-            install_update
+            install_update,
+            open_logs
         ])
         .setup(|app| {
+            log::info!(
+                "Starlane {} starting on {} {}",
+                app.package_info().version,
+                std::env::consts::OS,
+                std::env::consts::ARCH
+            );
             // Tray: the way back into Starlane while it works in the background.
             let open = MenuItem::with_id(app, "open", "Open Starlane", true, None::<&str>)?;
             let sync = MenuItem::with_id(app, "sync", "Sync now", true, None::<&str>)?;
@@ -212,7 +256,10 @@ pub fn run() {
                     "sync" => {
                         let _ = app.emit("starlane://sync-now", ());
                     }
-                    "quit" => app.exit(0),
+                    "quit" => {
+                        log::info!("quit from tray");
+                        app.exit(0)
+                    }
                     _ => {}
                 })
                 .on_tray_icon_event(|tray, event| {

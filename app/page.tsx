@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Nav } from "@/components/marketing/Nav";
 import { Footer } from "@/components/marketing/Footer";
-import { PlatformAvailability } from "@/components/marketing/PlatformAvailability";
+import { DownloadButton } from "@/components/marketing/DownloadButton";
 import { DecisionTrace } from "@/components/marketing/landing/DecisionTrace";
 import { AskDemo } from "@/components/marketing/landing/AskDemo";
 import { HowItThinks } from "@/components/marketing/landing/HowItThinks";
@@ -76,10 +76,12 @@ export default function LandingPage() {
               and checks what happened.
             </p>
             <div className="sl-hero-ctas">
-              <Link href="/access" className="sl-btn sl-btn-solid">Get Starlane</Link>
-              <a href="#how" className="sl-link-arrow">See how it works</a>
+              <DownloadButton />
+              <Link href="/access" className="sl-link-arrow">Request a pilot</Link>
             </div>
-            <PlatformAvailability />
+            <p style={{ fontSize: 13, color: "var(--sl-ink-faint)", marginTop: 14 }}>
+              Windows 10 and 11, 64-bit. No macOS or Linux app yet; Starlane also runs in the browser.
+            </p>
           </div>
           <DecisionTrace />
         </header>
@@ -203,10 +205,10 @@ export default function LandingPage() {
               Tell us about yours; you will see straight away whether your systems are supported.
             </p>
             <div className="sl-hero-ctas">
-              <Link href="/access" className="sl-btn sl-btn-solid">Get Starlane</Link>
+              <DownloadButton where="access" />
+              <Link href="/access" className="sl-link-arrow">Request a pilot</Link>
               <Link href="/access/status" className="sl-link-arrow">Check on an application</Link>
             </div>
-            <PlatformAvailability />
           </div>
         </section>
       </main>

@@ -2,10 +2,11 @@
 // non-secret preferences (kept in the OS store alongside the session so the
 // app has exactly one place it persists anything).
 import { createStarlaneClient, type StarlaneClient, type TelemetryEvent } from '@starlane/contracts';
-import { appInfo, platformFetch, platformName, secrets, sessionStore, type AppInfo } from './platform';
+import { appInfo, logLine, platformFetch, platformName, secrets, sessionStore, type AppInfo } from './platform';
 
 export const PRODUCTION_API = 'https://vantro-flow-backend-production.up.railway.app';
-const BUILD_API = (import.meta.env.VITE_STARLANE_API_URL as string | undefined) || PRODUCTION_API;
+// A release build may only point at HTTPS; anything else falls back to production.
+const BUILD_API = ((u) => (u && (import.meta.env.DEV || u.startsWith('https://')) ? u : PRODUCTION_API))(import.meta.env.VITE_STARLANE_API_URL as string | undefined);
 
 export interface Prefs {
   apiBase?: string;
@@ -16,12 +17,12 @@ export interface Prefs {
 }
 const DEFAULT_PREFS: Prefs = { channel: 'stable', notifications: true, tally: { port: 9000, company: null, intervalMin: 15 } };
 
-/** Only Starlane-operated hosts and a local development server are accepted. */
+/** Only Starlane-operated HTTPS hosts are accepted; a local development server only in development builds. */
 export function allowedApiBase(url: string): boolean {
   try {
     const u = new URL(url);
     if (u.protocol === 'https:' && (/\.up\.railway\.app$/.test(u.hostname) || /(^|\.)starlane\.app$/.test(u.hostname))) return true;
-    return u.protocol === 'http:' && (u.hostname === 'localhost' || u.hostname === '127.0.0.1') && u.port === '8787';
+    return import.meta.env.DEV && u.protocol === 'http:' && (u.hostname === 'localhost' || u.hostname === '127.0.0.1') && u.port === '8787';
   } catch { return false; }
 }
 
@@ -68,6 +69,9 @@ const queue: TelemetryEvent[] = [];
 let timer: ReturnType<typeof setTimeout> | null = null;
 export function track(name: TelemetryEvent['name'], props: TelemetryEvent['props'] = {}) {
   if (!info) return;
+  // The same allowlisted event goes to the local support log, so support can
+  // tell a connection, sign-in, Bridge or update failure apart.
+  logLine(/failed|expired/.test(name) ? 'error' : /offline/.test(name) ? 'warn' : 'info', `${name} ${JSON.stringify(props)}`);
   queue.push({ name, props: { client: 'desktop', platform: platformName(info.os), app_version: info.version, ...props } });
   if (!timer) timer = setTimeout(flush, 4000);
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { OfflineError, SessionEnded, type Bootstrap } from '@starlane/contracts';
 import { api, getPrefs, onSessionEnded, track } from './api';
+import { logLine } from './platform';
 import { tallyHost } from './connector/tallyHost';
 import { RouterProvider, useRouter } from './lib/router';
 import { clearResourceCache } from './lib/useResource';
@@ -39,6 +40,7 @@ export function App() {
       if (e instanceof OfflineError) { track('client.offline', { reason: 'startup' }); await tallyHost.start(); setPhase(getPrefs().onboarded ? 'ready' : 'onboarding'); return; }
       setBootErr((e as Error).message);
       track('client.startup_failed', { error_code: (e as Error).name });
+      logLine('error', `startup failed: ${(e as Error).name}: ${(e as Error).message}`);
     }
   }, []);
 
@@ -67,8 +69,9 @@ export function App() {
       <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
         <div style={{ display: 'grid', gap: 12, maxWidth: 380 }}>
           <div className="wordmark" style={{ padding: 0 }}><Mark />Starlane</div>
-          <div className="err">Starlane could not start: {bootErr}</div>
-          <div><button className="btn" onClick={() => void load()}>Try again</button></div>
+          <div className="err" role="alert">Starlane could not connect to the service.</div>
+          <div className="small muted">Your data is safe; nothing was changed. Check this computer’s internet connection and try again. If it keeps happening, send Starlane support this detail: {bootErr}</div>
+          <div><button className="btn primary" onClick={() => void load()}>Try again</button></div>
         </div>
       </div>
     );

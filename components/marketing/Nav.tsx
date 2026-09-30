@@ -37,7 +37,7 @@ export function Nav() {
           <Link href="/#how" className="hidden md:inline">How it works</Link>
           <Link href="/#trust" className="hidden md:inline">Trust</Link>
           <Link href="/login" className="hidden md:inline">Sign in</Link>
-          <Link href="/access" className="sl-btn sl-btn-solid">Get Starlane</Link>
+          <a href="/download/windows" className="sl-btn sl-btn-solid">Download</a>
           <button
             type="button"
             className="sl-nav-toggle"
@@ -57,6 +57,7 @@ export function Nav() {
         <Link href="/#how" onClick={close}>How it works</Link>
         <Link href="/#trust" onClick={close}>Trust</Link>
         <Link href="/login" onClick={close}>Sign in</Link>
+        <Link href="/access" onClick={close}>Request a pilot</Link>
       </div>
     </>
   );
