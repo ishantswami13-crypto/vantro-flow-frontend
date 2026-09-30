@@ -6,6 +6,7 @@ import { FiChevronRight } from "react-icons/fi";
 import { isDemoMode } from "@/lib/demo";
 import { decisionsApi, money, daysUntil } from "@/lib/decisions";
 import { C, Pill } from "@/components/decisions/ui";
+import { stakeOf } from "@/components/os/shared";
 
 // The one thing on Today that asks for judgement: decisions with a window.
 // Shows nothing in demo mode and says so plainly when the summary can't load.
@@ -38,7 +39,7 @@ export default function TodayDecisionsCard() {
           <p className="text-[12px] mt-1" style={{ color: C.muted }}>
             {(() => {
               const d = daysUntil(top.deadline);
-              const stake = top.materiality?.expectedUncollected90 ?? top.materiality?.workingCapitalTiedUp ?? null;
+              const stake = stakeOf(top.materiality as Record<string, unknown> | null);
               return [d == null ? null : d <= 0 ? "Decide today" : `Decide within ${d} day${d === 1 ? "" : "s"}`, stake != null ? `${money(stake, top.currency)} at stake if ignored` : null, top.recommendation ? `suggests ${top.recommendation.label.toLowerCase()}` : null].filter(Boolean).join(" · ");
             })()}
           </p>

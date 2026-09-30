@@ -104,9 +104,9 @@ export default function AttendancePage() {
           <p className="text-xs text-muted mt-1">Haazri aur salary calculator</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={prevMonth} className="p-2 bg-surface-2 rounded-xl text-muted hover:text-primary transition-colors"><FiChevronLeft size={16} /></button>
+          <button aria-label="Previous" onClick={prevMonth} className="p-2 bg-surface-2 rounded-xl text-muted hover:text-primary transition-colors"><FiChevronLeft size={16} /></button>
           <span className="text-sm font-bold text-primary w-20 text-center">{MONTHS[month-1]} {year}</span>
-          <button onClick={nextMonth} className="p-2 bg-surface-2 rounded-xl text-muted hover:text-primary transition-colors"><FiChevronRight size={16} /></button>
+          <button aria-label="Next" onClick={nextMonth} className="p-2 bg-surface-2 rounded-xl text-muted hover:text-primary transition-colors"><FiChevronRight size={16} /></button>
         </div>
       </div>
 

@@ -116,7 +116,10 @@ export function parseTargetsCsv(text: string): { rows: TargetRow[]; problems: st
     const v = split(line);
     const g = (k: string) => { const idx = head.indexOf(k); return idx === -1 ? '' : (v[idx] || ''); };
     if (!g('email')) { problems.push(`Row ${i + 2}: no email (emails are never guessed)`); return; }
-    const verified = g('verification_source') && g('verification_method');
+    // A verification needs a date. Without one the contact is imported as
+    // unverified; the import never stamps today's date on someone else's check.
+    const verified = g('verification_source') && g('verification_method') && g('verified_at');
+    if (g('verification_source') && g('verification_method') && !g('verified_at')) problems.push(`Row ${i + 2}: verification has no verified_at date, so this contact is imported as unverified`);
     rows.push({
       company: {
         name: g('company'), domain: g('domain') || undefined, industry: g('industry') || undefined, country: g('country') || undefined,
@@ -124,7 +127,7 @@ export function parseTargetsCsv(text: string): { rows: TargetRow[]; problems: st
       },
       contact: {
         fullName: g('full_name'), roleTitle: g('role') || undefined, email: g('email'), country: g('country') || undefined, timezone: g('timezone') || undefined,
-        verification: verified ? { source: g('verification_source'), method: g('verification_method'), verifiedAt: g('verified_at') || new Date().toISOString().slice(0, 10) } : undefined,
+        verification: verified ? { source: g('verification_source'), method: g('verification_method'), verifiedAt: g('verified_at') } : undefined,
         roleVerifiedAt: verified ? (g('verified_at') || undefined) : undefined, roleSource: verified ? g('verification_source') : undefined,
       },
     });

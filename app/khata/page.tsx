@@ -262,7 +262,7 @@ export default function KhataPage() {
                         </p>
                         <p className="text-2xs text-muted">Bal: {fmtINR(entry.running_balance)}</p>
                       </div>
-                      <button onClick={() => deleteEntry(entry.id)}
+                      <button aria-label="Delete" onClick={() => deleteEntry(entry.id)}
                         className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-danger transition-all">
                         <FiTrash2 size={12} />
                       </button>

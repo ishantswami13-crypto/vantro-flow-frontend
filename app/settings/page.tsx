@@ -18,7 +18,7 @@ import {
   FiToggleLeft, FiToggleRight, FiPlus, FiSend,
   FiAlertCircle, FiCopy, FiInfo,
 } from "react-icons/fi";
-import { api, getUser, clearAuth, type DunningRule, authHeaders } from "@/lib/api";
+import { api, getUser, clearAuth, type DunningRule, type DeliveryLine, type DeliveryStatus, authHeaders } from "@/lib/api";
 import { INDUSTRY_OPTIONS, setBusinessType } from "@/lib/businessTypes";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
@@ -101,7 +101,9 @@ function SettingsPageInner() {
   const [error, setError]   = useState("");
 
   // Form state
-  const [profile, setProfile]   = useState({ full_name: "", email: "", phone: "", password: "" });
+  const [profile, setProfile]   = useState({ full_name: "", email: "", phone: "", current_password: "", password: "" });
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [delivery, setDelivery] = useState<DeliveryStatus | null>(null);
   const [business, setBusiness] = useState({ business_name: "", gstin: "", industry: "trading", team_size: "6-20", business_address: "", city: "", upi_id: "", invoice_prefix: "INV" });
   const [prefs, setPrefs]       = useState({ language: "hinglish", contact_time: "" });
 
@@ -128,7 +130,7 @@ function SettingsPageInner() {
   useEffect(() => {
     const user = getUser();
     if (user) {
-      setProfile(p => ({ ...p, full_name: user.business_name || "", email: user.email || "", phone: user.phone || "" }));
+      setProfile(p => ({ ...p, email: user.email || "", phone: user.phone || "" }));
       setBusiness(b => ({ ...b, business_name: user.business_name || "", gstin: user.gstin || "" }));
     }
     api.settings.get().then(({ settings }: any) => {
@@ -139,12 +141,14 @@ function SettingsPageInner() {
       if (settings.invoice_prefix)    setBusiness(b => ({ ...b, invoice_prefix: settings.invoice_prefix }));
       if (settings.language)          setPrefs(p => ({ ...p, language: settings.language }));
       if (settings.contact_time)      setPrefs(p => ({ ...p, contact_time: settings.contact_time }));
+      if (settings.owner_name)        setProfile(p => ({ ...p, full_name: settings.owner_name }));
       if (settings.owner_name || settings.ai_persona) {
         setVoice({ owner_name: settings.owner_name || "", city: settings.city || "", voice_style: settings.voice_style || "casual_hinglish", ai_persona: settings.ai_persona || "" });
         setVoiceActive(!!(settings.owner_name && settings.ai_persona));
       }
       if (settings.automation_enabled !== undefined) setAutoEnabled(!!settings.automation_enabled);
-    }).catch(() => {});
+    }).catch(() => setLoadFailed(true));
+    api.settings.deliveryStatus().then(setDelivery).catch(() => setDelivery(null));
   }, []);
 
   // Load dunning rules when automation tab opens
@@ -159,13 +163,32 @@ function SettingsPageInner() {
   const showSaved = () => { setSaved(true); setTimeout(() => setSaved(false), 2500); };
 
   const save = async (body: Record<string, unknown>) => {
+    // Saving after a failed load would overwrite real values with blank defaults.
+    if (loadFailed) { setError("Your saved settings could not be loaded, so nothing was saved. Reload the page and try again."); return; }
     setSaving(true); setError(""); setSaved(false);
     try { await api.settings.update(body as any); showSaved(); }
     catch (e: any) { setError(e.message || "Save failed"); }
     finally { setSaving(false); }
   };
 
-  const handleProfileSave  = (e: React.FormEvent) => { e.preventDefault(); const body: Record<string, string> = { business_name: profile.full_name, phone: profile.phone }; if (profile.password) body.password = profile.password; save(body); };
+  // Full name is the owner's name (owner_name); the business name lives on the
+  // Business tab. A password change goes to its own route and needs the
+  // current password.
+  const handleProfileSave  = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (profile.password && !profile.current_password) { setError("Enter your current password to set a new one."); return; }
+    if (profile.password && profile.password.length < 8) { setError("The new password must be at least 8 characters."); return; }
+    await save({ owner_name: profile.full_name, phone: profile.phone });
+    if (profile.password) {
+      setSaving(true);
+      try {
+        await api.settings.changePassword(profile.current_password, profile.password);
+        setProfile(p => ({ ...p, current_password: "", password: "" }));
+        showSaved();
+      } catch (err: any) { setError(err.message || "Password was not changed"); }
+      finally { setSaving(false); }
+    }
+  };
   const handleBusinessSave = (e: React.FormEvent) => {
     e.preventDefault();
     setBusinessType(business.industry);
@@ -229,6 +252,7 @@ function SettingsPageInner() {
   };
 
   const handleDeleteRule = async (id: string) => {
+    if (!window.confirm("Delete this reminder rule?")) return;
     try {
       await api.dunning.delete(id);
       setRules(prev => prev.filter(r => r.id !== id));
@@ -286,7 +310,10 @@ function SettingsPageInner() {
                     <Input label="Phone" type="tel" prefix="+91" value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} />
                   </div>
                   <Input label="Email" type="email" value={profile.email} readOnly />
-                  <Input label="New Password" type="password" placeholder="Leave blank to keep current" value={profile.password} onChange={e => setProfile(p => ({ ...p, password: e.target.value }))} />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input label="Current Password" type="password" autoComplete="current-password" placeholder="Needed only to change it" value={profile.current_password} onChange={e => setProfile(p => ({ ...p, current_password: e.target.value }))} />
+                    <Input label="New Password" type="password" autoComplete="new-password" placeholder="Leave blank to keep current" value={profile.password} onChange={e => setProfile(p => ({ ...p, password: e.target.value }))} />
+                  </div>
                   <Button type="submit" icon={<FiCheck size={14} />} loading={saving}>Save Profile</Button>
                 </form>
                 <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
@@ -458,13 +485,10 @@ function SettingsPageInner() {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <p className="text-base font-black text-primary">Starlane AutoPilot</p>
-                        <span className="flex items-center gap-1 text-2xs font-bold text-success bg-success/10 border border-success/20 px-2 py-0.5 rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" /> Active
-                        </span>
+                        <DeliveryBadge line={delivery ? { active: delivery.whatsapp.active && delivery.dunning.active, reason: null } : undefined} />
                       </div>
                       <p className="text-sm text-secondary leading-relaxed">
-                        WhatsApp, Razorpay, aur daily dunning — sab Starlane handle karta hai.<br />
-                        <span className="text-muted text-xs">Koi API key dene ki zaroorat nahi. Bas apna business chalao.</span>
+                        WhatsApp reminders, payment links and the daily reminder run. Each line below shows whether it is actually working on this account.
                       </p>
                     </div>
                   </div>
@@ -481,12 +505,9 @@ function SettingsPageInner() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-primary">WhatsApp Reminders</p>
-                        <p className="text-2xs text-muted">Powered by Starlane's Twilio account · Sent from verified WhatsApp number</p>
+                        <p className="text-2xs text-muted">{delivery?.whatsapp.reason || "Sent from Starlane's verified WhatsApp number"}</p>
                       </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
-                        style={{ background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" }}>
-                        <FiCheckCircle size={11} /> Active
-                      </div>
+                      <DeliveryBadge line={delivery?.whatsapp} />
                     </div>
 
                     {/* Razorpay */}
@@ -496,12 +517,9 @@ function SettingsPageInner() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-primary">Payment Links (Razorpay)</p>
-                        <p className="text-2xs text-muted">Powered by Starlane's Razorpay · UPI, card, netbanking sab accepted</p>
+                        <p className="text-2xs text-muted">{delivery?.paymentLinks.reason || "UPI, card and netbanking through Razorpay"}</p>
                       </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
-                        style={{ background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" }}>
-                        <FiCheckCircle size={11} /> Active
-                      </div>
+                      <DeliveryBadge line={delivery?.paymentLinks} />
                     </div>
 
                     {/* Daily Dunning */}
@@ -511,12 +529,9 @@ function SettingsPageInner() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-primary">Daily Auto-Dunning</p>
-                        <p className="text-2xs text-muted">Cron runs at 9 AM IST every day · Reminders fire per your rules automatically</p>
+                        <p className="text-2xs text-muted">{delivery?.dunning.reason || "Runs daily at 9 AM IST and follows your reminder rules"}</p>
                       </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
-                        style={{ background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" }}>
-                        <FiCheckCircle size={11} /> Auto
-                      </div>
+                      <DeliveryBadge line={delivery?.dunning} />
                     </div>
 
                     {/* Push Notifications */}
@@ -526,12 +541,9 @@ function SettingsPageInner() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-primary">Payment Received Alerts</p>
-                        <p className="text-2xs text-muted">Push notification + WhatsApp to you when a customer pays</p>
+                        <p className="text-2xs text-muted">{delivery?.push.reason || "A push notification when a customer pays"}</p>
                       </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0"
-                        style={{ background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" }}>
-                        <FiCheckCircle size={11} /> Active
-                      </div>
+                      <DeliveryBadge line={delivery?.push} />
                     </div>
                   </div>
                 </Card>
@@ -559,12 +571,12 @@ function SettingsPageInner() {
                 <div className="p-4 bg-accent/5 border border-accent/20 rounded-xl flex gap-3">
                   <FiInfo size={14} className="text-accent shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs font-semibold text-accent mb-1.5">Full automation loop</p>
+                    <p className="text-xs font-semibold text-accent mb-1.5">What the automation does once sending is on</p>
                     <ul className="text-2xs text-secondary space-y-1">
-                      <li>📄 Invoice create → Customer ko WhatsApp (payment link ke saath)</li>
-                      <li>⏰ Daily 9 AM → Overdue invoices pe auto-reminder (aapke rules ke hisaab se)</li>
-                      <li>💰 Customer pays → Invoice auto-close → Aapko push + WhatsApp notification</li>
-                      <li>🙏 Customer ko thank-you WhatsApp automatic</li>
+                      <li>A new invoice sends the customer a WhatsApp message with a payment link</li>
+                      <li>Every day at 9 AM IST, overdue invoices get a reminder according to your rules</li>
+                      <li>When the customer pays, the invoice closes and you are notified</li>
+                      <li>The customer gets a thank-you message</li>
                     </ul>
                   </div>
                 </div>
@@ -581,7 +593,7 @@ function SettingsPageInner() {
                     <div>
                       <p className="text-sm font-bold text-primary">Collections Automation</p>
                       <p className="text-xs text-secondary mt-0.5">
-                        {autoEnabled ? "Running — reminders fire automatically every day at 9 AM IST" : "Paused — no reminders will auto-send until you enable this"}
+                        {!autoEnabled ? "Paused. No reminders will go out until you turn this on." : delivery && !delivery.whatsapp.active ? `On, but nothing is sent yet: ${delivery.whatsapp.reason}.` : "On. Reminders go out every day at 9 AM IST."}
                       </p>
                     </div>
                     <button onClick={handleToggleAutomation} disabled={autoToggling}
@@ -746,7 +758,7 @@ function SettingsPageInner() {
                               className={["px-3 py-1.5 rounded-lg text-2xs font-bold border transition-all", rule.enabled ? "bg-success-dim text-success border-success/30 hover:opacity-80" : "bg-surface border-border text-muted hover:text-secondary"].join(" ")}>
                               {rule.enabled ? "On" : "Off"}
                             </button>
-                            <button onClick={() => handleDeleteRule(rule.id)} className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-all">
+                            <button aria-label="Delete" onClick={() => handleDeleteRule(rule.id)} className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-all">
                               <FiTrash2 size={13} />
                             </button>
                           </div>
@@ -797,5 +809,21 @@ export default function SettingsPage() {
     <Suspense fallback={null}>
       <SettingsPageInner />
     </Suspense>
+  );
+}
+
+// A status badge driven by /api/settings/delivery-status. Unknown (not loaded)
+// is shown as unknown, never as active.
+function DeliveryBadge({ line }: { line?: DeliveryLine }) {
+  const state = !line ? "unknown" : line.active ? "on" : "off";
+  const styles = {
+    on: { background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" },
+    off: { background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.3)", color: "#B7791F" },
+    unknown: { background: "rgba(128,128,128,0.08)", border: "1px solid rgba(128,128,128,0.2)", color: "#8A8A85" },
+  }[state];
+  return (
+    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0" style={styles}>
+      {state === "on" ? <><FiCheckCircle size={11} /> Active</> : state === "off" ? "Not active" : "Unknown"}
+    </div>
   );
 }

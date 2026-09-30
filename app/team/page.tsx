@@ -323,7 +323,7 @@ export default function TeamPage() {
           <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-border overflow-hidden">
             <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <h3 className="font-bold text-primary">Add Worker</h3>
-              <button onClick={() => setShowAdd(false)} className="text-muted hover:text-primary"><FiX size={16} /></button>
+              <button aria-label="Close" onClick={() => setShowAdd(false)} className="text-muted hover:text-primary"><FiX size={16} /></button>
             </div>
             <form onSubmit={addWorker} className="p-5 space-y-3">
               <div>
@@ -436,11 +436,11 @@ function WorkerCard({ w, editId, editData, setEditId, setEditData, onToggle, onD
                 WA
               </a>
             )}
-            <button onClick={() => { setEditId(w.id); setEditData({}); }}
+            <button aria-label="Edit" onClick={() => { setEditId(w.id); setEditData({}); }}
               className="p-1.5 text-muted hover:text-primary transition-colors">
               <FiEdit2 size={13} />
             </button>
-            <button onClick={() => onDelete(w.id)}
+            <button aria-label="Delete" onClick={() => onDelete(w.id)}
               className="p-1.5 text-muted hover:text-danger transition-colors">
               <FiTrash2 size={13} />
             </button>

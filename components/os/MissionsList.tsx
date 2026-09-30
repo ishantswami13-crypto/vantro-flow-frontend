@@ -84,11 +84,11 @@ function MissionRow({ m }: { m: Mission }) {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div style={{ minWidth: 0, flex: "1 1 320px" }}>
           <p className="text-[14px]" style={{ color: C.ink, fontWeight: 600 }}>
-            {m.source === "DECISION" ? <Link className="hover-dim" href={m.href}>{m.title}</Link> : m.title}
+            {m.source !== "WORKFLOW" ? <Link className="hover-dim" href={m.href}>{m.title}</Link> : m.title}
           </p>
           {m.objective && <p className="text-[12.5px] mt-0.5" style={{ color: C.body }}>{m.source === "DECISION" ? "Chosen option: " : "Goal: "}{m.objective}</p>}
           <p className="text-[12px] mt-1" style={{ color: C.faint }}>
-            {m.source === "DECISION" ? "From a decision" : "Deployed workflow"}
+            {m.source === "DECISION" ? "From a decision" : m.source === "COLLECTION" ? "Collection mission" : "Deployed workflow"}
             {m.mode ? ` · ${m.mode === "SHADOW" ? "Shadow (nothing changes outside Starlane)" : m.mode === "WITH_APPROVAL" ? "Each step waits for your approval" : "Live"}` : ""}
             {m.updatedAt ? ` · updated ${relTime(m.updatedAt)}` : ""}
           </p>
@@ -116,6 +116,7 @@ function MissionRow({ m }: { m: Mission }) {
         </ul>
         <p className="text-[12px] mt-2" style={{ color: C.faint }}>Worker: {m.assigned.agent} ({m.assigned.model}). Owner: {m.assigned.owner}.</p>
         {m.source === "DECISION" && <p className="text-[12px] mt-1"><Link className="underline" href={m.href} style={{ color: C.muted }}>Open the decision, its evidence and its audit trail</Link></p>}
+        {m.source === "COLLECTION" && <p className="text-[12px] mt-1"><Link className="underline" href={m.href} style={{ color: C.muted }}>Open the mission, its progress and blockers</Link></p>}
       </details>
     </Row>
   );

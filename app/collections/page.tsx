@@ -521,7 +521,7 @@ export default function CollectionsPage() {
                 <p>{paidToast.name} ne payment kiya!</p>
                 <p className="text-xs font-normal opacity-90">₹{paidToast.amount.toLocaleString("en-IN")} received</p>
               </div>
-              <button onClick={() => setPaidToast(null)} className="ml-2 opacity-70 hover:opacity-100"><FiX size={14} /></button>
+              <button aria-label="Close" onClick={() => setPaidToast(null)} className="ml-2 opacity-70 hover:opacity-100"><FiX size={14} /></button>
             </div>
           </div>
         )}
@@ -544,7 +544,7 @@ export default function CollectionsPage() {
                   <p className="font-bold text-primary text-sm">Log Customer Reply</p>
                   <p className="text-2xs text-muted mt-0.5">{replyModal.name}</p>
                 </div>
-                <button onClick={() => { setReplyModal(null); setReplyText(""); }}><FiX size={16} className="text-muted hover:text-primary" /></button>
+                <button aria-label="Close" onClick={() => { setReplyModal(null); setReplyText(""); }}><FiX size={16} className="text-muted hover:text-primary" /></button>
               </div>
               <div className="space-y-4">
                 <div>
@@ -588,7 +588,7 @@ export default function CollectionsPage() {
             <div className="bg-surface border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <p className="font-bold text-primary text-sm">Log Call — {logModal.name}</p>
-                <button onClick={() => setLogModal(null)}><FiX size={16} className="text-muted hover:text-primary" /></button>
+                <button aria-label="Close" onClick={() => setLogModal(null)}><FiX size={16} className="text-muted hover:text-primary" /></button>
               </div>
               <div className="space-y-4">
                 <div>
@@ -654,7 +654,7 @@ export default function CollectionsPage() {
                   <p className="text-sm font-bold text-primary">Send via WhatsApp</p>
                   <p className="text-2xs text-muted mt-0.5">Tap the button to open WhatsApp with this message ready</p>
                 </div>
-                <button onClick={() => setManualModal(null)} className="text-muted hover:text-primary"><FiX size={16} /></button>
+                <button aria-label="Close" onClick={() => setManualModal(null)} className="text-muted hover:text-primary"><FiX size={16} /></button>
               </div>
               <div className="p-3 bg-[#128C7E]/10 border border-[#128C7E]/30 rounded-xl">
                 <p className="text-sm text-secondary leading-relaxed whitespace-pre-wrap">{manualModal.text}</p>
@@ -689,7 +689,7 @@ export default function CollectionsPage() {
                   <p className="text-sm font-bold text-primary">Add Invoice</p>
                   <p className="text-2xs text-muted mt-0.5">Add a single customer invoice manually</p>
                 </div>
-                <button onClick={() => setShowAddInvoice(false)} className="text-muted hover:text-primary transition-colors">
+                <button aria-label="Close" onClick={() => setShowAddInvoice(false)} className="text-muted hover:text-primary transition-colors">
                   <FiX size={16} />
                 </button>
               </div>
@@ -1056,7 +1056,7 @@ export default function CollectionsPage() {
 
                           {/* ── View Invoice ── */}
                           {c.invoiceId && (
-                            <button
+                            <button aria-label="Show"
                               onClick={() => router.push(`/invoice/${c.invoiceId}`)}
                               title="View & print invoice"
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-surface-3 hover:text-primary transition-all">
@@ -1101,7 +1101,7 @@ export default function CollectionsPage() {
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-success hover:text-white hover:border-success transition-all disabled:opacity-50">
                             {markingPaid === c.id ? <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> : <FiCheckSquare size={11} />}
                           </button>
-                          <button onClick={() => { setLogModal(c); setCallForm({ did_pick_up: true, promised_date: "", notes: "" }); }}
+                          <button aria-label="Call" onClick={() => { setLogModal(c); setCallForm({ did_pick_up: true, promised_date: "", notes: "" }); }}
                             title="Log Call"
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-accent hover:text-white hover:border-accent transition-all">
                             <FiPhone size={11} />
@@ -1136,7 +1136,7 @@ export default function CollectionsPage() {
           <div className="w-full max-w-md bg-surface-1 border border-border rounded-2xl p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between">
               <p className="text-sm font-bold text-primary">Import Excel / CSV</p>
-              <button onClick={() => { setShowImport(false); setImportMsg(""); setShowTallyGuide(false); }} className="text-muted hover:text-primary">
+              <button aria-label="Close" onClick={() => { setShowImport(false); setImportMsg(""); setShowTallyGuide(false); }} className="text-muted hover:text-primary">
                 <FiX size={16} />
               </button>
             </div>

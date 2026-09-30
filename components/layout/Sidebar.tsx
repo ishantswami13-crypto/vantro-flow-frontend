@@ -273,9 +273,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           </div>
           {!collapsed && (
             <div className="flex items-center shrink-0" style={{ gap: "4px" }}>
-              <button
-                aria-label="Notifications"
-                title="Notifications"
+              {/* The dot is the pending follow-up count, so the bell opens them. */}
+              <Link
+                href="/collections"
+                aria-label={pendingCount ? `${pendingCount} pending follow-up${pendingCount === 1 ? "" : "s"}` : "Follow-ups"}
+                title={pendingCount ? `${pendingCount} pending follow-up${pendingCount === 1 ? "" : "s"}` : "Follow-ups"}
                 className="hover-fade relative flex items-center justify-center rounded-[6px]"
                 style={{ width: "26px", height: "26px", color: "#63635F" }}
               >
@@ -286,7 +288,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     style={{ width: "5px", height: "5px", top: "4px", right: "5px", background: "var(--accent)" }}
                   />
                 )}
-              </button>
+              </Link>
               <button
                 onClick={() => setSearchOpen(true)}
                 aria-label="Search Starlane (Ctrl+K)"
@@ -298,7 +300,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               </button>
             </div>
           )}
-          <button onClick={onClose} className="lg:hidden p-1.5 rounded-lg" style={{ color: "#6F6F6B" }}>
+          <button aria-label="Close" onClick={onClose} className="lg:hidden p-1.5 rounded-lg" style={{ color: "#6F6F6B" }}>
             <FiX size={15} />
           </button>
         </div>

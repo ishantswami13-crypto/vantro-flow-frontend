@@ -10,7 +10,7 @@ import Link from "next/link";
 import { C, Pill, Skeleton } from "@/components/decisions/ui";
 import { osApi, Workflow, WorkflowItem, ITEM_STATUS_LABEL } from "@/lib/os";
 import { money, pct, shortDate, daysUntil, decisionsApi, STATUS_LABEL } from "@/lib/decisions";
-import { Panel, Btn, Row, Muted, ErrorLine, errorText, useLoad } from "./shared";
+import { Panel, Btn, Row, Muted, ErrorLine, errorText, useLoad, stakeOf } from "./shared";
 
 export function AutomationProposals() {
   const { data, error, loading, reload } = useLoad(() => osApi.workflows("PROPOSED"));
@@ -100,8 +100,12 @@ function ItemRow({ item, onDone, onStale }: { item: WorkflowItem; onDone: (i: Wo
       const r = approve ? await osApi.approveItem(item.id) : await osApi.rejectItem(item.id);
       onDone(r.item);
     } catch (e) {
-      setErr(errorText(e));
-      onStale();
+      // 409: someone (another tab, a teammate) already decided this one. Say so,
+      // then refresh; any other error stays on screen so it can be read.
+      if ((e as { status?: number })?.status === 409) {
+        setErr("This reminder was already decided elsewhere. Refreshing the list.");
+        setTimeout(onStale, 2500);
+      } else setErr(errorText(e));
     } finally { setBusy(false); }
   };
   const h = item.context.history;
@@ -154,7 +158,7 @@ export function DecisionsNeedingYou() {
       )}
       {waiting.map((d) => {
         const left = daysUntil(d.deadline);
-        const stake = d.materiality ? Object.values(d.materiality).find((v) => typeof v === "number" && v > 0) : null;
+        const stake = stakeOf(d.materiality as Record<string, unknown> | null);
         return (
           <Row key={d.id}>
             <div className="flex items-start justify-between gap-3 flex-wrap">

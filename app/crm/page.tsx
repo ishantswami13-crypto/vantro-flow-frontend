@@ -223,7 +223,7 @@ export default function CRMPage() {
                       <Badge variant={cfg.variant}>{cfg.label}</Badge>
                       {autoCustomer && <Badge variant="accent">Auto</Badge>}
                       {!autoCustomer && (
-                        <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-surface-2 transition-all">
+                        <button aria-label="Edit" onClick={() => openEdit(p)} className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-surface-2 transition-all">
                           <FiEdit2 size={12} />
                         </button>
                       )}
@@ -312,7 +312,7 @@ export default function CRMPage() {
             <div className="relative w-full max-w-md card-premium p-6 shadow-card-hover z-10">
               <div className="flex items-center justify-between mb-5">
                 <p className="text-sm font-bold text-primary">{editId ? "Edit Prospect" : "Add New Prospect"}</p>
-                <button onClick={() => setShowModal(false)} className="text-muted hover:text-primary transition-colors">
+                <button aria-label="Close" onClick={() => setShowModal(false)} className="text-muted hover:text-primary transition-colors">
                   <FiX size={18} />
                 </button>
               </div>

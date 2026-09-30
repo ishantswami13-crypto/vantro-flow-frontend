@@ -50,7 +50,9 @@ function SimulatePageInner() {
 
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>("");
   const [mode, setMode] = useState<"earlier" | "unpaid">("earlier");
-  const [daysEarlier, setDaysEarlier] = useState<number>(7);
+  // The engine compares "collected inside its 30-day horizon" with the baseline,
+  // so a day count would not change the result; none is asked for.
+  const daysEarlier = 0;
 
   const [result, setResult] = useState<SimulateScenarioResponse | null>(null);
   const [running, setRunning] = useState(false);
@@ -148,23 +150,10 @@ function SimulatePageInner() {
                         onChange={(e) => { setMode(e.target.value as "earlier" | "unpaid"); setResult(null); }}
                         style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid rgba(25,25,23,0.16)", fontSize: 13, color: "#191917", background: "#FBFAF7" }}
                       >
-                        <option value="earlier">Paid X days earlier</option>
+                        <option value="earlier">Gets collected in the next 30 days</option>
                         <option value="unpaid">Remains unpaid</option>
                       </select>
                     </label>
-
-                    {mode === "earlier" && (
-                      <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "#63635F" }}>
-                        Days earlier
-                        <input
-                          type="number"
-                          min={0}
-                          value={daysEarlier}
-                          onChange={(e) => { setDaysEarlier(Number(e.target.value) || 0); setResult(null); }}
-                          style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid rgba(25,25,23,0.16)", fontSize: 13, color: "#191917", width: 90, background: "#FBFAF7" }}
-                        />
-                      </label>
-                    )}
 
                     <button
                       onClick={runSimulation}

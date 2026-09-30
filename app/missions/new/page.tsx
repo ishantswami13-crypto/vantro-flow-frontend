@@ -6,7 +6,7 @@
 // edits; POST /api/client/missions saves it, and /activate starts it, which
 // proposes one reminder per customer for approval. Nothing is sent from here.
 // ?customer=<name> or ?invoice=<id> pre-fills who the mission is about.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Link from "next/link";
@@ -43,14 +43,23 @@ export default function NewMissionPage() {
     return () => { live = false; clearTimeout(t); };
   }, [input]);
 
+  // Once created, a retry (say activation failed) reuses the same mission
+  // instead of creating a second one.
+  const createdId = useRef<string | null>(null);
   async function create(activate: boolean) {
-    if (!input) return;
+    if (!input || busy) return;
     setBusy(true); setErr(null);
     try {
-      const { mission } = await request<{ mission: Mission }>("/api/client/missions", { method: "POST", body: JSON.stringify({ type: "collections", ...input }) });
-      if (activate) await request(`/api/client/missions/${mission.id}/activate`, { method: "POST", body: "{}" });
-      router.push(`/missions/${mission.id}`);
-    } catch (e) { setErr((e as Error).message); setBusy(false); }
+      if (!createdId.current) {
+        const { mission } = await request<{ mission: Mission }>("/api/client/missions", { method: "POST", body: JSON.stringify({ type: "collections", ...input }) });
+        createdId.current = mission.id;
+      }
+      if (activate) await request(`/api/client/missions/${createdId.current}/activate`, { method: "POST", body: "{}" });
+      router.push(`/missions/${createdId.current}`);
+    } catch (e) {
+      setErr(createdId.current ? `The mission was saved as a draft but not started: ${(e as Error).message}` : (e as Error).message);
+      setBusy(false);
+    }
   }
 
   const d = preview?.draft, sim = preview?.simulation;

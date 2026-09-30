@@ -257,7 +257,7 @@ export type MissionState = 'PLANNING' | 'WAITING_FOR_INFORMATION' | 'WAITING_FOR
 export type MissionOutcome = 'PENDING' | 'VERIFIED_SUCCESS' | 'VERIFIED_FAILURE' | 'OUTCOME_UNKNOWN';
 export interface Mission {
   id: string;
-  source: 'DECISION' | 'WORKFLOW';
+  source: 'DECISION' | 'WORKFLOW' | 'COLLECTION';
   sourceId: string;
   title: string;
   objective: string | null;

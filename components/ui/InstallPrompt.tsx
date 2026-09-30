@@ -64,7 +64,7 @@ export default function InstallPrompt() {
               </button>
             </div>
           </div>
-          <button onClick={dismiss} className="text-muted hover:text-primary transition-colors shrink-0">
+          <button aria-label="Close" onClick={dismiss} className="text-muted hover:text-primary transition-colors shrink-0">
             <FiX size={14} />
           </button>
         </div>

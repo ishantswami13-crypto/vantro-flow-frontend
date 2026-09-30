@@ -130,7 +130,7 @@ export default function OrdersPage() {
             onChange={e => { setDate(e.target.value); load(e.target.value); }}
             className="input-base text-sm px-3 py-1.5"
           />
-          <button onClick={() => load(date)} className="p-2 rounded-xl hover:bg-surface-2 text-muted hover:text-primary transition-colors">
+          <button aria-label="Refresh" onClick={() => load(date)} className="p-2 rounded-xl hover:bg-surface-2 text-muted hover:text-primary transition-colors">
             <FiRefreshCw size={15} />
           </button>
           <button onClick={() => setShowAdd(true)}

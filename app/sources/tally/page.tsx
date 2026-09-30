@@ -78,11 +78,13 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
 export default function SourcesTallyPage() {
   const [connections, setConnections] = useState<DataConnection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     api.connections.list()
       .then((res) => { if (!cancelled) setConnections(res.connections || []); })
+      .catch((e) => { if (!cancelled) setLoadError(e instanceof Error ? e.message : "Connections could not be loaded."); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
@@ -103,6 +105,8 @@ export default function SourcesTallyPage() {
 
         {loading ? (
           <p style={{ fontSize: 13, color: "#63635F" }}>Loading…</p>
+        ) : loadError ? (
+          <p role="alert" style={{ fontSize: 13, color: "#B3261E" }}>Tally's status could not be loaded: {loadError}</p>
         ) : !tally ? (
           <Panel title="Overview">
             <EmptyPanel

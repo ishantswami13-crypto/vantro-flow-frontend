@@ -475,7 +475,7 @@ export default function DecisionDetailPage() {
                 max={max}
                 recommended={rec?.key === o.key}
                 selected={d.selectedOption === o.key}
-                canChoose={canChoose}
+                canChoose={canChoose && !select.isPending}
                 busy={select.isPending && choosing === o.key}
                 onChoose={() => { setChoosing(o.key); select.mutate(o.key); }}
               />

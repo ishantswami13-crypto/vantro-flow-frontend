@@ -118,6 +118,14 @@ async function cookieAuthWorks(): Promise<boolean> {
   }
 }
 
+export type DeliveryLine = { active: boolean; reason: string | null };
+export type DeliveryStatus = {
+  whatsapp: DeliveryLine;
+  paymentLinks: DeliveryLine & { upiFallback: boolean };
+  dunning: DeliveryLine & { scheduledAt: string };
+  push: DeliveryLine;
+};
+
 export async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -130,7 +138,18 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
 
   try {
     const res = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include', signal: controller.signal });
-    const data = await res.json();
+    // A gateway error page, a 204 or a proxy timeout is not JSON; read the body
+    // as text first so the caller sees the HTTP status, not a parse error.
+    const raw = await res.text();
+    let data: any = null;
+    if (raw) {
+      try { data = JSON.parse(raw); } catch { data = null; }
+    }
+    if (res.ok && raw && data === null) {
+      const err = new Error(`The server sent an unreadable response (HTTP ${res.status}).`);
+      (err as any).status = res.status;
+      throw err;
+    }
 
     // Self-heal an existing cookie-mode session that predates saveAuth()
     // mirroring vantro_csrf_token into localStorage: the backend now echoes
@@ -161,8 +180,8 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
       throw new Error(data?.error || 'Session expired. Please log in again.');
     }
     if (!res.ok) {
-      const errorMsg = data.error || 'Request failed';
-      const requestId = res.headers.get('x-request-id') || data.requestId || 'unknown';
+      const errorMsg = data?.error || (res.status >= 500 ? `The server had a problem (HTTP ${res.status}).` : `Request failed (HTTP ${res.status}).`);
+      const requestId = res.headers.get('x-request-id') || data?.requestId || 'unknown';
       const errorObj = new Error(`${errorMsg} (Error ID: ${requestId})`);
       (errorObj as any).requestId = requestId;
       (errorObj as any).status = res.status;
@@ -515,7 +534,7 @@ export const api = {
   // ─── Billing ─────────────────────────────────────────────
   billing: {
     createOrder: (body: { plan: string; period: string }) =>
-      request<{ order: RazorpayOrder; key: string }>('/api/billing/create-order', { method: 'POST', body: JSON.stringify(body) }),
+      request<{ order: RazorpayOrder; key: string }>('/api/billing/create-order', { method: 'POST', body: JSON.stringify({ ...body, plan_id: body.plan }) }),
     verify: (body: object) => request<{ success: boolean }>('/api/billing/verify', { method: 'POST', body: JSON.stringify(body) }),
     history: () => request<{ history: BillingRecord[] }>('/api/billing/history'),
   },
@@ -523,6 +542,9 @@ export const api = {
   // ─── Settings ────────────────────────────────────────────
   settings: {
     get: () => request<{ settings: UserSettings }>('/api/settings'),
+    deliveryStatus: () => request<DeliveryStatus>('/api/settings/delivery-status'),
+    changePassword: (current_password: string, new_password: string) =>
+      request<{ success: boolean; message: string }>('/api/auth/change-password', { method: 'POST', body: JSON.stringify({ current_password, new_password }) }),
     update: (body: Partial<UserSettings>) =>
       request<{ settings: UserSettings }>('/api/settings', { method: 'PATCH', body: JSON.stringify(body) }),
     saveWhatsApp: (body: { provider: string; interakt_api_key?: string; wati_api_url?: string; wati_token?: string }) =>
@@ -677,7 +699,11 @@ export interface Connector {
   authType: 'local_bridge' | 'file_import' | 'oauth' | 'api_key' | 'public_feed';
   availability: 'available' | 'not_available'; syncMode: string; summary: string;
   unavailableReason?: string; objects: string[]; access: string[]; setup: string[];
+  /** What Starlane can do through it: READ, SEARCH, SUBSCRIBE, WRITE, EXECUTE. */
+  capabilities?: string[];
   state: {
+    /** Canonical health (CONNECTED, STALE, AUTH_EXPIRED, ...) and what the connection allows. */
+    canonicalHealth?: string; capabilityLabel?: string;
     health: ConnectorHealth; status: string | null; connectedAt: string | null; lastSyncAt: string | null; lastError: string | null;
     devices: Array<{ id: string; name: string; status: 'ACTIVE' | 'REVOKED'; pairedAt: string; lastSeenAt: string | null; revokedAt: string | null }>;
     lastImport: { filename: string | null; status: string; completedAt: string | null; rowsAccepted: number; rowsRejected: number } | null;

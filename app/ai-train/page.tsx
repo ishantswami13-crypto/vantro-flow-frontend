@@ -80,7 +80,9 @@ export default function AITrainPage() {
   };
 
   const deleteVocab = async (id: string) => {
-    await fetch(`${API}/api/vocabulary/${id}`, { method: "DELETE", headers: hdr(), credentials: "include" as RequestCredentials });
+    if (!window.confirm("Remove this word from Starlane's vocabulary?")) return;
+    const r = await fetch(`${API}/api/vocabulary/${id}`, { method: "DELETE", headers: hdr(), credentials: "include" as RequestCredentials }).catch(() => null);
+    if (!r || !r.ok) { window.alert("The word was not removed. Try again."); return; }
     setVocab(v => v.filter(x => x.id !== id));
   };
 
@@ -210,7 +212,7 @@ export default function AITrainPage() {
                                 <p className="text-2xs text-muted mt-0.5 italic">Also: {item.aliases.join(", ")}</p>
                               )}
                             </div>
-                            <button onClick={() => deleteVocab(item.id)}
+                            <button aria-label="Delete" onClick={() => deleteVocab(item.id)}
                               className="text-muted/40 hover:text-danger opacity-0 group-hover:opacity-100 transition-all p-1 shrink-0">
                               <FiTrash2 size={12} />
                             </button>

@@ -27,12 +27,18 @@ function fmtINR(n: number, short = false) {
 // Local calendar date (IST for Indian users), not the UTC date.
 function localIso(dt: Date) { return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`; }
 function todayStr() { return localIso(new Date()); }
+// Older order rows hold items as a JSON string; never let that crash the page.
+function orderItems(order: any): any[] {
+  let items = order?.items;
+  if (typeof items === "string") { try { items = JSON.parse(items); } catch { items = []; } }
+  return Array.isArray(items) ? items : [];
+}
 function fmtDateFull(d: string) {
   const dt = new Date(d + "T00:00:00");
   const isToday   = d === todayStr();
   const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
   const isYday    = d === localIso(yesterday);
-  const label     = isToday ? "Aaj" : isYday ? "Kal" : "";
+  const label     = isToday ? "Today" : isYday ? "Yesterday" : "";
   const weekday   = dt.toLocaleDateString("en-IN", { weekday: "long" });
   const dayMonth  = dt.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   return { label, weekday, dayMonth };
@@ -135,6 +141,7 @@ export default function TodayPage() {
   };
 
   const deleteExpense = async (id: string) => {
+    if (!window.confirm("Delete this expense? This cannot be undone.")) return;
     const res = await fetch(`${API}/api/expenses/${id}`, { method:"DELETE", headers: { ...authHeaders() }, credentials: "include" }).catch(() => null);
     if (!res || !res.ok) { setLoadError("That expense was not deleted. Try again."); return; }
     load(date);
@@ -149,7 +156,7 @@ export default function TodayPage() {
   const isToday = date === todayStr();
 
   return (
-    <DashboardLayout pageTitle="Aaj ka Hisaab">
+    <DashboardLayout pageTitle="Today">
       <TodaySummary />
       <TodayDecisionsCard />
 
@@ -157,7 +164,7 @@ export default function TodayPage() {
       <div className="flex items-center justify-between mb-5 gap-3">
         <div className="flex items-center gap-2">
           {/* Prev day */}
-          <button onClick={() => changeDate(addDays(date,-1))}
+          <button aria-label="Previous" onClick={() => changeDate(addDays(date,-1))}
             className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-secondary hover:text-primary hover:border-accent/40 transition-all">
             <FiChevronLeft size={16} />
           </button>
@@ -182,7 +189,7 @@ export default function TodayPage() {
           </button>
 
           {/* Next day — disabled if today */}
-          <button onClick={() => changeDate(addDays(date,1))}
+          <button aria-label="Next" onClick={() => changeDate(addDays(date,1))}
             disabled={isToday}
             className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-secondary hover:text-primary hover:border-accent/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
             <FiChevronRight size={16} />
@@ -192,7 +199,7 @@ export default function TodayPage() {
           {!isToday && (
             <button onClick={() => changeDate(todayStr())}
               className="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all">
-              Aaj
+              Today
             </button>
           )}
         </div>
@@ -210,7 +217,7 @@ export default function TodayPage() {
         </div>
       </div>
 
-      {formError && <p role="alert" className="text-sm text-danger mb-3">{formError}</p>}
+      {formError && !showExpForm && !showSaleForm && <p role="alert" className="text-sm text-danger mb-3">{formError}</p>}
       {loading && !summary ? (
         <div className="flex items-center justify-center h-48 text-muted">
           <FiRefreshCw className="animate-spin mr-2" size={18} /> Loading…
@@ -235,7 +242,10 @@ export default function TodayPage() {
                 : <FiTrendingDown size={80} className="text-danger" />}
             </div>
             <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-              Net {isProfit ? "Profit" : "Loss"} {isToday ? "Today" : "on this day"}
+              Net money {isProfit ? "in" : "out"} {isToday ? "today" : "on this day"}
+            </p>
+            <p className="text-2xs text-muted -mt-1 mb-2">
+              Sales booked and payments received, minus expenses and purchases. This is not profit: it has no cost of goods.
             </p>
             <p className={`text-5xl font-black tracking-tight mb-4 ${isProfit ? "text-success" : "text-danger"}`}>
               {isProfit ? "+" : ""}{fmtINR(net)}
@@ -243,10 +253,10 @@ export default function TodayPage() {
 
             <div className="grid grid-cols-4 gap-3">
               {[
-                { label:"Income",    value: `+${fmtINR(income, true)}`,   color:"text-success" },
-                { label:"Expenses",  value: `-${fmtINR(expenses, true)}`, color:"text-danger"  },
+                { label:"Money in",  value: `+${fmtINR(income, true)}`,   color:"text-success" },
+                { label:"Money out", value: `-${fmtINR(expenses, true)}`, color:"text-danger"  },
                 { label:"Orders",    value: String(s?.order_count || 0),  color:"text-primary" },
-                { label:"Collected", value: String(s?.invoices_collected || 0), color:"text-primary" },
+                { label:"Invoices paid", value: String(s?.invoices_collected || 0), color:"text-primary" },
               ].map(({ label, value, color }) => (
                 <div key={label} className="bg-black/10 rounded-xl px-3 py-2">
                   <p className="text-2xs text-muted/70 mb-1">{label}</p>
@@ -280,9 +290,9 @@ export default function TodayPage() {
                     ? "bg-surface-1 text-primary shadow-sm border border-border"
                     : "text-muted hover:text-secondary"
                 }`}>
-                {t==="sales" ? `💰 Sales (${(summary?.orders||[]).length})`
-                 : t==="expenses" ? `💸 Expenses (${(summary?.expenses||[]).length})`
-                 : "📊 Overview"}
+                {t==="sales" ? `Sales (${(summary?.orders||[]).length})`
+                 : t==="expenses" ? `Expenses (${(summary?.expenses||[]).length})`
+                 : "Overview"}
               </button>
             ))}
           </div>
@@ -291,11 +301,11 @@ export default function TodayPage() {
           {tab==="overview" && (
             <div className="space-y-4">
               <div className="card-premium p-4">
-                <p className="text-2xs font-bold text-muted uppercase tracking-wider mb-3">Income Breakdown</p>
+                <p className="text-2xs font-bold text-muted uppercase tracking-wider mb-3">Money in, by source</p>
                 <div className="space-y-3">
                   {[
-                    { icon: FiShoppingBag, label:"Orders Income",       color:"#0066FF", value: s?.income?.orders   || 0 },
-                    { icon: FiFileText,    label:"Invoices Collected",   color:"#10D98A", value: s?.income?.invoices || 0 },
+                    { icon: FiShoppingBag, label:"Orders booked",       color:"#0066FF", value: s?.income?.orders   || 0 },
+                    { icon: FiFileText,    label:"Invoice payments received",   color:"#10D98A", value: s?.income?.invoices || 0 },
                     { icon: FiDollarSign,  label:"Sales Recorded",       color:"#7C5CFC", value: s?.sales_total || 0 },
                   ].filter((r) => r.label !== "Sales Recorded" || r.value > 0).map(({ icon: Icon, label, color, value }) => (
                     <div key={label} className="flex items-center justify-between">
@@ -311,7 +321,7 @@ export default function TodayPage() {
                   ))}
                   <div className="h-px bg-border" />
                   <div className="flex justify-between text-sm font-bold">
-                    <span className="text-primary">Total Income</span>
+                    <span className="text-primary">Total money in</span>
                     <span className="text-success text-base">+{fmtINR(income)}</span>
                   </div>
                 </div>
@@ -364,8 +374,8 @@ export default function TodayPage() {
                   <div className="w-14 h-14 rounded-2xl bg-surface-2 border border-border flex items-center justify-center mx-auto mb-4">
                     <FiZap size={24} className="text-muted opacity-50" />
                   </div>
-                  <p className="font-bold text-primary mb-1">Aaj ka data khaali hai</p>
-                  <p className="text-sm text-muted mb-4">Sale ya expense add karo upar se</p>
+                  <p className="font-bold text-primary mb-1">Nothing recorded for this day</p>
+                  <p className="text-sm text-muted mb-4">Add a sale or an expense above.</p>
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => setShowSaleForm(true)}
                       className="px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all">
@@ -419,9 +429,9 @@ export default function TodayPage() {
                               <span className="text-2xs text-muted">{fmtTime(order.created_at)}</span>
                               {order.source==="ai_call" && <span className="text-2xs text-accent bg-accent/10 px-1.5 rounded-full">📞 AI Call</span>}
                             </div>
-                            {(order.items||[]).length > 0 && (
+                            {orderItems(order).length > 0 && (
                               <p className="text-xs text-muted mt-1 truncate">
-                                {order.items.slice(0,3).map((i:any) => `${i.quantity} ${i.unit} ${i.local_name||i.name}`).join(" · ")}
+                                {orderItems(order).slice(0,3).map((i:any) => `${i.quantity} ${i.unit} ${i.local_name||i.name}`).join(" · ")}
                               </p>
                             )}
                           </div>
@@ -474,7 +484,7 @@ export default function TodayPage() {
                         </div>
                       </div>
                       <p className="font-black text-danger text-sm shrink-0">-{fmtINR(Number(exp.amount))}</p>
-                      <button onClick={() => deleteExpense(exp.id)} className="text-danger/30 hover:text-danger p-1 transition-colors">
+                      <button aria-label="Delete" onClick={() => deleteExpense(exp.id)} className="text-danger/30 hover:text-danger p-1 transition-colors">
                         <FiTrash2 size={13} />
                       </button>
                     </div>
@@ -519,6 +529,7 @@ export default function TodayPage() {
                   </select>
                 </div>
               </div>
+              {formError && <p role="alert" className="text-sm text-danger">{formError}</p>}
               <button type="submit" disabled={submitting}
                 className="w-full bg-danger/10 text-danger border border-danger/20 py-3 rounded-xl font-bold text-sm hover:bg-danger/20 transition-colors flex items-center justify-center gap-2">
                 {submitting ? <FiRefreshCw className="animate-spin" size={14} /> : <FiPlus size={14} />}
@@ -559,6 +570,7 @@ export default function TodayPage() {
                   className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent"
                   placeholder="5 truck bajri, 2 bag cement, cloth…" />
               </div>
+              {formError && <p role="alert" className="text-sm text-danger">{formError}</p>}
               <button type="submit" disabled={submitting}
                 className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all shadow-sm flex items-center justify-center gap-2">
                 {submitting ? <FiRefreshCw className="animate-spin" size={14} /> : <FiPlus size={14} />}

@@ -35,6 +35,11 @@ export function ScanFindings() {
         {scan && (
           <ul className="space-y-1">
             {scan.summary.map((l) => <li key={l} className="text-[13.5px] leading-[1.55]" style={{ color: C.ink }}>{l}</li>)}
+            {scan.status === "DEGRADED" && (
+              <li role="alert" className="text-[13px] leading-[1.55]" style={{ color: C.bad }}>
+                Decision discovery did not finish on this scan, so the decision count may be out of date. Run the scan again; if it keeps happening, the rest of these findings still stand.
+              </li>
+            )}
           </ul>
         )}
       </Panel>

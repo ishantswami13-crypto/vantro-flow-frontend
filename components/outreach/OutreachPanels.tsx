@@ -38,9 +38,12 @@ export function OutreachControl({ status, onChange }: { status: OutreachStatus |
       onChange();
     } catch (err) { setError(errorText(err)); } finally { setBusy(false); }
   };
+  // STOP never waits on START: it has its own in-flight flag, so it stays
+  // pressable while a start (or anything else) is still running.
+  const [stopping, setStopping] = useState(false);
   const stopAll = async () => {
-    setBusy(true); setError(null);
-    try { await outreachApi.stopAll("STOP ALL OUTBOUND pressed"); onChange(); } catch (err) { setError(errorText(err)); } finally { setBusy(false); }
+    setStopping(true); setError(null);
+    try { await outreachApi.stopAll("STOP ALL OUTBOUND pressed"); onChange(); } catch (err) { setError(`Stop did not go through: ${errorText(err)} Press it again.`); } finally { setStopping(false); }
   };
 
   const headlineTone: Tone = !status ? "neutral" : status.globalStop.stopped || status.engine.status === "STOPPED_AUTOMATICALLY" ? "bad" : running ? "good" : "neutral";
@@ -101,7 +104,7 @@ export function OutreachControl({ status, onChange }: { status: OutreachStatus |
         <Btn primary onClick={start} disabled={busy || (mode === "LIVE" && confirm !== "SEND TO REAL PROSPECTS")}>
           {running ? `Switch to ${mode}` : "START"}
         </Btn>
-        <Btn danger onClick={stopAll} disabled={busy}>STOP ALL OUTBOUND</Btn>
+        <Btn danger onClick={stopAll} disabled={stopping}>{stopping ? "Stopping…" : "STOP ALL OUTBOUND"}</Btn>
       </div>
       <ErrorLine error={error} />
       {refusal && (

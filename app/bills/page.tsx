@@ -241,7 +241,7 @@ export default function BillsPage() {
           <div className="w-full max-w-2xl card-base p-5 my-4 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-primary text-lg">New GST Invoice</h2>
-              <button onClick={() => setShowForm(false)} className="text-muted hover:text-primary"><FiX size={18} /></button>
+              <button aria-label="Close" onClick={() => setShowForm(false)} className="text-muted hover:text-primary"><FiX size={18} /></button>
             </div>
             <form onSubmit={submit} className="space-y-4">
               {/* Customer info */}
@@ -305,7 +305,7 @@ export default function BillsPage() {
                       <input type="number" value={item.rate} onChange={e => updateItem(i,"rate",e.target.value)} min="0" placeholder="Rate" className="input-base text-xs col-span-2 py-1.5" />
                       <div className="col-span-1 flex items-center justify-between">
                         <span className="text-2xs text-muted">{fmtINR(item.amount).replace("₹","")}</span>
-                        {items.length > 1 && <button type="button" onClick={() => setItems(it => it.filter((_,j)=>j!==i))} className="text-danger/60 hover:text-danger"><FiX size={12} /></button>}
+                        {items.length > 1 && <button aria-label="Remove this item" type="button" onClick={() => setItems(it => it.filter((_,j)=>j!==i))} className="text-danger/60 hover:text-danger"><FiX size={12} /></button>}
                       </div>
                     </div>
                   ))}

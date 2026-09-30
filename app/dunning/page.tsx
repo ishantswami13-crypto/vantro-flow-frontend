@@ -226,7 +226,7 @@ export default function DunningPage() {
                             : <FiToggleLeft size={22} />
                         }
                       </button>
-                      <button onClick={() => handleDelete(rule.id)}
+                      <button aria-label="Delete this rule" onClick={() => handleDelete(rule.id)}
                         className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger-dim transition-all">
                         <FiX size={13} />
                       </button>
@@ -286,7 +286,7 @@ export default function DunningPage() {
             <div className="relative w-full max-w-sm card-premium p-6 shadow-card-hover z-10">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-bold text-primary">New Automation Rule</p>
-                <button onClick={() => setShowModal(false)} className="text-muted hover:text-primary"><FiX size={18} /></button>
+                <button aria-label="Close" onClick={() => setShowModal(false)} className="text-muted hover:text-primary"><FiX size={18} /></button>
               </div>
               {error && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-danger-dim border border-danger/20 text-danger text-xs mb-3">

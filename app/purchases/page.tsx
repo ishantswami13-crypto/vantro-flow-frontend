@@ -772,7 +772,7 @@ export default function PurchasesPage() {
           <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-12 pb-4"
                style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)" }}>
             <p className="text-white/80 text-sm font-medium">Bill ko frame ke andar rakho</p>
-            <button onClick={stopCamera}
+            <button aria-label="Stop camera" onClick={stopCamera}
               className="p-2.5 rounded-full bg-black/40 backdrop-blur-sm text-white border border-white/20">
               <FiX size={18} />
             </button>
@@ -1012,11 +1012,11 @@ export default function PurchasesPage() {
                           Pay
                         </button>
                       )}
-                      <button onClick={() => openEdit(p)}
+                      <button aria-label="Edit" onClick={() => openEdit(p)}
                         className="p-1.5 bg-surface-2 text-muted rounded-lg hover:text-primary transition-colors">
                         <FiEdit2 size={12} />
                       </button>
-                      <button onClick={() => deletePurchase(p.id)}
+                      <button aria-label="Delete" onClick={() => deletePurchase(p.id)}
                         className="p-1.5 bg-surface-2 text-muted rounded-lg hover:text-danger transition-colors">
                         <FiTrash2 size={12} />
                       </button>
@@ -1054,7 +1054,7 @@ export default function PurchasesPage() {
                   {scanning ? "AI is extracting all details from your photo" : "Supplier ka bill add karo"}
                 </p>
               </div>
-              <button onClick={closeModal} className="p-1.5 text-muted hover:text-primary">
+              <button aria-label="Close" onClick={closeModal} className="p-1.5 text-muted hover:text-primary">
                 <FiX size={16} />
               </button>
             </div>

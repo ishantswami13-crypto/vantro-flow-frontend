@@ -159,7 +159,7 @@ function CallScriptModal({ debtor, script, onClose }: {
                 <FiPhone size={11} /> Call Now
               </a>
             )}
-            <button onClick={onClose} className="w-7 h-7 rounded-lg bg-surface-2 border border-border flex items-center justify-center text-muted hover:text-primary">
+            <button aria-label="Close" onClick={onClose} className="w-7 h-7 rounded-lg bg-surface-2 border border-border flex items-center justify-center text-muted hover:text-primary">
               <FiX size={14} />
             </button>
           </div>
@@ -229,6 +229,7 @@ function DebtorCallCard({ d, rank, twilioReady }: { d: Debtor; rank: number; twi
   const [loading, setLoading]     = useState(false);
   const [calling, setCalling]     = useState(false);
   const [callDone, setCallDone]   = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [tone, setTone]           = useState<"soft" | "firm" | "urgent">("soft");
   const [showModal, setShowModal] = useState(false);
 
@@ -241,15 +242,18 @@ function DebtorCallCard({ d, rank, twilioReady }: { d: Debtor; rank: number; twi
         body: JSON.stringify({ customer_name: d.customer_name, invoice_amount: d.invoice_amount,
           days_overdue: d.days_overdue, call_count: d.callCount, has_promise: d.hasPromise, tone }),
       });
-      const data = await r.json();
-      if (data.success) { setScript(data.script); setShowModal(true); }
-    } catch { /* noop */ }
+      const data = await r.json().catch(() => ({}));
+      if (data.success) { setScript(data.script); setShowModal(true); setActionError(null); }
+      else setActionError(data.error || "The script could not be written. Try again.");
+    } catch { setActionError("Starlane could not be reached. Check your connection."); }
     finally { setLoading(false); }
   };
 
   const initiateAICall = async () => {
     if (!d.customer_phone) return;
-    setCalling(true);
+    // A real phone call to a customer cannot be taken back: ask first.
+    if (!window.confirm(`Place an automated call to ${d.customer_name} at +91 ${d.customer_phone} now?`)) return;
+    setCalling(true); setActionError(null);
     try {
       const r = await fetch(`${BASE}/api/voice/call`, {
         method: "POST",
@@ -257,9 +261,10 @@ function DebtorCallCard({ d, rank, twilioReady }: { d: Debtor; rank: number; twi
         body: JSON.stringify({ customer_name: d.customer_name, customer_phone: d.customer_phone,
           invoice_amount: d.invoice_amount, days_overdue: d.days_overdue, tone }),
       });
-      const data = await r.json();
+      const data = await r.json().catch(() => ({}));
       if (data.success) setCallDone(true);
-    } catch { /* noop */ }
+      else setActionError(data.error || (data.blocked ? "Calls are switched off on this account, so nothing was dialled." : "The call was not placed."));
+    } catch { setActionError("The call was not placed: Starlane could not be reached."); }
     finally { setCalling(false); }
   };
 
@@ -305,6 +310,7 @@ function DebtorCallCard({ d, rank, twilioReady }: { d: Debtor; rank: number; twi
           {d.customer_phone && (
             twilioReady ? (
               <button onClick={initiateAICall} disabled={calling || callDone}
+                aria-label={`Call ${d.customer_name}`}
                 title="AI calls this debtor automatically"
                 className={["w-7 h-7 rounded-lg flex items-center justify-center transition-all text-xs font-black",
                   callDone ? "bg-success text-white" : calling ? "bg-surface-2 border border-border text-muted" : "bg-success-dim border border-success/20 text-success hover:bg-success hover:text-white",
@@ -312,7 +318,7 @@ function DebtorCallCard({ d, rank, twilioReady }: { d: Debtor; rank: number; twi
                 {callDone ? <FiCheckCircle size={11} /> : calling ? <FiRefreshCw size={10} className="animate-spin" /> : <FiPhone size={11} />}
               </button>
             ) : (
-              <a href={`tel:+91${d.customer_phone}`}
+              <a href={`tel:+91${d.customer_phone}`} aria-label={`Dial ${d.customer_name}`}
                 className="w-7 h-7 rounded-lg bg-success-dim border border-success/20 flex items-center justify-center hover:bg-success hover:text-white transition-all text-success">
                 <FiPhone size={11} />
               </a>
@@ -320,6 +326,7 @@ function DebtorCallCard({ d, rank, twilioReady }: { d: Debtor; rank: number; twi
           )}
         </div>
       </div>
+      {actionError && <p role="alert" className="text-2xs text-danger px-4 -mt-1">{actionError}</p>}
 
       {showModal && script && (
         <CallScriptModal debtor={d} script={script} onClose={() => setShowModal(false)} />
@@ -527,7 +534,7 @@ function AIFounderPageInner() {
               )}
             </div>
           </div>
-          <button onClick={fetchBriefing}
+          <button aria-label="Refresh" onClick={fetchBriefing}
             className="p-2 rounded-xl bg-surface-2 border border-border text-muted hover:text-primary hover:border-accent/30 transition-all">
             <FiRefreshCw size={14} className={mlLoading ? "animate-spin" : ""} />
           </button>

@@ -61,9 +61,15 @@ export function errorText(err: unknown): string {
   return err instanceof Error ? err.message : "Something went wrong.";
 }
 
-/** True when the backend answered but the operating-system tables are not there yet. */
+/**
+ * True only when the backend says its tables are not there yet (it sends a
+ * *_NOT_MIGRATED code) or the route does not exist. Any other 5xx is an
+ * outage and is shown as an error, not as "not set up".
+ */
 export function isNotReady(err: unknown): boolean {
-  return err instanceof DecisionApiError && (err.status === 404 || err.status >= 500);
+  if (!(err instanceof DecisionApiError)) return false;
+  const code = typeof err.body?.code === "string" ? err.body.code : "";
+  return err.status === 404 || code.endsWith("_NOT_MIGRATED");
 }
 
 export function healthTone(h?: string | null): "good" | "warn" | "bad" | "neutral" {
@@ -107,4 +113,17 @@ export function useLoad<T>(fn: () => Promise<T>) {
   }, []);
   useEffect(() => { reload(); }, [reload]);
   return { data, error, loading, reload, setData };
+}
+
+/**
+ * The amount a decision puts at stake, by name. A threshold, share or
+ * probability is never shown as the money at stake.
+ */
+export function stakeOf(materiality?: Record<string, unknown> | null): number | null {
+  if (!materiality) return null;
+  for (const k of ["expectedUncollected90", "workingCapitalTiedUp", "revenueExposure"]) {
+    const v = materiality[k];
+    if (typeof v === "number" && Number.isFinite(v) && v > 0) return v;
+  }
+  return null;
 }

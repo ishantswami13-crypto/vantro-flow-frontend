@@ -55,8 +55,9 @@ function statusOf(w: Watch): { label: string; color: string } {
   if (w.last_triggered_at && w.last_evaluated_at && w.last_triggered_at === w.last_evaluated_at) {
     return { label: "Triggered", color: "#E8462B" };
   }
-  if (w.last_triggered_at) return { label: "Watching", color: "#C98A1C" };
-  return { label: "Nominal", color: "#1FB870" };
+  // Triggered at some earlier check, clear at the latest one.
+  if (w.last_triggered_at) return { label: "Clear now, triggered before", color: "#C98A1C" };
+  return { label: w.last_evaluated_at ? "Clear" : "Not checked yet", color: w.last_evaluated_at ? "#1FB870" : "#63635F" };
 }
 
 function formatChecked(w: Watch): string {
@@ -81,6 +82,8 @@ function WatchPageInner() {
   const [watches, setWatches] = useState<Watch[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // A failed pause/delete/check is shown above the list; it never hides the list.
+  const [actionError, setActionError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -121,19 +124,20 @@ function WatchPageInner() {
       await api.watches.update(w.id, { status: w.status === "paused" ? "active" : "paused" });
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Update failed");
+      setActionError(e instanceof Error ? e.message : "Update failed");
     } finally {
       setBusyId(null);
     }
   }
 
   async function handleDelete(w: Watch) {
-    setBusyId(w.id);
+    if (!window.confirm(`Delete the watch "${w.name}"? This cannot be undone.`)) return;
+    setBusyId(w.id); setActionError(null);
     try {
       await api.watches.remove(w.id);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Delete failed");
+      setActionError(e instanceof Error ? e.message : "Delete failed");
     } finally {
       setBusyId(null);
     }
@@ -145,7 +149,7 @@ function WatchPageInner() {
       await api.watches.evaluate(w.id);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Evaluate failed");
+      setActionError(e instanceof Error ? e.message : "Evaluate failed");
     } finally {
       setBusyId(null);
     }
@@ -260,8 +264,13 @@ function WatchPageInner() {
             <span style={{ textAlign: "right" }}>LAST CHECKED</span>
           </div>
 
+          {actionError && (
+            <div role="alert" style={{ padding: "10px 14px", color: "#E8462B", fontSize: 13 }}>
+              {actionError}
+            </div>
+          )}
           {error && (
-            <div style={{ padding: "16px 14px", color: "#E8462B", fontSize: 13 }}>
+            <div role="alert" style={{ padding: "16px 14px", color: "#E8462B", fontSize: 13 }}>
               {error}
             </div>
           )}
@@ -392,6 +401,8 @@ function NewWatchModal({
     setFormError(null);
     const thresholdNum = Number(threshold);
     if (!name.trim()) return setFormError("Name is required");
+    // Number("") is 0, so an empty box would silently become a threshold of 0.
+    if (!threshold.trim()) return setFormError("Enter a threshold");
     if (Number.isNaN(thresholdNum)) return setFormError("Threshold must be a number");
     if (needsEntity && !entityName.trim()) return setFormError("Customer name is required for this metric");
 

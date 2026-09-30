@@ -300,7 +300,7 @@ export default function AiActionsPage() {
               All approvals in Control →
             </Link>
           </div>
-          <button
+          <button aria-label="Refresh"
             onClick={fetchActions}
             className="p-2 rounded-lg bg-surface-2 border border-border text-secondary hover:text-primary transition-colors"
           >

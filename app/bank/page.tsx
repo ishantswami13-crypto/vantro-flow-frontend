@@ -320,7 +320,12 @@ export default function BankPage() {
   };
 
   const ignoreTxn  = async (id: number) => { await fetch(`${API}/api/bank/transactions/${id}/ignore`, { method: "PATCH", headers: hdr(), credentials: "include" as RequestCredentials }); load(); };
-  const deleteTxn  = async (id: number) => { await fetch(`${API}/api/bank/transactions/${id}`, { method: "DELETE", headers: hdr(), credentials: "include" as RequestCredentials }); load(); };
+  const deleteTxn  = async (id: number) => {
+    if (!window.confirm("Delete this transaction? This cannot be undone.")) return;
+    const r = await fetch(`${API}/api/bank/transactions/${id}`, { method: "DELETE", headers: hdr(), credentials: "include" as RequestCredentials }).catch(() => null);
+    if (!r || !r.ok) { window.alert("The transaction was not deleted. Try again."); return; }
+    load();
+  };
 
   const creditTotal = txns.filter(t => t.type === "credit").reduce((s, t) => s + t.amount, 0);
   const unmatched   = txns.filter(t => t.status === "unmatched" && t.type === "credit").length;
@@ -384,7 +389,7 @@ export default function BankPage() {
                       className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-accent/10 text-accent text-xs font-bold hover:bg-accent/20 transition-colors">
                       <FiUpload size={12} /> Import Statement
                     </button>
-                    <button onClick={() => deleteAccount(acct.id)}
+                    <button aria-label="Delete" onClick={() => deleteAccount(acct.id)}
                       className="p-2 rounded-xl bg-surface-2 text-muted hover:text-danger transition-colors opacity-0 group-hover:opacity-100">
                       <FiTrash2 size={12} />
                     </button>
@@ -521,7 +526,7 @@ export default function BankPage() {
                       className="flex items-center gap-1 px-3 py-1.5 bg-success/20 text-success rounded-lg text-xs font-bold hover:bg-success/30 transition-colors">
                       <FiCheck size={11} /> Mark Paid
                     </button>
-                    <button onClick={() => ignoreTxn(txn.id)}
+                    <button aria-label="Ignore this transaction" onClick={() => ignoreTxn(txn.id)}
                       className="p-1.5 text-muted hover:text-danger rounded-lg bg-surface-2 transition-colors">
                       <FiX size={12} />
                     </button>
@@ -585,7 +590,7 @@ export default function BankPage() {
                         Match
                       </button>
                     )}
-                    <button onClick={() => deleteTxn(txn.id)}
+                    <button aria-label="Delete" onClick={() => deleteTxn(txn.id)}
                       className="p-1 text-muted hover:text-danger transition-colors opacity-0 group-hover:opacity-100">
                       <FiTrash2 size={12} />
                     </button>
@@ -606,7 +611,7 @@ export default function BankPage() {
                 <h3 className="font-bold text-primary">Connect Bank Account</h3>
                 <p className="text-xs text-muted mt-0.5">Sirf details store karta hai — securely</p>
               </div>
-              <button onClick={() => setShowAddAccount(false)} className="text-muted hover:text-primary"><FiX size={16} /></button>
+              <button aria-label="Close" onClick={() => setShowAddAccount(false)} className="text-muted hover:text-primary"><FiX size={16} /></button>
             </div>
             <form onSubmit={addAccount} className="p-5 space-y-3">
               <div>
@@ -676,7 +681,7 @@ export default function BankPage() {
           <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-border overflow-hidden">
             <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <h3 className="font-bold text-primary">Add Transaction</h3>
-              <button onClick={() => setShowAdd(false)} className="text-muted hover:text-primary"><FiX size={16} /></button>
+              <button aria-label="Close" onClick={() => setShowAdd(false)} className="text-muted hover:text-primary"><FiX size={16} /></button>
             </div>
             <form onSubmit={addManualTxn} className="p-5 space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -730,7 +735,7 @@ export default function BankPage() {
                 <h3 className="font-bold text-primary">Match to Invoice</h3>
                 <p className="text-xs text-muted">Payment: <span className="text-success font-bold">{fmtINR(matchModal.amount)}</span></p>
               </div>
-              <button onClick={() => setMatchModal(null)} className="text-muted hover:text-primary"><FiX size={16} /></button>
+              <button aria-label="Close" onClick={() => setMatchModal(null)} className="text-muted hover:text-primary"><FiX size={16} /></button>
             </div>
             <div className="p-5 space-y-2 max-h-96 overflow-y-auto">
               {pendingInvoices.length === 0 ? (

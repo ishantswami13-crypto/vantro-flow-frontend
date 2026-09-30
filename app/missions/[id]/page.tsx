@@ -118,7 +118,7 @@ export default function MissionPage() {
                       {m.allowed?.includes("activate") ? <button style={{ ...btn, background: "#191917", color: "#fff" }} disabled={!!busy} onClick={() => void act("activate")}>{busy === "activate" ? "Starting…" : m.status === "paused" ? "Resume" : "Start mission"}</button> : null}
                       {m.allowed?.includes("pause") ? <button style={btn} disabled={!!busy} onClick={() => void act("pause")}>Pause</button> : null}
                       {m.allowed?.includes("cancel") ? <button style={btn} disabled={!!busy} onClick={() => void act("cancel")}>Cancel mission</button> : null}
-                      {m.status === "active" || m.status === "paused" ? <Link style={{ ...btn, textDecoration: "none", color: "#191917" }} href={`/simulate?mission=${m.id}`}>Simulate</Link> : null}
+                      
                     </div>
                   ) : null}
                   {note ? <p role="status" style={{ margin: 0, fontSize: 13 }}>{note}</p> : null}

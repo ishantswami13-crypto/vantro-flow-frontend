@@ -54,6 +54,13 @@ function describe(c: Connector): { text: string; color: string } {
   return map[c.state.health];
 }
 
+// What the connection lets Starlane do, from the backend's capability label.
+const CAPABILITY_TEXT: Record<string, string> = {
+  READ_ONLY: "Read only: Starlane reads from it and never writes back",
+  WRITE_CAPABLE: "Starlane can write to it",
+  EXECUTION_REQUIRES_APPROVAL: "Starlane can act through it, only after you approve each action",
+};
+
 const isConnected = (c: Connector) => ["healthy", "stale", "error"].includes(c.state.health);
 
 function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
@@ -66,6 +73,9 @@ function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ fontSize: 14, fontWeight: 500, color: INK, margin: 0 }}>{c.name}</p>
         <p style={{ fontSize: 12, marginTop: 2, color: d.color }}>{d.text}</p>
+        {isConnected(c) && c.state.capabilityLabel && CAPABILITY_TEXT[c.state.capabilityLabel] && (
+          <p style={{ fontSize: 11.5, marginTop: 2, color: FAINT }}>{CAPABILITY_TEXT[c.state.capabilityLabel]}</p>
+        )}
         {c.state.devices.filter((x) => x.status === "ACTIVE").length > 0 && (
           <p style={{ fontSize: 11.5, marginTop: 2, color: FAINT }}>
             {c.state.devices.filter((x) => x.status === "ACTIVE").map((x) => `${x.name}${x.lastSeenAt ? ` · seen ${timeAgo(x.lastSeenAt)}` : ""}`).join(" · ")}
