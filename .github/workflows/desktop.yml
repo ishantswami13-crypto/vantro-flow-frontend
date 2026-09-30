@@ -1,25 +1,43 @@
 name: Desktop
 
 # Starlane desktop (desktop/, Tauri) and the shared contracts it is built on.
-#   check    every PR/push touching them: typecheck, web build, Rust tests
-#   windows  builds the installable Windows app (NSIS .exe + .msi) and uploads
-#            it as a workflow artifact; on a desktop-v* tag it also publishes a
-#            GitHub Release (+ latest.json for in-app updates when signing is set up)
+#
+#   check      every PR/push touching them: typecheck, web build (no dev server
+#              in the bundle), Rust tests
+#   windows    builds the Windows installers (NSIS .exe + .msi), stages them
+#              under fixed names with a manifest and checksums, validates
+#              them, then installs them the way a user would: install, launch,
+#              shortcut, Apps-list entry, reinstall, uninstall; and upgrade over
+#              the currently published release when there is one
+#   gates      the release refuses to publish unless these pass: web lint,
+#              typecheck, secret scan, build; backend syntax, lint, tenant
+#              isolation, migrations on an empty Postgres, test suite, and
+#              pilot readiness on fixture data
+#   rehearsal  (not on tags) serves the staged installer and manifest locally,
+#              runs the website's /download/windows route against them, and
+#              checks the download is the real binary with the right SHA-256
+#   publish    only on a desktop-v* or desktop-beta tag, after every job above:
+#              creates the GitHub Release with the fixed-name assets, then
+#              downloads it back through releases/latest and checks it
 #
 # Signing is optional and configured only through secrets/variables:
 #   secrets.TAURI_SIGNING_PRIVATE_KEY (+ _PASSWORD)  updater signing key
 #   vars.TAURI_UPDATER_PUBKEY                        its public half
 #   secrets.WINDOWS_CERTIFICATE (base64 .pfx) + WINDOWS_CERTIFICATE_PASSWORD
 # Without them the installer builds and runs, but is unsigned (SmartScreen
-# warning) and cannot update itself.
+# warning) and cannot update itself. vars.STARLANE_API_URL overrides the API
+# the app talks to (HTTPS only; default: production).
+#
+# Publishing uses the GitHub environment "release": add required reviewers to
+# it (Settings > Environments) so a tag alone cannot ship an installer.
 
 on:
   push:
     branches: ["main", "claude/**"]
-    tags: ["desktop-v*"]
-    paths: ["desktop/**", "packages/contracts/**", ".github/workflows/desktop.yml"]
+    tags: ["desktop-v*", "desktop-beta"]
+    paths: ["desktop/**", "packages/contracts/**", ".github/workflows/desktop.yml", "app/download/**", "lib/desktopRelease.ts", "scripts/check-download.mjs"]
   pull_request:
-    paths: ["desktop/**", "packages/contracts/**", ".github/workflows/desktop.yml"]
+    paths: ["desktop/**", "packages/contracts/**", ".github/workflows/desktop.yml", "app/download/**", "lib/desktopRelease.ts", "scripts/check-download.mjs"]
   workflow_dispatch:
 
 permissions:
@@ -27,7 +45,10 @@ permissions:
 
 concurrency:
   group: desktop-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/desktop-v') || github.ref == 'refs/tags/desktop-beta' }}
 
 jobs:
   check:
@@ -40,6 +61,12 @@ jobs:
       - run: npm ci
       - name: Typecheck + web build
         run: npm run build
+      - name: No development server in the shipped interface
+        run: |
+          if grep -rlE 'localhost:(1420|8787)|127\.0\.0\.1:8787' dist/; then
+            echo "The production bundle still references a development server"; exit 1
+          fi
+          echo "dist/ has no localhost:1420 / :8787 references"
       - name: Linux system libraries for the Tauri shell
         run: |
           sudo apt-get update
@@ -54,13 +81,13 @@ jobs:
     needs: check
     if: github.event_name != 'pull_request'
     runs-on: windows-latest
-    permissions:
-      contents: write   # only used on desktop-v* tags to publish the release
     defaults: { run: { working-directory: desktop, shell: bash } }
     env:
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
       TAURI_UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
+      VITE_STARLANE_API_URL: ${{ vars.STARLANE_API_URL }}
+      RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -85,107 +112,271 @@ jobs:
           Remove-Item $pfx
           "thumbprint=$($cert.Thumbprint)" >> $env:GITHUB_OUTPUT
 
-      - name: Configure signing and updates
+      - name: Configure release (signing, updates, no dev server, version = tag)
         env:
           WINDOWS_CERT_THUMBPRINT: ${{ steps.cert.outputs.thumbprint }}
         run: node scripts/configure-release.mjs
 
       - name: Build installers
-        if: ${{ !startsWith(github.ref, 'refs/tags/desktop-v') }}
         run: npx tauri build --bundles nsis,msi
 
-      - name: Publish release (desktop-v* tags)
-        if: startsWith(github.ref, 'refs/tags/desktop-v')
-        uses: tauri-apps/tauri-action@v0
+      - name: Stage assets, checksums and manifest
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WINDOWS_CERT_THUMBPRINT: ${{ steps.cert.outputs.thumbprint }}
-        with:
-          projectPath: desktop
-          tagName: ${{ github.ref_name }}
-          releaseName: Starlane ${{ github.ref_name }}
-          releaseBody: See the assets below to install Starlane for Windows.
-          releaseDraft: true
-          includeUpdaterJson: ${{ vars.TAURI_UPDATER_PUBKEY != '' }}
-          args: --bundles nsis,msi
+          WINDOWS_CODE_SIGNED: ${{ steps.cert.outputs.thumbprint != '' && '1' || '0' }}
+        run: node scripts/release-manifest.mjs --bundle src-tauri/target/release/bundle --out release --tag "${RELEASE_TAG:-unreleased}" --repo "${{ github.repository }}"
 
-      - name: Upload installers
-        uses: actions/upload-artifact@v4
-        with:
-          name: starlane-windows-${{ github.sha }}
-          path: |
-            desktop/src-tauri/target/release/bundle/nsis/*.exe
-            desktop/src-tauri/target/release/bundle/nsis/*.sig
-            desktop/src-tauri/target/release/bundle/msi/*.msi
-            desktop/src-tauri/target/release/bundle/msi/*.sig
-          if-no-files-found: error
-          retention-days: 30
-
-      # Install the real installers the way a user would, start the installed
-      # app, check it stays up (no crash on start: WebView2, keyring and
-      # plugins all load), then uninstall. Proves the artifacts install, not
-      # just that they were produced.
-      - name: Installer smoke test (NSIS per-user, then MSI)
-        if: ${{ !startsWith(github.ref, 'refs/tags/desktop-v') }}
+      - name: Validate staged installers (type, size, version, name, signature)
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+          $conf = Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
+          $exe = Get-Item release/Starlane-Setup-x64.exe
+          $msi = Get-Item release/Starlane-x64.msi
+          foreach ($f in @($exe, $msi)) { if ($f.Length -le 0) { throw "$($f.Name) is empty" } }
+          $bin = Get-Item src-tauri/target/release/Starlane.exe -ErrorAction SilentlyContinue
+          if (-not $bin) { throw 'The app executable is not named Starlane.exe' }
+          $vi = $bin.VersionInfo
+          Write-Output "Starlane.exe: ProductName='$($vi.ProductName)' FileDescription='$($vi.FileDescription)' ProductVersion='$($vi.ProductVersion)' CompanyName='$($vi.CompanyName)'"
+          if ($vi.ProductName -ne 'Starlane') { throw "ProductName is '$($vi.ProductName)', expected Starlane" }
+          if (-not $vi.ProductVersion.StartsWith($conf.version)) { throw "ProductVersion $($vi.ProductVersion) is not $($conf.version)" }
+          foreach ($f in @($bin, $exe, $msi)) {
+            $s = Get-AuthenticodeSignature $f.FullName
+            Write-Output ("{0}: Authenticode {1}{2}" -f $f.Name, $s.Status, $(if ($s.SignerCertificate) { " by $($s.SignerCertificate.Subject)" } else { '' }))
+          }
+          Get-FileHash release/*.exe, release/*.msi -Algorithm SHA256 | Format-Table -AutoSize | Out-String | Write-Output
+
+      - name: Upload staged release
+        uses: actions/upload-artifact@v4
+        with:
+          name: starlane-windows-${{ github.sha }}
+          path: desktop/release/*
+          if-no-files-found: error
+          retention-days: 30
+
+      # Install the real installers the way a user would and check what a user
+      # would see: the app starts and stays up (WebView2, keyring and plugins
+      # load), its window is titled Starlane, the Start Menu shortcut and the
+      # Apps-list entry say Starlane with this version; a reinstall over itself
+      # works; uninstall removes the app, shortcut and entry. When a release is
+      # already published, the new installer must also upgrade over it.
+      - name: Installer smoke test (upgrade, install, reinstall, uninstall; NSIS then MSI)
+        shell: pwsh
+        env:
+          PUBLISHED_INSTALLER: https://github.com/${{ github.repository }}/releases/latest/download/Starlane-Setup-x64.exe
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $conf = Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
+          $version = $conf.version
+          $installDir = "$env:LOCALAPPDATA\Starlane"
+          $appExe = "$installDir\Starlane.exe"
+          $shortcut = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Starlane.lnk"
+          $uninstKeys = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+          function Entry { Get-ItemProperty $uninstKeys -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like 'Starlane*' } | Select-Object -First 1 }
           function Test-Launch([string]$exe) {
             if (-not (Test-Path $exe)) { throw "Installed app not found at $exe" }
-            Write-Output "Launching $exe"
             $p = Start-Process -FilePath $exe -PassThru
             Start-Sleep -Seconds 15
             if ($p.HasExited) { throw "Starlane exited within 15 s (exit code $($p.ExitCode))" }
-            Write-Output "Starlane is running (pid $($p.Id)) from $exe"
-            Stop-Process -Id $p.Id -Force
+            $p.Refresh()
+            Write-Output "Running: pid $($p.Id), window title '$($p.MainWindowTitle)'"
+            if ($p.MainWindowTitle -and $p.MainWindowTitle -ne 'Starlane') { throw "Window title is '$($p.MainWindowTitle)'" }
+            # Single instance: a second launch must hand over to the first and exit.
+            $second = Start-Process -FilePath $exe -PassThru
+            Start-Sleep -Seconds 6
+            if (-not $second.HasExited) { Stop-Process -Id $second.Id -Force; throw 'A second Starlane stayed running (single instance broken)' }
+            Write-Output 'Second launch handed over to the running app and exited'
+            Get-Process -Name Starlane -ErrorAction SilentlyContinue | Stop-Process -Force
             Start-Sleep -Seconds 2
           }
-          $nsis = Get-ChildItem src-tauri/target/release/bundle/nsis/*.exe | Select-Object -First 1
-          Write-Output "NSIS installer: $($nsis.Name) ($([math]::Round($nsis.Length / 1MB, 1)) MB)"
+          function Uninstall-Nsis {
+            $un = Get-ChildItem $installDir -Filter 'uninstall*.exe' | Select-Object -First 1
+            if (-not $un) { throw 'No uninstaller next to the installed app' }
+            Start-Process -FilePath $un.FullName -ArgumentList '/S' -Wait
+            for ($i = 0; $i -lt 30 -and (Test-Path $appExe); $i++) { Start-Sleep -Seconds 1 }
+            if (Test-Path $appExe) { throw 'NSIS uninstall left the app behind' }
+            if (Test-Path $shortcut) { throw 'NSIS uninstall left the Start Menu shortcut' }
+            if (Entry) { throw 'NSIS uninstall left the Apps-list entry' }
+          }
+          $nsis = Get-Item release/Starlane-Setup-x64.exe
+
+          # Upgrade over the published release, when one exists.
+          $prev = Join-Path $env:RUNNER_TEMP 'previous-Starlane-Setup-x64.exe'
+          try { Invoke-WebRequest -Uri $env:PUBLISHED_INSTALLER -OutFile $prev -UseBasicParsing } catch { $prev = $null }
+          if ($prev -and (Test-Path $prev)) {
+            Start-Process -FilePath $prev -ArgumentList '/S' -Wait
+            $old = (Entry).DisplayVersion
+            Write-Output "Published release installed: $old"
+            $proc = Start-Process -FilePath $nsis.FullName -ArgumentList '/S' -Wait -PassThru
+            if ($proc.ExitCode -ne 0) { throw "Upgrade install exited with $($proc.ExitCode)" }
+            $now = (Entry).DisplayVersion
+            if ($now -ne $version) { throw "After upgrade the Apps list says $now, expected $version" }
+            Test-Launch $appExe
+            Write-Output "UPGRADE: $old -> $now, launched"
+            Uninstall-Nsis
+          } else { Write-Output 'UPGRADE: skipped, no published release yet' }
+
+          # Fresh install.
           $proc = Start-Process -FilePath $nsis.FullName -ArgumentList '/S' -Wait -PassThru
           if ($proc.ExitCode -ne 0) { throw "NSIS installer exited with $($proc.ExitCode)" }
-          # The app binary is named after the Cargo package (starlane-desktop.exe);
-          # take whatever non-uninstaller .exe the installer put in the Starlane folder.
-          function Find-App([string[]]$dirs) {
-            foreach ($d in $dirs) {
-              if (-not (Test-Path $d)) { continue }
-              $e = Get-ChildItem $d -Filter *.exe | Where-Object { $_.Name -notmatch '^uninstall' } | Select-Object -First 1
-              if ($e) { return $e }
-            }
-            return $null
-          }
-          $app = Find-App @("$env:LOCALAPPDATA\Starlane", "$env:LOCALAPPDATA\Programs\Starlane", "$env:ProgramFiles\Starlane")
-          if (-not $app) { Get-ChildItem "$env:LOCALAPPDATA" -Directory | Select-Object -ExpandProperty Name; throw 'NSIS install produced no Starlane executable' }
-          Test-Launch $app.FullName
-          $dir = $app.DirectoryName
-          $un = Get-ChildItem $dir -Filter 'uninstall*.exe' | Select-Object -First 1
-          if (-not $un) { throw 'No uninstaller next to the installed app' }
-          Start-Process -FilePath $un.FullName -ArgumentList '/S' -Wait
-          # NSIS uninstallers re-launch a temp copy and return early; poll.
-          for ($i = 0; $i -lt 30 -and (Test-Path $app.FullName); $i++) { Start-Sleep -Seconds 1 }
-          if (Test-Path $app.FullName) { throw 'NSIS uninstall left the app behind' }
-          Write-Output 'NSIS: installed, launched, uninstalled.'
+          $e = Entry
+          if (-not $e) { throw 'No Apps-list entry for Starlane' }
+          Write-Output "Apps list: '$($e.DisplayName)' $($e.DisplayVersion) by '$($e.Publisher)', icon $($e.DisplayIcon)"
+          if ($e.DisplayName -ne 'Starlane') { throw "Apps list name is '$($e.DisplayName)'" }
+          if ($e.DisplayVersion -ne $version) { throw "Apps list version is $($e.DisplayVersion), expected $version" }
+          if (-not (Test-Path $shortcut)) { throw "No Start Menu shortcut at $shortcut" }
+          $lnk = (New-Object -ComObject WScript.Shell).CreateShortcut($shortcut)
+          if ($lnk.TargetPath -ne $appExe) { throw "Shortcut points at $($lnk.TargetPath)" }
+          Write-Output "Start Menu: $shortcut -> $($lnk.TargetPath)"
+          Test-Launch $appExe
+          # Reinstall over itself.
+          $proc = Start-Process -FilePath $nsis.FullName -ArgumentList '/S' -Wait -PassThru
+          if ($proc.ExitCode -ne 0) { throw "Reinstall exited with $($proc.ExitCode)" }
+          Test-Launch $appExe
+          Uninstall-Nsis
+          Write-Output 'NSIS: installed, launched, reinstalled, uninstalled (app, shortcut and Apps-list entry removed).'
 
-          $msi = Get-ChildItem src-tauri/target/release/bundle/msi/*.msi | Select-Object -First 1
-          Write-Output "MSI: $($msi.Name) ($([math]::Round($msi.Length / 1MB, 1)) MB)"
+          $msi = Get-Item release/Starlane-x64.msi
           $proc = Start-Process msiexec.exe -ArgumentList "/i `"$($msi.FullName)`" /qn /norestart /l*v `"$env:RUNNER_TEMP\msi.log`"" -Wait -PassThru
           if ($proc.ExitCode -ne 0) { Get-Content "$env:RUNNER_TEMP\msi.log" -Tail 40; throw "msiexec exited with $($proc.ExitCode)" }
-          # Where did Windows Installer put it? Ask the uninstall registry rather than guess.
-          $keys = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*'
-          $entry = Get-ItemProperty $keys -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like 'Starlane*' } | Select-Object -First 1
-          $dirs = @("$env:ProgramFiles\Starlane", "${env:ProgramFiles(x86)}\Starlane", "$env:LOCALAPPDATA\Programs\Starlane")
-          if ($entry -and $entry.InstallLocation) { $dirs = @($entry.InstallLocation.TrimEnd('\')) + $dirs }
-          $exe = Find-App $dirs
-          if (-not $exe) {
-            $found = Get-ChildItem "$env:ProgramFiles", "${env:ProgramFiles(x86)}" -Filter starlane-desktop.exe -Recurse -Depth 3 -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($found) { $exe = $found }
-          }
-          if (-not $exe) {
-            Write-Output "Uninstall entry: $($entry | Select-Object DisplayName, InstallLocation, UninstallString | Out-String)"
-            Get-Content "$env:RUNNER_TEMP\msi.log" -Tail 60
-            throw 'MSI install produced no Starlane executable'
-          }
-          Test-Launch $exe.FullName
+          $e = Entry
+          $dirs = @("$env:LOCALAPPDATA\Starlane", "$env:ProgramFiles\Starlane", "${env:ProgramFiles(x86)}\Starlane", "$env:LOCALAPPDATA\Programs\Starlane")
+          if ($e -and $e.InstallLocation) { $dirs = @($e.InstallLocation.TrimEnd('\')) + $dirs }
+          $exe = $dirs | ForEach-Object { Join-Path $_ 'Starlane.exe' } | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $exe) { Write-Output ($e | Format-List | Out-String); throw 'MSI install produced no Starlane.exe' }
+          Write-Output "MSI Apps list: '$($e.DisplayName)' $($e.DisplayVersion); app at $exe"
+          Test-Launch $exe
           $proc = Start-Process msiexec.exe -ArgumentList "/x `"$($msi.FullName)`" /qn /norestart" -Wait -PassThru
           if ($proc.ExitCode -ne 0) { throw "MSI uninstall exited with $($proc.ExitCode)" }
+          if (Test-Path $exe) { throw 'MSI uninstall left the app behind' }
           Write-Output 'MSI: installed, launched, uninstalled.'
+
+  gates:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: starlane_test }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: web }
+      - uses: actions/checkout@v4
+        with:
+          repository: ishantswami13-crypto/vantro-flow-backend
+          ref: ${{ vars.BACKEND_RELEASE_REF || 'main' }}
+          path: backend
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Web app — lint, typecheck, secret scan, build
+        working-directory: web
+        env: { NEXT_PUBLIC_API_URL: "https://vantro-flow-backend-production.up.railway.app" }
+        run: npm ci && npm run lint && npm run typecheck && npm run security:secrets && npm run build
+      - name: Backend — syntax, lint, tenant isolation, migrations, tests, pilot readiness
+        working-directory: backend
+        env:
+          PGSSLMODE: disable
+          DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/starlane_test
+          NODE_ENV: test
+          JWT_SECRET: ci-only-jwt-secret-not-used-anywhere-else-0123456789
+        run: |
+          echo "backend ref: $(git rev-parse --short HEAD) (${{ vars.BACKEND_RELEASE_REF || 'main' }})"
+          npm ci
+          npm run check
+          npx eslint . --quiet
+          npm run security:tenant-isolation
+          npm run db:migrate
+          npm test
+          npm run pilot:readiness
+
+  rehearsal:
+    needs: windows
+    if: github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - uses: actions/download-artifact@v4
+        with: { name: "starlane-windows-${{ github.sha }}", path: staged }
+      - name: Serve the staged release locally, as GitHub Releases would
+        run: |
+          # The manifest as it would be published, but pointing at this local server.
+          node -e "const f='staged/starlane-release.json',m=require('./'+f);for(const a of Object.values(m.platforms.windows.x64))a.url='http://127.0.0.1:8080/'+a.filename;require('fs').writeFileSync('staged/local-release.json',JSON.stringify(m))"
+          (cd staged && python3 -m http.server 8080 >/dev/null 2>&1 &)
+          sleep 2
+      - name: Build the website with the manifest pointed at the local server
+        env:
+          NEXT_PUBLIC_API_URL: https://vantro-flow-backend-production.up.railway.app
+          STARLANE_RELEASE_MANIFEST_URL: http://127.0.0.1:8080/local-release.json
+        run: |
+          npm ci
+          npm run build
+          (npx next start -p 3000 >/tmp/next.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3000/login && break; sleep 1; done
+      - name: The Download button's URL delivers the real installer
+        run: |
+          node scripts/check-download.mjs http://127.0.0.1:3000/download/windows --type exe --manifest http://127.0.0.1:8080/local-release.json
+          node scripts/check-download.mjs "http://127.0.0.1:3000/download/windows?type=msi" --type msi --manifest http://127.0.0.1:8080/local-release.json
+          curl -sf http://127.0.0.1:3000/download/latest.json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const m=JSON.parse(s);if(!m.published||!m.platforms.windows.x64.installer.sha256)process.exit(1);console.log('manifest ok',m.version,m.label)})"
+      - name: With nothing published, the endpoint says so (503), never a page
+        env:
+          NEXT_PUBLIC_API_URL: https://vantro-flow-backend-production.up.railway.app
+          STARLANE_RELEASE_MANIFEST_URL: http://127.0.0.1:8080/not-published.json
+        run: |
+          (npx next start -p 3001 >/tmp/next2.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3001/login && break; sleep 1; done
+          code=$(curl -s -o /tmp/body -w '%{http_code}' http://127.0.0.1:3001/download/windows)
+          echo "status $code: $(cat /tmp/body)"
+          test "$code" = "503"
+          if node scripts/check-download.mjs http://127.0.0.1:3001/download/windows; then echo 'check passed on a 503'; exit 1; fi
+
+  publish:
+    needs: [windows, gates]
+    if: startsWith(github.ref, 'refs/tags/desktop-v') || github.ref == 'refs/tags/desktop-beta'
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: "starlane-windows-${{ github.sha }}", path: release }
+      - name: Publish the GitHub Release
+        run: |
+          label=$(node -p "require('./release/starlane-release.json').label")
+          notes=desktop/RELEASE_NOTES.md
+          if [ "$TAG" = "desktop-beta" ]; then
+            # Rolling beta: replace the previous beta assets in place.
+            gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --prerelease --latest=false --title "$label" --notes-file "$notes"
+            gh release upload "$TAG" release/* --clobber
+            gh release edit "$TAG" --title "$label" --prerelease --latest=false
+          else
+            gh release create "$TAG" release/* --title "$label" --notes-file "$notes" --latest --verify-tag
+          fi
+      - name: Verify the published download (through releases/latest for stable)
+        run: |
+          base="https://github.com/${{ github.repository }}/releases"
+          if [ "$TAG" = "desktop-beta" ]; then dl="$base/download/desktop-beta"; else dl="$base/latest/download"; fi
+          for i in 1 2 3 4 5; do
+            node scripts/check-download.mjs "$dl/Starlane-Setup-x64.exe" --type exe --manifest "$dl/starlane-release.json" && ok=1 && break
+            sleep 15
+          done
+          test "$ok" = 1
+          node scripts/check-download.mjs "$dl/Starlane-x64.msi" --type msi --manifest "$dl/starlane-release.json"
+      - name: Verify the website endpoint (when vars.STARLANE_SITE_URL is set)
+        if: vars.STARLANE_SITE_URL != '' && startsWith(github.ref, 'refs/tags/desktop-v')
+        run: |
+          # The site caches the manifest for up to 2 minutes.
+          for i in 1 2 3 4 5 6 7 8; do
+            node scripts/check-download.mjs "${{ vars.STARLANE_SITE_URL }}/download/windows" --type exe --manifest "https://github.com/${{ github.repository }}/releases/latest/download/starlane-release.json" && exit 0
+            sleep 30
+          done
+          exit 1

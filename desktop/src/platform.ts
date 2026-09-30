@@ -112,3 +112,17 @@ export async function openExternal(url: string) {
   const { openUrl } = await import('@tauri-apps/plugin-opener');
   await openUrl(url);
 }
+
+// ── Support log (desktop only) ────────────────────────────────────────────
+// Goes to the rotating file the shell writes (Settings › Diagnostics › Open
+// logs). Callers pass event names, codes and messages only: never tokens,
+// passwords, pairing codes or business records.
+export function logLine(level: 'info' | 'warn' | 'error', message: string) {
+  if (!isDesktop) return;
+  void import('@tauri-apps/plugin-log').then((l) => (level === 'error' ? l.error : level === 'warn' ? l.warn : l.info)(message.slice(0, 500))).catch(() => {});
+}
+
+export async function openLogs() {
+  if (!isDesktop) return;
+  await invoke('open_logs');
+}
