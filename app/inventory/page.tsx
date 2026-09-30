@@ -671,7 +671,7 @@ export default function InventoryPage() {
             <div className="flex items-center justify-between px-5 py-4"
               style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
               <p className="font-bold text-primary text-base">Add Product</p>
-              <button onClick={() => setShowAdd(false)}
+              <button aria-label="Close" onClick={() => setShowAdd(false)}
                 className="p-1.5 rounded-lg"
                 style={{ color: "rgba(255,255,255,0.4)" }}>
                 <FiX size={16} />

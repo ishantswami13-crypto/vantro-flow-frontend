@@ -740,3 +740,15 @@ main h2 {
   background-repeat: no-repeat;
   background-attachment: local;
 }
+
+/* Reduced motion, everywhere: people who ask the OS for less motion get none,
+   including the width-animated progress and score bars and Tailwind's
+   animate-* utilities, not only the named classes above. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

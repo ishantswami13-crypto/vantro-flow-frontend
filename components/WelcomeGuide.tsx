@@ -86,7 +86,7 @@ export default function WelcomeGuide({ waConnected, hasInvoices, autoEnabled, on
               : "Complete these steps to activate full automation"}
           </p>
         </div>
-        <button onClick={handleDismiss} className="text-muted hover:text-primary transition-colors ml-3 mt-0.5 shrink-0">
+        <button aria-label="Close" onClick={handleDismiss} className="text-muted hover:text-primary transition-colors ml-3 mt-0.5 shrink-0">
           <FiX size={15} />
         </button>
       </div>

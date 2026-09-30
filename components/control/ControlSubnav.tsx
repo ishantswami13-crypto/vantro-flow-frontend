@@ -9,6 +9,7 @@ import Link from "next/link";
 // Approvals and Audit are their own routes.
 export type ControlTab =
   | "overview"
+  | "decisions"
   | "users"
   | "permissions"
   | "approvals"
@@ -19,13 +20,12 @@ export type ControlTab =
 
 const TABS: { key: ControlTab; label: string; href: string }[] = [
   { key: "overview", label: "Overview", href: "/control?tab=overview" },
+  { key: "decisions", label: "Decisions", href: "/control/decisions" },
   { key: "users", label: "Users & Roles", href: "/control?tab=users" },
   { key: "permissions", label: "Permissions", href: "/control?tab=permissions" },
   { key: "approvals", label: "Approvals", href: "/control/approvals" },
   { key: "automation", label: "Automation", href: "/control?tab=automation" },
-  { key: "monitoring", label: "Monitoring", href: "/control?tab=monitoring" },
   { key: "audit", label: "Audit", href: "/control/audit" },
-  { key: "security", label: "Security", href: "/control?tab=security" },
 ];
 
 export function ControlSubnav({ active }: { active: ControlTab }) {

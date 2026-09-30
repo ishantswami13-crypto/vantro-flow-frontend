@@ -118,6 +118,14 @@ async function cookieAuthWorks(): Promise<boolean> {
   }
 }
 
+export type DeliveryLine = { active: boolean; reason: string | null };
+export type DeliveryStatus = {
+  whatsapp: DeliveryLine;
+  paymentLinks: DeliveryLine & { upiFallback: boolean };
+  dunning: DeliveryLine & { scheduledAt: string };
+  push: DeliveryLine;
+};
+
 export async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -130,7 +138,18 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
 
   try {
     const res = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include', signal: controller.signal });
-    const data = await res.json();
+    // A gateway error page, a 204 or a proxy timeout is not JSON; read the body
+    // as text first so the caller sees the HTTP status, not a parse error.
+    const raw = await res.text();
+    let data: any = null;
+    if (raw) {
+      try { data = JSON.parse(raw); } catch { data = null; }
+    }
+    if (res.ok && raw && data === null) {
+      const err = new Error(`The server sent an unreadable response (HTTP ${res.status}).`);
+      (err as any).status = res.status;
+      throw err;
+    }
 
     // Self-heal an existing cookie-mode session that predates saveAuth()
     // mirroring vantro_csrf_token into localStorage: the backend now echoes
@@ -161,8 +180,8 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
       throw new Error(data?.error || 'Session expired. Please log in again.');
     }
     if (!res.ok) {
-      const errorMsg = data.error || 'Request failed';
-      const requestId = res.headers.get('x-request-id') || data.requestId || 'unknown';
+      const errorMsg = data?.error || (res.status >= 500 ? `The server had a problem (HTTP ${res.status}).` : `Request failed (HTTP ${res.status}).`);
+      const requestId = res.headers.get('x-request-id') || data?.requestId || 'unknown';
       const errorObj = new Error(`${errorMsg} (Error ID: ${requestId})`);
       (errorObj as any).requestId = requestId;
       (errorObj as any).status = res.status;
@@ -515,7 +534,7 @@ export const api = {
   // ─── Billing ─────────────────────────────────────────────
   billing: {
     createOrder: (body: { plan: string; period: string }) =>
-      request<{ order: RazorpayOrder; key: string }>('/api/billing/create-order', { method: 'POST', body: JSON.stringify(body) }),
+      request<{ order: RazorpayOrder; key: string }>('/api/billing/create-order', { method: 'POST', body: JSON.stringify({ ...body, plan_id: body.plan }) }),
     verify: (body: object) => request<{ success: boolean }>('/api/billing/verify', { method: 'POST', body: JSON.stringify(body) }),
     history: () => request<{ history: BillingRecord[] }>('/api/billing/history'),
   },
@@ -523,6 +542,9 @@ export const api = {
   // ─── Settings ────────────────────────────────────────────
   settings: {
     get: () => request<{ settings: UserSettings }>('/api/settings'),
+    deliveryStatus: () => request<DeliveryStatus>('/api/settings/delivery-status'),
+    changePassword: (current_password: string, new_password: string) =>
+      request<{ success: boolean; message: string }>('/api/auth/change-password', { method: 'POST', body: JSON.stringify({ current_password, new_password }) }),
     update: (body: Partial<UserSettings>) =>
       request<{ settings: UserSettings }>('/api/settings', { method: 'PATCH', body: JSON.stringify(body) }),
     saveWhatsApp: (body: { provider: string; interakt_api_key?: string; wati_api_url?: string; wati_token?: string }) =>
@@ -610,6 +632,39 @@ export const api = {
     tallyDevices: () => request<{ success: boolean; devices: Array<{ id: string; device_name?: string; created_at?: string; revoked_at?: string | null }> }>('/api/connectors/tally/devices'),
   },
 
+  // ─── Connector platform (manifests + live state) ────────
+  // See backend lib/connectors/*. State is derived only from rows a real
+  // sync/import wrote; OAuth connectors report 'unavailable' until built.
+  connectors: {
+    list: () => request<{ success: boolean; connectors: Connector[] }>('/api/connectors'),
+    pairing: (id: string) =>
+      request<{ success: boolean; pairing: { connectorId: string; code: string; expiresAt: string; command: string } }>(`/api/connectors/${id}/pairing`, { method: 'POST' }),
+    revokeTallyDevice: (deviceId: string) =>
+      request<{ success: boolean }>(`/api/connectors/tally/devices/${deviceId}/revoke`, { method: 'POST' }),
+    /** Downloads the bridge program as a file (authenticated). */
+    async downloadBridge(id: string): Promise<{ filename: string; sha256: string | null }> {
+      const res = await fetch(`${API_BASE}/api/connectors/${id}/bridge`, { headers: authHeaders(), credentials: 'include' });
+      if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      const filename = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') || '')?.[1] || 'tally-sync.mjs';
+      const href = URL.createObjectURL(await res.blob());
+      const a = document.createElement('a');
+      a.href = href; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(href), 1000);
+      return { filename, sha256: res.headers.get('x-content-sha256') };
+    },
+  },
+
+  // ─── Access review (admins; ADMIN_EMAILS on the backend) ─
+  adminAccess: {
+    list: (status?: string) =>
+      request<{ success: boolean; applications: AccessApplicationRow[]; counts: Record<string, number> }>(`/api/admin/access/applications${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+    get: (id: string) => request<{ success: boolean; application: AccessApplicationDetail }>(`/api/admin/access/applications/${id}`),
+    decide: (id: string, status: string, reviewNote?: string) =>
+      request<{ success: boolean; downloadUrl: string | null; emailed: boolean; error?: string }>(`/api/admin/access/applications/${id}`, { method: 'PATCH', body: JSON.stringify({ status, reviewNote }) }),
+    reissue: (id: string) =>
+      request<{ success: boolean; downloadUrl: string; expiresAt: string; emailed: boolean }>(`/api/admin/access/applications/${id}/entitlement`, { method: 'POST' }),
+  },
+
   // ─── Onboarding V2 (Business / Priorities / Connect) ────
   onboarding: {
     state: () =>
@@ -637,6 +692,36 @@ export const api = {
     health: () => request<WorldHealthResponse>('/api/world/health'),
   },
 };
+
+export type ConnectorHealth = 'not_connected' | 'healthy' | 'stale' | 'error' | 'disconnected' | 'unavailable';
+export interface Connector {
+  id: string; sourceType: string | null; name: string; provider: string | null; category: string;
+  authType: 'local_bridge' | 'file_import' | 'oauth' | 'api_key' | 'public_feed';
+  availability: 'available' | 'not_available'; syncMode: string; summary: string;
+  unavailableReason?: string; objects: string[]; access: string[]; setup: string[];
+  /** What Starlane can do through it: READ, SEARCH, SUBSCRIBE, WRITE, EXECUTE. */
+  capabilities?: string[];
+  state: {
+    /** Canonical health (CONNECTED, STALE, AUTH_EXPIRED, ...) and what the connection allows. */
+    canonicalHealth?: string; capabilityLabel?: string;
+    health: ConnectorHealth; status: string | null; connectedAt: string | null; lastSyncAt: string | null; lastError: string | null;
+    devices: Array<{ id: string; name: string; status: 'ACTIVE' | 'REVOKED'; pairedAt: string; lastSeenAt: string | null; revokedAt: string | null }>;
+    lastImport: { filename: string | null; status: string; completedAt: string | null; rowsAccepted: number; rowsRejected: number } | null;
+  };
+}
+
+export interface AccessEligibility { tier: 'ready' | 'review' | 'unsupported' | 'waitlist'; label: string; reasons: string[]; rules_version: string }
+export interface AccessApplicationRow {
+  id: string; name: string; email: string; company: string; website: string | null; role: string; company_size: string;
+  industry: string; country: string; systems: string[]; other_systems: string | null; will_connect_systems: boolean;
+  status: 'submitted' | 'reviewing' | 'approved' | 'waitlisted' | 'rejected' | 'expired';
+  eligibility: AccessEligibility; review_note: string | null; reviewed_by: string | null; reviewed_at: string | null; created_at: string;
+}
+export interface AccessApplicationDetail extends AccessApplicationRow {
+  problem: string; desired_outcome: string; notes: string | null;
+  events: Array<{ from_status: string | null; to_status: string; actor: string; note: string | null; created_at: string }>;
+  entitlements: Array<{ id: string; expires_at: string; revoked_at: string | null; created_by: string; created_at: string; downloads: number; last_download_at: string | null }>;
+}
 
 export interface WorldSourceHealth {
   source_id: string;

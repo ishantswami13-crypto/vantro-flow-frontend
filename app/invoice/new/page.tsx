@@ -227,7 +227,7 @@ export default function NewInvoicePage() {
   // ── Shared header ─────────────────────────────────────────────────────────
   const Header = ({ onBack }: { onBack: () => void }) => (
     <div className="flex items-center gap-3 mb-5">
-      <button
+      <button aria-label="Back"
         onClick={onBack}
         className="w-8 h-8 rounded-lg bg-surface-2 border border-border flex items-center justify-center text-muted hover:text-primary transition-colors">
         <FiArrowLeft size={15} />

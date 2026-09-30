@@ -87,7 +87,7 @@ export default function OnboardingPage() {
   const [priorities, setPriorities] = useState<string[]>([]);
 
   // Stage 3 — Connect
-  const [enrollment, setEnrollment] = useState<{ code: string; expiresAt: string } | null>(null);
+  const [enrollment, setEnrollment] = useState<{ code: string; expiresAt: string; command: string } | null>(null);
   const [enrolling, setEnrolling] = useState(false);
   const [deviceConnected, setDeviceConnected] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -104,7 +104,7 @@ export default function OnboardingPage() {
         if (res.onboarding_done || res.hasBusinessData) {
           // Already onboarded, or an existing account with real data
           // (e.g. Kumar Traders) — never force this flow on them.
-          router.replace("/dashboard");
+          router.replace("/bridge");
           return;
         }
         if (res.profile.company_name) setCompanyName(res.profile.company_name);
@@ -173,8 +173,9 @@ export default function OnboardingPage() {
   async function startTallyEnrollment() {
     setError(""); setEnrolling(true);
     try {
-      const res = await api.connections.enrollTally();
-      setEnrollment({ code: res.enrollmentCode, expiresAt: res.expiresAt });
+      const knownIds = new Set(((await api.connections.tallyDevices()).devices || []).map((d) => d.id));
+      const res = await api.connectors.pairing("tally");
+      setEnrollment({ code: res.pairing.code, expiresAt: res.pairing.expiresAt, command: res.pairing.command });
       // Poll the real devices list — the only honest signal that the
       // separate local Tally connector actually claimed this enrollment.
       // No fabricated progress steps: just an indeterminate spinner until
@@ -182,7 +183,7 @@ export default function OnboardingPage() {
       pollRef.current = setInterval(async () => {
         try {
           const d = await api.connections.tallyDevices();
-          if (d.devices?.some((dev) => !dev.revoked_at)) {
+          if (d.devices?.some((dev) => !dev.revoked_at && !knownIds.has(dev.id))) {
             setDeviceConnected(true);
             if (pollRef.current) clearInterval(pollRef.current);
           }
@@ -208,7 +209,7 @@ export default function OnboardingPage() {
     finally { setLoading(false); }
   }
 
-  const goToWorkspace = () => router.push("/dashboard");
+  const goToWorkspace = () => router.push("/bridge");
 
   if (!ready) {
     return (
@@ -326,17 +327,22 @@ export default function OnboardingPage() {
                 </div>
                 {enrollment && (
                   <div>
-                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, letterSpacing: "0.08em", padding: "10px 14px", background: "rgba(255,255,255,.05)", borderRadius: 6, textAlign: "center", marginBottom: 10 }}>
-                      {enrollment.code}
+                    <p style={{ fontSize: 12.5, color: "rgba(255,255,255,.6)", marginBottom: 8 }}>
+                      On the computer that runs TallyPrime (Node.js 18+),{" "}
+                      <button type="button" onClick={() => api.connectors.downloadBridge("tally").catch(() => setError("Could not download the bridge — try again"))}
+                        style={{ background: "none", border: "none", padding: 0, color: "#fff", textDecoration: "underline", cursor: "pointer", font: "inherit" }}>download the Starlane bridge</button>, then run this in the same folder:
+                    </p>
+                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12.5, padding: "10px 12px", background: "rgba(255,255,255,.05)", borderRadius: 6, marginBottom: 10, overflowX: "auto", whiteSpace: "nowrap" }}>
+                      {enrollment.command}
                     </div>
                     <p style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 10 }}>
-                      Enter this code in the Starlane Tally connector on your machine. Expires {new Date(enrollment.expiresAt).toLocaleTimeString()}.
+                      One-time code, expires {new Date(enrollment.expiresAt).toLocaleTimeString()}. The bridge is read-only and gets its own revocable credential.
                     </p>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
                       {deviceConnected ? (
-                        <><FiCheck size={14} style={{ color: "#10D98A" }} /> <span style={{ color: "#10D98A" }}>Enrollment complete</span></>
+                        <><FiCheck size={14} style={{ color: "#10D98A" }} /> <span style={{ color: "#10D98A" }}>Paired — this computer will sync automatically</span></>
                       ) : (
-                        <><FiLoader size={13} className="spin" style={{ color: "rgba(255,255,255,.4)" }} /> <span style={{ color: "rgba(255,255,255,.4)" }}>Waiting for the connector to claim this code…</span></>
+                        <><FiLoader size={13} className="spin" style={{ color: "rgba(255,255,255,.4)" }} /> <span style={{ color: "rgba(255,255,255,.4)" }}>Waiting for the bridge to pair…</span></>
                       )}
                     </div>
                   </div>
@@ -349,7 +355,7 @@ export default function OnboardingPage() {
                   <div style={{ fontSize: 14, fontWeight: 600 }}>File import (CSV / Excel)</div>
                   <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Import customers, sales or purchase records from a spreadsheet</div>
                 </div>
-                <Link href="/settings?import=1" className="btn-back" style={{ whiteSpace: "nowrap", textDecoration: "none", display: "inline-block" }}>Import</Link>
+                <Link href="/collections?import=1" className="btn-back" style={{ whiteSpace: "nowrap", textDecoration: "none", display: "inline-block" }}>Import</Link>
               </div>
             </div>
 

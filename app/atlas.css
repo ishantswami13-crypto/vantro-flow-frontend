@@ -9,8 +9,8 @@
 .atlas-page {
   --bg:   #000000;
   --fg:   #FFFFFF;
-  --muted: rgba(255,255,255,0.48);
-  --faint: rgba(255,255,255,0.24);
+  --muted: rgba(255,255,255,0.66);
+  --faint: rgba(255,255,255,0.5);
   --line:  rgba(255,255,255,0.10);
   --font-display: 'Space Grotesk', system-ui, sans-serif;
   --font-body:    'Hanken Grotesk', system-ui, sans-serif;
@@ -215,7 +215,7 @@
 .atlas-page .s-sm { padding: clamp(40px, 6vw, 80px) 0 }
 .atlas-page .s-label {
   font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .24em;
-  text-transform: uppercase; color: rgba(255,255,255,.22);
+  text-transform: uppercase; color: rgba(255,255,255,.6);
   display: block; margin-bottom: 16px;
 }
 .atlas-page .s-head { margin-bottom: clamp(44px, 5vw, 68px) }
@@ -625,7 +625,7 @@
 /* LEGAL PAGES */
 .atlas-page .legal-header { padding: clamp(88px,12vw,120px) 0 clamp(40px,5vw,56px); border-bottom: 1px solid rgba(255,255,255,.08) }
 .atlas-page .legal-header h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(32px,5vw,64px); letter-spacing: -0.045em; line-height: 1; margin-bottom: 16px }
-.atlas-page .legal-header .lh-meta { font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,.28); letter-spacing: .1em }
+.atlas-page .legal-header .lh-meta { font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,.6); letter-spacing: .1em }
 .atlas-page .legal-body { padding: 64px 0 100px }
 .atlas-page .legal-content { max-width: 720px }
 .atlas-page .legal-content h2 { font-family: var(--font-display); font-weight: 600; font-size: 19px; letter-spacing: -0.025em; margin: 48px 0 10px; color: rgba(255,255,255,.9); padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,.07) }
@@ -636,29 +636,29 @@
 .atlas-page .legal-content a { color: rgba(255,255,255,.68); text-decoration: underline; text-underline-offset: 3px }
 .atlas-page .legal-content a:hover { color: #fff }
 .atlas-page .legal-content strong { color: rgba(255,255,255,.78) }
-.atlas-page .legal-content .notice { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 8px; padding: 16px 20px; margin: 24px 0; font-size: 14px; color: rgba(255,255,255,.45); line-height: 1.6 }
+.atlas-page .legal-content .notice { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 8px; padding: 16px 20px; margin: 24px 0; font-size: 14px; color: rgba(255,255,255,.62); line-height: 1.6 }
 .atlas-page .draft-banner { background: rgba(255,200,0,.07); border-bottom: 1px solid rgba(255,200,0,.15); padding: 12px var(--pad); text-align: center; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; color: rgba(255,200,0,.6) }
 
 /* AUTH PAGES */
 .atlas-page.auth-page { display: grid; grid-template-columns: 1fr 520px 1fr; grid-template-rows: auto 1fr auto; min-height: 100vh }
 .atlas-page.auth-page .topbar { grid-column: 1/-1; display: flex; align-items: center; justify-content: space-between; padding: 24px 40px; border-bottom: 1px solid rgba(255,255,255,.08) }
 .atlas-page.auth-page .brand-wm { font-weight: 700; font-size: 14px; letter-spacing: .2em; text-transform: uppercase }
-.atlas-page.auth-page .topbar-right { font-size: 13px; color: rgba(255,255,255,.32) }
+.atlas-page.auth-page .topbar-right { font-size: 13px; color: rgba(255,255,255,.62) }
 .atlas-page.auth-page .topbar-right a { color: #fff; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,.2); padding-bottom: 1px; transition: border-color .2s }
 .atlas-page.auth-page .topbar-right a:hover { border-color: rgba(255,255,255,.7) }
 .atlas-page.auth-page .center { grid-column: 2; display: flex; flex-direction: column; justify-content: center; padding: 64px 0; min-height: calc(100vh - 120px) }
 .atlas-page.auth-page .auth-head { margin-bottom: 44px }
 .atlas-page.auth-page .auth-head h1 { font-weight: 700; font-size: clamp(28px,3.5vw,40px); letter-spacing: -.042em; line-height: 1.05; margin-bottom: 10px }
-.atlas-page.auth-page .auth-head p { font-size: 15px; color: rgba(255,255,255,.32); line-height: 1.6 }
+.atlas-page.auth-page .auth-head p { font-size: 15px; color: rgba(255,255,255,.66); line-height: 1.6 }
 .atlas-page.auth-page .auth-form { display: flex; flex-direction: column; gap: 14px }
 .atlas-page.auth-page .field { display: flex; flex-direction: column; gap: 7px }
-.atlas-page.auth-page .field label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.18) }
+.atlas-page.auth-page .field label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.6) }
 .atlas-page.auth-page .field input, .atlas-page.auth-page .field select {
   background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.10);
   border-radius: 6px; padding: 13px 16px; font-family: var(--font-body); font-size: 15px;
   color: #fff; outline: none; transition: border-color .2s, background .2s;
 }
-.atlas-page.auth-page .field input::placeholder { color: rgba(255,255,255,.22) }
+.atlas-page.auth-page .field input::placeholder { color: rgba(255,255,255,.5) }
 .atlas-page.auth-page .field input:focus, .atlas-page.auth-page .field select:focus { border-color: rgba(255,255,255,.38); background: rgba(255,255,255,.07) }
 .atlas-page.auth-page .btn-login, .atlas-page.auth-page .btn-main {
   margin-top: 8px; background: #fff; color: #000; border: none; border-radius: 6px;
@@ -667,9 +667,9 @@
   transition: opacity .2s, transform .15s; position: relative;
 }
 .atlas-page.auth-page .btn-login:hover, .atlas-page.auth-page .btn-main:hover { opacity: .9; transform: translateY(-1px) }
-.atlas-page.auth-page .page-foot { grid-column: 1/-1; border-top: 1px solid rgba(255,255,255,.08); padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em; color: rgba(255,255,255,.18); text-transform: uppercase }
-.atlas-page.auth-page .page-foot a { color: rgba(255,255,255,.22); text-decoration: none; transition: color .2s }
-.atlas-page.auth-page .page-foot a:hover { color: rgba(255,255,255,.55) }
+.atlas-page.auth-page .page-foot { grid-column: 1/-1; border-top: 1px solid rgba(255,255,255,.08); padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em; color: rgba(255,255,255,.55); text-transform: uppercase }
+.atlas-page.auth-page .page-foot a { color: rgba(255,255,255,.6); text-decoration: none; transition: color .2s }
+.atlas-page.auth-page .page-foot a:hover { color: rgba(255,255,255,.85) }
 @media(max-width:640px) {
   .atlas-page.auth-page { grid-template-columns: 1fr }
   .atlas-page.auth-page .center { grid-column: 1; padding: 44px 24px }
@@ -688,14 +688,14 @@
 @keyframes afadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 .atlas-page .step-head { margin-bottom: 36px }
 .atlas-page .step-head h2 { font-weight: 700; font-size: clamp(26px,3.2vw,36px); letter-spacing: -.042em; line-height: 1.06; margin-bottom: 10px }
-.atlas-page .step-head p { font-size: 14.5px; color: rgba(255,255,255,.32); line-height: 1.65 }
-.atlas-page .step-num { font-family: var(--font-mono); font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.22); margin-bottom: 14px }
+.atlas-page .step-head p { font-size: 14.5px; color: rgba(255,255,255,.66); line-height: 1.65 }
+.atlas-page .step-num { font-family: var(--font-mono); font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.55); margin-bottom: 14px }
 .atlas-page .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
 .atlas-page .tools-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 4px }
 .atlas-page .trust { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 32px; padding-top: 28px; border-top: 1px solid rgba(255,255,255,.07) }
-.atlas-page .trust-item { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em; color: rgba(255,255,255,.22); text-transform: uppercase; display: flex; align-items: center; gap: 6px }
+.atlas-page .trust-item { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em; color: rgba(255,255,255,.55); text-transform: uppercase; display: flex; align-items: center; gap: 6px }
 .atlas-page .trust-item::before { content: '✓'; color: rgba(255,255,255,.35) }
-.atlas-page .auth-foot { margin-top: 28px; font-size: 13px; color: rgba(255,255,255,.3); text-align: center }
+.atlas-page .auth-foot { margin-top: 28px; font-size: 13px; color: rgba(255,255,255,.6); text-align: center }
 .atlas-page .auth-foot a { color: rgba(255,255,255,.6); text-decoration: none; font-weight: 500; transition: color .2s }
 .atlas-page .auth-foot a:hover { color: #fff }
 .atlas-page .btn-back { background: transparent; border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 13px 20px; font-family: var(--font-body); font-weight: 500; font-size: 14px; color: rgba(255,255,255,.55); cursor: pointer; transition: background .2s, color .2s }
@@ -717,8 +717,8 @@
 .atlas-page.auth-page {
   --bg:   #141412;
   --fg:   #F5F4F0;
-  --muted: rgba(245,244,240,0.52);
-  --faint: rgba(245,244,240,0.30);
+  --muted: rgba(245,244,240,0.66);
+  --faint: rgba(245,244,240,0.5);
   --line:  rgba(255,255,255,0.12);
   --font-body: 'Geist', 'Plus Jakarta Sans', system-ui, sans-serif;
 }

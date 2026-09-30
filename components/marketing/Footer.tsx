@@ -6,18 +6,23 @@ export function Footer() {
       <div className="sl-footer-grid">
         <div>
           <span className="sl-wordmark">Starlane</span>
-          <p className="sl-p" style={{ marginTop: 14, maxWidth: 280 }}>Intelligence and execution infrastructure, by Vantro Technologies.</p>
+          <p className="sl-p" style={{ marginTop: 14, maxWidth: 280 }}>Decision and execution intelligence for operating companies.</p>
         </div>
         <div className="sl-footer-col">
-          <h3>Product</h3>
-          <a href="#product">Intelligence</a>
-          <a href="#story">How it reasons</a>
-          <a href="#capabilities">Capabilities</a>
+          <h3>Features</h3>
+          <Link href="/product/bridge">The Bridge</Link>
+          <Link href="/product/scan">Scan</Link>
+          <Link href="/product/watch">Watch</Link>
+          <Link href="/product/missions">Missions</Link>
+          <Link href="/product/simulate">Simulate</Link>
+          <Link href="/product/memory">Memory</Link>
+          <Link href="/product/prepared">Prepared</Link>
         </div>
         <div className="sl-footer-col">
           <h3>Company</h3>
           <Link href="/security">Security</Link>
-          <a href="#trust">Evidence &amp; controls</a>
+          <Link href="/#trust">Evidence &amp; controls</Link>
+          <Link href="/access">Get Starlane</Link>
           <Link href="/login">Sign in</Link>
         </div>
         <div className="sl-footer-col">
@@ -28,7 +33,6 @@ export function Footer() {
       </div>
       <div style={{ paddingTop: 28, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <span style={{ fontSize: 12.5, color: "var(--sl-ink-faint)" }}>© {new Date().getFullYear()} Vantro Technologies</span>
-        <span style={{ fontFamily: "var(--sl-mono)", fontSize: 11, color: "var(--sl-ink-faint)" }}>Decisions grounded in evidence.</span>
       </div>
     </footer>
   );

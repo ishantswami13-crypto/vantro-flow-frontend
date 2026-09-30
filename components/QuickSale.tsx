@@ -140,7 +140,7 @@ export default function QuickSale({ onClose, onSaved }: QuickSaleProps) {
               <p className="text-2xs text-muted">Type ya bolo — sale instant save ho jaayegi</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl text-muted hover:text-primary hover:bg-surface-2 transition-colors">
+          <button aria-label="Close" onClick={onClose} className="p-2 rounded-xl text-muted hover:text-primary hover:bg-surface-2 transition-colors">
             <FiX size={16} />
           </button>
         </div>
@@ -194,7 +194,7 @@ export default function QuickSale({ onClose, onSaved }: QuickSaleProps) {
                       placeholder="Unit" className="col-span-2 bg-surface-2 border border-white/8 rounded-lg px-2 py-2 text-xs text-muted focus:outline-none focus:border-accent/50 text-center" />
                     <input value={item.price} onChange={e => updateItem(i, "price", parseFloat(e.target.value) || 0)}
                       type="number" min="0" placeholder="₹ Rate" className="col-span-3 bg-surface-2 border border-white/8 rounded-lg px-2 py-2 text-xs text-primary focus:outline-none focus:border-accent/50" />
-                    <button onClick={() => removeItem(i)} className="col-span-1 text-muted hover:text-danger transition-colors text-center">
+                    <button aria-label="Remove this item" onClick={() => removeItem(i)} className="col-span-1 text-muted hover:text-danger transition-colors text-center">
                       <FiX size={12} />
                     </button>
                   </div>

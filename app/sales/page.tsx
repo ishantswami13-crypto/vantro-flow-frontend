@@ -805,7 +805,7 @@ export default function SalesPage() {
             <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-12 pb-4"
                  style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)" }}>
               <p className="text-white/80 text-sm font-medium">Invoice ko frame ke andar rakho</p>
-              <button onClick={stopCamera}
+              <button aria-label="Stop camera" onClick={stopCamera}
                 className="p-2.5 rounded-full bg-black/40 backdrop-blur-sm text-white border border-white/20">
                 <FiX size={18} />
               </button>
@@ -1032,11 +1032,11 @@ export default function SalesPage() {
                             Collect
                           </button>
                         )}
-                        <button onClick={() => openEdit(s)}
+                        <button aria-label="Edit" onClick={() => openEdit(s)}
                           className="p-1.5 bg-surface-2 text-muted rounded-lg hover:text-primary transition-colors">
                           <FiEdit2 size={12} />
                         </button>
-                        <button onClick={() => deleteSale(s.id)}
+                        <button aria-label="Delete" onClick={() => deleteSale(s.id)}
                           className="p-1.5 bg-surface-2 text-muted rounded-lg hover:text-danger transition-colors">
                           <FiTrash2 size={12} />
                         </button>
@@ -1068,7 +1068,7 @@ export default function SalesPage() {
                     {scanning ? "AI is extracting details from your photo" : "Customer ka invoice add karo"}
                   </p>
                 </div>
-                <button onClick={closeModal} className="p-1.5 text-muted hover:text-primary"><FiX size={16} /></button>
+                <button aria-label="Close" onClick={closeModal} className="p-1.5 text-muted hover:text-primary"><FiX size={16} /></button>
               </div>
 
               {/* Bill preview */}

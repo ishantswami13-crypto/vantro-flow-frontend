@@ -45,6 +45,7 @@ const MORE_GROUPS: { label: string; items: { href: string; label: string; icon: 
       { href: "/dashboard",      label: "Overview",       icon: FiSun },
       { href: "/customers",      label: "Customers",      icon: FiUsers },
       { href: "/suppliers",      label: "Suppliers",      icon: FiTruck },
+      { href: "/discover",       label: "Discover",       icon: FiSearch },
     ],
   },
   {
@@ -272,9 +273,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           </div>
           {!collapsed && (
             <div className="flex items-center shrink-0" style={{ gap: "4px" }}>
-              <button
-                aria-label="Notifications"
-                title="Notifications"
+              {/* The dot is the pending follow-up count, so the bell opens them. */}
+              <Link
+                href="/collections"
+                aria-label={pendingCount ? `${pendingCount} pending follow-up${pendingCount === 1 ? "" : "s"}` : "Follow-ups"}
+                title={pendingCount ? `${pendingCount} pending follow-up${pendingCount === 1 ? "" : "s"}` : "Follow-ups"}
                 className="hover-fade relative flex items-center justify-center rounded-[6px]"
                 style={{ width: "26px", height: "26px", color: "#63635F" }}
               >
@@ -285,7 +288,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     style={{ width: "5px", height: "5px", top: "4px", right: "5px", background: "var(--accent)" }}
                   />
                 )}
-              </button>
+              </Link>
               <button
                 onClick={() => setSearchOpen(true)}
                 aria-label="Search Starlane (Ctrl+K)"
@@ -297,7 +300,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               </button>
             </div>
           )}
-          <button onClick={onClose} className="lg:hidden p-1.5 rounded-lg" style={{ color: "#6F6F6B" }}>
+          <button aria-label="Close" onClick={onClose} className="lg:hidden p-1.5 rounded-lg" style={{ color: "#6F6F6B" }}>
             <FiX size={15} />
           </button>
         </div>
@@ -321,7 +324,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           <div className="space-y-0.5">
             {PRIMARY.map(n => (
               <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon}
-                active={pathname === n.href || pathname.startsWith(n.href + "/")}
+                active={pathname === n.href || pathname.startsWith(n.href + "/") || (n.href === "/prepared" && pathname.startsWith("/decisions"))}
                 onClick={onClose} collapsedMode={collapsed} />
             ))}
           </div>
@@ -333,7 +336,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               state instead of sharing the unrelated "More" flyout. */}
           <div className="mt-5 pt-3 space-y-0.5" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
             {!collapsed && (
-              <p className="px-2.5 mb-1" style={{ fontSize: "10.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", fontWeight: 500 }}>
+              <p className="px-2.5 mb-1" style={{ fontSize: "10.5px", letterSpacing: "1px", textTransform: "uppercase", color: "#9A9992", fontWeight: 500 }}>
                 {V32_SECONDARY_NAV_LABEL}
               </p>
             )}
@@ -419,7 +422,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     })}
                     {isAdmin && (
                       <Link href="/admin" onClick={() => { setMoreOpen(false); onClose(); }}
-                        className="flex items-center gap-2 rounded-[6px] text-[13px]" style={{ height: "33px", paddingLeft: "8px", color: "#6F6F6B" }}>
+                        className="flex items-center gap-2 rounded-[6px] text-[13px]" style={{ height: "33px", paddingLeft: "8px", color: "#9A9992" }}>
                         <FiShield size={14} strokeWidth={1.75} /> Admin
                       </Link>
                     )}
@@ -434,7 +437,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               longer pushes this down. */}
           {!collapsed && recents.length > 0 && (
             <div className="mt-8">
-              <p className="px-2.5 mb-1.5" style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#62625F" }}>
+              <p className="px-2.5 mb-1.5" style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9A9992" }}>
                 Recents
               </p>
               <div>
@@ -449,14 +452,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
                   >
                     <span className="truncate text-[13px]">{r.label}</span>
-                    <span className="shrink-0 text-[11px]" style={{ color: "#6F6F6B" }}>{timeAgo(r.at)}</span>
+                    <span className="shrink-0 text-[11px]" style={{ color: "#9A9992" }}>{timeAgo(r.at)}</span>
                   </Link>
                 ))}
               </div>
               <Link href="/intelligence" onClick={onClose}
-                className="block px-2.5 mt-0.5 text-[12px] transition-colors duration-150" style={{ height: "28px", lineHeight: "28px", color: "#6F6F6B" }}
+                className="block px-2.5 mt-0.5 text-[12px] transition-colors duration-150" style={{ height: "28px", lineHeight: "28px", color: "#9A9992" }}
                 onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = "#A7A7A2")}
-                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = "#6F6F6B")}>
+                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = "#9A9992")}>
                 View all intelligence
               </Link>
             </div>
@@ -492,7 +495,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             {!collapsed && (
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-[13px] font-medium truncate leading-tight" style={{ color: "#F7F7F5" }}>{userName}</p>
-                <p className="text-[11px] truncate" style={{ color: "#6F6F6B" }}>
+                <p className="text-[11px] truncate" style={{ color: "#9A9992" }}>
                   {bizType ? bizType.label : (userPlan === "free" ? "Free plan" : userPlan.charAt(0).toUpperCase() + userPlan.slice(1) + " plan")}
                 </p>
               </div>

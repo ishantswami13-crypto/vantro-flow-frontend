@@ -8,7 +8,8 @@ import {
   FiChevronDown, FiChevronUp, FiChevronLeft, FiChevronRight,
   FiCalendar, FiZap,
 } from "react-icons/fi";
-import { isDemoMode } from "@/lib/demo";
+import TodayDecisionsCard from "@/components/decisions/TodayDecisionsCard";
+import { TodaySummary } from "@/components/os/TodaySummary";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -23,13 +24,21 @@ function fmtINR(n: number, short = false) {
   if (short && n >= 1000)   return "₹" + (n/1000).toFixed(0) + "K";
   return "₹" + Number(n).toLocaleString("en-IN");
 }
-function todayStr() { return new Date().toISOString().split("T")[0]; }
+// Local calendar date (IST for Indian users), not the UTC date.
+function localIso(dt: Date) { return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`; }
+function todayStr() { return localIso(new Date()); }
+// Older order rows hold items as a JSON string; never let that crash the page.
+function orderItems(order: any): any[] {
+  let items = order?.items;
+  if (typeof items === "string") { try { items = JSON.parse(items); } catch { items = []; } }
+  return Array.isArray(items) ? items : [];
+}
 function fmtDateFull(d: string) {
   const dt = new Date(d + "T00:00:00");
   const isToday   = d === todayStr();
   const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
-  const isYday    = d === yesterday.toISOString().split("T")[0];
-  const label     = isToday ? "Aaj" : isYday ? "Kal" : "";
+  const isYday    = d === localIso(yesterday);
+  const label     = isToday ? "Today" : isYday ? "Yesterday" : "";
   const weekday   = dt.toLocaleDateString("en-IN", { weekday: "long" });
   const dayMonth  = dt.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   return { label, weekday, dayMonth };
@@ -40,41 +49,8 @@ function fmtTime(iso: string) {
 function addDays(d: string, n: number) {
   const dt = new Date(d + "T00:00:00");
   dt.setDate(dt.getDate() + n);
-  return dt.toISOString().split("T")[0];
+  return localIso(dt);
 }
-
-// ── Demo data ──────────────────────────────────────────────────────────────
-const DEMO_SUMMARY = {
-  summary: {
-    income: { total: 87500, orders: 62500, invoices: 25000 },
-    expenses: { total: 18200, by_category: { fuel: 3200, salary: 8000, material: 5000, misc: 2000 } },
-    net_profit: 69300,
-    order_count: 7,
-    invoices_collected: 3,
-    calls_made: 5,
-    orders_by_status: { delivered: 5, new: 1, confirmed: 1, dispatched: 0, cancelled: 0 },
-  },
-  orders: [
-    { id:"d1", customer_name:"Mehta Fabrics",      total_amount: 24000, status:"delivered", created_at: new Date().toISOString(), items:[{quantity:8,unit:"roll",name:"Grey Cloth"}] },
-    { id:"d2", customer_name:"Sharma Steel Works", total_amount: 18500, status:"delivered", created_at: new Date().toISOString(), items:[{quantity:3,unit:"ton",name:"TMT Rod 12mm"}] },
-    { id:"d3", customer_name:"Patel Agro",         total_amount: 12000, status:"dispatched", created_at: new Date().toISOString(), items:[{quantity:20,unit:"bag",name:"Urea Fertilizer"}] },
-    { id:"d4", customer_name:"Gupta Construction", total_amount:  8000, status:"confirmed",  created_at: new Date().toISOString(), items:[{quantity:50,unit:"bag",name:"Cement PPC 53"}] },
-  ],
-  expenses: [
-    { id:"e1", description:"Truck fuel — delivery run", amount:3200, category:"fuel",     created_at: new Date().toISOString() },
-    { id:"e2", description:"Driver salary — Ramesh",    amount:8000, category:"salary",   created_at: new Date().toISOString() },
-    { id:"e3", description:"Raw material — steel rods", amount:5000, category:"material", created_at: new Date().toISOString() },
-    { id:"e4", description:"Misc office expenses",      amount:2000, category:"misc",      created_at: new Date().toISOString() },
-  ],
-  paid_invoices: [
-    { id:"i1", customer_name:"Joshi Electronics", invoice_amount:25000 },
-  ],
-  top_items: [
-    { name:"TMT Rod 12mm", qty:8 },
-    { name:"Cement PPC 53", qty:50 },
-    { name:"Grey Cloth", qty:8 },
-  ],
-};
 
 const STATUS_COLORS: Record<string,string> = {
   new:"text-accent bg-accent/10", confirmed:"text-warning bg-warning/10",
@@ -92,18 +68,24 @@ export default function TodayPage() {
   const [expForm, setExpForm]   = useState({ description:"", amount:"", category:"misc" });
   const [saleForm, setSaleForm] = useState({ customer_name:"", amount:"", description:"", payment_mode:"cash" });
   const [submitting, setSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string|null>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async (d = date) => {
-    if (isDemoMode()) { setSummary(DEMO_SUMMARY); setLoading(false); return; }
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch(`${API}/api/today/summary?date=${d}`, {
         headers: { ...authHeaders() }, credentials: "include",
       });
-      const data = await res.json();
-      if (data.success) setSummary(data);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) setSummary(data);
+      else { setSummary(null); setLoadError(data.error || `The server answered ${res.status}.`); }
+    } catch {
+      setSummary(null);
+      setLoadError("Could not reach Starlane. Check your connection.");
     } finally { setLoading(false); }
   }, [date]);
 
@@ -116,26 +98,29 @@ export default function TodayPage() {
 
   const addExpense = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isDemoMode()) { setShowExpForm(false); return; }
     setSubmitting(true);
+    setFormError(null);
     try {
-      await fetch(`${API}/api/expenses`, {
+      const res = await fetch(`${API}/api/expenses`, {
         method:"POST",
         headers: { ...authHeaders(), "Content-Type":"application/json" }, credentials: "include",
         body: JSON.stringify(expForm),
       });
+      if (!res.ok) { setFormError("The expense was not saved. Check the amount and try again."); return; }
       setExpForm({ description:"", amount:"", category:"misc" });
       setShowExpForm(false);
       load(date);
+    } catch {
+      setFormError("The expense was not saved: Starlane could not be reached.");
     } finally { setSubmitting(false); }
   };
 
   const addSale = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isDemoMode()) { setShowSaleForm(false); return; }
     setSubmitting(true);
+    setFormError(null);
     try {
-      await fetch(`${API}/api/orders`, {
+      const res = await fetch(`${API}/api/orders`, {
         method:"POST",
         headers: { ...authHeaders(), "Content-Type":"application/json" }, credentials: "include",
         body: JSON.stringify({
@@ -146,15 +131,19 @@ export default function TodayPage() {
           status:"delivered", source:"manual",
         }),
       });
+      if (!res.ok) { setFormError("The sale was not saved. Check the amount and try again."); return; }
       setSaleForm({ customer_name:"", amount:"", description:"", payment_mode:"cash" });
       setShowSaleForm(false);
       load(date);
+    } catch {
+      setFormError("The sale was not saved: Starlane could not be reached.");
     } finally { setSubmitting(false); }
   };
 
   const deleteExpense = async (id: string) => {
-    if (isDemoMode()) return;
-    await fetch(`${API}/api/expenses/${id}`, { method:"DELETE", headers: { ...authHeaders() }, credentials: "include" });
+    if (!window.confirm("Delete this expense? This cannot be undone.")) return;
+    const res = await fetch(`${API}/api/expenses/${id}`, { method:"DELETE", headers: { ...authHeaders() }, credentials: "include" }).catch(() => null);
+    if (!res || !res.ok) { setLoadError("That expense was not deleted. Try again."); return; }
     load(date);
   };
 
@@ -167,13 +156,15 @@ export default function TodayPage() {
   const isToday = date === todayStr();
 
   return (
-    <DashboardLayout pageTitle="Aaj ka Hisaab">
+    <DashboardLayout pageTitle="Today">
+      <TodaySummary />
+      <TodayDecisionsCard />
 
       {/* ── PREMIUM DATE NAVIGATOR ──────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-5 gap-3">
         <div className="flex items-center gap-2">
           {/* Prev day */}
-          <button onClick={() => changeDate(addDays(date,-1))}
+          <button aria-label="Previous" onClick={() => changeDate(addDays(date,-1))}
             className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-secondary hover:text-primary hover:border-accent/40 transition-all">
             <FiChevronLeft size={16} />
           </button>
@@ -198,7 +189,7 @@ export default function TodayPage() {
           </button>
 
           {/* Next day — disabled if today */}
-          <button onClick={() => changeDate(addDays(date,1))}
+          <button aria-label="Next" onClick={() => changeDate(addDays(date,1))}
             disabled={isToday}
             className="w-9 h-9 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-secondary hover:text-primary hover:border-accent/40 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
             <FiChevronRight size={16} />
@@ -208,7 +199,7 @@ export default function TodayPage() {
           {!isToday && (
             <button onClick={() => changeDate(todayStr())}
               className="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all">
-              Aaj
+              Today
             </button>
           )}
         </div>
@@ -226,9 +217,16 @@ export default function TodayPage() {
         </div>
       </div>
 
+      {formError && !showExpForm && !showSaleForm && <p role="alert" className="text-sm text-danger mb-3">{formError}</p>}
       {loading && !summary ? (
         <div className="flex items-center justify-center h-48 text-muted">
           <FiRefreshCw className="animate-spin mr-2" size={18} /> Loading…
+        </div>
+      ) : loadError && !summary ? (
+        <div role="alert" className="rounded-2xl p-5 mb-5 border border-danger/20 bg-danger/5">
+          <p className="text-sm font-semibold text-danger">This day&apos;s sales and expenses could not be loaded.</p>
+          <p className="text-sm text-secondary mt-1">{loadError} Nothing has been changed. The figures are hidden rather than shown as zero.</p>
+          <button type="button" onClick={() => load(date)} className="mt-3 px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-bold">Try again</button>
         </div>
       ) : (
         <>
@@ -244,7 +242,10 @@ export default function TodayPage() {
                 : <FiTrendingDown size={80} className="text-danger" />}
             </div>
             <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-              Net {isProfit ? "Profit" : "Loss"} Today
+              Net money {isProfit ? "in" : "out"} {isToday ? "today" : "on this day"}
+            </p>
+            <p className="text-2xs text-muted -mt-1 mb-2">
+              Sales booked and payments received, minus expenses and purchases. This is not profit: it has no cost of goods.
             </p>
             <p className={`text-5xl font-black tracking-tight mb-4 ${isProfit ? "text-success" : "text-danger"}`}>
               {isProfit ? "+" : ""}{fmtINR(net)}
@@ -252,10 +253,10 @@ export default function TodayPage() {
 
             <div className="grid grid-cols-4 gap-3">
               {[
-                { label:"Income",    value: `+${fmtINR(income, true)}`,   color:"text-success" },
-                { label:"Expenses",  value: `-${fmtINR(expenses, true)}`, color:"text-danger"  },
+                { label:"Money in",  value: `+${fmtINR(income, true)}`,   color:"text-success" },
+                { label:"Money out", value: `-${fmtINR(expenses, true)}`, color:"text-danger"  },
                 { label:"Orders",    value: String(s?.order_count || 0),  color:"text-primary" },
-                { label:"Collected", value: String(s?.invoices_collected || 0), color:"text-primary" },
+                { label:"Invoices paid", value: String(s?.invoices_collected || 0), color:"text-primary" },
               ].map(({ label, value, color }) => (
                 <div key={label} className="bg-black/10 rounded-xl px-3 py-2">
                   <p className="text-2xs text-muted/70 mb-1">{label}</p>
@@ -289,9 +290,9 @@ export default function TodayPage() {
                     ? "bg-surface-1 text-primary shadow-sm border border-border"
                     : "text-muted hover:text-secondary"
                 }`}>
-                {t==="sales" ? `💰 Sales (${(summary?.orders||[]).length})`
-                 : t==="expenses" ? `💸 Expenses (${(summary?.expenses||[]).length})`
-                 : "📊 Overview"}
+                {t==="sales" ? `Sales (${(summary?.orders||[]).length})`
+                 : t==="expenses" ? `Expenses (${(summary?.expenses||[]).length})`
+                 : "Overview"}
               </button>
             ))}
           </div>
@@ -300,12 +301,13 @@ export default function TodayPage() {
           {tab==="overview" && (
             <div className="space-y-4">
               <div className="card-premium p-4">
-                <p className="text-2xs font-bold text-muted uppercase tracking-wider mb-3">Income Breakdown</p>
+                <p className="text-2xs font-bold text-muted uppercase tracking-wider mb-3">Money in, by source</p>
                 <div className="space-y-3">
                   {[
-                    { icon: FiShoppingBag, label:"Orders Income",       color:"#0066FF", value: s?.income?.orders   || 0 },
-                    { icon: FiFileText,    label:"Invoices Collected",   color:"#10D98A", value: s?.income?.invoices || 0 },
-                  ].map(({ icon: Icon, label, color, value }) => (
+                    { icon: FiShoppingBag, label:"Orders booked",       color:"#0066FF", value: s?.income?.orders   || 0 },
+                    { icon: FiFileText,    label:"Invoice payments received",   color:"#10D98A", value: s?.income?.invoices || 0 },
+                    { icon: FiDollarSign,  label:"Sales Recorded",       color:"#7C5CFC", value: s?.sales_total || 0 },
+                  ].filter((r) => r.label !== "Sales Recorded" || r.value > 0).map(({ icon: Icon, label, color, value }) => (
                     <div key={label} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg flex items-center justify-center"
@@ -319,7 +321,7 @@ export default function TodayPage() {
                   ))}
                   <div className="h-px bg-border" />
                   <div className="flex justify-between text-sm font-bold">
-                    <span className="text-primary">Total Income</span>
+                    <span className="text-primary">Total money in</span>
                     <span className="text-success text-base">+{fmtINR(income)}</span>
                   </div>
                 </div>
@@ -335,6 +337,12 @@ export default function TodayPage() {
                         <span className="font-semibold text-danger text-sm">-{fmtINR(amt as number)}</span>
                       </div>
                     ))}
+                    {(s?.expenses?.purchases || 0) > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-secondary">📦 Purchases</span>
+                        <span className="font-semibold text-danger text-sm">-{fmtINR(s.expenses.purchases)}</span>
+                      </div>
+                    )}
                     <div className="h-px bg-border" />
                     <div className="flex justify-between text-sm font-bold">
                       <span className="text-primary">Total Expenses</span>
@@ -366,8 +374,8 @@ export default function TodayPage() {
                   <div className="w-14 h-14 rounded-2xl bg-surface-2 border border-border flex items-center justify-center mx-auto mb-4">
                     <FiZap size={24} className="text-muted opacity-50" />
                   </div>
-                  <p className="font-bold text-primary mb-1">Aaj ka data khaali hai</p>
-                  <p className="text-sm text-muted mb-4">Sale ya expense add karo upar se</p>
+                  <p className="font-bold text-primary mb-1">Nothing recorded for this day</p>
+                  <p className="text-sm text-muted mb-4">Add a sale or an expense above.</p>
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => setShowSaleForm(true)}
                       className="px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all">
@@ -421,9 +429,9 @@ export default function TodayPage() {
                               <span className="text-2xs text-muted">{fmtTime(order.created_at)}</span>
                               {order.source==="ai_call" && <span className="text-2xs text-accent bg-accent/10 px-1.5 rounded-full">📞 AI Call</span>}
                             </div>
-                            {(order.items||[]).length > 0 && (
+                            {orderItems(order).length > 0 && (
                               <p className="text-xs text-muted mt-1 truncate">
-                                {order.items.slice(0,3).map((i:any) => `${i.quantity} ${i.unit} ${i.local_name||i.name}`).join(" · ")}
+                                {orderItems(order).slice(0,3).map((i:any) => `${i.quantity} ${i.unit} ${i.local_name||i.name}`).join(" · ")}
                               </p>
                             )}
                           </div>
@@ -476,7 +484,7 @@ export default function TodayPage() {
                         </div>
                       </div>
                       <p className="font-black text-danger text-sm shrink-0">-{fmtINR(Number(exp.amount))}</p>
-                      <button onClick={() => deleteExpense(exp.id)} className="text-danger/30 hover:text-danger p-1 transition-colors">
+                      <button aria-label="Delete" onClick={() => deleteExpense(exp.id)} className="text-danger/30 hover:text-danger p-1 transition-colors">
                         <FiTrash2 size={13} />
                       </button>
                     </div>
@@ -521,6 +529,7 @@ export default function TodayPage() {
                   </select>
                 </div>
               </div>
+              {formError && <p role="alert" className="text-sm text-danger">{formError}</p>}
               <button type="submit" disabled={submitting}
                 className="w-full bg-danger/10 text-danger border border-danger/20 py-3 rounded-xl font-bold text-sm hover:bg-danger/20 transition-colors flex items-center justify-center gap-2">
                 {submitting ? <FiRefreshCw className="animate-spin" size={14} /> : <FiPlus size={14} />}
@@ -561,6 +570,7 @@ export default function TodayPage() {
                   className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent"
                   placeholder="5 truck bajri, 2 bag cement, cloth…" />
               </div>
+              {formError && <p role="alert" className="text-sm text-danger">{formError}</p>}
               <button type="submit" disabled={submitting}
                 className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all shadow-sm flex items-center justify-center gap-2">
                 {submitting ? <FiRefreshCw className="animate-spin" size={14} /> : <FiPlus size={14} />}

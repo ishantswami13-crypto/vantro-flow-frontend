@@ -1,0 +1,3 @@
+# Native clients and their shared package are not part of the web deployment.
+desktop/
+mobile/

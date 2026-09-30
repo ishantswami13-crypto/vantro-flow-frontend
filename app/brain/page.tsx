@@ -173,7 +173,7 @@ export default function BrainPage() {
                   <div key={r.id} className="flex items-start gap-2 group">
                     <span className="text-2xs text-accent bg-accent/10 px-1.5 py-0.5 rounded-full shrink-0 capitalize">{r.category}</span>
                     <p className="text-xs text-secondary flex-1">{r.rule}</p>
-                    <button onClick={() => deleteRule(r.id)} className="text-danger/40 hover:text-danger opacity-0 group-hover:opacity-100 p-0.5">
+                    <button aria-label="Delete" onClick={() => deleteRule(r.id)} className="text-danger/40 hover:text-danger opacity-0 group-hover:opacity-100 p-0.5">
                       <FiTrash2 size={11} />
                     </button>
                   </div>
