@@ -265,11 +265,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { path: web }
-      - uses: actions/checkout@v4
-        with:
-          repository: ishantswami13-crypto/vantro-flow-backend
-          ref: ${{ vars.BACKEND_RELEASE_REF || 'main' }}
-          path: backend
+      - name: Check out the backend this release ships with
+        # A tag gates on vars.BACKEND_RELEASE_REF, else the backend's main (what
+        # production deploys). A branch build gates on the backend branch of the
+        # same name when there is one (stacked work), else main.
+        run: |
+          ref="${{ vars.BACKEND_RELEASE_REF }}"
+          if [ -z "$ref" ]; then
+            if [ "${{ startsWith(github.ref, 'refs/tags/') }}" = "true" ]; then ref=main; else ref="${{ github.ref_name }}"; fi
+          fi
+          url=https://github.com/ishantswami13-crypto/vantro-flow-backend
+          git clone -q --depth 1 --branch "$ref" "$url" backend 2>/dev/null || { echo "no backend branch $ref; using main"; ref=main; git clone -q --depth 1 "$url" backend; }
+          echo "BACKEND_REF=$ref" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - name: Web app — lint, typecheck, secret scan, build
@@ -284,7 +291,7 @@ jobs:
           NODE_ENV: test
           JWT_SECRET: ci-only-jwt-secret-not-used-anywhere-else-0123456789
         run: |
-          echo "backend ref: $(git rev-parse --short HEAD) (${{ vars.BACKEND_RELEASE_REF || 'main' }})"
+          echo "backend ref: $BACKEND_REF @ $(git rev-parse --short HEAD)"
           npm ci
           npm run check
           npx eslint . --quiet
