@@ -9,7 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "tauri": "tauri",
-    "icons": "node scripts/make-icon.mjs && tauri icon icon-source.png",
+    "icons": "node ../scripts/make-brand.mjs && tauri icon icon-source.png",
     "e2e:preview": "python3 scripts/e2e-preview.py"
   },
   "dependencies": {
