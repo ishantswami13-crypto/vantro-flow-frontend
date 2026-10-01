@@ -1,7 +1,6 @@
 ## Starlane 0.1.2 Pilot for Windows
 
 ### What changed in 0.1.2
-- A new sign-in screen with a moving starfield.
 - **Continue with Google, Apple or phone number.** These finish in your browser and then open Starlane signed in. Each one shows "Soon" until Starlane switches it on.
 - Your email and password (your Starlane ID) still work as before.
 

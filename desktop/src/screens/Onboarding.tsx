@@ -8,7 +8,6 @@ import { api, app, savePrefs } from '../api';
 import { tallyHost } from '../connector/tallyHost';
 import { onShellEvent, openExternal } from '../platform';
 import { Mark, Spinner } from '../ui';
-import { Starfield } from '../Starfield';
 import { useHost } from './Sources';
 
 const WEBSITE = 'https://vantro-flow-frontend.vercel.app';
@@ -18,7 +17,6 @@ function Frame({ step, children }: { step: number; children: ReactNode }) {
   return (
     <div className="onb">
       <aside className="onb-side">
-        <Starfield />
         <div className="wordmark" style={{ padding: 0 }}><Mark size={20} />Starlane</div>
         <p className="sentence" style={{ marginTop: 56 }}>Know what needs you today, from your company’s own books.</p>
         <ol className="steps">

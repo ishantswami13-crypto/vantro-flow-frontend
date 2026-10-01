@@ -7,7 +7,6 @@ import { FiEye, FiEyeOff, FiRefreshCw, FiCheckCircle, FiArrowRight } from "react
 import { saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import { INDUSTRY_OPTIONS } from "@/lib/businessTypes";
-import { Starfield } from "@/components/brand/Starfield";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -257,7 +256,6 @@ function SignupForm() {
 export default function SignupPage() {
   return (
     <div className="atlas-page auth-page">
-      <div className="auth-sky"><Starfield /></div>
       <header className="topbar">
         <Link href="/" style={{display:"flex",alignItems:"center",textDecoration:"none",color:"#fff"}}>
           <span className="brand-wm">Starlane</span>

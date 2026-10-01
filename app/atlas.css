@@ -747,9 +747,6 @@
 .atlas-page.auth-page .btn-login:active,
 .atlas-page.auth-page .btn-main:active { transform: scale(0.97) }
 
-.atlas-page.auth-page .auth-sky { position: fixed; inset: 0; z-index: 0; pointer-events: none }
-.atlas-page.auth-page > :not(.auth-sky) { position: relative; z-index: 1 }
-
 /* Sign-in options: Google, Apple, phone, then the Starlane ID form */
 .atlas-page.auth-page .signin-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px }
 .atlas-page.auth-page .so-btn {

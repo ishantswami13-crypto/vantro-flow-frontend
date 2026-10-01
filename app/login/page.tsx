@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { FiEye, FiEyeOff, FiArrowRight, FiCheck } from "react-icons/fi";
 import { api, saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
-import { Starfield } from "@/components/brand/Starfield";
 import { SignInOptions } from "@/components/auth/SignInOptions";
 
 // /login?app=<state> is the desktop app asking to sign in through the browser.
@@ -91,7 +90,6 @@ export default function LoginPage() {
 
   return (
     <div className="atlas-page auth-page">
-      <div className="auth-sky"><Starfield /></div>
       <header className="topbar">
         <Link href="/" style={{display:"flex",alignItems:"center",textDecoration:"none",color:"#fff"}}>
           <span className="brand-wm">Starlane</span>
