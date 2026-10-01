@@ -143,6 +143,25 @@ export function createStarlaneClient(opts: StarlaneClientOptions) {
       await opts.tokens.save(session);
       return out;
     },
+    // Which of Google, Apple and phone sign-in the server has switched on.
+    async providers(): Promise<{ google: boolean; apple: boolean; phone: boolean }> {
+      const out = await parse<{ google: unknown; apple: unknown; phone: boolean }>(await raw('/api/auth/providers', {}));
+      return { google: !!out.google, apple: !!out.apple, phone: !!out.phone };
+    },
+    // Browser sign-in (Google, Apple, phone or email on the website): trade the
+    // single-use code the website handed back for this app's own session.
+    async exchangeBrowserCode(code: string, state: string): Promise<LoginResponse> {
+      const res = await raw('/api/auth/native/exchange', {
+        method: 'POST',
+        body: { code, state, client: opts.info.client, platform: opts.info.platform, deviceName: opts.info.deviceName, appVersion: opts.info.appVersion },
+      });
+      const out = await parse<LoginResponse & { success: boolean }>(res);
+      const { accessToken, accessExpiresAt, refreshToken, refreshExpiresAt, sessionId } = out;
+      session = { accessToken, accessExpiresAt, refreshToken, refreshExpiresAt, sessionId };
+      loaded = true;
+      await opts.tokens.save(session);
+      return out;
+    },
     async logout() {
       try { await authed('/api/auth/native/logout', { method: 'POST', body: {} }); } catch { /* sign out locally regardless */ }
       await endSession();

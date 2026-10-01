@@ -221,6 +221,23 @@ function ensureDataUrl(value: string, mimeType: string): string {
   return value.startsWith('data:') ? value : `data:${mimeType};base64,${value}`;
 }
 
+async function signInCall<T>(path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: body === undefined ? 'GET' : 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    credentials: 'include',
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  let data: any = null;
+  try { data = await res.json(); } catch { /* not JSON */ }
+  if (!res.ok) {
+    const err = new Error(data?.error || `Sign-in failed (HTTP ${res.status}).`);
+    (err as any).status = res.status; (err as any).code = data?.code;
+    throw err;
+  }
+  return data as T;
+}
+
 // ─── Auth ────────────────────────────────────────────────
 export const api = {
   auth: {
@@ -233,6 +250,17 @@ export const api = {
     // authenticated call, not just this one) — kept here too since this
     // endpoint now also echoes it in the body, same shape as login/signup.
     me: () => request<{ user: User; csrf_token?: string | null }>('/api/auth/me'),
+    // Other ways to sign in. Each is off until its key is set on the server.
+    // These use signInCall, not request(): a wrong code is a 401 that must not
+    // bounce the person off the sign-in page.
+    providers: () => signInCall<{ google: { clientId: string } | null; apple: { clientId: string } | null; phone: boolean }>('/api/auth/providers'),
+    oauth: (provider: 'google' | 'apple', body: { credential: string; name?: string }) =>
+      signInCall<{ token: string; csrf_token?: string | null; user: User }>(`/api/auth/oauth/${provider}`, body),
+    phoneStart: (phone: string) => signInCall<{ success: boolean; message: string }>('/api/auth/phone/start', { phone }),
+    phoneVerify: (phone: string, code: string) =>
+      signInCall<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/phone/verify', { phone, code }),
+    // A single-use code the desktop app trades for its own session.
+    desktopHandoff: (state: string) => signInCall<{ code: string }>('/api/auth/desktop/handoff', { state }),
   },
 
   // ─── Dashboard ──────────────────────────────────────────

@@ -640,7 +640,7 @@
 .atlas-page .draft-banner { background: rgba(255,200,0,.07); border-bottom: 1px solid rgba(255,200,0,.15); padding: 12px var(--pad); text-align: center; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; color: rgba(255,200,0,.6) }
 
 /* AUTH PAGES */
-.atlas-page.auth-page { display: grid; grid-template-columns: 1fr 520px 1fr; grid-template-rows: auto 1fr auto; min-height: 100vh }
+.atlas-page.auth-page { position: relative; isolation: isolate; background: radial-gradient(120% 80% at 80% 0%, #17163A 0%, #0B0B1A 45%, #050509 100%); display: grid; grid-template-columns: 1fr 520px 1fr; grid-template-rows: auto 1fr auto; min-height: 100vh }
 .atlas-page.auth-page .topbar { grid-column: 1/-1; display: flex; align-items: center; justify-content: space-between; padding: 24px 40px; border-bottom: 1px solid rgba(255,255,255,.08) }
 .atlas-page.auth-page .brand-wm { font-weight: 700; font-size: 14px; letter-spacing: .2em; text-transform: uppercase }
 .atlas-page.auth-page .topbar-right { font-size: 13px; color: rgba(255,255,255,.62) }
@@ -746,3 +746,34 @@
 .atlas-page.auth-page .btn-main:hover { background: #2A2A2E; opacity: 1; transform: none }
 .atlas-page.auth-page .btn-login:active,
 .atlas-page.auth-page .btn-main:active { transform: scale(0.97) }
+
+/* Sign-in options: Google, Apple, phone, then the Starlane ID form */
+.atlas-page.auth-page .signin-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px }
+.atlas-page.auth-page .so-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+  padding: 12px 18px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.06); color: #F5F4F0; font-family: var(--font-body); font-size: 14.5px; font-weight: 500;
+  cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  transition: background-color 140ms cubic-bezier(0.2,0.8,0.2,1), border-color 140ms;
+}
+.atlas-page.auth-page .so-btn:hover:not(:disabled) { background: rgba(255,255,255,.11); border-color: rgba(255,255,255,.28) }
+.atlas-page.auth-page .so-btn:disabled { opacity: .5; cursor: default }
+.atlas-page.auth-page .so-soon {
+  font-style: normal; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.7); margin-left: 4px;
+}
+.atlas-page.auth-page .so-google { display: flex; justify-content: center; min-height: 44px }
+.atlas-page.auth-page .so-phone { display: flex; gap: 8px; flex-wrap: wrap }
+.atlas-page.auth-page .so-phone input {
+  flex: 1; min-width: 0; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); border-radius: 999px;
+  padding: 11px 16px; color: #F5F4F0; font-size: 15px; outline: none; font-family: var(--font-body);
+}
+.atlas-page.auth-page .so-phone input:focus { border-color: rgba(255,255,255,.34) }
+.atlas-page.auth-page .so-go { border-radius: 999px; padding: 0 18px; border: none; background: #F5F4F0; color: #0B0B10; font-weight: 600; cursor: pointer }
+.atlas-page.auth-page .so-go:disabled { opacity: .4; cursor: default }
+.atlas-page.auth-page .so-note { width: 100%; font-size: 12.5px; color: rgba(255,255,255,.66); margin: 2px 4px 0 }
+.atlas-page.auth-page .so-note button { background: none; border: none; color: rgba(255,255,255,.85); text-decoration: underline; cursor: pointer; font: inherit; padding: 0 }
+.atlas-page.auth-page .so-divider { display: flex; align-items: center; gap: 12px; margin: 14px 0 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.5) }
+.atlas-page.auth-page .so-divider::before, .atlas-page.auth-page .so-divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.12) }
+.atlas-page.auth-page .app-handoff { display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); margin-bottom: 18px; backdrop-filter: blur(10px) }
+.atlas-page.auth-page .app-handoff p { font-size: 14px; color: rgba(255,255,255,.75); line-height: 1.5; margin: 0 }

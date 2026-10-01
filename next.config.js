@@ -29,6 +29,8 @@ const connectSrc = [
   'https://*.i.posthog.com',
   'https://*.supabase.co',
   'wss://*.supabase.co',
+  // Sign in with Google
+  'https://accounts.google.com',
 ].filter((value, index, all) => all.indexOf(value) === index);
 
 const securityHeaders = [
@@ -49,12 +51,12 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.razorpay.com https://*.posthog.com https://*.i.posthog.com",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.razorpay.com https://*.posthog.com https://*.i.posthog.com https://accounts.google.com https://appleid.cdn-apple.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
       `connect-src ${connectSrc.join(' ')}`,
-      "frame-src https://checkout.razorpay.com https://api.razorpay.com",
+      "frame-src https://checkout.razorpay.com https://api.razorpay.com https://accounts.google.com https://appleid.apple.com",
       "media-src 'self' blob:",
       "object-src 'none'",
       "base-uri 'self'",
