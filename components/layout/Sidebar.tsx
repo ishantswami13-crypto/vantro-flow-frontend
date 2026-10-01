@@ -20,6 +20,7 @@ import { getRecents, timeAgo, type RecentEntry } from "@/lib/recents";
 import { CommandPalette, type SearchableRoute } from "./CommandPalette";
 import { IdentityAvatar } from "@/components/identity/IdentityAvatar";
 import { IdentityPicker } from "@/components/identity/IdentityPicker";
+import StarlaneMark from "@/components/brand/StarlaneMark";
 import { V32_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, V32_SECONDARY_NAV_LABEL } from "@/lib/navigation";
 
 // Starlane Version 32 (frozen design) primary nav — 8 items, exact order,
@@ -265,6 +266,9 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         {/* Brand + search + collapse control */}
         <div className="flex items-center justify-between px-3.5 shrink-0" style={{ height: "56px" }}>
           <div className="flex items-center gap-2 min-w-0">
+            <span style={{ display: "inline-flex", borderRadius: 6, boxShadow: "0 0 0 1px rgba(255,255,255,0.10)" }}>
+              <StarlaneMark size={24} title="Starlane" />
+            </span>
             {!collapsed && (
               <span className="truncate" style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: "20px", letterSpacing: "-0.3px", color: "#F5F4F0" }}>
                 Starlane

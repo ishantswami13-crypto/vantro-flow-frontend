@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import StarlaneMark from "@/components/brand/StarlaneMark";
 import { useEffect, useRef, useState } from "react";
 
 export function useNavScroll(ref: React.RefObject<HTMLElement | null>) {
@@ -29,7 +30,7 @@ export function Nav() {
   return (
     <>
       <nav aria-label="Main navigation" className="sl-nav" ref={navRef}>
-        <Link href="/" aria-label="Starlane home" className="sl-wordmark">Starlane</Link>
+        <Link href="/" aria-label="Starlane home" className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={26} />Starlane</Link>
         <div className="sl-navlinks">
           <Link href="/product" className="hidden md:inline">Features</Link>
           <Link href="/product/bridge" className="hidden md:inline">The Bridge</Link>

@@ -1,11 +1,12 @@
 import Link from "next/link";
+import StarlaneMark from "@/components/brand/StarlaneMark";
 
 export function Footer() {
   return (
     <footer className="sl-wrap" style={{ paddingTop: 64, paddingBottom: 32 }}>
       <div className="sl-footer-grid">
         <div>
-          <span className="sl-wordmark">Starlane</span>
+          <span className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={26} />Starlane</span>
           <p className="sl-p" style={{ marginTop: 14, maxWidth: 280 }}>Decision and execution intelligence for operating companies.</p>
         </div>
         <div className="sl-footer-col">
