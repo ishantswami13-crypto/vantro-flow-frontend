@@ -1,6 +1,12 @@
-## Starlane 0.1.0 Pilot for Windows
+## Starlane 0.1.1 Pilot for Windows
 
-This is the first pilot build of Starlane for Windows. It is for selected businesses working with the Starlane team. It is not a general-availability release.
+### What changed in 0.1.1
+- The new Starlane S logo on the app icon, Start Menu, taskbar and sign-in screen.
+- **Forgot password** and **Request access** on the sign-in screen now open the Starlane website in your browser. In 0.1.0 they did nothing.
+
+To update, download and install over 0.1.0. Your sign-in and data are kept.
+
+This is a pilot build of Starlane for Windows. It is for selected businesses working with the Starlane team. It is not a general-availability release.
 
 ### Install
 1. Download `Starlane-Setup-x64.exe` below, or use the Download button on the Starlane website.
