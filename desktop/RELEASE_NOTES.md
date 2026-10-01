@@ -1,10 +1,15 @@
-## Starlane 0.1.1 Pilot for Windows
+## Starlane 0.1.2 Pilot for Windows
+
+### What changed in 0.1.2
+- A new sign-in screen with a moving starfield.
+- **Continue with Google, Apple or phone number.** These finish in your browser and then open Starlane signed in. Each one shows "Soon" until Starlane switches it on.
+- Your email and password (your Starlane ID) still work as before.
+
+To update, download and install over 0.1.1. Your sign-in and data are kept.
 
 ### What changed in 0.1.1
 - The new Starlane S logo on the app icon, Start Menu, taskbar and sign-in screen.
 - **Forgot password** and **Request access** on the sign-in screen now open the Starlane website in your browser. In 0.1.0 they did nothing.
-
-To update, download and install over 0.1.0. Your sign-in and data are kept.
 
 This is a pilot build of Starlane for Windows. It is for selected businesses working with the Starlane team. It is not a general-availability release.
 

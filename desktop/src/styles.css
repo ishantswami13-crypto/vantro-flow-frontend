@@ -133,7 +133,8 @@ textarea.input { height: auto; padding: 10px 12px; resize: none; }
 
 /* ── Onboarding ────────────────────────────────────────── */
 .onb { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); height: 100%; }
-.onb-side { background: var(--rail); color: var(--rail-ink); padding: 40px 44px; display: flex; flex-direction: column; }
+.onb-side { position: relative; overflow: hidden; isolation: isolate; background: radial-gradient(120% 90% at 85% 10%, #1A1840 0%, #0D0E1F 45%, #07070D 100%); color: var(--rail-ink); padding: 40px 44px; display: flex; flex-direction: column; }
+.onb-side > :not(canvas) { position: relative; z-index: 1; }
 .onb-side .sentence { color: var(--rail-ink); font-size: 30px; line-height: 38px; }
 .steps { list-style: none; padding: 0; margin: auto 0 0; display: grid; gap: 10px; font-size: 13px; color: var(--rail-faint); }
 .steps li { display: flex; gap: 10px; align-items: center; }
@@ -198,3 +199,12 @@ textarea.input { height: auto; padding: 10px 12px; resize: none; }
 .section .kind { margin-left: 6px; vertical-align: 2px; }
 input[type='range'] { accent-color: var(--ink); width: 100%; }
 select.input { appearance: auto; }
+
+/* Sign-in options (they finish in the browser, then hand back to the app) */
+.signin-options { display: grid; gap: 10px; margin-bottom: 6px }
+.so-btn { display: flex; align-items: center; justify-content: center; gap: 10px; height: 40px; border-radius: 999px; border: 1px solid var(--rule-strong); background: var(--surface); color: var(--ink); font: inherit; font-weight: 500; cursor: default; transition: background-color 120ms, border-color 120ms }
+.so-btn:hover:not(:disabled) { background: var(--sunk) }
+.so-soon { font-style: normal; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--rule-strong); opacity: .8 }
+.so-btn:disabled { opacity: .5; cursor: default }
+.so-divider { display: flex; align-items: center; gap: 12px; margin: 8px 0 2px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; opacity: .6 }
+.so-divider::before, .so-divider::after { content: ""; flex: 1; height: 1px; background: currentColor; opacity: .25 }

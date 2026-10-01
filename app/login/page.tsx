@@ -6,6 +6,11 @@ import { useRouter } from "next/navigation";
 import { FiEye, FiEyeOff, FiArrowRight, FiCheck } from "react-icons/fi";
 import { api, saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
+import { Starfield } from "@/components/brand/Starfield";
+import { SignInOptions } from "@/components/auth/SignInOptions";
+
+// /login?app=<state> is the desktop app asking to sign in through the browser.
+const APP_STATE_RE = /^[A-Za-z0-9_-]{16,64}$/;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,6 +24,41 @@ export default function LoginPage() {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passFocused, setPassFocused]   = useState(false);
   const passRef = useRef<HTMLInputElement>(null);
+  const [appState, setAppState]     = useState<string | null>(null);
+  const [signedInAs, setSignedInAs] = useState<string | null>(null);
+  const [handedOff, setHandedOff]   = useState<string | null>(null);
+
+  useEffect(() => {
+    const st = new URLSearchParams(window.location.search).get("app");
+    if (st && APP_STATE_RE.test(st)) {
+      setAppState(st);
+      try { const u = JSON.parse(localStorage.getItem("vantro_user") || "null"); if (u?.email) setSignedInAs(u.email); } catch { /* not signed in */ }
+    }
+  }, []);
+
+  // Hand this browser sign-in to the desktop app: a 2-minute single-use code,
+  // never the session token itself.
+  const openApp = async () => {
+    if (!appState) return;
+    setError(""); setLoading(true);
+    try {
+      const { code } = await api.auth.desktopHandoff(appState);
+      const link = `starlane://auth/${appState}/${code}`;
+      setHandedOff(link);
+      window.location.href = link;
+    } catch (err: unknown) {
+      setSignedInAs(null);
+      setError(err instanceof Error ? err.message : "Could not reach the app. Sign in again.");
+    } finally { setLoading(false); }
+  };
+
+  const finishSignIn = async (data: { token: string; csrf_token?: string | null; user: any }, remember = true) => {
+    await saveAuth(data.token, data.user, remember, data.csrf_token);
+    posthog.identify(data.user.id, { email: data.user.email, name: data.user.business_name, plan: data.user.plan });
+    posthog.capture("user_logged_in");
+    if (appState) { setSignedInAs(data.user.email); await openApp(); }
+    else router.push("/bridge");
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("vantro_saved_email");
@@ -40,10 +80,7 @@ export default function LoginPage() {
       const data = await api.auth.login(form);
       if (rememberMe) { localStorage.setItem("vantro_saved_email", form.email); localStorage.setItem("vantro_remember", "1"); }
       else { localStorage.removeItem("vantro_saved_email"); localStorage.removeItem("vantro_remember"); }
-      await saveAuth(data.token, data.user, rememberMe, data.csrf_token);
-      posthog.identify(data.user.id, { email: data.user.email, name: data.user.business_name, plan: data.user.plan });
-      posthog.capture("user_logged_in");
-      router.push("/bridge");
+      await finishSignIn(data, rememberMe);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Invalid email or password");
     } finally { setLoading(false); }
@@ -54,6 +91,7 @@ export default function LoginPage() {
 
   return (
     <div className="atlas-page auth-page">
+      <div className="auth-sky"><Starfield /></div>
       <header className="topbar">
         <Link href="/" style={{display:"flex",alignItems:"center",textDecoration:"none",color:"#fff"}}>
           <span className="brand-wm">Starlane</span>
@@ -63,8 +101,8 @@ export default function LoginPage() {
 
       <main className="center fade-once">
         <div className="auth-head">
-          <h1>Welcome back.</h1>
-          <p style={{fontFamily:"'Hanken Grotesk',system-ui"}}>{step === "email" ? "Sign in to your Starlane workspace." : form.email}</p>
+          <h1>{appState ? "Sign in to the app." : "Welcome back."}</h1>
+          <p style={{fontFamily:"'Hanken Grotesk',system-ui"}}>{step === "email" ? (appState ? "Sign in here and Starlane on your computer opens signed in." : "Sign in to your Starlane workspace.") : form.email}</p>
         </div>
 
         {error && (
@@ -73,7 +111,25 @@ export default function LoginPage() {
           </div>
         )}
 
-        {step === "email" && (
+        {handedOff && (
+          <div className="app-handoff">
+            <p>You are signed in. Starlane should open on your computer now. If it did not, open it again here.</p>
+            <a className="btn-login" href={handedOff} style={{textDecoration:"none"}}><span className="btn-txt">Open Starlane</span><FiArrowRight size={16}/></a>
+          </div>
+        )}
+
+        {!handedOff && appState && signedInAs && (
+          <div className="app-handoff">
+            <p>You are already signed in as {signedInAs}.</p>
+            <button type="button" className="btn-login" onClick={openApp} disabled={loading}><span className="btn-txt">Continue to the app</span><FiArrowRight size={16}/></button>
+          </div>
+        )}
+
+        {!handedOff && step === "email" && (
+          <SignInOptions disabled={loading} onSession={(d) => { setError(""); finishSignIn(d).catch((e) => setError(e instanceof Error ? e.message : "Sign-in failed.")); }} onError={setError} />
+        )}
+
+        {!handedOff && step === "email" && (
           <form className="auth-form" onSubmit={handleEmailNext} noValidate>
             <div className="field">
               <label htmlFor="email">Work Email</label>
@@ -94,7 +150,7 @@ export default function LoginPage() {
           </form>
         )}
 
-        {step === "password" && (
+        {!handedOff && step === "password" && (
           <form className="auth-form" onSubmit={handleLogin}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",borderRadius:"6px",background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.08)"}}>
               <span style={{fontSize:"13px",color:"rgba(255,255,255,.7)"}}>{form.email}</span>

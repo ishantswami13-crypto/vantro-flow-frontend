@@ -312,6 +312,8 @@ mod tests {
     fn deep_link_routes() {
         assert_eq!(route_from_url("starlane://actions/8b1f0c0e-1").as_deref(), Some("/actions/8b1f0c0e-1"));
         assert_eq!(route_from_url("starlane://sources/tally").as_deref(), Some("/sources/tally"));
+        // Browser sign-in hands back state and a single-use code as path parts.
+        assert_eq!(route_from_url("starlane://auth/AbC_-12345678901234/x_Y-z0").as_deref(), Some("/auth/AbC_-12345678901234/x_Y-z0"));
         assert_eq!(route_from_url("https://evil.test/actions/1"), None);
         assert_eq!(route_from_url("starlane://actions/1?x=<script>"), Some("/actions/1".into()));
         assert_eq!(route_from_url("starlane://actions/a%20b"), None);

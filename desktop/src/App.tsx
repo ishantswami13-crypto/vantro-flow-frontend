@@ -125,7 +125,7 @@ function Shell({ boot, onSignOut }: { boot: Bootstrap | null; onSignOut: () => v
   // Shell events: deep links, tray "Sync now".
   useEffect(() => {
     const offs: Array<Promise<() => void>> = [
-      onShellEvent('starlane://route', (p) => { if (typeof p === 'string') go(p); }),
+      onShellEvent('starlane://route', (p) => { if (typeof p === 'string' && !p.startsWith('/auth/')) go(p); }),
       onShellEvent('starlane://sync-now', () => { void tallyHost.syncNow(); }),
     ];
     return () => { offs.forEach((p) => void p.then((off) => off())); };
