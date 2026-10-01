@@ -16,6 +16,7 @@
     "autostart:allow-is-enabled",
     "process:allow-restart",
     "opener:allow-open-url",
+    "opener:allow-default-urls",
     "deep-link:default",
     "log:default",
     {

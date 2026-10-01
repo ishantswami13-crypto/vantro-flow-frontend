@@ -10,7 +10,7 @@ import { openExternal } from '../platform';
 import { Mark, Spinner } from '../ui';
 import { useHost } from './Sources';
 
-const WEBSITE = 'https://vantro-flow.vercel.app';
+const WEBSITE = 'https://vantro-flow-frontend.vercel.app';
 
 function Frame({ step, children }: { step: number; children: ReactNode }) {
   const steps = ['Sign in', 'Your organization', 'Your systems', 'Connect Tally', 'First sync'];
