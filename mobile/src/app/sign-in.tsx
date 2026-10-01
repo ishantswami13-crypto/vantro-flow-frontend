@@ -6,7 +6,7 @@ import { api } from '../lib/api';
 import { useSession } from '../lib/session';
 import { Button, T, c, f } from '../components/ui';
 
-const WEBSITE = 'https://vantro-flow.vercel.app';
+const WEBSITE = 'https://vantro-flow-frontend.vercel.app';
 
 export default function SignIn() {
   const { refresh } = useSession();

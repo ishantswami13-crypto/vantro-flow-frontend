@@ -38,7 +38,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "icons": "node scripts/make-icons.mjs"
+    "icons": "node ../scripts/make-brand.mjs"
   },
   "private": true,
   "description": "Starlane for iPhone and Android (Expo): Today, approvals with evidence, Discover, Ask Starlane, push."

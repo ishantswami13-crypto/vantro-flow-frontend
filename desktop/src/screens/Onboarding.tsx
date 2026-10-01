@@ -10,7 +10,7 @@ import { openExternal } from '../platform';
 import { Mark, Spinner } from '../ui';
 import { useHost } from './Sources';
 
-const WEBSITE = 'https://vantro-flow.vercel.app';
+const WEBSITE = 'https://vantro-flow-frontend.vercel.app';
 
 function Frame({ step, children }: { step: number; children: ReactNode }) {
   const steps = ['Sign in', 'Your organization', 'Your systems', 'Connect Tally', 'First sync'];
@@ -37,6 +37,11 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // Opens the page in the default browser; if Windows refuses, say where to go instead.
+  async function openSite(path: string) {
+    try { await openExternal(`${WEBSITE}${path}`); }
+    catch { setErr(`Could not open your browser. Go to ${WEBSITE}${path}`); }
+  }
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setErr(null);
     try { await api().login(email.trim(), password); onSignedIn(); }
@@ -56,8 +61,8 @@ export function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         <button className="btn primary" style={{ height: 40 }} disabled={busy}>{busy ? <span className="spin" /> : null}Sign in</button>
       </form>
       <div className="small muted" style={{ display: 'flex', gap: 16 }}>
-        <button className="btn ghost sm" style={{ paddingLeft: 0 }} onClick={() => void openExternal(`${WEBSITE}/forgot-password`)}>Forgot password</button>
-        <button className="btn ghost sm" onClick={() => void openExternal(`${WEBSITE}/access`)}>No account? Request access</button>
+        <button type="button" className="btn ghost sm" style={{ paddingLeft: 0 }} onClick={() => void openSite('/forgot-password')}>Forgot password</button>
+        <button type="button" className="btn ghost sm" onClick={() => void openSite('/access')}>No account? Request access</button>
       </div>
       <p className="small faint">Your session is stored in {app().os === 'macos' ? 'the macOS Keychain' : app().os === 'windows' ? 'Windows Credential Manager' : 'this computer’s credential store'}, never in a file.</p>
     </Frame>
