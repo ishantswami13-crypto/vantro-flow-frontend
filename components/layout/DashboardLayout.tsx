@@ -81,6 +81,21 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
 
   useEffect(() => { setIsDemo(isDemoMode()); }, []);
 
+  // Cards with .hover-lift carry a soft light that follows the cursor; this
+  // one listener feeds it the pointer position. Fine pointers only.
+  useEffect(() => {
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    const onMove = (e: PointerEvent) => {
+      const el = (e.target as Element | null)?.closest?.(".hover-lift") as HTMLElement | null;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      el.style.setProperty("--my", `${e.clientY - r.top}px`);
+    };
+    document.addEventListener("pointermove", onMove, { passive: true });
+    return () => document.removeEventListener("pointermove", onMove);
+  }, []);
+
   // Real working-memory: record the page actually visited, keyed off the
   // same pageTitle every screen already passes in. No server-side activity
   // log exists yet, so this is client-recorded — real navigation history,
@@ -200,7 +215,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
         )}
 
         <main className="flex-1 overflow-y-auto v32-main">
-          <div className="v32-wrap">{children}</div>
+          <div key={pathname} className="v32-wrap page-in">{children}</div>
         </main>
       </div>
 

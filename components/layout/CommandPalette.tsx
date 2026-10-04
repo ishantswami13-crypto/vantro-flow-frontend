@@ -120,7 +120,7 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
         role="dialog"
         aria-modal="true"
         aria-label="Search Starlane"
-        className="fixed fade-once flex flex-col overflow-hidden"
+        className="fixed pop-in flex flex-col overflow-hidden"
         style={{
           top: 90, left: "50%", transform: "translateX(-50%)", width: "min(660px, calc(100vw - 32px))", maxHeight: "70vh",
           background: "#FFFFFF", border: "1px solid #E5E4DF", borderRadius: 10, boxShadow: "0 6px 24px rgba(0,0,0,0.10)",

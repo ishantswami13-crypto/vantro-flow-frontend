@@ -182,13 +182,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         href={href}
         onClick={onClick}
         aria-current={active ? "page" : undefined}
-        className={`flex items-center ${active ? "" : "hover-fade"}`}
+        className={`nav-row relative flex items-center ${active ? "" : "hover-fade"}`}
         style={{
           gap: 10, padding: "8px 8px", borderRadius: 7, fontSize: 13, lineHeight: "16px",
           background: active ? "rgba(255,255,255,0.09)" : "transparent",
           color: active ? "#F5F4F0" : "#63635F",
         }}
       >
+        {active && <span aria-hidden="true" className="nav-mark" />}
         <Icon size={16} />
         <span className="flex-1 truncate">{label}</span>
       </Link>
@@ -298,7 +299,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           {moreOpen && (
             <div
               ref={moreRef}
-              className="fixed z-40 overflow-hidden fade-once"
+              className="fixed z-40 overflow-hidden pop-in"
               style={{
                 left: 252,
                 top: Math.max(12, (moreBtnRef.current?.getBoundingClientRect().top ?? 0) - 160),
@@ -359,7 +360,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           </button>
 
           {accountOpen && (
-            <div className="absolute z-40 overflow-hidden fade-once" style={{
+            <div className="absolute z-40 overflow-hidden pop-in" style={{
               left: 0, right: 0, bottom: 44, background: "#1B1B18", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
             }}>
               <div style={{ padding: 12, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>

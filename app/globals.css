@@ -432,11 +432,10 @@
 .card-in:nth-child(5) { animation-delay: 280ms; }
 .card-in:nth-child(6) { animation-delay: 350ms; }
 
-@keyframes pulseDot {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.3; }
-}
-.pulse-dot { animation: pulseDot 2.4s ease-in-out infinite; }
+/* Pulsing dots keep a solid core and breathe a fine ring outward
+   (the ring itself is .dot-live::after, defined with the premium details). */
+.pulse-dot { position: relative; }
+.pulse-dot:not(.absolute):not(.fixed) { display: inline-block; }
 
 @keyframes drawerIn {
   from { opacity: 0; transform: translateX(16px); }
@@ -447,7 +446,7 @@
   to   { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .fade-once, .card-in, .pulse-dot { animation: none; }
+  .fade-once, .card-in { animation: none; }
 }
 
 /* Global base transitions (handoff §3 Motion) — applied to every interactive
@@ -811,4 +810,163 @@ button:disabled { cursor: default; }
 @media (min-width: 768px) {
   .watch-grid { grid-template-columns: 2.2fr 2fr 1fr 1fr; row-gap: 0; }
   .watch-head { display: grid; }
+}
+
+/* ============================================================
+   V32 PREMIUM DETAILS — small, quiet motion and finish.
+   Everything here is decorative: it never carries information the
+   static page doesn't already show, and all of it switches off under
+   prefers-reduced-motion.
+   ============================================================ */
+:root {
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Paper grain: a barely-there texture so the off-white reads as paper,
+   not a flat screen fill. */
+.v32-main {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Route entry: a soft rise with a hint of focus-pull. */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(6px); filter: blur(2px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+/* Fill "backwards" only: once done, no filter/transform is left on the
+   wrapper, which would otherwise trap the fixed-position drawers inside it. */
+.page-in { animation: pageIn 420ms var(--ease-out-soft) backwards; }
+
+/* Rows arrive one after another (delay set inline per index). */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+.rise-in { animation: riseIn 460ms var(--ease-out-soft) both; }
+
+/* Figures settle into focus the first time they render. */
+@keyframes figureIn {
+  from { opacity: 0; filter: blur(3px); letter-spacing: 0.04em; }
+  to   { opacity: 1; filter: blur(0); letter-spacing: normal; }
+}
+.figure-in { animation: figureIn 620ms var(--ease-out-soft) both; display: inline-block; }
+
+/* Hairline rules draw in from the left. */
+@keyframes ruleDraw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.rule-draw { height: 1px; background: #EBEAE6; transform-origin: left center; animation: ruleDraw 900ms var(--ease-out-soft) 120ms both; }
+
+/* Live status dot: the dot stays solid; a fine ring breathes out of it. */
+.dot-live { position: relative; display: inline-block; flex-shrink: 0; }
+.dot-live::after, .pulse-dot::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: inherit; opacity: 0;
+  animation: dotRing 2.8s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+@keyframes dotRing {
+  0%   { transform: scale(1); opacity: 0.45; }
+  70%  { transform: scale(3); opacity: 0; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+/* Dot field: a fine dot grid behind a hero, with a slow wash of the
+   user's accent drifting across it. */
+.dot-field { position: absolute; pointer-events: none; z-index: 0; }
+.dot-field::before, .dot-field::after {
+  content: ""; position: absolute; inset: 0;
+  background-image: radial-gradient(circle, currentColor 0.8px, transparent 1.3px);
+  background-size: 14px 14px;
+  -webkit-mask-image: radial-gradient(ellipse var(--dot-rx, 46%) 100% at var(--dot-x, 100%) 0%, #000 0%, transparent 75%);
+          mask-image: radial-gradient(ellipse var(--dot-rx, 46%) 100% at var(--dot-x, 100%) 0%, #000 0%, transparent 75%);
+}
+.dot-field::before { color: rgba(25, 25, 23, 0.12); }
+.dot-field::after {
+  color: rgba(var(--accent-rgb), 0.85);
+  -webkit-mask-image: linear-gradient(105deg, transparent 35%, #000 50%, transparent 65%), radial-gradient(ellipse var(--dot-rx, 46%) 100% at var(--dot-x, 100%) 0%, #000 0%, transparent 75%);
+          mask-image: linear-gradient(105deg, transparent 35%, #000 50%, transparent 65%), radial-gradient(ellipse var(--dot-rx, 46%) 100% at var(--dot-x, 100%) 0%, #000 0%, transparent 75%);
+  -webkit-mask-size: 300% 100%, 100% 100%; mask-size: 300% 100%, 100% 100%;
+  -webkit-mask-composite: source-in; mask-composite: intersect;
+  animation: dotWash 9s ease-in-out infinite;
+  opacity: 0.55;
+}
+@keyframes dotWash {
+  0%   { -webkit-mask-position: 100% 0, 0 0; mask-position: 100% 0, 0 0; }
+  100% { -webkit-mask-position: 0% 0, 0 0;   mask-position: 0% 0, 0 0; }
+}
+.dot-field-wrap { position: relative; }
+.dot-field-wrap > :not(.dot-field) { position: relative; z-index: 1; }
+
+/* Thinking: three small dots, each lifting in turn. */
+.thinking-dots { display: inline-flex; gap: 4px; align-items: center; }
+.thinking-dots > span {
+  width: 4px; height: 4px; border-radius: 50%; background: currentColor;
+  animation: thinkDot 1.2s ease-in-out infinite;
+}
+.thinking-dots > span:nth-child(2) { animation-delay: 0.15s; }
+.thinking-dots > span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes thinkDot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+  30%           { transform: translateY(-3px); opacity: 1; }
+}
+
+/* Warmer, slower skeleton shimmer on paper. */
+.v32-wrap .skeleton {
+  background: linear-gradient(90deg, #EFEEEA 0%, #F7F6F3 40%, #EFEEEA 80%);
+  background-size: 240% 100%;
+  animation: shimmer 2.2s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* Primary buttons: a single light sheen passes on hover. */
+.btn-primary-v32, .btn-primary-sidebar { position: relative; overflow: hidden; isolation: isolate; }
+.btn-primary-v32::after, .btn-primary-sidebar::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.14) 50%, transparent 70%);
+  transform: translateX(-120%);
+}
+.btn-primary-v32:hover::after, .btn-primary-sidebar:hover::after {
+  transform: translateX(120%); transition: transform 700ms var(--ease-out-soft);
+}
+
+/* Cards: a soft light follows the cursor (position set by the layout). */
+.hover-lift { position: relative; }
+.hover-lift::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(var(--accent-rgb), 0.07), transparent 70%);
+  transition: opacity 220ms ease;
+}
+.hover-lift:hover::before { opacity: 1; }
+
+/* Sidebar: the active page carries a small accent mark that grows in. */
+.nav-mark {
+  position: absolute; left: 0; top: 50%; width: 2px; height: 14px; margin-top: -7px;
+  border-radius: 2px; background: var(--accent);
+  animation: navMark 360ms var(--ease-out-soft) both;
+}
+@keyframes navMark { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+.nav-row svg { transition: transform 160ms var(--ease-out-soft); }
+.nav-row:hover svg { transform: translateX(1px); }
+
+/* Composer: a quiet accent halo when focused. */
+.composer-glow { transition: border-color 200ms ease, box-shadow 260ms var(--ease-out-soft); }
+.composer-glow:focus-within {
+  border-color: rgba(var(--accent-rgb), 0.45) !important;
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.08), 0 10px 30px -12px rgba(25,25,23,0.18);
+}
+
+/* Command palette and pop-overs scale in from 98%. */
+/* Individual translate/scale so it composes with any inline transform
+   (the palette centres itself with translateX(-50%)). */
+@keyframes popIn {
+  from { opacity: 0; translate: 0 -4px; scale: 0.98; }
+  to   { opacity: 1; translate: 0 0; scale: 1; }
+}
+.pop-in { animation: popIn 200ms var(--ease-out-soft) both; transform-origin: top center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-in, .rise-in, .figure-in, .rule-draw, .pop-in, .nav-mark,
+  .dot-live::after, .pulse-dot::after, .dot-field::after, .thinking-dots > span, .v32-wrap .skeleton {
+    animation: none !important;
+  }
+  .figure-in, .page-in { filter: none; }
+  .btn-primary-v32:hover::after, .btn-primary-sidebar:hover::after { transition: none; transform: translateX(-120%); }
 }

@@ -104,15 +104,34 @@ export function SectionTitle({ children, size = 16, className = "" }: { children
   return <h2 className={className} style={{ fontFamily: V.serif, fontWeight: 400, fontSize: size, color: V.ink, margin: "0 0 6px", letterSpacing: "-0.1px" }}>{children}</h2>;
 }
 
-export function Dot({ color, size = 6, pulse = false, className = "" }: { color: string; size?: number; pulse?: boolean; className?: string }) {
+/** Status dot. `live` adds a fine ring breathing out of it, for states that are happening now. */
+export function Dot({ color, size = 6, pulse = false, live = false, className = "" }: { color: string; size?: number; pulse?: boolean; live?: boolean; className?: string }) {
+  if (live) {
+    return <span aria-hidden="true" className={`dot-live shrink-0 ${className}`} style={{ width: size, height: size, borderRadius: "50%", background: color }} />;
+  }
   return <span aria-hidden="true" className={`${pulse ? "pulse-dot" : ""} shrink-0 ${className}`} style={{ width: size, height: size, borderRadius: "50%", background: color, display: "inline-block" }} />;
 }
 
+/** Three small dots lifting in turn, beside "working" copy. */
+export function ThinkingDots({ color = V.tertiary }: { color?: string }) {
+  return <span aria-hidden="true" className="thinking-dots" style={{ color }}><span /><span /><span /></span>;
+}
+
+/** Decorative dot grid with a slow accent wash, placed behind a hero inside a `.dot-field-wrap`. */
+export function DotField({ style }: { style?: React.CSSProperties }) {
+  return <span aria-hidden="true" className="dot-field" style={{ inset: "-28px -24px auto -24px", height: 220, ...style }} />;
+}
+
+/** Hairline that draws in from the left. */
+export function Rule({ style }: { style?: React.CSSProperties }) {
+  return <div aria-hidden="true" className="rule-draw" style={style} />;
+}
+
 /** 6px dot + 12.5px label (status_dot). */
-export function StatusDot({ label, color, pulse }: { label: React.ReactNode; color: string; pulse?: boolean }) {
+export function StatusDot({ label, color, pulse, live }: { label: React.ReactNode; color: string; pulse?: boolean; live?: boolean }) {
   return (
     <span className="inline-flex items-center" style={{ gap: 6, fontSize: 12.5, color: V.body }}>
-      <Dot color={color} size={6} pulse={pulse} />
+      <Dot color={color} size={6} pulse={pulse} live={live} />
       {label}
     </span>
   );
@@ -124,7 +143,7 @@ export function Sep() {
 }
 
 export function Mono({ children, size = 12.5, color = V.ink, className = "" }: { children: React.ReactNode; size?: number; color?: string; className?: string }) {
-  return <span className={className} style={{ fontFamily: V.mono, fontSize: size, color, fontVariantNumeric: "tabular-nums" }}>{children}</span>;
+  return <span className={`figure-in ${className}`} style={{ fontFamily: V.mono, fontSize: size, color, fontVariantNumeric: "tabular-nums" }}>{children}</span>;
 }
 
 export function Chevron({ size = 14 }: { size?: number }) {
