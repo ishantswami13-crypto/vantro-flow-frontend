@@ -155,7 +155,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
         {/* Demo mode notice — a quiet horizontal disclosure strip, not an
             all-caps terminal-style alert. Truthful, low-key, sentence case. */}
         {isDemo && (
-          <div className="flex items-center justify-between gap-3 px-4 py-1.5 shrink-0" style={{ background: "#FAFAF8", borderBottom: "1px solid #EDEDE9" }}>
+          <div className="flex items-center justify-between gap-3 px-4 py-1.5 shrink-0" style={{ background: "#F7F7F4", borderBottom: "1px solid #EBEAE6" }}>
             <span className="text-xs flex items-center gap-1.5" style={{ color: "#8A8A86" }}>
               <FiInfo size={11} />
               Simulated demonstration — sample data, not your business
@@ -177,20 +177,21 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
 
         {/* Push notification permission banner */}
         {showNotifBanner && !isDemo && (
-          <div className="bg-accent/10 border-b border-accent/20 px-4 py-2 flex items-center justify-between gap-3 text-sm shrink-0">
-            <span className="text-accent font-medium">
-              Payment milte hi notification aayega — abhi enable karein
+          <div className="px-4 py-2 flex items-center justify-between gap-3 shrink-0" style={{ background: "#FFFFFF", borderBottom: "1px solid #EBEAE6", fontSize: 12.5 }}>
+            <span style={{ color: "#43433F" }}>
+              Get a notification the moment a payment lands.
             </span>
             <div className="flex gap-2 shrink-0">
               <button
                 onClick={handleEnableNotifications}
-                className="bg-white text-black px-3 py-1 rounded-lg text-xs font-semibold hover:bg-white/90"
+                className="btn-primary-v32 px-3 py-1 text-xs"
               >
                 Enable
               </button>
               <button
                 onClick={() => setShowNotifBanner(false)}
-                className="text-muted px-2 py-1 text-xs hover:text-primary"
+                className="hover-dim px-2 py-1 text-xs"
+                style={{ color: "#63635F" }}
               >
                 Later
               </button>
@@ -198,8 +199,8 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-5 page-fade id-wash">
-          {children}
+        <main className="flex-1 overflow-y-auto v32-main">
+          <div className="v32-wrap">{children}</div>
         </main>
       </div>
 

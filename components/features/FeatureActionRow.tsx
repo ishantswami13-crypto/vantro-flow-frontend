@@ -12,7 +12,7 @@ import { LIFECYCLE_LABEL, LIFECYCLE_TONE, type FeatureAction } from "../../packa
 
 const RULE = "rgba(25,25,23,0.10)", GRAPHITE = "#63635F";
 const TONE: Record<string, [string, string]> = {
-  accent: ["#ECEEF6", "#4B5170"], ok: ["#E9F2EC", "#2F6B4F"], warn: ["#F7EFDF", "#8A5A12"], bad: ["#F6E6E6", "#A23B3B"], muted: ["#F1F0EC", GRAPHITE],
+  accent: ["#ECEEF6", "#4B5170"], ok: ["#E9F2EC", "#477054"], warn: ["#F7EFDF", "#8A5A12"], bad: ["#F6E6E6", "#A23B3B"], muted: ["#F1F0EC", GRAPHITE],
 };
 const btn: React.CSSProperties = { fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "#fff", cursor: "pointer" };
 

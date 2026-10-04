@@ -40,7 +40,7 @@ export interface LensDrawerProps {
   onClose: () => void;
 }
 
-const DEFAULT_ACCENT = "#696D86";
+const DEFAULT_ACCENT = "var(--accent, #696D86)";
 
 export function LensDrawer({
   entityType,
@@ -84,67 +84,34 @@ export function LensDrawer({
         ];
 
   return (
-    <Drawer titleId={titleId} title={name} onClose={onClose}>
-      <div className="-m-4">
-        {/* Header block — entity type + avatar + name + status. The Drawer
-            shell already renders its own close button + h2, so this repeats
-            the name visually (Fraunces, 20px) below that accessible header,
-            matching the V32 identity-block layout. */}
-        <div className="px-2 pb-4 mb-4" style={{ borderBottom: "1px solid #EBEAE6" }}>
-          <p className="v32-section-label mb-3">{entityType}</p>
-          <div className="flex items-center gap-3">
-            <div
-              className="shrink-0 rounded-full"
-              style={{ width: 30, height: 30, background: accent, border: "1px solid rgba(25,25,23,0.14)" }}
-              aria-hidden="true"
-            />
-            <div className="min-w-0">
-              <p className="truncate" style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 20, color: "#191917" }}>
-                {name}
-              </p>
-              {statusLabel && (
-                <p className="text-[11px] mt-0.5" style={{ color: statusColor || accent }}>{statusLabel}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-4">
-            {resolvedActions.map(a => (
-              <button
-                key={a.label}
-                onClick={a.onClick}
-                className="btn-secondary-v32 px-3 py-1.5 text-[12px]"
-              >
-                {a.label}
-              </button>
+    <Drawer
+      titleId={titleId}
+      title={name}
+      onClose={onClose}
+      eyebrow={entityType}
+      leading={<span aria-hidden="true" className="shrink-0" style={{ width: 30, height: 30, borderRadius: "50%", background: accent }} />}
+      subtitle={statusLabel ? <span style={{ fontSize: 11, color: statusColor || accent }}>{statusLabel}</span> : undefined}
+      actions={resolvedActions.map(a => (
+        <button key={a.label} type="button" onClick={a.onClick} className="btn-secondary-v32" style={{ padding: "6px 12px", fontSize: 12 }}>
+          {a.label}
+        </button>
+      ))}
+    >
+      <div>
+        {sections.map(section => (
+          <div key={section.label} style={{ marginBottom: 22 }}>
+            <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 8 }}>{section.label}</div>
+            {section.rows.map(row => (
+              <div key={row.label} className="flex items-baseline justify-between gap-3" style={{ padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>
+                <span style={{ fontSize: 12.5, color: "#63635F" }}>{row.label}</span>
+                <span className="text-right" style={{ fontSize: 13, color: "#191917" }}>{row.value}</span>
+              </div>
             ))}
           </div>
-        </div>
-
-        <div className="px-2 space-y-5">
-          {sections.map(section => (
-            <div key={section.label}>
-              <p className="v32-section-label mb-2">{section.label}</p>
-              <div>
-                {section.rows.map(row => (
-                  <div
-                    key={row.label}
-                    className="flex items-baseline justify-between gap-3 py-1.5"
-                    style={{ borderBottom: "1px solid #F3F2EE" }}
-                  >
-                    <span className="text-[12.5px]" style={{ color: "#63635F" }}>{row.label}</span>
-                    <span className="text-[13px] text-right" style={{ color: "#191917", fontFamily: "'IBM Plex Mono', Menlo, monospace" }}>
-                      {row.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-          {sections.length === 0 && (
-            <p className="v32-meta">No further detail is available for this entity yet.</p>
-          )}
-        </div>
+        ))}
+        {sections.length === 0 && (
+          <p style={{ fontSize: 12.5, color: "#8A8A86" }}>No further detail is available for this entity yet.</p>
+        )}
       </div>
     </Drawer>
   );

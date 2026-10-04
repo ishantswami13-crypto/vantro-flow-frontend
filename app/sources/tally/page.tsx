@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type DataConnection } from "@/lib/api";
+import { FiChevronLeft } from "react-icons/fi";
+import { Button, Sep, StatusDot, ErrorBanner, SkeletonRows } from "@/components/v32/ui";
+import { IconSources } from "@/components/v32/icons";
 
 // Sources — Tally detail. STARLANE_FRONTEND_HANDOFF.md §1/§5/§6/§8/§16.
 //
@@ -46,33 +49,26 @@ function formatDate(iso: string | null): string {
   return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function OverviewRow({ label, value, tone }: { label: string; value: string; tone?: "warn" }) {
+function OverviewRow({ label, value, tone, mono = true }: { label: string; value: string; tone?: "warn"; mono?: boolean }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 4px", borderBottom: "1px solid #EBEAE6" }}>
+    <div className="flex items-baseline justify-between" style={{ gap: 16, padding: "8px 0", borderBottom: "1px solid #EBEAE6" }}>
       <span style={{ fontSize: 12.5, color: "#63635F" }}>{label}</span>
-      <span style={{ fontSize: 13.5, color: tone === "warn" ? "#C13B3B" : "#191917", fontWeight: 500, textAlign: "right", maxWidth: 360 }}>{value}</span>
+      <span style={{ fontSize: 13, color: tone === "warn" ? "#A64F4B" : "#191917", fontFamily: mono ? "'IBM Plex Mono', monospace" : undefined, textAlign: "right", maxWidth: 380 }}>{value}</span>
     </div>
   );
 }
 
-function EmptyPanel({ title, body }: { title: string; body: string }) {
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ padding: "36px 24px", textAlign: "center" }} className="fade-once">
-      <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 15, color: "#191917", marginBottom: 6 }}>{title}</p>
-      <p className="v32-body max-w-md mx-auto" style={{ color: "#63635F" }}>{body}</p>
-    </div>
-  );
-}
-
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, overflow: "hidden" }}>
-      <div style={{ padding: "12px 16px", borderBottom: "1px solid #EBEAE6" }}>
-        <p style={{ fontSize: 12, letterSpacing: 0.4, color: "#63635F", textTransform: "uppercase", margin: 0 }}>{title}</p>
-      </div>
+    <div>
+      <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 8 }}>{label}</div>
       {children}
     </div>
   );
+}
+
+function Quiet({ children }: { children: React.ReactNode }) {
+  return <div style={{ fontSize: 12.5, color: "#8A8A86", lineHeight: 1.6, paddingTop: 4 }}>{children}</div>;
 }
 
 export default function SourcesTallyPage() {
@@ -90,66 +86,60 @@ export default function SourcesTallyPage() {
   }, []);
 
   const tally = connections.find((c) => c.source_type === "TALLY");
+  const status = !tally ? { label: "Not connected", color: "rgba(25,25,23,0.25)" }
+    : tally.status === "CONNECTED" ? { label: "Healthy", color: "#477054" }
+      : tally.status === "ERROR" ? { label: "Needs attention", color: "#A64F4B" }
+        : { label: "Not connected", color: "rgba(25,25,23,0.25)" };
 
   return (
     <DashboardLayout pageTitle="Sources">
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
+      <Link href="/sources" className="hover-dim flex items-center" style={{ gap: 6, fontSize: 12.5, color: "#63635F" }}>
+        <FiChevronLeft size={13} /> Sources
+      </Link>
+
+      <div className="fade-once flex items-start justify-between flex-wrap" style={{ gap: 12 }}>
         <div>
-          <Link href="/sources" className="hover-dim" style={{ fontSize: 12.5, color: "#63635F", textDecoration: "none" }}>
-            ← Sources
-          </Link>
-          <h1 style={{ margin: "6px 0 0", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
-            Tally
-          </h1>
-        </div>
-
-        {loading ? (
-          <p style={{ fontSize: 13, color: "#63635F" }}>Loading…</p>
-        ) : loadError ? (
-          <p role="alert" style={{ fontSize: 13, color: "#B3261E" }}>Tally's status could not be loaded: {loadError}</p>
-        ) : !tally ? (
-          <Panel title="Overview">
-            <EmptyPanel
-              title="Tally isn't connected yet"
-              body="Connect Tally from the Sources page to see its connection status, sync history, and data here."
-            />
-          </Panel>
-        ) : (
-          <Panel title="Overview">
-            <div style={{ padding: "4px 16px" }}>
-              <OverviewRow label="Status" value={tally.status === "CONNECTED" ? "Connected" : tally.status === "ERROR" ? "Error" : "Not connected"} tone={tally.status === "ERROR" ? "warn" : undefined} />
-              <OverviewRow label="Connected since" value={formatDate(tally.connected_at)} />
-              <OverviewRow label="Last synced" value={tally.last_sync_at ? `${formatDate(tally.last_sync_at)} (${timeAgo(tally.last_sync_at)})` : "Never"} />
-              {tally.last_sync_error && <OverviewRow label="Last sync error" value={tally.last_sync_error} tone="warn" />}
-            </div>
-          </Panel>
-        )}
-
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <div style={{ flex: 1.3, minWidth: 320 }}>
-            <Panel title="Data availability by domain">
-              <EmptyPanel
-                title="Domain-level availability isn't tracked yet"
-                body="Starlane doesn't yet compute per-domain sync coverage (Customers, Receivables, Sales, Suppliers, Purchases, Inventory, Payables, Banking, Tax) from the Tally connection. This panel will show a real Available / Partial / Unavailable status per domain once that computation exists — never a hardcoded one."
-              />
-            </Panel>
+          <div className="flex items-center" style={{ gap: 10, marginBottom: 4 }}>
+            <IconSources size={18} style={{ color: "#43433F" }} />
+            <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 22, color: "#191917" }}>Tally</h1>
           </div>
-          <div style={{ flex: 1, maxWidth: 340, minWidth: 260 }}>
-            <Panel title="Reconciliation">
-              <EmptyPanel
-                title="Reconciliation data isn't available yet."
-                body="Once enabled, Starlane will compare receivables, payables, and sales totals directly against Tally and flag any difference before using those numbers elsewhere in the product."
-              />
-            </Panel>
+          <div className="flex items-center" style={{ gap: 6, fontSize: 12.5, color: "#63635F" }}>
+            Accounting / ERP <Sep /> <StatusDot label={loading ? "Checking…" : status.label} color={status.color} />
           </div>
         </div>
+        <Button small href="/sources/connect">{tally ? "Pair another computer" : "Connect Tally"}</Button>
+      </div>
 
-        <Panel title="Data quality">
-          <EmptyPanel
-            title="No data-quality issues have been surfaced yet."
-            body="Starlane checks for missing relationships, duplicate entities, and unmapped ledgers as more history syncs."
-          />
-        </Panel>
+      {loadError && <ErrorBanner>Tally&apos;s status could not be loaded: {loadError}</ErrorBanner>}
+
+      <div className="fade-once flex flex-col lg:flex-row" style={{ gap: 32 }}>
+        <div className="flex flex-col" style={{ flex: 1.3, minWidth: 0, gap: 22 }}>
+          <Section label="Overview">
+            {loading ? <SkeletonRows rows={3} height={36} /> : !tally ? (
+              <Quiet>Tally is not connected yet. Connect it to see its sync history and what Starlane reads from it.</Quiet>
+            ) : (
+              <>
+                <OverviewRow label="Last successful sync" value={tally.last_sync_at ? timeAgo(tally.last_sync_at) : "Never"} />
+                <OverviewRow label="Connected since" value={formatDate(tally.connected_at)} />
+                {tally.last_sync_error && <OverviewRow label="Last sync error" value={tally.last_sync_error} tone="warn" mono={false} />}
+              </>
+            )}
+          </Section>
+          <Section label="What Starlane understands from Tally">
+            <Quiet>
+              Per-domain coverage (customers, receivables, sales, suppliers, purchases, stock) is not computed yet,
+              so no Available or Partial status is shown here. What Starlane read from your data is under Sources, Data Quality.
+            </Quiet>
+          </Section>
+        </div>
+        <div className="flex flex-col" style={{ flex: 1, maxWidth: 320, minWidth: 0, gap: 22 }}>
+          <Section label="Reconciliation">
+            <Quiet>Once enabled, Starlane compares receivables, payables and sales totals against Tally and flags any difference before those numbers are used.</Quiet>
+          </Section>
+          <Section label="Access">
+            <Quiet>Read only. The bridge never creates, edits or deletes anything in Tally, and its device credential can be revoked from Sources.</Quiet>
+          </Section>
+        </div>
       </div>
     </DashboardLayout>
   );

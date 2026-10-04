@@ -18,7 +18,7 @@ const TOOLTIP_STYLE = {
   border: "1px solid #E5E5E1",
   borderRadius: 8,
   fontSize: 12,
-  color: "#171717",
+  color: "#191917",
   boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
 };
 
@@ -169,7 +169,7 @@ export default function AnalyticsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>Analytics</h2>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Analytics</h2>
             <p className="text-sm text-secondary mt-1">Collections performance based on your real data</p>
           </div>
           <div className="flex gap-1 p-1 bg-surface-2 rounded-xl border border-border">
@@ -266,7 +266,7 @@ export default function AnalyticsPage() {
                       <XAxis dataKey="day" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
                       <Tooltip contentStyle={TOOLTIP_STYLE} />
-                      <Bar dataKey="made"     name="Called"   fill="#171717" radius={[4,4,0,0]} />
+                      <Bar dataKey="made"     name="Called"   fill="#191917" radius={[4,4,0,0]} />
                       <Bar dataKey="answered" name="Answered" fill="#0066FF" radius={[4,4,0,0]} />
                       <Bar dataKey="promised" name="Promised" fill="#10D98A" radius={[4,4,0,0]} />
                     </BarChart>

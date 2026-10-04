@@ -8,6 +8,7 @@ import { LensDrawer, type LensSection } from "@/components/ui/LensDrawer";
 import { formatDateTime } from "@/components/intelligence/format";
 import { api, type SignalImpact, type IntelligenceEvidenceItem, type ImpactComponent } from "@/lib/api";
 import { FiChevronLeft } from "react-icons/fi";
+import { Button, Mono } from "@/components/v32/ui";
 
 // Discover detail — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§6/§16.
 //
@@ -56,49 +57,33 @@ export default function DiscoverDetailPage() {
         <FiChevronLeft size={13} /> Discover
       </button>
 
-      {loading && <p className="v32-body">Loading this finding…</p>}
+      {loading && <p style={{ fontSize: 13, color: "#63635F" }}>Loading this finding…</p>}
       {error && <p className="v32-body" style={{ color: "#A64F4B" }}>{error}</p>}
 
       {impact && (
-        <div className="flex fade-once" style={{ gap: 32 }}>
+        <div className="flex flex-col lg:flex-row fade-once" style={{ gap: 32 }}>
           {/* Left column — the finding itself (flex:1.4) */}
           <div style={{ flex: 1.4, minWidth: 0 }}>
-            <p className="v32-section-label mb-2">
-              {impact.signal.related_entity_type || impact.signal.event_type || "Signal"}
-            </p>
-            <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 21, color: "#191917" }} className="mb-2">
+            <div style={{ fontSize: 11, letterSpacing: "0.6px", textTransform: "uppercase", color: RISKY.has(impact.signal.impact_status) ? "#A64F4B" : "#63635F", marginBottom: 6 }}>
+              {(impact.signal.related_entity_type || impact.signal.event_type || "Signal").replace(/_/g, " ")}
+            </div>
+            <h1 style={{ margin: "0 0 16px", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 21, color: "#191917", lineHeight: 1.4 }}>
               {impact.signal.event_title || impact.signal.why_exists}
             </h1>
-            {impact.signal.event_title && (
-              <p className="v32-body mb-1" style={{ color: "#43433F" }}>{impact.signal.why_exists}</p>
+            {impact.signal.event_title && impact.signal.why_exists && (
+              <Block label="Why it is unusual">{impact.signal.why_exists}</Block>
             )}
             {impact.signal.rule_explanation && (
-              <p className="v32-body mb-4" style={{ color: "#63635F" }}>{impact.signal.rule_explanation}</p>
+              <Block label="Why it matters">{impact.signal.rule_explanation}</Block>
             )}
-
-            <div className="flex items-center gap-2 mb-6">
-              <button
-                onClick={() => setShowEvidence(true)}
-                className="hover-dim"
-                style={{
-                  fontSize: 11, fontFamily: "'IBM Plex Mono', Menlo, monospace",
-                  padding: "3px 8px", borderRadius: 4, border: "1px solid rgba(25,25,23,0.14)",
-                  color: "#63635F", background: "none", cursor: "pointer",
-                }}
-              >
-                ev View evidence
-              </button>
-              <span className="v32-meta">
-                {impact.signal.impact_status ? impact.signal.impact_status.replace(/_/g, " ").toLowerCase() : impact.signal.status.toLowerCase()}
-                {" · "}
-                {formatDateTime(impact.signal.last_updated_at || impact.signal.first_detected_at)}
-              </span>
-            </div>
+            {impact.totalRevenueExposure != null && (
+              <Block label="Magnitude / impact">Revenue exposure of <Mono size={13}>₹{(impact.totalRevenueExposure / 100000).toFixed(1)}L</Mono> across {impact.components?.length || 0} traced component{(impact.components?.length || 0) === 1 ? "" : "s"}.</Block>
+            )}
 
             {/* Known / Unknown transparency block — real, from the backend's
                 own sufficientDataForQuantification + reason fields. */}
             <div className="mb-6">
-              <p className="v32-section-label mb-3">What Starlane knows vs. doesn't</p>
+              <SectionLabel>What Starlane knows / does not know</SectionLabel>
               {impact.sufficientDataForQuantification ? (
                 <div className="space-y-3">
                   <KVLine label="Known" value={`Quantified downstream impact across ${impact.components?.length || 0} component${(impact.components?.length || 0) === 1 ? "" : "s"}.`} tone="known" />
@@ -117,7 +102,7 @@ export default function DiscoverDetailPage() {
             {/* Affected components / entities — entity_row family, real data only */}
             {impact.components && impact.components.length > 0 && (
               <div>
-                <p className="v32-section-label mb-3">Affected components</p>
+                <SectionLabel>Affected entities</SectionLabel>
                 <div>
                   {impact.components.map((c) => (
                     <ComponentRow key={c.component.id} component={c} />
@@ -125,12 +110,18 @@ export default function DiscoverDetailPage() {
                 </div>
               </div>
             )}
+
+            <div className="flex flex-wrap" style={{ gap: 10, paddingTop: 12 }}>
+              <Button primary small href="/simulate">Simulate</Button>
+              <Button small href="/watch?new=1">Watch this</Button>
+              <Button small href={`/scan?q=${encodeURIComponent(`Tell me more about: ${impact.signal.event_title || impact.signal.why_exists || "this finding"}`)}`}>Ask about this</Button>
+            </div>
           </div>
 
           {/* Right rail — flex:1; max-width:300px */}
-          <div style={{ flex: 1, maxWidth: 300, minWidth: 0 }} className="space-y-6">
+          <div style={{ flex: 1, maxWidth: 300, minWidth: 0 }} className="space-y-5">
             <div>
-              <p className="v32-section-label mb-2">Source</p>
+              <RailLabel>Evidence</RailLabel>
               <RailRow text={impact.evidence[0]?.source || "Starlane detection pipeline"} />
               {impact.signal.event_observed_at && (
                 <RailRow text={`Observed ${formatDateTime(impact.signal.event_observed_at)}`} />
@@ -139,7 +130,7 @@ export default function DiscoverDetailPage() {
 
             {impact.supplier && (
               <div>
-                <p className="v32-section-label mb-2">Related entity</p>
+                <RailLabel>Entities</RailLabel>
                 <div
                   className="row-hover -mx-2 px-2 py-1.5 cursor-pointer"
                   onClick={() => setShowSupplierLens(true)}
@@ -153,7 +144,7 @@ export default function DiscoverDetailPage() {
             )}
 
             <div>
-              <p className="v32-section-label mb-2">Confidence</p>
+              <RailLabel>Confidence</RailLabel>
               <RailRow text={
                 impact.signal.plausibility_confidence != null
                   ? `${Math.round(impact.signal.plausibility_confidence * 100)}% plausibility`
@@ -196,15 +187,34 @@ function buildSupplierLensSections(impact: SignalImpact): LensSection[] {
   return [{ label: "Snapshot", rows }];
 }
 
+const RISKY = new Set(["EXPOSED", "OBSERVED_IMPACT"]);
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 8 }}>{children}</div>;
+}
+
+function RailLabel({ children }: { children: React.ReactNode }) {
+  return <div style={{ fontSize: 10.5, letterSpacing: "1px", textTransform: "uppercase", color: "#8A8A86", marginBottom: 6 }}>{children}</div>;
+}
+
+function Block({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 5 }}>{label}</div>
+      <div style={{ fontSize: 13.5, lineHeight: 1.6, color: "#43433F" }}>{children}</div>
+    </div>
+  );
+}
+
 function KVLine({ label, value, tone }: { label: string; value: string; tone: "known" | "unknown" }) {
   return (
     <div className="flex items-start gap-3">
       <span
         className="shrink-0"
         style={{
-          fontSize: 10.5, letterSpacing: 0.5, textTransform: "uppercase", fontWeight: 500,
+          fontSize: 11, textTransform: "uppercase",
           color: tone === "known" ? "#477054" : "#8A8A86",
-          minWidth: 56,
+          width: 62,
         }}
       >
         {label}
@@ -216,7 +226,7 @@ function KVLine({ label, value, tone }: { label: string; value: string; tone: "k
 
 function RailRow({ text }: { text: string }) {
   return (
-    <p className="v32-body py-1.5" style={{ color: "#43433F", borderBottom: "1px solid #EBEAE6" }}>{text}</p>
+    <div style={{ fontSize: 12.5, color: "#43433F", padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>{text}</div>
   );
 }
 

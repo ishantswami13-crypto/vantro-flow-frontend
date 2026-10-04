@@ -15,7 +15,7 @@ import type { Mission } from "../../../packages/contracts/src/features";
 const RULE = "rgba(25,25,23,0.10)", GRAPHITE = "#63635F";
 const STATUS: Record<string, [string, string]> = {
   active: ["Active", "#4B5170"], paused: ["Paused", "#8A5A12"], draft: ["Draft", GRAPHITE],
-  completed: ["Completed", "#2F6B4F"], failed: ["Missed target", "#A23B3B"], cancelled: ["Cancelled", GRAPHITE],
+  completed: ["Completed", "#477054"], failed: ["Missed target", "#A23B3B"], cancelled: ["Cancelled", GRAPHITE],
 };
 const inr = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
 const btn: React.CSSProperties = { fontSize: 13, padding: "6px 12px", borderRadius: 6, border: `1px solid ${RULE}`, background: "#fff", cursor: "pointer" };
@@ -77,7 +77,7 @@ export default function MissionPage() {
                         {m.status === "active" && p.daysLeft != null ? <span style={{ marginLeft: "auto", fontSize: 13, color: GRAPHITE }}>{p.daysLeft} days left</span> : null}
                       </div>
                       <div style={{ height: 6, borderRadius: 3, background: "rgba(25,25,23,0.08)", overflow: "hidden" }} role="img" aria-label={`${Math.round(p.ratio * 100)}% of target collected`}>
-                        <div style={{ height: "100%", width: `${Math.round(p.ratio * 100)}%`, background: m.status === "failed" ? "#A23B3B" : "#2F6B4F" }} />
+                        <div style={{ height: "100%", width: `${Math.round(p.ratio * 100)}%`, background: m.status === "failed" ? "#A23B3B" : "#477054" }} />
                       </div>
                       {p.byInvoice?.map((i) => (
                         <div key={i.id} style={{ display: "flex", gap: 10, fontSize: 13.5, borderTop: `1px solid ${RULE}`, paddingTop: 8 }}>

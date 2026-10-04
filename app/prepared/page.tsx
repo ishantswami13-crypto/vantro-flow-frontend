@@ -7,6 +7,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { AutomationProposals, ReminderApprovals, DecisionsNeedingYou } from "@/components/os/PreparedPanels";
 import { OutreachSummary } from "@/components/outreach/OutreachPanels";
 import { api, getUser, type PreparedCard, type PreparedResponse } from "@/lib/api";
+import { PageHeader, EmptyLine, ErrorBanner, SkeletonRows } from "@/components/v32/ui";
 
 // Prepared — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16, Priority 6.
 //
@@ -43,23 +44,23 @@ const TABS: { key: TabKey; label: string }[] = [
 const EMPTY_COPY: Record<TabKey, { title: string; body: string }> = {
   for_you: {
     title: "Nothing Starlane has flagged for you right now",
-    body: "This tab shows real triggered watches, real detected opportunities, and real forecast risk for your business. There isn't any right now — that's an accurate reflection of your current data, not a placeholder.",
+    body: "Triggered watches, detected opportunities and forecast risk for your business appear here. There isn't any right now.",
   },
   needs_you: {
     title: "Nothing is waiting on a decision",
-    body: "This is the default tab: it lists real pending actions awaiting your approval (the same queue Control tracks). There are none right now.",
+    body: "Prepared actions waiting for your approval appear here, the same queue Control tracks. There are none right now.",
   },
   upcoming: {
     title: "Nothing scheduled to be prepared",
-    body: "This tab would show work Starlane expects to prepare ahead of a known future event. No capability that schedules ahead-of-time preparation exists yet, so this tab is always honestly empty today.",
+    body: "Work Starlane prepares ahead of a known date will appear here.",
   },
   completed: {
     title: "No completed items",
-    body: "This tab lists real actions you've already approved. None have been approved yet.",
+    body: "Actions you approve appear here. None have been approved yet.",
   },
   dismissed: {
     title: "Nothing dismissed",
-    body: "This tab lists real actions you've already rejected. None have been rejected yet.",
+    body: "Actions you dismiss appear here. None have been rejected yet.",
   },
 };
 
@@ -107,78 +108,38 @@ function PreparedCardView({
   const isPending = card.status === "pending" || !card.status;
   const primaryIsApprove = isAiAction && isPending;
   const secondaryEnabled = isAiAction && isPending;
+  const when = formatTimestamp(card.timestamp);
 
   return (
-    <div
-      className="prepared_card"
-      style={{
-        border: "1px solid rgba(25,25,23,0.10)",
-        borderRadius: 8,
-        padding: "16px 18px",
-        marginBottom: 10,
-        background: "#FFFFFF",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-        <span
-          style={{
-            fontFamily: "'IBM Plex Mono', 'SFMono-Regular', monospace",
-            fontSize: 10,
-            letterSpacing: 0.4,
-            textTransform: "uppercase",
-            color: "#8A8A86",
-          }}
-        >
-          {card.trigger.replace(/_/g, " ")}
-        </span>
-        <span style={{ fontSize: 11, color: "#8A8A86" }}>{formatTimestamp(card.timestamp)}</span>
+    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 18 }}>
+      <div style={{ fontSize: 11, letterSpacing: "1px", color: "var(--accent)", marginBottom: 8, textTransform: "uppercase" }}>
+        {card.trigger.replace(/_/g, " ")}{when ? `, ${when}` : ""}
       </div>
-      <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 15, color: "#191917", margin: "0 0 4px" }}>
-        {card.summary}
-      </p>
-      {card.detail ? (
-        <p className="v32-body" style={{ color: "#63635F", margin: "0 0 10px" }}>
-          {card.detail}
-        </p>
-      ) : null}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ fontSize: 14.5, color: "#191917", marginBottom: 10, lineHeight: 1.5 }}>{card.summary}</div>
+      {card.detail ? <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: 6 }}>{card.detail}</div> : null}
+      <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: 14 }}>Source: {SOURCE_LABEL[card.source] || "Starlane"}</div>
+      {primaryIsApprove && card.approve_does && <div style={{ fontSize: 12, color: "#63635F", marginBottom: 12 }}>{card.approve_does}</div>}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <button
-          className="hover-dim"
+          type="button"
+          className={primaryIsApprove ? "btn-primary-v32" : "btn-secondary-v32"}
           onClick={primaryIsApprove ? onApprove : onOpen}
           disabled={busy}
-          style={{
-            fontSize: 12,
-            padding: "6px 12px",
-            borderRadius: 6,
-            border: "1px solid #191917",
-            background: "#191917",
-            color: "#fff",
-            cursor: busy ? "default" : "pointer",
-            opacity: busy ? 0.6 : 1,
-          }}
+          style={{ padding: "8px 14px", borderRadius: 6, fontSize: 12.5, opacity: busy ? 0.4 : 1 }}
           title={card.approve_does}
         >
           {primaryIsApprove ? (busy ? "Approving…" : "Approve") : "Open"}
         </button>
+        {primaryIsApprove && (
+          <button type="button" className="btn-secondary-v32" onClick={onOpen} style={{ padding: "8px 14px", borderRadius: 6, fontSize: 12.5 }}>
+            Review
+          </button>
+        )}
         {secondaryEnabled && (
-          <button
-            className="hover-dim"
-            onClick={onReject}
-            disabled={busy}
-            style={{
-              fontSize: 12,
-              padding: "6px 12px",
-              borderRadius: 6,
-              border: "1px solid rgba(25,25,23,0.20)",
-              background: "none",
-              color: "#63635F",
-              cursor: busy ? "default" : "pointer",
-            }}
-          >
+          <button type="button" className="hover-dim" onClick={onReject} disabled={busy} style={{ padding: "8px 10px", border: "none", background: "none", color: "#63635F", fontSize: 12.5, marginLeft: "auto", cursor: "pointer" }}>
             {card.secondary}
           </button>
         )}
-        <span style={{ fontSize: 11, color: "#B4B3AE", marginLeft: "auto" }}>{SOURCE_LABEL[card.source] || "Starlane"}</span>
       </div>
     </div>
   );
@@ -248,141 +209,71 @@ export default function PreparedPage() {
 
   return (
     <DashboardLayout pageTitle="Prepared">
-      <div
-        style={{
-          flex: 1,
-          minHeight: 0,
-          display: "flex",
-          flexDirection: "column",
-          gap: 20,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1
-            style={{
-              margin: 0,
-              fontFamily: "'Fraunces', Georgia, serif",
-              fontWeight: 400,
-              fontSize: 26,
-              color: "#191917",
-            }}
-          >
-            Prepared
-          </h1>
-          {/* Control › Approvals is the one place that lists every decision
-              waiting on the owner; this page only shows the prepared subset. */}
-          <Link href="/control/approvals" className="hover-dim" style={{ fontSize: 13, color: "#63635F" }}>
-            All approvals →
-          </Link>
-        </div>
+      <PageHeader
+        title="Prepared"
+        right={
+          /* Control › Approvals lists every decision waiting on the owner;
+             this page only shows the prepared subset. */
+          <Link href="/control/approvals" className="hover-dim" style={{ fontSize: 12.5, color: "#63635F" }}>All approvals</Link>
+        }
+      />
 
-        <DecisionsNeedingYou />
-        <OutreachSummary context="prepared" />
-        <AutomationProposals />
-        <ReminderApprovals />
-
-        <nav
-          aria-label="Prepared tabs"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 22,
-            borderBottom: "1px solid #EBEAE6",
-            marginBottom: 4,
-          }}
-        >
-          {TABS.map((t) => (
+      <div role="tablist" aria-label="Prepared" className="flex items-baseline overflow-x-auto" style={{ gap: 26, borderBottom: "1px solid rgba(25,25,23,0.08)" }}>
+        {TABS.map((t) => {
+          const on = t.key === tab;
+          return (
             <button
               key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={on}
               onClick={() => setTab(t.key)}
-              className="hover-dim"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "8px 2px",
-                fontSize: 13,
-                fontWeight: t.key === tab ? 500 : 400,
-                color: t.key === tab ? "#191917" : "#63635F",
-                background: "none",
-                border: "none",
-                borderBottomColor: t.key === tab ? "#696D86" : "transparent",
-                borderBottomWidth: 2,
-                borderBottomStyle: "solid",
-                cursor: "pointer",
-              }}
+              className={on ? "" : "hover-dim"}
+              style={{ fontSize: 13.5, color: on ? "#191917" : "#63635F", paddingBottom: 8, marginBottom: -1, whiteSpace: "nowrap", background: "none", borderBottom: `2px solid ${on ? "var(--accent)" : "transparent"}` }}
             >
-              <span>{t.label}</span>
-              <span
-                style={{
-                  fontFamily: "'IBM Plex Mono', 'SFMono-Regular', monospace",
-                  fontSize: 11,
-                  color: "#8A8A86",
-                }}
-              >
-                {counts[t.key]}
-              </span>
+              {t.label} <span style={{ color: on ? "#63635F" : "#B9B8B2", fontSize: 12 }}>{data ? counts[t.key] : ""}</span>
             </button>
-          ))}
-        </nav>
-
-        <div
-          style={{
-            flex: 1,
-            minHeight: 0,
-            boxSizing: "border-box",
-            background: "#FFFFFF",
-            border: "1px solid rgba(25,25,23,0.10)",
-            borderRadius: 8,
-            overflow: cards.length ? "auto" : "hidden",
-            display: "flex",
-            flexDirection: "column",
-            padding: cards.length ? 16 : 0,
-          }}
-        >
-          {error ? (
-            <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
-              <p className="v32-body" style={{ color: "#63635F" }}>{error}</p>
-            </div>
-          ) : data === null ? (
-            <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
-              <p className="v32-body" style={{ color: "#63635F" }}>Loading…</p>
-            </div>
-          ) : cards.length === 0 ? (
-            <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
-              <p
-                style={{
-                  fontFamily: "'Fraunces', Georgia, serif",
-                  fontSize: 16,
-                  color: "#191917",
-                  marginBottom: 6,
-                }}
-              >
-                {copy.title}
-              </p>
-              <p className="v32-body max-w-md mx-auto" style={{ color: "#63635F" }}>
-                {copy.body}
-              </p>
-            </div>
-          ) : (
-            <>
-              {actionError && (
-                <p style={{ fontSize: 12.5, color: "#B3261E", marginBottom: 10 }}>{actionError}</p>
-              )}
-              {cards.map((card) => (
-                <PreparedCardView
-                  key={card.id}
-                  card={card}
-                  busy={busyId === card.id}
-                  onApprove={() => decide(card, "approved")}
-                  onReject={() => decide(card, "rejected")}
-                  onOpen={() => router.push(targetPathForCard(card))}
-                />
-              ))}
-            </>
-          )}
-        </div>
+          );
+        })}
       </div>
+
+      {actionError && <ErrorBanner>{actionError}</ErrorBanner>}
+
+      {error ? (
+        <ErrorBanner>{error}</ErrorBanner>
+      ) : data === null ? (
+        <SkeletonRows rows={3} />
+      ) : cards.length === 0 ? (
+        <EmptyLine title={copy.title} body={copy.body} />
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {cards.map((card) => (
+            <PreparedCardView
+              key={card.id}
+              card={card}
+              busy={busyId === card.id}
+              onApprove={() => decide(card, "approved")}
+              onReject={() => decide(card, "rejected")}
+              onOpen={() => router.push(targetPathForCard(card))}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* The decision, reminder and workflow queues that live with Prepared,
+          shown under the tab they belong to. */}
+      {tab === "needs_you" && (
+        <>
+          <DecisionsNeedingYou />
+          <ReminderApprovals />
+        </>
+      )}
+      {tab === "for_you" && (
+        <>
+          <AutomationProposals />
+          <OutreachSummary context="prepared" />
+        </>
+      )}
     </DashboardLayout>
   );
 }

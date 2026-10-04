@@ -266,8 +266,8 @@ function SettingsPageInner() {
     <DashboardLayout pageTitle="Settings">
       <div className="space-y-4">
         <div>
-          <h2 className="text-xl font-bold text-primary">Settings</h2>
-          <p className="text-sm text-secondary mt-0.5">Manage your account, integrations, and automation.</p>
+          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>Settings</h1>
+          <p style={{ fontSize: 13.5, color: "#63635F", marginTop: 4 }}>Manage your account, integrations, and automation.</p>
         </div>
 
         {saved && <Alert variant="success" title="Saved">Your changes have been saved successfully.</Alert>}
@@ -278,7 +278,7 @@ function SettingsPageInner() {
           <nav className="lg:w-52 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0 shrink-0">
             {TABS.map(({ key, label, icon: Icon, badge }) => (
               <button key={key} onClick={() => setTab(key)}
-                className={["flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all", tab === key ? "bg-accent-dim text-accent" : "text-secondary hover:text-primary hover:bg-surface-2"].join(" ")}>
+                className={["flex items-center gap-2.5 px-3 py-2 rounded-[7px] text-[13px] whitespace-nowrap transition-all", tab === key ? "bg-[rgba(25,25,23,0.06)] text-primary" : "text-secondary hover:text-primary hover:bg-[rgba(25,25,23,0.04)]"].join(" ")}>
                 <Icon size={15} className="shrink-0" />
                 <span className="flex-1 text-left">{label}</span>
                 {badge && <span className="text-2xs font-bold px-1.5 py-0.5 rounded-full bg-success-dim text-success border border-success/20">{badge}</span>}
@@ -296,7 +296,7 @@ function SettingsPageInner() {
                 <h3 className="text-sm font-semibold text-primary mb-5">User Profile</h3>
                 <form onSubmit={handleProfileSave} className="space-y-4 max-w-lg">
                   <div className="flex items-center gap-4 pb-4 border-b border-border">
-                    <IdentityAvatar name={initials} size={56} />
+                    <IdentityAvatar name={initials} size={56} initial />
                     <div>
                       <p className="text-sm font-semibold text-primary">{profile.full_name || "—"}</p>
                       <p className="text-xs text-secondary">{profile.email}</p>
@@ -338,13 +338,13 @@ function SettingsPageInner() {
                   <div>
                     <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Business Address</label>
                     <textarea value={business.business_address} onChange={e => setBusiness(b => ({ ...b, business_address: e.target.value }))} placeholder="Shop No. 12, Gandhi Nagar, Delhi - 110031" rows={2}
-                      className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
+                      className="w-full bg-white border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">City</label>
                       <select value={business.city} onChange={e => setBusiness(b => ({ ...b, city: e.target.value }))}
-                        className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
+                        className="w-full bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
                         <option value="">Select city</option>
                         {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
@@ -357,7 +357,7 @@ function SettingsPageInner() {
                       <div>
                         <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Invoice Prefix</label>
                         <input value={business.invoice_prefix} onChange={e => setBusiness(b => ({ ...b, invoice_prefix: e.target.value.toUpperCase() }))} placeholder="INV" maxLength={6}
-                          className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors font-mono" />
+                          className="w-full bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors font-mono" />
                         <p className="text-2xs text-muted mt-1">Bills will be INV-2025-0001</p>
                       </div>
                       <Input label="UPI ID (for invoices)" type="text" placeholder="yourname@upi" value={business.upi_id} onChange={e => setBusiness(b => ({ ...b, upi_id: e.target.value }))} />
@@ -391,7 +391,7 @@ function SettingsPageInner() {
                       <Input label="Your First Name" type="text" placeholder="e.g. Rajesh" value={voice.owner_name} onChange={e => setVoice(v => ({ ...v, owner_name: e.target.value }))} />
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-medium text-secondary uppercase tracking-wider">Business City</label>
-                        <select value={voice.city} onChange={e => setVoice(v => ({ ...v, city: e.target.value }))} className="bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
+                        <select value={voice.city} onChange={e => setVoice(v => ({ ...v, city: e.target.value }))} className="bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
                           <option value="">Select city</option>
                           {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
@@ -419,7 +419,7 @@ function SettingsPageInner() {
                         <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1">Message {i + 1} {i === 0 ? "(required)" : "(optional)"}</label>
                         <textarea value={s} onChange={e => setSamples(prev => prev.map((v, j) => j === i ? e.target.value : v))} rows={2}
                           placeholder={i === 0 ? 'e.g. Ramesh bhai, aapka ₹45,000 pending hai. Aaj possible hai kya?' : 'Paste another message...'}
-                          className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
+                          className="w-full bg-white border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
                       </div>
                     ))}
                     <button onClick={handleExtractVoice} disabled={extracting || !samples[0].trim()}
@@ -441,7 +441,7 @@ function SettingsPageInner() {
                   <div className="max-w-lg">
                     <textarea value={voice.ai_persona} onChange={e => setVoice(v => ({ ...v, ai_persona: e.target.value }))}
                       placeholder="e.g. I talk in casual Hinglish. I use 'bhai' often. I keep messages short and to the point."
-                      rows={4} className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
+                      rows={4} className="w-full bg-white border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
                   </div>
                 </Card>
                 <form onSubmit={handleVoiceSave} className="flex items-center gap-3">
@@ -474,12 +474,12 @@ function SettingsPageInner() {
 
                 {/* AutoPilot Hero */}
                 <div className="relative overflow-hidden rounded-2xl p-6"
-                  style={{ background: "linear-gradient(135deg, #1A1F2E 0%, #161A24 100%)", border: "1px solid rgba(79,110,247,0.25)", boxShadow: "0 0 60px rgba(79,110,247,0.08)" }}>
+                  style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)" }}>
                   <div className="absolute -top-8 -right-8 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
                   <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-cta/5 rounded-full blur-3xl pointer-events-none" />
                   <div className="relative flex items-start gap-4">
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-xl"
-                      style={{ background: "linear-gradient(135deg, #4F6EF7, #3D5CF5)", boxShadow: "0 4px 20px rgba(79,110,247,0.4)" }}>
+                      style={{ background: "#191917", color: "#F7F7F4" }}>
                       ⚡
                     </div>
                     <div>
@@ -652,7 +652,7 @@ function SettingsPageInner() {
 
                   {/* Add rule form */}
                   {showAddRule && (
-                    <div className="mb-4 p-4 bg-surface-2 border border-border rounded-xl space-y-4">
+                    <div className="mb-4 p-4 bg-white border border-border-input rounded-md space-y-4">
                       <p className="text-xs font-semibold text-primary">New Reminder Rule</p>
                       <div className="grid grid-cols-3 gap-3">
                         <div>

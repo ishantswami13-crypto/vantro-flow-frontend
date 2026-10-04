@@ -1,37 +1,44 @@
+import type React from "react";
 import {
-  FiDatabase, FiShield, FiCompass, FiSearch, FiTarget, FiSettings,
-  FiSliders, FiClock, FiCheckSquare, FiUsers, FiSun, FiGitBranch,
-} from "react-icons/fi";
-import type { IconType } from "react-icons";
+  IconBridge, IconScan, IconDiscover, IconWatch, IconMissions, IconSimulate,
+  IconMemory, IconPrepared, IconSources, IconAgents, IconControl, IconSettings,
+} from "@/components/v32/icons";
 
 export interface PrimaryNavItem {
   href: string;
   label: string;
-  icon: IconType;
+  icon: (p: { size?: number; className?: string; style?: React.CSSProperties }) => React.ReactElement;
 }
 
-// Primary nav: Today, then the seven surfaces in the order of the loop
-// (Bridge -> Scan -> Watch -> Simulate -> Prepared -> Missions -> Memory).
-// Each surface answers one question. Decisions live inside Prepared (the
-// queue of things that need a person) and open at /decisions/[id];
-// Discover (supplier and customer lenses) is under More.
+// Primary nav — the Version 32 NAV_ITEMS, in the design's exact order
+// (Starlane.html / STARLANE_FRONTEND_HANDOFF.md §2).
 export const V32_NAV_ITEMS: PrimaryNavItem[] = [
-  { href: "/today",    label: "Today",      icon: FiSun },
-  { href: "/bridge",   label: "Bridge",     icon: FiCompass },
-  { href: "/scan",     label: "Scan",       icon: FiSearch },
-  { href: "/watch",    label: "Watch",      icon: FiTarget },
-  { href: "/simulate", label: "Simulate",   icon: FiSliders },
-  { href: "/prepared", label: "Prepared",   icon: FiCheckSquare },
-  { href: "/missions", label: "Missions",   icon: FiGitBranch },
-  { href: "/memory",   label: "Memory",     icon: FiClock },
+  { href: "/bridge",   label: "The Bridge", icon: IconBridge },
+  { href: "/scan",     label: "Scan",       icon: IconScan },
+  { href: "/discover", label: "Discover",   icon: IconDiscover },
+  { href: "/watch",    label: "Watch",      icon: IconWatch },
+  { href: "/missions", label: "Missions",   icon: IconMissions },
+  { href: "/simulate", label: "Simulate",   icon: IconSimulate },
+  { href: "/memory",   label: "Memory",     icon: IconMemory },
+  { href: "/prepared", label: "Prepared",   icon: IconPrepared },
 ];
 
-// Second group: org-wide and governance surfaces (connected systems, the
-// agents that work for the company, controls and approvals), then settings.
-export const V32_SECONDARY_NAV_LABEL = "ENTERPRISE";
+// Second group: Sources, Agents and Control are real pages in the design but
+// are not in NAV_ITEMS (handoff §2 open gap). Resolved with option (a): a
+// quiet second group below a divider, so those pages still highlight.
 export const V32_SECONDARY_NAV_ITEMS: PrimaryNavItem[] = [
-  { href: "/sources",  label: "Sources",  icon: FiDatabase },
-  { href: "/agents",   label: "Agents",   icon: FiUsers },
-  { href: "/control",  label: "Control",  icon: FiShield },
-  { href: "/settings", label: "Settings", icon: FiSettings },
+  { href: "/sources",  label: "Sources",  icon: IconSources },
+  { href: "/agents",   label: "Agents",   icon: IconAgents },
+  { href: "/control",  label: "Control",  icon: IconControl },
+  { href: "/settings", label: "Settings", icon: IconSettings },
 ];
+
+// The sidebar's optional primary button (the design's `create_label`):
+// only the pages that pass one in the design show it.
+export function createActionFor(pathname: string): { label: string; href: string } | null {
+  if (pathname === "/scan" || pathname.startsWith("/scan/")) return { label: "New scan", href: "/scan" };
+  if (pathname === "/watch") return { label: "New watch", href: "/watch?new=1" };
+  if (pathname === "/missions" || pathname.startsWith("/missions/")) return { label: "New mission", href: "/missions/new" };
+  if (pathname === "/simulate") return { label: "New simulation", href: "/simulate?new=1" };
+  return null;
+}

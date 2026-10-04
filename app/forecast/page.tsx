@@ -255,7 +255,7 @@ export default function ForecastPage() {
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
             style={{ background: "rgba(0,102,255,0.08)", border: "1px solid rgba(0,102,255,0.2)" }}>
             <FiDollarSign size={15} style={{ color: "#0066FF", flexShrink: 0 }} />
-            <p className="text-sm flex-1" style={{ color: "#171717" }}>
+            <p className="text-sm flex-1" style={{ color: "#191917" }}>
               Set your current cash balance to get an accurate forecast
             </p>
             {showCashInput ? (
@@ -269,7 +269,7 @@ export default function ForecastPage() {
                   placeholder="e.g. 50000"
                   autoFocus
                   className="w-28 px-2 py-1 text-sm rounded-lg outline-none"
-                  style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", color: "#171717" }}
+                  style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", color: "#191917" }}
                 />
                 <button onClick={saveCash}
                   className="px-3 py-1 rounded-lg text-xs font-semibold"

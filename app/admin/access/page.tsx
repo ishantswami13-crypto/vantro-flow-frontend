@@ -20,8 +20,8 @@ const NEXT: Record<Status, Status[]> = {
   waitlisted: ["reviewing", "approved", "rejected"], rejected: ["reviewing"], approved: ["expired"], expired: ["reviewing", "approved"],
 };
 const VERB: Record<Status, string> = { submitted: "Submit", reviewing: "Start review", approved: "Approve", waitlisted: "Waitlist", rejected: "Reject", expired: "Expire access" };
-const TIER_COLOR = { ready: "#2F6B4F", review: "#8A5A12", unsupported: "#C13B3B", waitlist: "#63635F" } as const;
-const INK = "#191917", SOFT = "#63635F", FAINT = "#9A9A94", LINE = "#EBEAE6";
+const TIER_COLOR = { ready: "#477054", review: "#8A5A12", unsupported: "#A64F4B", waitlist: "#63635F" } as const;
+const INK = "#191917", SOFT = "#63635F", FAINT = "#8A8A86", LINE = "#EBEAE6";
 const fmt = (d: string) => new Date(d).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 export default function AccessReviewPage() {
@@ -80,7 +80,7 @@ export default function AccessReviewPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 18, minWidth: 0 }}>
         <h1 className="v32-page-title" style={{ margin: 0 }}>Access review</h1>
         <p style={{ fontSize: 13.5, color: SOFT, margin: 0, maxWidth: 680 }}>Applications to the private rollout. Compatibility is assessed by fixed rules at submission; the decision is yours.</p>
-        {error && <p role="alert" style={{ fontSize: 13, color: "#C13B3B", margin: 0 }}>{error}</p>}
+        {error && <p role="alert" style={{ fontSize: 13, color: "#A64F4B", margin: 0 }}>{error}</p>}
 
         <nav aria-label="Filter by status" style={{ display: "flex", gap: 20, borderBottom: `1px solid ${LINE}`, overflowX: "auto" }}>
           {FILTERS.map((f) => (

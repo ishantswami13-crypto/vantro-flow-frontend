@@ -5,6 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type AuditEvent } from "@/lib/api";
 import { MemoryLearning } from "@/components/os/MemoryPanels";
+import { TeachStarlanePanel } from "@/components/os/BridgePanels";
+import { PageHeader, Subnav, EmptyLine } from "@/components/v32/ui";
 
 // Memory — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
 //
@@ -54,26 +56,27 @@ import { MemoryLearning } from "@/components/os/MemoryPanels";
 // rendered below is either a literal field value or a static label
 // attached deterministically to a field value.
 
-type TabKey = "timeline" | "decisions" | "replay" | "turning-points";
+type TabKey = "timeline" | "decisions" | "replay" | "turning-points" | "learning";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "timeline", label: "Timeline" },
   { key: "decisions", label: "Decisions" },
   { key: "replay", label: "Replay" },
   { key: "turning-points", label: "Turning Points" },
+  { key: "learning", label: "What Starlane learned" },
 ];
 
 const DECISION_HINTS = ["approve", "reject", "decline", "status", "confirm", "cancel"];
 const TURNING_POINT_RULES: { match: string; outcome: string; color: string }[] = [
-  { match: "approve", outcome: "Approved", color: "#1FB870" },
-  { match: "reject", outcome: "Rejected", color: "#E8462B" },
-  { match: "decline", outcome: "Declined", color: "#E8462B" },
-  { match: "overdue", outcome: "Went overdue", color: "#E8462B" },
-  { match: "risk", outcome: "Flagged at risk", color: "#E8462B" },
-  { match: "default", outcome: "Defaulted", color: "#E8462B" },
-  { match: "write_off", outcome: "Written off", color: "#E8462B" },
-  { match: "paid", outcome: "Paid", color: "#1FB870" },
-  { match: "cancel", outcome: "Cancelled", color: "#9A9A94" },
+  { match: "approve", outcome: "Approved", color: "#477054" },
+  { match: "reject", outcome: "Rejected", color: "#A64F4B" },
+  { match: "decline", outcome: "Declined", color: "#A64F4B" },
+  { match: "overdue", outcome: "Went overdue", color: "#A64F4B" },
+  { match: "risk", outcome: "Flagged at risk", color: "#A64F4B" },
+  { match: "default", outcome: "Defaulted", color: "#A64F4B" },
+  { match: "write_off", outcome: "Written off", color: "#A64F4B" },
+  { match: "paid", outcome: "Paid", color: "#477054" },
+  { match: "cancel", outcome: "Cancelled", color: "#8A8A86" },
 ];
 
 function humanize(action: string): string {
@@ -96,7 +99,7 @@ function reasonFor(e: AuditEvent): string {
   return "No linked entity recorded";
 }
 
-const EMPTY_COPY: Record<TabKey, { title: string; body: string }> = {
+const EMPTY_COPY: Record<Exclude<TabKey, "learning">, { title: string; body: string }> = {
   timeline: {
     title: "No audit events yet",
     body: "The timeline shows every change Starlane records for your account: approvals, status changes and edits. Nothing has been recorded yet. As soon as something changes, it appears here.",
@@ -115,41 +118,28 @@ const EMPTY_COPY: Record<TabKey, { title: string; body: string }> = {
   },
 };
 
-function TimelineNode({ e, index }: { e: AuditEvent; index: number }) {
+function shortDate(iso: string): string {
+  const d = new Date(iso);
+  const sameYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString("en-IN", sameYear ? { day: "numeric", month: "short" } : { month: "short", year: "numeric" });
+}
+
+// V32 memory_event: date column, a dot on a hairline, title, reason and an
+// outlined outcome pill. The outcome comes only from the action string.
+function TimelineNode({ e }: { e: AuditEvent }) {
   const cls = classify(e.action);
   return (
-    <div className="card-in" style={{ display: "flex", gap: 14, position: "relative" }}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 12, flexShrink: 0 }}>
-        <span
-          style={{
-            width: 9,
-            height: 9,
-            borderRadius: "50%",
-            background: cls ? cls.color : "#B9B9B3",
-            marginTop: 4,
-            flexShrink: 0,
-          }}
-        />
-        <span style={{ flex: 1, width: 1, background: "#EBEAE6", marginTop: 4 }} />
+    <div className="card-in" style={{ display: "flex", gap: 16 }}>
+      <div title={formatDate(e.created_at)} style={{ width: 70, flexShrink: 0, fontSize: 12, color: "#63635F", paddingTop: 2 }}>{shortDate(e.created_at)}</div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#191917", marginTop: 5 }} />
+        <span style={{ width: 1, flex: 1, background: "rgba(25,25,23,0.12)", marginTop: 4 }} />
       </div>
       <div style={{ paddingBottom: 20, minWidth: 0 }}>
-        <p style={{ fontSize: 11, color: "#9A9A94", marginBottom: 2 }}>{formatDate(e.created_at)}</p>
-        <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 15, color: "#191917", margin: 0 }}>
-          {humanize(e.action)}
-        </p>
-        <p className="v32-body" style={{ color: "#63635F", marginTop: 3 }}>{reasonFor(e)}</p>
+        <div style={{ fontSize: 14, color: "#191917", marginBottom: 4 }}>{humanize(e.action)}</div>
+        <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: cls ? 6 : 0 }}>{reasonFor(e)}</div>
         {cls && (
-          <span
-            style={{
-              display: "inline-block",
-              marginTop: 6,
-              fontSize: 11,
-              padding: "2px 8px",
-              borderRadius: 999,
-              color: cls.color,
-              background: `${cls.color}14`,
-            }}
-          >
+          <span style={{ fontSize: 11, color: cls.color, border: `1px solid ${cls.color}`, borderRadius: 20, padding: "3px 9px", display: "inline-block" }}>
             {cls.outcome}
           </span>
         )}
@@ -159,28 +149,7 @@ function TimelineNode({ e, index }: { e: AuditEvent; index: number }) {
 }
 
 function EmptyPanel({ title, body }: { title: string; body: string }) {
-  return (
-    <div
-      style={{
-        flex: 1,
-        minHeight: 0,
-        boxSizing: "border-box",
-        background: "#FFFFFF",
-        border: "1px solid rgba(25,25,23,0.10)",
-        borderRadius: 8,
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
-        <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, color: "#191917", marginBottom: 6 }}>
-          {title}
-        </p>
-        <p className="v32-body max-w-md mx-auto" style={{ color: "#63635F" }}>{body}</p>
-      </div>
-    </div>
-  );
+  return <EmptyLine title={title} body={body} />;
 }
 
 export default function MemoryPage() {
@@ -231,47 +200,22 @@ export default function MemoryPage() {
 
   return (
     <DashboardLayout pageTitle="Memory">
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
-            Memory
-          </h1>
-        </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <PageHeader title="Memory" subtitle="How things reached their current state, from the changes Starlane recorded." />
+        <Subnav items={TABS} active={tab} onChange={(k) => setTab(k as TabKey)} />
 
-        <MemoryLearning />
+        {tab === "learning" && (
+          <>
+            <MemoryLearning />
+            <TeachStarlanePanel />
+          </>
+        )}
 
-        <nav
-          aria-label="Secondary"
-          style={{ display: "flex", alignItems: "center", gap: 22, borderBottom: "1px solid #EBEAE6", marginBottom: 4 }}
-        >
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className="hover-dim"
-              style={{
-                padding: "8px 2px",
-                fontSize: 13,
-                fontWeight: t.key === tab ? 500 : 400,
-                color: t.key === tab ? "#191917" : "#63635F",
-                background: "none",
-                border: "none",
-                borderBottomColor: t.key === tab ? "#696D86" : "transparent",
-                borderBottomWidth: 2,
-                borderBottomStyle: "solid",
-                cursor: "pointer",
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
-
-        {isLoading && (
+        {tab !== "learning" && isLoading && (
           <div className="fade-once v32-body" style={{ color: "#63635F", padding: "24px 0" }}>Loading audit trail…</div>
         )}
 
-        {isError && (
+        {tab !== "learning" && isError && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
             <EmptyPanel title="Couldn't load the audit trail" body="Check your connection and try again." />
             <button onClick={() => refetch()} className="hover-dim" style={{ fontSize: 12.5, color: "#63635F", textDecoration: "underline", background: "none", border: "none", cursor: "pointer" }}>
@@ -285,7 +229,7 @@ export default function MemoryPage() {
             <EmptyPanel {...EMPTY_COPY.timeline} />
           ) : (
             <div style={{ display: "flex", flexDirection: "column" }}>
-              {events.map((e, i) => <TimelineNode key={e.id} e={e} index={i} />)}
+              {events.map((e) => <TimelineNode key={e.id} e={e} />)}
             </div>
           )
         )}
@@ -295,9 +239,15 @@ export default function MemoryPage() {
             <EmptyPanel {...EMPTY_COPY.decisions} />
           ) : (
             <div style={{ display: "flex", flexDirection: "column" }}>
-              {decisions.map((e, i) => <TimelineNode key={e.id} e={e} index={i} />)}
+              {decisions.map((e) => <TimelineNode key={e.id} e={e} />)}
             </div>
           )
+        )}
+
+        {!isLoading && !isError && tab === "replay" && entities.length > 0 && replaySequence.length > 0 && (
+          <div style={{ fontSize: 11, letterSpacing: "1px", color: "#63635F", textTransform: "uppercase" }}>
+            Replay · {entities.find((x) => x.entity_id === activeReplayEntity)?.entity_type || "record"}
+          </div>
         )}
 
         {!isLoading && !isError && tab === "replay" && (
@@ -314,9 +264,9 @@ export default function MemoryPage() {
                       style={{
                         padding: "6px 12px",
                         borderRadius: 999,
-                        border: "1px solid rgba(25,25,23,0.10)",
-                        background: ent.entity_id === activeReplayEntity ? "#191917" : "#F3F2EE",
-                        color: ent.entity_id === activeReplayEntity ? "#FFFFFF" : "#63635F",
+                        border: `1px solid ${ent.entity_id === activeReplayEntity ? "var(--accent)" : "rgba(25,25,23,0.14)"}`,
+                        background: "transparent",
+                        color: ent.entity_id === activeReplayEntity ? "#191917" : "#63635F",
                         fontSize: 12.5,
                         cursor: "pointer",
                       }}
@@ -327,7 +277,7 @@ export default function MemoryPage() {
                 </div>
               )}
               <div style={{ display: "flex", flexDirection: "column" }}>
-                {replaySequence.map((e, i) => <TimelineNode key={e.id} e={e} index={i} />)}
+                {replaySequence.map((e) => <TimelineNode key={e.id} e={e} />)}
               </div>
             </div>
           )
@@ -338,7 +288,7 @@ export default function MemoryPage() {
             <EmptyPanel {...EMPTY_COPY["turning-points"]} />
           ) : (
             <div style={{ display: "flex", flexDirection: "column" }}>
-              {turningPoints.map(({ e }, i) => <TimelineNode key={e.id} e={e} index={i} />)}
+              {turningPoints.map(({ e }) => <TimelineNode key={e.id} e={e} />)}
             </div>
           )
         )}

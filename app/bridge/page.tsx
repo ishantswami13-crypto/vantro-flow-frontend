@@ -1,189 +1,255 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { BridgeHealthPanel, TeachStarlanePanel } from "@/components/os/BridgePanels";
-import { EvidenceDrawer } from "@/components/intelligence/EvidenceDrawer";
-import { formatDateTime } from "@/components/intelligence/format";
-import { api, type IntelligenceSignal, type IntelligenceEvidenceItem } from "@/lib/api";
-import { FiActivity } from "react-icons/fi";
+import { request } from "@/lib/api";
+import { greeting, firstName } from "@/lib/greeting";
+import { V, Dot, Sep, Mono, Chevron, Label, ErrorBanner, SkeletonRows, EmptyLine, ago, clockTime } from "@/components/v32/ui";
+import { IconSearch, IconClock, IconFileCheck, IconCalendar } from "@/components/v32/icons";
+import { EvidenceSetDrawer } from "@/components/v32/EvidenceSetDrawer";
+import type { BridgeView, WatchEvent, FeatureAction } from "../../packages/contracts/src/features";
+import { LIFECYCLE_LABEL } from "../../packages/contracts/src/features";
 
-// The Bridge answers one question: what is connected? It shows each
-// connector's real health and what Starlane may do with it (from
-// GET /api/os/bridge via BridgeHealthPanel), how to bring in data, and what
-// a person can teach Starlane. Decisions and prepared work live on Prepared,
-// and what is changing lives on Watch, so they are not repeated here.
-// External signals from connected world sources are listed last, with
-// their evidence, because they come from a connection.
+// The Bridge (Version 32 home): what changed, what needs you, what is
+// prepared and what is coming up — all from GET /api/client/bridge, the same
+// read the desktop and phone apps use. Nothing here is computed in the
+// browser beyond counting the rows the server sent.
 
-function dotColorForStatus(status: string): string {
-  if (status === "ACTIVE") return "#A64F4B"; // critical
-  if (status === "UPDATED") return "#4F6EF7"; // accent
-  return "#8A8A86"; // CANDIDATE / neutral
+const KIND_LABEL: Record<string, string> = {
+  invoice_overdue: "Collections",
+  promise_broken: "Payment promise",
+  sync_failed: "Sources",
+  sync_stale: "Sources",
+  watch_triggered: "Watch",
+};
+
+function isUrgent(e: WatchEvent) {
+  return e.severity === "critical" || e.severity === "high";
 }
 
-function relativeTime(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  const ms = Date.now() - new Date(iso).getTime();
-  if (!Number.isFinite(ms) || ms < 0) return formatDateTime(iso);
-  const mins = Math.floor(ms / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+/** The one figure worth showing next to an event: a calculated value from its own evidence. */
+function eventMetric(e: WatchEvent): string | null {
+  const f = e.evidence?.facts?.find((x) => x.kind === "calculated" && typeof x.value === "number");
+  if (!f || typeof f.value !== "number") return null;
+  if (f.unit === "INR") return `₹${Math.round(f.value).toLocaleString("en-IN")}`;
+  if (/days?/i.test(f.label)) return `${f.value} days`;
+  return f.value.toLocaleString("en-IN");
 }
+
+const FRESHNESS: Record<string, { color: string; text: (at: string | null) => string }> = {
+  fresh: { color: V.positive, text: (at) => `Last synced ${ago(at) || "recently"}` },
+  delayed: { color: V.warning, text: (at) => `Sync delayed · ${ago(at) || "a while ago"}` },
+  stale: { color: V.critical, text: (at) => `Sync stale · ${ago(at) || "a while ago"}` },
+  none: { color: V.neutralDot, text: () => "No source syncing yet" },
+};
 
 export default function BridgePage() {
-  const [signals, setSignals] = useState<IntelligenceSignal[] | null>(null);
-  const [signalsError, setSignalsError] = useState<string | null>(null);
-  const [evidenceSignalId, setEvidenceSignalId] = useState<string | null>(null);
-  const [evidence, setEvidence] = useState<IntelligenceEvidenceItem[] | null>(null);
-  const [evidenceLoading, setEvidenceLoading] = useState(false);
+  const router = useRouter();
+  const [data, setData] = useState<BridgeView | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [scan, setScan] = useState("");
+  const [open, setOpen] = useState<WatchEvent | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    api.intelligence.signals()
-      .then((r) => { if (!cancelled) setSignals(r.signals || []); })
-      .catch((e) => { if (!cancelled) { setSignals([]); setSignalsError(e?.message || "External signals could not be loaded."); } });
-    return () => { cancelled = true; };
+    setName(firstName());
+    request<BridgeView>("/api/client/bridge")
+      .then(setData)
+      .catch((e: Error) => setError(e.message || "The Bridge could not be loaded."));
   }, []);
 
-  const openEvidence = async (signalId: string) => {
-    setEvidenceSignalId(signalId);
-    setEvidence(null);
-    setEvidenceLoading(true);
-    try {
-      const res = await api.intelligence.impact(signalId);
-      setEvidence(res.impact.evidence || []);
-    } catch {
-      setEvidence([]);
-    } finally {
-      setEvidenceLoading(false);
-    }
-  };
+  const latest = useMemo(() => data?.attention.watch.latest || [], [data]);
+  const urgent = latest.filter(isUrgent);
+  const other = latest.filter((e) => !isUrgent(e));
+  const decisions = data?.attention.topDecisions || [];
+  const prepared = (data?.prepared || []).filter((h) => h.count > 0 && h.first);
+  const upcoming = (data?.missions || []).filter((m) => m.status === "active" && m.endsAt);
+  const syncAt = data?.dataAsOf || data?.sources.find((s) => s.lastSuccessAt)?.lastSuccessAt || null;
+  const fresh = FRESHNESS[data?.freshness || "none"] || FRESHNESS.none;
+  const changes = latest.length;
 
   return (
     <DashboardLayout pageTitle="The Bridge">
-      <div className="mb-6">
-        <h1 className="v32-page-title">The Bridge</h1>
-        <p className="v32-meta mt-1">What is connected, how fresh it is, and what Starlane may do with each source.</p>
+      <div className="fade-once">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="min-w-0">
+            <h1 style={{ margin: "0 0 4px", fontFamily: V.serif, fontWeight: 400, fontSize: 26, color: V.ink }}>
+              {greeting()}{name ? `, ${name}` : ""}
+            </h1>
+            <div style={{ fontSize: 13, color: V.secondary }}>
+              {!data ? " "
+                : !data.hasData ? "Connect a source and Starlane will tell you what changed."
+                : changes === 0 ? "Nothing new needs a look since the last sync."
+                : `${changes} meaningful change${changes === 1 ? "" : "s"} worth a look`}
+            </div>
+          </div>
+          <div className="flex items-center flex-wrap" style={{ gap: 16 }}>
+            {data && (
+              <div className="flex items-center" style={{ gap: 6, fontSize: 12, color: V.tertiary }}>
+                <Dot color={fresh.color} />
+                {fresh.text(syncAt)}
+              </div>
+            )}
+            <form
+              onSubmit={(e) => { e.preventDefault(); router.push(scan.trim() ? `/scan?q=${encodeURIComponent(scan.trim())}` : "/scan"); }}
+              className="flex items-center"
+              style={{ gap: 8, border: `1px solid ${V.input}`, borderRadius: 6, padding: "7px 12px", background: "transparent" }}
+            >
+              <IconSearch size={13} style={{ color: V.secondary }} />
+              <label htmlFor="bridge-scan" className="sr-only">Scan your business</label>
+              <input
+                id="bridge-scan"
+                value={scan}
+                onChange={(e) => setScan(e.target.value)}
+                placeholder="Scan"
+                style={{ width: 90, background: "none", border: "none", outline: "none", boxShadow: "none", color: V.ink, fontSize: 13 }}
+              />
+            </form>
+          </div>
+        </div>
+
+        {data && data.hasData && (
+          <div className="flex items-center flex-wrap" style={{ gap: 10, marginTop: 14, paddingTop: 14, borderTop: `1px solid ${V.divider}`, fontSize: 13, color: V.body }}>
+            <span className="flex items-center" style={{ gap: 6 }}><Dot color={V.critical} />{urgent.length} need attention</span>
+            <Sep />
+            <span className="flex items-center" style={{ gap: 6 }}><Dot color={V.accent} />{data.attention.decisions} waiting on your decision</span>
+            <Sep />
+            <span style={{ color: V.secondary }}>everything else stable</span>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-4">
-        <BridgeHealthPanel />
-        <div className="space-y-4">
-          <Link
-            href="/decisions/import"
-            className="block rounded-2xl hover-dim"
-            style={{ border: "1px solid #E7E5DF", padding: "18px 20px", background: "#FFFFFF" }}
-          >
-            <span className="v32-body" style={{ color: "#1A1A18", fontWeight: 600 }}>Upload a receivables file</span>
-            <span className="v32-meta block mt-1" style={{ color: "#63635F" }}>
-              CSV or Excel export of invoices (Tally, Busy or any ledger). Starlane shows what it read and what it rejected before anything is used.
-            </span>
-          </Link>
-          <Link
-            href="/sources"
-            className="block rounded-2xl hover-dim"
-            style={{ border: "1px solid #E7E5DF", padding: "18px 20px", background: "#FFFFFF" }}
-          >
-            <span className="v32-body" style={{ color: "#1A1A18", fontWeight: 600 }}>Connect Tally or see every source</span>
-            <span className="v32-meta block mt-1" style={{ color: "#63635F" }}>
-              Tally connects through the desktop connector and is read-only. Sources also shows sync activity and data quality.
-            </span>
-          </Link>
-          <TeachStarlanePanel />
+      {error && <ErrorBanner>{error}</ErrorBanner>}
+
+      <div className="fade-once flex flex-col lg:flex-row" style={{ gap: 32 }}>
+        {/* What changed */}
+        <div className="min-w-0 flex flex-col" style={{ flex: 1.2, gap: 22 }}>
+          <div>
+            <div style={{ fontFamily: V.serif, fontSize: 16, color: V.ink, marginBottom: 6 }}>What changed</div>
+            {!data && !error && <SkeletonRows rows={3} height={84} />}
+            {data && !data.hasData && (
+              <EmptyLine
+                title="No books connected yet."
+                body="Starlane reports changes from your own records only. Connect Tally or upload a receivables file and this fills in on the next sync."
+                action={<div className="flex gap-2"><Link href="/sources" className="btn-secondary-v32" style={{ padding: "6px 12px", fontSize: 12, borderRadius: 6 }}>Connect a source</Link><Link href="/decisions/import" className="btn-secondary-v32" style={{ padding: "6px 12px", fontSize: 12, borderRadius: 6 }}>Upload a file</Link></div>}
+              />
+            )}
+            {data && data.hasData && latest.length === 0 && (
+              <EmptyLine title="Nothing changed that needs a look." body="Overdue bands, broken promises and sync problems appear here the moment Starlane sees them." />
+            )}
+            {urgent.length > 0 && <Label style={{ marginBottom: 2 }}>Needs attention</Label>}
+            {urgent.map((e) => <IntelRow key={e.id} e={e} dot={V.critical} onOpen={() => setOpen(e)} />)}
+            {other.length > 0 && <Label style={{ margin: "14px 0 2px" }}>Worth watching</Label>}
+            {other.map((e) => <IntelRow key={e.id} e={e} dot={V.warning} onOpen={() => setOpen(e)} />)}
+            {data && data.attention.watch.open > latest.length && (
+              <Link href="/watch" className="hover-dim inline-block" style={{ fontSize: 12.5, color: V.secondary, marginTop: 10 }}>
+                All {data.attention.watch.open} open items on Watch →
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Needs you / Prepared / Upcoming */}
+        <div className="min-w-0 flex flex-col w-full lg:max-w-[320px]" style={{ flex: 1, gap: 24 }}>
+          <div>
+            <div style={{ fontFamily: V.serif, fontSize: 15, color: V.ink, marginBottom: 8 }}>Needs you</div>
+            {!data && !error && <SkeletonRows rows={2} height={46} />}
+            {data && decisions.length === 0 && <p style={{ fontSize: 12.5, color: V.secondary, padding: "4px 0" }}>No decision is waiting on you.</p>}
+            {decisions.slice(0, 4).map((a, i) => <NeedsYouRow key={a.id} a={a} emphasized={i === 0} />)}
+          </div>
+
+          <div>
+            <div style={{ fontFamily: V.serif, fontSize: 15, color: V.ink, marginBottom: 8 }}>Prepared for you</div>
+            {data && prepared.length === 0 && <p style={{ fontSize: 12.5, color: V.secondary, padding: "4px 0" }}>Nothing is due to be prepared.</p>}
+            {prepared.map((h) => (
+              <SideRow
+                key={h.horizon}
+                href={h.first!.route || "/prepared"}
+                icon={<IconFileCheck size={15} />}
+                title={h.first!.title}
+                context={h.first!.reason}
+                meta={h.count > 1 ? `${h.count} items` : "Ready"}
+              />
+            ))}
+          </div>
+
+          <div>
+            <div style={{ fontFamily: V.serif, fontSize: 15, color: V.ink, marginBottom: 8 }}>Upcoming</div>
+            {data && upcoming.length === 0 && <p style={{ fontSize: 12.5, color: V.secondary, padding: "4px 0" }}>No mission deadline coming up.</p>}
+            {upcoming.slice(0, 3).map((m) => (
+              <SideRow
+                key={m.id}
+                href={`/missions/${m.id}`}
+                icon={<IconCalendar size={15} />}
+                title={m.title}
+                context={m.objective}
+                meta={m.endsAt ? new Date(m.endsAt).toLocaleDateString("en-IN", { weekday: "short" }) : ""}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="mt-8">
-        <p className="v32-section-label mb-3">External signals from connected world sources</p>
-        {signals === null && <p className="v32-body" style={{ color: "#63635F" }}>Loading…</p>}
-        {signalsError && <p className="v32-meta" style={{ color: "#A64F4B" }}>{signalsError}</p>}
-        {signals !== null && !signalsError && signals.length === 0 && (
-          <EmptyPanel
-            compact
-            icon={<FiActivity size={18} style={{ color: "#8A8A86" }} />}
-            title="No external signals yet"
-            body="When a connected world source (exchange rates, earthquakes) produces a signal Starlane is confident about, it is listed here with its evidence."
-          />
-        )}
-        {signals !== null && signals.length > 0 && signals.map((sig) => (
-          <IntelRow key={sig.id} signal={sig} onOpenEvidence={() => openEvidence(sig.id)} />
-        ))}
-      </div>
-
-      {evidenceSignalId && (
-        evidenceLoading || evidence === null ? (
-          <LoadingEvidencePlaceholder onClose={() => setEvidenceSignalId(null)} />
-        ) : (
-          <EvidenceDrawer
-            evidence={evidence}
-            title="Why Starlane flagged this"
-            onClose={() => { setEvidenceSignalId(null); setEvidence(null); }}
-          />
-        )
+      {open && (
+        <EvidenceSetDrawer title={open.title} record={open.detail || undefined} evidence={open.evidence} onClose={() => setOpen(null)}>
+          <div className="flex gap-2">
+            <Link href="/watch" className="btn-secondary-v32" style={{ padding: "6px 12px", fontSize: 12, borderRadius: 6 }}>Open in Watch</Link>
+          </div>
+        </EvidenceSetDrawer>
       )}
     </DashboardLayout>
   );
 }
 
-function IntelRow({ signal, onOpenEvidence }: { signal: IntelligenceSignal; onOpenEvidence: () => void }) {
+function IntelRow({ e, dot, onOpen }: { e: WatchEvent; dot: string; onOpen: () => void }) {
+  const metric = eventMetric(e);
   return (
-    <div
-      className="row-hover py-3 px-2 -mx-2 cursor-pointer"
-      style={{ borderBottom: "1px solid #EDEDE9" }}
-      onClick={onOpenEvidence}
-      role="button"
-      tabIndex={0}
-    >
-      <div className="flex items-start gap-2.5">
-        <span
-          className="mt-1.5 shrink-0 rounded-full"
-          style={{ width: 6, height: 6, background: dotColorForStatus(signal.status) }}
-          aria-hidden="true"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="v32-meta uppercase tracking-wide mb-0.5">
-            {signal.related_entity_type || signal.event_type || "Signal"}
-          </p>
-          <p style={{ fontSize: 13.5, color: "#191917" }}>
-            {signal.event_title || signal.why_exists}
-          </p>
-          {signal.event_title && signal.why_exists && (
-            <p className="v32-body mt-0.5" style={{ color: "#63635F" }}>{signal.why_exists}</p>
-          )}
-          <p className="v32-meta mt-1">
-            {signal.impact_status} · {relativeTime(signal.last_updated_at || signal.first_detected_at)}
-          </p>
+    <button type="button" onClick={onOpen} className="row-hover w-full text-left flex items-start" style={{ gap: 14, padding: "12px 10px", borderBottom: `1px solid ${V.divider}`, borderRadius: 6 }}>
+      <Dot color={dot} className="mt-[7px]" />
+      <div className="flex-1 min-w-0">
+        <div style={{ fontSize: 11, letterSpacing: "0.6px", textTransform: "uppercase", color: V.secondary, marginBottom: 2 }}>{KIND_LABEL[e.kind] || "Watch"}</div>
+        <div style={{ fontSize: 14.5, fontWeight: 600, color: V.ink, marginBottom: 2 }}>{e.title}</div>
+        {e.detail && <div style={{ fontSize: 13, color: V.body, marginBottom: 3 }}>{e.detail}</div>}
+        <div className="flex items-center" style={{ gap: 10 }}>
+          {metric && <Mono>{metric}</Mono>}
+          <span style={{ fontSize: 12, color: V.tertiary }}>{e.evidence?.facts?.length ? "From your books" : "Starlane"} · {clockTime(e.firstSeenAt)}</span>
         </div>
       </div>
-    </div>
+      <Chevron />
+    </button>
   );
 }
 
-function EmptyPanel({
-  icon, title, body, compact,
-}: { icon: React.ReactNode; title: string; body: string; compact?: boolean }) {
+function NeedsYouRow({ a, emphasized }: { a: FeatureAction; emphasized: boolean }) {
   return (
-    <div className={compact ? "py-3" : "py-8 text-center"}>
-      {!compact && <div className="mb-3 flex justify-center">{icon}</div>}
-      {compact && <div className="mb-1.5">{icon}</div>}
-      <p style={{ fontFamily: compact ? undefined : "'Fraunces', Georgia, serif", fontSize: compact ? 13 : 16, color: "#191917" }} className={compact ? "" : "mb-1.5"}>
-        {title}
-      </p>
-      <p className="v32-body" style={{ color: "#63635F" }}>{body}</p>
-    </div>
+    <Link
+      href={a.missionId ? `/missions/${a.missionId}` : "/prepared"}
+      className="row-hover flex items-center"
+      style={{ gap: 10, padding: "9px 10px", borderRadius: 7, border: `1px solid ${emphasized ? V.emphasis : "transparent"}` }}
+    >
+      <span className="shrink-0 flex items-center justify-center" style={{ width: 15, height: 15, color: V.secondary }}><IconClock size={15} /></span>
+      <div className="flex-1 min-w-0">
+        <div style={{ fontSize: 13, color: V.ink }}>{a.title}</div>
+        <div className="truncate" style={{ fontSize: 11.5, color: V.secondary }}>{a.description || LIFECYCLE_LABEL[a.lifecycle]}</div>
+      </div>
+      <span className="shrink-0" style={{ fontSize: 11, color: V.tertiary }}>{clockTime(a.createdAt)}</span>
+      <Chevron size={13} />
+    </Link>
   );
 }
 
-function LoadingEvidencePlaceholder({ onClose }: { onClose: () => void }) {
-  // Reuses the Drawer shell indirectly by rendering EvidenceDrawer with an
-  // empty evidence array while the real fetch is in flight, rather than a
-  // fifth ad-hoc overlay — the drawer's own copy already reads sensibly
-  // with zero items ("nothing to trace yet") for the brief loading window.
-  return <EvidenceDrawer evidence={[]} title="Loading evidence…" onClose={onClose} />;
+function SideRow({ href, icon, title, context, meta }: { href: string; icon: React.ReactNode; title: string; context?: string | null; meta?: string }) {
+  return (
+    <Link href={href} className="row-hover flex items-center" style={{ gap: 10, padding: "9px 10px", borderRadius: 7 }}>
+      <span className="shrink-0 flex items-center justify-center" style={{ width: 15, height: 15, color: V.secondary }}>{icon}</span>
+      <div className="flex-1 min-w-0">
+        <div style={{ fontSize: 13, color: V.ink }}>{title}</div>
+        {context && <div className="truncate" style={{ fontSize: 11.5, color: V.secondary }}>{context}</div>}
+      </div>
+      {meta && <span className="shrink-0" style={{ fontSize: 11, color: V.tertiary }}>{meta}</span>}
+      <Chevron size={13} />
+    </Link>
+  );
 }

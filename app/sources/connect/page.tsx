@@ -18,7 +18,7 @@ export default function SourcesConnectPage() {
         <nav aria-label="Breadcrumb" style={{ fontSize: 12.5, color: "#63635F" }}>
           <Link href="/sources" className="hover-dim" style={{ color: "#63635F" }}>Sources</Link> <span aria-hidden>›</span> Connect Tally
         </nav>
-        <h1 className="v32-page-title" style={{ margin: 0 }}>Connect TallyPrime</h1>
+        <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>Connect TallyPrime</h1>
         <p style={{ fontSize: 13.5, color: "#63635F", lineHeight: 1.6, margin: 0 }}>
           Starlane reads Tally through a small bridge on the computer where Tally runs. It is read-only — it never creates,
           edits or deletes anything in Tally — and it uses its own device credential, which you can revoke from Sources at any time.
@@ -29,7 +29,7 @@ export default function SourcesConnectPage() {
         </div>
 
         {connected && (
-          <div role="status" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", border: "1px solid #BFD6C9", background: "#F2F7F4", borderRadius: 8, padding: "14px 16px" }}>
+          <div role="status" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", border: "1px solid rgba(71,112,84,0.35)", background: "#FFFFFF", borderRadius: 8, padding: "14px 16px" }}>
             <p style={{ margin: 0, fontSize: 13.5, color: "#191917" }}>Tally is connected. Starlane is building your business state from the vouchers it received.</p>
             <Link href="/bridge" style={{ fontSize: 13, fontWeight: 600, color: "#191917" }}>Open The Bridge →</Link>
           </div>

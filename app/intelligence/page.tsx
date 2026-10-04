@@ -56,11 +56,11 @@ function SignalRow({ signal, onOpen }: { signal: IntelligenceSignal; onOpen: () 
       <span
         aria-hidden="true"
         className="mt-1.5 rounded-full shrink-0"
-        style={{ width: 6, height: 6, background: isExternal ? "#4F6EF7" : "#D8D8D3" }}
+        style={{ width: 6, height: 6, background: isExternal ? "#191917" : "#D8D8D3" }}
       />
       <div className="min-w-0 flex-1">
         <p className="text-[12px]" style={{ color: "#8A8A86" }}>{metaParts.join(" · ")}</p>
-        <p className="text-[15px] font-medium mt-1" style={{ color: "#171717" }}>{signal.event_title || "External event"}</p>
+        <p className="text-[15px] font-medium mt-1" style={{ color: "#191917" }}>{signal.event_title || "External event"}</p>
         <p className="text-[13px] mt-1 leading-[1.5] max-w-[640px] line-clamp-2" style={{ color: "#686868" }}>{humanReason(signal)}</p>
         <p className="text-[12px] mt-2" style={{ color: "#8A8A86" }}>
           Updated {formatDateTime(signal.last_updated_at || signal.first_detected_at)}
@@ -114,7 +114,7 @@ export default function IntelligencePage() {
   return (
     <DashboardLayout pageTitle="Intelligence">
       <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
-        <h1 className="text-[28px] lg:text-[32px] leading-[1.15] mb-2" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>
+        <h1 className="text-[28px] lg:text-[32px] leading-[1.15] mb-2" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>
           Intelligence
         </h1>
         <p className="text-[14px] max-w-[700px] mb-9" style={{ color: "#686868" }}>
@@ -146,12 +146,12 @@ export default function IntelligencePage() {
             <span
               aria-hidden="true"
               className="absolute inset-0 flex items-center justify-center select-none pointer-events-none"
-              style={{ fontSize: "clamp(56px, 16vw, 140px)", fontWeight: 600, color: "#171717", opacity: 0.03, letterSpacing: "-0.04em", whiteSpace: "nowrap" }}
+              style={{ fontSize: "clamp(56px, 16vw, 140px)", fontWeight: 600, color: "#191917", opacity: 0.03, letterSpacing: "-0.04em", whiteSpace: "nowrap" }}
             >
               Starlane
             </span>
             <div className="relative">
-              <p className="text-[15px] font-medium" style={{ color: "#171717" }}>No material changes detected</p>
+              <p className="text-[15px] font-medium" style={{ color: "#191917" }}>No material changes detected</p>
               <p className="text-[13px] mt-1.5 max-w-[440px] mx-auto" style={{ color: "#8A8A86" }}>
                 Starlane hasn't identified a material change from the evidence currently available.
               </p>

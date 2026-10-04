@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { EmptyLine } from "@/components/v32/ui";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { ControlSubnav } from "@/components/control/ControlSubnav";
 import { formatDateTime } from "@/components/intelligence/format";
 import { api, type RankedAction } from "@/lib/api";
-import { FiCheckSquare } from "react-icons/fi";
 
 // Priority 5 — Control Approvals. Real pending ai_actions for this tenant,
 // same two-column layout the honest-empty shell already had (§6:
@@ -53,13 +53,13 @@ function ApprovalRow({
       style={{
         display: "flex", flexDirection: "column", gap: 4, width: "100%", textAlign: "left",
         padding: "12px 14px", borderRadius: 10, border: "1px solid",
-        borderColor: selected ? "#4F6EF7" : "#EBEAE6",
+        borderColor: selected ? "var(--accent)" : "#EBEAE6",
         background: selected ? "#F4F6FE" : "transparent",
         cursor: "pointer", marginBottom: 8,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-        <span className="text-sm font-medium" style={{ color: "#171717" }}>{action.title}</span>
+        <span className="text-sm font-medium" style={{ color: "#191917" }}>{action.title}</span>
         <span className="text-2xs" style={{ color: priorityColor(action.priority), fontWeight: 600, whiteSpace: "nowrap" }}>
           {priorityLabel(action.priority)}
         </span>
@@ -133,10 +133,9 @@ export default function ControlApprovalsPage() {
             )}
 
             {actions !== null && !loadError && actions.length === 0 && (
-              <EmptyState
-                icon={<FiCheckSquare size={28} style={{ color: "#8A8A86" }} />}
+              <EmptyLine
                 title="No other actions are waiting for a decision right now."
-                message=""
+                body={<>Decisions Starlane raises wait on <Link className="underline" href="/prepared">Prepared</Link>.</>}
               />
             )}
 
@@ -178,29 +177,29 @@ export default function ControlApprovalsPage() {
                 </div>
 
                 {selected.description && (
-                  <p className="text-sm" style={{ color: "#3A3A36", lineHeight: 1.5 }}>{selected.description}</p>
+                  <p className="text-sm" style={{ color: "#43433F", lineHeight: 1.5 }}>{selected.description}</p>
                 )}
 
                 {selected.recommended_message && (
                   <div style={{ padding: 12, borderRadius: 8, background: "#F7F7F5", border: "1px solid #EBEAE6" }}>
                     <div className="text-2xs" style={{ color: "#8A8A86", marginBottom: 4 }}>Recommended message</div>
-                    <p className="text-sm" style={{ color: "#3A3A36" }}>{selected.recommended_message}</p>
+                    <p className="text-sm" style={{ color: "#43433F" }}>{selected.recommended_message}</p>
                   </div>
                 )}
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   <div className="text-2xs" style={{ color: "#8A8A86" }}>
-                    Actor: <span style={{ color: "#3A3A36" }}>{actorLabel(selected)}</span>
+                    Actor: <span style={{ color: "#43433F" }}>{actorLabel(selected)}</span>
                   </div>
                   <div className="text-2xs" style={{ color: "#8A8A86" }}>
-                    Action type: <span style={{ color: "#3A3A36" }}>{selected.action_type}</span>
+                    Action type: <span style={{ color: "#43433F" }}>{selected.action_type}</span>
                   </div>
                   <div className="text-2xs" style={{ color: "#8A8A86" }}>
-                    Created: <span style={{ color: "#3A3A36" }}>{formatDateTime(selected.created_at)}</span>
+                    Created: <span style={{ color: "#43433F" }}>{formatDateTime(selected.created_at)}</span>
                   </div>
                   {selected.risk_level && (
                     <div className="text-2xs" style={{ color: "#8A8A86" }}>
-                      Risk: <span style={{ color: "#3A3A36" }}>{selected.risk_level}</span>
+                      Risk: <span style={{ color: "#43433F" }}>{selected.risk_level}</span>
                     </div>
                   )}
                 </div>
@@ -226,7 +225,7 @@ export default function ControlApprovalsPage() {
                     disabled={decisionPending}
                     style={{
                       flex: 1, padding: "9px 14px", borderRadius: 8, border: "1px solid #EBEAE6",
-                      background: "transparent", color: "#3A3A36", fontSize: 13, fontWeight: 600,
+                      background: "transparent", color: "#43433F", fontSize: 13, fontWeight: 600,
                       cursor: decisionPending ? "default" : "pointer", opacity: decisionPending ? 0.6 : 1,
                     }}
                   >

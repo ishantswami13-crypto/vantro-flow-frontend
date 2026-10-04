@@ -5,6 +5,9 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type Connector, type ConnectorHealth } from "@/lib/api";
 import { FiUploadCloud } from "react-icons/fi";
+import { PageHeader, Subnav, StatusDot, Dot, Chevron, EmptyLine, ErrorBanner, SkeletonRows } from "@/components/v32/ui";
+import { IconSources } from "@/components/v32/icons";
+import { BridgeHealthPanel } from "@/components/os/BridgePanels";
 
 // Sources — every system Starlane can connect to, and its live state.
 //
@@ -14,8 +17,9 @@ import { FiUploadCloud } from "react-icons/fi";
 // that are not built say so and offer no connect action.
 //
 // Tabs: Connected / Available are real. Sync Activity is the last real sync
-// per source (no fabricated feed). Data Quality and Reconciliation have no
-// computation behind them yet and say exactly that.
+// per source (no fabricated feed). Data Quality shows what Starlane understood
+// from the connections; Reconciliation has no computation behind it yet and
+// says exactly that.
 
 type TabKey = "connected" | "available" | "sync" | "quality" | "reconciliation";
 const TABS: { key: TabKey; label: string }[] = [
@@ -26,7 +30,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "reconciliation", label: "Reconciliation" },
 ];
 
-const INK = "#191917", SOFT = "#63635F", FAINT = "#9A9A94", LINE = "#EBEAE6", WARN = "#C13B3B", OK = "#2F6B4F";
+const INK = "#191917", SOFT = "#63635F", FAINT = "#8A8A86", LINE = "#EBEAE6", WARN = "#A64F4B";
 
 function timeAgo(iso: string | null): string {
   if (!iso) return "";
@@ -34,24 +38,31 @@ function timeAgo(iso: string | null): string {
   if (ms < 0 || Number.isNaN(ms)) return "";
   const min = Math.floor(ms / 60000);
   if (min < 1) return "just now";
-  if (min < 60) return `${min} minute${min === 1 ? "" : "s"} ago`;
+  if (min < 60) return `${min}m ago`;
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr} hour${hr === 1 ? "" : "s"} ago`;
+  if (hr < 24) return `${hr}h ago`;
   const day = Math.floor(hr / 24);
-  return `${day} day${day === 1 ? "" : "s"} ago`;
+  return `${day}d ago`;
 }
 
-function describe(c: Connector): { text: string; color: string } {
-  const ago = timeAgo(c.state.lastSyncAt);
-  const map: Record<ConnectorHealth, { text: string; color: string }> = {
-    healthy: { text: c.authType === "file_import" ? `Last import ${ago}${c.state.lastImport?.filename ? ` · ${c.state.lastImport.filename}` : ""}` : `Connected · last synced ${ago}`, color: OK },
-    stale: { text: c.state.lastSyncAt ? `Last synced ${ago} — sync is overdue` : "Paired, but nothing has synced yet", color: WARN },
-    error: { text: `Needs attention${c.state.lastError ? ` — ${c.state.lastError}` : ""}`, color: WARN },
-    disconnected: { text: "Disconnected", color: FAINT },
-    not_connected: { text: c.authType === "public_feed" ? "No data received yet" : "Not connected", color: FAINT },
-    unavailable: { text: c.unavailableReason || "Not available yet", color: FAINT },
-  };
-  return map[c.state.health];
+// V32 status_dot per connector health.
+const STATUS: Record<ConnectorHealth, { label: string; color: string }> = {
+  healthy: { label: "Healthy", color: "#477054" },
+  stale: { label: "Sync overdue", color: "#9B742B" },
+  error: { label: "Needs attention", color: "#A64F4B" },
+  disconnected: { label: "Disconnected", color: "rgba(25,25,23,0.25)" },
+  not_connected: { label: "Not connected", color: "rgba(25,25,23,0.25)" },
+  unavailable: { label: "Not available yet", color: "rgba(25,25,23,0.25)" },
+};
+
+function noteFor(c: Connector): string {
+  if (c.state.health === "error" && c.state.lastError) return c.state.lastError;
+  if (c.state.health === "stale" && !c.state.lastSyncAt) return "Paired, but nothing has synced yet";
+  if (c.authType === "file_import" && c.state.lastImport?.filename) return `Last import · ${c.state.lastImport.filename}`;
+  const active = c.state.devices.filter((x) => x.status === "ACTIVE");
+  if (active.length) return active.map((x) => `${x.name}${x.lastSeenAt ? `, seen ${timeAgo(x.lastSeenAt)}` : ""}`).join(" · ");
+  if (c.availability !== "available") return c.unavailableReason || c.summary;
+  return c.summary;
 }
 
 // What the connection lets Starlane do, from the backend's capability label.
@@ -63,44 +74,53 @@ const CAPABILITY_TEXT: Record<string, string> = {
 
 const isConnected = (c: Connector) => ["healthy", "stale", "error"].includes(c.state.health);
 
-function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
-  const d = describe(c);
+const COLS = "grid-cols-[16px_1fr_auto] md:grid-cols-[16px_160px_130px_110px_1fr_auto]";
+
+function TableHeader() {
   return (
-    <div className="row-hover" style={{ display: "flex", alignItems: "center", gap: 16, padding: "16px 4px", borderBottom: `1px solid ${LINE}`, borderRadius: 6, opacity: c.availability === "available" ? 1 : 0.6 }}>
-      <div aria-hidden style={{ width: 34, height: 34, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13, fontWeight: 500, background: "#F3F2EE", border: `1px solid ${LINE}`, color: SOFT }}>
-        {c.authType === "file_import" ? <FiUploadCloud size={14} /> : c.name.charAt(0)}
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 14, fontWeight: 500, color: INK, margin: 0 }}>{c.name}</p>
-        <p style={{ fontSize: 12, marginTop: 2, color: d.color }}>{d.text}</p>
-        {isConnected(c) && c.state.capabilityLabel && CAPABILITY_TEXT[c.state.capabilityLabel] && (
-          <p style={{ fontSize: 11.5, marginTop: 2, color: FAINT }}>{CAPABILITY_TEXT[c.state.capabilityLabel]}</p>
-        )}
-        {c.state.devices.filter((x) => x.status === "ACTIVE").length > 0 && (
-          <p style={{ fontSize: 11.5, marginTop: 2, color: FAINT }}>
-            {c.state.devices.filter((x) => x.status === "ACTIVE").map((x) => `${x.name}${x.lastSeenAt ? ` · seen ${timeAgo(x.lastSeenAt)}` : ""}`).join(" · ")}
-          </p>
-        )}
-      </div>
-      {action}
+    <div className={`hidden md:grid ${COLS} items-center`} style={{ gap: 14, padding: "8px 12px", fontSize: 11, letterSpacing: "0.5px", color: FAINT }}>
+      <span /><span>SOURCE</span><span>STATUS</span><span>LAST SYNC</span><span>NOTE</span><span />
     </div>
   );
 }
 
+function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
+  const st = STATUS[c.state.health];
+  const href = c.authType === "local_bridge" ? "/sources/tally" : undefined;
+  const cap = isConnected(c) && c.state.capabilityLabel ? CAPABILITY_TEXT[c.state.capabilityLabel] : undefined;
+  const body = (
+    <>
+      <span aria-hidden className="flex items-center justify-center" style={{ width: 16, height: 16, color: SOFT }}>
+        {c.authType === "file_import" ? <FiUploadCloud size={14} /> : <IconSources size={15} />}
+      </span>
+      <div className="min-w-0">
+        <div style={{ fontSize: 14, fontWeight: 600, color: INK }}>{c.name}</div>
+        <div style={{ fontSize: 12, color: FAINT }}>{c.category.replace(/_/g, " ").replace(/^./, (x) => x.toUpperCase())}</div>
+        <div className="md:hidden" style={{ marginTop: 4 }}><StatusDot label={st.label} color={st.color} /></div>
+      </div>
+      <div className="hidden md:block"><StatusDot label={st.label} color={st.color} /></div>
+      <div className="hidden md:block" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#43433F" }}>{timeAgo(c.state.lastSyncAt) || "—"}</div>
+      <div className="hidden md:block min-w-0 truncate" style={{ fontSize: 12, color: SOFT }} title={cap ? `${noteFor(c)}. ${cap}` : noteFor(c)}>{noteFor(c)}</div>
+      <div className="flex items-center justify-end" style={{ gap: 12 }} onClick={(e) => e.stopPropagation()}>
+        {action}
+        {href && <Chevron />}
+      </div>
+    </>
+  );
+  const cls = `row-hover grid ${COLS} items-center`;
+  const style: React.CSSProperties = { gap: 14, padding: "14px 12px", minHeight: 58, boxSizing: "border-box", borderBottom: `1px solid ${LINE}`, opacity: c.availability === "available" ? 1 : 0.6 };
+  if (href) return <Link href={href} className={cls} style={style}>{body}</Link>;
+  return <div className={cls} style={style}>{body}</div>;
+}
+
 function Quiet({ children, onClick, href, disabled }: { children: React.ReactNode; onClick?: () => void; href?: string; disabled?: boolean }) {
-  const style = { color: INK, fontSize: 13, fontWeight: 500, background: "none", border: "none", cursor: disabled ? "default" : "pointer", whiteSpace: "nowrap" } as const;
+  const style = { color: "#43433F", fontSize: 12.5, background: "none", border: "none", cursor: disabled ? "default" : "pointer", whiteSpace: "nowrap" } as const;
   if (href) return <Link href={href} className="hover-dim" style={{ ...style, textDecoration: "none" }}>{children}</Link>;
   return <button type="button" onClick={onClick} disabled={disabled} className="hover-dim" style={style}>{children}</button>;
 }
 
 function Empty({ title, body, children }: { title: string; body: string; children?: React.ReactNode }) {
-  return (
-    <div style={{ padding: "40px 24px", textAlign: "center" }} className="fade-once">
-      <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, color: INK, marginBottom: 6 }}>{title}</p>
-      <p className="v32-body max-w-md mx-auto" style={{ color: SOFT }}>{body}</p>
-      {children}
-    </div>
-  );
+  return <EmptyLine title={title} body={body} action={children} />;
 }
 
 export default function SourcesPage() {
@@ -130,7 +150,7 @@ export default function SourcesPage() {
   const available = company.filter((c) => !isConnected(c));
 
   const actionFor = (c: Connector) => {
-    if (c.availability !== "available") return <span style={{ fontSize: 12, color: "#B5B5B0" }}>Not available yet</span>;
+    if (c.availability !== "available") return null;
     if (c.authType === "local_bridge") {
       const active = c.state.devices.filter((d) => d.status === "ACTIVE");
       return (
@@ -148,52 +168,53 @@ export default function SourcesPage() {
 
   const syncEntries = [...connected, ...world].filter((c) => c.state.lastSyncAt || c.state.health !== "not_connected");
 
+  const lastSync = [...connected, ...world].map((c) => c.state.lastSyncAt).filter(Boolean).sort().pop() || null;
+  const allHealthy = connected.length > 0 && connected.every((c) => c.state.health === "healthy");
+
   return (
     <DashboardLayout pageTitle="Sources">
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
-        <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: INK }}>Sources</h1>
-        <p style={{ fontSize: 13.5, color: SOFT, maxWidth: 640, margin: 0 }}>
-          The systems and external signals Starlane uses to understand your company. Each connection states what Starlane receives;
-          everything Starlane shows can be traced back to one of these.
-        </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <PageHeader
+          title="Sources"
+          subtitle="Where Starlane gets its understanding of your organization."
+          right={connectors ? (
+            <span className="flex items-center" style={{ gap: 6, fontSize: 12, color: FAINT }}>
+              <Dot color={!connected.length ? "rgba(25,25,23,0.25)" : allHealthy ? "#477054" : "#9B742B"} />
+              {!connected.length ? "Nothing connected yet" : `${allHealthy ? "All current" : "Needs a look"}${lastSync ? ` · Last sync ${timeAgo(lastSync)}` : ""}`}
+            </span>
+          ) : undefined}
+        />
 
         {loadError && (
-          <p role="alert" style={{ fontSize: 13, color: WARN }}>
+          <ErrorBanner>
             {loadError} <button type="button" onClick={load} className="hover-dim" style={{ background: "none", border: "none", color: INK, textDecoration: "underline", cursor: "pointer" }}>Retry</button>
-          </p>
+          </ErrorBanner>
         )}
 
-        <nav aria-label="Secondary" style={{ display: "flex", alignItems: "center", gap: 22, borderBottom: `1px solid ${LINE}`, marginBottom: 4, overflowX: "auto" }}>
-          {TABS.map((t) => (
-            <button key={t.key} onClick={() => setTab(t.key)} className="hover-dim" aria-current={t.key === tab ? "page" : undefined}
-              style={{ padding: "8px 2px", fontSize: 13, fontWeight: t.key === tab ? 500 : 400, color: t.key === tab ? INK : SOFT, background: "none", border: "none",
-                borderBottomColor: t.key === tab ? "#696D86" : "transparent", borderBottomWidth: 2, borderBottomStyle: "solid", cursor: "pointer", whiteSpace: "nowrap" }}>
-              {t.label}
-            </button>
-          ))}
-        </nav>
+        <Subnav items={TABS} active={tab} onChange={(k) => setTab(k as TabKey)} />
 
-        <div style={{ flex: 1, minHeight: 0, background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div className="fade-once">
           {connectors === null && !loadError && (
-            <div style={{ padding: "12px 20px" }} aria-busy="true">
-              {[0, 1, 2].map((i) => <div key={i} className="skeleton" style={{ height: 52, margin: "10px 0", borderRadius: 6, background: "#F3F2EE" }} />)}
+            <div>
+              <SkeletonRows rows={3} height={58} />
             </div>
           )}
 
           {connectors && tab === "connected" && (
             connected.length || world.length ? (
-              <div style={{ padding: "8px 20px 20px" }}>
+              <div>
+                {connected.length > 0 && <TableHeader />}
                 {connected.map((c) => <Row key={c.id} c={c} action={actionFor(c)} />)}
                 {!connected.length && (
                   <Empty title="No company system is connected yet." body="Connect Tally or upload an export to give Starlane your real receivables, payables and stock.">
-                    <div style={{ marginTop: 14, display: "flex", gap: 18, justifyContent: "center" }}>
+                    <div style={{ display: "flex", gap: 18 }}>
                       <Quiet href="/sources/connect">Connect Tally</Quiet><Quiet onClick={() => setTab("available")}>See all sources</Quiet>
                     </div>
                   </Empty>
                 )}
                 {world.length > 0 && (
                   <>
-                    <p className="v32-section-label" style={{ fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", color: FAINT, margin: "22px 4px 4px" }}>External signals</p>
+                    <p style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: FAINT, margin: "24px 12px 4px" }}>External signals</p>
                     {world.map((c) => <Row key={c.id} c={c} />)}
                   </>
                 )}
@@ -202,29 +223,32 @@ export default function SourcesPage() {
           )}
 
           {connectors && tab === "available" && (
-            <div style={{ padding: "8px 20px 20px" }}>
+            <div>
+              <TableHeader />
               {available.filter((c) => c.availability === "available").map((c) => (
                 <div key={c.id}>
                   <Row c={c} action={actionFor(c)} />
                   {c.access.length > 0 && (
-                    <ul style={{ margin: "8px 0 10px 54px", padding: 0, listStyle: "none", display: "grid", gap: 4 }}>
+                    <ul style={{ margin: "8px 0 10px 42px", padding: 0, listStyle: "none", display: "grid", gap: 4 }}>
                       {c.access.map((a) => <li key={a} style={{ fontSize: 12, color: SOFT }}>· {a}</li>)}
                     </ul>
                   )}
                 </div>
               ))}
-              <p style={{ fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", color: FAINT, margin: "22px 4px 4px" }}>Not built yet</p>
+              <p style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: FAINT, margin: "24px 12px 4px" }}>Not built yet</p>
               {available.filter((c) => c.availability !== "available").map((c) => <Row key={c.id} c={c} action={actionFor(c)} />)}
             </div>
           )}
 
           {connectors && tab === "sync" && (
             syncEntries.length ? (
-              <div style={{ padding: "8px 20px 20px" }}>{syncEntries.map((c) => <Row key={c.id} c={c} />)}</div>
+              <div><TableHeader />{syncEntries.map((c) => <Row key={c.id} c={c} />)}</div>
             ) : <Empty title="No sync activity yet" body="The last sync of each connected source appears here. Nothing has synced yet." />
           )}
 
-          {tab === "quality" && <Empty title="Data-quality checks aren’t running yet." body="Planned: duplicate customers and suppliers, unmapped ledgers, and missing relationships found as history syncs. Nothing is checked today, so nothing is reported." />}
+          {/* What Starlane understood from each connection, likely duplicate
+              customers and how it reads the data (GET /api/os/bridge). */}
+          {tab === "quality" && <BridgeHealthPanel />}
           {tab === "reconciliation" && <Empty title="Reconciliation isn’t running yet." body="Planned: receivables, payables and sales totals compared against Tally before those numbers are used elsewhere. Nothing is compared today." />}
         </div>
       </div>

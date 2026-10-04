@@ -39,15 +39,16 @@ export function EvidenceDrawer({
   const grouped = GROUP_ORDER.map((kind) => ({ kind, items: evidence.filter((e) => e.kind === kind) })).filter((g) => g.items.length > 0);
 
   return (
-    <Drawer titleId="evidence-drawer-title" title={title} onClose={onClose}>
-      {/* The drawer header already shows `title`; only the record line is
-          added here so the title never appears twice. */}
-      {record && (
-        <div className="-mx-4 -mt-4 mb-4 px-4 pt-4 pb-3" style={{ borderBottom: "1px solid #EBEAE6" }}>
-          <p className="text-[12.5px]" style={{ color: "#63635F" }}>{record}</p>
-        </div>
-      )}
-      <p className="text-2xs text-muted mb-4 leading-relaxed">
+    <Drawer
+      titleId="evidence-drawer-title"
+      title={title}
+      onClose={onClose}
+      eyebrow="Evidence"
+      titleSize={19}
+      subtitle={record ? <span style={{ fontSize: 12.5 }}>{record}</span> : undefined}
+      footer="Conclusion → analysis → evidence → source record. Every figure in Starlane can be traced back to here."
+    >
+      <p className="mb-5" style={{ fontSize: 12.5, color: "#63635F", lineHeight: 1.6 }}>
         Every number on this screen traces back to one of the items below. Facts are things Starlane read directly from your
         records or the external event. Assumptions are planning parameters you or Starlane recorded. Forecasts are
         projections, not observations.
@@ -64,13 +65,13 @@ export function EvidenceDrawer({
             <div className="mb-1">
               <EvidenceKindBadge kind={group.kind} />
             </div>
-            <ul className="divide-y divide-border border-t border-border mt-2">
+            <ul className="mt-2" style={{ borderTop: "1px solid #EBEAE6" }}>
               {group.items.map((item, i) => (
-                <li key={`${group.kind}-${i}`} className="py-3">
-                  <p className="text-xs font-semibold text-primary">{item.label}</p>
-                  <p className="text-2xs text-secondary mt-1 leading-relaxed">{item.detail}</p>
+                <li key={`${group.kind}-${i}`} className="py-3" style={{ borderBottom: "1px solid #EBEAE6" }}>
+                  <p style={{ fontSize: 13, color: "#191917" }}>{item.label}</p>
+                  <p className="mt-1" style={{ fontSize: 12.5, color: "#43433F", lineHeight: 1.55 }}>{item.detail}</p>
                   <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
-                    <span className="text-2xs text-muted font-mono truncate">
+                    <span className="truncate" style={{ fontSize: 11.5, color: "#8A8A86", fontFamily: "'IBM Plex Mono', monospace" }}>
                       {item.source}{item.timestamp ? ` · ${formatDateTime(item.timestamp)}` : ""}
                     </span>
                     <ConfidenceBadge level={item.confidence} />
@@ -80,11 +81,6 @@ export function EvidenceDrawer({
             </ul>
           </div>
         ))}
-      </div>
-      <div className="-mx-4 -mb-4 mt-6 px-4 py-3.5" style={{ borderTop: "1px solid #EBEAE6" }}>
-        <p className="text-[11.5px]" style={{ color: "#63635F" }}>
-          Conclusion → analysis → evidence → source record. Every figure in Starlane can be traced back to here.
-        </p>
       </div>
     </Drawer>
   );

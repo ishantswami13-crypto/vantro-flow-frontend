@@ -7,34 +7,38 @@ import React from "react";
 import type { Interval, HealthDimension } from "@/lib/decisions";
 import { money, BAND_LABEL } from "@/lib/decisions";
 
+// Version 32 tokens (STARLANE_FRONTEND_HANDOFF.md §3).
 export const C = {
-  ink: "#171717",
-  body: "#4A4A47",
-  muted: "#686868",
+  ink: "#191917",
+  body: "#43433F",
+  muted: "#63635F",
   faint: "#8A8A86",
-  line: "#E5E5E1",
-  wash: "#FAFAF8",
-  good: "#2F7D5B",
-  warn: "#A0661B",
-  bad: "#B3413A",
-  accent: "#5C5F9E",
+  line: "#EBEAE6",
+  card: "rgba(25,25,23,0.10)",
+  wash: "#F3F2EE",
+  good: "#477054",
+  warn: "#9B742B",
+  bad: "#A64F4B",
+  accent: "var(--accent, #696D86)",
 };
 
 export function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[11px] uppercase tracking-[0.08em] mb-3" style={{ color: C.faint, fontWeight: 500 }}>
+    <p className="text-[10.5px] uppercase mb-3" style={{ color: C.muted, fontWeight: 500, letterSpacing: "1px" }}>
       {children}
     </p>
   );
 }
 
 type Tone = "neutral" | "good" | "warn" | "bad" | "accent";
+// Outlined tag pills, as on the Missions and Memory boards: coloured text
+// and border on white, radius 20px. Never a filled colour block.
 const TONE: Record<Tone, { fg: string; bg: string; bd: string }> = {
-  neutral: { fg: C.body, bg: "#F3F3F0", bd: "#E5E5E1" },
-  good: { fg: C.good, bg: "#EEF6F1", bd: "#D3E8DC" },
-  warn: { fg: C.warn, bg: "#FBF4EA", bd: "#EFDDC2" },
-  bad: { fg: C.bad, bg: "#FBEFEE", bd: "#F0D2CF" },
-  accent: { fg: C.accent, bg: "#F1F1F8", bd: "#DCDDF0" },
+  neutral: { fg: C.muted, bg: "transparent", bd: "rgba(25,25,23,0.14)" },
+  good: { fg: C.good, bg: "transparent", bd: "rgba(71,112,84,0.45)" },
+  warn: { fg: C.warn, bg: "transparent", bd: "rgba(155,116,43,0.45)" },
+  bad: { fg: C.bad, bg: "transparent", bd: "rgba(166,79,75,0.45)" },
+  accent: { fg: C.accent, bg: "transparent", bd: "rgba(var(--accent-rgb, 105, 109, 134), 0.5)" },
 };
 
 export function Pill({ tone = "neutral", children, title }: { tone?: Tone; children: React.ReactNode; title?: string }) {
@@ -42,8 +46,8 @@ export function Pill({ tone = "neutral", children, title }: { tone?: Tone; child
   return (
     <span
       title={title}
-      className="inline-flex items-center gap-1 text-[11px] px-2 py-[2px] rounded-full whitespace-nowrap"
-      style={{ color: t.fg, background: t.bg, border: `1px solid ${t.bd}`, fontWeight: 500 }}
+      className="inline-flex items-center gap-1 text-[11px] px-[9px] py-[1px] rounded-[20px] whitespace-nowrap"
+      style={{ color: t.fg, background: t.bg, border: `1px solid ${t.bd}`, fontWeight: 400, letterSpacing: "0.2px" }}
     >
       {children}
     </span>
@@ -70,7 +74,7 @@ export function Stat({ label, value, sub, tone }: { label: string; value: React.
   return (
     <div className="min-w-0">
       <p className="text-[12px]" style={{ color: C.faint }}>{label}</p>
-      <p className="text-[22px] leading-tight mt-1 tabular-nums" style={{ color: tone ? C[tone] : C.ink, fontWeight: 500, letterSpacing: "-0.01em" }}>{value}</p>
+      <p className="text-[22px] leading-tight mt-1 tabular-nums" style={{ color: tone ? C[tone] : C.ink, fontWeight: 400, fontFamily: "'IBM Plex Mono', Menlo, monospace", letterSpacing: "-0.01em" }}>{value}</p>
       {sub && <p className="text-[12px] mt-1" style={{ color: C.muted }}>{sub}</p>}
     </div>
   );

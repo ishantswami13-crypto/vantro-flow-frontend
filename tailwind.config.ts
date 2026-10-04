@@ -31,12 +31,15 @@ const config: Config = {
         "border-input":      "rgba(25,25,23,0.12)",
         "border-button":     "rgba(25,25,23,0.14)",
         "border-emphasis":   "rgba(25,25,23,0.16)",
-        accent:      "#696D86", // DEFAULT_ACCENT (indigo) — see USER_ACCENTS below
-        "accent-hover": "#3D5CF5",
-        "accent-dim":   "rgba(105,109,134,0.12)",
-        cta:         "#FF6B35",
-        "cta-hover": "#F55A22",
-        "cta-dim":   "rgba(255,107,53,0.12)",
+        // The signed-in person's accent (lib/identity.ts sets --accent-rgb);
+        // DEFAULT_ACCENT indigo until it loads. See USER_ACCENTS below.
+        accent:      "rgba(var(--accent-rgb, 105, 109, 134), <alpha-value>)",
+        "accent-hover": "#191917",
+        "accent-dim":   "rgba(var(--accent-rgb, 105, 109, 134), 0.10)",
+        // V32 has no orange CTA: primary actions are ink on paper.
+        cta:         "#191917",
+        "cta-hover": "#2A2A2E",
+        "cta-dim":   "rgba(25,25,23,0.06)",
         primary:   "#191917",
         secondary: "#63635F",
         muted:     "#8A8A86",
@@ -74,7 +77,7 @@ const config: Config = {
         "accent-deep-sand":      "#847661",
       },
       fontFamily: {
-        sans: ["Geist", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        sans: ["Plus Jakarta Sans", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
         mono: ["IBM Plex Mono", "Menlo", "monospace"],
         serif: ["Fraunces", "Georgia", "serif"],
       },
