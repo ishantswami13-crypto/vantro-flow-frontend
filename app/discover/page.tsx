@@ -6,7 +6,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EvidenceDrawer } from "@/components/intelligence/EvidenceDrawer";
 import { formatDateTime } from "@/components/intelligence/format";
 import { api, getUser, type IntelligenceSignal, type IntelligenceEvidenceItem, type IntelligenceOpportunity } from "@/lib/api";
-import { PageHeader, Subnav, Sep, Mono, Chevron, EvMark, EmptyLine, ErrorBanner } from "@/components/v32/ui";
+import { IconDiscover, IconSparkle } from "@/components/v32/icons";
+import { PageHeader, Subnav, Sep, IconTile, Mono, Chevron, EvMark, EmptyLine, ErrorBanner } from "@/components/v32/ui";
 
 // Discover — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
 //
@@ -271,6 +272,7 @@ function DiscoveryRow({
       role="button"
       tabIndex={0}
     >
+      <IconTile tone={signal.status === "ACTIVE" ? "critical" : signal.status === "UPDATED" ? "warning" : undefined}><IconDiscover size={16} /></IconTile>
       <div className="min-w-0 flex-1">
         <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "#63635F", marginBottom: 4, textTransform: "uppercase" }}>
           {(signal.related_entity_type || signal.event_type || "Signal").replace(/_/g, " ")}
@@ -302,6 +304,7 @@ function OpportunityRow({
 }: { opportunity: IntelligenceOpportunity; onOpenEvidence: (e: React.MouseEvent) => void }) {
   return (
     <div className="row-hover flex items-start" style={{ gap: 14, padding: "16px 10px", borderBottom: "1px solid #EBEAE6", borderRadius: 6 }}>
+      <IconTile tone="positive"><IconSparkle size={16} /></IconTile>
       <div className="min-w-0 flex-1">
         <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "#63635F", marginBottom: 4, textTransform: "uppercase" }}>
           Opportunity · {opportunity.affectedEntities.supplierName}

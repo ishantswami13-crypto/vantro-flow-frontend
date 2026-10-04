@@ -8,6 +8,7 @@
 import React from "react";
 import Link from "next/link";
 import { FiChevronRight } from "react-icons/fi";
+import { IconSparkle } from "./icons";
 
 export const V = {
   ink: "#191917",
@@ -232,12 +233,16 @@ export function Lettermark({ letter, color = "#696D86", size = 30 }: { letter: s
 }
 
 /** A quiet sentence for "nothing here yet": never an illustration, never a big icon. */
-export function EmptyLine({ title, body, action }: { title?: React.ReactNode; body?: React.ReactNode; action?: React.ReactNode }) {
+/** Empty state: a quiet icon tile beside the title and one line of help. */
+export function EmptyLine({ title, body, action, icon }: { title?: React.ReactNode; body?: React.ReactNode; action?: React.ReactNode; icon?: React.ReactNode }) {
   return (
-    <div className="fade-once" style={{ padding: "18px 0" }}>
-      {title && <div style={{ fontSize: 13.5, color: V.ink, marginBottom: 3 }}>{title}</div>}
-      {body && <div style={{ fontSize: 12.5, color: V.secondary, lineHeight: 1.6, maxWidth: 640 }}>{body}</div>}
-      {action && <div className="mt-3">{action}</div>}
+    <div className="fade-once flex items-start" style={{ padding: "18px 0", gap: 14 }}>
+      <IconTile size={38}>{icon || <IconSparkle size={17} />}</IconTile>
+      <div className="min-w-0" style={{ paddingTop: 1 }}>
+        {title && <div style={{ fontSize: 14, color: V.ink, marginBottom: 3 }}>{title}</div>}
+        {body && <div style={{ fontSize: 12.5, color: V.secondary, lineHeight: 1.6, maxWidth: 640 }}>{body}</div>}
+        {action && <div className="mt-3">{action}</div>}
+      </div>
     </div>
   );
 }
@@ -284,4 +289,28 @@ export function clockTime(iso: string | null | undefined): string {
   const today = new Date();
   if (d.toDateString() === today.toDateString()) return d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+/** Icon tile: a soft square that gives a row a visual anchor. `tone` tints it
+ *  for rows that need attention. */
+export function IconTile({ children, tone, size = 34 }: { children: React.ReactNode; tone?: "critical" | "warning" | "positive"; size?: number }) {
+  const t = tone === "critical" ? { bg: "rgba(166,79,75,0.09)", fg: V.critical }
+    : tone === "warning" ? { bg: "rgba(155,116,43,0.10)", fg: V.warning }
+    : tone === "positive" ? { bg: "rgba(71,112,84,0.10)", fg: V.positive }
+    : { bg: "#FFFFFF", fg: V.body };
+  return (
+    <span aria-hidden="true" className="shrink-0 inline-flex items-center justify-center" style={{ width: size, height: size, borderRadius: 9, background: t.bg, color: t.fg, boxShadow: tone ? undefined : `inset 0 0 0 1px ${V.card}` }}>
+      {children}
+    </span>
+  );
+}
+
+/** A large serif figure over a short label, for a page's two or three headline counts. */
+export function Figure({ value, label, tone }: { value: React.ReactNode; label: React.ReactNode; tone?: string }) {
+  return (
+    <div className="min-w-0">
+      <div className="figure-in" style={{ fontFamily: V.serif, fontSize: 30, lineHeight: 1.05, color: tone || V.ink, fontVariantNumeric: "tabular-nums" }}>{value}</div>
+      <div style={{ fontSize: 12.5, color: V.secondary, marginTop: 4 }}>{label}</div>
+    </div>
+  );
 }

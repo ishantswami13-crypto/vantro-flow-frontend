@@ -915,3 +915,42 @@ button:disabled { cursor: default; }
   .figure-in, .page-in { filter: none; }
   .btn-primary-v32:hover::after, .btn-primary-sidebar:hover::after { transition: none; transform: translateX(-120%); }
 }
+
+/* Scan composer: one rounded box like a chat app, a plus menu on the left
+   and the send button on the right. */
+.scan-composer {
+  width: 100%; box-sizing: border-box; background: #FFFFFF;
+  border: 1px solid rgba(25,25,23,0.12); border-radius: 26px;
+  box-shadow: 0 1px 2px rgba(25,25,23,0.04), 0 12px 32px -18px rgba(25,25,23,0.18);
+}
+.scan-input {
+  display: block; width: 100%; box-sizing: border-box; min-height: 56px; max-height: 200px;
+  padding: 18px 20px 6px 20px; border: none; outline: none; box-shadow: none; resize: none; background: none;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15.5px; line-height: 1.5; color: #191917;
+}
+.scan-input::placeholder { color: #8A8A86; }
+.scan-round {
+  width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.scan-plus { background: transparent; border: 1px solid rgba(25,25,23,0.14); color: #43433F; }
+.scan-plus:hover, .scan-plus[aria-expanded="true"] { background: rgba(25,25,23,0.05); border-color: rgba(25,25,23,0.22); }
+.scan-send { background: #191917; border: none; color: #F7F7F4; }
+.scan-send:hover:not(:disabled) { background: #2A2A2E; }
+.scan-send:disabled { opacity: 0.25; cursor: default; }
+.scan-menu {
+  position: absolute; left: 0; top: calc(100% + 8px); z-index: 30; width: 260px; padding: 6px;
+  background: #FFFFFF; border: 1px solid #E5E4DF; border-radius: 14px; box-shadow: 0 12px 32px -8px rgba(25,25,23,0.18);
+}
+.scan-menu-item {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 10px; border-radius: 9px; background: none; border: none; cursor: pointer;
+}
+.scan-menu-item:hover, .scan-menu-item:focus-visible { background: #F5F4F1; outline: none; }
+.scan-menu-icon {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  background: #F3F2EE; color: #43433F;
+}
+.scan-chip {
+  padding: 7px 14px; border: 1px solid rgba(25,25,23,0.10); border-radius: 999px; background: rgba(255,255,255,0.7);
+  font-size: 12.5px; color: #43433F; cursor: pointer;
+}
+.scan-chip:hover { background: #FFFFFF; border-color: rgba(25,25,23,0.18); color: #191917; }

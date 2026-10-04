@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { request } from "@/lib/api";
 import { greeting, firstName } from "@/lib/greeting";
-import { V, Sep, Mono, Chevron, Label, ErrorBanner, SkeletonRows, EmptyLine, Rule, ago, clockTime } from "@/components/v32/ui";
-import { IconSearch, IconClock, IconFileCheck, IconCalendar } from "@/components/v32/icons";
+import { V, Mono, Chevron, Label, ErrorBanner, SkeletonRows, EmptyLine, Rule, IconTile, Figure, ago, clockTime } from "@/components/v32/ui";
+import { IconSearch, IconClock, IconFileCheck, IconCalendar, IconRupee, IconPromise, IconSync, IconWatch } from "@/components/v32/icons";
 import { EvidenceSetDrawer } from "@/components/v32/EvidenceSetDrawer";
 import type { BridgeView, WatchEvent, FeatureAction } from "../../packages/contracts/src/features";
 import { LIFECYCLE_LABEL } from "../../packages/contracts/src/features";
@@ -111,13 +111,11 @@ export default function BridgePage() {
 
         {data && data.hasData && (
           <>
-          <Rule style={{ marginTop: 14 }} />
-          <div className="flex items-center flex-wrap" style={{ gap: 10, paddingTop: 14, fontSize: 13, color: V.body }}>
-            <span><Mono size={13} color={urgent.length ? V.critical : V.ink}>{urgent.length}</Mono> need attention</span>
-            <Sep />
-            <span><Mono size={13}>{data.attention.decisions}</Mono> waiting on your decision</span>
-            <Sep />
-            <span style={{ color: V.secondary }}>everything else stable</span>
+          <Rule style={{ marginTop: 16 }} />
+          <div className="grid grid-cols-3" style={{ gap: 24, paddingTop: 18, maxWidth: 560 }}>
+            <Figure value={urgent.length} label="Need attention" tone={urgent.length ? V.critical : undefined} />
+            <Figure value={data.attention.decisions} label="Waiting on your decision" />
+            <Figure value={prepared.reduce((n, h) => n + h.count, 0)} label="Prepared for you" />
           </div>
           </>
         )}
@@ -205,10 +203,18 @@ export default function BridgePage() {
   );
 }
 
+function KindIcon({ kind }: { kind: string }) {
+  if (kind === "invoice_overdue") return <IconRupee size={16} />;
+  if (kind === "promise_broken") return <IconPromise size={16} />;
+  if (kind === "sync_failed" || kind === "sync_stale") return <IconSync size={16} />;
+  return <IconWatch size={16} />;
+}
+
 function IntelRow({ e, i = 0, onOpen }: { e: WatchEvent; i?: number; onOpen: () => void }) {
   const metric = eventMetric(e);
   return (
     <button type="button" onClick={onOpen} className="rise-in row-hover w-full text-left flex items-start" style={{ gap: 14, padding: "12px 10px", margin: "0 -10px", width: "calc(100% + 20px)", borderBottom: `1px solid ${V.divider}`, borderRadius: 6, animationDelay: `${80 + i * 55}ms` }}>
+      <IconTile tone={isUrgent(e) ? "critical" : undefined}><KindIcon kind={e.kind} /></IconTile>
       <div className="flex-1 min-w-0">
         <div style={{ fontSize: 11, letterSpacing: "0.6px", textTransform: "uppercase", color: V.secondary, marginBottom: 2 }}>{KIND_LABEL[e.kind] || "Watch"}</div>
         <div style={{ fontSize: 14.5, fontWeight: 600, color: V.ink, marginBottom: 2 }}>{e.title}</div>
