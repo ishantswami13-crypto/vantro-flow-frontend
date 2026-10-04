@@ -104,12 +104,8 @@ export function SectionTitle({ children, size = 16, className = "" }: { children
   return <h2 className={className} style={{ fontFamily: V.serif, fontWeight: 400, fontSize: size, color: V.ink, margin: "0 0 6px", letterSpacing: "-0.1px" }}>{children}</h2>;
 }
 
-/** Status dot. `live` adds a fine ring breathing out of it, for states that are happening now. */
-export function Dot({ color, size = 6, pulse = false, live = false, className = "" }: { color: string; size?: number; pulse?: boolean; live?: boolean; className?: string }) {
-  if (live) {
-    return <span aria-hidden="true" className={`dot-live shrink-0 ${className}`} style={{ width: size, height: size, borderRadius: "50%", background: color }} />;
-  }
-  return <span aria-hidden="true" className={`${pulse ? "pulse-dot" : ""} shrink-0 ${className}`} style={{ width: size, height: size, borderRadius: "50%", background: color, display: "inline-block" }} />;
+export function Dot({ color, size = 6, className = "" }: { color: string; size?: number; className?: string }) {
+  return <span aria-hidden="true" className={`shrink-0 ${className}`} style={{ width: size, height: size, borderRadius: "50%", background: color, display: "inline-block" }} />;
 }
 
 /** Three small dots lifting in turn, beside "working" copy. */
@@ -117,21 +113,18 @@ export function ThinkingDots({ color = V.tertiary }: { color?: string }) {
   return <span aria-hidden="true" className="thinking-dots" style={{ color }}><span /><span /><span /></span>;
 }
 
-/** Decorative dot grid with a slow accent wash, placed behind a hero inside a `.dot-field-wrap`. */
-export function DotField({ style }: { style?: React.CSSProperties }) {
-  return <span aria-hidden="true" className="dot-field" style={{ inset: "-28px -24px auto -24px", height: 220, ...style }} />;
-}
-
 /** Hairline that draws in from the left. */
 export function Rule({ style }: { style?: React.CSSProperties }) {
   return <div aria-hidden="true" className="rule-draw" style={style} />;
 }
 
-/** 6px dot + 12.5px label (status_dot). */
-export function StatusDot({ label, color, pulse, live }: { label: React.ReactNode; color: string; pulse?: boolean; live?: boolean }) {
+const TONED = new Set([V.positive, V.warning, V.critical]);
+
+/** Status as quiet text: no leading dot. Positive, warning and critical
+ *  states keep their tone in the text colour; anything else stays grey. */
+export function StatusDot({ label, color }: { label: React.ReactNode; color: string }) {
   return (
-    <span className="inline-flex items-center" style={{ gap: 6, fontSize: 12.5, color: V.body }}>
-      <Dot color={color} size={6} pulse={pulse} live={live} />
+    <span className="inline-flex items-center" style={{ fontSize: 12.5, color: TONED.has(color) ? color : V.secondary }}>
       {label}
     </span>
   );

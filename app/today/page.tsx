@@ -207,11 +207,11 @@ export default function TodayPage() {
         {/* Action buttons */}
         <div className="flex gap-2 shrink-0">
           <button onClick={() => setShowSaleForm(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all shadow-sm">
+            className="btn-primary-v32 flex items-center gap-1.5" style={{ padding: "6px 12px", fontSize: 12 }}>
             <FiPlus size={13} /> Sale
           </button>
           <button onClick={() => setShowExpForm(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-danger/10 text-danger border border-danger/20 text-xs font-bold hover:bg-danger/20 transition-all">
+            className="btn-secondary-v32 flex items-center gap-1.5" style={{ padding: "6px 12px", fontSize: 12 }}>
             <FiPlus size={13} /> Expense
           </button>
         </div>
@@ -266,8 +266,7 @@ export default function TodayPage() {
             ].map((stat, i) => (
               <span key={stat.label} className="flex items-center" style={{ gap: 6 }}>
                 {i > 0 && <span aria-hidden style={{ color: "#D7D6D0", marginRight: 4 }}>·</span>}
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: stat.color }} />
-                {stat.value} {stat.label}
+                <span style={{ fontFamily: "'IBM Plex Mono', Menlo, monospace", color: "#191917" }}>{stat.value}</span> {stat.label}
               </span>
             ))}
           </div>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type Connector, type ConnectorHealth } from "@/lib/api";
 import { FiUploadCloud } from "react-icons/fi";
-import { PageHeader, Subnav, StatusDot, Dot, Chevron, EmptyLine, ErrorBanner, SkeletonRows } from "@/components/v32/ui";
+import { PageHeader, Subnav, StatusDot, Chevron, EmptyLine, ErrorBanner, SkeletonRows } from "@/components/v32/ui";
 import { IconSources } from "@/components/v32/icons";
 import { BridgeHealthPanel } from "@/components/os/BridgePanels";
 
@@ -178,8 +178,7 @@ export default function SourcesPage() {
           title="Sources"
           subtitle="Where Starlane gets its understanding of your organization."
           right={connectors ? (
-            <span className="flex items-center" style={{ gap: 6, fontSize: 12, color: FAINT }}>
-              <Dot color={!connected.length ? "rgba(25,25,23,0.25)" : allHealthy ? "#477054" : "#9B742B"} />
+            <span style={{ fontSize: 12, color: connected.length && !allHealthy ? "#9B742B" : FAINT }}>
               {!connected.length ? "Nothing connected yet" : `${allHealthy ? "All current" : "Needs a look"}${lastSync ? ` · Last sync ${timeAgo(lastSync)}` : ""}`}
             </span>
           ) : undefined}

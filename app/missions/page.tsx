@@ -6,6 +6,7 @@ import { MissionsList, missionCount, type MissionFilter } from "@/components/os/
 import { WorkflowsPanel } from "@/components/os/MissionsPanels";
 import { OutreachSummary } from "@/components/outreach/OutreachPanels";
 import { PageHeader, Subnav, Button } from "@/components/v32/ui";
+import { IconPlus } from "@/components/v32/icons";
 import { useLoad } from "@/components/os/shared";
 import { osApi } from "@/lib/os";
 
@@ -25,7 +26,7 @@ export default function MissionsPage() {
       <PageHeader
         title="Missions"
         subtitle="What Starlane is handling, and whether it worked."
-        right={<span className="lg:hidden"><Button primary small href="/missions/new">New mission</Button></span>}
+        right={<Button primary small href="/missions/new"><IconPlus size={13} />New mission</Button>}
       />
       <Subnav
         active={tab}

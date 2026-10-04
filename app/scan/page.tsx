@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DotField, ThinkingDots } from "@/components/v32/ui";
+import { ThinkingDots } from "@/components/v32/ui";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ScanFindings } from "@/components/os/ScanFindings";
 import { api, getUser } from "@/lib/api";
@@ -65,8 +65,7 @@ export default function ScanPage() {
   return (
     <DashboardLayout pageTitle="Scan">
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "min(50vh, 460px)", padding: "24px 0", boxSizing: "border-box" }}>
-        <div className="fade-once dot-field-wrap" style={{ width: 680, maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <DotField style={{ inset: "-80px -140px auto -140px", height: 320, ["--dot-x" as string]: "50%", ["--dot-rx" as string]: "50%" } as CSSProperties} />
+        <div className="fade-once" style={{ width: 680, maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <h1 className="scan-greeting" style={{ margin: "0 0 28px 0", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, color: "#191917", textAlign: "center" }}>
             {getGreeting()}, {ownerName}
           </h1>

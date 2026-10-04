@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EvidenceDrawer } from "@/components/intelligence/EvidenceDrawer";
 import { formatDateTime } from "@/components/intelligence/format";
 import { api, getUser, type IntelligenceSignal, type IntelligenceEvidenceItem, type IntelligenceOpportunity } from "@/lib/api";
-import { PageHeader, Subnav, Dot, Sep, Mono, Chevron, EvMark, EmptyLine, ErrorBanner } from "@/components/v32/ui";
+import { PageHeader, Subnav, Sep, Mono, Chevron, EvMark, EmptyLine, ErrorBanner } from "@/components/v32/ui";
 
 // Discover — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
 //
@@ -52,12 +52,6 @@ const TABS: { key: TabKey; label: string }[] = [
 ];
 
 const RISK_STATUSES = new Set(["EXPOSED", "OBSERVED_IMPACT"]);
-
-function dotColorForStatus(status: string): string {
-  if (status === "ACTIVE") return "#A64F4B";
-  if (status === "UPDATED") return "#9B742B";
-  return "#8A8A86";
-}
 
 function relativeTime(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -177,9 +171,7 @@ export default function DiscoverPage() {
         title="Discover"
         subtitle="Things Starlane found that may be worth your attention."
         right={latest ? (
-          <span className="flex items-center" style={{ gap: 6, fontSize: 12, color: "#8A8A86" }}>
-            <Dot color="#477054" />Last signal {relativeTime(latest)}
-          </span>
+          <span style={{ fontSize: 12, color: "#8A8A86" }}>Last signal {relativeTime(latest)}</span>
         ) : undefined}
       />
 
@@ -187,9 +179,9 @@ export default function DiscoverPage() {
         <div className="flex items-center flex-wrap" style={{ gap: 10, fontSize: 13, color: "#43433F", paddingBottom: 4 }}>
           <span>{all.length} worth investigating</span>
           <Sep />
-          <span className="flex items-center" style={{ gap: 6 }}><Dot color="#477054" />{oppCount} opportunit{oppCount === 1 ? "y" : "ies"}</span>
+          <span>{oppCount} opportunit{oppCount === 1 ? "y" : "ies"}</span>
           <Sep />
-          <span className="flex items-center" style={{ gap: 6 }}><Dot color="#A64F4B" />{risks.length} risk{risks.length === 1 ? "" : "s"}</span>
+          <span style={{ color: risks.length ? "#A64F4B" : undefined }}>{risks.length} risk{risks.length === 1 ? "" : "s"}</span>
           <Sep />
           <span style={{ color: "#63635F" }}>{changed.length} changed</span>
         </div>
@@ -279,7 +271,6 @@ function DiscoveryRow({
       role="button"
       tabIndex={0}
     >
-      <span className="shrink-0" style={{ width: 6, height: 6, borderRadius: "50%", background: dotColorForStatus(signal.status), marginTop: 8 }} aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "#63635F", marginBottom: 4, textTransform: "uppercase" }}>
           {(signal.related_entity_type || signal.event_type || "Signal").replace(/_/g, " ")}
@@ -311,7 +302,6 @@ function OpportunityRow({
 }: { opportunity: IntelligenceOpportunity; onOpenEvidence: (e: React.MouseEvent) => void }) {
   return (
     <div className="row-hover flex items-start" style={{ gap: 14, padding: "16px 10px", borderBottom: "1px solid #EBEAE6", borderRadius: 6 }}>
-      <span className="shrink-0" style={{ width: 6, height: 6, borderRadius: "50%", background: "#477054", marginTop: 8 }} aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "#63635F", marginBottom: 4, textTransform: "uppercase" }}>
           Opportunity · {opportunity.affectedEntities.supplierName}

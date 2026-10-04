@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { request } from "@/lib/api";
 import { greeting, firstName } from "@/lib/greeting";
-import { V, Dot, Sep, Mono, Chevron, Label, ErrorBanner, SkeletonRows, EmptyLine, DotField, Rule, ago, clockTime } from "@/components/v32/ui";
+import { V, Sep, Mono, Chevron, Label, ErrorBanner, SkeletonRows, EmptyLine, Rule, ago, clockTime } from "@/components/v32/ui";
 import { IconSearch, IconClock, IconFileCheck, IconCalendar } from "@/components/v32/icons";
 import { EvidenceSetDrawer } from "@/components/v32/EvidenceSetDrawer";
 import type { BridgeView, WatchEvent, FeatureAction } from "../../packages/contracts/src/features";
@@ -72,8 +72,7 @@ export default function BridgePage() {
 
   return (
     <DashboardLayout pageTitle="The Bridge">
-      <div className="fade-once dot-field-wrap">
-        <DotField />
+      <div className="fade-once">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
             <h1 style={{ margin: "0 0 4px", fontFamily: V.serif, fontWeight: 400, fontSize: 26, color: V.ink }}>
@@ -88,8 +87,7 @@ export default function BridgePage() {
           </div>
           <div className="flex items-center flex-wrap" style={{ gap: 16 }}>
             {data && (
-              <div className="flex items-center" style={{ gap: 6, fontSize: 12, color: V.tertiary }}>
-                <Dot color={fresh.color} live={data.freshness === "fresh"} />
+              <div style={{ fontSize: 12, color: data.freshness === "stale" ? V.critical : data.freshness === "delayed" ? V.warning : V.tertiary }}>
                 {fresh.text(syncAt)}
               </div>
             )}
@@ -115,9 +113,9 @@ export default function BridgePage() {
           <>
           <Rule style={{ marginTop: 14 }} />
           <div className="flex items-center flex-wrap" style={{ gap: 10, paddingTop: 14, fontSize: 13, color: V.body }}>
-            <span className="flex items-center" style={{ gap: 6 }}><Dot color={V.critical} live={urgent.length > 0} />{urgent.length} need attention</span>
+            <span><Mono size={13} color={urgent.length ? V.critical : V.ink}>{urgent.length}</Mono> need attention</span>
             <Sep />
-            <span className="flex items-center" style={{ gap: 6 }}><Dot color={V.accent} />{data.attention.decisions} waiting on your decision</span>
+            <span><Mono size={13}>{data.attention.decisions}</Mono> waiting on your decision</span>
             <Sep />
             <span style={{ color: V.secondary }}>everything else stable</span>
           </div>
@@ -144,9 +142,9 @@ export default function BridgePage() {
               <EmptyLine title="Nothing changed that needs a look." body="Overdue bands, broken promises and sync problems appear here the moment Starlane sees them." />
             )}
             {urgent.length > 0 && <Label style={{ marginBottom: 2 }}>Needs attention</Label>}
-            {urgent.map((e, i) => <IntelRow key={e.id} e={e} i={i} live dot={V.critical} onOpen={() => setOpen(e)} />)}
+            {urgent.map((e, i) => <IntelRow key={e.id} e={e} i={i} onOpen={() => setOpen(e)} />)}
             {other.length > 0 && <Label style={{ margin: "14px 0 2px" }}>Worth watching</Label>}
-            {other.map((e, i) => <IntelRow key={e.id} e={e} i={urgent.length + i} dot={V.warning} onOpen={() => setOpen(e)} />)}
+            {other.map((e, i) => <IntelRow key={e.id} e={e} i={urgent.length + i} onOpen={() => setOpen(e)} />)}
             {data && data.attention.watch.open > latest.length && (
               <Link href="/watch" className="hover-dim inline-block" style={{ fontSize: 12.5, color: V.secondary, marginTop: 10 }}>
                 All {data.attention.watch.open} open items on Watch →
@@ -207,11 +205,10 @@ export default function BridgePage() {
   );
 }
 
-function IntelRow({ e, i = 0, dot, live = false, onOpen }: { e: WatchEvent; i?: number; dot: string; live?: boolean; onOpen: () => void }) {
+function IntelRow({ e, i = 0, onOpen }: { e: WatchEvent; i?: number; onOpen: () => void }) {
   const metric = eventMetric(e);
   return (
-    <button type="button" onClick={onOpen} className="rise-in row-hover w-full text-left flex items-start" style={{ gap: 14, padding: "12px 10px", borderBottom: `1px solid ${V.divider}`, borderRadius: 6, animationDelay: `${80 + i * 55}ms` }}>
-      <Dot color={dot} live={live} className="mt-[7px]" />
+    <button type="button" onClick={onOpen} className="rise-in row-hover w-full text-left flex items-start" style={{ gap: 14, padding: "12px 10px", margin: "0 -10px", width: "calc(100% + 20px)", borderBottom: `1px solid ${V.divider}`, borderRadius: 6, animationDelay: `${80 + i * 55}ms` }}>
       <div className="flex-1 min-w-0">
         <div style={{ fontSize: 11, letterSpacing: "0.6px", textTransform: "uppercase", color: V.secondary, marginBottom: 2 }}>{KIND_LABEL[e.kind] || "Watch"}</div>
         <div style={{ fontSize: 14.5, fontWeight: 600, color: V.ink, marginBottom: 2 }}>{e.title}</div>

@@ -10,8 +10,8 @@ import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey }
 import { CommandPalette, type SearchableRoute } from "./CommandPalette";
 import { IdentityAvatar } from "@/components/identity/IdentityAvatar";
 import { IdentityPicker } from "@/components/identity/IdentityPicker";
-import { V32_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, createActionFor, type PrimaryNavItem } from "@/lib/navigation";
-import { IconBell, IconSearch, IconPlus, IconMore } from "@/components/v32/icons";
+import { V32_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, type PrimaryNavItem } from "@/lib/navigation";
+import { IconBell, IconSearch, IconMore } from "@/components/v32/icons";
 
 // Everything real that sits outside the Version 32 nav lives in the "More"
 // flyout: it is still reachable, but the rail stays as quiet as the design.
@@ -182,14 +182,13 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         href={href}
         onClick={onClick}
         aria-current={active ? "page" : undefined}
-        className={`nav-row relative flex items-center ${active ? "" : "hover-fade"}`}
+        className={`flex items-center ${active ? "" : "hover-fade"}`}
         style={{
           gap: 10, padding: "8px 8px", borderRadius: 7, fontSize: 13, lineHeight: "16px",
           background: active ? "rgba(255,255,255,0.09)" : "transparent",
-          color: active ? "#F5F4F0" : "#63635F",
+          color: active ? "#F5F4F0" : "#9A9993",
         }}
       >
-        {active && <span aria-hidden="true" className="nav-mark" />}
         <Icon size={16} />
         <span className="flex-1 truncate">{label}</span>
       </Link>
@@ -197,7 +196,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   }
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
-  const create = createActionFor(pathname);
 
   return (
     <>
@@ -227,11 +225,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               aria-label={pendingCount ? `${pendingCount} pending follow-up${pendingCount === 1 ? "" : "s"}` : "Follow-ups"}
               title={pendingCount ? `${pendingCount} pending follow-up${pendingCount === 1 ? "" : "s"}` : "Follow-ups"}
               className="hover-fade relative flex items-center justify-center"
-              style={{ width: 26, height: 26, borderRadius: 6, color: "#63635F" }}
+              style={{ width: 26, height: 26, borderRadius: 6, color: "#8A8A86" }}
             >
               <IconBell size={15} />
               {pendingCount !== null && pendingCount > 0 && (
-                <span className="pulse-dot absolute" style={{ width: 5, height: 5, borderRadius: "50%", top: 4, right: 5, background: "var(--accent)" }} />
+                <span className="absolute" style={{ width: 5, height: 5, borderRadius: "50%", top: 4, right: 5, background: "var(--accent)" }} />
               )}
             </Link>
             <button
@@ -239,28 +237,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               aria-label="Search Starlane (Ctrl+K)"
               title="Search (Ctrl+K)"
               className="hover-fade flex items-center justify-center"
-              style={{ width: 26, height: 26, borderRadius: 6, color: "#63635F" }}
+              style={{ width: 26, height: 26, borderRadius: 6, color: "#8A8A86" }}
             >
               <IconSearch size={14} />
             </button>
-            <button aria-label="Close menu" onClick={onClose} className="lg:hidden hover-fade flex items-center justify-center" style={{ width: 26, height: 26, borderRadius: 6, color: "#63635F" }}>
+            <button aria-label="Close menu" onClick={onClose} className="lg:hidden hover-fade flex items-center justify-center" style={{ width: 26, height: 26, borderRadius: 6, color: "#8A8A86" }}>
               <FiX size={14} />
             </button>
           </div>
         </div>
 
-        {/* The page's primary create action, only where the design has one. */}
-        {create && (
-          <Link
-            href={create.href}
-            onClick={onClose}
-            className="btn-primary-sidebar flex items-center shrink-0"
-            style={{ margin: "0 4px 18px 4px", padding: "9px 12px", gap: 8, fontSize: 13, lineHeight: "16px", color: "#F5F4F0" }}
-          >
-            <IconPlus size={14} />
-            {create.label}
-          </Link>
-        )}
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0" style={{ margin: "0 -4px", padding: "0 4px" }}>
           <nav aria-label="Primary" className="flex flex-col" style={{ gap: 2 }}>
@@ -288,7 +274,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               style={{
                 gap: 10, padding: "8px 8px", borderRadius: 7, fontSize: 13, lineHeight: "16px",
                 background: isMoreActive || moreOpen ? "rgba(255,255,255,0.09)" : "transparent",
-                color: isMoreActive || moreOpen ? "#F5F4F0" : "#63635F",
+                color: isMoreActive || moreOpen ? "#F5F4F0" : "#9A9993",
               }}
             >
               <IconMore size={16} />

@@ -7,7 +7,7 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { PageHeader, StatusDot, Dot, Sep, Lettermark, EmptyLine, Button } from "@/components/v32/ui";
+import { PageHeader, StatusDot, Sep, Lettermark, EmptyLine, Button } from "@/components/v32/ui";
 import { ControlSubnav, type ControlTab } from "@/components/control/ControlSubnav";
 import { api, type CortexHealthResponse, type DataConnection, type UserSettings } from "@/lib/api";
 
@@ -75,7 +75,9 @@ function ConnectionSection({ connections }: { connections: DataConnection[] }) {
 // Plain sans, tabular-nums — numbers carry hierarchy through size/weight,
 // not monospace (monospace is reserved for genuinely technical values).
 function Stat({ value, label, tone }: { value: React.ReactNode; label: string; tone?: "danger" | "warning" | "success" }) {
-  const color = tone === "danger" ? "#A64F4B" : tone === "warning" ? "#9B742B" : tone === "success" ? "#477054" : "#191917";
+  // Tone only when there is something to report: a coloured zero is noise.
+  const empty = value === 0 || value === null || value === undefined || value === "—";
+  const color = empty ? "#191917" : tone === "danger" ? "#A64F4B" : tone === "warning" ? "#9B742B" : tone === "success" ? "#477054" : "#191917";
   return (
     <div>
       <div style={{ fontSize: 12, color: "#63635F", marginBottom: 6 }}>{label}</div>
@@ -168,8 +170,8 @@ function OverviewTab() {
       <div className="flex items-center flex-wrap" style={{ gap: 10, fontSize: 13, color: "#43433F" }}>
         <span>1 user</span><Sep />
         <span>{connectedN} connected source{connectedN === 1 ? "" : "s"}</span><Sep />
-        <span className="flex items-center" style={{ gap: 6 }}>
-          {pending > 0 && <Dot color="#9B742B" />}{pending} pending approval{pending === 1 ? "" : "s"}
+        <span style={{ color: pending > 0 ? "#9B742B" : undefined }}>
+          {pending} pending approval{pending === 1 ? "" : "s"}
         </span>
       </div>
 

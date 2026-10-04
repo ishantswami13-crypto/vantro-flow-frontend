@@ -32,13 +32,3 @@ export const V32_SECONDARY_NAV_ITEMS: PrimaryNavItem[] = [
   { href: "/control",  label: "Control",  icon: IconControl },
   { href: "/settings", label: "Settings", icon: IconSettings },
 ];
-
-// The sidebar's optional primary button (the design's `create_label`):
-// only the pages that pass one in the design show it.
-export function createActionFor(pathname: string): { label: string; href: string } | null {
-  if (pathname === "/scan" || pathname.startsWith("/scan/")) return { label: "New scan", href: "/scan" };
-  if (pathname === "/watch") return { label: "New watch", href: "/watch?new=1" };
-  if (pathname === "/missions" || pathname.startsWith("/missions/")) return { label: "New mission", href: "/missions/new" };
-  if (pathname === "/simulate") return { label: "New simulation", href: "/simulate?new=1" };
-  return null;
-}

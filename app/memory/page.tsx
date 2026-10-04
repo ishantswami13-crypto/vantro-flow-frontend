@@ -132,7 +132,6 @@ function TimelineNode({ e }: { e: AuditEvent }) {
     <div className="card-in" style={{ display: "flex", gap: 16 }}>
       <div title={formatDate(e.created_at)} style={{ width: 70, flexShrink: 0, fontSize: 12, color: "#63635F", paddingTop: 2 }}>{shortDate(e.created_at)}</div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#191917", marginTop: 5 }} />
         <span style={{ width: 1, flex: 1, background: "rgba(25,25,23,0.12)", marginTop: 4 }} />
       </div>
       <div style={{ paddingBottom: 20, minWidth: 0 }}>

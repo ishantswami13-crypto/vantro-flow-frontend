@@ -276,14 +276,13 @@ function SettingsPageInner() {
         <div className="flex flex-col lg:flex-row gap-5">
           {/* Tab nav */}
           <nav className="lg:w-52 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0 shrink-0">
-            {TABS.map(({ key, label, icon: Icon, badge }) => (
+            {TABS.map(({ key, label, icon: Icon }) => (
               <button key={key} onClick={() => setTab(key)}
                 className={["flex items-center gap-2.5 px-3 py-2 rounded-[7px] text-[13px] whitespace-nowrap transition-all", tab === key ? "bg-[rgba(25,25,23,0.06)] text-primary" : "text-secondary hover:text-primary hover:bg-[rgba(25,25,23,0.04)]"].join(" ")}>
                 <Icon size={15} className="shrink-0" />
                 <span className="flex-1 text-left">{label}</span>
-                {badge && <span className="text-2xs font-bold px-1.5 py-0.5 rounded-full bg-success-dim text-success border border-success/20">{badge}</span>}
-                {key === "voice" && voiceActive && <span className="w-2 h-2 rounded-full bg-success animate-pulse" />}
-                {key === "automation" && autoEnabled && <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />}
+                {key === "voice" && voiceActive && <span className="text-[11px]" style={{ color: "#477054" }}>On</span>}
+                {key === "automation" && autoEnabled && <span className="text-[11px]" style={{ color: "#477054" }}>On</span>}
               </button>
             ))}
           </nav>
@@ -318,8 +317,8 @@ function SettingsPageInner() {
                 </form>
                 <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
                   <div><p className="text-xs font-semibold text-secondary">Sign out of Starlane</p><p className="text-2xs text-muted">You can log back in anytime</p></div>
-                  <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-danger/30 text-danger text-xs font-semibold hover:bg-danger/10 transition-colors">
-                    <FiLogOut size={12} /> Sign Out
+                  <button onClick={handleLogout} className="btn-secondary-v32 flex items-center gap-1.5" style={{ padding: "6px 12px", fontSize: 12 }}>
+                    <FiLogOut size={12} /> Sign out
                   </button>
                 </div>
               </Card>

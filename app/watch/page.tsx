@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, Watch, WatchConditionConfig } from "@/lib/api";
 import { WatchBrief, ObjectivesPanel } from "@/components/os/WatchPanels";
+import { Button } from "@/components/v32/ui";
+import { IconPlus } from "@/components/v32/icons";
 
 // Watch — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
 //
@@ -170,13 +172,10 @@ function WatchPageInner() {
           <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
             Watch
           </h1>
-          {/* On desktop the sidebar's "New watch" button opens this (?new=1). */}
-          <button onClick={() => setShowModal(true)} className="btn-primary-v32 lg:hidden" style={{ padding: "7px 14px", fontSize: 12.5, borderRadius: 6 }}>
-            New watch
-          </button>
+          <Button primary small onClick={() => setShowModal(true)}><IconPlus size={13} />New watch</Button>
         </div>
 
-        <div style={{ fontSize: 13.5, color: "#63635F" }}>
+        <div style={{ fontSize: 13.5, color: "#63635F", marginTop: -16 }}>
           {loading
             ? "Loading what Starlane is watching…"
             : list.length === 0
@@ -274,7 +273,6 @@ function WatchPageInner() {
 
           {!error && !loading && filtered.map((w) => {
             const s = statusOf(w);
-            const pulsing = s.label === "Triggered";
             return (
               <div
                 key={w.id}
@@ -289,11 +287,7 @@ function WatchPageInner() {
               >
                 <span style={{ fontSize: 13.5, color: "#191917" }}>{w.name}</span>
                 <span style={{ fontSize: 12.5, color: "#63635F" }}>{conditionLabel(w)}</span>
-                <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#43433F" }}>
-                  <span
-                    className={pulsing ? "pulse-dot" : undefined}
-                    style={{ width: 7, height: 7, borderRadius: "50%", background: s.color, display: "inline-block" }}
-                  />
+                <span style={{ fontSize: 12.5, color: s.color }}>
                   {s.label}
                 </span>
                 <span style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}>
