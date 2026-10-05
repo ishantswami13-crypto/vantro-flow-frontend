@@ -43,3 +43,8 @@ export const IconRupee = (p: P) => <Svg {...p}><path d="M6 4h12M6 9h12" /><path 
 export const IconPromise = (p: P) => <Svg {...p}><path d="M4 12l4 4 4-4" /><path d="M8 16V8a4 4 0 0 1 8 0" /><path d="M14 18h6" /></Svg>;
 export const IconSync = (p: P) => <Svg {...p}><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8" /><polyline points="4,3 4,8 9,8" /><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16" /><polyline points="20,21 20,16 15,16" /></Svg>;
 export const IconSparkle = (p: P) => <Svg {...p}><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" /></Svg>;
+export const IconCopy = (p: P) => <Svg {...p}><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></Svg>;
+export const IconCheck = (p: P) => <Svg {...p}><polyline points="5,12.5 10,17 19,7.5" /></Svg>;
+export const IconHistory = (p: P) => <Svg {...p}><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6" /><polyline points="3.5,4 3.5,8 7.5,8" /><polyline points="12,7.5 12,12 15,14" /></Svg>;
+export const IconTrash = (p: P) => <Svg {...p}><path d="M4.5 7h15" /><path d="M9.5 7V4.5h5V7" /><path d="M6.5 7l1 12.5h9l1-12.5" /></Svg>;
+export const IconWhatsApp = (p: P) => <Svg {...p}><path d="M4 20l1.3-3.9A8 8 0 1 1 8 18.8L4 20z" /></Svg>;

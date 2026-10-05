@@ -819,8 +819,9 @@ button:disabled { cursor: default; }
 
 /* Paper grain: a barely-there texture so the off-white reads as paper,
    not a flat screen fill. */
+:root { --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
 .v32-main {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: var(--paper-grain);
 }
 
 /* Route entry: a soft rise with a hint of focus-pull. */
@@ -954,3 +955,33 @@ button:disabled { cursor: default; }
   font-size: 12.5px; color: #43433F; cursor: pointer;
 }
 .scan-chip:hover { background: #FFFFFF; border-color: rgba(25,25,23,0.18); color: #191917; }
+
+/* Scan: workflow cards under the box, the conversation turns, and History. */
+.scan-flows { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 900px) { .scan-flows { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.scan-flow {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 14px; text-align: left;
+  background: rgba(255,255,255,0.62); border: 1px solid rgba(25,25,23,0.08); border-radius: 14px;
+  cursor: pointer; text-decoration: none; transition: background .18s ease, border-color .18s ease, translate .18s ease, box-shadow .18s ease;
+}
+.scan-flow:hover { background: #FFFFFF; border-color: rgba(25,25,23,0.14); translate: 0 -1px; box-shadow: 0 10px 24px -18px rgba(25,25,23,0.35); }
+.scan-flow:disabled { opacity: .5; cursor: default; translate: none; }
+.scan-q {
+  align-self: flex-end; max-width: 82%; padding: 10px 15px; border-radius: 18px 18px 6px 18px;
+  background: #EFEEE9; color: #191917; font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.scan-tool {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 8px; border: none; background: none;
+  font-size: 12px; color: #8A8A86; cursor: pointer; text-decoration: none; transition: background .15s ease, color .15s ease;
+}
+.scan-tool:hover { background: rgba(25,25,23,0.05); color: #191917; }
+.scan-dock {
+  position: sticky; bottom: 0; padding: 22px 0 18px;
+  background-image: var(--paper-grain), linear-gradient(to bottom, rgba(247,247,244,0), #F7F7F4 30%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22px); mask-image: linear-gradient(to bottom, transparent, #000 22px);
+}
+.scan-hist-row { position: relative; display: flex; align-items: center; gap: 14px; padding: 12px 10px; margin: 0 -10px; border-radius: 12px; text-decoration: none; transition: background .15s ease; }
+.scan-hist-row:hover { background: rgba(255,255,255,0.75); }
+.scan-hist-del { opacity: 0; }
+.scan-hist-row:hover .scan-hist-del, .scan-hist-del:focus-visible { opacity: 1; }
+@media (hover: none) { .scan-hist-del { opacity: 1; } }
