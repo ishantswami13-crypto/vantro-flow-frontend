@@ -22,7 +22,7 @@ export function ErrorFallback({ errorId, retryAction }: { errorId: string, retry
       <div className="flex gap-3">
         <button onClick={retryAction}
           className="px-5 py-2 rounded-xl text-sm font-semibold transition-colors"
-          style={{ background: "#4F6EF7", color: "#ffffff" }}>
+          style={{ background: "#191917", color: "#ffffff" }}>
           Try Again
         </button>
         <a href="/bridge"

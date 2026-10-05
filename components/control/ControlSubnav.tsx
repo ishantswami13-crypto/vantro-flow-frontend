@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Subnav } from "@/components/v32/ui";
 
 // Shared 8-tab subnav reused across all three Control boards (Control.dc.html,
 // ControlApprovals.dc.html, ControlAudit.dc.html) per STARLANE_FRONTEND_HANDOFF.md
@@ -29,33 +29,5 @@ const TABS: { key: ControlTab; label: string; href: string }[] = [
 ];
 
 export function ControlSubnav({ active }: { active: ControlTab }) {
-  return (
-    <nav
-      aria-label="Control"
-      style={{ display: "flex", alignItems: "center", gap: 22, borderBottom: "1px solid #EBEAE6", marginBottom: 4, overflowX: "auto" }}
-    >
-      {TABS.map((t) => (
-        <Link
-          key={t.key}
-          href={t.href}
-          className="hover-dim"
-          style={{
-            padding: "8px 2px",
-            fontSize: 13,
-            fontWeight: t.key === active ? 500 : 400,
-            color: t.key === active ? "#191917" : "#63635F",
-            background: "none",
-            border: "none",
-            borderBottomColor: t.key === active ? "#696D86" : "transparent",
-            borderBottomWidth: 2,
-            borderBottomStyle: "solid",
-            whiteSpace: "nowrap",
-            textDecoration: "none",
-          }}
-        >
-          {t.label}
-        </Link>
-      ))}
-    </nav>
-  );
+  return <Subnav label="Control" active={active} items={TABS.map((t) => ({ key: t.key, label: t.label, href: t.href }))} />;
 }

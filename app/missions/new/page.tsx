@@ -119,7 +119,7 @@ export default function NewMissionPage() {
                   <div style={{ background: "#fff", border: `1px solid ${RULE}`, borderRadius: 8, padding: "14px 16px", display: "grid", gap: 6, fontSize: 14 }}>
                     <div><span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{inr(sim.estimate.expected.value)}</span> expected within {sim.horizonDays} days</div>
                     <div style={{ fontSize: 13, color: GRAPHITE }}>Range {inr(sim.estimate.range.low)} – {inr(sim.estimate.range.high)}</div>
-                    {sim.target ? <div style={{ color: sim.target.reach === "unlikely" ? "#A23B3B" : sim.target.reach === "possible" ? "#8A5A12" : "#2F6B4F" }}>{sim.target.text}</div> : null}
+                    {sim.target ? <div style={{ color: sim.target.reach === "unlikely" ? "#A23B3B" : sim.target.reach === "possible" ? "#8A5A12" : "#477054" }}>{sim.target.text}</div> : null}
                     {sim.caveat ? <div style={{ fontSize: 12.5, color: GRAPHITE }}>{sim.caveat}</div> : null}
                   </div>
                 </div>

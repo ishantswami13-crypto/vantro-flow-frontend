@@ -6,7 +6,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EvidenceDrawer } from "@/components/intelligence/EvidenceDrawer";
 import { formatDateTime } from "@/components/intelligence/format";
 import { api, getUser, type IntelligenceSignal, type IntelligenceEvidenceItem, type IntelligenceOpportunity } from "@/lib/api";
-import { FiSearch } from "react-icons/fi";
+import { IconDiscover, IconSparkle } from "@/components/v32/icons";
+import { PageHeader, Subnav, Sep, IconTile, Mono, Chevron, EvMark, EmptyLine, ErrorBanner } from "@/components/v32/ui";
 
 // Discover — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
 //
@@ -52,12 +53,6 @@ const TABS: { key: TabKey; label: string }[] = [
 ];
 
 const RISK_STATUSES = new Set(["EXPOSED", "OBSERVED_IMPACT"]);
-
-function dotColorForStatus(status: string): string {
-  if (status === "ACTIVE") return "#A64F4B";
-  if (status === "UPDATED") return "#4F6EF7";
-  return "#8A8A86";
-}
 
 function relativeTime(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -165,64 +160,52 @@ export default function DiscoverPage() {
   else if (tab === "opportunities") { /* rendered separately below */ }
   else hasRealBacking = false;
 
+  const latest = all.reduce<string | null>((m, x) => {
+    const t = x.last_updated_at || x.first_detected_at;
+    return t && (!m || t > m) ? t : m;
+  }, null);
+  const oppCount = opportunitiesSummary?.boundedOpportunities ?? (opportunities || []).length;
+
   return (
     <DashboardLayout pageTitle="Discover">
-      <div className="mb-4">
-        <h1 className="v32-page-title mb-1">Discover</h1>
-        <p className="v32-body">
-          {loading
-            ? "Loading what Starlane has found…"
-            : tab === "opportunities"
-              ? (opportunitiesLoading
-                  ? "Checking suppliers for bounded opportunities…"
-                  : `${opportunitiesSummary?.boundedOpportunities ?? 0} bounded opportunit${(opportunitiesSummary?.boundedOpportunities ?? 0) === 1 ? "y" : "ies"} from ${opportunitiesSummary?.suppliersEvaluated ?? 0} supplier${(opportunitiesSummary?.suppliersEvaluated ?? 0) === 1 ? "" : "s"} checked`)
-              : `${all.length} tracked signal${all.length === 1 ? "" : "s"} · ${risks.length} flagged as risk`}
-        </p>
-        {loadError && <p className="v32-meta mt-1" style={{ color: "#A64F4B" }}>{loadError}</p>}
-      </div>
+      <PageHeader
+        title="Discover"
+        subtitle="Things Starlane found that may be worth your attention."
+        right={latest ? (
+          <span style={{ fontSize: 12, color: "#8A8A86" }}>Last signal {relativeTime(latest)}</span>
+        ) : undefined}
+      />
 
-      <div className="flex mb-4" style={{ gap: 22, borderBottom: "1px solid #EBEAE6" }}>
-        {TABS.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={t.key === tab ? "" : "hover-dim"}
-            style={{
-              padding: "0 0 10px 0",
-              fontSize: 13,
-              fontWeight: t.key === tab ? 500 : 400,
-              color: t.key === tab ? "#191917" : "#63635F",
-              background: "none",
-              borderTop: "none",
-              borderLeft: "none",
-              borderRight: "none",
-              borderBottomColor: t.key === tab ? "#696D86" : "transparent",
-              borderBottomWidth: 2,
-              borderBottomStyle: "solid",
-              cursor: "pointer",
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {!loading && (all.length > 0 || oppCount > 0) && (
+        <div className="flex items-center flex-wrap" style={{ gap: 10, fontSize: 13, color: "#43433F", paddingBottom: 4 }}>
+          <span>{all.length} worth investigating</span>
+          <Sep />
+          <span>{oppCount} opportunit{oppCount === 1 ? "y" : "ies"}</span>
+          <Sep />
+          <span style={{ color: risks.length ? "#A64F4B" : undefined }}>{risks.length} risk{risks.length === 1 ? "" : "s"}</span>
+          <Sep />
+          <span style={{ color: "#63635F" }}>{changed.length} changed</span>
+        </div>
+      )}
+      {loadError && <ErrorBanner>{loadError}</ErrorBanner>}
+
+      <Subnav
+        items={TABS.map((t) => ({ key: t.key, label: t.label }))}
+        active={tab}
+        onChange={(k) => setTab(k as TabKey)}
+      />
 
       {tab === "opportunities" && !opportunitiesLoading && opportunitiesError && (
         <p className="v32-meta mt-1 mb-3" style={{ color: "#A64F4B" }}>{opportunitiesError}</p>
       )}
 
       {tab === "opportunities" && !opportunitiesLoading && (opportunities || []).length === 0 && !opportunitiesError && (
-        <div className="fade-once py-8 text-center">
-          <FiSearch size={20} style={{ color: "#8A8A86", margin: "0 auto 12px" }} />
-          <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, color: "#191917" }} className="mb-1.5">
-            0 opportunities found from {opportunitiesSummary?.suppliersEvaluated ?? 0} supplier{(opportunitiesSummary?.suppliersEvaluated ?? 0) === 1 ? "" : "s"} checked
-          </p>
-          <p className="v32-body" style={{ color: "#63635F" }}>
-            {(opportunitiesSummary?.suppliersEvaluated ?? 0) === 0
-              ? "No suppliers on file yet — the opportunity engine has nothing to check against."
-              : "Starlane checked real demand and supplier-stability data for every supplier and found no bounded opportunity right now. This is a real, current result — not a missing feature."}
-          </p>
-        </div>
+        <EmptyLine
+          title={`No opportunity found from ${opportunitiesSummary?.suppliersEvaluated ?? 0} supplier${(opportunitiesSummary?.suppliersEvaluated ?? 0) === 1 ? "" : "s"} checked.`}
+          body={(opportunitiesSummary?.suppliersEvaluated ?? 0) === 0
+            ? "No suppliers are on file yet, so there is nothing to check against."
+            : "Starlane checked demand and supplier stability for every supplier and found no bounded opportunity right now."}
+        />
       )}
 
       {tab === "opportunities" && !opportunitiesLoading && (opportunities || []).length > 0 && (
@@ -238,17 +221,10 @@ export default function DiscoverPage() {
       )}
 
       {tab !== "opportunities" && !loading && hasRealBacking && visible.length === 0 && (
-        <div className="fade-once py-8 text-center">
-          <FiSearch size={20} style={{ color: "#8A8A86", margin: "0 auto 12px" }} />
-          <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, color: "#191917" }} className="mb-1.5">
-            Nothing here yet
-          </p>
-          <p className="v32-body" style={{ color: "#63635F" }}>
-            {tab === "changes"
-              ? "No signal has changed since it was first detected."
-              : "No signal currently meets this bar."}
-          </p>
-        </div>
+        <EmptyLine
+          title="Nothing here yet."
+          body={tab === "changes" ? "No signal has changed since it was first detected." : "No signal currently meets this bar."}
+        />
       )}
 
       {tab !== "opportunities" && !loading && hasRealBacking && visible.length > 0 && (
@@ -289,51 +265,36 @@ function DiscoveryRow({
   const conf = confidenceLabel(signal.plausibility_confidence);
   return (
     <div
-      className="row-hover py-3 px-2 -mx-2 cursor-pointer"
-      style={{ borderBottom: "1px solid #EDEDE9" }}
+      className="row-hover flex items-start cursor-pointer"
+      style={{ gap: 14, padding: "16px 10px", borderBottom: "1px solid #EBEAE6", borderRadius: 6 }}
       onClick={onOpen}
+      onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
       role="button"
       tabIndex={0}
     >
-      <div className="flex items-start gap-2.5">
-        <span
-          className="mt-1.5 shrink-0 rounded-full"
-          style={{ width: 6, height: 6, background: dotColorForStatus(signal.status) }}
-          aria-hidden="true"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="v32-meta uppercase tracking-wide mb-0.5">
-            {signal.related_entity_type || signal.event_type || "Signal"}
-          </p>
-          <p style={{ fontSize: 13.5, color: "#191917" }}>
-            {signal.event_title || signal.why_exists}
-          </p>
-          {signal.event_title && signal.why_exists && (
-            <p className="v32-body mt-0.5" style={{ color: "#63635F" }}>
-              {signal.why_exists}
-            </p>
-          )}
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className="v32-meta">
-              {signal.impact_status ? signal.impact_status.replace(/_/g, " ").toLowerCase() : signal.status.toLowerCase()}
-              {" · "}
-              {relativeTime(signal.last_updated_at || signal.first_detected_at)}
-              {conf ? ` · ${conf}` : ""}
-            </span>
-            <button
-              onClick={onOpenEvidence}
-              className="hover-dim"
-              style={{
-                fontSize: 10.5, fontFamily: "'IBM Plex Mono', Menlo, monospace",
-                padding: "1px 5px", borderRadius: 4, border: "1px solid rgba(25,25,23,0.14)",
-                color: "#63635F", background: "none", cursor: "pointer",
-              }}
-            >
-              ev
-            </button>
+      <IconTile tone={signal.status === "ACTIVE" ? "critical" : signal.status === "UPDATED" ? "warning" : undefined}><IconDiscover size={16} /></IconTile>
+      <div className="min-w-0 flex-1">
+        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "#63635F", marginBottom: 4, textTransform: "uppercase" }}>
+          {(signal.related_entity_type || signal.event_type || "Signal").replace(/_/g, " ")}
+        </div>
+        <div style={{ fontSize: 15.5, fontWeight: 600, color: "#191917", marginBottom: 4 }}>
+          {signal.event_title || signal.why_exists}
+        </div>
+        {signal.event_title && signal.why_exists && (
+          <div style={{ fontSize: 13, color: "#43433F", marginBottom: 6 }}>
+            {signal.why_exists}
+            <EvMark onClick={onOpenEvidence} />
           </div>
+        )}
+        <div className="flex items-center flex-wrap" style={{ gap: 8, fontSize: 11.5, color: "#8A8A86" }}>
+          <span>{signal.impact_status ? signal.impact_status.replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase()) : signal.status.toLowerCase()}</span>
+          <Sep />
+          <span>{relativeTime(signal.last_updated_at || signal.first_detected_at)}</span>
+          {conf && <><Sep /><span>{conf}</span></>}
+          {!(signal.event_title && signal.why_exists) && <EvMark onClick={onOpenEvidence} />}
         </div>
       </div>
+      <Chevron />
     </div>
   );
 }
@@ -342,45 +303,22 @@ function OpportunityRow({
   opportunity, onOpenEvidence,
 }: { opportunity: IntelligenceOpportunity; onOpenEvidence: (e: React.MouseEvent) => void }) {
   return (
-    <div
-      className="row-hover py-3 px-2 -mx-2"
-      style={{ borderBottom: "1px solid #EDEDE9" }}
-    >
-      <div className="flex items-start gap-2.5">
-        <span
-          className="mt-1.5 shrink-0 rounded-full"
-          style={{ width: 6, height: 6, background: "#4F9E63" }}
-          aria-hidden="true"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="v32-meta uppercase tracking-wide mb-0.5">
-            Supplier · {opportunity.affectedEntities.supplierName}
-          </p>
-          <p style={{ fontSize: 13.5, color: "#191917" }}>
-            {opportunity.opportunity}
-          </p>
-          <p className="v32-body mt-0.5" style={{ color: "#63635F" }}>
-            {opportunity.reasoning}
-          </p>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className="v32-meta">
-              bounded opportunity
-              {" · "}
-              {relativeTime(opportunity.timestamp)}
-              {opportunity.materiality != null ? ` · +${opportunity.materiality}% demand` : ""}
-            </span>
-            <button
-              onClick={onOpenEvidence}
-              className="hover-dim"
-              style={{
-                fontSize: 10.5, fontFamily: "'IBM Plex Mono', Menlo, monospace",
-                padding: "1px 5px", borderRadius: 4, border: "1px solid rgba(25,25,23,0.14)",
-                color: "#63635F", background: "none", cursor: "pointer",
-              }}
-            >
-              ev
-            </button>
-          </div>
+    <div className="row-hover flex items-start" style={{ gap: 14, padding: "16px 10px", borderBottom: "1px solid #EBEAE6", borderRadius: 6 }}>
+      <IconTile tone="positive"><IconSparkle size={16} /></IconTile>
+      <div className="min-w-0 flex-1">
+        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "#63635F", marginBottom: 4, textTransform: "uppercase" }}>
+          Opportunity · {opportunity.affectedEntities.supplierName}
+        </div>
+        <div style={{ fontSize: 15.5, fontWeight: 600, color: "#191917", marginBottom: 4 }}>{opportunity.opportunity}</div>
+        <div style={{ fontSize: 13, color: "#43433F", marginBottom: 6 }}>
+          {opportunity.reasoning}
+          <EvMark onClick={onOpenEvidence} />
+        </div>
+        <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
+          {opportunity.materiality != null && <><Mono size={13}>+{opportunity.materiality}% demand</Mono><Sep /></>}
+          <span style={{ fontSize: 11.5, color: "#8A8A86" }}>Bounded opportunity</span>
+          <Sep />
+          <span style={{ fontSize: 11.5, color: "#8A8A86" }}>{relativeTime(opportunity.timestamp)}</span>
         </div>
       </div>
     </div>
@@ -407,14 +345,7 @@ function EmptyTabState({ tab }: { tab: TabKey }) {
     },
   };
   const c = copy[tab] || copy.patterns;
-  return (
-    <div className="fade-once py-8 text-center">
-      <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, color: "#191917" }} className="mb-1.5">
-        {c.title}
-      </p>
-      <p className="v32-body max-w-md mx-auto" style={{ color: "#63635F" }}>{c.body}</p>
-    </div>
-  );
+  return <EmptyLine title={c.title} body={c.body} />;
 }
 
 function EvidenceLoadingPlaceholder({ onClose }: { onClose: () => void }) {

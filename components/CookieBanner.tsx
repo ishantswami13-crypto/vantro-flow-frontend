@@ -51,7 +51,7 @@ export default function CookieBanner() {
           <Link
             href="/privacy"
             className="underline transition-colors hover:text-gray-900"
-            style={{ color: "#171717" }}
+            style={{ color: "#191917" }}
           >
             Privacy policy
           </Link>
@@ -69,7 +69,7 @@ export default function CookieBanner() {
           <button
             onClick={accept}
             className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-85"
-            style={{ background: "#171717", color: "#ffffff" }}
+            style={{ background: "#191917", color: "#ffffff" }}
           >
             Accept all
           </button>

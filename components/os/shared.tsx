@@ -9,10 +9,10 @@ import { DecisionApiError } from "@/lib/decisions";
 
 export function Panel({ title, subtitle, right, children }: { title: string; subtitle?: React.ReactNode; right?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl" style={{ background: "#FFFFFF", border: `1px solid ${C.line}`, padding: "18px 20px" }}>
+    <section className="rounded-lg fade-once" style={{ background: "#FFFFFF", border: `1px solid ${C.card}`, padding: "20px 22px" }}>
       <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
         <div style={{ minWidth: 0 }}>
-          <h2 className="text-[15px]" style={{ color: C.ink, fontWeight: 600, margin: 0 }}>{title}</h2>
+          <h2 style={{ color: C.ink, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 17, letterSpacing: "-0.2px", margin: 0 }}>{title}</h2>
           {subtitle && <p className="text-[12.5px] mt-1 leading-[1.55]" style={{ color: C.muted }}>{subtitle}</p>}
         </div>
         {right}
@@ -29,14 +29,14 @@ export function Btn({ children, onClick, primary, danger, disabled, type = "butt
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className="text-[12.5px] rounded-md px-3 py-[6px] whitespace-nowrap"
+      className={`text-[12.5px] rounded-md px-3 py-[6px] whitespace-nowrap ${disabled ? "" : primary ? "btn-primary-v32" : "btn-secondary-v32"}`}
       style={{
-        fontWeight: 500,
+        fontWeight: 400,
         cursor: disabled ? "default" : "pointer",
-        opacity: disabled ? 0.55 : 1,
-        color: primary ? "#FFFFFF" : danger ? C.bad : C.ink,
-        background: primary ? "#191917" : "#FFFFFF",
-        border: `1px solid ${primary ? "#191917" : danger ? "#F0D2CF" : C.line}`,
+        opacity: disabled ? 0.4 : 1,
+        color: primary ? "#F7F7F4" : danger ? C.bad : C.body,
+        background: primary ? "#191917" : "transparent",
+        border: `1px solid ${primary ? "#191917" : danger ? "rgba(166,79,75,0.35)" : "rgba(25,25,23,0.14)"}`,
       }}
     >
       {children}
@@ -45,7 +45,7 @@ export function Btn({ children, onClick, primary, danger, disabled, type = "butt
 }
 
 export function Row({ children }: { children: React.ReactNode }) {
-  return <div className="py-3" style={{ borderTop: `1px solid ${C.line}` }}>{children}</div>;
+  return <div className="py-3.5" style={{ borderTop: `1px solid ${C.line}` }}>{children}</div>;
 }
 
 export function Muted({ children }: { children: React.ReactNode }) {

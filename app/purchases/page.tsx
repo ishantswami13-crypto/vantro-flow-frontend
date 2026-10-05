@@ -818,7 +818,7 @@ export default function PurchasesPage() {
 
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-[26px] leading-[1.15]" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>Purchases</h1>
+          <h1 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Purchases</h1>
           <p className="text-xs text-muted mt-1">What you owe your suppliers</p>
         </div>
         <div className="flex items-center gap-2">

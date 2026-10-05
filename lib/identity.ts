@@ -1,32 +1,37 @@
-// Per-user colour identity — every account gets its own soft gradient that
-// shows up wherever the app refers to "you": avatars, the active nav marker,
-// text selection, and the primary "ask Starlane" actions. Deterministic from
-// the user id so it is stable across sessions and devices; a user can pick a
+// Per-user accent — Version 32 USER_ACCENTS (handoff §3). Ten curated,
+// muted, enterprise-safe colours; one stable accent per user, used at low
+// coverage (~5–10%): the avatar, the active subnav underline, link hover,
+// selected-row tints and the notification dot. Deterministic from the user
+// id so it is stable across sessions and devices; a user can pick a
 // different one (kept in this browser only — a per-viewer preference).
 
 export interface Identity {
   key: string;
   name: string;
+  color: string;
+  /** Kept for older callers that read three stops; all three are the accent. */
   stops: [string, string, string];
 }
 
-// Curated, low-saturation gradients that sit well on the warm off-white
-// canvas and the near-black sidebar. Three stops each so the blend reads as
-// a wash of colour rather than a hard two-tone.
+const accent = (key: string, name: string, color: string): Identity => ({ key, name, color, stops: [color, color, color] });
+
 export const IDENTITIES: Identity[] = [
-  { key: "dusk",      name: "Dusk",      stops: ["#F4B18C", "#D98BA6", "#8C7BD1"] },
-  { key: "tide",      name: "Tide",      stops: ["#9FD8CB", "#6FA8DC", "#5B6BC9"] },
-  { key: "saffron",   name: "Saffron",   stops: ["#F6D38A", "#EFA46B", "#D7667A"] },
-  { key: "moss",      name: "Moss",      stops: ["#C9DDA0", "#8DBF9A", "#4F8C83"] },
-  { key: "orchid",    name: "Orchid",    stops: ["#F2C2E0", "#C49BE0", "#7F86D8"] },
-  { key: "ember",     name: "Ember",     stops: ["#F7B9A1", "#E27D6A", "#A9546B"] },
-  { key: "glacier",   name: "Glacier",   stops: ["#D6ECF2", "#9CC7E4", "#7B93D6"] },
-  { key: "clay",      name: "Clay",      stops: ["#E9CDB3", "#C99A83", "#8C6F7E"] },
-  { key: "lagoon",    name: "Lagoon",    stops: ["#B7E4C7", "#74C3B5", "#3F8FA8"] },
-  { key: "twilight",  name: "Twilight",  stops: ["#C3C8F0", "#8E97DA", "#5C5F9E"] },
+  accent("indigo",         "Indigo",         "#696D86"),
+  accent("sage",           "Sage",           "#66765F"),
+  accent("slate_teal",     "Slate teal",     "#557476"),
+  accent("stone_blue",     "Stone blue",     "#647384"),
+  accent("aubergine",      "Aubergine",      "#756775"),
+  accent("clay",           "Clay",           "#876C61"),
+  accent("olive",          "Olive",          "#77755B"),
+  accent("graphite_green", "Graphite green", "#617068"),
+  accent("dust_rose",      "Dust rose",      "#846D70"),
+  accent("deep_sand",      "Deep sand",      "#847661"),
 ];
 
-const STORAGE_KEY = "starlane_identity";
+/** DEFAULT_ACCENT = indigo. */
+export const DEFAULT_ACCENT = IDENTITIES[0];
+
+const STORAGE_KEY = "starlane_accent";
 export const IDENTITY_EVENT = "starlane-identity-change";
 
 function hash(input: string): number {
@@ -39,7 +44,7 @@ function hash(input: string): number {
 }
 
 export function defaultIdentityFor(seed: string | null | undefined): Identity {
-  if (!seed) return IDENTITIES[0];
+  if (!seed) return DEFAULT_ACCENT;
   return IDENTITIES[hash(seed) % IDENTITIES.length];
 }
 
@@ -59,20 +64,26 @@ export function saveIdentity(key: string) {
   window.dispatchEvent(new Event(IDENTITY_EVENT));
 }
 
-export function identityGradient(identity: Identity, angle = 135): string {
-  const [a, b, c] = identity.stops;
-  return `linear-gradient(${angle}deg, ${a} 0%, ${b} 52%, ${c} 100%)`;
+/** Solid accent; the name is kept so older call sites keep working. */
+export function identityGradient(identity: Identity): string {
+  return identity.color;
 }
 
-// Writes the identity onto :root as CSS variables so any component (or
-// plain CSS) can use it without prop drilling.
+function rgb(hex: string): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+}
+
+// Writes the accent onto :root as CSS variables so any component (or plain
+// CSS) can use it without prop drilling.
 export function applyIdentity(identity: Identity) {
   if (typeof document === "undefined") return;
   const root = document.documentElement.style;
-  const [a, b, c] = identity.stops;
-  root.setProperty("--id-a", a);
-  root.setProperty("--id-b", b);
-  root.setProperty("--id-c", c);
-  root.setProperty("--id-gradient", identityGradient(identity));
-  root.setProperty("--id-gradient-h", identityGradient(identity, 90));
+  root.setProperty("--accent", identity.color);
+  root.setProperty("--accent-rgb", rgb(identity.color));
+  root.setProperty("--id-a", identity.color);
+  root.setProperty("--id-b", identity.color);
+  root.setProperty("--id-c", identity.color);
+  root.setProperty("--id-gradient", identity.color);
+  root.setProperty("--id-gradient-h", identity.color);
 }

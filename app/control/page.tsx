@@ -7,7 +7,7 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader, StatusDot, Sep, Lettermark, EmptyLine, Button } from "@/components/v32/ui";
 import { ControlSubnav, type ControlTab } from "@/components/control/ControlSubnav";
 import { api, type CortexHealthResponse, type DataConnection, type UserSettings } from "@/lib/api";
 
@@ -51,25 +51,20 @@ function timeSince(iso: string | null): string {
 function ConnectionSection({ connections }: { connections: DataConnection[] }) {
   if (connections.length === 0) {
     return (
-      <EmptyState
-        title="No sources connected yet"
-        message="Connect a business system so Starlane can reason from real, current data."
-      />
+      <EmptyLine title="No sources connected yet." body="Connect a business system so Starlane can reason from real, current data." action={<Button small href="/sources">Open Sources</Button>} />
     );
   }
   return (
     <div>
       {connections.map(c => (
-        <div key={c.id} className="flex items-center justify-between py-4" style={{ borderBottom: "1px solid #E5E5E1" }}>
-          <div>
-            <p className="text-[14px] font-medium" style={{ color: "#171717" }}>{c.source_type}</p>
-            {c.last_sync_error && <p className="text-[12px] mt-0.5" style={{ color: "#C13B3B" }}>{c.last_sync_error}</p>}
+        <div key={c.id} className="flex items-center justify-between" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid #EBEAE6" }}>
+          <div className="min-w-0">
+            <div style={{ fontSize: 13, color: "#191917" }}>{c.source_type.charAt(0) + c.source_type.slice(1).toLowerCase()}</div>
+            {c.last_sync_error && <div style={{ fontSize: 12, color: "#A64F4B", marginTop: 2 }}>{c.last_sync_error}</div>}
           </div>
-          <div className="text-right">
-            <p className="text-[13px]" style={{ color: String(c.status).toUpperCase() === "CONNECTED" ? "#171717" : "#8A8A86" }}>
-              {String(c.status).toUpperCase() === "CONNECTED" ? "Connected" : "Not connected"}
-            </p>
-            <p className="text-[12px] mt-0.5" style={{ color: "#8A8A86" }}>Last synced {timeSince(c.last_sync_at)}</p>
+          <div className="flex items-center shrink-0" style={{ gap: 16 }}>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#43433F" }}>{timeSince(c.last_sync_at)}</span>
+            <StatusDot label={String(c.status).toUpperCase() === "CONNECTED" ? "Connected" : "Not connected"} color={String(c.status).toUpperCase() === "CONNECTED" ? "#477054" : "rgba(25,25,23,0.25)"} />
           </div>
         </div>
       ))}
@@ -80,18 +75,20 @@ function ConnectionSection({ connections }: { connections: DataConnection[] }) {
 // Plain sans, tabular-nums — numbers carry hierarchy through size/weight,
 // not monospace (monospace is reserved for genuinely technical values).
 function Stat({ value, label, tone }: { value: React.ReactNode; label: string; tone?: "danger" | "warning" | "success" }) {
-  const color = tone === "danger" ? "#C13B3B" : tone === "warning" ? "#B8860B" : tone === "success" ? "#1A8F5C" : "#171717";
+  // Tone only when there is something to report: a coloured zero is noise.
+  const empty = value === 0 || value === null || value === undefined || value === "—";
+  const color = empty ? "#191917" : tone === "danger" ? "#A64F4B" : tone === "warning" ? "#9B742B" : tone === "success" ? "#477054" : "#191917";
   return (
     <div>
-      <p className="text-[22px] leading-none" style={{ color, fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>{value}</p>
-      <p className="text-[12px] mt-1.5" style={{ color: "#8A8A86" }}>{label}</p>
+      <div style={{ fontSize: 12, color: "#63635F", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 22, color, lineHeight: 1 }}>{value}</div>
     </div>
   );
 }
 
 function IntelligenceSection({ stats }: { stats: CortexHealthResponse["stats"] }) {
   return (
-    <div className="flex flex-wrap gap-x-10 gap-y-5">
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
       <Stat value={stats.pending_actions} label="Pending actions" />
       <Stat value={stats.pending_by_priority.urgent} label="Urgent" tone="danger" />
       <Stat value={stats.pending_by_priority.high} label="High priority" tone="warning" />
@@ -104,7 +101,7 @@ function IntelligenceSection({ stats }: { stats: CortexHealthResponse["stats"] }
 function OutcomesSection({ stats }: { stats: CortexHealthResponse["stats"] }) {
   const enough = stats.evaluated_actions >= MIN_EVALUATED_FOR_RATE;
   return (
-    <div className="flex flex-wrap gap-x-10 gap-y-5">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <Stat value={stats.evaluated_actions} label="Actions evaluated" />
       <Stat
         value={enough && stats.effectiveness_rate !== null ? `${stats.effectiveness_rate}%` : "—"}
@@ -118,7 +115,24 @@ function OutcomesSection({ stats }: { stats: CortexHealthResponse["stats"] }) {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-[11px] font-semibold uppercase mb-4" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>{children}</p>;
+  return <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 8 }}>{children}</div>;
+}
+
+function PolicyRows() {
+  return (
+    <div>
+      {POLICY_LEVELS.map((p) => (
+        <div key={p.level} className="flex items-start flex-wrap md:flex-nowrap" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid #EBEAE6" }}>
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8A8A86", width: 20, paddingTop: 1, flexShrink: 0 }}>{p.level}</span>
+          <div style={{ width: 110, flexShrink: 0, fontSize: 13, color: "#191917" }}>{p.name}</div>
+          <div style={{ flex: 1, minWidth: 180, fontSize: 12.5, color: "#63635F" }}>{p.description}</div>
+          <div style={{ width: 210, flexShrink: 0 }}>
+            <StatusDot label={p.granted ? "Allowed" : "Requires approval every time"} color={p.granted ? "#477054" : "#9B742B"} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function OverviewTab() {
@@ -147,22 +161,40 @@ function OverviewTab() {
     );
   }
 
+  const conns = connections.data?.connections || [];
+  const connectedN = conns.filter((c) => String(c.status).toUpperCase() === "CONNECTED").length;
+  const pending = health.data?.stats?.pending_actions ?? 0;
+
   return (
-    <div className="space-y-10">
+    <div className="flex flex-col" style={{ gap: 26 }}>
+      <div className="flex items-center flex-wrap" style={{ gap: 10, fontSize: 13, color: "#43433F" }}>
+        <span>1 user</span><Sep />
+        <span>{connectedN} connected source{connectedN === 1 ? "" : "s"}</span><Sep />
+        <span style={{ color: pending > 0 ? "#9B742B" : undefined }}>
+          {pending} pending approval{pending === 1 ? "" : "s"}
+        </span>
+      </div>
+
       <div>
-        <SectionLabel>Connection</SectionLabel>
-        <ConnectionSection connections={connections.data?.connections || []} />
+        <SectionLabel>What Starlane is allowed to do</SectionLabel>
+        <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: 10 }}>The same four levels used on every agent.</div>
+        <PolicyRows />
+      </div>
+
+      <div>
+        <SectionLabel>Connections</SectionLabel>
+        <ConnectionSection connections={conns} />
       </div>
 
       {health.data?.stats && (
-        <div className="pt-8" style={{ borderTop: "1px solid #E5E5E1" }}>
+        <div>
           <SectionLabel>Intelligence</SectionLabel>
           <IntelligenceSection stats={health.data.stats} />
         </div>
       )}
 
       {health.data?.stats && (
-        <div className="pt-8" style={{ borderTop: "1px solid #E5E5E1" }}>
+        <div>
           <SectionLabel>Outcomes</SectionLabel>
           <OutcomesSection stats={health.data.stats} />
         </div>
@@ -187,20 +219,20 @@ function UsersTab() {
     <div className="space-y-8">
       <div>
         <SectionLabel>Owner</SectionLabel>
-        <div className="flex items-center justify-between py-4" style={{ borderBottom: "1px solid #E5E5E1" }}>
-          <div>
-            <p className="text-[14px] font-medium" style={{ color: "#171717" }}>{u?.business_name || "Owner"}</p>
-            <p className="text-[12px] mt-0.5" style={{ color: "#8A8A86" }}>{u?.email}</p>
+        <div className="flex items-center justify-between" style={{ gap: 14, padding: "14px 10px", borderBottom: "1px solid #EBEAE6" }}>
+          <div className="flex items-center" style={{ gap: 12 }}>
+            <Lettermark letter={u?.business_name || u?.email || "O"} color="var(--accent)" />
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#191917" }}>{u?.business_name || "Owner"}</div>
+              <div style={{ fontSize: 12, color: "#8A8A86" }}>{u?.email}</div>
+            </div>
           </div>
-          <p className="text-[13px]" style={{ color: "#171717" }}>Owner · full access</p>
+          <span style={{ fontSize: 12.5, color: "#43433F" }}>Owner · full access</span>
         </div>
       </div>
       <div>
         <SectionLabel>Team</SectionLabel>
-        <EmptyState
-          title="No other users have been added yet"
-          message="Invited teammates will appear here with their own role and Agent permissions."
-        />
+        <EmptyLine title="No other users have been added yet." body="Invited teammates will appear here with their own role and agent permissions." />
       </div>
     </div>
   );
@@ -218,47 +250,12 @@ const POLICY_LEVELS: { level: string; name: string; description: string; granted
 
 function PermissionsTab() {
   return (
-    <div className="space-y-4">
+    <div>
       <SectionLabel>Organization-wide policy</SectionLabel>
-      <p className="text-[13px] mb-4" style={{ color: "#63635F", maxWidth: 640 }}>
+      <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: 10, maxWidth: 640 }}>
         This governs every agent in Starlane. It applies the same way to all agents and cannot be changed per agent.
-      </p>
-      <div style={{ border: "1px solid #EBEAE6", borderRadius: 8, overflow: "hidden" }}>
-        {POLICY_LEVELS.map((p, i) => (
-          <div
-            key={p.level}
-            className="row-hover flex items-center justify-between"
-            style={{ padding: "14px 16px", borderBottom: i < POLICY_LEVELS.length - 1 ? "1px solid #EBEAE6" : "none" }}
-          >
-            <div className="flex items-center gap-3">
-              <span
-                style={{
-                  fontSize: 11, fontWeight: 600, color: "#63635F", background: "#F3F2EE",
-                  border: "1px solid #EBEAE6", borderRadius: 4, padding: "2px 6px",
-                }}
-              >
-                {p.level}
-              </span>
-              <div>
-                <p className="text-[14px] font-medium" style={{ color: "#171717" }}>{p.name}</p>
-                <p className="text-[12px] mt-0.5" style={{ color: "#8A8A86" }}>{p.description}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <span
-                style={{
-                  width: 6, height: 6, borderRadius: "50%",
-                  background: p.granted ? "#1A8F5C" : "#8A8A86",
-                  display: "inline-block",
-                }}
-              />
-              <span className="text-[13px]" style={{ color: p.granted ? "#171717" : "#8A8A86" }}>
-                {p.granted ? "Allowed" : "Requires approval every time"}
-              </span>
-            </div>
-          </div>
-        ))}
       </div>
+      <PolicyRows />
     </div>
   );
 }
@@ -289,23 +286,11 @@ function ControlPageInner() {
   return (
     <DashboardLayout pageTitle="Control">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
-        <div className="fade-once">
-          <h1
-            style={{
-              margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26,
-              color: "#191917",
-            }}
-          >
-            Control
-          </h1>
-          <p className="text-[13.5px] mt-2 max-w-[640px]" style={{ color: "#63635F" }}>
-            What Starlane can see, what it&apos;s doing, and whether it&apos;s right.
-          </p>
-        </div>
+        <PageHeader title="Control" subtitle="Manage how Starlane can access, prepare, recommend, and act across your organization." />
 
         <ControlSubnav active={tab} />
 
-        <div style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "8px 2px 24px" }}>
+        <div className="fade-once">
           {tab === "overview" && <OverviewTab />}
           {tab === "users" && <UsersTab />}
           {tab === "permissions" && <PermissionsTab />}

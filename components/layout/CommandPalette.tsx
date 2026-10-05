@@ -2,13 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiSearch } from "react-icons/fi";
 import { api, type IntelligenceSignal } from "@/lib/api";
+import { getRecents, timeAgo, type RecentEntry } from "@/lib/recents";
+import { IconSearch, IconClock, IconPlus, IconScan, IconWatch, IconMissions, IconSimulate } from "@/components/v32/icons";
+import { Chevron } from "@/components/v32/ui";
 
 export interface SearchableRoute {
   href: string;
   label: string;
   type: "Page";
+  context?: string;
 }
 
 interface CommandPaletteProps {
@@ -17,16 +20,20 @@ interface CommandPaletteProps {
   routes: SearchableRoute[];
 }
 
-// Real search only. Two source types today: the static real route list
-// (every href that actually exists in the shell) and real active
-// intelligence signals fetched live - never a fabricated third category
-// (no "Workspaces"/"Agents"/"Forecasts" results, since those aren't real
-// objects yet). Architecture stays extensible: add another real fetch here
-// when another object type becomes real, not before.
+type Row = { key: string; href: string; title: string; context?: string; icon: React.ReactNode; shortcut?: string };
+type Group = { label: string; rows: Row[] };
+
+const ICON = { size: 16, style: { color: "#63635F" } };
+
+// Version 32 command palette (handoff §11): 660px, groups with uppercase
+// labels, 46px rows, the selected row tinted with the user's accent.
+// Real content only: pages that exist, this browser's recent pages, live
+// intelligence signals and the create actions the product really has.
 export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [signals, setSignals] = useState<IntelligenceSignal[] | null>(null);
+  const [recents, setRecents] = useState<RecentEntry[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -35,6 +42,7 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
     if (!open) return;
     setQuery("");
     setActiveIndex(0);
+    setRecents(getRecents());
     inputRef.current?.focus();
     if (signals === null) {
       api.intelligence.signals()
@@ -43,19 +51,32 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const results = useMemo(() => {
+  const groups = useMemo<Group[]>(() => {
     const q = query.trim().toLowerCase();
-    const matchedRoutes = routes.filter(r => !q || r.label.toLowerCase().includes(q)).slice(0, 6);
-    const matchedSignals = (signals || [])
-      .filter(s => !q || (s.event_title || "").toLowerCase().includes(q))
-      .slice(0, 6)
-      .map(s => ({ href: `/intelligence/${s.id}`, label: s.event_title || "External event", type: "Investigation" as const }));
-    return [...matchedSignals, ...matchedRoutes];
-  }, [query, routes, signals]);
+    const hit = (s: string) => !q || s.toLowerCase().includes(q);
+    const out: Group[] = [];
+    const recentRows = recents.filter(r => hit(r.label)).slice(0, 3)
+      .map(r => ({ key: `r:${r.href}`, href: r.href, title: r.label, context: `opened ${timeAgo(r.at)}`, icon: <IconClock {...ICON} /> }));
+    if (recentRows.length) out.push({ label: "Recent", rows: recentRows });
+    const signalRows = (signals || []).filter(s => hit(s.event_title || "")).slice(0, 4)
+      .map(s => ({ key: `s:${s.id}`, href: `/intelligence/${s.id}`, title: s.event_title || "External event", context: s.related_entity_type || "Signal", icon: <IconScan {...ICON} /> }));
+    if (signalRows.length) out.push({ label: "Signals", rows: signalRows });
+    const pageRows = routes.filter(r => hit(r.label)).slice(0, q ? 8 : 6)
+      .map(r => ({ key: `p:${r.href}`, href: r.href, title: r.label, context: r.context, icon: <span style={{ width: 16, display: "inline-block" }} /> }));
+    if (pageRows.length) out.push({ label: "Work", rows: pageRows });
+    const actions: Row[] = [
+      { key: "a:ask", href: "/scan", title: "Ask Starlane", context: "Open Scan", icon: <IconScan {...ICON} />, shortcut: "↵" },
+      { key: "a:watch", href: "/watch?new=1", title: "New Watch", icon: <IconPlus {...ICON} /> },
+      { key: "a:mission", href: "/missions/new", title: "New Mission", icon: <IconMissions {...ICON} /> },
+      { key: "a:sim", href: "/simulate", title: "Simulate", context: "Run a new scenario", icon: <IconSimulate {...ICON} /> },
+      { key: "a:watchlist", href: "/watch", title: "Watch", context: "What Starlane is watching", icon: <IconWatch {...ICON} /> },
+    ].filter(a => hit(a.title));
+    if (actions.length) out.push({ label: "Actions", rows: actions });
+    return out;
+  }, [query, routes, signals, recents]);
 
-  // Reset the highlighted row whenever the result set itself changes
-  // (typing a new query, signals finishing their fetch) rather than
-  // leaving a stale index pointed at a row that may no longer exist.
+  const flat = useMemo(() => groups.flatMap(g => g.rows), [groups]);
+
   useEffect(() => { setActiveIndex(0); }, [query, signals]);
 
   function go(href: string) {
@@ -69,22 +90,20 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
       if (e.key === "Escape") { onClose(); return; }
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setActiveIndex(i => (results.length === 0 ? 0 : (i + 1) % results.length));
+        setActiveIndex(i => Math.min(flat.length - 1, i + 1));
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setActiveIndex(i => (results.length === 0 ? 0 : (i - 1 + results.length) % results.length));
+        setActiveIndex(i => Math.max(0, i - 1));
       } else if (e.key === "Enter") {
         e.preventDefault();
-        const target = results[activeIndex];
+        const target = flat[activeIndex];
         if (target) go(target.href);
       }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose, results, activeIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, onClose, flat, activeIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keep the highlighted row scrolled into view as arrow keys move past
-  // the visible window of a long result list.
   useEffect(() => {
     if (!listRef.current) return;
     const el = listRef.current.querySelector<HTMLElement>(`[data-index="${activeIndex}"]`);
@@ -93,54 +112,71 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
 
   if (!open) return null;
 
+  let index = -1;
   return (
-    <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[15vh] px-4" onClick={onClose}>
-      <div className="fixed inset-0" style={{ background: "rgba(0,0,0,0.35)" }} />
+    <div className="fixed inset-0 z-[200]" onClick={onClose}>
+      <div className="fixed inset-0 lens-backdrop" style={{ background: "rgba(20,20,18,0.16)" }} />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Search Starlane"
-        className="relative w-full sm:w-[600px] rounded-xl overflow-hidden"
-        style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}
+        className="fixed pop-in flex flex-col overflow-hidden"
+        style={{
+          top: 90, left: "50%", transform: "translateX(-50%)", width: "min(660px, calc(100vw - 32px))", maxHeight: "70vh",
+          background: "#FFFFFF", border: "1px solid #E5E4DF", borderRadius: 10, boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
+        }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 px-4" style={{ height: "48px", borderBottom: "1px solid #EDEDE9" }}>
-          <FiSearch size={16} style={{ color: "#8A8A86" }} />
+        <div className="flex items-center gap-3 shrink-0" style={{ padding: "14px 16px", borderBottom: "1px solid #EBEAE6" }}>
+          <IconSearch size={15} style={{ color: "#8A8A86" }} />
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search Starlane"
-            className="flex-1 bg-transparent text-sm outline-none"
-            style={{ color: "#171717" }}
+            placeholder="Search Starlane or run a command…"
+            className="flex-1 bg-transparent outline-none"
+            style={{ color: "#191917", fontSize: 14.5, boxShadow: "none" }}
             role="combobox"
             aria-expanded="true"
             aria-controls="command-palette-results"
-            aria-activedescendant={results[activeIndex] ? `command-palette-row-${activeIndex}` : undefined}
+            aria-activedescendant={flat[activeIndex] ? `command-palette-row-${activeIndex}` : undefined}
           />
-          <kbd className="text-[11px] px-1.5 py-0.5 rounded" style={{ color: "#8A8A86", background: "#F2F2EE" }}>Esc</kbd>
+          <kbd style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>Esc</kbd>
         </div>
-        <div ref={listRef} id="command-palette-results" role="listbox" className="max-h-[360px] overflow-y-auto py-1.5">
-          {results.length === 0 ? (
-            <p className="text-sm py-8 text-center" style={{ color: "#8A8A86" }}>No results</p>
-          ) : (
-            results.map((r, i) => (
-              <button
-                key={r.href}
-                id={`command-palette-row-${i}`}
-                data-index={i}
-                role="option"
-                aria-selected={i === activeIndex}
-                onClick={() => go(r.href)}
-                onMouseEnter={() => setActiveIndex(i)}
-                className="w-full flex items-center justify-between gap-3 px-4 text-left transition-colors"
-                style={{ height: "40px", background: i === activeIndex ? "#F7F7F4" : "transparent" }}
-              >
-                <span className="text-sm truncate" style={{ color: "#171717" }}>{r.label}</span>
-                <span className="text-xs shrink-0" style={{ color: "#8A8A86" }}>{r.type}</span>
-              </button>
-            ))
-          )}
+        <div ref={listRef} id="command-palette-results" role="listbox" className="overflow-y-auto" style={{ padding: "4px 8px 8px" }}>
+          {flat.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#8A8A86", padding: "28px 0", textAlign: "center" }}>No results</p>
+          ) : groups.map(g => (
+            <div key={g.label}>
+              <div style={{ padding: "10px 14px 4px 14px", fontSize: 10.5, letterSpacing: "1px", textTransform: "uppercase", color: "#8A8A86" }}>{g.label}</div>
+              {g.rows.map(r => {
+                index += 1;
+                const i = index;
+                const selected = i === activeIndex;
+                return (
+                  <button
+                    key={r.key}
+                    id={`command-palette-row-${i}`}
+                    data-index={i}
+                    role="option"
+                    aria-selected={selected}
+                    onClick={() => go(r.href)}
+                    onMouseEnter={() => setActiveIndex(i)}
+                    className="row-hover w-full flex items-center text-left"
+                    style={{ height: 46, gap: 12, padding: "0 14px", borderRadius: 7, background: selected ? "rgba(var(--accent-rgb), 0.08)" : "transparent" }}
+                  >
+                    {r.icon}
+                    <span className="shrink-0" style={{ fontSize: 13.5, color: "#191917" }}>{r.title}</span>
+                    {r.context && <span className="truncate flex-1" style={{ fontSize: 12, color: "#8A8A86" }}>{r.context}</span>}
+                    {!r.context && <span className="flex-1" />}
+                    {r.shortcut
+                      ? <kbd style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>{r.shortcut}</kbd>
+                      : <Chevron size={13} />}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
     </div>

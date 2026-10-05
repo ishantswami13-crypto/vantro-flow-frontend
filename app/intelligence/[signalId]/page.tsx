@@ -178,7 +178,7 @@ export default function SignalImpactPage() {
       {!isLoading && !isError && impact && !impact.sufficientDataForQuantification && (
         <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
           <Breadcrumb router={router} title={impact.signal.event_title || "External signal"} />
-          <h1 className="text-[26px] lg:text-[32px] leading-[1.15] mb-6" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>
+          <h1 className="text-[26px] lg:text-[32px] leading-[1.15] mb-6" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>
             {impact.signal.event_title || "External signal"}
           </h1>
           <EmptyState
@@ -195,7 +195,7 @@ export default function SignalImpactPage() {
               citations, the reasoning behind it, then the decision. */}
           <div className="min-w-0 max-w-[700px]">
             <Breadcrumb router={router} title={impact.signal.event_title || "Investigation"} />
-            <h1 className="text-[24px] lg:text-[30px] leading-[1.2] mb-2" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>
+            <h1 className="text-[24px] lg:text-[30px] leading-[1.2] mb-2" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>
               {impact.signal.event_title || "External signal"}
             </h1>
             <p className="text-[13px]" style={{ color: "#686868" }}>

@@ -182,7 +182,7 @@ export default function ScanResultPage() {
                         target="_blank"
                         rel="noreferrer"
                         className="btn-primary-v32"
-                        style={{ padding: "9px 14px", fontFamily: "'Geist', 'Plus Jakarta Sans', sans-serif", fontSize: 12.5, textDecoration: "none" }}
+                        style={{ padding: "9px 14px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12.5, textDecoration: "none" }}
                       >
                         Open WhatsApp draft for {w.to}
                       </a>
@@ -211,7 +211,7 @@ export default function ScanResultPage() {
                   onClick={sendFollowUp}
                   disabled={sending || !followUp.trim()}
                   className="btn-secondary-v32"
-                  style={{ padding: "9px 14px", fontFamily: "'Geist', 'Plus Jakarta Sans', sans-serif", fontSize: 12.5, cursor: sending || !followUp.trim() ? "default" : "pointer", opacity: sending || !followUp.trim() ? 0.5 : 1 }}
+                  style={{ padding: "9px 14px", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12.5, cursor: sending || !followUp.trim() ? "default" : "pointer", opacity: sending || !followUp.trim() ? 0.5 : 1 }}
                 >
                   Ask
                 </button>

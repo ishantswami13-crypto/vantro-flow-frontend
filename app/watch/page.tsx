@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, Watch, WatchConditionConfig } from "@/lib/api";
 import { WatchBrief, ObjectivesPanel } from "@/components/os/WatchPanels";
+import { Button } from "@/components/v32/ui";
+import { IconPlus } from "@/components/v32/icons";
 
 // Watch — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
 //
@@ -53,11 +55,11 @@ function conditionLabel(w: Watch): string {
 function statusOf(w: Watch): { label: string; color: string } {
   if (w.status === "paused") return { label: "Paused", color: "#63635F" };
   if (w.last_triggered_at && w.last_evaluated_at && w.last_triggered_at === w.last_evaluated_at) {
-    return { label: "Triggered", color: "#E8462B" };
+    return { label: "Triggered", color: "#A64F4B" };
   }
   // Triggered at some earlier check, clear at the latest one.
-  if (w.last_triggered_at) return { label: "Clear now, triggered before", color: "#C98A1C" };
-  return { label: w.last_evaluated_at ? "Clear" : "Not checked yet", color: w.last_evaluated_at ? "#1FB870" : "#63635F" };
+  if (w.last_triggered_at) return { label: "Clear now, triggered before", color: "#9B742B" };
+  return { label: w.last_evaluated_at ? "Clear" : "Not checked yet", color: w.last_evaluated_at ? "#477054" : "#8A8A86" };
 }
 
 function formatChecked(w: Watch): string {
@@ -93,7 +95,7 @@ function WatchPageInner() {
   const prefillEntity = searchParams.get("prefill_entity");
 
   useEffect(() => {
-    if (prefillMetric) {
+    if (prefillMetric || searchParams.get("new") === "1") {
       setShowModal(true);
       // Clear the query params once consumed so a refresh doesn't reopen it.
       router.replace("/watch");
@@ -161,50 +163,24 @@ function WatchPageInner() {
     tab === "paused" ? list.filter((w) => w.status === "paused") :
     tab === "changed" ? list.filter((w) => w.status === "active" && w.last_triggered_at) :
     list; // history: everything, most-recently-evaluated context still per-row
+  const triggeredCount = list.filter((w) => statusOf(w).label === "Triggered").length;
 
   return (
     <DashboardLayout pageTitle="Watch">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1
-            style={{
-              margin: 0,
-              fontFamily: "'Fraunces', Georgia, serif",
-              fontWeight: 400,
-              fontSize: 26,
-              color: "#191917",
-            }}
-          >
+          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
             Watch
           </h1>
-          <button
-            onClick={() => setShowModal(true)}
-            className="hover-dim"
-            style={{
-              padding: "8px 16px",
-              fontSize: 13,
-              fontWeight: 500,
-              color: "#FFFFFF",
-              background: "#191917",
-              border: "none",
-              borderRadius: 6,
-              cursor: "pointer",
-            }}
-          >
-            New watch
-          </button>
+          <Button primary small onClick={() => setShowModal(true)}><IconPlus size={13} />New watch</Button>
         </div>
 
-        <WatchBrief />
-        <ObjectivesPanel />
-
-        <h2 style={{ margin: "8px 0 0", fontSize: 15, fontWeight: 600, color: "#191917" }}>Your own conditions</h2>
-        <div style={{ fontSize: 13.5, color: "#63635F" }}>
+        <div style={{ fontSize: 13.5, color: "#63635F", marginTop: -16 }}>
           {loading
-            ? "Loading watch conditions…"
+            ? "Loading what Starlane is watching…"
             : list.length === 0
-              ? "No watch conditions configured yet."
-              : `${list.length} watch condition${list.length === 1 ? "" : "s"} configured.`}
+              ? "Starlane is not watching any of your own conditions yet."
+              : `Starlane is watching ${list.length} condition${list.length === 1 ? "" : "s"} for you. ${triggeredCount === 0 ? "None need a look." : `${triggeredCount} need${triggeredCount === 1 ? "s" : ""} a look.`}`}
         </div>
 
         <nav
@@ -223,7 +199,7 @@ function WatchPageInner() {
                 color: t.key === tab ? "#191917" : "#63635F",
                 background: "none",
                 border: "none",
-                borderBottomColor: t.key === tab ? "#696D86" : "transparent",
+                borderBottomColor: t.key === tab ? "var(--accent)" : "transparent",
                 borderBottomWidth: 2,
                 borderBottomStyle: "solid",
                 cursor: "pointer",
@@ -236,8 +212,6 @@ function WatchPageInner() {
 
         <div
           style={{
-            flex: 1,
-            minHeight: 0,
             boxSizing: "border-box",
             background: "#FFFFFF",
             border: "1px solid rgba(25,25,23,0.10)",
@@ -248,9 +222,8 @@ function WatchPageInner() {
           }}
         >
           <div
+            className="watch-grid watch-head"
             style={{
-              display: "grid",
-              gridTemplateColumns: "2.2fr 2fr 1fr 1fr",
               padding: "10px 14px",
               background: "#F3F2EE",
               fontSize: 11,
@@ -265,12 +238,12 @@ function WatchPageInner() {
           </div>
 
           {actionError && (
-            <div role="alert" style={{ padding: "10px 14px", color: "#E8462B", fontSize: 13 }}>
+            <div role="alert" style={{ padding: "10px 14px", color: "#A64F4B", fontSize: 13 }}>
               {actionError}
             </div>
           )}
           {error && (
-            <div role="alert" style={{ padding: "16px 14px", color: "#E8462B", fontSize: 13 }}>
+            <div role="alert" style={{ padding: "16px 14px", color: "#A64F4B", fontSize: 13 }}>
               {error}
             </div>
           )}
@@ -300,36 +273,30 @@ function WatchPageInner() {
 
           {!error && !loading && filtered.map((w) => {
             const s = statusOf(w);
-            const pulsing = s.label !== "Nominal";
             return (
               <div
                 key={w.id}
+                className="card-in row-hover group watch-grid"
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "2.2fr 2fr 1fr 1fr",
-                  padding: "12px 14px",
-                  borderTop: "1px solid #EBEAE6",
+                  padding: "16px 14px",
+                  minHeight: 52,
+                  boxSizing: "border-box",
+                  borderBottom: "1px solid rgba(25,25,23,0.06)",
                   alignItems: "center",
-                  fontSize: 13,
-                  color: "#191917",
                 }}
               >
-                <span style={{ fontWeight: 500 }}>{w.name}</span>
-                <span style={{ color: "#63635F" }}>{conditionLabel(w)}</span>
-                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span
-                    className={pulsing ? "pulse-dot" : undefined}
-                    style={{ width: 7, height: 7, borderRadius: "50%", background: s.color, display: "inline-block" }}
-                  />
+                <span style={{ fontSize: 13.5, color: "#191917" }}>{w.name}</span>
+                <span style={{ fontSize: 12.5, color: "#63635F" }}>{conditionLabel(w)}</span>
+                <span style={{ fontSize: 12.5, color: s.color }}>
                   {s.label}
                 </span>
                 <span style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}>
-                  <span style={{ color: "#63635F", fontSize: 12 }}>{formatChecked(w)}</span>
+                  <span className="watch-row-actions flex items-center" style={{ gap: 10 }}>
                   <button
                     onClick={() => handleEvaluate(w)}
                     disabled={busyId === w.id}
                     className="hover-dim"
-                    style={{ fontSize: 11, background: "none", border: "none", color: "#696D86", cursor: "pointer" }}
+                    style={{ fontSize: 11.5, background: "none", border: "none", color: "#63635F", cursor: "pointer" }}
                     title="Evaluate now"
                   >
                     Check now
@@ -338,7 +305,7 @@ function WatchPageInner() {
                     onClick={() => handlePauseResume(w)}
                     disabled={busyId === w.id}
                     className="hover-dim"
-                    style={{ fontSize: 11, background: "none", border: "none", color: "#696D86", cursor: "pointer" }}
+                    style={{ fontSize: 11.5, background: "none", border: "none", color: "#63635F", cursor: "pointer" }}
                   >
                     {w.status === "paused" ? "Resume" : "Pause"}
                   </button>
@@ -346,15 +313,20 @@ function WatchPageInner() {
                     onClick={() => handleDelete(w)}
                     disabled={busyId === w.id}
                     className="hover-dim"
-                    style={{ fontSize: 11, background: "none", border: "none", color: "#E8462B", cursor: "pointer" }}
+                    style={{ fontSize: 11.5, background: "none", border: "none", color: "#A64F4B", cursor: "pointer" }}
                   >
                     Delete
                   </button>
+                  </span>
+                  <span style={{ color: "#63635F", fontSize: 12 }}>{formatChecked(w)}</span>
                 </span>
               </div>
             );
           })}
         </div>
+
+        <WatchBrief />
+        <ObjectivesPanel />
       </div>
 
       {showModal && (
@@ -422,7 +394,7 @@ function NewWatchModal({
   return (
     <div
       style={{
-        position: "fixed", inset: 0, background: "rgba(25,25,23,0.4)",
+        position: "fixed", inset: 0, background: "rgba(20,20,18,0.28)",
         display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
       }}
       onClick={onClose}
@@ -431,9 +403,9 @@ function NewWatchModal({
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: "#FFFFFF", borderRadius: 10, padding: 24, width: 420,
+          background: "#FFFFFF", border: "1px solid #E5E4DF", borderRadius: 10, padding: 24, width: 420, maxWidth: "calc(100vw - 32px)",
           display: "flex", flexDirection: "column", gap: 14,
-          boxShadow: "0 12px 40px rgba(0,0,0,0.2)",
+          boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
         }}
       >
         <h2 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 20, color: "#191917" }}>
@@ -487,22 +459,22 @@ function NewWatchModal({
           </label>
         </div>
 
-        {formError && <div style={{ color: "#E8462B", fontSize: 12 }}>{formError}</div>}
+        {formError && <div style={{ color: "#A64F4B", fontSize: 12 }}>{formError}</div>}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}>
           <button
             type="button"
             onClick={onClose}
-            className="hover-dim"
-            style={{ padding: "8px 14px", fontSize: 13, background: "none", border: "1px solid #EBEAE6", borderRadius: 6, cursor: "pointer", color: "#191917" }}
+            className="btn-secondary-v32"
+            style={{ padding: "8px 14px", fontSize: 13, borderRadius: 6 }}
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="hover-dim"
-            style={{ padding: "8px 14px", fontSize: 13, fontWeight: 500, background: "#191917", color: "#FFFFFF", border: "none", borderRadius: 6, cursor: "pointer" }}
+            className="btn-primary-v32"
+            style={{ padding: "8px 14px", fontSize: 13, borderRadius: 6 }}
           >
             {saving ? "Creating…" : "Create watch"}
           </button>
@@ -519,8 +491,8 @@ const inputStyle: React.CSSProperties = {
   padding: "8px 10px",
   fontSize: 13,
   color: "#191917",
-  background: "#FAFAF8",
-  border: "1px solid #EBEAE6",
+  background: "#FFFFFF",
+  border: "1px solid rgba(25,25,23,0.12)",
   borderRadius: 6,
   boxSizing: "border-box",
 };

@@ -27,7 +27,7 @@ export default function GlobalError({
             </div>
             <button
               onClick={reset}
-              style={{ padding: '0.75rem 1.5rem', background: '#4F6EF7', color: 'white', borderRadius: '0.75rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+              style={{ padding: '0.75rem 1.5rem', background: '#191917', color: 'white', borderRadius: '0.75rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
             >
               Reload application
             </button>

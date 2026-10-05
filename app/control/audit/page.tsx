@@ -61,7 +61,7 @@ function AuditRow({ event }: { event: AuditEvent }) {
     >
       <span className="text-2xs" style={{ color: "#8A8A86" }}>{formatTime(event.created_at)}</span>
       <span className="text-2xs" style={{ color: "#8A8A86" }}>—</span>
-      <span className="text-sm font-medium" style={{ color: "#171717" }}>{humanizeAction(event.action)}</span>
+      <span className="text-sm font-medium" style={{ color: "#191917" }}>{humanizeAction(event.action)}</span>
       <span className="text-2xs font-mono" style={{ color: "#8A8A86" }}>
         {event.entity_type ? `${event.entity_type}${event.entity_id ? ` · ${event.entity_id.slice(0, 8)}…` : ""}` : "—"}
       </span>

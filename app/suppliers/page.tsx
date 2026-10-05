@@ -110,7 +110,7 @@ export default function SuppliersPage() {
       <div className="space-y-5 page-enter">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
-            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>Suppliers</h2>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Suppliers</h2>
             <p className="text-sm text-secondary mt-1">Payables generated from your purchase bills</p>
           </div>
           <button onClick={loadSuppliers} className="px-4 py-2 rounded-xl border border-border text-secondary text-xs font-bold hover:text-primary hover:border-border-2 transition-colors">

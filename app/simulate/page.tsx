@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type ScenarioInvoice, type SimulateScenarioResponse } from "@/lib/api";
 import { WorkflowReplays } from "@/components/os/SimulatePanels";
+import { PageHeader, Subnav } from "@/components/v32/ui";
 
 // Simulate — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§6/§14/§16.
 //
@@ -15,7 +16,7 @@ import { WorkflowReplays } from "@/components/os/SimulatePanels";
 // own real open invoice, plus fxScenarioEngine.js's buildFxScenarioChain for
 // whatever real currency-exposure data exists (honestly NO_EFFECT/
 // INSUFFICIENT_CONTEXT for tenants with none today — no fabricated FX number
-// is ever shown). The Saved/Comparisons/Forecasts tabs were removed: no
+// is ever shown). The Saved/Comparisons/Forecasts tabs are not shown: no
 // persistence layer exists for saved simulations, so they could only ever
 // be empty. Decision simulations are saved with their decision instead.
 //
@@ -101,153 +102,105 @@ function SimulatePageInner() {
 
   const selectedInvoice = invoices.find((inv) => inv.id === selectedInvoiceId) || null;
 
+  const [tab, setTab] = useState<"new" | "replays">("new");
+  const pill: React.CSSProperties = { padding: "8px 30px 8px 14px", border: "1px solid rgba(25,25,23,0.14)", borderRadius: 20, fontSize: 12.5, color: "#43433F", background: "transparent", maxWidth: "100%" };
+  const tone = (n: number | null | undefined, goodWhenNegative = false) =>
+    n == null || n === 0 ? "#191917" : (n < 0) === goodWhenNegative ? "#477054" : "#A64F4B";
+
   return (
     <DashboardLayout pageTitle="Simulate">
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
-            Simulate
-          </h1>
-        </div>
+      <PageHeader title="Simulate" />
+      <Subnav
+        active={tab}
+        onChange={(k) => setTab(k as "new" | "replays")}
+        items={[{ key: "new", label: "New" }, { key: "replays", label: "Workflow replays" }]}
+      />
 
-        <WorkflowReplays />
-
-        <p className="v32-section-label" style={{ marginTop: 4 }}>Test a change to one invoice</p>
-
-        {(
-          <>
-            {/* Real picker: the tenant's own open/overdue invoices. */}
-            <div style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-              {invoicesLoading ? (
-                <p className="v32-body" style={{ color: "#63635F" }}>Loading your open invoices…</p>
-              ) : invoicesError ? (
-                <p className="v32-body" style={{ color: "#B3261E" }}>{invoicesError}</p>
-              ) : invoices.length === 0 ? (
-                <p className="v32-body" style={{ color: "#63635F" }}>No open (non-Paid) invoices to simulate against yet.</p>
-              ) : (
-                <>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
-                    <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "#63635F", flex: "1 1 260px" }}>
-                      Invoice
-                      <select
-                        value={selectedInvoiceId}
-                        onChange={(e) => { setSelectedInvoiceId(e.target.value); setResult(null); }}
-                        style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid rgba(25,25,23,0.16)", fontSize: 13, color: "#191917", background: "#FBFAF7" }}
-                      >
-                        {invoices.map((inv) => (
-                          <option key={inv.id} value={inv.id}>
-                            {inv.customer_name || "Unknown customer"} — {fmt(inv.invoice_amount)}
-                            {inv.days_overdue != null ? ` (${inv.days_overdue}d overdue)` : ""}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "#63635F" }}>
-                      Assumption
-                      <select
-                        value={mode}
-                        onChange={(e) => { setMode(e.target.value as "earlier" | "unpaid"); setResult(null); }}
-                        style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid rgba(25,25,23,0.16)", fontSize: 13, color: "#191917", background: "#FBFAF7" }}
-                      >
-                        <option value="earlier">Gets collected in the next 30 days</option>
-                        <option value="unpaid">Remains unpaid</option>
-                      </select>
-                    </label>
-
-                    <button
-                      onClick={runSimulation}
-                      disabled={!selectedInvoiceId || running}
-                      className="btn-secondary-v32"
-                      style={{ padding: "9px 18px", fontSize: 13, opacity: !selectedInvoiceId || running ? 0.5 : 1 }}
-                    >
-                      {running ? "Running…" : "Run simulation"}
-                    </button>
-                  </div>
-                  {selectedInvoice && (
-                    <p style={{ fontSize: 12, color: "#9A9A94" }}>
-                      Real invoice amount: {fmt(selectedInvoice.invoice_amount)} {selectedInvoice.currency || ""}
-                    </p>
-                  )}
-                  {runError && <p style={{ fontSize: 12, color: "#B3261E" }}>{runError}</p>}
-                </>
-              )}
-            </div>
-
-            {result && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 16 }}>
-                <SimCard
-                  title="CURRENT BASELINE"
-                  accent="#63635F"
-                  rows={[
-                    ["Total open receivables", fmt(result.baseline.totalOpenReceivables)],
-                    ["Total overdue", fmt(result.baseline.totalOverdue)],
-                  ]}
-                  note="Observed from your ledger: what happens if nothing changes"
-                />
-                <SimCard
-                  title="SIMULATED RESULT"
-                  accent="#3B6E4F"
-                  rows={[
-                    ["Projected total overdue", fmt(result.simulated.projected_state.projectedTotalOverdue)],
-                    ["Cash impact delta", fmt(result.simulated.projected_state.cashImpactDelta)],
-                  ]}
-                  note={result.simulated.projected_state.narrative}
-                />
-                <SimCard
-                  title="DELTA"
-                  accent={result.delta.direction === "IMPROVEMENT_VS_BASELINE" ? "#3B6E4F" : result.delta.direction === "WORSE_VS_BASELINE" ? "#B3261E" : "#63635F"}
-                  rows={[
-                    ["Overdue delta vs baseline", fmt(result.delta.delta)],
-                    ["Direction", result.delta.direction.replace(/_/g, " ")],
-                  ]}
-                  note={result.delta.note}
-                />
-              </div>
-            )}
-
-            {result && (
-              <div style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 16 }}>
-                <p style={{ fontSize: 11, letterSpacing: 0.5, color: "#63635F", marginBottom: 8 }}>FX SCENARIO</p>
-                {result.fx.impact_mode === "NO_EFFECT" || result.fx.impact_mode === "INSUFFICIENT_CONTEXT" ? (
-                  <p className="v32-body" style={{ color: "#9A9A94" }}>
-                    No FX exposure data available for this scenario yet — {result.fx.reason}
+      {tab === "replays" ? <WorkflowReplays /> : (
+        <>
+          {/* Assumptions: the tenant's own open invoices, and the two
+              hypotheticals scenarioEngine.js really supports. */}
+          <div style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 18 }}>
+            <div style={{ fontSize: 11, letterSpacing: "1px", color: "#63635F", marginBottom: 12 }}>ASSUMPTIONS</div>
+            {invoicesLoading ? (
+              <p style={{ fontSize: 13, color: "#63635F" }}>Loading your open invoices…</p>
+            ) : invoicesError ? (
+              <p style={{ fontSize: 13, color: "#A64F4B" }}>{invoicesError}</p>
+            ) : invoices.length === 0 ? (
+              <p style={{ fontSize: 13, color: "#63635F" }}>No open invoices to simulate against yet. Import your receivables or connect Tally first.</p>
+            ) : (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <label className="sr-only" htmlFor="sim-invoice">Invoice</label>
+                  <select
+                    id="sim-invoice"
+                    value={selectedInvoiceId}
+                    onChange={(e) => { setSelectedInvoiceId(e.target.value); setResult(null); }}
+                    className="hover-lift sim-pill"
+                    style={pill}
+                  >
+                    {invoices.map((inv) => (
+                      <option key={inv.id} value={inv.id}>
+                        {inv.customer_name || "Unknown customer"} · {fmt(inv.invoice_amount)}
+                        {inv.days_overdue != null ? ` · ${inv.days_overdue}d overdue` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <label className="sr-only" htmlFor="sim-mode">Assumption</label>
+                  <select
+                    id="sim-mode"
+                    value={mode}
+                    onChange={(e) => { setMode(e.target.value as "earlier" | "unpaid"); setResult(null); }}
+                    className="hover-lift sim-pill"
+                    style={pill}
+                  >
+                    <option value="earlier">Gets collected in the next 30 days</option>
+                    <option value="unpaid">Remains unpaid</option>
+                  </select>
+                  <button
+                    onClick={runSimulation}
+                    disabled={!selectedInvoiceId || running}
+                    className="btn-primary-v32"
+                    style={{ marginLeft: "auto", padding: "9px 16px", borderRadius: 6, fontSize: 12.5, opacity: !selectedInvoiceId || running ? 0.4 : 1 }}
+                  >
+                    {running ? "Running…" : "Run simulation"}
+                  </button>
+                </div>
+                {selectedInvoice && (
+                  <p style={{ fontSize: 12, color: "#8A8A86", marginTop: 10 }}>
+                    Invoice amount {fmt(selectedInvoice.invoice_amount)} {selectedInvoice.currency || ""}, from your ledger.
                   </p>
-                ) : (
-                  <p className="v32-body" style={{ color: "#191917" }}>{result.fx.reason}</p>
                 )}
-              </div>
+                {runError && <p style={{ fontSize: 12, color: "#A64F4B", marginTop: 8 }}>{runError}</p>}
+              </>
             )}
-          </>
-        )}
-      </div>
+          </div>
+
+          {result && (
+            <>
+              <div style={{ fontSize: 11, letterSpacing: "1px", color: "#63635F" }}>DOWNSTREAM EFFECTS · 30-DAY HORIZON</div>
+              <div className="grid gap-4 md:grid-cols-3">
+                <SimCard label="Projected overdue" value={fmt(result.simulated.projected_state.projectedTotalOverdue)} color="#191917" note={`Today ${fmt(result.baseline.totalOverdue)} overdue of ${fmt(result.baseline.totalOpenReceivables)} open.`} />
+                <SimCard label="Cash" value={fmt(result.simulated.projected_state.cashImpactDelta)} color={tone(result.simulated.projected_state.cashImpactDelta)} note={result.simulated.projected_state.narrative} />
+                <SimCard label="Overdue vs today" value={fmt(result.delta.delta)} color={result.delta.direction === "IMPROVEMENT_VS_BASELINE" ? "#477054" : result.delta.direction === "WORSE_VS_BASELINE" ? "#A64F4B" : "#191917"} note={result.delta.note} />
+              </div>
+              <p style={{ fontSize: 12.5, color: "#8A8A86" }}>
+                Currency: {result.fx.impact_mode === "NO_EFFECT" || result.fx.impact_mode === "INSUFFICIENT_CONTEXT" ? `no exposure to model. ${result.fx.reason}` : result.fx.reason}
+              </p>
+            </>
+          )}
+        </>
+      )}
     </DashboardLayout>
   );
 }
 
-function SimCard({ title, accent, rows, note }: { title: string; accent: string; rows: [string, string][]; note: string }) {
+function SimCard({ label, value, color, note }: { label: string; value: string; color: string; note: string }) {
   return (
-    <div
-      style={{
-        boxSizing: "border-box",
-        background: "#FFFFFF",
-        border: `1px solid ${accent}33`,
-        borderTop: `3px solid ${accent}`,
-        borderRadius: 8,
-        padding: "16px 18px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-      }}
-    >
-      <span style={{ fontSize: 11, letterSpacing: 0.5, color: accent, fontWeight: 600 }}>{title}</span>
-      {rows.map(([label, value]) => (
-        <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-          <span style={{ fontSize: 12, color: "#63635F" }}>{label}</span>
-          <span style={{ fontFamily: "'IBM Plex Mono', 'SFMono-Regular', monospace", fontSize: 13, color: "#191917" }}>{value}</span>
-        </div>
-      ))}
-      <span style={{ fontSize: 11.5, color: "#9A9A94", marginTop: 4 }}>{note}</span>
+    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 18 }}>
+      <div style={{ fontSize: 12, color: "#63635F", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 22, color, marginBottom: 6 }}>{value}</div>
+      <div style={{ fontSize: 12, color: "#63635F", lineHeight: 1.5 }}>{note}</div>
     </div>
   );
 }

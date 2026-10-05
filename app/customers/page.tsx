@@ -138,7 +138,7 @@ export default function CustomersPage() {
       <div className="space-y-5 page-enter">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
-            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#171717", fontWeight: 500, letterSpacing: "-0.01em" }}>Customers</h2>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Customers</h2>
             <p className="text-sm text-secondary mt-1">Auto-added from Sales, Invoices and Khata</p>
           </div>
           <div className="flex gap-2">

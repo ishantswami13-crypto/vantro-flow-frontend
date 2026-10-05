@@ -22,8 +22,7 @@ export function WatchBrief() {
       {data && (
         <ul className="space-y-2">
           {data.lines.map((l, i) => (
-            <li key={i} className="flex gap-2 items-start">
-              <span className="mt-[6px] h-[7px] w-[7px] rounded-full shrink-0" style={{ background: { good: C.good, bad: C.bad, warn: C.warn, neutral: C.faint }[BRIEF_TONE[l.tone] || "neutral"] }} aria-hidden />
+            <li key={i}>
               <span className="text-[13.5px] leading-[1.55]" style={{ color: C.ink }}>{l.text}</span>
             </li>
           ))}

@@ -4,100 +4,93 @@
 // GET /api/os/agents. Each one is backed by code that runs today and by rows
 // it writes (runs, last activity, measured performance, kill-switch state).
 // Agents with no behaviour yet are listed separately with the reason, never
-// as live workers, and there is no "create agent" button because no such
+// as live workers, and there is no "New agent" button because no such
 // capability exists.
 
+import { useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { C, Pill, Skeleton } from "@/components/decisions/ui";
-import { osApi, AgentInfo } from "@/lib/os";
-import { relTime } from "@/lib/decisions";
-import { Panel, Row, Muted, ErrorLine, errorText, useLoad } from "@/components/os/shared";
+import { osApi } from "@/lib/os";
+import { useLoad, errorText } from "@/components/os/shared";
+import { PageHeader, Subnav, Lettermark, StatusDot, Chevron, EmptyLine, ErrorBanner, SkeletonRows, ago } from "@/components/v32/ui";
+import { agentColor, agentStatus, PERMISSION_LABEL } from "@/components/agents/shared";
 
-const PERMISSION_LABEL: Record<string, string> = {
-  READ: "Read",
-  ANALYZE: "Analyse",
-  PROPOSE: "Propose",
-  PREPARE: "Prepare",
-  EXECUTE_APPROVED_INTERNAL: "Run approved internal steps",
-  RECORD_OUTCOME: "Record outcomes",
-};
-
-function statusTone(s: AgentInfo["status"]): "good" | "bad" | "neutral" {
-  if (s === "ACTIVE") return "good";
-  if (s === "STOPPED") return "bad";
-  return "neutral";
-}
+const COLS = "grid-cols-[30px_1fr_auto] md:grid-cols-[30px_minmax(0,2.2fr)_minmax(0,1.5fr)_110px_minmax(0,1.3fr)_14px]";
 
 export default function AgentsPage() {
-  const { data, error, loading, reload } = useLoad(() => osApi.agents());
+  const { data, error, loading } = useLoad(() => osApi.agents());
+  const [tab, setTab] = useState<"running" | "planned">("running");
+  const agents = data?.agents || [];
 
   return (
     <DashboardLayout pageTitle="Agents">
-      <div className="max-w-[900px] space-y-6">
-        <div>
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>Agents</h1>
-          <p style={{ fontSize: 13.5, color: "#63635F", maxWidth: 640, marginTop: 6 }}>
-            The workers that run inside Starlane, what each is allowed to do and what it cannot, and how it has performed on your data.
-            To stop one, use the switches on <Link className="underline" href="/control/decisions">Control, Decisions</Link>.
-          </p>
+      <PageHeader
+        title="Agents"
+        subtitle="Ongoing responsibilities Starlane carries across your organization."
+      />
+      <Subnav
+        active={tab}
+        onChange={(k) => setTab(k as "running" | "planned")}
+        items={[
+          { key: "running", label: "Running", count: data ? agents.length : null },
+          { key: "planned", label: "Not built yet", count: data ? data.notBuilt.length : null },
+        ]}
+      />
+
+      <div className="fade-once flex flex-col" style={{ gap: 26 }}>
+        <div style={{ fontSize: 13, color: "#63635F", maxWidth: 640 }}>
+          Every agent here is deterministic code. None calls a language model or sends a message on its own. To stop one, use the switches on{" "}
+          <Link className="underline" href="/control/decisions">Control, Decisions</Link>.
         </div>
 
-        <Panel
-          title="Running in this workspace"
-          subtitle="All four are deterministic code. None of them calls a language model or sends a message on its own."
-          right={<button type="button" onClick={reload} className="text-[12.5px] hover-dim" style={{ color: C.muted }}>Refresh</button>}
-        >
-          {loading && <Skeleton rows={4} />}
-          <ErrorLine error={error ? `Agents could not be loaded: ${errorText(error)} Try Refresh.` : null} />
-          {data?.agents.map((a) => (
-            <Row key={a.key}>
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div style={{ minWidth: 0, flex: "1 1 320px" }}>
-                  <p className="text-[14px]" style={{ color: C.ink, fontWeight: 600 }}>{a.name}</p>
-                  <p className="text-[12.5px] mt-1 leading-[1.55]" style={{ color: C.body }}>{a.purpose}</p>
-                </div>
-                <Pill tone={statusTone(a.status)}>{a.status === "ACTIVE" ? "Active" : a.status === "STOPPED" ? "Stopped" : "Not run yet"}</Pill>
-              </div>
-              {a.stoppedReason && <p className="text-[12.5px] mt-2" style={{ color: C.bad }}>Stopped: {a.stoppedReason}</p>}
-              <p className="text-[12px] mt-2" style={{ color: C.faint }}>
-                {a.runs} {a.runs === 1 ? "run" : "runs"}
-                {a.lastRunAt ? ` · last ${relTime(a.lastRunAt)}` : ""} · {a.model}
-                {a.budget ? ` · ${a.budget}` : ""}
-              </p>
-              {a.performance && <p className="text-[12.5px] mt-1" style={{ color: C.body }}>{a.performance}</p>}
-              <details className="mt-2">
-                <summary className="text-[12px] cursor-pointer" style={{ color: C.muted }}>What it does, what it may do, what it cannot do</summary>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2 text-[12.5px]" style={{ color: C.body }}>
-                  <div>
-                    <p style={{ color: C.faint }}>Does</p>
-                    <ul className="mt-1 space-y-0.5">{a.performs.map((x) => <li key={x}>{x}</li>)}</ul>
-                  </div>
-                  <div>
-                    <p style={{ color: C.faint }}>Permissions</p>
-                    <ul className="mt-1 space-y-0.5">{a.permissions.map((x) => <li key={x}>{PERMISSION_LABEL[x] || x}</li>)}</ul>
-                  </div>
-                  <div>
-                    <p style={{ color: C.faint }}>Cannot</p>
-                    <ul className="mt-1 space-y-0.5">{a.cannot.map((x) => <li key={x}>{x}</li>)}</ul>
-                  </div>
-                </div>
-              </details>
-            </Row>
-          ))}
-        </Panel>
+        {loading && <SkeletonRows rows={4} height={64} />}
+        {!!error && <ErrorBanner>Agents could not be loaded: {errorText(error)}</ErrorBanner>}
 
-        {data && data.notBuilt.length > 0 && (
-          <Panel title="Not built yet" subtitle="These are planned. Starlane does not show them as working until they are.">
-            {data.notBuilt.map((n) => (
-              <Row key={n.name}>
-                <p className="text-[13.5px]" style={{ color: C.ink, fontWeight: 500 }}>{n.name}</p>
-                <p className="text-[12.5px] mt-0.5" style={{ color: C.muted }}>{n.reason}</p>
-              </Row>
-            ))}
-          </Panel>
+        {data && tab === "running" && (
+          agents.length === 0 ? <EmptyLine title="No agent is registered for this workspace." /> : (
+            <div>
+              <div style={{ fontSize: 11, letterSpacing: "1px", color: "#63635F", marginBottom: 4 }}>RUNNING IN THIS WORKSPACE</div>
+              <div className={`hidden md:grid ${COLS} items-center`} style={{ gap: 14, padding: "8px 12px", fontSize: 11, letterSpacing: "0.5px", color: "#8A8A86" }}>
+                <span /><span>AGENT</span><span>MAY</span><span>LAST RUN</span><span>STATUS</span><span />
+              </div>
+              {agents.map((a) => {
+                const st = agentStatus(a);
+                return (
+                  <Link key={a.key} href={`/agents/${encodeURIComponent(a.key)}`} className={`row-hover grid ${COLS} items-center`} style={{ gap: 14, padding: "14px 12px", minHeight: 64, boxSizing: "border-box", borderBottom: "1px solid #EBEAE6" }}>
+                    <Lettermark letter={a.name} color={agentColor(a.key)} />
+                    <div className="min-w-0">
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#191917" }}>{a.name}</div>
+                      <div className="truncate" style={{ fontSize: 12, color: "#8A8A86" }}>{a.purpose}</div>
+                    </div>
+                    <div className="hidden md:block truncate" style={{ fontSize: 12.5, color: "#63635F" }}>
+                      {a.permissions.map((p) => PERMISSION_LABEL[p] || p).join(", ")}
+                    </div>
+                    <div className="hidden md:block" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#43433F" }}>{a.lastRunAt ? ago(a.lastRunAt) : "Never"}</div>
+                    <div className="hidden md:block"><StatusDot label={st.label} color={st.color} /></div>
+                    <Chevron />
+                  </Link>
+                );
+              })}
+            </div>
+          )
         )}
-        {data && data.agents.length === 0 && <Muted>No agent is registered for this workspace.</Muted>}
+
+        {data && tab === "planned" && (
+          data.notBuilt.length === 0 ? <EmptyLine title="Nothing planned is waiting to be built." /> : (
+            <div>
+              <div style={{ fontSize: 11, letterSpacing: "1px", color: "#63635F", marginBottom: 8 }}>PLANNED, NOT SHOWN AS WORKING UNTIL THEY ARE</div>
+              {data.notBuilt.map((n) => (
+                <div key={n.name} className="row-hover flex items-start" style={{ gap: 14, padding: "16px 12px", borderBottom: "1px solid #EBEAE6", borderRadius: 6 }}>
+                  <Lettermark letter={n.name} color={agentColor(n.name)} />
+                  <div className="min-w-0">
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#191917" }}>{n.name}</div>
+                    <div style={{ fontSize: 12.5, color: "#63635F", marginTop: 2 }}>{n.reason}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
       </div>
     </DashboardLayout>
   );

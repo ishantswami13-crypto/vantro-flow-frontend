@@ -3,7 +3,7 @@ import { authHeaders } from "@/lib/api";
 import { useEffect, useState, useCallback, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
-  FiPlus, FiTrash2, FiRefreshCw, FiTrendingUp, FiTrendingDown,
+  FiPlus, FiTrash2, FiRefreshCw, FiTrendingDown,
   FiShoppingBag, FiFileText, FiCheckCircle, FiDollarSign,
   FiChevronDown, FiChevronUp, FiChevronLeft, FiChevronRight,
   FiCalendar, FiZap,
@@ -207,11 +207,11 @@ export default function TodayPage() {
         {/* Action buttons */}
         <div className="flex gap-2 shrink-0">
           <button onClick={() => setShowSaleForm(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all shadow-sm">
+            className="btn-primary-v32 flex items-center gap-1.5" style={{ padding: "6px 12px", fontSize: 12 }}>
             <FiPlus size={13} /> Sale
           </button>
           <button onClick={() => setShowExpForm(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-danger/10 text-danger border border-danger/20 text-xs font-bold hover:bg-danger/20 transition-all">
+            className="btn-secondary-v32 flex items-center gap-1.5" style={{ padding: "6px 12px", fontSize: 12 }}>
             <FiPlus size={13} /> Expense
           </button>
         </div>
@@ -230,72 +230,58 @@ export default function TodayPage() {
         </div>
       ) : (
         <>
-          {/* ── BIG P&L HERO CARD ─────────────────────────────────────────── */}
-          <div className={`rounded-2xl p-5 mb-5 relative overflow-hidden ${
-            isProfit
-              ? "bg-gradient-to-br from-success/15 to-success/5 border border-success/20"
-              : "bg-gradient-to-br from-danger/15 to-danger/5 border border-danger/20"
-          }`}>
-            <div className="absolute -top-2 -right-2 opacity-10">
-              {isProfit
-                ? <FiTrendingUp size={80} className="text-success" />
-                : <FiTrendingDown size={80} className="text-danger" />}
-            </div>
-            <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
+          {/* ── NET MONEY (V32 sim_card style: white card, mono figure) ─────── */}
+          <div className="fade-once mb-5" style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 20 }}>
+            <p style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 4 }}>
               Net money {isProfit ? "in" : "out"} {isToday ? "today" : "on this day"}
             </p>
-            <p className="text-2xs text-muted -mt-1 mb-2">
+            <p style={{ fontSize: 12, color: "#8A8A86", marginBottom: 10 }}>
               Sales booked and payments received, minus expenses and purchases. This is not profit: it has no cost of goods.
             </p>
-            <p className={`text-5xl font-black tracking-tight mb-4 ${isProfit ? "text-success" : "text-danger"}`}>
+            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 34, color: isProfit ? "#477054" : "#A64F4B", marginBottom: 18, lineHeight: 1 }}>
               {isProfit ? "+" : ""}{fmtINR(net)}
             </p>
-
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderTop: "1px solid #EBEAE6" }}>
               {[
-                { label:"Money in",  value: `+${fmtINR(income, true)}`,   color:"text-success" },
-                { label:"Money out", value: `-${fmtINR(expenses, true)}`, color:"text-danger"  },
-                { label:"Orders",    value: String(s?.order_count || 0),  color:"text-primary" },
-                { label:"Invoices paid", value: String(s?.invoices_collected || 0), color:"text-primary" },
+                { label: "Money in", value: `+${fmtINR(income, true)}`, color: "#477054" },
+                { label: "Money out", value: `-${fmtINR(expenses, true)}`, color: "#A64F4B" },
+                { label: "Orders", value: String(s?.order_count || 0), color: "#191917" },
+                { label: "Invoices paid", value: String(s?.invoices_collected || 0), color: "#191917" },
               ].map(({ label, value, color }) => (
-                <div key={label} className="bg-black/10 rounded-xl px-3 py-2">
-                  <p className="text-2xs text-muted/70 mb-1">{label}</p>
-                  <p className={`text-base font-bold ${color}`}>{value}</p>
+                <div key={label} style={{ padding: "12px 0 0" }}>
+                  <p style={{ fontSize: 12, color: "#63635F", marginBottom: 4 }}>{label}</p>
+                  <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 15, color }}>{value}</p>
                 </div>
               ))}
             </div>
           </div>
 
           {/* ── QUICK STATS ───────────────────────────────────────────────── */}
-          <div className="grid grid-cols-4 gap-2 mb-5">
+          <div className="flex items-center flex-wrap mb-5" style={{ gap: 10, fontSize: 13, color: "#43433F" }}>
             {[
-              { label:"Delivered", value: s?.orders_by_status?.delivered || 0, color:"text-success",  bg:"bg-success/10" },
-              { label:"Pending",   value:(s?.orders_by_status?.new||0)+(s?.orders_by_status?.confirmed||0)+(s?.orders_by_status?.dispatched||0), color:"text-warning", bg:"bg-warning/10" },
-              { label:"Calls",     value: s?.calls_made || 0,                  color:"text-accent",   bg:"bg-accent/10"  },
-              { label:"Cancelled", value: s?.orders_by_status?.cancelled || 0, color:"text-danger",   bg:"bg-danger/10"  },
-            ].map(stat => (
-              <div key={stat.label} className={`card-premium p-3 text-center ${stat.bg} border-0`}>
-                <p className={`text-2xl font-black ${stat.color}`}>{stat.value}</p>
-                <p className="text-2xs text-muted mt-0.5">{stat.label}</p>
-              </div>
+              { label: "delivered", value: s?.orders_by_status?.delivered || 0, color: "#477054" },
+              { label: "pending", value: (s?.orders_by_status?.new || 0) + (s?.orders_by_status?.confirmed || 0) + (s?.orders_by_status?.dispatched || 0), color: "#9B742B" },
+              { label: "calls", value: s?.calls_made || 0, color: "var(--accent)" },
+              { label: "cancelled", value: s?.orders_by_status?.cancelled || 0, color: "#A64F4B" },
+            ].map((stat, i) => (
+              <span key={stat.label} className="flex items-center" style={{ gap: 6 }}>
+                {i > 0 && <span aria-hidden style={{ color: "#D7D6D0", marginRight: 4 }}>·</span>}
+                <span style={{ fontFamily: "'IBM Plex Mono', Menlo, monospace", color: "#191917" }}>{stat.value}</span> {stat.label}
+              </span>
             ))}
           </div>
 
           {/* ── TABS ──────────────────────────────────────────────────────── */}
-          <div className="flex gap-1 bg-surface-2 rounded-xl p-1 mb-4 border border-border">
+          <nav aria-label="Today" className="flex items-center mb-4" style={{ gap: 22, borderBottom: "1px solid #EBEAE6" }}>
             {(["overview","sales","expenses"] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)}
-                className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
-                  tab===t
-                    ? "bg-surface-1 text-primary shadow-sm border border-border"
-                    : "text-muted hover:text-secondary"
-                }`}>
+              <button key={t} onClick={() => setTab(t)} className="hover-dim"
+                style={{ padding: "8px 2px", marginBottom: -1, fontSize: 13, fontWeight: tab === t ? 500 : 400, color: tab === t ? "#191917" : "#63635F", borderBottom: `2px solid ${tab === t ? "var(--accent)" : "transparent"}` }}>
                 {t==="sales" ? `Sales (${(summary?.orders||[]).length})`
                  : t==="expenses" ? `Expenses (${(summary?.expenses||[]).length})`
                  : "Overview"}
               </button>
             ))}
-          </div>
+          </nav>
 
           {/* ── OVERVIEW TAB ──────────────────────────────────────────────── */}
           {tab==="overview" && (

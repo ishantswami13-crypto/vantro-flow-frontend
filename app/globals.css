@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300..500;1,9..144,300..500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300..500;1,9..144,300..500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -11,10 +11,28 @@
   --bg:          #F7F7F4;
   --surface:     #FFFFFF;
   --surface-1:   #FFFFFF;
-  --surface-2:   #F2F2EF;
-  --border:      #E5E5E1;
-  --accent:      #4F6EF7;
-  --accent-rgb:  79, 110, 247;
+  --surface-2:   #F3F2EE;
+  --border:      #EBEAE6;
+  /* User accent (lib/identity.ts writes the signed-in user's own). */
+  --accent:      #696D86;
+  --accent-rgb:  105, 109, 134;
+  /* Version 32 tokens (STARLANE_FRONTEND_HANDOFF.md §3) */
+  --ink:            #191917;
+  --ink-secondary:  #63635F;
+  --ink-tertiary:   #8A8A86;
+  --ink-body:       #43433F;
+  --line:           #EBEAE6;
+  --line-hairline:  #E5E4DF;
+  --line-strong:    #D7D6D0;
+  --line-card:      rgba(25,25,23,0.10);
+  --line-input:     rgba(25,25,23,0.12);
+  --line-button:    rgba(25,25,23,0.14);
+  --line-emphasis:  rgba(25,25,23,0.16);
+  --line-row:       rgba(25,25,23,0.06);
+  --positive:       #477054;
+  --warning:        #9B742B;
+  --critical:       #A64F4B;
+  --ease:           cubic-bezier(0.2,0.8,0.2,1);
   --cta:         #FF6B35;
   --cta-rgb:     255, 107, 53;
   --success-rgb: 16, 217, 138;
@@ -75,8 +93,8 @@
 
   body {
     background-color: var(--bg);
-    color: #171717;
-    font-family: 'Geist', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    color: #191917;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
     font-size: 14px;
     font-weight: 400;
     line-height: 1.6;
@@ -86,10 +104,12 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
   }
+  a:hover { color: var(--accent); }
+  ::placeholder { color: #8A8A86; }
 
   ::selection {
     background: rgba(var(--accent-rgb), 0.18);
@@ -412,12 +432,6 @@
 .card-in:nth-child(5) { animation-delay: 280ms; }
 .card-in:nth-child(6) { animation-delay: 350ms; }
 
-@keyframes pulseDot {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.3; }
-}
-.pulse-dot { animation: pulseDot 2.4s ease-in-out infinite; }
-
 @keyframes drawerIn {
   from { opacity: 0; transform: translateX(16px); }
   to   { opacity: 1; transform: translateX(0); }
@@ -427,7 +441,7 @@
   to   { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .fade-once, .card-in, .pulse-dot { animation: none; }
+  .fade-once, .card-in { animation: none; }
 }
 
 /* Global base transitions (handoff §3 Motion) — applied to every interactive
@@ -445,12 +459,12 @@ a, button, input, textarea {
 /* Canonical light-surface row hover (handoff §4) — used by every list/table
    row except the dark sidebar, which uses .hover-fade instead. */
 .row-hover { transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1); }
-.row-hover:hover { background: #F5F4F1; }
+.row-hover:hover { background: #F5F4F1 !important; }
 .row-chevron { transition: transform 120ms cubic-bezier(0.2,0.8,0.2,1), color 120ms cubic-bezier(0.2,0.8,0.2,1); color: #8A8A86; }
 .row-hover:hover .row-chevron { transform: translateX(2px); color: #343431; }
 
 .hover-fade { transition: color 120ms cubic-bezier(0.2,0.8,0.2,1), background-color 120ms cubic-bezier(0.2,0.8,0.2,1); }
-.hover-fade:hover { color: #F5F4F0; background: rgba(255,255,255,0.08); }
+.hover-fade:hover { color: #F5F4F0 !important; background: rgba(255,255,255,0.08); }
 .hover-dim { transition: opacity 120ms cubic-bezier(0.2,0.8,0.2,1); }
 .hover-dim:hover { opacity: 0.72; }
 .hover-lift { transition: transform 120ms cubic-bezier(0.2,0.8,0.2,1), box-shadow 180ms cubic-bezier(0.2,0.8,0.2,1), border-color 120ms cubic-bezier(0.2,0.8,0.2,1); }
@@ -464,17 +478,17 @@ a, button, input, textarea {
   background: #191917; color: #F7F7F4; border: none; border-radius: 6px;
   transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
 }
-.btn-primary-v32:hover { background: #2A2A2E; }
+.btn-primary-v32:hover { background: #2A2A2E !important; }
 .btn-primary-sidebar {
   background: #1B1B18; color: #F5F4F0; border: 1px solid rgba(255,255,255,0.14); border-radius: 7px;
   transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
 }
-.btn-primary-sidebar:hover { background: #2A2A2E; }
+.btn-primary-sidebar:hover { background: #2A2A2E !important; }
 .btn-secondary-v32 {
   background: none; border: 1px solid rgba(25,25,23,0.14); color: #43433F; border-radius: 6px;
   transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), border-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
 }
-.btn-secondary-v32:hover { background: rgba(25,25,23,0.04); border-color: rgba(25,25,23,0.22); }
+.btn-secondary-v32:hover { background: rgba(25,25,23,0.04) !important; border-color: rgba(25,25,23,0.22) !important; }
 button:active { transform: scale(0.97); }
 
 /* Type scale (handoff §3) */
@@ -566,7 +580,7 @@ button:active { transform: scale(0.97); }
   border-radius: 8px !important;
   box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
   padding: 8px 10px !important;
-  font-family: 'Geist', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
 }
 .recharts-default-tooltip .recharts-tooltip-label {
   font-size: 11px !important;
@@ -698,48 +712,37 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ============================================================
-   EDITORIAL TYPE + USER IDENTITY
-   Page titles set in the Fraunces display serif (light optical size) over
-   a Geist UI sans; the signed-in user's gradient (--id-* on :root, see
-   lib/identity.ts) tints selection and identity marks across the app.
+   VERSION 32 TYPE + USER ACCENT
+   Plus Jakarta Sans for the UI, Fraunces for titles and editorial
+   moments, IBM Plex Mono for every number. The signed-in user's accent
+   (--accent, see lib/identity.ts) is used sparingly: the active subnav
+   underline, link hover, selected-row tints and their avatar.
    ============================================================ */
-body {
-  letter-spacing: -0.006em;
-  font-feature-settings: "ss01", "cv11";
-}
-
 main h1 {
   font-family: 'Fraunces', Georgia, serif !important;
-  font-weight: 380 !important;
-  font-variation-settings: "opsz" 72;
-  letter-spacing: -0.022em !important;
-  line-height: 1.12;
+  font-weight: 400 !important;
+  font-size: 26px;
+  letter-spacing: -0.2px !important;
+  line-height: 1.2;
+  color: #191917;
 }
 
+/* Section titles inside pages read quiet (Fraunces 17px, the design's
+   "What changed" / "Needs you" headings), never bold sans. */
 main h2 {
-  letter-spacing: -0.012em;
+  letter-spacing: -0.005em;
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--id-b, #8E97DA) 28%, transparent);
-  color: #171717;
+  background: rgba(var(--accent-rgb), 0.18);
+  color: #191917;
 }
 
-.id-gradient { background: var(--id-gradient, linear-gradient(135deg, #C3C8F0, #8E97DA, #5C5F9E)); }
-.id-gradient-text {
-  background: var(--id-gradient-h, linear-gradient(90deg, #C3C8F0, #8E97DA, #5C5F9E));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+.id-gradient { background: var(--accent); }
+.id-gradient-text { color: var(--accent); }
 
-/* Faint wash of the user's colour across the top of every page. */
-.id-wash {
-  background-image: radial-gradient(1100px 300px at 88% -120px, color-mix(in srgb, var(--id-b, transparent) 16%, transparent), transparent 72%),
-                    radial-gradient(900px 260px at 10% -140px, color-mix(in srgb, var(--id-a, transparent) 14%, transparent), transparent 70%);
-  background-repeat: no-repeat;
-  background-attachment: local;
-}
+/* Kept as a no-op: the canvas is flat #F7F7F4 in Version 32. */
+.id-wash { background-image: none; }
 
 /* Reduced motion, everywhere: people who ask the OS for less motion get none,
    including the width-animated progress and score bars and Tailwind's
@@ -752,3 +755,202 @@ main h2 {
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+   VERSION 32 SHELL — main content wrapper (WRAP_OPEN, handoff §6):
+   padding 32px 48px 32px 40px at desktop; 16px gutters on phones.
+   ============================================================ */
+.v32-main { background: #F7F7F4; }
+.v32-wrap {
+  display: flex; flex-direction: column; gap: 20px;
+  padding: 20px 16px 40px;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+@media (min-width: 1024px) {
+  .v32-wrap { padding: 32px 48px 32px 40px; }
+}
+/* Pages that already lay out their own vertical rhythm keep it: the
+   wrapper's gap only applies between top-level blocks. */
+.v32-wrap > * { min-width: 0; }
+
+.lens-backdrop { animation: backdropIn 200ms cubic-bezier(0.2,0.8,0.2,1) both; }
+.lens-drawer { animation: drawerIn 220ms cubic-bezier(0.2,0.8,0.2,1) both; }
+
+/* Keyboard focus (handoff §8 recommendation): the user's accent ring. */
+a:focus-visible, button:focus-visible, [role="button"]:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+button:disabled { cursor: default; }
+
+/* Scan greeting: 38px Fraunces on desktop (V32), smaller on phones. */
+.scan-greeting { font-size: 28px; }
+@media (min-width: 1024px) { .scan-greeting { font-size: 38px; } }
+
+/* Watch rows: row actions stay quiet until the row is hovered or focused. */
+@media (hover: hover) {
+  .watch-row-actions { opacity: 0; transition: opacity 120ms ease; }
+  .group:hover .watch-row-actions, .group:focus-within .watch-row-actions { opacity: 1; }
+}
+
+/* Simulate assumption pills are real <select>s drawn as V32 pills. */
+.sim-pill { appearance: none; -webkit-appearance: none; cursor: pointer; box-shadow: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2363635F' stroke-width='2'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important; background-position: right 12px center !important; }
+
+/* Watch table (V32 watch_row 2.2fr 2fr 1fr 1fr); stacks on phones. */
+.watch-grid { display: grid; grid-template-columns: 1fr; row-gap: 4px; }
+.watch-head { display: none; }
+@media (min-width: 768px) {
+  .watch-grid { grid-template-columns: 2.2fr 2fr 1fr 1fr; row-gap: 0; }
+  .watch-head { display: grid; }
+}
+
+/* ============================================================
+   V32 PREMIUM DETAILS — small, quiet motion and finish.
+   Everything here is decorative: it never carries information the
+   static page doesn't already show, and all of it switches off under
+   prefers-reduced-motion.
+   ============================================================ */
+:root {
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Paper grain: a barely-there texture so the off-white reads as paper,
+   not a flat screen fill. */
+.v32-main {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Route entry: a soft rise with a hint of focus-pull. */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(6px); filter: blur(2px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
+/* Fill "backwards" only: once done, no filter/transform is left on the
+   wrapper, which would otherwise trap the fixed-position drawers inside it. */
+.page-in { animation: pageIn 420ms var(--ease-out-soft) backwards; }
+
+/* Rows arrive one after another (delay set inline per index). */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+.rise-in { animation: riseIn 460ms var(--ease-out-soft) both; }
+
+/* Figures settle into focus the first time they render. */
+@keyframes figureIn {
+  from { opacity: 0; filter: blur(3px); letter-spacing: 0.04em; }
+  to   { opacity: 1; filter: blur(0); letter-spacing: normal; }
+}
+.figure-in { animation: figureIn 620ms var(--ease-out-soft) both; display: inline-block; }
+
+/* Hairline rules draw in from the left. */
+@keyframes ruleDraw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.rule-draw { height: 1px; background: #EBEAE6; transform-origin: left center; animation: ruleDraw 900ms var(--ease-out-soft) 120ms both; }
+
+/* Thinking: three small dots, each lifting in turn. */
+.thinking-dots { display: inline-flex; gap: 4px; align-items: center; }
+.thinking-dots > span {
+  width: 4px; height: 4px; border-radius: 50%; background: currentColor;
+  animation: thinkDot 1.2s ease-in-out infinite;
+}
+.thinking-dots > span:nth-child(2) { animation-delay: 0.15s; }
+.thinking-dots > span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes thinkDot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+  30%           { transform: translateY(-3px); opacity: 1; }
+}
+
+/* Warmer, slower skeleton shimmer on paper. */
+.v32-wrap .skeleton {
+  background: linear-gradient(90deg, #EFEEEA 0%, #F7F6F3 40%, #EFEEEA 80%);
+  background-size: 240% 100%;
+  animation: shimmer 2.2s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* Primary buttons: a single light sheen passes on hover. */
+.btn-primary-v32, .btn-primary-sidebar { position: relative; overflow: hidden; isolation: isolate; }
+.btn-primary-v32::after, .btn-primary-sidebar::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.14) 50%, transparent 70%);
+  transform: translateX(-120%);
+}
+.btn-primary-v32:hover::after, .btn-primary-sidebar:hover::after {
+  transform: translateX(120%); transition: transform 700ms var(--ease-out-soft);
+}
+
+/* Cards: a soft light follows the cursor (position set by the layout). */
+.hover-lift { position: relative; }
+.hover-lift::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(var(--accent-rgb), 0.07), transparent 70%);
+  transition: opacity 220ms ease;
+}
+.hover-lift:hover::before { opacity: 1; }
+
+/* Composer: a quiet accent halo when focused. */
+.composer-glow { transition: border-color 200ms ease, box-shadow 260ms var(--ease-out-soft); }
+.composer-glow:focus-within {
+  border-color: rgba(var(--accent-rgb), 0.45) !important;
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.08), 0 10px 30px -12px rgba(25,25,23,0.18);
+}
+
+/* Command palette and pop-overs scale in from 98%. */
+/* Individual translate/scale so it composes with any inline transform
+   (the palette centres itself with translateX(-50%)). */
+@keyframes popIn {
+  from { opacity: 0; translate: 0 -4px; scale: 0.98; }
+  to   { opacity: 1; translate: 0 0; scale: 1; }
+}
+.pop-in { animation: popIn 200ms var(--ease-out-soft) both; transform-origin: top center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-in, .rise-in, .figure-in, .rule-draw, .pop-in,
+  .thinking-dots > span, .v32-wrap .skeleton {
+    animation: none !important;
+  }
+  .figure-in, .page-in { filter: none; }
+  .btn-primary-v32:hover::after, .btn-primary-sidebar:hover::after { transition: none; transform: translateX(-120%); }
+}
+
+/* Scan composer: one rounded box like a chat app, a plus menu on the left
+   and the send button on the right. */
+.scan-composer {
+  width: 100%; box-sizing: border-box; background: #FFFFFF;
+  border: 1px solid rgba(25,25,23,0.12); border-radius: 26px;
+  box-shadow: 0 1px 2px rgba(25,25,23,0.04), 0 12px 32px -18px rgba(25,25,23,0.18);
+}
+.scan-input {
+  display: block; width: 100%; box-sizing: border-box; min-height: 56px; max-height: 200px;
+  padding: 18px 20px 6px 20px; border: none; outline: none; box-shadow: none; resize: none; background: none;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15.5px; line-height: 1.5; color: #191917;
+}
+.scan-input::placeholder { color: #8A8A86; }
+.scan-round {
+  width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.scan-plus { background: transparent; border: 1px solid rgba(25,25,23,0.14); color: #43433F; }
+.scan-plus:hover, .scan-plus[aria-expanded="true"] { background: rgba(25,25,23,0.05); border-color: rgba(25,25,23,0.22); }
+.scan-send { background: #191917; border: none; color: #F7F7F4; }
+.scan-send:hover:not(:disabled) { background: #2A2A2E; }
+.scan-send:disabled { opacity: 0.25; cursor: default; }
+.scan-menu {
+  position: absolute; left: 0; top: calc(100% + 8px); z-index: 30; width: 260px; padding: 6px;
+  background: #FFFFFF; border: 1px solid #E5E4DF; border-radius: 14px; box-shadow: 0 12px 32px -8px rgba(25,25,23,0.18);
+}
+.scan-menu-item {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 10px; border-radius: 9px; background: none; border: none; cursor: pointer;
+}
+.scan-menu-item:hover, .scan-menu-item:focus-visible { background: #F5F4F1; outline: none; }
+.scan-menu-icon {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  background: #F3F2EE; color: #43433F;
+}
+.scan-chip {
+  padding: 7px 14px; border: 1px solid rgba(25,25,23,0.10); border-radius: 999px; background: rgba(255,255,255,0.7);
+  font-size: 12.5px; color: #43433F; cursor: pointer;
+}
+.scan-chip:hover { background: #FFFFFF; border-color: rgba(25,25,23,0.18); color: #191917; }
