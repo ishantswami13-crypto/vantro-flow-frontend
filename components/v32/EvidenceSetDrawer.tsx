@@ -23,7 +23,7 @@ function Row({ label, value, mono, note }: { label: string; value: React.ReactNo
     <div style={{ padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>
       <div className="flex items-baseline justify-between gap-4">
         <span style={{ fontSize: 12.5, color: "#63635F" }}>{label}</span>
-        <span className="text-right" style={{ fontSize: 13, color: "#191917", fontFamily: mono ? "'IBM Plex Mono', monospace" : undefined }}>{value}</span>
+        <span className="text-right" style={{ fontSize: 13, color: "#191917", fontFamily: mono ? "'Plus Jakarta Sans', system-ui, sans-serif" : undefined }}>{value}</span>
       </div>
       {note && <div style={{ fontSize: 11.5, color: "#8A8A86", marginTop: 2 }}>{note}</div>}
     </div>
@@ -33,7 +33,7 @@ function Row({ label, value, mono, note }: { label: string; value: React.ReactNo
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 22 }}>
-      <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 8 }}>{label}</div>
       {children}
     </div>
   );

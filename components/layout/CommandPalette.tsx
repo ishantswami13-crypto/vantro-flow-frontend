@@ -141,14 +141,14 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
             aria-controls="command-palette-results"
             aria-activedescendant={flat[activeIndex] ? `command-palette-row-${activeIndex}` : undefined}
           />
-          <kbd style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>Esc</kbd>
+          <kbd style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>Esc</kbd>
         </div>
         <div ref={listRef} id="command-palette-results" role="listbox" className="overflow-y-auto" style={{ padding: "4px 8px 8px" }}>
           {flat.length === 0 ? (
             <p style={{ fontSize: 13, color: "#8A8A86", padding: "28px 0", textAlign: "center" }}>No results</p>
           ) : groups.map(g => (
             <div key={g.label}>
-              <div style={{ padding: "10px 14px 4px 14px", fontSize: 10.5, letterSpacing: "1px", textTransform: "uppercase", color: "#8A8A86" }}>{g.label}</div>
+              <div style={{ padding: "10px 14px 4px 14px", fontSize: 10.5, letterSpacing: 0, color: "#8A8A86" }}>{g.label}</div>
               {g.rows.map(r => {
                 index += 1;
                 const i = index;
@@ -170,7 +170,7 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
                     {r.context && <span className="truncate flex-1" style={{ fontSize: 12, color: "#8A8A86" }}>{r.context}</span>}
                     {!r.context && <span className="flex-1" />}
                     {r.shortcut
-                      ? <kbd style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>{r.shortcut}</kbd>
+                      ? <kbd style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>{r.shortcut}</kbd>
                       : <Chevron size={13} />}
                   </button>
                 );

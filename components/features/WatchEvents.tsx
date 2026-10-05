@@ -72,8 +72,8 @@ export default function WatchEvents() {
                     {e.evidence.facts.map((f, j) => (
                       <div key={j} style={{ display: "contents" }}>
                         <dt>{f.label}</dt>
-                        <dd style={{ margin: 0, fontFamily: "'IBM Plex Mono', monospace" }}>{show(f.value, f.unit)}</dd>
-                        <dd style={{ margin: 0, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: "uppercase", color: "#63635F" }}>{f.kind}</dd>
+                        <dd style={{ margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{show(f.value, f.unit)}</dd>
+                        <dd style={{ margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: "#63635F" }}>{f.kind}</dd>
                       </div>
                     ))}
                   </dl>

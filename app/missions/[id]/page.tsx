@@ -58,7 +58,7 @@ export default function MissionPage() {
           <>
             <div>
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: "uppercase", color: GRAPHITE }}>Mission · Collections</span>
+                <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: GRAPHITE }}>Mission · Collections</span>
                 <span style={{ fontSize: 12, fontWeight: 600, color, background: "#F1F0EC", borderRadius: 999, padding: "3px 9px" }}>{label}</span>
               </div>
               <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 30, fontWeight: 400, color: "#191917", margin: "10px 0 0" }}>{m.title}</h1>
@@ -72,7 +72,7 @@ export default function MissionPage() {
                     <h2 style={h2}>Progress</h2>
                     <div style={{ ...panel, padding: "14px 16px", display: "grid", gap: 10 }}>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 20 }}>{inr(p.collected)}</span>
+                        <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 20 }}>{inr(p.collected)}</span>
                         <span style={{ color: GRAPHITE }}>of {inr(p.targetAmount)} collected</span>
                         {m.status === "active" && p.daysLeft != null ? <span style={{ marginLeft: "auto", fontSize: 13, color: GRAPHITE }}>{p.daysLeft} days left</span> : null}
                       </div>
@@ -82,7 +82,7 @@ export default function MissionPage() {
                       {p.byInvoice?.map((i) => (
                         <div key={i.id} style={{ display: "flex", gap: 10, fontSize: 13.5, borderTop: `1px solid ${RULE}`, paddingTop: 8 }}>
                           <span style={{ flex: 1 }}>{i.customer}{i.invoiceNumber ? ` · ${i.invoiceNumber}` : ""}{i.disputed ? " · disputed" : ""}</span>
-                          <span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{i.status === "paid_or_removed" ? "Paid" : `${inr(i.now)} left`}</span>
+                          <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{i.status === "paid_or_removed" ? "Paid" : `${inr(i.now)} left`}</span>
                         </div>
                       ))}
                       {p.evidence ? <p style={{ margin: 0, fontSize: 12.5, color: GRAPHITE }}>{p.evidence.summary}{p.evidence.method ? ` ${p.evidence.method}` : ""}</p> : null}
@@ -95,7 +95,7 @@ export default function MissionPage() {
                       {m.targetInvoices.map((i, n) => (
                         <div key={i.id} style={{ display: "flex", gap: 10, padding: "10px 16px", borderTop: n ? `1px solid ${RULE}` : 0, fontSize: 13.5 }}>
                           <span style={{ flex: 1 }}>{i.customer} · {i.invoiceNumber || "No number"} · {i.daysOverdue} days overdue</span>
-                          <span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{inr(i.amount)}</span>
+                          <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{inr(i.amount)}</span>
                         </div>
                       ))}
                     </div>

@@ -63,7 +63,7 @@ function ConnectionSection({ connections }: { connections: DataConnection[] }) {
             {c.last_sync_error && <div style={{ fontSize: 12, color: "#A64F4B", marginTop: 2 }}>{c.last_sync_error}</div>}
           </div>
           <div className="flex items-center shrink-0" style={{ gap: 16 }}>
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#43433F" }}>{timeSince(c.last_sync_at)}</span>
+            <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "#43433F" }}>{timeSince(c.last_sync_at)}</span>
             <StatusDot label={String(c.status).toUpperCase() === "CONNECTED" ? "Connected" : "Not connected"} color={String(c.status).toUpperCase() === "CONNECTED" ? "#477054" : "rgba(25,25,23,0.25)"} />
           </div>
         </div>
@@ -81,7 +81,7 @@ function Stat({ value, label, tone }: { value: React.ReactNode; label: string; t
   return (
     <div>
       <div style={{ fontSize: 12, color: "#63635F", marginBottom: 6 }}>{label}</div>
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 22, color, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 22, color, lineHeight: 1 }}>{value}</div>
     </div>
   );
 }
@@ -115,7 +115,7 @@ function OutcomesSection({ stats }: { stats: CortexHealthResponse["stats"] }) {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 8 }}>{children}</div>;
+  return <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 8 }}>{children}</div>;
 }
 
 function PolicyRows() {
@@ -123,7 +123,7 @@ function PolicyRows() {
     <div>
       {POLICY_LEVELS.map((p) => (
         <div key={p.level} className="flex items-start flex-wrap md:flex-nowrap" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid #EBEAE6" }}>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8A8A86", width: 20, paddingTop: 1, flexShrink: 0 }}>{p.level}</span>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: "#8A8A86", width: 20, paddingTop: 1, flexShrink: 0 }}>{p.level}</span>
           <div style={{ width: 110, flexShrink: 0, fontSize: 13, color: "#191917" }}>{p.name}</div>
           <div style={{ flex: 1, minWidth: 180, fontSize: 12.5, color: "#63635F" }}>{p.description}</div>
           <div style={{ width: 210, flexShrink: 0 }}>
@@ -221,7 +221,7 @@ function UsersTab() {
         <SectionLabel>Owner</SectionLabel>
         <div className="flex items-center justify-between" style={{ gap: 14, padding: "14px 10px", borderBottom: "1px solid #EBEAE6" }}>
           <div className="flex items-center" style={{ gap: 12 }}>
-            <Lettermark letter={u?.business_name || u?.email || "O"} color="var(--accent)" />
+            <Lettermark letter={u?.business_name || u?.email || "O"} />
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: "#191917" }}>{u?.business_name || "Owner"}</div>
               <div style={{ fontSize: 12, color: "#8A8A86" }}>{u?.email}</div>

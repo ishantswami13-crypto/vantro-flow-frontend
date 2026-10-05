@@ -274,7 +274,7 @@ function DiscoveryRow({
     >
       <IconTile tone={signal.status === "ACTIVE" ? "critical" : signal.status === "UPDATED" ? "warning" : undefined}><IconDiscover size={16} /></IconTile>
       <div className="min-w-0 flex-1">
-        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "#63635F", marginBottom: 4, textTransform: "uppercase" }}>
+        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "#63635F", marginBottom: 4 }}>
           {(signal.related_entity_type || signal.event_type || "Signal").replace(/_/g, " ")}
         </div>
         <div style={{ fontSize: 15.5, fontWeight: 600, color: "#191917", marginBottom: 4 }}>
@@ -306,7 +306,7 @@ function OpportunityRow({
     <div className="row-hover flex items-start" style={{ gap: 14, padding: "16px 10px", borderBottom: "1px solid #EBEAE6", borderRadius: 6 }}>
       <IconTile tone="positive"><IconSparkle size={16} /></IconTile>
       <div className="min-w-0 flex-1">
-        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "#63635F", marginBottom: 4, textTransform: "uppercase" }}>
+        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "#63635F", marginBottom: 4 }}>
           Opportunity · {opportunity.affectedEntities.supplierName}
         </div>
         <div style={{ fontSize: 15.5, fontWeight: 600, color: "#191917", marginBottom: 4 }}>{opportunity.opportunity}</div>

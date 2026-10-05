@@ -112,7 +112,7 @@ function PreparedCardView({
 
   return (
     <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 18 }}>
-      <div style={{ fontSize: 11, letterSpacing: "1px", color: "var(--accent)", marginBottom: 8, textTransform: "uppercase" }}>
+      <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--accent)", marginBottom: 8 }}>
         {card.trigger.replace(/_/g, " ")}{when ? `, ${when}` : ""}
       </div>
       <div style={{ fontSize: 14.5, color: "#191917", marginBottom: 10, lineHeight: 1.5 }}>{card.summary}</div>

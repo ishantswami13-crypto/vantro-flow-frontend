@@ -60,13 +60,13 @@ export default function ScanLookup() {
           {hits.customers.map((c, i) => (
             <button key={c.key} onClick={() => void openCustomer(c.key)} style={{ all: "unset", boxSizing: "border-box", width: "100%", display: "flex", gap: 12, padding: "10px 14px", borderTop: i ? `1px solid ${RULE}` : 0, cursor: "pointer" }}>
               <span style={{ flex: 1 }}><strong style={{ fontWeight: 500 }}>{c.name}</strong> <span style={{ color: GRAPHITE, fontSize: 13 }}>· {c.openCount} open · oldest {c.oldestDays} days</span></span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{inr(c.openTotal)}</span>
+              <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{inr(c.openTotal)}</span>
             </button>
           ))}
           {hits.invoices.map((v) => (
             <button key={v.id} onClick={() => void openInvoice(v.id)} style={{ all: "unset", boxSizing: "border-box", width: "100%", display: "flex", gap: 12, padding: "10px 14px", borderTop: `1px solid ${RULE}`, cursor: "pointer" }}>
               <span style={{ flex: 1 }}><strong style={{ fontWeight: 500 }}>{v.invoiceNumber}</strong> <span style={{ color: GRAPHITE, fontSize: 13 }}>· {v.customer} · {v.daysOverdue > 0 ? `${v.daysOverdue} days overdue` : "not yet due"}</span></span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{inr(v.amount)}</span>
+              <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{inr(v.amount)}</span>
             </button>
           ))}
         </div>
@@ -81,8 +81,8 @@ export default function ScanLookup() {
             {(invoice ? invoice.evidence : scan.evidence).facts.map((f, i) => (
               <div key={i} style={{ display: "contents" }}>
                 <dt>{f.label}</dt>
-                <dd style={{ margin: 0, fontFamily: "'IBM Plex Mono', monospace" }}>{show(f.value, f.unit)}</dd>
-                <dd style={{ margin: 0, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, textTransform: "uppercase", color: GRAPHITE }}>{f.kind}</dd>
+                <dd style={{ margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{show(f.value, f.unit)}</dd>
+                <dd style={{ margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: GRAPHITE }}>{f.kind}</dd>
               </div>
             ))}
           </dl>

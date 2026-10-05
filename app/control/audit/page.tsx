@@ -37,7 +37,7 @@ function AuditHeaderRow() {
       style={{
         display: "grid", gridTemplateColumns: GRID_COLS, gap: 12, padding: "10px 4px",
         borderBottom: "1px solid #EBEAE6", fontSize: 11, fontWeight: 600, color: "#8A8A86",
-        textTransform: "uppercase", letterSpacing: "0.06em",
+        letterSpacing: 0,
       }}
     >
       <span>Time</span>

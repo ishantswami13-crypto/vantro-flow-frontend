@@ -121,7 +121,7 @@ function SimulatePageInner() {
           {/* Assumptions: the tenant's own open invoices, and the two
               hypotheticals scenarioEngine.js really supports. */}
           <div style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 18 }}>
-            <div style={{ fontSize: 11, letterSpacing: "1px", color: "#63635F", marginBottom: 12 }}>ASSUMPTIONS</div>
+            <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 12 }}>Assumptions</div>
             {invoicesLoading ? (
               <p style={{ fontSize: 13, color: "#63635F" }}>Loading your open invoices…</p>
             ) : invoicesError ? (
@@ -178,7 +178,7 @@ function SimulatePageInner() {
 
           {result && (
             <>
-              <div style={{ fontSize: 11, letterSpacing: "1px", color: "#63635F" }}>DOWNSTREAM EFFECTS · 30-DAY HORIZON</div>
+              <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F" }}>DOWNSTREAM EFFECTS · 30-DAY HORIZON</div>
               <div className="grid gap-4 md:grid-cols-3">
                 <SimCard label="Projected overdue" value={fmt(result.simulated.projected_state.projectedTotalOverdue)} color="#191917" note={`Today ${fmt(result.baseline.totalOverdue)} overdue of ${fmt(result.baseline.totalOpenReceivables)} open.`} />
                 <SimCard label="Cash" value={fmt(result.simulated.projected_state.cashImpactDelta)} color={tone(result.simulated.projected_state.cashImpactDelta)} note={result.simulated.projected_state.narrative} />
@@ -199,7 +199,7 @@ function SimCard({ label, value, color, note }: { label: string; value: string; 
   return (
     <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 18 }}>
       <div style={{ fontSize: 12, color: "#63635F", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 22, color, marginBottom: 6 }}>{value}</div>
+      <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 22, color, marginBottom: 6 }}>{value}</div>
       <div style={{ fontSize: 12, color: "#63635F", lineHeight: 1.5 }}>{note}</div>
     </div>
   );

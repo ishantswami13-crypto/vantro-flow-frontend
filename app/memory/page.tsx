@@ -244,7 +244,7 @@ export default function MemoryPage() {
         )}
 
         {!isLoading && !isError && tab === "replay" && entities.length > 0 && replaySequence.length > 0 && (
-          <div style={{ fontSize: 11, letterSpacing: "1px", color: "#63635F", textTransform: "uppercase" }}>
+          <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F" }}>
             Replay · {entities.find((x) => x.entity_id === activeReplayEntity)?.entity_type || "record"}
           </div>
         )}

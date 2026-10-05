@@ -13,12 +13,12 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { osApi } from "@/lib/os";
 import { useLoad, errorText } from "@/components/os/shared";
 import { Subnav, Lettermark, StatusDot, Sep, Button, EmptyLine, ErrorBanner, SkeletonRows, ago } from "@/components/v32/ui";
-import { agentColor, agentStatus, PERMISSION_LABEL } from "@/components/agents/shared";
+import { agentStatus, PERMISSION_LABEL } from "@/components/agents/shared";
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 6 }}>{label}</div>
       {children}
     </div>
   );
@@ -39,7 +39,7 @@ function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between" style={{ gap: 12, padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>
       <span style={{ fontSize: 12.5, color: "#63635F" }}>{label}</span>
-      <span style={{ fontSize: 12.5, color: "#191917", fontFamily: "'IBM Plex Mono', monospace", textAlign: "right" }}>{value}</span>
+      <span style={{ fontSize: 12.5, color: "#191917", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", textAlign: "right" }}>{value}</span>
     </div>
   );
 }
@@ -69,9 +69,9 @@ export default function AgentDetail() {
           <>
             <div className="fade-once flex items-start justify-between flex-wrap" style={{ gap: 12 }}>
               <div className="flex items-center" style={{ gap: 12 }}>
-                <Lettermark letter={a.name} color={agentColor(a.key)} />
+                <Lettermark letter={a.name} size={44} />
                 <div>
-                  <h1 style={{ margin: "0 0 2px", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 21, color: "#191917" }}>{a.name}</h1>
+                  <h1 style={{ margin: "0 0 2px", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, letterSpacing: "-0.01em", color: "#191917" }}>{a.name}</h1>
                   <div className="flex items-center flex-wrap" style={{ gap: 6, fontSize: 12.5, color: "#63635F" }}>
                     {a.model} <Sep /> <StatusDot label={st.label} color={st.color} />
                   </div>
@@ -115,13 +115,13 @@ export default function AgentDetail() {
               </div>
               <div className="flex flex-col" style={{ flex: 1, maxWidth: 300, minWidth: 0, gap: 20 }}>
                 <div>
-                  <div style={{ fontSize: 10.5, letterSpacing: "1px", color: "#8A8A86", marginBottom: 6 }}>ACTIVITY</div>
+                  <div style={{ fontSize: 10.5, letterSpacing: 0, color: "#8A8A86", marginBottom: 6 }}>Activity</div>
                   <Fact label="Runs" value={String(a.runs)} />
                   <Fact label="Last run" value={a.lastRunAt ? ago(a.lastRunAt) : "Never"} />
                   {a.budget && <Fact label="Budget" value={a.budget} />}
                 </div>
                 <div>
-                  <div style={{ fontSize: 10.5, letterSpacing: "1px", color: "#8A8A86", marginBottom: 6 }}>APPROVAL</div>
+                  <div style={{ fontSize: 10.5, letterSpacing: 0, color: "#8A8A86", marginBottom: 6 }}>Approval</div>
                   <div style={{ fontSize: 12.5, color: "#43433F", lineHeight: 1.6 }}>Nothing leaves Starlane without a person approving it. Approvals wait on Control.</div>
                 </div>
               </div>

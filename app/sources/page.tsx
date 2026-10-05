@@ -78,8 +78,8 @@ const COLS = "grid-cols-[16px_1fr_auto] md:grid-cols-[16px_160px_130px_110px_1fr
 
 function TableHeader() {
   return (
-    <div className={`hidden md:grid ${COLS} items-center`} style={{ gap: 14, padding: "8px 12px", fontSize: 11, letterSpacing: "0.5px", color: FAINT }}>
-      <span /><span>SOURCE</span><span>STATUS</span><span>LAST SYNC</span><span>NOTE</span><span />
+    <div className={`hidden md:grid ${COLS} items-center`} style={{ gap: 14, padding: "8px 12px", fontSize: 11, letterSpacing: 0, color: FAINT }}>
+      <span /><span>Source</span><span>Status</span><span>Last sync</span><span>Note</span><span />
     </div>
   );
 }
@@ -99,7 +99,7 @@ function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
         <div className="md:hidden" style={{ marginTop: 4 }}><StatusDot label={st.label} color={st.color} /></div>
       </div>
       <div className="hidden md:block"><StatusDot label={st.label} color={st.color} /></div>
-      <div className="hidden md:block" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#43433F" }}>{timeAgo(c.state.lastSyncAt) || "—"}</div>
+      <div className="hidden md:block" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "#43433F" }}>{timeAgo(c.state.lastSyncAt) || "—"}</div>
       <div className="hidden md:block min-w-0 truncate" style={{ fontSize: 12, color: SOFT }} title={cap ? `${noteFor(c)}. ${cap}` : noteFor(c)}>{noteFor(c)}</div>
       <div className="flex items-center justify-end" style={{ gap: 12 }} onClick={(e) => e.stopPropagation()}>
         {action}
@@ -213,7 +213,7 @@ export default function SourcesPage() {
                 )}
                 {world.length > 0 && (
                   <>
-                    <p style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: FAINT, margin: "24px 12px 4px" }}>External signals</p>
+                    <p style={{ fontSize: 11, letterSpacing: 0, color: FAINT, margin: "24px 12px 4px" }}>External signals</p>
                     {world.map((c) => <Row key={c.id} c={c} />)}
                   </>
                 )}
@@ -234,7 +234,7 @@ export default function SourcesPage() {
                   )}
                 </div>
               ))}
-              <p style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: FAINT, margin: "24px 12px 4px" }}>Not built yet</p>
+              <p style={{ fontSize: 11, letterSpacing: 0, color: FAINT, margin: "24px 12px 4px" }}>Not built yet</p>
               {available.filter((c) => c.availability !== "available").map((c) => <Row key={c.id} c={c} action={actionFor(c)} />)}
             </div>
           )}

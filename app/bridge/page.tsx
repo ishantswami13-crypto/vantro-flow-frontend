@@ -237,7 +237,7 @@ function IntelRow({ e, i = 0, onOpen }: { e: WatchEvent; i?: number; onOpen: () 
     <button type="button" onClick={onOpen} className="rise-in row-hover w-full text-left flex items-start" style={{ gap: 14, padding: "12px 10px", margin: "0 -10px", width: "calc(100% + 20px)", borderBottom: `1px solid ${V.divider}`, borderRadius: 6, animationDelay: `${80 + i * 55}ms` }}>
       <IconTile tone={isUrgent(e) ? "critical" : undefined}><KindIcon kind={e.kind} /></IconTile>
       <div className="flex-1 min-w-0">
-        <div style={{ fontSize: 11, letterSpacing: "0.6px", textTransform: "uppercase", color: V.secondary, marginBottom: 2 }}>{KIND_LABEL[e.kind] || "Watch"}</div>
+        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: V.secondary, marginBottom: 2 }}>{KIND_LABEL[e.kind] || "Watch"}</div>
         <div style={{ fontSize: 14.5, fontWeight: 600, color: V.ink, marginBottom: 2 }}>{e.title}</div>
         {e.detail && <div style={{ fontSize: 13, color: V.body, marginBottom: 3 }}>{e.detail}</div>}
         <div className="flex items-center" style={{ gap: 10 }}>
