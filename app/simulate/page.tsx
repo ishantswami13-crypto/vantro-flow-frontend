@@ -109,7 +109,7 @@ function SimulatePageInner() {
 
   return (
     <DashboardLayout pageTitle="Simulate">
-      <PageHeader title="Simulate" />
+      <PageHeader title="Simulate" subtitle="Try a what-if against your own open invoices" />
       <Subnav
         active={tab}
         onChange={(k) => setTab(k as "new" | "replays")}

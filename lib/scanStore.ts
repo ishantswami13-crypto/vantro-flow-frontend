@@ -1,51 +1,100 @@
-// Scan has no backend-side query/thread persistence — POST /api/ai-chat
-// (server.js:6259) is stateless per call and takes only the message array
-// the caller sends; there is no queryId, no saved-query table, no
-// conversation-history endpoint. So /scan/:queryId can't be a durable,
-// shareable, backend-backed URL yet. This store gives it a real (if
-// session-scoped) identity via sessionStorage — good enough for the
-// composer -> result navigation and for follow-up turns within one tab,
-// but a refreshed/deep-linked queryId with nothing in sessionStorage must
-// show an honest "this result isn't available anymore" state rather than
-// silently 404ing or fabricating content. This is a real, disclosed
-// limitation of the current backend, not a design choice to hide it.
+// Scan conversations. POST /api/ai-chat (server.js) is stateless per call:
+// it takes only the message array the caller sends and has no thread or
+// history table. So conversations are kept in this browser's localStorage,
+// keyed per signed-in user so two accounts on one device never see each
+// other's questions. They survive a refresh and power the History page,
+// but they do not follow the person to another device; the UI says so.
 
 import type { ChatMessage } from "./api";
+import { getUser } from "./api";
 
-export interface ScanResult {
+export type ScanResponse = { message: string; actions: string[]; navigate: string | null; waLinks: { to: string; phone: string; message: string; url: string }[] };
+
+export interface ScanTurn {
   question: string;
-  messages: ChatMessage[];
-  response: { message: string; actions: string[]; navigate: string | null; waLinks: { to: string; phone: string; message: string; url: string }[] };
+  response: ScanResponse;
   askedAt: string;
 }
 
-const KEY_PREFIX = "vantro_scan_";
-
-export function saveScanResult(result: ScanResult): string {
-  const queryId = (typeof crypto !== "undefined" && "randomUUID" in crypto)
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  try {
-    sessionStorage.setItem(KEY_PREFIX + queryId, JSON.stringify(result));
-  } catch { /* sessionStorage unavailable — result just won't survive navigation */ }
-  return queryId;
+export interface ScanThread {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  turns: ScanTurn[];
 }
 
-export function getScanResult(queryId: string): ScanResult | null {
+const MAX_THREADS = 60;
+
+/** Fired on this tab whenever conversations change, so the sidebar's Recent list can refresh. */
+export const SCAN_THREADS_EVENT = "starlane:scan-threads";
+
+function storeKey(): string {
+  const id = getUser()?.id;
+  return `starlane_scan_threads_${id || "anon"}`;
+}
+
+function readAll(): ScanThread[] {
   try {
-    const raw = sessionStorage.getItem(KEY_PREFIX + queryId);
-    if (!raw) return null;
-    return JSON.parse(raw);
+    const raw = localStorage.getItem(storeKey());
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return null;
+    return [];
   }
 }
 
-// Follow-ups reuse the same queryId and append to the real message history
-// that /api/ai-chat expects — this is genuine conversation threading, just
-// held client-side since the backend has none of its own.
-export function updateScanResult(queryId: string, result: ScanResult): void {
+function writeAll(threads: ScanThread[]): void {
   try {
-    sessionStorage.setItem(KEY_PREFIX + queryId, JSON.stringify(result));
-  } catch { /* ignore */ }
+    localStorage.setItem(storeKey(), JSON.stringify(threads.slice(0, MAX_THREADS)));
+    window.dispatchEvent(new Event(SCAN_THREADS_EVENT));
+  } catch { /* storage full or blocked: the conversation still shows in this tab */ }
+}
+
+function newId(): string {
+  return (typeof crypto !== "undefined" && "randomUUID" in crypto)
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+/** Newest first. */
+export function listThreads(): ScanThread[] {
+  return readAll().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+export function getThread(id: string): ScanThread | null {
+  return readAll().find((t) => t.id === id) || null;
+}
+
+/** Starts a conversation with its first answered question; returns its id. */
+export function createThread(turn: ScanTurn): string {
+  const id = newId();
+  const thread: ScanThread = { id, title: turn.question, createdAt: turn.askedAt, updatedAt: turn.askedAt, turns: [turn] };
+  writeAll([thread, ...readAll()]);
+  return id;
+}
+
+export function appendTurn(id: string, turn: ScanTurn): ScanThread | null {
+  const all = readAll();
+  const t = all.find((x) => x.id === id);
+  if (!t) return null;
+  t.turns.push(turn);
+  t.updatedAt = turn.askedAt;
+  writeAll([t, ...all.filter((x) => x.id !== id)]);
+  return t;
+}
+
+export function deleteThread(id: string): void {
+  writeAll(readAll().filter((t) => t.id !== id));
+}
+
+/** The message history /api/ai-chat expects, ending with a new question. */
+export function messagesFor(thread: ScanThread | null, nextQuestion: string): ChatMessage[] {
+  const msgs: ChatMessage[] = [];
+  for (const turn of thread?.turns || []) {
+    msgs.push({ role: "user", content: turn.question });
+    msgs.push({ role: "assistant", content: turn.response.message });
+  }
+  msgs.push({ role: "user", content: nextQuestion });
+  return msgs;
 }

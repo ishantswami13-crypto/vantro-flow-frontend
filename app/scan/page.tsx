@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ThinkingDots } from "@/components/v32/ui";
-import { IconPlus, IconArrowUp, IconUpload, IconLink, IconSparkle } from "@/components/v32/icons";
+import { IconTile } from "@/components/v32/ui";
+import { IconPlus, IconUpload, IconLink, IconSparkle, IconRupee, IconMissions, IconSimulate, IconHistory } from "@/components/v32/icons";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ScanFindings } from "@/components/os/ScanFindings";
+import { ScanComposer, businessNameFromStorage } from "@/components/scan/ScanComposer";
+import { ScanThinking } from "@/components/scan/ScanThinking";
 import { api, getUser } from "@/lib/api";
-import { saveScanResult } from "@/lib/scanStore";
+import { createThread, listThreads } from "@/lib/scanStore";
 
 // Scan is a chat start: a greeting and one box. The assistant answers only
 // from connected data, and its tools can read and draft but never mark
@@ -29,11 +32,8 @@ export default function ScanPage() {
   const [ownerName, setOwnerName] = useState<string>("there");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showFindings, setShowFindings] = useState(false);
-  const taRef = useRef<HTMLTextAreaElement>(null);
+  const [hasHistory, setHasHistory] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  // The box grows with the question, up to a few lines, then scrolls.
-  const grow = (el: HTMLTextAreaElement) => { el.style.height = "auto"; el.style.height = `${Math.min(el.scrollHeight, 200)}px`; };
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -51,6 +51,8 @@ export default function ScanPage() {
     })();
     const q = new URLSearchParams(window.location.search).get("q");
     if (q && q.trim()) { setQuestion(q); void submit(q); }
+    if (new URLSearchParams(window.location.search).get("books") === "1") setShowFindings(true);
+    setHasHistory(listThreads().length > 0);
     setOwnerName((stored.owner_name || stored.business_name || user?.business_name || user?.email?.split("@")[0] || "there").split(" ")[0]);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -61,18 +63,10 @@ export default function ScanPage() {
     setError(null);
     try {
       const user = getUser();
-      const stored = (() => {
-        try { return JSON.parse(localStorage.getItem("vantro_user") || "{}"); } catch { return {}; }
-      })();
-      const businessName = stored.business_name || user?.business_name || "";
+      const businessName = businessNameFromStorage(user?.business_name);
       const result = await api.aiChat(user?.id || "", [{ role: "user", content: trimmed }], businessName);
-      const queryId = saveScanResult({
-        question: trimmed,
-        messages: [{ role: "user", content: trimmed }],
-        response: result,
-        askedAt: new Date().toISOString(),
-      });
-      router.push(`/scan/${queryId}`);
+      const threadId = createThread({ question: trimmed, response: result, askedAt: new Date().toISOString() });
+      router.push(`/scan/${threadId}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't reach Starlane to answer that.");
       setSubmitting(false);
@@ -87,26 +81,13 @@ export default function ScanPage() {
             {getGreeting()}, {ownerName}
           </h1>
 
-          <form
-            onSubmit={e => { e.preventDefault(); submit(question); }}
-            className="composer-glow scan-composer"
-          >
-            <label htmlFor="ask" className="sr-only">Ask a question about your business data</label>
-            <textarea
-              id="ask"
-              ref={taRef}
-              rows={1}
-              value={question}
-              onChange={e => { setQuestion(e.target.value); grow(e.currentTarget); }}
-              onKeyDown={e => {
-                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(question); }
-              }}
-              placeholder="Ask Starlane about your business"
-              disabled={submitting}
-              className="scan-input"
-            />
-
-            <div className="flex items-center justify-between" style={{ padding: "4px 10px 10px 10px" }}>
+          <ScanComposer
+            value={question}
+            onChange={setQuestion}
+            onSubmit={() => submit(question)}
+            submitting={submitting}
+            placeholder="Ask Starlane about your business"
+            leading={
               <div ref={menuRef} className="relative">
                 <button
                   type="button"
@@ -126,35 +107,41 @@ export default function ScanPage() {
                   </div>
                 )}
               </div>
-              <button
-                type="submit"
-                disabled={submitting || !question.trim()}
-                aria-label="Ask"
-                className="scan-round scan-send"
-              >
-                {submitting ? <ThinkingDots color="#F7F7F4" /> : <IconArrowUp size={16} />}
-              </button>
-            </div>
-          </form>
+            }
+          />
 
-          {!showFindings && (
-            <div className="flex flex-wrap justify-center" style={{ gap: 8, marginTop: 18 }}>
-              {SUGGESTIONS.map(q => (
-                <button
-                  key={q}
-                  type="button"
-                  onClick={() => submit(q)}
-                  disabled={submitting}
-                  className="scan-chip"
-                >
-                  {q}
-                </button>
-              ))}
+          {submitting && (
+            <div style={{ alignSelf: "flex-start", marginTop: 22, paddingLeft: 6 }}><ScanThinking /></div>
+          )}
+
+          {!showFindings && !submitting && (
+            <div className="scan-flows" style={{ marginTop: 22 }}>
+              {WORKFLOWS.map((w, i) => {
+                const body = (
+                  <>
+                    <IconTile size={32}>{w.icon}</IconTile>
+                    <span className="flex flex-col min-w-0">
+                      <span style={{ fontSize: 13, color: "#191917" }}>{w.title}</span>
+                      <span style={{ fontSize: 11.5, color: "#8A8A86", marginTop: 2 }}>{w.hint}</span>
+                    </span>
+                  </>
+                );
+                return "ask" in w
+                  ? <button key={w.title} type="button" disabled={submitting} onClick={() => submit(w.ask)} className="scan-flow rise-in" style={{ animationDelay: `${i * 50}ms` }}>{body}</button>
+                  : <Link key={w.title} href={w.href} className="scan-flow rise-in" style={{ animationDelay: `${i * 50}ms` }}>{body}</Link>;
+              })}
             </div>
           )}
 
           {error && <p role="alert" style={{ fontSize: 12.5, color: "#A64F4B", marginTop: 14 }}>{error}</p>}
-          <p style={{ fontSize: 11.5, color: "#8A8A86", marginTop: 18, textAlign: "center" }}>Starlane answers only from your connected data.</p>
+          <div className="flex items-center justify-center" style={{ gap: 14, marginTop: 20, fontSize: 11.5, color: "#8A8A86" }}>
+            <span>Starlane answers only from your connected data.</span>
+            {hasHistory && (
+              <Link href="/scan/history" className="inline-flex items-center hover:text-[#191917]" style={{ gap: 5, color: "#63635F" }}>
+                <IconHistory size={13} /> History
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 
@@ -179,5 +166,13 @@ function MenuItem({ icon, title, hint, onClick }: { icon: React.ReactNode; title
   );
 }
 
-// Starter questions, answered by the same assistant over the tenant's data.
-const SUGGESTIONS = ["Who owes us the most?", "What is overdue this week?", "Which customers pay late?"];
+// Starting points under the box. One asks the assistant straight away; the
+// others open the screen that does that job, so nothing here is a promise
+// the product cannot keep.
+type Workflow = { title: string; hint: string; icon: React.ReactNode } & ({ ask: string } | { href: string });
+const WORKFLOWS: Workflow[] = [
+  { title: "Who owes us the most?", hint: "Ranked from your invoices", icon: <IconRupee size={15} />, ask: "Who owes us the most?" },
+  { title: "Chase overdue invoices", hint: "Start a collections mission", icon: <IconMissions size={15} />, href: "/missions/new" },
+  { title: "Forecast cash", hint: "Simulate the next weeks", icon: <IconSimulate size={15} />, href: "/simulate" },
+  { title: "Import invoices", hint: "From a sheet or Tally export", icon: <IconUpload size={15} />, href: "/decisions/import" },
+];

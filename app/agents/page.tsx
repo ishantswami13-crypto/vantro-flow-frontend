@@ -26,7 +26,7 @@ export default function AgentsPage() {
     <DashboardLayout pageTitle="Agents">
       <PageHeader
         title="Agents"
-        subtitle="Ongoing responsibilities Starlane carries across your organization."
+        subtitle="What runs for you, and when it last ran"
       />
       <Subnav
         active={tab}
@@ -38,11 +38,6 @@ export default function AgentsPage() {
       />
 
       <div className="fade-once flex flex-col" style={{ gap: 26 }}>
-        <div style={{ fontSize: 13, color: "#63635F", maxWidth: 640 }}>
-          Every agent here is deterministic code. None calls a language model or sends a message on its own. To stop one, use the switches on{" "}
-          <Link className="underline" href="/control/decisions">Control, Decisions</Link>.
-        </div>
-
         {loading && <SkeletonRows rows={4} height={64} />}
         {!!error && <ErrorBanner>Agents could not be loaded: {errorText(error)}</ErrorBanner>}
 
@@ -91,6 +86,10 @@ export default function AgentsPage() {
             </div>
           )
         )}
+        <p style={{ fontSize: 12, color: "#8A8A86", margin: 0, maxWidth: 640 }}>
+          Each agent is fixed code: none calls a language model or sends a message on its own. Stop one from{" "}
+          <Link className="underline" href="/control/decisions">Control, Decisions</Link>.
+        </p>
       </div>
     </DashboardLayout>
   );

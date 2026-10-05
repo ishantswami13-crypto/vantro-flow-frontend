@@ -200,7 +200,7 @@ export default function MemoryPage() {
   return (
     <DashboardLayout pageTitle="Memory">
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <PageHeader title="Memory" subtitle="How things reached their current state, from the changes Starlane recorded." />
+        <PageHeader title="Memory" subtitle="How each item reached its current state" />
         <Subnav items={TABS} active={tab} onChange={(k) => setTab(k as TabKey)} />
 
         {tab === "learning" && (
