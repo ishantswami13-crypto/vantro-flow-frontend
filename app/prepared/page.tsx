@@ -211,6 +211,7 @@ export default function PreparedPage() {
     <DashboardLayout pageTitle="Prepared">
       <PageHeader
         title="Prepared"
+        subtitle="Decisions waiting on you, with what is at stake"
         right={
           /* Control › Approvals lists every decision waiting on the owner;
              this page only shows the prepared subset. */

@@ -26,6 +26,9 @@ export interface ScanThread {
 
 const MAX_THREADS = 60;
 
+/** Fired on this tab whenever conversations change, so the sidebar's Recent list can refresh. */
+export const SCAN_THREADS_EVENT = "starlane:scan-threads";
+
 function storeKey(): string {
   const id = getUser()?.id;
   return `starlane_scan_threads_${id || "anon"}`;
@@ -44,6 +47,7 @@ function readAll(): ScanThread[] {
 function writeAll(threads: ScanThread[]): void {
   try {
     localStorage.setItem(storeKey(), JSON.stringify(threads.slice(0, MAX_THREADS)));
+    window.dispatchEvent(new Event(SCAN_THREADS_EVENT));
   } catch { /* storage full or blocked: the conversation still shows in this tab */ }
 }
 

@@ -48,3 +48,7 @@ export const IconCheck = (p: P) => <Svg {...p}><polyline points="5,12.5 10,17 19
 export const IconHistory = (p: P) => <Svg {...p}><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6" /><polyline points="3.5,4 3.5,8 7.5,8" /><polyline points="12,7.5 12,12 15,14" /></Svg>;
 export const IconTrash = (p: P) => <Svg {...p}><path d="M4.5 7h15" /><path d="M9.5 7V4.5h5V7" /><path d="M6.5 7l1 12.5h9l1-12.5" /></Svg>;
 export const IconWhatsApp = (p: P) => <Svg {...p}><path d="M4 20l1.3-3.9A8 8 0 1 1 8 18.8L4 20z" /></Svg>;
+export const IconLibrary = (p: P) => <Svg {...p}><path d="M5 4.5h4v15H5z" /><path d="M10.5 4.5h4v15h-4z" /><path d="M16 5.2l3.6-.9 2.2 14.6-3.6.9z" /></Svg>;
+export const IconBookmark = (p: P) => <Svg {...p}><path d="M6.5 4h11v16l-5.5-4-5.5 4z" /></Svg>;
+export const IconBookmarkFilled = (p: P) => <Svg {...p}><path d="M6.5 4h11v16l-5.5-4-5.5 4z" fill="currentColor" /></Svg>;
+export const IconArrowRight = (p: P) => <Svg {...p}><line x1="5" y1="12" x2="19" y2="12" /><polyline points="13,6 19,12 13,18" /></Svg>;

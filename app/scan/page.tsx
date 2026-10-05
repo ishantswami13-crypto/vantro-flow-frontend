@@ -8,6 +8,7 @@ import { IconPlus, IconUpload, IconLink, IconSparkle, IconRupee, IconMissions, I
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ScanFindings } from "@/components/os/ScanFindings";
 import { ScanComposer, businessNameFromStorage } from "@/components/scan/ScanComposer";
+import { ScanThinking } from "@/components/scan/ScanThinking";
 import { api, getUser } from "@/lib/api";
 import { createThread, listThreads } from "@/lib/scanStore";
 
@@ -50,6 +51,7 @@ export default function ScanPage() {
     })();
     const q = new URLSearchParams(window.location.search).get("q");
     if (q && q.trim()) { setQuestion(q); void submit(q); }
+    if (new URLSearchParams(window.location.search).get("books") === "1") setShowFindings(true);
     setHasHistory(listThreads().length > 0);
     setOwnerName((stored.owner_name || stored.business_name || user?.business_name || user?.email?.split("@")[0] || "there").split(" ")[0]);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -108,7 +110,11 @@ export default function ScanPage() {
             }
           />
 
-          {!showFindings && (
+          {submitting && (
+            <div style={{ alignSelf: "flex-start", marginTop: 22, paddingLeft: 6 }}><ScanThinking /></div>
+          )}
+
+          {!showFindings && !submitting && (
             <div className="scan-flows" style={{ marginTop: 22 }}>
               {WORKFLOWS.map((w, i) => {
                 const body = (

@@ -176,7 +176,7 @@ export default function SourcesPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <PageHeader
           title="Sources"
-          subtitle="Where Starlane gets its understanding of your organization."
+          subtitle="Where Starlane gets its data"
           right={connectors ? (
             <span style={{ fontSize: 12, color: connected.length && !allHealthy ? "#9B742B" : FAINT }}>
               {!connected.length ? "Nothing connected yet" : `${allHealthy ? "All current" : "Needs a look"}${lastSync ? ` · Last sync ${timeAgo(lastSync)}` : ""}`}

@@ -7,8 +7,11 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { request } from "@/lib/api";
 import { greeting, firstName } from "@/lib/greeting";
 import { V, Mono, Chevron, Label, ErrorBanner, SkeletonRows, EmptyLine, Rule, IconTile, Figure, ago, clockTime } from "@/components/v32/ui";
-import { IconSearch, IconClock, IconFileCheck, IconCalendar, IconRupee, IconPromise, IconSync, IconWatch } from "@/components/v32/icons";
+import { IconScan, IconClock, IconFileCheck, IconCalendar, IconRupee, IconPromise, IconSync, IconWatch } from "@/components/v32/icons";
 import { EvidenceSetDrawer } from "@/components/v32/EvidenceSetDrawer";
+import { ScanComposer } from "@/components/scan/ScanComposer";
+import { listThreads, type ScanThread } from "@/lib/scanStore";
+import { timeAgo } from "@/lib/recents";
 import type { BridgeView, WatchEvent, FeatureAction } from "../../packages/contracts/src/features";
 import { LIFECYCLE_LABEL } from "../../packages/contracts/src/features";
 
@@ -52,9 +55,11 @@ export default function BridgePage() {
   const [name, setName] = useState("");
   const [scan, setScan] = useState("");
   const [open, setOpen] = useState<WatchEvent | null>(null);
+  const [recent, setRecent] = useState<ScanThread[]>([]);
 
   useEffect(() => {
     setName(firstName());
+    setRecent(listThreads().slice(0, 3));
     request<BridgeView>("/api/client/bridge")
       .then(setData)
       .catch((e: Error) => setError(e.message || "The Bridge could not be loaded."));
@@ -91,27 +96,24 @@ export default function BridgePage() {
                 {fresh.text(syncAt)}
               </div>
             )}
-            <form
-              onSubmit={(e) => { e.preventDefault(); router.push(scan.trim() ? `/scan?q=${encodeURIComponent(scan.trim())}` : "/scan"); }}
-              className="flex items-center"
-              style={{ gap: 8, border: `1px solid ${V.input}`, borderRadius: 6, padding: "7px 12px", background: "transparent" }}
-            >
-              <IconSearch size={13} style={{ color: V.secondary }} />
-              <label htmlFor="bridge-scan" className="sr-only">Scan your business</label>
-              <input
-                id="bridge-scan"
-                value={scan}
-                onChange={(e) => setScan(e.target.value)}
-                placeholder="Scan"
-                style={{ width: 90, background: "none", border: "none", outline: "none", boxShadow: "none", color: V.ink, fontSize: 13 }}
-              />
-            </form>
           </div>
+        </div>
+
+        {/* Ask first, like Harvey's home: the Scan box under the greeting. */}
+        <div style={{ maxWidth: 720, marginTop: 20 }}>
+          <ScanComposer
+            id="bridge-scan"
+            value={scan}
+            onChange={setScan}
+            onSubmit={() => { if (scan.trim()) router.push(`/scan?q=${encodeURIComponent(scan.trim())}`); }}
+            submitting={false}
+            placeholder="Ask Starlane about your business"
+          />
         </div>
 
         {data && data.hasData && (
           <>
-          <Rule style={{ marginTop: 16 }} />
+          <Rule style={{ marginTop: 22 }} />
           <div className="grid grid-cols-3" style={{ gap: 24, paddingTop: 18, maxWidth: 560 }}>
             <Figure value={urgent.length} label="Need attention" tone={urgent.length ? V.critical : undefined} />
             <Figure value={data.attention.decisions} label="Waiting on your decision" />
@@ -191,6 +193,25 @@ export default function BridgePage() {
           </div>
         </div>
       </div>
+
+      {/* Recent work, the way Harvey's home ends: conversations on this device. */}
+      {recent.length > 0 && (
+        <div className="fade-once" style={{ marginTop: 8 }}>
+          <div className="flex items-baseline justify-between" style={{ marginBottom: 10 }}>
+            <div style={{ fontFamily: V.serif, fontSize: 16, color: V.ink }}>Pick up where you left off</div>
+            <Link href="/scan/history" style={{ fontSize: 12, color: V.secondary }}>All conversations</Link>
+          </div>
+          <div className="lib-grid">
+            {recent.map((t, i) => (
+              <Link key={t.id} href={`/scan/${t.id}`} className="lib-card rise-in" style={{ animationDelay: `${i * 40}ms`, gap: 8 }}>
+                <IconTile size={30}><IconScan size={14} /></IconTile>
+                <div className="truncate" style={{ fontSize: 13.5, color: V.ink }}>{t.title}</div>
+                <div className="lib-tag">{t.turns.length} {t.turns.length === 1 ? "question" : "questions"} · {timeAgo(t.updatedAt)}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {open && (
         <EvidenceSetDrawer title={open.title} record={open.detail || undefined} evidence={open.evidence} onClose={() => setOpen(null)}>

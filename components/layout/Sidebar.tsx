@@ -10,7 +10,8 @@ import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey }
 import { CommandPalette, type SearchableRoute } from "./CommandPalette";
 import { IdentityAvatar } from "@/components/identity/IdentityAvatar";
 import { IdentityPicker } from "@/components/identity/IdentityPicker";
-import { V32_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, type PrimaryNavItem } from "@/lib/navigation";
+import { V32_NAV_ITEMS, V32_WORKSPACE_NAV_ITEMS, type PrimaryNavItem } from "@/lib/navigation";
+import { listThreads, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
 import { IconBell, IconSearch, IconMore } from "@/components/v32/icons";
 
 // Everything real that sits outside the Version 32 nav lives in the "More"
@@ -76,7 +77,11 @@ const MORE_GROUPS: { label: string; items: { href: string; label: string; badge?
     ],
   },
 ];
-const MORE_HREFS = new Set(MORE_GROUPS.flatMap(g => g.items.map(i => i.href)));
+const MORE_HREFS = new Set([
+  ...V32_WORKSPACE_NAV_ITEMS.map(n => n.href),
+  "/decisions",
+  ...MORE_GROUPS.flatMap(g => g.items.map(i => i.href)),
+]);
 
 interface SidebarProps { open: boolean; onClose: () => void; }
 
@@ -91,6 +96,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const [accountOpen, setAccountOpen]     = useState(false);
   const [searchOpen, setSearchOpen]       = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [recent, setRecent]               = useState<ScanThread[]>([]);
   const accountRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
   const moreBtnRef = useRef<HTMLButtonElement>(null);
@@ -105,6 +111,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     if (accountOpen || moreOpen) document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [accountOpen, moreOpen]);
+
+  // Recent Scan conversations, like Harvey's recent work in its sidebar.
+  // They come from this browser's store and refresh when one is added.
+  useEffect(() => {
+    const load = () => setRecent(listThreads().slice(0, 5));
+    load();
+    window.addEventListener(SCAN_THREADS_EVENT, load);
+    window.addEventListener("storage", load);
+    return () => { window.removeEventListener(SCAN_THREADS_EVENT, load); window.removeEventListener("storage", load); };
+  }, []);
 
   // Global search shortcut
   useEffect(() => {
@@ -172,7 +188,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   const searchableRoutes: SearchableRoute[] = [
     { href: "/intelligence", label: "Intelligence", type: "Page" },
     ...V32_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
-    ...V32_SECONDARY_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
+    ...V32_WORKSPACE_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
     ...MORE_GROUPS.flatMap(g => g.items.map(i => ({ href: i.href, label: i.label, type: "Page" as const }))),
   ];
 
@@ -195,7 +211,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     );
   }
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string) => {
+    // Scan owns /scan and each conversation; History owns /scan/history.
+    if (href === "/scan") return pathname === "/scan" || (pathname.startsWith("/scan/") && pathname !== "/scan/history");
+    return pathname === href || pathname.startsWith(href + "/");
+  };
 
   return (
     <>
@@ -207,7 +227,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         className={[
           "fixed top-0 left-0 z-30 h-full flex flex-col",
           "transition-transform duration-200 ease-out",
-          "lg:translate-x-0 lg:static lg:z-auto",
+          "lg:translate-x-0 lg:static lg:z-30",
           open ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
         style={{ width: 264, flexShrink: 0, boxSizing: "border-box", background: "#141412", borderRight: "1px solid rgba(255,255,255,0.06)", padding: "22px 16px" }}
@@ -251,17 +271,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0" style={{ margin: "0 -4px", padding: "0 4px" }}>
           <nav aria-label="Primary" className="flex flex-col" style={{ gap: 2 }}>
             {V32_NAV_ITEMS.map(n => (
-              <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon}
-                active={isActive(n.href) || (n.href === "/prepared" && pathname.startsWith("/decisions"))}
-                onClick={onClose} />
-            ))}
-          </nav>
-
-          {/* Sources, Agents and Control: real pages outside NAV_ITEMS
-              (handoff §2), grouped quietly below a hairline so they still
-              highlight when open. */}
-          <nav aria-label="Organization" className="flex flex-col" style={{ gap: 2, marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            {V32_SECONDARY_NAV_ITEMS.map(n => (
               <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
             ))}
 
@@ -282,13 +291,35 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             </button>
           </nav>
 
+          {recent.length > 0 && (
+            <nav aria-label="Recent conversations" className="flex flex-col" style={{ gap: 1, marginTop: 22 }}>
+              <p style={{ padding: "0 8px 6px", fontSize: 11.5, color: "#63635F" }}>Recent</p>
+              {recent.map(t => {
+                const active = pathname === `/scan/${t.id}`;
+                return (
+                  <Link
+                    key={t.id}
+                    href={`/scan/${t.id}`}
+                    onClick={onClose}
+                    aria-current={active ? "page" : undefined}
+                    title={t.title}
+                    className={`truncate ${active ? "" : "hover-fade"}`}
+                    style={{ display: "block", padding: "6px 8px", borderRadius: 7, fontSize: 12.5, color: active ? "#F5F4F0" : "#8A8A86", background: active ? "rgba(255,255,255,0.09)" : "transparent" }}
+                  >
+                    {t.title}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
+
           {moreOpen && (
             <div
               ref={moreRef}
               className="fixed z-40 overflow-hidden pop-in"
               style={{
-                left: 252,
-                top: Math.max(12, (moreBtnRef.current?.getBoundingClientRect().top ?? 0) - 160),
+                left: typeof window !== "undefined" && window.innerWidth < 600 ? 12 : 252,
+                top: Math.max(12, (moreBtnRef.current?.getBoundingClientRect().top ?? 0) - 120),
                 width: 272,
                 maxHeight: "72vh",
                 background: "#1B1B18",
@@ -298,6 +329,24 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               }}
             >
               <div className="overflow-y-auto" style={{ maxHeight: "72vh", padding: 8 }}>
+                <div style={{ marginBottom: 10 }}>
+                  <p style={{ padding: "4px 8px", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "1px", color: "#63635F" }}>Workspace</p>
+                  {V32_WORKSPACE_NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+                    const active = isActive(href) || (href === "/prepared" && pathname.startsWith("/decisions"));
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={() => { setMoreOpen(false); onClose(); }}
+                        className={`flex items-center ${active ? "" : "hover-fade"}`}
+                        style={{ height: 32, padding: "0 8px", gap: 9, borderRadius: 6, fontSize: 13, background: active ? "rgba(255,255,255,0.09)" : "transparent", color: active ? "#F5F4F0" : "#B9B8B2" }}
+                      >
+                        <Icon size={15} />
+                        <span className="flex-1 truncate">{label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
                 {MORE_GROUPS.map(({ label, items }) => {
                   const visibleItems = items.filter(n => !(hiddenRoutes.size > 0 && hiddenRoutes.has(n.href)) && !isRouteLocked(n.href));
                   if (visibleItems.length === 0) return null;

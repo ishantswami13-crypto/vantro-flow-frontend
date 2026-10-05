@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button, EmptyLine, IconTile, PageHeader } from "@/components/v32/ui";
+import { Button, EmptyLine, IconTile, PageHeader, SearchField } from "@/components/v32/ui";
 import { IconHistory, IconPlus, IconScan, IconTrash } from "@/components/v32/icons";
 import { deleteThread, listThreads, type ScanThread } from "@/lib/scanStore";
 import { timeAgo } from "@/lib/recents";
@@ -19,6 +19,7 @@ function groupOf(iso: string): string {
 
 export default function ScanHistoryPage() {
   const [threads, setThreads] = useState<ScanThread[] | null>(null);
+  const [query, setQuery] = useState("");
 
   useEffect(() => { setThreads(listThreads()); }, []);
 
@@ -28,20 +29,33 @@ export default function ScanHistoryPage() {
   };
 
   const groups: { label: string; items: ScanThread[] }[] = [];
-  for (const t of threads || []) {
+  // Search matches any question or answer in the conversation, not just its title.
+  const q = query.trim().toLowerCase();
+  const shown = (threads || []).filter(t => !q || t.turns.some(x => x.question.toLowerCase().includes(q) || x.response.message.toLowerCase().includes(q)));
+  for (const t of shown) {
     const label = groupOf(t.updatedAt);
     const g = groups.find(x => x.label === label);
     if (g) g.items.push(t); else groups.push({ label, items: [t] });
   }
 
   return (
-    <DashboardLayout pageTitle="Scan">
+    <DashboardLayout pageTitle="History">
       <div style={{ width: 760, maxWidth: "100%", margin: "0 auto" }}>
         <PageHeader
           title="History"
           subtitle="Your Scan conversations on this device"
           right={<Button href="/scan"><IconPlus size={14} /> New conversation</Button>}
-        />
+        >
+          {threads && threads.length > 0 && (
+            <div style={{ marginTop: 18 }}>
+              <SearchField id="history-search" value={query} onChange={setQuery} placeholder="Search conversations" />
+            </div>
+          )}
+        </PageHeader>
+
+        {q && threads && threads.length > 0 && shown.length === 0 && (
+          <EmptyLine icon={<IconHistory size={17} />} title="No conversation matches" body="Search looks through every question and answer kept on this device." />
+        )}
 
         {threads && threads.length === 0 && (
           <EmptyLine

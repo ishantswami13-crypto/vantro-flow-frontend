@@ -985,3 +985,24 @@ button:disabled { cursor: default; }
 .scan-hist-del { opacity: 0; }
 .scan-hist-row:hover .scan-hist-del, .scan-hist-del:focus-visible { opacity: 1; }
 @media (hover: none) { .scan-hist-del { opacity: 1; } }
+
+/* Page search: one shape on every page, under the title and tabs. */
+.page-search {
+  display: flex; align-items: center; gap: 8px; width: 100%; max-width: 360px; box-sizing: border-box;
+  padding: 0 12px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(25,25,23,0.10); color: #8A8A86; transition: border-color .15s ease, background .15s ease;
+}
+.page-search:focus-within { background: #FFFFFF; border-color: rgba(25,25,23,0.22); }
+.page-search input { flex: 1; min-width: 0; border: none; outline: none; background: none; font-size: 13px; color: #191917; font-family: inherit; }
+.page-search input::placeholder { color: #8A8A86; }
+
+/* Library cards: prompts and workflows. */
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.lib-card {
+  position: relative; display: flex; flex-direction: column; gap: 10px; padding: 16px; text-align: left; box-sizing: border-box;
+  background: rgba(255,255,255,0.62); border: 1px solid rgba(25,25,23,0.08); border-radius: 14px; cursor: pointer; text-decoration: none;
+  transition: background .18s ease, border-color .18s ease, translate .18s ease, box-shadow .18s ease;
+}
+.lib-card:hover, .lib-card:focus-visible { background: #FFFFFF; border-color: rgba(25,25,23,0.14); translate: 0 -1px; box-shadow: 0 10px 24px -18px rgba(25,25,23,0.35); outline: none; }
+.lib-tag { font-size: 11px; color: #8A8A86; }
+.lib-star { position: absolute; top: 10px; right: 10px; }

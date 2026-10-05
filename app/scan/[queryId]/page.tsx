@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyLine, ThinkingDots } from "@/components/v32/ui";
-import { IconCheck, IconCopy, IconHistory, IconPlus, IconWhatsApp } from "@/components/v32/icons";
+import { IconBookmark, IconBookmarkFilled, IconCheck, IconCopy, IconHistory, IconPlus, IconWhatsApp } from "@/components/v32/icons";
 import { AnswerMarkdown } from "@/components/scan/AnswerMarkdown";
 import { ScanComposer, businessNameFromStorage } from "@/components/scan/ScanComposer";
+import { ScanThinking } from "@/components/scan/ScanThinking";
+import { isPromptSaved, removeSavedPrompt, savePrompt } from "@/lib/promptStore";
 import { api, getUser } from "@/lib/api";
 import { appendTurn, getThread, messagesFor, type ScanThread, type ScanTurn } from "@/lib/scanStore";
 
@@ -79,9 +81,7 @@ export default function ScanThreadPage() {
               {pending && (
                 <div className="fade-once" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   <div className="scan-q">{pending}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#8A8A86" }}>
-                    <ThinkingDots /> Reading your data
-                  </div>
+                  <ScanThinking />
                 </div>
               )}
               <div ref={endRef} />
@@ -110,7 +110,15 @@ export default function ScanThreadPage() {
 
 function Turn({ turn }: { turn: ScanTurn }) {
   const [copied, setCopied] = useState(false);
+  const [saved, setSaved] = useState(false);
   const { message, actions, waLinks } = turn.response;
+
+  useEffect(() => { setSaved(isPromptSaved(turn.question)); }, [turn.question]);
+
+  const toggleSave = () => {
+    if (saved) removeSavedPrompt(turn.question); else savePrompt(turn.question);
+    setSaved(!saved);
+  };
 
   const copy = async () => {
     try {
@@ -149,6 +157,9 @@ function Turn({ turn }: { turn: ScanTurn }) {
         <div className="flex items-center" style={{ marginTop: 8, marginLeft: -9 }}>
           <button type="button" onClick={copy} className="scan-tool" aria-label="Copy answer">
             {copied ? <IconCheck size={14} /> : <IconCopy size={14} />} {copied ? "Copied" : "Copy"}
+          </button>
+          <button type="button" onClick={toggleSave} className="scan-tool" aria-pressed={saved} title={saved ? "Remove from your Library" : "Save this question to your Library"}>
+            {saved ? <IconBookmarkFilled size={14} /> : <IconBookmark size={14} />} {saved ? "Saved to Library" : "Save prompt"}
           </button>
         </div>
       </div>

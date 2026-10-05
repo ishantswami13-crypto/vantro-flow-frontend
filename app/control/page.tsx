@@ -286,7 +286,7 @@ function ControlPageInner() {
   return (
     <DashboardLayout pageTitle="Control">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
-        <PageHeader title="Control" subtitle="Manage how Starlane can access, prepare, recommend, and act across your organization." />
+        <PageHeader title="Control" subtitle="What Starlane may see, prepare and do" />
 
         <ControlSubnav active={tab} />
 

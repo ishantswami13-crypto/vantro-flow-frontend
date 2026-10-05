@@ -8,7 +8,7 @@
 import React from "react";
 import Link from "next/link";
 import { FiChevronRight } from "react-icons/fi";
-import { IconSparkle } from "./icons";
+import { IconSearch, IconSparkle } from "./icons";
 
 export const V = {
   ink: "#191917",
@@ -312,5 +312,16 @@ export function Figure({ value, label, tone }: { value: React.ReactNode; label: 
       <div className="figure-in" style={{ fontFamily: V.serif, fontSize: 30, lineHeight: 1.05, color: tone || V.ink, fontVariantNumeric: "tabular-nums" }}>{value}</div>
       <div style={{ fontSize: 12.5, color: V.secondary, marginTop: 4 }}>{label}</div>
     </div>
+  );
+}
+
+/** The search box that sits under a page's title and tabs, the same on every page. */
+export function SearchField({ value, onChange, placeholder, id }: { value: string; onChange: (v: string) => void; placeholder: string; id: string }) {
+  return (
+    <label htmlFor={id} className="page-search">
+      <IconSearch size={14} />
+      <span className="sr-only">{placeholder}</span>
+      <input id={id} type="search" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} autoComplete="off" />
+    </label>
   );
 }

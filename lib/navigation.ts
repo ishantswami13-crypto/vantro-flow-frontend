@@ -1,7 +1,7 @@
 import type React from "react";
 import {
-  IconBridge, IconScan, IconDiscover, IconWatch, IconMissions, IconSimulate,
-  IconMemory, IconPrepared, IconSources, IconAgents, IconControl, IconSettings,
+  IconBridge, IconScan, IconWatch, IconMissions, IconLibrary, IconHistory,
+  IconDiscover, IconPrepared, IconSimulate, IconMemory, IconSources, IconAgents, IconControl, IconSettings,
 } from "@/components/v32/icons";
 
 export interface PrimaryNavItem {
@@ -10,23 +10,24 @@ export interface PrimaryNavItem {
   icon: (p: { size?: number; className?: string; style?: React.CSSProperties }) => React.ReactElement;
 }
 
-// Primary nav — the Version 32 NAV_ITEMS, in the design's exact order
-// (Starlane.html / STARLANE_FRONTEND_HANDOFF.md §2).
+// Primary nav: six places, the way Harvey keeps a few tools plus History and
+// Library in its sidebar. Everything else stays one click away under More.
 export const V32_NAV_ITEMS: PrimaryNavItem[] = [
-  { href: "/bridge",   label: "The Bridge", icon: IconBridge },
-  { href: "/scan",     label: "Scan",       icon: IconScan },
-  { href: "/discover", label: "Discover",   icon: IconDiscover },
-  { href: "/watch",    label: "Watch",      icon: IconWatch },
-  { href: "/missions", label: "Missions",   icon: IconMissions },
-  { href: "/simulate", label: "Simulate",   icon: IconSimulate },
-  { href: "/memory",   label: "Memory",     icon: IconMemory },
-  { href: "/prepared", label: "Prepared",   icon: IconPrepared },
+  { href: "/bridge",       label: "The Bridge", icon: IconBridge },
+  { href: "/scan",         label: "Scan",       icon: IconScan },
+  { href: "/watch",        label: "Watch",      icon: IconWatch },
+  { href: "/missions",     label: "Missions",   icon: IconMissions },
+  { href: "/library",      label: "Library",    icon: IconLibrary },
+  { href: "/scan/history", label: "History",    icon: IconHistory },
 ];
 
-// Second group: Sources, Agents and Control are real pages in the design but
-// are not in NAV_ITEMS (handoff §2 open gap). Resolved with option (a): a
-// quiet second group below a divider, so those pages still highlight.
-export const V32_SECONDARY_NAV_ITEMS: PrimaryNavItem[] = [
+// The rest of the Version 32 pages, first in the More flyout. They keep
+// their icons so the flyout reads like the rail.
+export const V32_WORKSPACE_NAV_ITEMS: PrimaryNavItem[] = [
+  { href: "/discover", label: "Discover", icon: IconDiscover },
+  { href: "/prepared", label: "Prepared", icon: IconPrepared },
+  { href: "/simulate", label: "Simulate", icon: IconSimulate },
+  { href: "/memory",   label: "Memory",   icon: IconMemory },
   { href: "/sources",  label: "Sources",  icon: IconSources },
   { href: "/agents",   label: "Agents",   icon: IconAgents },
   { href: "/control",  label: "Control",  icon: IconControl },
