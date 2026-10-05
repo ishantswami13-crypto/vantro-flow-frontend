@@ -100,7 +100,7 @@ export function LensDrawer({
       <div>
         {sections.map(section => (
           <div key={section.label} style={{ marginBottom: 22 }}>
-            <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 8 }}>{section.label}</div>
+            <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 8 }}>{section.label}</div>
             {section.rows.map(row => (
               <div key={row.label} className="flex items-baseline justify-between gap-3" style={{ padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>
                 <span style={{ fontSize: 12.5, color: "#63635F" }}>{row.label}</span>

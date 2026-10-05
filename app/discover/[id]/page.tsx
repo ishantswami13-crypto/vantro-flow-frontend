@@ -64,7 +64,7 @@ export default function DiscoverDetailPage() {
         <div className="flex flex-col lg:flex-row fade-once" style={{ gap: 32 }}>
           {/* Left column — the finding itself (flex:1.4) */}
           <div style={{ flex: 1.4, minWidth: 0 }}>
-            <div style={{ fontSize: 11, letterSpacing: "0.6px", textTransform: "uppercase", color: RISKY.has(impact.signal.impact_status) ? "#A64F4B" : "#63635F", marginBottom: 6 }}>
+            <div style={{ fontSize: 11, letterSpacing: "0.6px", color: RISKY.has(impact.signal.impact_status) ? "#A64F4B" : "#63635F", marginBottom: 6 }}>
               {(impact.signal.related_entity_type || impact.signal.event_type || "Signal").replace(/_/g, " ")}
             </div>
             <h1 style={{ margin: "0 0 16px", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 21, color: "#191917", lineHeight: 1.4 }}>
@@ -190,17 +190,17 @@ function buildSupplierLensSections(impact: SignalImpact): LensSection[] {
 const RISKY = new Set(["EXPOSED", "OBSERVED_IMPACT"]);
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 8 }}>{children}</div>;
+  return <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 8 }}>{children}</div>;
 }
 
 function RailLabel({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 10.5, letterSpacing: "1px", textTransform: "uppercase", color: "#8A8A86", marginBottom: 6 }}>{children}</div>;
+  return <div style={{ fontSize: 10.5, letterSpacing: 0, color: "#8A8A86", marginBottom: 6 }}>{children}</div>;
 }
 
 function Block({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 5 }}>{label}</div>
+      <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 5 }}>{label}</div>
       <div style={{ fontSize: 13.5, lineHeight: 1.6, color: "#43433F" }}>{children}</div>
     </div>
   );
@@ -212,8 +212,7 @@ function KVLine({ label, value, tone }: { label: string; value: string; tone: "k
       <span
         className="shrink-0"
         style={{
-          fontSize: 11, textTransform: "uppercase",
-          color: tone === "known" ? "#477054" : "#8A8A86",
+          fontSize: 11, color: tone === "known" ? "#477054" : "#8A8A86",
           width: 62,
         }}
       >
@@ -246,7 +245,7 @@ function ComponentRow({ component }: { component: ImpactComponent }) {
           <p className="v32-meta">{relevance}</p>
         </div>
         {component.revenueExposure.sufficientData && (
-          <span style={{ fontFamily: "'IBM Plex Mono', Menlo, monospace", fontSize: 12.5, color: "#191917" }}>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12.5, color: "#191917" }}>
             ₹{(component.revenueExposure.totalRevenueExposure / 100000).toFixed(1)}L
           </span>
         )}

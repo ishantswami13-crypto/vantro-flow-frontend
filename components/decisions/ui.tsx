@@ -24,7 +24,7 @@ export const C = {
 
 export function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10.5px] uppercase mb-3" style={{ color: C.muted, fontWeight: 500, letterSpacing: "1px" }}>
+    <p className="text-[10.5px] uppercase mb-3" style={{ color: C.muted, fontWeight: 500, letterSpacing: 0 }}>
       {children}
     </p>
   );
@@ -74,7 +74,7 @@ export function Stat({ label, value, sub, tone }: { label: string; value: React.
   return (
     <div className="min-w-0">
       <p className="text-[12px]" style={{ color: C.faint }}>{label}</p>
-      <p className="text-[22px] leading-tight mt-1 tabular-nums" style={{ color: tone ? C[tone] : C.ink, fontWeight: 400, fontFamily: "'IBM Plex Mono', Menlo, monospace", letterSpacing: "-0.01em" }}>{value}</p>
+      <p className="text-[22px] leading-tight mt-1 tabular-nums" style={{ color: tone ? C[tone] : C.ink, fontWeight: 400, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", letterSpacing: "-0.01em" }}>{value}</p>
       {sub && <p className="text-[12px] mt-1" style={{ color: C.muted }}>{sub}</p>}
     </div>
   );

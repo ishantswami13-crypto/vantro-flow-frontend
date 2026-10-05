@@ -494,18 +494,18 @@ button:active { transform: scale(0.97); }
 /* Type scale (handoff §3) */
 .v32-page-title { font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: 26px; color: #191917; }
 .v32-section-label {
-  font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: #63635F; font-weight: 500;
+  font-size: 12px; color: #8A8A86; font-weight: 400;
 }
 .v32-meta { font-size: 11.5px; color: #8A8A86; }
 .v32-body { font-size: 13.5px; color: #43433F; }
 
 /* Table visual language (handoff §12) */
 .v32-table thead th {
-  background: #F3F2EE; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; color: #63635F;
+  background: #F3F2EE; font-size: 12px; color: #8A8A86;
   text-align: left; padding: 10px 16px; font-weight: 500;
 }
 .v32-table tbody td { padding: 10px 16px; font-size: 13px; color: #191917; }
-.v32-table tbody td.v32-numeric { font-family: 'IBM Plex Mono', Menlo, monospace; }
+.v32-table tbody td.v32-numeric { font-variant-numeric: tabular-nums; }
 .v32-table tbody tr { border-bottom: 1px solid rgba(25,25,23,0.06); }
 
 /* Drawer shell (Lens / Evidence — handoff §9/§10) */
@@ -608,10 +608,8 @@ button:active { transform: scale(0.97); }
    SECTION LABEL
    ============================================================ */
 .section-label {
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 400;
   color: #8A8A86;
 }
 
@@ -1006,3 +1004,12 @@ button:disabled { cursor: default; }
 .lib-card:hover, .lib-card:focus-visible { background: #FFFFFF; border-color: rgba(25,25,23,0.14); translate: 0 -1px; box-shadow: 0 10px 24px -18px rgba(25,25,23,0.35); outline: none; }
 .lib-tag { font-size: 11px; color: #8A8A86; }
 .lib-star { position: absolute; top: 10px; right: 10px; }
+
+/* Agents gallery: ready-agent cards in the Library card style. */
+.agent-grid { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+.agent-card { gap: 14px; padding: 20px; min-height: 210px; }
+.agent-purpose { font-size: 13px; color: #63635F; line-height: 1.55; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.agent-perm { font-size: 11.5px; color: #63635F; padding: 3px 9px; border-radius: 999px; background: rgba(25,25,23,0.04); }
+.agent-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(25,25,23,0.06); display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: #8A8A86; }
+.agent-card-muted { cursor: default; background: rgba(255,255,255,0.35); }
+.agent-card-muted:hover { background: rgba(255,255,255,0.35); translate: none; box-shadow: none; border-color: rgba(25,25,23,0.08); }

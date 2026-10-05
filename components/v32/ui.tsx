@@ -30,7 +30,7 @@ export const V = {
   neutralDot: "rgba(25,25,23,0.25)",
   accent: "var(--accent, #696D86)",
   serif: "'Fraunces', Georgia, serif",
-  mono: "'IBM Plex Mono', Menlo, monospace",
+  mono: "'Plus Jakarta Sans', system-ui, sans-serif",
 };
 
 /** Page title row: Fraunces 26px, an optional one-line subtitle and a right slot. */
@@ -94,7 +94,7 @@ export function Subnav({ items, active, onChange, label = "Secondary" }: {
 /** Uppercase section label (10.5–11px, letter-spacing 1px). */
 export function Label({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={className} style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: V.tertiary, ...style }}>
+    <div className={className} style={{ fontSize: 12, color: V.tertiary, ...style }}>
       {children}
     </div>
   );
@@ -178,7 +178,7 @@ export function Button({ children, onClick, primary, disabled, type = "button", 
 /** Table header row (§12): surface-2, 11px uppercase, letter-spacing 0.5px. */
 export function TableHead({ columns, template, className = "" }: { columns: React.ReactNode[]; template: string; className?: string }) {
   return (
-    <div className={`hidden md:grid ${className}`} style={{ gridTemplateColumns: template, padding: "10px 14px", background: V.surface2, fontSize: 11, letterSpacing: "0.5px", textTransform: "uppercase", color: V.secondary }}>
+    <div className={`hidden md:grid ${className}`} style={{ gridTemplateColumns: template, padding: "10px 14px", background: V.surface2, fontSize: 11, letterSpacing: 0, color: V.secondary }}>
       {columns.map((c, i) => <span key={i} style={{ textAlign: i === columns.length - 1 ? "right" : undefined }}>{c}</span>)}
     </div>
   );
@@ -207,7 +207,7 @@ export function EntityRow({ type, name, relevance, metric, href, onClick }: {
   const inner = (
     <>
       <div className="flex-1 min-w-0">
-        <div style={{ fontSize: 10.5, letterSpacing: "0.6px", textTransform: "uppercase", color: V.tertiary }}>{type}</div>
+        <div style={{ fontSize: 10.5, letterSpacing: "0.6px", color: V.tertiary }}>{type}</div>
         <div style={{ fontSize: 13.5, color: V.ink }}>{name}</div>
         {relevance && <div style={{ fontSize: 12, color: V.secondary }}>{relevance}</div>}
       </div>
@@ -222,11 +222,11 @@ export function EntityRow({ type, name, relevance, metric, href, onClick }: {
   return <div className={cls} style={style}>{inner}</div>;
 }
 
-/** Lettermark — one canonical shape: 30px square, 7px radius, Fraunces initial. */
-export function Lettermark({ letter, color = "#696D86", size = 30 }: { letter: string; color?: string; size?: number }) {
+/** Lettermark: a monochrome serif initial on a white tile, the same in every place. */
+export function Lettermark({ letter, size = 30 }: { letter: string; color?: string; size?: number }) {
   return (
     <span aria-hidden="true" className="inline-flex items-center justify-center shrink-0"
-      style={{ width: size, height: size, borderRadius: 7, background: color, color: "#FFFFFF", fontFamily: V.serif, fontSize: Math.round(size * 0.47) }}>
+      style={{ width: size, height: size, borderRadius: Math.round(size * 0.26), background: "#FFFFFF", color: V.ink, boxShadow: `inset 0 0 0 1px ${V.card}`, fontFamily: V.serif, fontSize: Math.round(size * 0.5) }}>
       {(letter || "?").charAt(0).toUpperCase()}
     </span>
   );

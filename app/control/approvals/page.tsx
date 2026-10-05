@@ -170,7 +170,7 @@ export default function ControlApprovalsPage() {
             {selected && (
               <>
                 <div>
-                  <div className="text-2xs" style={{ color: priorityColor(selected.priority), fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  <div className="text-2xs" style={{ color: priorityColor(selected.priority), fontWeight: 600, letterSpacing: "0.04em" }}>
                     {priorityLabel(selected.priority)}
                   </div>
                   <h2 style={{ margin: "6px 0 0", fontSize: 17, fontWeight: 600, color: "#191917" }}>{selected.title}</h2>

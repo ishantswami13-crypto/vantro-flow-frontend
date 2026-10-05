@@ -330,7 +330,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             >
               <div className="overflow-y-auto" style={{ maxHeight: "72vh", padding: 8 }}>
                 <div style={{ marginBottom: 10 }}>
-                  <p style={{ padding: "4px 8px", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "1px", color: "#63635F" }}>Workspace</p>
+                  <p style={{ padding: "4px 8px", fontSize: 10.5, letterSpacing: 0, color: "#63635F" }}>Workspace</p>
                   {V32_WORKSPACE_NAV_ITEMS.map(({ href, label, icon: Icon }) => {
                     const active = isActive(href) || (href === "/prepared" && pathname.startsWith("/decisions"));
                     return (
@@ -352,7 +352,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                   if (visibleItems.length === 0) return null;
                   return (
                     <div key={label} style={{ marginBottom: 10 }}>
-                      <p style={{ padding: "4px 8px", fontSize: 10.5, textTransform: "uppercase", letterSpacing: "1px", color: "#63635F" }}>{label}</p>
+                      <p style={{ padding: "4px 8px", fontSize: 10.5, letterSpacing: 0, color: "#63635F" }}>{label}</p>
                       {visibleItems.map(({ href, label: itemLabel, badge }) => {
                         const active = isActive(href);
                         const liveBadge = badge === "live" && pendingCount !== null && pendingCount > 0 ? String(pendingCount) : null;
@@ -365,7 +365,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                             style={{ height: 32, padding: "0 8px", gap: 8, borderRadius: 6, fontSize: 13, background: active ? "rgba(255,255,255,0.09)" : "transparent", color: active ? "#F5F4F0" : "#B9B8B2" }}
                           >
                             <span className="flex-1 truncate">{itemLabel}</span>
-                            {liveBadge && <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10.5, color: "#8A8A86" }}>{liveBadge}</span>}
+                            {liveBadge && <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#8A8A86" }}>{liveBadge}</span>}
                           </Link>
                         );
                       })}

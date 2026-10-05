@@ -231,10 +231,10 @@ function WatchPageInner() {
               color: "#63635F",
             }}
           >
-            <span>WATCHING</span>
-            <span>CONDITION</span>
-            <span>STATUS</span>
-            <span style={{ textAlign: "right" }}>LAST CHECKED</span>
+            <span>Watching</span>
+            <span>Condition</span>
+            <span>Status</span>
+            <span style={{ textAlign: "right" }}>Last checked</span>
           </div>
 
           {actionError && (

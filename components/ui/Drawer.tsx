@@ -97,7 +97,7 @@ export function Drawer({ titleId, title, onClose, onBack, children, breadcrumb, 
       >
         <div className="shrink-0" style={{ padding: "24px 28px 18px 28px", borderBottom: "1px solid #EBEAE6" }}>
           <div className="flex items-center justify-between gap-3" style={{ marginBottom: 14 }}>
-            <div className="min-w-0" style={breadcrumb ? { fontSize: 12, color: "#63635F" } : { fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F" }}>
+            <div className="min-w-0" style={breadcrumb ? { fontSize: 12, color: "#63635F" } : { fontSize: 11, letterSpacing: 0, color: "#63635F" }}>
               {breadcrumb || eyebrow}
             </div>
             <button

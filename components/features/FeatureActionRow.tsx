@@ -50,7 +50,7 @@ export function FeatureActionRow({ a, first, onDecided }: { a: FeatureAction; fi
       {a.lifecycleNote ? <span style={{ fontSize: 13, color: GRAPHITE }}>{a.lifecycleNote}</span> : null}
       {a.draft ? (
         <blockquote style={{ margin: 0, padding: "8px 12px", background: "#F7F6F2", borderRadius: 6, fontSize: 13.5, whiteSpace: "pre-wrap" }}>
-          <span style={{ display: "block", fontSize: 11, textTransform: "uppercase", color: GRAPHITE, marginBottom: 4, fontFamily: "'IBM Plex Mono', monospace" }}>Drafted message</span>
+          <span style={{ display: "block", fontSize: 11, color: GRAPHITE, marginBottom: 4, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Drafted message</span>
           {a.draft}
         </blockquote>
       ) : null}

@@ -53,7 +53,7 @@ function OverviewRow({ label, value, tone, mono = true }: { label: string; value
   return (
     <div className="flex items-baseline justify-between" style={{ gap: 16, padding: "8px 0", borderBottom: "1px solid #EBEAE6" }}>
       <span style={{ fontSize: 12.5, color: "#63635F" }}>{label}</span>
-      <span style={{ fontSize: 13, color: tone === "warn" ? "#A64F4B" : "#191917", fontFamily: mono ? "'IBM Plex Mono', monospace" : undefined, textAlign: "right", maxWidth: 380 }}>{value}</span>
+      <span style={{ fontSize: 13, color: tone === "warn" ? "#A64F4B" : "#191917", fontFamily: mono ? "'Plus Jakarta Sans', system-ui, sans-serif" : undefined, textAlign: "right", maxWidth: 380 }}>{value}</span>
     </div>
   );
 }
@@ -61,7 +61,7 @@ function OverviewRow({ label, value, tone, mono = true }: { label: string; value
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 8 }}>{label}</div>
       {children}
     </div>
   );

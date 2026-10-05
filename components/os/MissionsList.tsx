@@ -76,7 +76,7 @@ function MissionCard({ m }: { m: Mission }) {
   const body = (
     <>
       <div>
-        <span className="inline-block" style={{ fontSize: 11, letterSpacing: "0.5px", color, border: `1px solid ${color}`, borderRadius: 20, padding: "3px 10px", whiteSpace: "nowrap", marginBottom: 10 }}>
+        <span className="inline-block" style={{ fontSize: 11, letterSpacing: 0, color, border: `1px solid ${color}`, borderRadius: 20, padding: "3px 10px", whiteSpace: "nowrap", marginBottom: 10 }}>
           {MISSION_STATE_LABEL[m.state]}
         </span>
         <div style={{ fontFamily: V.serif, fontSize: 18, lineHeight: 1.35, color: V.ink, marginBottom: 4 }}>{m.title}</div>
