@@ -202,6 +202,43 @@ function WhatIf({ d }: { d: Decision }) {
   );
 }
 
+const OUTCOME_WORDS: Record<string, string> = {
+  MET: "worked", NOT_MET: "did not work", ON_TRACK: "on track", OFF_TRACK: "off track", ABORTED: "stopped (dispute)",
+  UNKNOWN: "outcome unknown", ACTIVE: "still being checked", DRAFT: "not started", NO_ACTION_RECORDED: "no action recorded",
+};
+
+// Similar-decision memory: earlier decisions like this one and how they ended.
+function SimilarDecisions({ id }: { id: string }) {
+  const q = useQuery({ queryKey: ["decision-similar", id], queryFn: () => decisionsApi.similar(id) });
+  if (q.isLoading) return null;
+  return (
+    <section className="mt-10">
+      <SectionLabel>Similar decisions before</SectionLabel>
+      {q.error ? (
+        <p className="text-[13px]" style={{ color: C.muted }}>Could not load earlier decisions just now.</p>
+      ) : !q.data?.similar.length ? (
+        <p className="text-[13px]" style={{ color: C.muted }}>{q.data?.note || "No earlier decision is close enough to compare."}</p>
+      ) : (
+        <ul>
+          {q.data.similar.map((s) => (
+            <li key={s.id} className="py-3" style={{ borderTop: `1px solid ${C.line}` }}>
+              <Link href={`/decisions/${s.id}`} className="text-[13.5px] hover-dim" style={{ color: C.ink, fontWeight: 500 }}>{s.title}</Link>
+              <p className="text-[12.5px] mt-0.5" style={{ color: C.body }}>
+                {s.chosen ? `Chose "${s.chosen}"` : "Nothing chosen"} · {OUTCOME_WORDS[s.outcome.status] || s.outcome.status.replace(/_/g, " ").toLowerCase()}
+                {s.decidedAt ? ` · ${shortDate(s.decidedAt)}` : ""}
+              </p>
+              <p className="text-[11.5px] mt-0.5" style={{ color: C.faint }}>
+                {Math.round(s.similarity * 100)}% alike: {[s.why.sameCustomer ? "same customer" : null, s.why.sharedSigns.length ? `${s.why.sharedSigns.length} shared warning sign${s.why.sharedSigns.length === 1 ? "" : "s"}` : null, s.why.sizeSimilarity >= 0.5 ? "similar size" : null].filter(Boolean).join(", ") || "same kind of decision"}
+                {s.outcome.detail ? `. ${s.outcome.detail}` : ""}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function Verification({ detail, onVerify, busy }: { detail: DecisionDetail; onVerify: () => void; busy: boolean }) {
   const c = detail.contract;
   if (!c || !c.activated_at) return null;
@@ -566,6 +603,8 @@ export default function DecisionDetailPage() {
             <WhatIf d={d} />
           </div>
         </section>
+
+        <SimilarDecisions id={d.id} />
 
         {/* Unknowns */}
         {d.unknowns.length > 0 && (

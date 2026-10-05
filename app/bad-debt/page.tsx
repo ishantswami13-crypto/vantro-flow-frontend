@@ -67,7 +67,14 @@ export default function BadDebtPage() {
       ["Customer", "Amount (₹)", "Days Overdue", "Risk Level", "Recommendation"],
       ...accounts.map(a => [a.customer_name, a.invoice_amount, a.days_overdue, a.risk_level, a.recommendation]),
     ];
-    const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+    // Quote every cell, escape quotes, and neutralise leading = + - @ so a
+    // customer name can never become a live formula when opened in Excel.
+    const cell = (c: unknown) => {
+      let v = String(c ?? "");
+      if (typeof c === "string" && /^[=+\-@\t\r]/.test(v)) v = "'" + v;
+      return `"${v.replace(/"/g, '""')}"`;
+    };
+    const csv = rows.map(r => r.map(cell).join(",")).join("\n");
     const a = document.createElement("a");
     a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
     a.download = "vantro-bad-debt.csv";

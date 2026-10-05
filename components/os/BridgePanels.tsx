@@ -92,8 +92,29 @@ export function BridgeHealthPanel() {
           {Object.entries(data.semantics.definitions).filter(([k]) => k !== "baseCurrency").map(([k, v]) => (
             <li key={k} className="text-[12.5px]" style={{ color: C.body }}>{v}</li>
           ))}
+          {data.semantics.authority.map((a) => (
+            <li key={a.fact} className="text-[12.5px]" style={{ color: C.body }}>{a.fact}: {a.source} is the authority.</li>
+          ))}
+          {data.semantics.authorityRule && <li className="text-[12.5px]" style={{ color: C.body }}>{data.semantics.authorityRule}</li>}
         </ul>
       </Row>
+
+      {data.crossSource && data.crossSource.keptFromTally > 0 && (
+        <Row>
+          <SectionLabel>Bills that came from both Tally and a file</SectionLabel>
+          <p className="text-[12.5px]" style={{ color: C.body }}>
+            {data.crossSource.keptFromTally} bill{data.crossSource.keptFromTally === 1 ? " was" : "s were"} in both. Each is counted once, from Tally.
+            {data.crossSource.disagreements.length ? ` ${data.crossSource.disagreements.length} disagreed with the file:` : " The two copies agreed."}
+          </p>
+          {data.crossSource.disagreements.length > 0 && (
+            <ul className="mt-1 space-y-1">
+              {data.crossSource.disagreements.slice(0, 10).map((d) => (
+                <li key={`${d.customer}|${d.bill}`} className="text-[12.5px]" style={{ color: C.warn }}>{d.customer}, bill {d.bill}: {d.detail}.</li>
+              ))}
+            </ul>
+          )}
+        </Row>
+      )}
     </Panel>
   );
 }

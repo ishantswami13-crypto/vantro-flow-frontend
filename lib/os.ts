@@ -54,7 +54,8 @@ export interface BridgeOverview {
   freshness: { status: string; lastUpdateAt: string | null; ageHours: number | null; invoiceCount: number; detail: string };
   discovered: { entity: string; count: number; source: string }[];
   entityResolution: { candidates: { names: string[]; normalized: string; confidence: string; evidence: string }[]; rule: string };
-  semantics: { definitions: Record<string, string>; authority: { fact: string; source: string }[] };
+  semantics: { definitions: Record<string, string>; authority: { fact: string; source: string }[]; authorityRule?: string };
+  crossSource?: { keptFromTally: number; disagreements: { bill: string; customer: string; detail: string }[] };
   missing: string[];
   answers: { connectedTo: string[]; canRead: string[]; canDo: string[] };
 }
@@ -334,7 +335,22 @@ export const MISSION_OUTCOME_LABEL: Record<MissionOutcome, string> = {
   OUTCOME_UNKNOWN: 'Outcome unknown',
 };
 
+export type SalesWhatIf = {
+  status: 'PROJECTED' | 'INSUFFICIENT_EVIDENCE';
+  changePct: number;
+  horizonDays: number;
+  reason?: string;
+  salesPerMonth?: number;
+  scenarioSalesPerMonth?: number;
+  cashFromNewSales?: { baseline: number; scenario: number; delta: number };
+  medianDaysToCash?: number;
+  summary?: string;
+  assumptions?: string[];
+  persisted: false;
+};
+
 export const osApi = {
+  salesWhatIf: (changePct: number, days: number) => call<SalesWhatIf>('GET', `/what-if/sales?changePct=${encodeURIComponent(changePct)}&days=${encodeURIComponent(days)}`),
   bridge: () => call<BridgeOverview>('GET', '/bridge'),
   knowledge: () => call<{ knowledge: KnowledgeItem[] }>('GET', '/knowledge'),
   teach: (input: { statement: string; kind: string; scope?: { type: string; name?: string } }) => call<{ knowledge: KnowledgeItem; note: string }>('POST', '/knowledge', input),

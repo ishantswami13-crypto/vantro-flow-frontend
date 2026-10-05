@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type ScenarioInvoice, type SimulateScenarioResponse } from "@/lib/api";
-import { WorkflowReplays } from "@/components/os/SimulatePanels";
+import { SalesWhatIf, WorkflowReplays } from "@/components/os/SimulatePanels";
 import { PageHeader, Subnav } from "@/components/v32/ui";
 
 // Simulate — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§6/§14/§16.
@@ -102,7 +102,7 @@ function SimulatePageInner() {
 
   const selectedInvoice = invoices.find((inv) => inv.id === selectedInvoiceId) || null;
 
-  const [tab, setTab] = useState<"new" | "replays">("new");
+  const [tab, setTab] = useState<"new" | "sales" | "replays">("new");
   const pill: React.CSSProperties = { padding: "8px 30px 8px 14px", border: "1px solid rgba(25,25,23,0.14)", borderRadius: 20, fontSize: 12.5, color: "#43433F", background: "transparent", maxWidth: "100%" };
   const tone = (n: number | null | undefined, goodWhenNegative = false) =>
     n == null || n === 0 ? "#191917" : (n < 0) === goodWhenNegative ? "#477054" : "#A64F4B";
@@ -112,11 +112,11 @@ function SimulatePageInner() {
       <PageHeader title="Simulate" subtitle="Try a what-if against your own open invoices" />
       <Subnav
         active={tab}
-        onChange={(k) => setTab(k as "new" | "replays")}
-        items={[{ key: "new", label: "New" }, { key: "replays", label: "Workflow replays" }]}
+        onChange={(k) => setTab(k as "new" | "sales" | "replays")}
+        items={[{ key: "new", label: "One invoice" }, { key: "sales", label: "Sales change" }, { key: "replays", label: "Workflow replays" }]}
       />
 
-      {tab === "replays" ? <WorkflowReplays /> : (
+      {tab === "replays" ? <WorkflowReplays /> : tab === "sales" ? <SalesWhatIf /> : (
         <>
           {/* Assumptions: the tenant's own open invoices, and the two
               hypotheticals scenarioEngine.js really supports. */}

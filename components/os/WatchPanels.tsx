@@ -119,6 +119,11 @@ function ObjectiveRow({ o }: { o: Objective }) {
         <Pill tone={healthTone(o.health)}>{HEALTH_LABEL[o.health] || o.health}</Pill>
       </div>
       {f?.explanation && <p className="text-[13px] mt-2 leading-[1.55]" style={{ color: C.body }}>{f.explanation}</p>}
+      {f?.breachProbability != null && o.health !== "OFF_TRACK" && (
+        <p className="text-[12.5px] mt-1" style={{ color: f.breachProbability >= 0.5 ? C.bad : f.breachProbability >= 0.2 ? C.warn : C.muted }}>
+          {Math.round(f.breachProbability * 100)}% chance of missing the target{f.breachInDays != null ? `, most likely in about ${f.breachInDays} days` : ""}.
+        </p>
+      )}
       {f?.points && f.points.length > 0 && (
         <div className="flex gap-3 mt-2 flex-wrap">
           {f.points.map((p) => (
