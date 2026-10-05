@@ -150,7 +150,7 @@ export default function DashboardPage() {
   const payablesDue = bizOverview.purchasesDue + bizOverview.unpaidBillsAmt;
   const netCash = (metrics?.total_outstanding || 0) - payablesDue;
   const recoveryRate = metrics ? Number(metrics.avg_recovery_rate) || 0 : 0;
-  const overdue30 = rawInvoices.filter(inv => inv.days_overdue > 30).reduce((s, inv) => s + inv.invoice_amount, 0);
+  const overdue30 = rawInvoices.filter(inv => inv.days_overdue > 30).reduce((s, inv) => s + (Number(inv.invoice_amount) || 0), 0);
 
   // Open typographic metrics, not a card wall — a related set of business
   // facts, not five independent "statuses" each demanding its own color.

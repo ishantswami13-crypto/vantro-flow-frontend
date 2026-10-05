@@ -327,7 +327,7 @@ export default function BankPage() {
     load();
   };
 
-  const creditTotal = txns.filter(t => t.type === "credit").reduce((s, t) => s + t.amount, 0);
+  const creditTotal = txns.filter(t => t.type === "credit").reduce((s, t) => s + (Number(t.amount) || 0), 0);
   const unmatched   = txns.filter(t => t.status === "unmatched" && t.type === "credit").length;
 
   return (

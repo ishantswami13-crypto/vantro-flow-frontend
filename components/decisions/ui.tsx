@@ -12,7 +12,7 @@ export const C = {
   ink: "#191917",
   body: "#43433F",
   muted: "#63635F",
-  faint: "#8A8A86",
+  faint: "#6E6E6A", // 4.5:1 on the page background (was #8A8A86, 3.1:1)
   line: "#EBEAE6",
   card: "rgba(25,25,23,0.10)",
   wash: "#F3F2EE",
@@ -136,7 +136,7 @@ export function HealthStrip({ dimensions }: { dimensions: HealthDimension[] }) {
 
 export function Skeleton({ rows = 3 }: { rows?: number }) {
   return (
-    <div aria-busy="true" aria-label="Loading">
+    <div role="status" aria-busy="true" aria-label="Loading">
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="py-6" style={{ borderBottom: `1px solid ${C.line}` }}>
           <div className="skeleton h-3 w-32 mb-3" />

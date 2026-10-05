@@ -63,8 +63,10 @@ export function Subnav({ items, active, onChange, label = "Secondary" }: {
   onChange?: (key: string) => void;
   label?: string;
 }) {
+  // Button items are tabs and need a tablist parent; link items are navigation.
+  const tabs = items.some((it) => !it.href);
   return (
-    <nav aria-label={label} className="flex items-center overflow-x-auto" style={{ gap: 22, borderBottom: `1px solid ${V.divider}`, marginBottom: 4 }}>
+    <nav aria-label={label} role={tabs ? "tablist" : undefined} className="flex items-center overflow-x-auto" style={{ gap: 22, borderBottom: `1px solid ${V.divider}`, marginBottom: 4 }}>
       {items.map((it) => {
         const on = it.key === active;
         const style: React.CSSProperties = {
@@ -249,7 +251,7 @@ export function EmptyLine({ title, body, action, icon }: { title?: React.ReactNo
 
 export function SkeletonRows({ rows = 3, height = 52 }: { rows?: number; height?: number }) {
   return (
-    <div aria-busy="true" aria-label="Loading">
+    <div role="status" aria-busy="true" aria-label="Loading">
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex items-center gap-3" style={{ height, borderBottom: `1px solid ${V.divider}` }}>
           <div className="skeleton h-3 w-40" />
