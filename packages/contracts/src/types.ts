@@ -172,7 +172,7 @@ export type TelemetryEventName =
   | 'client.connector_setup_started' | 'client.connector_setup_completed' | 'client.connector_setup_failed'
   | 'client.local_sync_succeeded' | 'client.local_sync_failed' | 'client.opening_bills_failed' | 'client.recommendation_opened' | 'client.evidence_opened'
   | 'client.approval_completed' | 'client.update_available' | 'client.update_installed' | 'client.update_failed'
-  | 'client.notification_opened' | 'client.ask_submitted' | 'client.offline' | 'client.session_expired';
+  | 'client.notification_opened' | 'client.ask_submitted' | 'client.offline' | 'client.session_expired' | 'client.live_app_opened' | 'client.live_app_failed';
 export interface TelemetryEvent {
   name: TelemetryEventName;
   props?: Partial<Record<'screen' | 'client' | 'platform' | 'app_version' | 'os_version' | 'error_code' | 'duration_ms' | 'connector' | 'channel' | 'reason' | 'online', string | number | boolean | null>>;

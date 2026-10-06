@@ -261,6 +261,10 @@ export const api = {
       signInCall<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/phone/verify', { phone, code }),
     // A single-use code the desktop app trades for its own session.
     desktopHandoff: (state: string) => signInCall<{ code: string }>('/api/auth/desktop/handoff', { state }),
+    // The desktop app's own window signing in to the website: trades the
+    // app's single-use code for a normal web session.
+    webExchange: (id: string, code: string) =>
+      signInCall<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/web/exchange', { id, code }),
   },
 
   // ─── Dashboard ──────────────────────────────────────────

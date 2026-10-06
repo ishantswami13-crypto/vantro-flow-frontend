@@ -5,7 +5,7 @@ import { logLine } from './platform';
 import { tallyHost } from './connector/tallyHost';
 import { RouterProvider, useRouter } from './lib/router';
 import { clearResourceCache } from './lib/useResource';
-import { isDesktop, notifyNative, onShellEvent } from './platform';
+import { isDesktop, notifyNative, onShellEvent, openWebWindow } from './platform';
 import { BridgeScreen } from './screens/Bridge';
 import { ActionScreen } from './screens/Decisions';
 import { MemoryScreen } from './screens/Memory';
@@ -18,16 +18,39 @@ import { SimulateScreen } from './screens/Simulate';
 import { SourceScreen, SourcesScreen, useHost } from './screens/Sources';
 import { WatchEventScreen, WatchScreen } from './screens/Watch';
 import { Mark, Spinner } from './ui';
+import { startBackgroundUpdates, updateAtStartup } from './lib/autoUpdate';
 
 type Phase = 'loading' | 'signed_out' | 'onboarding' | 'ready';
+
+/** Shows the live Starlane app in its own window. False (and this window stays) when it cannot. */
+export async function openLiveApp(next?: string): Promise<boolean> {
+  if (!isDesktop) return false;
+  try {
+    const { id, code } = await api().webHandoff();
+    await openWebWindow(id, code, next);
+    track('client.live_app_opened');
+    return true;
+  } catch (e) {
+    // Offline, or a server without the handoff yet: this window is the app.
+    logLine('warn', `live app not opened: ${(e as Error).name}: ${(e as Error).message}`);
+    track('client.live_app_failed', { error_code: (e as Error).name });
+    return false;
+  }
+}
 
 export function App() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [boot, setBoot] = useState<Bootstrap | null>(null);
   const [bootErr, setBootErr] = useState<string | null>(null);
 
+  const checkedUpdate = useRef(false);
   const load = useCallback(async () => {
     setBootErr(null);
+    // A newer signed build installs before anything opens (the app restarts).
+    if (isDesktop && !checkedUpdate.current) {
+      checkedUpdate.current = true;
+      if (await updateAtStartup()) return;
+    }
     if (!(await api().isSignedIn())) { setPhase('signed_out'); return; }
     try {
       const b = await api().bootstrap();
@@ -43,6 +66,18 @@ export function App() {
       logLine('error', `startup failed: ${(e as Error).name}: ${(e as Error).message}`);
     }
   }, []);
+
+  // Once signed in and set up, the visible app is the live website; this
+  // window keeps the Tally connector running behind it.
+  const liveOpened = useRef(false);
+  useEffect(() => {
+    if (phase !== 'ready' || liveOpened.current) return;
+    liveOpened.current = true;
+    void openLiveApp();
+  }, [phase]);
+  useEffect(() => { if (phase === 'signed_out') liveOpened.current = false; }, [phase]);
+
+  useEffect(() => (isDesktop ? startBackgroundUpdates() : undefined), []);
 
   useEffect(() => {
     track('client.app_started');
@@ -148,6 +183,7 @@ function Shell({ boot, onSignOut }: { boot: Bootstrap | null; onSignOut: () => v
             {n.badge && counts[n.badge] > 0 ? <span className="count">{counts[n.badge]}</span> : null}
           </button>
         ))}
+        {isDesktop ? <button className="nav-item" onClick={() => void openLiveApp()}>Open the full Starlane app</button> : null}
         <div className="rail-foot">
           <button className="nav-item" style={{ padding: 0, fontSize: 12 }} onClick={() => go('/sources/tally')}>
             <span className={`dot ${tallyTone}${host.phase === 'syncing' ? ' pulse' : ''}`} />

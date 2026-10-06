@@ -167,6 +167,8 @@ export function createStarlaneClient(opts: StarlaneClientOptions) {
       await endSession();
     },
 
+    /** A 60-second single-use code that signs the app's own website window in. */
+    webHandoff: () => authed<{ id: string; code: string }>('/api/auth/web/handoff', { method: 'POST', body: {} }),
     bootstrap: () => authed<Bootstrap & { success: boolean }>('/api/client/bootstrap'),
     now: (since?: string | null) => authed<Now & { success: boolean }>(`/api/client/now${since ? `?since=${encodeURIComponent(since)}` : ''}`),
     actions: (status: string = 'pending') => authed<{ actions: ActionSummary[] }>(`/api/client/actions?status=${encodeURIComponent(status)}`).then((r) => r.actions),

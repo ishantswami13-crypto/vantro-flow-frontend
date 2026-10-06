@@ -55,7 +55,7 @@ export async function platformFetch(input: string, init?: RequestInit) {
 
 export interface AppInfo { version: string; os: string; arch: string; device_name: string; updater_configured: boolean }
 export async function appInfo(): Promise<AppInfo> {
-  if (!isDesktop) return { version: '0.1.2', os: 'browser-preview', arch: '', device_name: 'Browser preview', updater_configured: false };
+  if (!isDesktop) return { version: '0.1.3', os: 'browser-preview', arch: '', device_name: 'Browser preview', updater_configured: false };
   return invoke<AppInfo>('app_info');
 }
 
@@ -106,6 +106,16 @@ export const updates = {
     return v;
   },
 };
+
+// ── The live Starlane app (desktop only) ──────────────────────────────────
+// Opens the website in the app's own "web" window, signed in with a 60-second
+// single-use code from the API; the shell builds the URL, so this window can
+// never be pointed anywhere else.
+export async function openWebWindow(id: string, code: string, next?: string) {
+  if (!isDesktop) return false;
+  await invoke('open_web', { id, code, next: next ?? null });
+  return true;
+}
 
 export async function openExternal(url: string) {
   if (!isDesktop) { window.open(url, '_blank', 'noopener'); return; }
