@@ -88,7 +88,8 @@ const SOURCE_LABEL: Record<string, string> = {
 };
 
 function targetPathForCard(card: PreparedCard): string {
-  if (card.source === "ai_actions") return "/control/approvals";
+  // Opens Approvals with this action already selected.
+  if (card.source === "ai_actions") return `/control/approvals?id=${encodeURIComponent(card.id)}`;
   if (card.source === "watches") return "/watch";
   if (card.source === "predictions") return "/forecast";
   if (card.source === "opportunityPropagation") return "/discover";

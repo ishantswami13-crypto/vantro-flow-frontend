@@ -725,7 +725,9 @@ export const api = {
   },
 };
 
-export type ConnectorHealth = 'not_connected' | 'healthy' | 'stale' | 'error' | 'disconnected' | 'unavailable';
+// Bridge connectors (Tally) also report pairing / connected / syncing /
+// delayed / revoked, derived from their latest sync run (lib/connectors/state.js).
+export type ConnectorHealth = 'not_connected' | 'pairing' | 'connected' | 'syncing' | 'healthy' | 'delayed' | 'stale' | 'error' | 'revoked' | 'disconnected' | 'unavailable';
 export interface Connector {
   id: string; sourceType: string | null; name: string; provider: string | null; category: string;
   authType: 'local_bridge' | 'file_import' | 'oauth' | 'api_key' | 'public_feed';
@@ -737,6 +739,9 @@ export interface Connector {
     /** Canonical health (CONNECTED, STALE, AUTH_EXPIRED, ...) and what the connection allows. */
     canonicalHealth?: string; capabilityLabel?: string;
     health: ConnectorHealth; status: string | null; connectedAt: string | null; lastSyncAt: string | null; lastError: string | null;
+    /** Bridge connectors: the latest succeeded run, and the latest attempt whatever its result. */
+    lastSuccessAt?: string | null;
+    lastAttempt?: { id: string; status: 'running' | 'succeeded' | 'failed'; startedAt: string; finishedAt: string | null; error: string | null; errorCode?: string | null } | null;
     devices: Array<{ id: string; name: string; status: 'ACTIVE' | 'REVOKED'; pairedAt: string; lastSeenAt: string | null; revokedAt: string | null }>;
     lastImport: { filename: string | null; status: string; completedAt: string | null; rowsAccepted: number; rowsRejected: number } | null;
   };

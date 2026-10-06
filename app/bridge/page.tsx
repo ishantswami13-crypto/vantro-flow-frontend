@@ -115,7 +115,9 @@ export default function BridgePage() {
           <>
           <Rule style={{ marginTop: 22 }} />
           <div className="grid grid-cols-3" style={{ gap: 24, paddingTop: 18, maxWidth: 560 }}>
-            <Figure value={urgent.length} label="Need attention" tone={urgent.length ? V.critical : undefined} />
+            {/* The server's count over every open event (the same rule Today and
+                the morning brief use), not just the four shown below. */}
+            <Figure value={data.attention.watch.urgent} label="Need attention" tone={data.attention.watch.urgent ? V.critical : undefined} />
             <Figure value={data.attention.decisions} label="Waiting on your decision" />
             <Figure value={prepared.reduce((n, h) => n + h.count, 0)} label="Prepared for you" />
           </div>

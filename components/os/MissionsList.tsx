@@ -20,6 +20,20 @@ const FILTERS: { key: MissionFilter; label: string; states: MissionState[] }[] =
   { key: "completed", label: "Completed", states: ["COMPLETED", "FAILED", "STOPPED"] },
 ];
 
+/** Agent display name: from GET /api/os/agents when loaded, else readable from its key. */
+export function agentLabel(key: string, names?: Record<string, string>): string {
+  if (names?.[key]) return names[key];
+  const s = key.replace(/^starlane\./, "").replace(/_/g, " ");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** Tools a mission's steps run through (decision adapters), in plain words. */
+export function missionTools(m: Mission): string[] {
+  const out = new Set<string>();
+  for (const s of m.steps) if (s.adapter) out.add(s.adapter.replace(/^[a-z_]+\./, "").replace(/_/g, " "));
+  return [...out];
+}
+
 export function missionCount(all: Mission[], k: MissionFilter): number {
   const f = FILTERS.find((x) => x.key === k)!;
   return all.filter((m) => f.states.includes(m.state)).length;
@@ -42,7 +56,7 @@ function outcomeColor(o: string): string {
 }
 
 /** Mission cards for one subnav tab. The list is loaded by the page. */
-export function MissionsList({ all, filter, loading, error }: { all: Mission[]; filter: MissionFilter; loading: boolean; error: unknown }) {
+export function MissionsList({ all, filter, loading, error, agentNames }: { all: Mission[]; filter: MissionFilter; loading: boolean; error: unknown; agentNames?: Record<string, string> }) {
   const f = FILTERS.find((x) => x.key === filter)!;
   const list = all.filter((m) => f.states.includes(m.state));
 
@@ -59,7 +73,7 @@ export function MissionsList({ all, filter, loading, error }: { all: Mission[]; 
   if (list.length === 0) return <EmptyLine title={filter === "at_risk" ? "No mission is at risk." : filter === "completed" ? "No mission has finished yet." : "No active mission."} />;
   return (
     <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-      {list.map((m) => <MissionCard key={m.id} m={m} />)}
+      {list.map((m) => <MissionCard key={m.id} m={m} agentNames={agentNames} />)}
     </div>
   );
 }
@@ -67,7 +81,8 @@ export function MissionsList({ all, filter, loading, error }: { all: Mission[]; 
 // decision_action_runs statuses that count as a finished step (060_decision_core.sql).
 const STEP_DONE = new Set(["SUCCEEDED", "SHADOWED", "PREPARED"]);
 
-function MissionCard({ m }: { m: Mission }) {
+function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string, string> }) {
+  const tools = missionTools(m);
   const total = m.steps.length;
   const done = m.steps.filter((s) => STEP_DONE.has((s.status || "").toUpperCase())).length;
   const pct = m.state === "COMPLETED" ? 100 : total ? Math.round((done / total) * 100) : 0;
@@ -84,6 +99,13 @@ function MissionCard({ m }: { m: Mission }) {
       </div>
       {(m.stateReason || m.outcome.detail) && (
         <div style={{ fontSize: 13, color: V.body, lineHeight: 1.55 }}>{m.stateReason || m.outcome.detail}</div>
+      )}
+      {m.assigned && (
+        <div style={{ fontSize: 12, color: V.secondary, lineHeight: 1.5 }}>
+          Agent: <span style={{ color: V.body }}>{agentLabel(m.assigned.agent, agentNames)}</span>
+          {tools.length ? <> · Tools: <span style={{ color: V.body }}>{tools.join(", ")}</span></> : null}
+          {" "}· You approve
+        </div>
       )}
       <div>
         <div style={{ height: 5, background: "rgba(25,25,23,0.08)", borderRadius: 3, overflow: "hidden" }}>
@@ -106,5 +128,5 @@ function MissionCard({ m }: { m: Mission }) {
   const cls = "card-in hover-lift flex flex-col";
   const style: React.CSSProperties = { boxSizing: "border-box", background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 8, padding: 20, gap: 12, minHeight: 200 };
   if (m.source !== "WORKFLOW") return <Link href={m.href} className={cls} style={style}>{body}</Link>;
-  return <div className={cls} style={style} title={`Worker: ${m.assigned.agent}. Owner: ${m.assigned.owner}.`}>{body}</div>;
+  return <div className={cls} style={style}>{body}</div>;
 }

@@ -237,8 +237,8 @@ export function createStarlaneClient(opts: StarlaneClientOptions) {
       startRun: (deviceToken: string) =>
         raw('/api/connectors/device/sync-runs', { method: 'POST', auth: `StarlaneDevice ${deviceToken}`, body: { clientVersion: opts.info.appVersion } })
           .then((r) => parse<{ syncRun: { id: string } }>(r)).then((r) => r.syncRun.id),
-      failRun: (deviceToken: string, runId: string, error: string) =>
-        raw(`/api/connectors/device/sync-runs/${encodeURIComponent(runId)}`, { method: 'PATCH', auth: `StarlaneDevice ${deviceToken}`, body: { status: 'failed', error } }).then((r) => parse(r)),
+      failRun: (deviceToken: string, runId: string, error: string, code?: string) =>
+        raw(`/api/connectors/device/sync-runs/${encodeURIComponent(runId)}`, { method: 'PATCH', auth: `StarlaneDevice ${deviceToken}`, body: code ? { status: 'failed', error, code } : { status: 'failed', error } }).then((r) => parse(r)),
       importTally: (deviceToken: string, runId: string, vouchers: unknown[], contacts?: Array<{ party: string; phone: string }>) =>
         raw('/api/import/tally', { method: 'POST', auth: `StarlaneDevice ${deviceToken}`, headers: { 'X-Sync-Run-Id': runId }, body: contacts?.length ? { vouchers, contacts } : { vouchers } })
           .then((r) => parse<{ imported: Record<string, number>; rejected: unknown[]; message: string; syncRunId: string }>(r)),
