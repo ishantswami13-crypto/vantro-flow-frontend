@@ -1486,9 +1486,15 @@ export interface AuditEvent {
   action: string;
   entity_type: string | null;
   entity_id: string | null;
-  old_value_json: unknown;
+  old_value_json?: unknown;
   new_value_json: unknown;
   created_at: string;
+  // Decision steps carry who acted, through which agent and model, and the outcome.
+  source?: 'ledger' | 'decision';
+  title?: string | null;
+  actor?: string | null;
+  model?: string | null;
+  result?: string | null;
 }
 
 // ─── Customer intelligence (drawer view) ─────────────────────────────────

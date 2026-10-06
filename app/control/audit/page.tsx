@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -17,10 +18,9 @@ import { api, type AuditEvent } from "@/lib/api";
 //
 // Column layout per STARLANE_FRONTEND_HANDOFF.md §17 (audit_row):
 // grid-template-columns: 90px 150px 2fr 140px 160px 1fr = Time/Actor/
-// Action/Object/Source/Result. The backend has no separate actor/source/
-// result columns yet (audit_logs has action/entity_type/entity_id/
-// old_value_json/new_value_json/created_at only) — those cells render an
-// honest "—" rather than fabricated values.
+// Action/Object/Source/Result. Decision steps (from decision_events) carry
+// actor, agent/model and result; ledger rows (audit_logs) do not, and those
+// cells render an honest "—" rather than fabricated values.
 function humanizeAction(action: string): string {
   return action.replace(/_/g, " ").toLowerCase().replace(/^./, c => c.toUpperCase());
 }
@@ -60,13 +60,18 @@ function AuditRow({ event }: { event: AuditEvent }) {
       }}
     >
       <span className="text-2xs" style={{ color: "#8A8A86" }}>{formatTime(event.created_at)}</span>
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>—</span>
-      <span className="text-sm font-medium" style={{ color: "#191917" }}>{humanizeAction(event.action)}</span>
-      <span className="text-2xs font-mono" style={{ color: "#8A8A86" }}>
-        {event.entity_type ? `${event.entity_type}${event.entity_id ? ` · ${event.entity_id.slice(0, 8)}…` : ""}` : "—"}
+      <span className="text-2xs" style={{ color: "#8A8A86" }}>{event.actor || "—"}</span>
+      <span className="text-sm font-medium" style={{ color: "#191917" }}>
+        {humanizeAction(event.action)}
+        {event.title && <span className="block text-2xs font-normal" style={{ color: "#63635F" }}>{event.title}</span>}
       </span>
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>—</span>
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>—</span>
+      <span className="text-2xs" style={{ color: "#8A8A86" }}>
+        {event.source === "decision" && event.entity_id
+          ? <Link className="underline" href={`/decisions/${event.entity_id}`}>Decision</Link>
+          : event.entity_type ? `${event.entity_type}${event.entity_id ? ` · ${event.entity_id.slice(0, 8)}…` : ""}` : "—"}
+      </span>
+      <span className="text-2xs" style={{ color: "#8A8A86" }}>{event.source === "decision" ? (event.model || "Starlane") : "Ledger"}</span>
+      <span className="text-2xs" style={{ color: "#8A8A86" }}>{event.result ? humanizeAction(event.result) : "—"}</span>
     </div>
   );
 }
@@ -86,7 +91,7 @@ export default function AuditPage() {
             Control
           </h1>
           <p className="text-[13.5px] mt-2 max-w-[640px]" style={{ color: "#63635F" }}>
-            A chronological record of financial changes Starlane has made or observed for this account.
+            A chronological record of every decision step and financial change: who acted, through which agent, and what happened.
           </p>
         </div>
 
@@ -102,7 +107,7 @@ export default function AuditPage() {
           {!isLoading && !isError && (data?.events.length ?? 0) === 0 && (
             <EmptyState
               title="No audit events yet"
-              message="Financial changes Starlane records will appear here as they happen."
+              message="Decision steps and financial changes will appear here as they happen."
             />
           )}
 

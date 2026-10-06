@@ -6,9 +6,55 @@
 
 import React, { useState } from "react";
 import { C, Pill, Skeleton, Stat } from "@/components/decisions/ui";
-import { osApi, Workflow, Replay, WORKFLOW_STATUS_LABEL } from "@/lib/os";
+import { osApi, Workflow, Replay, WORKFLOW_STATUS_LABEL, SalesWhatIf as SalesWhatIfResult } from "@/lib/os";
 import { money, pct, shortDate } from "@/lib/decisions";
 import { Panel, Btn, Row, Muted, ErrorLine, errorText, useLoad } from "./shared";
+
+// Business-level what-if: a change in sales, played through this business's
+// own payment timing. Read-only; nothing is saved.
+export function SalesWhatIf() {
+  const [change, setChange] = useState(-20);
+  const [days, setDays] = useState(60);
+  const [res, setRes] = useState<SalesWhatIfResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const run = async () => {
+    setBusy(true); setErr(null);
+    try { setRes(await osApi.salesWhatIf(change, days)); } catch (e) { setErr(errorText(e)); } finally { setBusy(false); }
+  };
+  const field: React.CSSProperties = { width: 84, padding: "6px 10px", border: `1px solid ${C.line}`, borderRadius: 8, fontSize: 13, color: C.ink, background: "#FFFFFF" };
+  return (
+    <Panel title="What if sales change?" subtitle="Plays a change in sales through how fast your customers really pay. Nothing is saved.">
+      <div className="flex items-end gap-3 flex-wrap">
+        <label className="text-[12px]" style={{ color: C.muted }}>
+          Sales change (%)
+          <input type="number" min={-100} max={200} step={5} value={change} onChange={(e) => setChange(Number(e.target.value))} style={{ ...field, display: "block", marginTop: 4 }} />
+        </label>
+        <label className="text-[12px]" style={{ color: C.muted }}>
+          Over (days)
+          <input type="number" min={7} max={180} step={1} value={days} onChange={(e) => setDays(Number(e.target.value))} style={{ ...field, display: "block", marginTop: 4 }} />
+        </label>
+        <Btn primary onClick={run} disabled={busy}>{busy ? "Working…" : "Run"}</Btn>
+      </div>
+      <ErrorLine error={err} />
+      {res && res.status === "INSUFFICIENT_EVIDENCE" && <Row><Muted>{res.reason}</Muted></Row>}
+      {res && res.status === "PROJECTED" && res.cashFromNewSales && (
+        <Row>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+            <Stat label="Sales a month" value={money(res.salesPerMonth ?? null)} sub={`becomes ${money(res.scenarioSalesPerMonth ?? null)}`} />
+            <Stat label={`Cash in ${res.horizonDays} days as things are`} value={money(res.cashFromNewSales.baseline)} />
+            <Stat label="With the change" value={money(res.cashFromNewSales.scenario)} />
+            <Stat label="Difference" value={money(res.cashFromNewSales.delta)} tone={res.cashFromNewSales.delta < 0 ? "bad" : undefined} />
+          </div>
+          <p className="text-[13px]" style={{ color: C.body }}>{res.summary}</p>
+          <ul className="mt-2 space-y-[2px]">
+            {(res.assumptions || []).map((a) => <li key={a} className="text-[11.5px]" style={{ color: C.faint }}>{a}</li>)}
+          </ul>
+        </Row>
+      )}
+    </Panel>
+  );
+}
 
 export function WorkflowReplays() {
   const { data, error, loading } = useLoad(() => osApi.workflows("PROPOSED,SHADOW,WITH_APPROVAL,PAUSED"));

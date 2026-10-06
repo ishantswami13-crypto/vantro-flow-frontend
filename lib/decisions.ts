@@ -382,6 +382,13 @@ async function upload<T>(path: string, file: File, options?: ImportOptions | nul
   }
 }
 
+export type SimilarDecision = {
+  id: string; title: string; status: string; decidedAt: string | null; createdAt: string;
+  chosen: string | null; outcome: { status: string; detail: string | null; attribution: string | null };
+  similarity: number; why: { sameCustomer: boolean; sharedSigns: string[]; sizeSimilarity: number };
+};
+export type SimilarResponse = { similar: SimilarDecision[]; note?: string; method?: string };
+
 export const decisionsApi = {
   today: () => call<TodayResponse>('GET', '/today'),
   list: (scope: 'active' | 'closed' | 'all' = 'active') => call<{ decisions: DecisionListItem[]; lastDiscovery: { at: string; status: string } | null }>('GET', `?scope=${scope}`),
@@ -404,6 +411,7 @@ export const decisionsApi = {
   importCommit: (file: File, options: ImportOptions) => upload<ImportCommit>('/import/commit', file, options),
   dataProfile: () => call<DataProfile>('GET', '/data-profile'),
   feedback: (id: string, kind: FeedbackKind, note?: string, optionKey?: string) => call<{ recorded: boolean; label: string }>('POST', `/${encodeURIComponent(id)}/feedback`, { kind, note, optionKey }),
+  similar: (id: string) => call<SimilarResponse>('GET', `/${encodeURIComponent(id)}/similar`),
   getFeedback: (id: string) => call<{ feedback: { kind: FeedbackKind; label: string; note: string | null; optionKey: string | null; at: string }[] }>('GET', `/${encodeURIComponent(id)}/feedback`),
 };
 
