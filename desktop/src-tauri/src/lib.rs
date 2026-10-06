@@ -18,19 +18,29 @@
 //     events, error codes and messages go there, never tokens, passwords or
 //     business records; Settings > Diagnostics opens the folder.
 //
-// Everything the user sees is the web view (desktop/src), built on the shared
-// Starlane API client (packages/contracts).
+// Two windows:
+//   - "web": the live Starlane website (the same app as in a browser), so the
+//     desktop always shows the latest version without a reinstall. It is a
+//     remote page with NO access to any native command (capabilities only
+//     cover "main"), and it can only navigate within the Starlane site;
+//     anything else opens in the browser.
+//   - "main": the local window (desktop/src): sign-in, the Tally connector
+//     host and its settings. Once the live app is open it keeps running in the
+//     background, reachable from the tray ("Tally connector"). If the website
+//     cannot be opened (offline) it stays the visible app.
 
 use serde::Serialize;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager, WindowEvent,
+    AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent,
 };
 use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_updater::UpdaterExt;
 
 const KEYRING_SERVICE: &str = "app.starlane.desktop";
+/// The live Starlane app shown in the "web" window.
+const SITE: &str = "https://vantro-flow-frontend.vercel.app";
 const STABLE_ENDPOINT: &str =
     "https://github.com/ishantswami13-crypto/vantro-flow-frontend/releases/latest/download/latest.json";
 const BETA_ENDPOINT: &str =
@@ -173,12 +183,91 @@ fn open_logs(app: AppHandle) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
-fn show_main(app: &AppHandle) {
-    if let Some(w) = app.get_webview_window("main") {
+fn show_window(app: &AppHandle, label: &str) -> bool {
+    if let Some(w) = app.get_webview_window(label) {
         let _ = w.unminimize();
         let _ = w.show();
         let _ = w.set_focus();
+        return true;
     }
+    false
+}
+
+/// "Open Starlane": the live app when it is open, else the local window.
+fn show_main(app: &AppHandle) {
+    if !show_window(app, "web") {
+        show_window(app, "main");
+    }
+}
+
+fn is_token(s: &str, min: usize, max: usize) -> bool {
+    (min..=max).contains(&s.len()) && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+}
+
+/// Only pages of the Starlane site may load in the live window.
+fn on_site(url: &url::Url) -> bool {
+    let site = url::Url::parse(SITE).expect("SITE is a valid URL");
+    url.scheme() == site.scheme() && url.host_str() == site.host_str() && url.port_or_known_default() == site.port_or_known_default()
+}
+
+/// The URL that signs the live window in: the single-use code rides in the
+/// fragment, which the browser never sends to a server.
+fn web_signin_url(id: &str, code: &str, next: Option<&str>) -> Result<url::Url, String> {
+    if !is_token(id, 16, 64) || !is_token(code, 16, 128) {
+        return Err("invalid sign-in code".into());
+    }
+    let next = next.filter(|n| n.starts_with('/') && !n.starts_with("//") && n.len() <= 200 && n.chars().all(|c| c.is_ascii_alphanumeric() || "/-_".contains(c)));
+    let mut frag = format!("id={id}&code={code}");
+    if let Some(n) = next {
+        frag.push_str("&next=");
+        frag.push_str(n);
+    }
+    let mut u = url::Url::parse(SITE).map_err(|e| e.to_string())?.join("/auth/desktop").map_err(|e| e.to_string())?;
+    u.set_fragment(Some(&frag));
+    Ok(u)
+}
+
+/// Opens (or re-signs) the live Starlane window with a code the local window
+/// just obtained from the API, then tucks the local window into the tray.
+#[tauri::command]
+async fn open_web(app: AppHandle, id: String, code: String, next: Option<String>) -> Result<(), String> {
+    let url = web_signin_url(&id, &code, next.as_deref())?;
+    // Started at login with --background: prepare it, but stay in the tray.
+    let background = std::env::args().any(|a| a == "--background")
+        && !app.get_webview_window("main").and_then(|w| w.is_visible().ok()).unwrap_or(false);
+    if let Some(w) = app.get_webview_window("web") {
+        w.navigate(url).map_err(|e| e.to_string())?;
+        if !background {
+            show_window(&app, "web");
+        }
+    } else {
+        let handle = app.clone();
+        WebviewWindowBuilder::new(&app, "web", WebviewUrl::External(url))
+            .title("Starlane")
+            .inner_size(1280.0, 820.0)
+            .min_inner_size(960.0, 640.0)
+            .center()
+            .visible(!background)
+            .on_navigation(move |u| {
+                if on_site(u) || u.scheme() == "about" {
+                    return true;
+                }
+                // Mail, other sites, downloads: the person's own browser.
+                if matches!(u.scheme(), "https" | "http" | "mailto") {
+                    let _ = handle.opener().open_url(u.as_str(), None::<&str>);
+                }
+                false
+            })
+            .build()
+            .map_err(|e| e.to_string())?;
+    }
+    log::info!("live Starlane window opened");
+    if !background {
+        if let Some(m) = app.get_webview_window("main") {
+            let _ = m.hide();
+        }
+    }
+    Ok(())
 }
 
 /// starlane://actions/<id> -> "/actions/<id>" for the web view router.
@@ -233,7 +322,8 @@ pub fn run() {
             app_info,
             check_update,
             install_update,
-            open_logs
+            open_logs,
+            open_web
         ])
         .setup(|app| {
             log::info!(
@@ -244,15 +334,19 @@ pub fn run() {
             );
             // Tray: the way back into Starlane while it works in the background.
             let open = MenuItem::with_id(app, "open", "Open Starlane", true, None::<&str>)?;
+            let connector = MenuItem::with_id(app, "connector", "Tally connector", true, None::<&str>)?;
             let sync = MenuItem::with_id(app, "sync", "Sync now", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "Quit Starlane", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&open, &sync, &quit])?;
+            let menu = Menu::with_items(app, &[&open, &connector, &sync, &quit])?;
             let mut tray = TrayIconBuilder::with_id("starlane")
                 .tooltip("Starlane")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id().as_ref() {
                     "open" => show_main(app),
+                    "connector" => {
+                        show_window(app, "main");
+                    }
                     "sync" => {
                         let _ = app.emit("starlane://sync-now", ());
                     }
@@ -294,7 +388,7 @@ pub fn run() {
         .on_window_event(|window, event| {
             // Close = keep working in the background (tray). Quit is explicit.
             if let WindowEvent::CloseRequested { api, .. } = event {
-                if window.label() == "main" {
+                if window.label() == "main" || window.label() == "web" {
                     api.prevent_close();
                     let _ = window.hide();
                     let _ = window.emit("starlane://hidden", ());
@@ -317,6 +411,23 @@ mod tests {
         assert_eq!(route_from_url("https://evil.test/actions/1"), None);
         assert_eq!(route_from_url("starlane://actions/1?x=<script>"), Some("/actions/1".into()));
         assert_eq!(route_from_url("starlane://actions/a%20b"), None);
+    }
+    #[test]
+    fn web_signin_url_is_built_safely() {
+        let u = web_signin_url("AbCdEfGhIjKlMnOp", "c0de_c0de-c0de_c0de", Some("/decisions/1")).unwrap();
+        assert_eq!(u.as_str(), "https://vantro-flow-frontend.vercel.app/auth/desktop#id=AbCdEfGhIjKlMnOp&code=c0de_c0de-c0de_c0de&next=/decisions/1");
+        assert!(web_signin_url("short", "c0de_c0de-c0de_c0de", None).is_err());
+        assert!(web_signin_url("AbCdEfGhIjKlMnOp", "bad code&x=1", None).is_err());
+        // A next that leaves the site is dropped, not followed.
+        let u = web_signin_url("AbCdEfGhIjKlMnOp", "c0de_c0de-c0de_c0de", Some("//evil.test")).unwrap();
+        assert!(!u.as_str().contains("next="));
+    }
+    #[test]
+    fn only_the_site_loads_in_the_live_window() {
+        assert!(on_site(&url::Url::parse("https://vantro-flow-frontend.vercel.app/bridge").unwrap()));
+        assert!(!on_site(&url::Url::parse("https://evil.test/").unwrap()));
+        assert!(!on_site(&url::Url::parse("http://vantro-flow-frontend.vercel.app/").unwrap()));
+        assert!(!on_site(&url::Url::parse("https://vantro-flow-frontend.vercel.app.evil.test/").unwrap()));
     }
     #[test]
     fn keyring_keys_are_allowlisted() {

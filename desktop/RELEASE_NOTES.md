@@ -1,4 +1,12 @@
-## Starlane 0.1.2 Pilot for Windows
+## Starlane 0.1.3 Pilot for Windows
+
+### What changed in 0.1.3
+- **The full Starlane app, always current.** After you sign in, the Starlane window shows the same app as the website, so every improvement appears without reinstalling. You are signed in to it automatically.
+- **Updates itself.** From this version on, Starlane checks for a newer signed version when it starts and every few hours. It installs at start-up or the next time you close the window, never in the middle of your work.
+- **Tally keeps syncing in the background.** The Tally connector now lives in the tray: right-click the Starlane icon and choose **Tally connector** to see or change it.
+- A short server or database hiccup no longer signs you out or stops the app with "Could not verify session".
+
+Install this version once by hand, over 0.1.1 or 0.1.2. Your sign-in and data are kept. After that, updates arrive on their own.
 
 ### What changed in 0.1.2
 - **Continue with Google, Apple or phone number.** These finish in your browser and then open Starlane signed in. Each one shows "Soon" until Starlane switches it on.
