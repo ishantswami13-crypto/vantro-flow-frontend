@@ -1,6 +1,6 @@
 [package]
 name = "starlane-desktop"
-version = "0.1.3"
+version = "0.1.4"
 description = "Starlane for desktop"
 authors = ["Starlane"]
 edition = "2021"
