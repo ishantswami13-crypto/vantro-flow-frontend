@@ -233,7 +233,10 @@ class TallyHost {
         imported = sum(r.imported);
       }
       for (let i = 0; i < rows.length; i += CHUNK) {
-        const r = await api().device.importTally(token, i === 0 ? runId : await api().device.startRun(token), rows.slice(i, i + CHUNK), i === 0 ? contacts : undefined);
+        // Each chunk is its own run; track the open one so a failure below
+        // closes it instead of leaving it 'running' on the server.
+        if (i > 0) runId = await api().device.startRun(token);
+        const r = await api().device.importTally(token, runId as string, rows.slice(i, i + CHUNK), i === 0 ? contacts : undefined);
         imported += sum(r.imported);
         rejected += r.rejected?.length || 0;
       }
@@ -251,10 +254,12 @@ class TallyHost {
       this.failures++;
       const { phase, message, code } = describe(e);
       if (phase === 'revoked') return; // forget() already set state; no reschedule
-      if (runId && token && phase !== 'starlane_offline') await api().device.failRun(token, runId, message).catch(() => {});
+      // Closed as failed with the error code. If Starlane is unreachable the
+      // server closes the run itself as timed out.
+      if (runId && token && phase !== 'starlane_offline') await api().device.failRun(token, runId, message, code).catch(() => {});
       else if (!runId && token && phase === 'tally_unreachable') {
         // Make sure Starlane knows why nothing arrived.
-        try { const id = await api().device.startRun(token); await api().device.failRun(token, id, message); } catch { /* offline */ }
+        try { const id = await api().device.startRun(token); await api().device.failRun(token, id, message, code); } catch { /* offline */ }
       }
       this.set({ phase, message });
       track('client.local_sync_failed', { connector: 'tally', error_code: code, duration_ms: Date.now() - started });

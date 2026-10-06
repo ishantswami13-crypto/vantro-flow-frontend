@@ -88,6 +88,8 @@ export type ConnectorHealth =
 export interface SyncAttempt {
   id: string; status: 'running' | 'succeeded' | 'failed'; startedAt: string; finishedAt: string | null;
   recordsReceived: number; recordsImported: number; recordsRejected: number; error: string | null; clientVersion: string | null;
+  /** Why it failed, as a code (tally_unreachable, sync_timed_out, ...). */
+  errorCode?: string | null;
 }
 
 export interface Now {

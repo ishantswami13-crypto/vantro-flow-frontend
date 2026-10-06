@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { api, type DataConnection } from "@/lib/api";
+import { api, type Connector, type DataConnection } from "@/lib/api";
 import { FiChevronLeft } from "react-icons/fi";
 import { Button, Sep, StatusDot, ErrorBanner, SkeletonRows } from "@/components/v32/ui";
 import { IconSources } from "@/components/v32/icons";
@@ -73,6 +73,9 @@ function Quiet({ children }: { children: React.ReactNode }) {
 
 export default function SourcesTallyPage() {
   const [connections, setConnections] = useState<DataConnection[]>([]);
+  // Health and last sync come from the latest sync run (GET /api/connectors),
+  // not the heartbeat row, so a failed or stuck attempt is not shown as healthy.
+  const [bridge, setBridge] = useState<Connector | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -82,11 +85,20 @@ export default function SourcesTallyPage() {
       .then((res) => { if (!cancelled) setConnections(res.connections || []); })
       .catch((e) => { if (!cancelled) setLoadError(e instanceof Error ? e.message : "Connections could not be loaded."); })
       .finally(() => { if (!cancelled) setLoading(false); });
+    api.connectors.list()
+      .then((res) => { if (!cancelled) setBridge(res.connectors.find((c) => c.id === "tally") || null); })
+      .catch(() => { /* falls back to the connection row */ });
     return () => { cancelled = true; };
   }, []);
 
   const tally = connections.find((c) => c.source_type === "TALLY");
-  const status = !tally ? { label: "Not connected", color: "rgba(25,25,23,0.25)" }
+  const h = bridge?.state.health;
+  const status = h && h !== "not_connected" && h !== "unavailable"
+    ? (h === "healthy" || h === "syncing" ? { label: h === "syncing" ? "Syncing" : "Healthy", color: "#477054" }
+      : h === "error" ? { label: "Needs attention", color: "#A64F4B" }
+        : h === "delayed" || h === "stale" || h === "connected" ? { label: h === "connected" ? "Paired, not synced yet" : "Sync delayed", color: "#9B742B" }
+          : { label: "Not connected", color: "rgba(25,25,23,0.25)" })
+    : !tally ? { label: "Not connected", color: "rgba(25,25,23,0.25)" }
     : tally.status === "CONNECTED" ? { label: "Healthy", color: "#477054" }
       : tally.status === "ERROR" ? { label: "Needs attention", color: "#A64F4B" }
         : { label: "Not connected", color: "rgba(25,25,23,0.25)" };
@@ -119,9 +131,17 @@ export default function SourcesTallyPage() {
               <Quiet>Tally is not connected yet. Connect it to see its sync history and what Starlane reads from it.</Quiet>
             ) : (
               <>
-                <OverviewRow label="Last successful sync" value={tally.last_sync_at ? timeAgo(tally.last_sync_at) : "Never"} />
-                <OverviewRow label="Connected since" value={formatDate(tally.connected_at)} />
-                {tally.last_sync_error && <OverviewRow label="Last sync error" value={tally.last_sync_error} tone="warn" mono={false} />}
+                {(() => {
+                  const lastOk = bridge ? bridge.state.lastSuccessAt ?? null : tally.last_sync_at;
+                  const lastErr = bridge ? bridge.state.lastError : tally.last_sync_error;
+                  return (
+                    <>
+                      <OverviewRow label="Last successful sync" value={lastOk ? timeAgo(lastOk) : "Never"} />
+                      <OverviewRow label="Connected since" value={formatDate(tally.connected_at)} />
+                      {lastErr && <OverviewRow label="Last sync error" value={lastErr} tone="warn" mono={false} />}
+                    </>
+                  );
+                })()}
               </>
             )}
           </Section>

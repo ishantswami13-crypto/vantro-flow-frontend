@@ -48,9 +48,14 @@ function timeAgo(iso: string | null): string {
 // V32 status_dot per connector health.
 const STATUS: Record<ConnectorHealth, { label: string; color: string }> = {
   healthy: { label: "Healthy", color: "#477054" },
+  syncing: { label: "Syncing", color: "#477054" },
+  connected: { label: "Paired, not synced yet", color: "#9B742B" },
+  delayed: { label: "Sync delayed", color: "#9B742B" },
   stale: { label: "Sync overdue", color: "#9B742B" },
   error: { label: "Needs attention", color: "#A64F4B" },
   disconnected: { label: "Disconnected", color: "rgba(25,25,23,0.25)" },
+  pairing: { label: "Waiting for pairing", color: "rgba(25,25,23,0.25)" },
+  revoked: { label: "Device revoked", color: "rgba(25,25,23,0.25)" },
   not_connected: { label: "Not connected", color: "rgba(25,25,23,0.25)" },
   unavailable: { label: "Not available yet", color: "rgba(25,25,23,0.25)" },
 };
@@ -72,7 +77,7 @@ const CAPABILITY_TEXT: Record<string, string> = {
   EXECUTION_REQUIRES_APPROVAL: "Starlane can act through it, only after you approve each action",
 };
 
-const isConnected = (c: Connector) => ["healthy", "stale", "error"].includes(c.state.health);
+const isConnected = (c: Connector) => ["healthy", "syncing", "connected", "delayed", "stale", "error"].includes(c.state.health);
 
 const COLS = "grid-cols-[16px_1fr_auto] md:grid-cols-[16px_160px_130px_110px_1fr_auto]";
 
@@ -85,7 +90,7 @@ function TableHeader() {
 }
 
 function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
-  const st = STATUS[c.state.health];
+  const st = STATUS[c.state.health] || { label: c.state.health.replace(/_/g, " "), color: "rgba(25,25,23,0.25)" };
   const href = c.authType === "local_bridge" ? "/sources/tally" : undefined;
   const cap = isConnected(c) && c.state.capabilityLabel ? CAPABILITY_TEXT[c.state.capabilityLabel] : undefined;
   const body = (
