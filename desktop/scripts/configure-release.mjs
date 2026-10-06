@@ -1,7 +1,6 @@
 // Prepares src-tauri/tauri.conf.json for a CI release build from environment
 // variables, so no key or certificate detail is ever committed:
-//   TAURI_UPDATER_PUBKEY        public half of the updater signing key (repo variable;
-//                               defaults to the committed desktop/updater.pub)
+//   TAURI_UPDATER_PUBKEY        public half of the updater signing key (repo variable)
 //                               → embeds the key and produces signed update artifacts
 //   WINDOWS_CERT_THUMBPRINT     thumbprint of the imported code-signing certificate
 //                               → Authenticode-signs the installer and the app
@@ -19,11 +18,7 @@ import { readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 
 const path = new URL('../src-tauri/tauri.conf.json', import.meta.url);
 const conf = JSON.parse(readFileSync(path, 'utf8'));
-// The public half is not a secret: it is committed (desktop/updater.pub) so a
-// release only needs the private key as a repository secret. A repository
-// variable still overrides it.
-const committedPubkey = (() => { try { return readFileSync(new URL('../updater.pub', import.meta.url), 'utf8'); } catch { return ''; } })();
-const pubkey = (process.env.TAURI_UPDATER_PUBKEY || committedPubkey).trim();
+const pubkey = (process.env.TAURI_UPDATER_PUBKEY || '').trim();
 const thumb = (process.env.WINDOWS_CERT_THUMBPRINT || '').trim();
 const signingKey = !!(process.env.TAURI_SIGNING_PRIVATE_KEY || '').trim();
 
