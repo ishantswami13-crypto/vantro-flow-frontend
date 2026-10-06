@@ -1,6 +1,6 @@
 {
   "name": "starlane-desktop",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "type": "module",
   "description": "Starlane for Windows and macOS: native shell (Tauri) around a purpose-built interface, with the local Tally connector host.",

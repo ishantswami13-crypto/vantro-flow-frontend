@@ -1,4 +1,8 @@
-## Starlane 0.1.3 Pilot for Windows
+## Starlane 0.1.4 Pilot for Windows
+
+### What changed in 0.1.4
+- **Signing in no longer opens a "page doesn't exist" screen.** The page the app uses to sign its window in to Starlane was missing from the website; it is back.
+- If you have 0.1.3, this version arrives by itself: Starlane installs it when it starts or the next time you close the window.
 
 ### What changed in 0.1.3
 - **The full Starlane app, always current.** After you sign in, the Starlane window shows the same app as the website, so every improvement appears without reinstalling. You are signed in to it automatically.

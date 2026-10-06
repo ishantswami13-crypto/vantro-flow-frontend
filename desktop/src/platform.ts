@@ -55,7 +55,7 @@ export async function platformFetch(input: string, init?: RequestInit) {
 
 export interface AppInfo { version: string; os: string; arch: string; device_name: string; updater_configured: boolean }
 export async function appInfo(): Promise<AppInfo> {
-  if (!isDesktop) return { version: '0.1.3', os: 'browser-preview', arch: '', device_name: 'Browser preview', updater_configured: false };
+  if (!isDesktop) return { version: '0.1.4', os: 'browser-preview', arch: '', device_name: 'Browser preview', updater_configured: false };
   return invoke<AppInfo>('app_info');
 }
 
