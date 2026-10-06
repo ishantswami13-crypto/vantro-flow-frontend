@@ -80,10 +80,17 @@ export default function ControlApprovalsPage() {
 
   const load = () => {
     setLoadError(null);
+    // ?id=<action id> (from Prepared's Review) opens with that action selected.
+    let linkedId: string | null = null;
+    try { linkedId = new URLSearchParams(window.location.search).get("id"); } catch { /* no window */ }
     api.aiActions.list("pending")
       .then(res => {
-        setActions(res.actions || []);
-        setSelectedId(prev => (prev && (res.actions || []).some(a => a.id === prev) ? prev : null));
+        const list = res.actions || [];
+        setActions(list);
+        setSelectedId(prev => {
+          if (prev && list.some(a => a.id === prev)) return prev;
+          return linkedId && list.some(a => a.id === linkedId) ? linkedId : null;
+        });
       })
       .catch(() => {
         setActions(null);

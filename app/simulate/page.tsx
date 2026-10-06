@@ -185,7 +185,7 @@ function SimulatePageInner() {
                 <SimCard label="Overdue vs today" value={fmt(result.delta.delta)} color={result.delta.direction === "IMPROVEMENT_VS_BASELINE" ? "#477054" : result.delta.direction === "WORSE_VS_BASELINE" ? "#A64F4B" : "#191917"} note={result.delta.note} />
               </div>
               <p style={{ fontSize: 12.5, color: "#8A8A86" }}>
-                Currency: {result.fx.impact_mode === "NO_EFFECT" || result.fx.impact_mode === "INSUFFICIENT_CONTEXT" ? `no exposure to model. ${result.fx.reason}` : result.fx.reason}
+                Currency: {result.fx.reason}
               </p>
             </>
           )}

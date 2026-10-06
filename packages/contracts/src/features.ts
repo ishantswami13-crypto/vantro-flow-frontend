@@ -62,6 +62,8 @@ export interface Mission {
   history?: Array<{ event: string; at: string }>;
   allowed?: Array<'activate' | 'pause' | 'cancel'>;
   targetInvoices?: Array<{ id: string; customer: string; invoiceNumber: string | null; amount: number; daysOverdue: number }> | null;
+  /** The agent that proposes this mission's actions (detail view only). */
+  assigned?: { agent: string; model: string; owner: string };
 }
 export interface MissionInput { title?: string; customer?: string; invoiceIds?: string[]; targetAmount?: number; horizonDays?: number; constraints?: Partial<MissionConstraints> }
 export interface MissionDraft { title: string; objective: string; target: { amount: number; invoiceIds: string[] }; horizonDays: number; constraints: MissionConstraints; excluded: Array<{ id: string; customer: string; reason: string }> }

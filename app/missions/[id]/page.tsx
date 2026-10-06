@@ -10,6 +10,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Link from "next/link";
 import { request } from "@/lib/api";
 import { FeatureActionRow } from "@/components/features/FeatureActionRow";
+import { agentLabel } from "@/components/os/MissionsList";
+import { osApi } from "@/lib/os";
 import type { Mission } from "../../../packages/contracts/src/features";
 
 const RULE = "rgba(25,25,23,0.10)", GRAPHITE = "#63635F";
@@ -28,6 +30,10 @@ export default function MissionPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [agentNames, setAgentNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    osApi.agents().then((r) => setAgentNames(Object.fromEntries(r.agents.map((a) => [a.key, a.name])))).catch(() => {});
+  }, []);
 
   const load = useCallback(() => {
     request<{ mission: Mission }>(`/api/client/missions/${encodeURIComponent(id)}`)
@@ -124,6 +130,7 @@ export default function MissionPage() {
                   {note ? <p role="status" style={{ margin: 0, fontSize: 13 }}>{note}</p> : null}
                   {error ? <p role="alert" style={{ margin: 0, fontSize: 13, color: "#A23B3B" }}>{error}</p> : null}
                   <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "4px 14px", fontSize: 13 }}>
+                    {m.assigned ? <><dt style={{ color: GRAPHITE }}>Agent</dt><dd style={{ margin: 0 }}>{agentLabel(m.assigned.agent, agentNames)} · proposes actions, you approve each one</dd></> : null}
                     <dt style={{ color: GRAPHITE }}>Horizon</dt><dd style={{ margin: 0 }}>{m.horizonDays} days{m.endsAt ? ` · ends ${new Date(m.endsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : ""}</dd>
                     <dt style={{ color: GRAPHITE }}>Escalation</dt><dd style={{ margin: 0 }}>{m.constraints.allowEscalation ? "Allowed" : "Reminders only"}</dd>
                     <dt style={{ color: GRAPHITE }}>Disputed</dt><dd style={{ margin: 0 }}>Always left out</dd>

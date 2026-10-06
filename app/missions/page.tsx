@@ -19,6 +19,9 @@ type Tab = MissionFilter | "workflows";
 export default function MissionsPage() {
   const [tab, setTab] = useState<Tab>("active");
   const { data, error, loading } = useLoad(() => osApi.missions());
+  // Agent names for each mission's assigned worker; keys still read if this fails.
+  const agents = useLoad(() => osApi.agents());
+  const agentNames = Object.fromEntries((agents.data?.agents || []).map((a) => [a.key, a.name]));
   const all = data?.missions || [];
   const n = (k: MissionFilter) => (data ? missionCount(all, k) : null);
   return (
@@ -42,7 +45,7 @@ export default function MissionsPage() {
         <WorkflowsPanel />
       ) : (
         <>
-          <MissionsList all={all} filter={tab} loading={loading} error={error} />
+          <MissionsList all={all} filter={tab} loading={loading} error={error} agentNames={agentNames} />
           {tab === "active" && <OutreachSummary context="missions" />}
         </>
       )}
