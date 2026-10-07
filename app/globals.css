@@ -935,13 +935,18 @@ button:disabled { cursor: default; }
 .lib-star { position: absolute; top: 10px; right: 10px; }
 
 /* Agents gallery: ready-agent cards in the Library card style. */
-.agent-grid { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
-.agent-card { gap: 14px; padding: 20px; min-height: 210px; }
-.agent-purpose { font-size: 13px; color: var(--ink-2); line-height: 1.55; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.agent-perm { font-size: 11.5px; color: var(--ink-2); padding: 3px 9px; border-radius: 999px; background: rgb(var(--tk-ink) / 0.04); }
-.agent-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid rgb(var(--tk-ink) / 0.06); display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--ink-3); }
-.agent-card-muted { cursor: default; background: rgb(var(--tk-surface) / 0.35); }
-.agent-card-muted:hover { background: rgb(var(--tk-surface) / 0.35); translate: none; box-shadow: none; border-color: rgb(var(--tk-ink) / 0.08); }
+.agent-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.agent-card { gap: 14px; padding: 20px; min-height: 212px; background: var(--surface); border-color: var(--line); border-radius: var(--radius-lg); }
+.agent-card:hover, .agent-card:focus-visible { background: var(--surface); border-color: var(--line-emphasis); box-shadow: none; }
+.agent-card:hover .row-chevron { transform: translateX(2px); color: var(--ink); }
+.agent-name { font-size: 15px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
+.agent-purpose { font-size: 13px; color: var(--ink-2); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.agent-purpose-full { -webkit-line-clamp: 4; }
+.agent-perm { font-size: 12px; color: var(--ink-2); padding: 3px 9px; border-radius: var(--radius-full); background: rgb(var(--tk-ink) / 0.05); }
+.agent-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--ink-3); }
+.agent-foot .row-chevron { transition: transform var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
+.agent-card-muted { cursor: default; background: transparent; min-height: 0; }
+.agent-card-muted:hover { background: transparent; translate: none; box-shadow: none; border-color: var(--line); }
 
 /* ============================================================
    SHARED CONTROLS (tokens only)
