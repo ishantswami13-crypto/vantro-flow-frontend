@@ -6,18 +6,15 @@ interface LoadingStateProps {
   className?: string;
 }
 
-// Generic section-level loading skeleton. Modeled on the SkeletonCard pattern
-// already used in app/forecast/page.tsx — promoted here so every Business
-// State section (and any future section) shares one implementation instead
-// of each page hand-rolling its own pulse animation.
+// Section loading skeleton: the shape of what is coming, never a fake value.
 export function LoadingState({ label, rows = 1, className = "" }: LoadingStateProps) {
   return (
-    <div className={["animate-pulse", className].join(" ")} role="status" aria-label={label || "Loading"}>
+    <div className={className} role="status" aria-busy="true" aria-label={label || "Loading"}>
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="card-metric p-5 mb-3 last:mb-0">
-          <div className="h-3 w-24 bg-surface-3 rounded mb-4" />
-          <div className="h-6 w-40 bg-surface-3 rounded mb-2" />
-          <div className="h-2.5 w-28 bg-surface-3 rounded" />
+        <div key={i} className="ui-panel" style={{ padding: 18, marginBottom: i === rows - 1 ? 0 : 10 }}>
+          <div className="skeleton" style={{ height: 10, width: 96, marginBottom: 14 }} />
+          <div className="skeleton" style={{ height: 18, width: 160, marginBottom: 10 }} />
+          <div className="skeleton" style={{ height: 9, width: 120 }} />
         </div>
       ))}
       <span className="sr-only">{label || "Loading"}</span>

@@ -9,28 +9,33 @@ import React from "react";
 import Link from "next/link";
 import { FiChevronRight } from "react-icons/fi";
 import { IconSearch, IconSparkle } from "./icons";
+import { formatRelative, formatClock } from "@/lib/format";
 
+// Every value reads a token from app/tokens.css, so these follow the theme.
 export const V = {
-  ink: "#191917",
-  secondary: "#63635F",
-  tertiary: "#8A8A86",
-  body: "#43433F",
-  divider: "#EBEAE6",
-  hairline: "#E5E4DF",
-  strong: "#D7D6D0",
-  card: "rgba(25,25,23,0.10)",
-  input: "rgba(25,25,23,0.12)",
-  button: "rgba(25,25,23,0.14)",
-  emphasis: "rgba(25,25,23,0.16)",
-  rowSubtle: "rgba(25,25,23,0.06)",
-  surface2: "#F3F2EE",
-  positive: "#477054",
-  warning: "#9B742B",
-  critical: "#A64F4B",
-  neutralDot: "rgba(25,25,23,0.25)",
-  accent: "var(--accent, #696D86)",
-  serif: "'Fraunces', Georgia, serif",
-  mono: "'Plus Jakarta Sans', system-ui, sans-serif",
+  ink: "var(--ink)",
+  secondary: "var(--ink-2)",
+  tertiary: "var(--ink-3)",
+  body: "var(--body)",
+  divider: "var(--line)",
+  hairline: "var(--line-hairline)",
+  strong: "var(--line-strong)",
+  card: "var(--line-card)",
+  input: "var(--line-input)",
+  button: "var(--line-button)",
+  emphasis: "var(--line-emphasis)",
+  rowSubtle: "var(--line-row)",
+  surface: "var(--surface)",
+  surface2: "var(--surface-2)",
+  elevated: "var(--elevated)",
+  positive: "var(--positive)",
+  warning: "var(--warning)",
+  critical: "var(--critical)",
+  info: "var(--info)",
+  neutralDot: "rgb(var(--tk-ink) / 0.25)",
+  accent: "var(--accent)",
+  serif: "var(--font-display)",
+  mono: "var(--font-sans)",
 };
 
 /** Page title row: Fraunces 26px, an optional one-line subtitle and a right slot. */
@@ -146,10 +151,10 @@ export function Chevron({ size = 14 }: { size?: number }) {
   return <FiChevronRight aria-hidden="true" size={size} strokeWidth={1.6} className="row-chevron shrink-0" style={{ color: V.tertiary }} />;
 }
 
-/** White card: 1px rgba(25,25,23,0.10) border, 8px radius, no shadow. */
+/** White card: 1px rgb(var(--tk-ink) / 0.10) border, 8px radius, no shadow. */
 export function Card({ children, className = "", style, lift = false }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; lift?: boolean }) {
   return (
-    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 8, ...style }}>
+    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "var(--surface)", border: `1px solid ${V.card}`, borderRadius: 8, ...style }}>
       {children}
     </div>
   );
@@ -170,8 +175,8 @@ export function Button({ children, onClick, primary, disabled, type = "button", 
   const cls = `${disabled ? "" : primary ? "btn-primary-v32" : "btn-secondary-v32"} inline-flex items-center justify-center gap-1.5 whitespace-nowrap ${className}`;
   const style: React.CSSProperties = {
     padding: small ? "6px 12px" : "9px 14px", borderRadius: 6, fontSize: small ? 12 : 13, fontWeight: 400,
-    background: primary ? "#191917" : "transparent", color: primary ? "#F7F7F4" : V.body,
-    border: `1px solid ${primary ? "#191917" : V.button}`, opacity: disabled ? 0.4 : 1, cursor: disabled ? "default" : "pointer",
+    background: primary ? "var(--ink)" : "transparent", color: primary ? "var(--bg)" : V.body,
+    border: `1px solid ${primary ? "var(--ink)" : V.button}`, opacity: disabled ? 0.4 : 1, cursor: disabled ? "default" : "pointer",
   };
   if (href && !disabled) return <Link href={href} className={cls} style={style} title={title}>{children}</Link>;
   return <button type={type} onClick={onClick} disabled={disabled} className={cls} style={style} title={title}>{children}</button>;
@@ -228,7 +233,7 @@ export function EntityRow({ type, name, relevance, metric, href, onClick }: {
 export function Lettermark({ letter, size = 30 }: { letter: string; color?: string; size?: number }) {
   return (
     <span aria-hidden="true" className="inline-flex items-center justify-center shrink-0"
-      style={{ width: size, height: size, borderRadius: Math.round(size * 0.26), background: "#FFFFFF", color: V.ink, boxShadow: `inset 0 0 0 1px ${V.card}`, fontFamily: V.serif, fontSize: Math.round(size * 0.5) }}>
+      style={{ width: size, height: size, borderRadius: Math.round(size * 0.26), background: "var(--surface)", color: V.ink, boxShadow: `inset 0 0 0 1px ${V.card}`, fontFamily: V.serif, fontSize: Math.round(size * 0.5) }}>
       {(letter || "?").charAt(0).toUpperCase()}
     </span>
   );
@@ -264,42 +269,23 @@ export function SkeletonRows({ rows = 3, height = 52 }: { rows?: number; height?
 
 export function ErrorBanner({ children }: { children: React.ReactNode }) {
   return (
-    <div role="alert" style={{ fontSize: 12.5, color: V.critical, background: "#A64F4B0d", border: "1px solid rgba(166,79,75,0.2)", borderRadius: 6, padding: "8px 12px" }}>
+    <div role="alert" style={{ fontSize: 12.5, color: V.critical, background: "#A64F4B0d", border: "1px solid rgb(var(--tk-critical) / 0.2)", borderRadius: 6, padding: "8px 12px" }}>
       {children}
     </div>
   );
 }
 
-/** Relative time in the design's voice: "3m ago", "2h ago". */
-export function ago(iso: string | null | undefined): string {
-  if (!iso) return "";
-  const ms = Date.now() - new Date(iso).getTime();
-  if (!Number.isFinite(ms)) return "";
-  if (ms < 60_000) return "just now";
-  const m = Math.floor(ms / 60_000);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return d === 1 ? "yesterday" : `${d}d ago`;
-}
-
-export function clockTime(iso: string | null | undefined): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  const today = new Date();
-  if (d.toDateString() === today.toDateString()) return d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-}
+/** Relative time ("3m ago") and clock time, from the shared formatters. */
+export const ago = (iso: string | null | undefined): string => formatRelative(iso);
+export const clockTime = (iso: string | null | undefined): string => formatClock(iso);
 
 /** Icon tile: a soft square that gives a row a visual anchor. `tone` tints it
  *  for rows that need attention. */
 export function IconTile({ children, tone, size = 34 }: { children: React.ReactNode; tone?: "critical" | "warning" | "positive"; size?: number }) {
-  const t = tone === "critical" ? { bg: "rgba(166,79,75,0.09)", fg: V.critical }
-    : tone === "warning" ? { bg: "rgba(155,116,43,0.10)", fg: V.warning }
-    : tone === "positive" ? { bg: "rgba(71,112,84,0.10)", fg: V.positive }
-    : { bg: "#FFFFFF", fg: V.body };
+  const t = tone === "critical" ? { bg: "rgb(var(--tk-critical) / 0.09)", fg: V.critical }
+    : tone === "warning" ? { bg: "rgb(var(--tk-warning) / 0.10)", fg: V.warning }
+    : tone === "positive" ? { bg: "rgb(var(--tk-positive) / 0.10)", fg: V.positive }
+    : { bg: V.surface, fg: V.body };
   return (
     <span aria-hidden="true" className="shrink-0 inline-flex items-center justify-center" style={{ width: size, height: size, borderRadius: 9, background: t.bg, color: t.fg, boxShadow: tone ? undefined : `inset 0 0 0 1px ${V.card}` }}>
       {children}
