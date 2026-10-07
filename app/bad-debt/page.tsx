@@ -3,7 +3,8 @@ import { isLoggedIn } from "@/lib/api";
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { FiAlertTriangle, FiPhone, FiMessageSquare, FiDownload } from "react-icons/fi";
-import { getUser, authHeaders } from "@/lib/api";
+import { getUser, authHeaders } from "@/lib/api";
+import { inr } from "@/lib/format";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -108,7 +109,7 @@ export default function BadDebtPage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Total at Risk",    value: `₹${(totalAtRisk / 100000).toFixed(1)}L`, sub: `${accounts.length} accounts`, color: "text-danger" },
+            { label: "Total at Risk",    value: inr(totalAtRisk), sub: `${accounts.length} accounts`, color: "text-danger" },
             { label: "Critical (120d+)", value: criticalCount,                             sub: "Needs legal notice",           color: "text-danger" },
             { label: "High Risk (90d+)", value: highCount,                                 sub: "Personal call needed",         color: "text-warning" },
           ].map(s => (

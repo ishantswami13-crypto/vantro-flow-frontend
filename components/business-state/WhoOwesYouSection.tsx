@@ -1,6 +1,7 @@
 import React from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { BrainSummary } from "@/lib/api";
+import { inr } from "@/lib/format";
 
 interface WhoOwesYouSectionProps {
   brain: BrainSummary | null;
@@ -8,12 +9,9 @@ interface WhoOwesYouSectionProps {
 
 const TOP_N = 8;
 
+// Money is always written in full (lib/format).
 function fmtINR(n: number): string {
-  const abs = Math.abs(n);
-  if (abs >= 10000000) return `₹${(abs / 10000000).toFixed(2)}Cr`;
-  if (abs >= 100000) return `₹${(abs / 100000).toFixed(2)}L`;
-  if (abs >= 1000) return `₹${(abs / 1000).toFixed(1)}K`;
-  return `₹${abs.toLocaleString("en-IN")}`;
+  return inr(n);
 }
 
 // Q2 — "who owes me money, and who is taking too long to pay": a plain

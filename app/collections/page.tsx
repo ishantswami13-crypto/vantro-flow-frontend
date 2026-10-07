@@ -12,7 +12,8 @@ import {
   FiUpload, FiX, FiCopy, FiMessageCircle, FiSend,
   FiZap, FiPlus, FiEye, FiCalendar, FiAlertCircle,
 } from "react-icons/fi";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { inr } from "@/lib/format";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 const CACHE_KEY = "vantro_collections_cache";
@@ -51,7 +52,7 @@ interface PromiseRecord {
 }
 
 function fmt(n: number) {
-  return n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${(n / 1000).toFixed(0)}K`;
+  return inr(n);
 }
 
 function timeAgo(iso: string): string {
@@ -812,7 +813,7 @@ export default function CollectionsPage() {
               <div key={b.label} className="rounded-xl border p-3" style={{ background: b.glow, borderColor: `${b.color}20` }}>
                 <p className="text-[10px] text-muted font-medium mb-1">{b.label}</p>
                 <p className="text-sm font-black" style={{ color: b.color }}>
-                  ₹{b.value >= 100000 ? `${(b.value / 100000).toFixed(1)}L` : b.value >= 1000 ? `${(b.value / 1000).toFixed(0)}K` : b.value}
+                  {inr(b.value)}
                 </p>
               </div>
             ))}
@@ -830,7 +831,7 @@ export default function CollectionsPage() {
             <div className="flex items-stretch divide-x divide-border">
               <div className="pr-5">
                 <p className="metric-value text-xl text-primary">
-                  ₹{totalOut >= 100000 ? `${(totalOut / 100000).toFixed(1)}L` : `${(totalOut / 1000).toFixed(0)}K`}
+                  {inr(totalOut)}
                 </p>
                 <p className="text-2xs text-muted mt-0.5">Total outstanding</p>
               </div>

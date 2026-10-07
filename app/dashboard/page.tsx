@@ -13,6 +13,7 @@ import { api, getUser, type Metrics, type Invoice, type OwnerBriefingResponse, t
 import QuickSale from "@/components/QuickSale";
 import OwnerBriefingCard from "@/components/agents/OwnerBriefingCard";
 import { isDemoMode } from "@/lib/demo";
+import { inr } from "@/lib/format";
 
 const DEMO_BRIEFING = "3 priority calls today — Mehta Fabrics (₹8.4L, 62 days overdue) first. Sharma Steel didn't pick up last time — try again. Cash runway is 12 days; ₹5L+ is needed this week.";
 
@@ -23,8 +24,9 @@ function getGreeting(): string {
 
 const CUSTOMERS: { id: number; name: string; outstanding: number; days: number; score: number; lastPayment: string; contact: string }[] = [];
 
+// Money is always written in full (lib/format).
 function fmtAmt(n: number) {
-  return n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${(n / 1000).toFixed(0)}K`;
+  return inr(n);
 }
 
 // Three example prompts shown BELOW the input, not chip buttons inside it —
@@ -158,7 +160,7 @@ export default function DashboardPage() {
   const healthDomains: { label: string; value: string; sub: string; critical: boolean }[] = [
     {
       label: "Cashflow",
-      value: `${netCash < 0 ? "-" : ""}₹${(Math.abs(netCash) / 100000).toFixed(1)}L`,
+      value: inr(netCash),
       sub: netCash < 0 ? "payables exceed receivables" : "net position",
       critical: netCash < 0,
     },
@@ -170,19 +172,19 @@ export default function DashboardPage() {
     },
     {
       label: "Payables",
-      value: `₹${(payablesDue / 100000).toFixed(1)}L`,
+      value: inr(payablesDue),
       sub: "bills + purchases due",
       critical: payablesDue > (metrics?.total_outstanding || 0) && payablesDue > 0,
     },
     {
       label: "Credit risk",
       value: String(liveRiskCustomers.length),
-      sub: liveRiskCustomers.length > 0 ? `₹${(riskTotal / 100000).toFixed(1)}L at 60–89d` : "no customers at risk",
+      sub: liveRiskCustomers.length > 0 ? `${inr(riskTotal)} at 60–89 days` : "No customer at risk",
       critical: liveRiskCustomers.length > 2,
     },
     {
       label: "Overdue 30d+",
-      value: `₹${(overdue30 / 100000).toFixed(1)}L`,
+      value: inr(overdue30),
       sub: "past 30 days",
       critical: overdue30 > (metrics?.total_outstanding || 1) * 0.3,
     },

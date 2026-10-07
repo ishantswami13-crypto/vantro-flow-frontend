@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, authHeaders, getToken, getUser, type CustomerPortfolioResponse } from "@/lib/api";
 import { FiBook, FiMessageSquare, FiPhone, FiSearch, FiUser, FiUsers, FiAlertTriangle } from "react-icons/fi";
-import { LensDrawer, type LensSection } from "@/components/ui/LensDrawer";
+import { LensDrawer, type LensSection } from "@/components/ui/LensDrawer";
+import { inr } from "@/lib/format";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -20,7 +21,7 @@ type Customer = {
 };
 
 const fmtINR = (n: number) =>
-  n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${Math.round(n).toLocaleString("en-IN")}`;
+  inr(n);
 
 const fmtDate = (value?: string | null) => {
   if (!value) return "No activity";

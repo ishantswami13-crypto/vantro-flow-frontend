@@ -11,10 +11,11 @@ import {
 } from "recharts";
 import { api, getUser } from "@/lib/api";
 import type { ForecastV2Response } from "@/lib/api";
-import Link from "next/link";
+import Link from "next/link";
+import { inr } from "@/lib/format";
 
 function fmt(v: number) {
-  return v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : `₹${(v / 1000).toFixed(0)}K`;
+  return inr(v);
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -401,7 +402,7 @@ export default function ForecastPage() {
                     <td className="px-4 py-3.5 text-xs font-semibold text-primary">{c.name}</td>
                     <td className="px-4 py-3.5 text-right">
                       <span className="metric-value text-sm text-accent">
-                        {c.amount >= 100000 ? `₹${(c.amount/100000).toFixed(1)}L` : `₹${c.amount.toLocaleString("en-IN")}`}
+                        {inr(c.amount)}
                       </span>
                     </td>
                     <td className="px-4 py-3.5 text-right hidden sm:table-cell">

@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getToken, getUser } from "@/lib/api";
 import { FiSearch, FiTruck, FiPhone, FiCalendar, FiAlertTriangle, FiX, FiFileText, FiChevronRight } from "react-icons/fi";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { inr } from "@/lib/format";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -57,7 +58,7 @@ type SupplierPurchase = {
 };
 
 const fmtINR = (n: number) =>
-  n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${Math.round(n).toLocaleString("en-IN")}`;
+  inr(n);
 
 const fmtDate = (d?: string | null) => {
   if (!d) return "No purchases";

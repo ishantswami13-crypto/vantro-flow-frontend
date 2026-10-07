@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { api, getUser } from "@/lib/api";
+import { api, getUser } from "@/lib/api";
+import { inr } from "@/lib/format";
 import {
   FiArrowDown, FiArrowUp, FiActivity, FiPlus, FiX, FiZap,
   FiShield, FiAlertTriangle, FiCheckCircle, FiTrendingUp,
@@ -19,10 +20,7 @@ const PAYMENT_METHODS = ["UPI", "Cash", "Bank Transfer", "Cheque", "NEFT/RTGS"];
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
 function fmt(n: number): string {
-  if (n >= 10000000) return `₹${(n / 10000000).toFixed(2)}Cr`;
-  if (n >= 100000)   return `₹${(n / 100000).toFixed(2)}L`;
-  if (n >= 1000)     return `₹${(n / 1000).toFixed(1)}K`;
-  return `₹${n.toLocaleString("en-IN")}`;
+  return inr(n);
 }
 function fmtFull(n: number): string {
   return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 0 })}`;

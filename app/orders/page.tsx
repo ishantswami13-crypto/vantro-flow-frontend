@@ -2,6 +2,7 @@
 import { authHeaders } from "@/lib/api";
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { inr } from "@/lib/format";
 import {
   FiPlus, FiPhone, FiMapPin, FiClock, FiPackage,
   FiChevronDown, FiChevronUp, FiTrash2, FiMic,
@@ -34,8 +35,9 @@ interface Order {
 function fmtTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 }
+// Money is always written in full (lib/format).
 function fmtINR(n: number) {
-  return "₹" + Number(n).toLocaleString("en-IN");
+  return inr(n);
 }
 
 export default function OrdersPage() {

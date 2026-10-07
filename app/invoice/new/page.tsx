@@ -9,6 +9,7 @@ import {
   FiFileText, FiMessageSquare, FiZap, FiPackage,
 } from "react-icons/fi";
 import { api, getUser, authHeaders } from "@/lib/api";
+import { inr } from "@/lib/format";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -30,8 +31,9 @@ function calcItemAmount(item: LineItem): number {
   return Math.round(q * r * 100) / 100;
 }
 
+// Money is always written in full (lib/format).
 function fmtINR(n: number) {
-  return "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  return inr(n);
 }
 
 // ── Step progress bar ──────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type ScenarioInvoice, type SimulateScenarioResponse } from "@/lib/api";
 import { SalesWhatIf, WorkflowReplays } from "@/components/os/SimulatePanels";
 import { PageHeader, Subnav } from "@/components/v32/ui";
+import { inr } from "@/lib/format";
 
 // Simulate — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§6/§14/§16.
 //
@@ -28,9 +29,7 @@ import { PageHeader, Subnav } from "@/components/v32/ui";
 
 const fmt = (n: number | null | undefined) => {
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
-  const abs = Math.abs(n);
-  const sign = n < 0 ? "-" : "";
-  return abs >= 100000 ? `${sign}₹${(abs / 100000).toFixed(1)}L` : `${sign}₹${Math.round(abs).toLocaleString("en-IN")}`;
+  return inr(n);
 };
 
 export default function SimulatePage() {

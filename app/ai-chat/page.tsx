@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { api, getUser, type ChatMessage, authHeaders, isLoggedIn } from "@/lib/api";
-import { posthog } from "@/lib/posthog";
+import { posthog } from "@/lib/posthog";
+import { inr } from "@/lib/format";
 import {
   getSpeechRecognitionConstructor,
   type WebSpeechRecognition,
@@ -63,10 +64,7 @@ type TabKey = "briefing" | "chat" | "callcenter";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 function fmt(n: number) {
-  return n >= 10000000 ? `₹${(n / 10000000).toFixed(1)}Cr`
-    : n >= 100000 ? `₹${(n / 100000).toFixed(1)}L`
-    : n >= 1000 ? `₹${(n / 1000).toFixed(0)}K`
-    : `₹${n}`;
+  return inr(n);
 }
 
 function formatMsg(text: string) {

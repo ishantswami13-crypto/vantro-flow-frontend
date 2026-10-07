@@ -1,18 +1,15 @@
 import React from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { BrainSummary } from "@/lib/api";
+import { inr } from "@/lib/format";
 
 interface MoneySectionProps {
   brain: BrainSummary | null;
 }
 
+// Money is always written in full (lib/format).
 function fmtINR(n: number): string {
-  const abs = Math.abs(n);
-  const sign = n < 0 ? "-" : "";
-  if (abs >= 10000000) return `${sign}₹${(abs / 10000000).toFixed(2)}Cr`;
-  if (abs >= 100000) return `${sign}₹${(abs / 100000).toFixed(2)}L`;
-  if (abs >= 1000) return `${sign}₹${(abs / 1000).toFixed(1)}K`;
-  return `${sign}₹${abs.toLocaleString("en-IN")}`;
+  return inr(n);
 }
 
 // Cash position: receivable / payable / net, from brain.position only.

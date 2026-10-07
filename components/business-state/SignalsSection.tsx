@@ -2,6 +2,7 @@ import React from "react";
 import { Signal } from "./Signal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { RankedAction, BrainSummary } from "@/lib/api";
+import { inr } from "@/lib/format";
 
 interface SignalsSectionProps {
   rankedActions: RankedAction[];
@@ -17,11 +18,9 @@ const TOP_N = 3;
 // "what changed" feed, and is not presented as one.
 const CHANGE_ACTION_TYPES = new Set(["CREDIT_RISK_ALERT", "CASHFLOW_GAP_ALERT"]);
 
+// Money is always written in full (lib/format).
 function fmtINR(n: number): string {
-  const abs = Math.abs(n);
-  if (abs >= 100000) return `₹${(abs / 100000).toFixed(2)}L`;
-  if (abs >= 1000) return `₹${(abs / 1000).toFixed(1)}K`;
-  return `₹${abs.toLocaleString("en-IN")}`;
+  return inr(n);
 }
 
 // Q5 — "is there anything I should pay attention to": objective, directly

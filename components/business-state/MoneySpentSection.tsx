@@ -1,5 +1,6 @@
 import React from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { inr } from "@/lib/format";
 
 export interface PurchaseRow {
   id: string | number;
@@ -15,12 +16,9 @@ interface MoneySpentSectionProps {
   isLoading?: boolean;
 }
 
+// Money is always written in full (lib/format).
 function fmtINR(n: number): string {
-  const abs = Math.abs(n);
-  if (abs >= 10000000) return `₹${(abs / 10000000).toFixed(2)}Cr`;
-  if (abs >= 100000) return `₹${(abs / 100000).toFixed(2)}L`;
-  if (abs >= 1000) return `₹${(abs / 1000).toFixed(1)}K`;
-  return `₹${abs.toLocaleString("en-IN")}`;
+  return inr(n);
 }
 
 function fmtDate(d: string): string {

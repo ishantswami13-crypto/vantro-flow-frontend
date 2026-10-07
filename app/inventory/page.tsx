@@ -4,7 +4,8 @@ import { useMemo, useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Badge } from "@/components/ui/Badge";
 import { FiPackage, FiAlertTriangle, FiTrendingUp, FiPlus, FiSearch, FiTruck, FiBox, FiX } from "react-icons/fi";
-import { api, getUser, authHeaders } from "@/lib/api";
+import { api, getUser, authHeaders } from "@/lib/api";
+import { inr } from "@/lib/format";
 import {
   buildProductLedgerRows,
   formatQuantity,
@@ -278,7 +279,7 @@ export default function InventoryPage() {
   const querySold = ledgerAllMatches.filter(row => row.source === "sale").reduce((sum, row) => sum + row.quantity, 0);
   const queryUnit = ledgerAllMatches.find(row => row.unit)?.unit;
 
-  const fmtVal = (v: number) => v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : `₹${(v / 1000).toFixed(0)}k`;
+  const fmtVal = (v: number) => inr(v);
 
   return (
     <DashboardLayout>
@@ -376,7 +377,7 @@ export default function InventoryPage() {
                           <p className="font-semibold text-primary">{item.name}</p>
                           <p className="text-2xs text-muted">{item.quantity_sold_30d} {item.unit} sold</p>
                         </div>
-                        <span className="font-bold text-success">₹{(item.value_sold_30d / 1000).toFixed(0)}K</span>
+                        <span className="font-bold text-success">{inr(item.value_sold_30d)}</span>
                       </div>
                     ))}
                   </div>

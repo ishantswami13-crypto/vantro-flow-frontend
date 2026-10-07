@@ -8,7 +8,8 @@ import {
   FiUsers, FiPlus, FiSearch, FiPhone, FiMessageSquare,
   FiEdit2, FiX, FiCheck, FiLoader, FiAlertTriangle,
 } from "react-icons/fi";
-import { api, getUser } from "@/lib/api";
+import { api, getUser } from "@/lib/api";
+import { inr } from "@/lib/format";
 
 type Status = "lead" | "contacted" | "trial" | "customer" | "lost";
 
@@ -153,7 +154,7 @@ export default function CRMPage() {
               { label: "Total Prospects", value: counts.total.toString(),  color: "var(--accent-primary)" },
               { label: "On Trial",        value: counts.trial.toString(),   color: "var(--status-warning)" },
               { label: "Customers",       value: counts.customer.toString(),color: "var(--status-success)" },
-              { label: "Pipeline Value",  value: counts.pipeline > 0 ? (counts.pipeline >= 100000 ? `₹${(counts.pipeline/100000).toFixed(1)}L` : `₹${counts.pipeline.toLocaleString("en-IN")}`) : "—", color: "var(--accent-primary)" },
+              { label: "Pipeline Value",  value: counts.pipeline > 0 ? (inr(counts.pipeline)) : "—", color: "var(--accent-primary)" },
             ].map(k => (
               <div key={k.label} className="card-metric p-5">
                 <p className="section-label mb-3">{k.label}</p>
@@ -234,7 +235,7 @@ export default function CRMPage() {
                     <div className="mb-3">
                       <p className="section-label mb-0.5">{autoCustomer ? "Outstanding" : "Pipeline Value"}</p>
                       <p className="text-sm font-bold text-warning">
-                        {p.amount_stuck >= 100000 ? `₹${(p.amount_stuck/100000).toFixed(1)}L` : `₹${p.amount_stuck.toLocaleString("en-IN")}`}
+                        {inr(p.amount_stuck)}
                       </p>
                       {autoCustomer && (
                         <p className="text-2xs text-muted mt-1">

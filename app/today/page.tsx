@@ -10,6 +10,7 @@ import {
 } from "react-icons/fi";
 import TodayDecisionsCard from "@/components/decisions/TodayDecisionsCard";
 import { TodaySummary } from "@/components/os/TodaySummary";
+import { inr } from "@/lib/format";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -19,10 +20,9 @@ const CAT_EMOJI: Record<string,string> = {
   electricity:"💡", maintenance:"🔧", marketing:"📣", misc:"💸",
 };
 
+// Money is always written in full (lib/format).
 function fmtINR(n: number, short = false) {
-  if (short && n >= 100000) return "₹" + (n/100000).toFixed(1) + "L";
-  if (short && n >= 1000)   return "₹" + (n/1000).toFixed(0) + "K";
-  return "₹" + Number(n).toLocaleString("en-IN");
+  return inr(n);
 }
 // Local calendar date (IST for Indian users), not the UTC date.
 function localIso(dt: Date) { return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`; }

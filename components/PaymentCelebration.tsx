@@ -10,16 +10,16 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { api, getUser } from "@/lib/api";
+import { inr } from "@/lib/format";
 
 interface CelebrationData {
   name: string;
   amount: number;
 }
 
+// Money is always written in full (lib/format).
 function fmtAmt(n: number) {
-  return n >= 100000
-    ? `₹${(n / 100000).toFixed(1)}L`
-    : `₹${n.toLocaleString("en-IN")}`;
+  return inr(n);
 }
 
 export default function PaymentCelebration() {

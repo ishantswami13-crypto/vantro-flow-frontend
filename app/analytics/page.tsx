@@ -11,7 +11,8 @@ import {
   Tooltip, ResponsiveContainer, LineChart, Line, Legend,
 } from "recharts";
 import { api, getUser } from "@/lib/api";
-import Link from "next/link";
+import Link from "next/link";
+import { inr, axisInr } from "@/lib/format";
 
 const TOOLTIP_STYLE = {
   backgroundColor: "var(--bg-elevated)",
@@ -137,10 +138,10 @@ export default function AnalyticsPage() {
   // Build chart data from monthly trend (API gives recovered per month)
   const chartData = (analytics?.monthly_trend || []).slice(-(range === "1m" ? 1 : range === "3m" ? 3 : 6)).map(m => ({
     month: m.month?.slice(0, 7) || m.month,
-    collected: +(m.recovered / 100000).toFixed(1),
-    sales: +((m.sales_booked || 0) / 100000).toFixed(1),
-    purchases: +((m.purchases_booked || 0) / 100000).toFixed(1),
-    net: +((m.net_booked || 0) / 100000).toFixed(1),
+    collected: Number(m.recovered) || 0,
+    sales: Number(m.sales_booked) || 0,
+    purchases: Number(m.purchases_booked) || 0,
+    net: Number(m.net_booked) || 0,
     calls: 0,
   }));
 
@@ -156,10 +157,10 @@ export default function AnalyticsPage() {
   const totalCalls     = callLogs.reduce((s, d) => s + d.made, 0);
 
   const kpis = [
-    { label: "Sales Booked",        value: salesBooked >= 100000 ? `₹${(salesBooked/100000).toFixed(2)}L` : `₹${salesBooked.toLocaleString("en-IN")}`, color: "var(--status-success)", icon: <FiTrendingUp size={16} /> },
-    { label: "Purchases Booked",    value: purchasesBooked >= 100000 ? `₹${(purchasesBooked/100000).toFixed(2)}L` : `₹${purchasesBooked.toLocaleString("en-IN")}`, color: "var(--status-warning)", icon: <FiBarChart2 size={16} /> },
-    { label: "Booked Net",          value: `${bookedNet < 0 ? "-" : ""}₹${Math.abs(bookedNet) >= 100000 ? `${(Math.abs(bookedNet)/100000).toFixed(2)}L` : Math.abs(bookedNet).toLocaleString("en-IN")}`, color: bookedNet >= 0 ? "var(--accent-primary)" : "var(--status-danger)", icon: <FiActivity size={16} /> },
-    { label: "Cash Collected",      value: totalCollected >= 100000 ? `₹${(totalCollected/100000).toFixed(2)}L` : `₹${totalCollected.toLocaleString("en-IN")}`, color: "var(--status-success)", icon: <FiDollarSign size={16} /> },
+    { label: "Sales Booked",        value: inr(salesBooked), color: "var(--status-success)", icon: <FiTrendingUp size={16} /> },
+    { label: "Purchases Booked",    value: inr(purchasesBooked), color: "var(--status-warning)", icon: <FiBarChart2 size={16} /> },
+    { label: "Booked Net",          value: inr(bookedNet), color: bookedNet >= 0 ? "var(--accent-primary)" : "var(--status-danger)", icon: <FiActivity size={16} /> },
+    { label: "Cash Collected",      value: inr(totalCollected), color: "var(--status-success)", icon: <FiDollarSign size={16} /> },
   ];
 
   return (
@@ -242,8 +243,8 @@ export default function AnalyticsPage() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" />
                     <XAxis dataKey="month" tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number, name: string) => [`₹${v}L`, name]} />
+                    <YAxis tickFormatter={axisInr} width={56} tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number, name: string) => [inr(v), name]} />
                     <Area type="monotone" dataKey="sales" name="Sales booked" stroke="var(--status-success)" strokeWidth={2} fill="url(#gc)" />
                     <Area type="monotone" dataKey="purchases" name="Purchases booked" stroke="var(--status-warning)" strokeWidth={2} fill="transparent" />
                     <Area type="monotone" dataKey="collected" name="Cash collected" stroke="var(--accent-primary)" strokeWidth={2} fill="transparent" />
@@ -302,7 +303,7 @@ export default function AnalyticsPage() {
                           </div>
                           <div className="text-right shrink-0">
                             <p className="text-xs font-bold text-accent">
-                              {c.amount >= 100000 ? `₹${(c.amount/100000).toFixed(1)}L` : `₹${c.amount.toLocaleString("en-IN")}`}
+                              {inr(c.amount)}
                             </p>
                           </div>
                         </div>

@@ -8,7 +8,8 @@ import { LensDrawer, type LensSection } from "@/components/ui/LensDrawer";
 import { formatDateTime } from "@/components/intelligence/format";
 import { api, type SignalImpact, type IntelligenceEvidenceItem, type ImpactComponent } from "@/lib/api";
 import { FiChevronLeft } from "react-icons/fi";
-import { Button, Mono } from "@/components/v32/ui";
+import { Button, Mono } from "@/components/v32/ui";
+import { inr } from "@/lib/format";
 
 // Discover detail — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§6/§16.
 //
@@ -77,7 +78,7 @@ export default function DiscoverDetailPage() {
               <Block label="Why it matters">{impact.signal.rule_explanation}</Block>
             )}
             {impact.totalRevenueExposure != null && (
-              <Block label="Magnitude / impact">Revenue exposure of <Mono size={13}>₹{(impact.totalRevenueExposure / 100000).toFixed(1)}L</Mono> across {impact.components?.length || 0} traced component{(impact.components?.length || 0) === 1 ? "" : "s"}.</Block>
+              <Block label="Magnitude / impact">Revenue exposure of <Mono size={13}>{inr(impact.totalRevenueExposure)}</Mono> across {impact.components?.length || 0} traced component{(impact.components?.length || 0) === 1 ? "" : "s"}.</Block>
             )}
 
             {/* Known / Unknown transparency block — real, from the backend's
@@ -88,7 +89,7 @@ export default function DiscoverDetailPage() {
                 <div className="space-y-3">
                   <KVLine label="Known" value={`Quantified downstream impact across ${impact.components?.length || 0} component${(impact.components?.length || 0) === 1 ? "" : "s"}.`} tone="known" />
                   {impact.totalRevenueExposure != null && (
-                    <KVLine label="Known" value={`Total revenue exposure: ₹${(impact.totalRevenueExposure / 100000).toFixed(1)}L`} tone="known" />
+                    <KVLine label="Known" value={`Total revenue exposure: ${inr(impact.totalRevenueExposure)}`} tone="known" />
                   )}
                   <KVLine label="Unknown" value="Anything outside the traced component/order chain below is not covered by this calculation." tone="unknown" />
                 </div>
@@ -246,7 +247,7 @@ function ComponentRow({ component }: { component: ImpactComponent }) {
         </div>
         {component.revenueExposure.sufficientData && (
           <span style={{ fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--text-primary)" }}>
-            ₹{(component.revenueExposure.totalRevenueExposure / 100000).toFixed(1)}L
+            {inr(component.revenueExposure.totalRevenueExposure)}
           </span>
         )}
       </div>
