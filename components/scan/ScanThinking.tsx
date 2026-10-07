@@ -2,44 +2,36 @@
 
 import { useEffect, useState } from "react";
 import { ThinkingDots } from "@/components/v32/ui";
-import { IconCheck } from "@/components/v32/icons";
+import { ScanMark } from "./ScanMark";
 
-// What Scan is doing while the answer is on its way, shown as steps the way
-// Harvey shows its thinking. POST /api/ai-chat does not stream progress, so
-// these are the phases every request goes through in server.js, in order:
-// it always loads the business's pending invoices first, then the model
-// calls whichever read-only lookups the question needs, then writes. The
-// step moves on by elapsed time, and the last step stays open until the
-// answer actually arrives, so nothing is shown as done before it is.
-const STEPS = ["Reading your invoices", "Looking up what the question needs", "Writing the answer"];
-const AT_MS = [0, 1600, 4200];
-
+// What Scan shows while an answer is on its way. POST /api/ai-chat does not
+// stream and reports no progress, so nothing here pretends to: one honest
+// line, the real seconds elapsed, and a plain description of what every
+// request does on the server (server.js reads the open invoices first, then
+// runs whichever read-only lookups the question needs, then writes). No step
+// is ever ticked off before the answer actually arrives.
 export function ScanThinking() {
-  const [elapsed, setElapsed] = useState(0);
+  const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
     const start = Date.now();
-    const t = setInterval(() => setElapsed(Date.now() - start), 250);
+    const t = setInterval(() => setSeconds(Math.floor((Date.now() - start) / 1000)), 500);
     return () => clearInterval(t);
   }, []);
 
-  const current = AT_MS.reduce((acc, at, i) => (elapsed >= at ? i : acc), 0);
-
   return (
-    <div role="status" aria-live="polite" className="fade-once" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {STEPS.map((s, i) => {
-        if (i > current) return null;
-        const done = i < current;
-        return (
-          <div key={s} className="rise-in" style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: done ? "var(--ink-3)" : "var(--body)" }}>
-            <span style={{ width: 16, display: "inline-flex", justifyContent: "center" }}>
-              {done ? <IconCheck size={13} /> : <ThinkingDots />}
-            </span>
-            {s}
-          </div>
-        );
-      })}
-      <span className="sr-only">{STEPS[current]}</span>
+    <div role="status" aria-live="polite" className="scan-answer fade-once">
+      <div className="scan-answer-head">
+        <ScanMark />
+        <span style={{ color: "var(--ink)", fontWeight: 500 }}>Starlane</span>
+        <span className="tabular-nums" style={{ color: "var(--ink-3)" }}>{seconds > 0 ? `${seconds}s` : ""}</span>
+      </div>
+      <div className="flex items-center" style={{ gap: 10, fontSize: 14, color: "var(--body)", minHeight: 24 }}>
+        <ThinkingDots /> Reading your data and writing an answer
+      </div>
+      <p style={{ margin: "6px 0 0", fontSize: 12.5, color: "var(--ink-3)", lineHeight: 1.55 }}>
+        Starlane reads your open invoices, then runs any read-only lookups the question needs.
+      </p>
     </div>
   );
 }

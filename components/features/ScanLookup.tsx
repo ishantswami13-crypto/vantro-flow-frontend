@@ -8,13 +8,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { request } from "@/lib/api";
 import type { CustomerScan, InvoiceScan, ScanSearch } from "../../packages/contracts/src/features";
+import { inrWhole as inr, formatCount } from "@/lib/format";
+import { humaneError } from "@/components/scan/humaneError";
 
-const RULE = "rgb(var(--tk-ink) / 0.10)", GRAPHITE = "var(--ink-2)";
-const inr = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
+const RULE = "var(--line-card)", GRAPHITE = "var(--ink-2)";
 function show(v: unknown, unit?: string) {
-  if (v === null || v === undefined || v === "") return "—";
+  if (v === null || v === undefined || v === "") return "Not known yet";
   if (typeof v === "boolean") return v ? "Yes" : "No";
-  if (typeof v === "number") return unit === "INR" ? inr(v) : `${v.toLocaleString("en-IN")}${unit && unit !== "INR" ? ` ${unit}` : ""}`;
+  if (typeof v === "number") return unit === "INR" ? inr(v) : `${formatCount(v)}${unit && unit !== "INR" ? ` ${unit}` : ""}`;
   return String(v);
 }
 
@@ -43,35 +44,35 @@ export default function ScanLookup() {
 
   async function openCustomer(key: string) {
     setError(null); setInvoice(null);
-    try { setScan((await request<{ scan: CustomerScan }>(`/api/client/scan/customer/${encodeURIComponent(key)}`)).scan); } catch (e) { setError((e as Error).message); }
+    try { setScan((await request<{ scan: CustomerScan }>(`/api/client/scan/customer/${encodeURIComponent(key)}`)).scan); } catch (e) { setError(humaneError(e)); }
   }
   async function openInvoice(id: string) {
     setError(null);
-    try { const s = (await request<{ scan: InvoiceScan }>(`/api/client/scan/invoice/${id}`)).scan; setInvoice(s); setScan(s.customer); } catch (e) { setError((e as Error).message); }
+    try { const s = (await request<{ scan: InvoiceScan }>(`/api/client/scan/invoice/${id}`)).scan; setInvoice(s); setScan(s.customer); } catch (e) { setError(humaneError(e)); }
   }
 
   return (
     <section aria-labelledby="scan-lookup-h" style={{ width: "100%", display: "grid", gap: 10, marginBottom: 28 }}>
-      <h2 id="scan-lookup-h" style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>Look into a customer or invoice</h2>
+      <h2 id="scan-lookup-h" style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 20, color: "var(--ink)" }}>Look into a customer or invoice</h2>
       <input aria-label="Customer or invoice number" placeholder="Mehta Hardware, S/101…" value={q} onChange={(e) => setQ(e.target.value)}
-        style={{ padding: "10px 12px", border: `1px solid ${RULE}`, borderRadius: 8, font: "inherit", background: "var(--surface)" }} />
+        className="ui-input" style={{ height: 40, fontSize: 14 }} />
       {hits && (hits.customers.length || hits.invoices.length) ? (
         <div style={{ background: "var(--surface)", border: `1px solid ${RULE}`, borderRadius: 8, overflow: "hidden" }}>
           {hits.customers.map((c, i) => (
             <button key={c.key} onClick={() => void openCustomer(c.key)} style={{ all: "unset", boxSizing: "border-box", width: "100%", display: "flex", gap: 12, padding: "10px 14px", borderTop: i ? `1px solid ${RULE}` : 0, cursor: "pointer" }}>
               <span style={{ flex: 1 }}><strong style={{ fontWeight: 500 }}>{c.name}</strong> <span style={{ color: GRAPHITE, fontSize: 13 }}>· {c.openCount} open · oldest {c.oldestDays} days</span></span>
-              <span style={{ fontFamily: "var(--font-sans)" }}>{inr(c.openTotal)}</span>
+              <span className="tabular-nums" style={{ color: "var(--ink)" }}>{inr(c.openTotal)}</span>
             </button>
           ))}
           {hits.invoices.map((v) => (
             <button key={v.id} onClick={() => void openInvoice(v.id)} style={{ all: "unset", boxSizing: "border-box", width: "100%", display: "flex", gap: 12, padding: "10px 14px", borderTop: `1px solid ${RULE}`, cursor: "pointer" }}>
               <span style={{ flex: 1 }}><strong style={{ fontWeight: 500 }}>{v.invoiceNumber}</strong> <span style={{ color: GRAPHITE, fontSize: 13 }}>· {v.customer} · {v.daysOverdue > 0 ? `${v.daysOverdue} days overdue` : "not yet due"}</span></span>
-              <span style={{ fontFamily: "var(--font-sans)" }}>{inr(v.amount)}</span>
+              <span className="tabular-nums" style={{ color: "var(--ink)" }}>{inr(v.amount)}</span>
             </button>
           ))}
         </div>
       ) : null}
-      {error ? <p role="alert" style={{ color: "var(--critical)", margin: 0 }}>{error}</p> : null}
+      {error ? <p role="alert" style={{ color: "var(--ink)", fontSize: 13, margin: 0 }}>{error}</p> : null}
       {scan ? (
         <article style={{ background: "var(--surface)", border: `1px solid ${RULE}`, borderRadius: 8, padding: "16px 18px", display: "grid", gap: 10 }}>
           <h3 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 21 }}>{invoice ? invoice.headline : scan.headline}</h3>
@@ -81,14 +82,14 @@ export default function ScanLookup() {
             {(invoice ? invoice.evidence : scan.evidence).facts.map((f, i) => (
               <div key={i} style={{ display: "contents" }}>
                 <dt>{f.label}</dt>
-                <dd style={{ margin: 0, fontFamily: "var(--font-sans)" }}>{show(f.value, f.unit)}</dd>
-                <dd style={{ margin: 0, fontFamily: "var(--font-sans)", fontSize: 11, color: GRAPHITE }}>{f.kind}</dd>
+                <dd className="tabular-nums" style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>{show(f.value, f.unit)}</dd>
+                <dd style={{ margin: 0, fontSize: 12, color: "var(--ink-3)" }}>{String(f.kind).replace(/_/g, " ").toLowerCase()}</dd>
               </div>
             ))}
           </dl>
           {scan.invoices.some((i) => i.daysOverdue > 0 && !i.disputed) ? (
             <Link href={invoice ? `/missions/new?invoice=${encodeURIComponent(invoice.subject.id)}` : `/missions/new?customer=${encodeURIComponent(scan.subject.name)}`}
-              style={{ justifySelf: "start", fontSize: 13.5, padding: "7px 12px", borderRadius: 6, background: "var(--inverse)", color: "var(--on-inverse)", textDecoration: "none" }}>
+              className="ui-btn ui-btn-primary" style={{ justifySelf: "start" }}>
               Start a mission to collect{invoice ? " this invoice" : ""}
             </Link>
           ) : null}

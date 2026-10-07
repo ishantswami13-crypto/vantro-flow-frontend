@@ -4,13 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { IconTile } from "@/components/v32/ui";
-import { IconPlus, IconUpload, IconLink, IconSparkle, IconRupee, IconMissions, IconSimulate, IconHistory } from "@/components/v32/icons";
+import { IconPlus, IconUpload, IconLink, IconSparkle, IconRupee, IconMissions, IconSimulate, IconHistory, IconLibrary } from "@/components/v32/icons";
+import Button from "@/components/ui/Button";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ScanFindings } from "@/components/os/ScanFindings";
 import { ScanComposer, businessNameFromStorage } from "@/components/scan/ScanComposer";
 import { ScanThinking } from "@/components/scan/ScanThinking";
 import { api, getUser } from "@/lib/api";
 import { createThread, listThreads } from "@/lib/scanStore";
+import { humaneError } from "@/components/scan/humaneError";
 
 // Scan is a chat start: a greeting and one box. The assistant answers only
 // from connected data, and its tools can read and draft but never mark
@@ -29,7 +31,8 @@ export default function ScanPage() {
   const [question, setQuestion] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [ownerName, setOwnerName] = useState<string>("there");
+  const [lastAsked, setLastAsked] = useState<string>("");
+  const [ownerName, setOwnerName] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showFindings, setShowFindings] = useState(false);
   const [hasHistory, setHasHistory] = useState(false);
@@ -53,7 +56,10 @@ export default function ScanPage() {
     if (q && q.trim()) { setQuestion(q); void submit(q); }
     if (new URLSearchParams(window.location.search).get("books") === "1") setShowFindings(true);
     setHasHistory(listThreads().length > 0);
-    setOwnerName((stored.owner_name || stored.business_name || user?.business_name || user?.email?.split("@")[0] || "there").split(" ")[0]);
+    // Greet the person by their own first name only. A business name or an
+    // email prefix is not a name, so without one the greeting stands alone.
+    const own = String(stored.owner_name || (user as { owner_name?: string } | null)?.owner_name || "").trim();
+    setOwnerName(own.split(/\s+/)[0] || "");
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = async (q: string) => {
@@ -61,6 +67,7 @@ export default function ScanPage() {
     if (!trimmed || submitting) return;
     setSubmitting(true);
     setError(null);
+    setLastAsked(trimmed);
     try {
       const user = getUser();
       const businessName = businessNameFromStorage(user?.business_name);
@@ -68,18 +75,23 @@ export default function ScanPage() {
       const threadId = createThread({ question: trimmed, response: result, askedAt: new Date().toISOString() });
       router.push(`/scan/${threadId}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't reach Starlane to answer that.");
+      // Keep the question in the box so Try again (or Enter) re-asks it.
+      setQuestion(trimmed);
+      setError(humaneError(e));
       setSubmitting(false);
     }
   };
 
   return (
     <DashboardLayout pageTitle="Scan">
-      <div className="scan-stage" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: showFindings ? "flex-start" : "center", minHeight: showFindings ? undefined : "calc(100vh - 190px)", padding: showFindings ? "32px 0 8px" : "24px 0", boxSizing: "border-box" }}>
+      <div className="scan-stage" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: showFindings ? "flex-start" : "center", minHeight: showFindings ? undefined : "calc(100vh - 200px)", padding: showFindings ? "24px 0 8px" : "24px 0", boxSizing: "border-box" }}>
         <div className="fade-once" style={{ width: 720, maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <h1 className="scan-greeting" style={{ margin: "0 0 26px 0", fontFamily: "var(--font-display)", fontWeight: 400, color: "var(--ink)", textAlign: "center" }}>
-            {getGreeting()}, {ownerName}
+          <h1 className="scan-greeting" style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, color: "var(--ink)", textAlign: "center" }}>
+            {getGreeting()}{ownerName ? `, ${ownerName}` : ""}
           </h1>
+          <p style={{ margin: "10px 0 28px", fontSize: 14, color: "var(--ink-2)", textAlign: "center" }}>
+            Ask about money owed, cash coming in or any customer.
+          </p>
 
           <ScanComposer
             value={question}
@@ -87,6 +99,8 @@ export default function ScanPage() {
             onSubmit={() => submit(question)}
             submitting={submitting}
             placeholder="Ask Starlane about your business"
+            autoFocus
+            hint={<span className="hidden sm:inline">Answers come only from your connected data</span>}
             leading={
               <div ref={menuRef} className="relative">
                 <button
@@ -111,7 +125,14 @@ export default function ScanPage() {
           />
 
           {submitting && (
-            <div style={{ alignSelf: "flex-start", marginTop: 22, paddingLeft: 6 }}><ScanThinking /></div>
+            <div style={{ alignSelf: "stretch", marginTop: 28, padding: "0 4px" }}><ScanThinking /></div>
+          )}
+
+          {error && !submitting && (
+            <div role="alert" className="fade-once flex items-center justify-between flex-wrap" style={{ alignSelf: "stretch", gap: 12, marginTop: 16, padding: "10px 12px 10px 14px", borderRadius: "var(--radius-md)", border: "1px solid rgb(var(--tk-critical) / 0.25)", background: "rgb(var(--tk-critical) / 0.06)" }}>
+              <span style={{ fontSize: 13, color: "var(--ink)" }}>{error}</span>
+              <Button variant="secondary" size="sm" onClick={() => submit(lastAsked || question)}>Try again</Button>
+            </div>
           )}
 
           {!showFindings && !submitting && (
@@ -119,10 +140,10 @@ export default function ScanPage() {
               {WORKFLOWS.map((w, i) => {
                 const body = (
                   <>
-                    <IconTile size={32}>{w.icon}</IconTile>
+                    <IconTile size={30}>{w.icon}</IconTile>
                     <span className="flex flex-col min-w-0">
-                      <span style={{ fontSize: 13, color: "var(--ink)" }}>{w.title}</span>
-                      <span style={{ fontSize: 11.5, color: "var(--ink-3)", marginTop: 2 }}>{w.hint}</span>
+                      <span style={{ fontSize: 13.5, color: "var(--ink)", lineHeight: 1.35 }}>{w.title}</span>
+                      <span style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 3, lineHeight: 1.4 }}>{w.hint}</span>
                     </span>
                   </>
                 );
@@ -133,20 +154,17 @@ export default function ScanPage() {
             </div>
           )}
 
-          {error && <p role="alert" style={{ fontSize: 12.5, color: "var(--critical)", marginTop: 14 }}>{error}</p>}
-          <div className="flex items-center justify-center" style={{ gap: 14, marginTop: 20, fontSize: 11.5, color: "var(--ink-3)" }}>
-            <span>Starlane answers only from your connected data.</span>
+          <div className="flex items-center justify-center flex-wrap" style={{ gap: 4, marginTop: 20 }}>
             {hasHistory && (
-              <Link href="/scan/history" className="inline-flex items-center hover:text-[var(--ink)]" style={{ gap: 5, color: "var(--ink-2)" }}>
-                <IconHistory size={13} /> History
-              </Link>
+              <Link href="/scan/history" className="scan-tool"><IconHistory size={14} /> Past conversations</Link>
             )}
+            <Link href="/library" className="scan-tool"><IconLibrary size={14} /> Library</Link>
           </div>
         </div>
       </div>
 
       {showFindings && (
-        <div className="fade-once" style={{ width: 880, maxWidth: "100%", margin: "0 auto" }}>
+        <div className="fade-once" style={{ width: "100%", maxWidth: "var(--content-max)" }}>
           <ScanFindings />
         </div>
       )}
@@ -160,7 +178,7 @@ function MenuItem({ icon, title, hint, onClick }: { icon: React.ReactNode; title
       <span className="scan-menu-icon">{icon}</span>
       <span className="flex flex-col text-left min-w-0">
         <span style={{ fontSize: 13, color: "var(--ink)" }}>{title}</span>
-        <span style={{ fontSize: 11.5, color: "var(--ink-3)" }}>{hint}</span>
+        <span style={{ fontSize: 12, color: "var(--ink-3)" }}>{hint}</span>
       </span>
     </button>
   );
