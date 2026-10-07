@@ -98,7 +98,7 @@ export default function CustomersPage() {
     DORMANT: "Dormant", AT_RISK: "At Risk", WATCH: "Watch", GROWING: "Growing", HEALTHY: "Healthy",
   };
   const HEALTH_LABEL_COLOR: Record<string, string> = {
-    DORMANT: "#8B8FA3", AT_RISK: "#F5424D", WATCH: "#F5A524", GROWING: "#10D98A", HEALTHY: "#3B82F6",
+    DORMANT: "var(--text-tertiary)", AT_RISK: "var(--status-danger)", WATCH: "var(--status-warning)", GROWING: "var(--status-success)", HEALTHY: "var(--accent-primary)",
   };
   const attentionList = (portfolio?.customers || [])
     .filter(c => c.healthLabel !== "HEALTHY")
@@ -138,7 +138,7 @@ export default function CustomersPage() {
       <div className="space-y-5 page-enter">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
-            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Customers</h2>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "var(--text-primary)", fontWeight: 500, letterSpacing: "-0.01em" }}>Customers</h2>
             <p className="text-sm text-secondary mt-1">Auto-added from Sales, Invoices and Khata</p>
           </div>
           <div className="flex gap-2">
@@ -277,13 +277,13 @@ export default function CustomersPage() {
                       <p className="text-2xs text-muted">{balance > 0 ? "lena hai" : balance < 0 ? "advance" : "clear"}</p>
                       {scoreMap[customer.customer_name] && (() => {
                         const risk = scoreMap[customer.customer_name];
-                        const tierColor = risk.tier === "HIGH_RISK" ? "#F5424D" : risk.tier === "MEDIUM" ? "#F5A524" : "#10D98A";
+                        const tierColor = risk.tier === "HIGH_RISK" ? "var(--status-danger)" : risk.tier === "MEDIUM" ? "var(--status-warning)" : "var(--status-success)";
                         const tierLabel = risk.tier === "HIGH_RISK" ? "High Risk" : risk.tier === "MEDIUM" ? "Medium" : "Low Risk";
                         const HEALTH_LABEL_TEXT: Record<string, string> = {
                           DORMANT: "Dormant", AT_RISK: "At Risk", WATCH: "Watch", GROWING: "Growing", HEALTHY: "Healthy",
                         };
                         const HEALTH_LABEL_COLOR: Record<string, string> = {
-                          DORMANT: "#8B8FA3", AT_RISK: "#F5424D", WATCH: "#F5A524", GROWING: "#10D98A", HEALTHY: "#3B82F6",
+                          DORMANT: "var(--text-tertiary)", AT_RISK: "var(--status-danger)", WATCH: "var(--status-warning)", GROWING: "var(--status-success)", HEALTHY: "var(--accent-primary)",
                         };
                         const health = risk.health_label;
                         return (

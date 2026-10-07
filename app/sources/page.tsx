@@ -30,7 +30,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "reconciliation", label: "Reconciliation" },
 ];
 
-const INK = "#191917", SOFT = "#63635F", FAINT = "#8A8A86", LINE = "#EBEAE6", WARN = "#A64F4B";
+const INK = "var(--text-primary)", SOFT = "var(--text-secondary)", FAINT = "var(--text-tertiary)", LINE = "var(--border-default)", WARN = "var(--status-danger)";
 
 function timeAgo(iso: string | null): string {
   if (!iso) return "";
@@ -47,17 +47,17 @@ function timeAgo(iso: string | null): string {
 
 // V32 status_dot per connector health.
 const STATUS: Record<ConnectorHealth, { label: string; color: string }> = {
-  healthy: { label: "Healthy", color: "#477054" },
-  syncing: { label: "Syncing", color: "#477054" },
-  connected: { label: "Paired, not synced yet", color: "#9B742B" },
-  delayed: { label: "Sync delayed", color: "#9B742B" },
-  stale: { label: "Sync overdue", color: "#9B742B" },
-  error: { label: "Needs attention", color: "#A64F4B" },
-  disconnected: { label: "Disconnected", color: "rgba(25,25,23,0.25)" },
-  pairing: { label: "Waiting for pairing", color: "rgba(25,25,23,0.25)" },
-  revoked: { label: "Device revoked", color: "rgba(25,25,23,0.25)" },
-  not_connected: { label: "Not connected", color: "rgba(25,25,23,0.25)" },
-  unavailable: { label: "Not available yet", color: "rgba(25,25,23,0.25)" },
+  healthy: { label: "Healthy", color: "var(--status-success)" },
+  syncing: { label: "Syncing", color: "var(--status-success)" },
+  connected: { label: "Paired, not synced yet", color: "var(--status-warning)" },
+  delayed: { label: "Sync delayed", color: "var(--status-warning)" },
+  stale: { label: "Sync overdue", color: "var(--status-warning)" },
+  error: { label: "Needs attention", color: "var(--status-danger)" },
+  disconnected: { label: "Disconnected", color: "rgb(var(--c-text-primary) / 0.25)" },
+  pairing: { label: "Waiting for pairing", color: "rgb(var(--c-text-primary) / 0.25)" },
+  revoked: { label: "Device revoked", color: "rgb(var(--c-text-primary) / 0.25)" },
+  not_connected: { label: "Not connected", color: "rgb(var(--c-text-primary) / 0.25)" },
+  unavailable: { label: "Not available yet", color: "rgb(var(--c-text-primary) / 0.25)" },
 };
 
 function noteFor(c: Connector): string {
@@ -90,7 +90,7 @@ function TableHeader() {
 }
 
 function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
-  const st = STATUS[c.state.health] || { label: c.state.health.replace(/_/g, " "), color: "rgba(25,25,23,0.25)" };
+  const st = STATUS[c.state.health] || { label: c.state.health.replace(/_/g, " "), color: "rgb(var(--c-text-primary) / 0.25)" };
   const href = c.authType === "local_bridge" ? "/sources/tally" : undefined;
   const cap = isConnected(c) && c.state.capabilityLabel ? CAPABILITY_TEXT[c.state.capabilityLabel] : undefined;
   const body = (
@@ -104,7 +104,7 @@ function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
         <div className="md:hidden" style={{ marginTop: 4 }}><StatusDot label={st.label} color={st.color} /></div>
       </div>
       <div className="hidden md:block"><StatusDot label={st.label} color={st.color} /></div>
-      <div className="hidden md:block" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "#43433F" }}>{timeAgo(c.state.lastSyncAt) || "—"}</div>
+      <div className="hidden md:block" style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--text-body)" }}>{timeAgo(c.state.lastSyncAt) || "—"}</div>
       <div className="hidden md:block min-w-0 truncate" style={{ fontSize: 12, color: SOFT }} title={cap ? `${noteFor(c)}. ${cap}` : noteFor(c)}>{noteFor(c)}</div>
       <div className="flex items-center justify-end" style={{ gap: 12 }} onClick={(e) => e.stopPropagation()}>
         {action}
@@ -119,7 +119,7 @@ function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
 }
 
 function Quiet({ children, onClick, href, disabled }: { children: React.ReactNode; onClick?: () => void; href?: string; disabled?: boolean }) {
-  const style = { color: "#43433F", fontSize: 12.5, background: "none", border: "none", cursor: disabled ? "default" : "pointer", whiteSpace: "nowrap" } as const;
+  const style = { color: "var(--text-body)", fontSize: 12.5, background: "none", border: "none", cursor: disabled ? "default" : "pointer", whiteSpace: "nowrap" } as const;
   if (href) return <Link href={href} className="hover-dim" style={{ ...style, textDecoration: "none" }}>{children}</Link>;
   return <button type="button" onClick={onClick} disabled={disabled} className="hover-dim" style={style}>{children}</button>;
 }
@@ -183,7 +183,7 @@ export default function SourcesPage() {
           title="Sources"
           subtitle="Where Starlane gets its data"
           right={connectors ? (
-            <span style={{ fontSize: 12, color: connected.length && !allHealthy ? "#9B742B" : FAINT }}>
+            <span style={{ fontSize: 12, color: connected.length && !allHealthy ? "var(--status-warning)" : FAINT }}>
               {!connected.length ? "Nothing connected yet" : `${allHealthy ? "All current" : "Needs a look"}${lastSync ? ` · Last sync ${timeAgo(lastSync)}` : ""}`}
             </span>
           ) : undefined}

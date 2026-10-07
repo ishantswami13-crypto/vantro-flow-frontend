@@ -11,29 +11,29 @@ import { FiChevronRight } from "react-icons/fi";
 import { IconSearch, IconSparkle } from "./icons";
 
 export const V = {
-  ink: "#191917",
-  secondary: "#63635F",
-  tertiary: "#8A8A86",
-  body: "#43433F",
-  divider: "#EBEAE6",
-  hairline: "#E5E4DF",
-  strong: "#D7D6D0",
-  card: "rgba(25,25,23,0.10)",
-  input: "rgba(25,25,23,0.12)",
-  button: "rgba(25,25,23,0.14)",
-  emphasis: "rgba(25,25,23,0.16)",
-  rowSubtle: "rgba(25,25,23,0.06)",
-  surface2: "#F3F2EE",
-  positive: "#477054",
-  warning: "#9B742B",
-  critical: "#A64F4B",
-  neutralDot: "rgba(25,25,23,0.25)",
-  accent: "var(--accent, #696D86)",
-  serif: "'Fraunces', Georgia, serif",
-  mono: "'Plus Jakarta Sans', system-ui, sans-serif",
+  ink: "var(--text-primary)",
+  secondary: "var(--text-secondary)",
+  tertiary: "var(--text-tertiary)",
+  body: "var(--text-body)",
+  divider: "var(--border-default)",
+  hairline: "var(--border-default)",
+  strong: "var(--border-default)",
+  card: "rgb(var(--c-ink) / 0.10)",
+  input: "rgb(var(--c-ink) / 0.12)",
+  button: "rgb(var(--c-ink) / 0.14)",
+  emphasis: "rgb(var(--c-ink) / 0.16)",
+  rowSubtle: "rgb(var(--c-ink) / 0.06)",
+  surface2: "var(--bg-subtle)",
+  positive: "var(--status-success)",
+  warning: "var(--status-warning)",
+  critical: "var(--status-danger)",
+  neutralDot: "rgb(var(--c-ink) / 0.25)",
+  accent: "var(--accent-primary)",
+  serif: "var(--font-sans)",
+  mono: "var(--font-sans)",
 };
 
-/** Page title row: Fraunces 26px, an optional one-line subtitle and a right slot. */
+/** Page title row: 20px semibold title, an optional one-line subtitle and a right slot. */
 export function PageHeader({ title, subtitle, right, children }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
@@ -44,8 +44,8 @@ export function PageHeader({ title, subtitle, right, children }: {
     <div className="fade-once">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 26, color: V.ink }}>{title}</h1>
-          {subtitle && <div style={{ fontSize: 13.5, color: V.secondary, marginTop: 4 }}>{subtitle}</div>}
+          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 600, fontSize: "var(--text-page)", letterSpacing: "-0.015em", color: V.ink }}>{title}</h1>
+          {subtitle && <div style={{ fontSize: 13, color: V.secondary, marginTop: 4 }}>{subtitle}</div>}
         </div>
         {right && <div className="flex items-center gap-4 shrink-0">{right}</div>}
       </div>
@@ -102,9 +102,9 @@ export function Label({ children, className = "", style }: { children: React.Rea
   );
 }
 
-/** Quiet serif section heading ("What changed", "Needs you"). */
-export function SectionTitle({ children, size = 16, className = "" }: { children: React.ReactNode; size?: number; className?: string }) {
-  return <h2 className={className} style={{ fontFamily: V.serif, fontWeight: 400, fontSize: size, color: V.ink, margin: "0 0 6px", letterSpacing: "-0.1px" }}>{children}</h2>;
+/** Section heading ("What changed", "Needs you"). */
+export function SectionTitle({ children, size = 14, className = "" }: { children: React.ReactNode; size?: number; className?: string }) {
+  return <h2 className={className} style={{ fontFamily: V.serif, fontWeight: 600, fontSize: size, color: V.ink, margin: "0 0 8px", letterSpacing: "-0.01em" }}>{children}</h2>;
 }
 
 export function Dot({ color, size = 6, className = "" }: { color: string; size?: number; className?: string }) {
@@ -146,10 +146,10 @@ export function Chevron({ size = 14 }: { size?: number }) {
   return <FiChevronRight aria-hidden="true" size={size} strokeWidth={1.6} className="row-chevron shrink-0" style={{ color: V.tertiary }} />;
 }
 
-/** White card: 1px rgba(25,25,23,0.10) border, 8px radius, no shadow. */
+/** White card: 1px rgb(var(--c-ink) / 0.10) border, 8px radius, no shadow. */
 export function Card({ children, className = "", style, lift = false }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; lift?: boolean }) {
   return (
-    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 8, ...style }}>
+    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "var(--bg-elevated)", border: `1px solid ${V.card}`, borderRadius: 8, ...style }}>
       {children}
     </div>
   );
@@ -170,8 +170,8 @@ export function Button({ children, onClick, primary, disabled, type = "button", 
   const cls = `${disabled ? "" : primary ? "btn-primary-v32" : "btn-secondary-v32"} inline-flex items-center justify-center gap-1.5 whitespace-nowrap ${className}`;
   const style: React.CSSProperties = {
     padding: small ? "6px 12px" : "9px 14px", borderRadius: 6, fontSize: small ? 12 : 13, fontWeight: 400,
-    background: primary ? "#191917" : "transparent", color: primary ? "#F7F7F4" : V.body,
-    border: `1px solid ${primary ? "#191917" : V.button}`, opacity: disabled ? 0.4 : 1, cursor: disabled ? "default" : "pointer",
+    background: primary ? "var(--bg-inverse)" : "transparent", color: primary ? "var(--text-on-inverse)" : V.body,
+    border: `1px solid ${primary ? "var(--text-primary)" : V.button}`, opacity: disabled ? 0.4 : 1, cursor: disabled ? "default" : "pointer",
   };
   if (href && !disabled) return <Link href={href} className={cls} style={style} title={title}>{children}</Link>;
   return <button type={type} onClick={onClick} disabled={disabled} className={cls} style={style} title={title}>{children}</button>;
@@ -228,7 +228,7 @@ export function EntityRow({ type, name, relevance, metric, href, onClick }: {
 export function Lettermark({ letter, size = 30 }: { letter: string; color?: string; size?: number }) {
   return (
     <span aria-hidden="true" className="inline-flex items-center justify-center shrink-0"
-      style={{ width: size, height: size, borderRadius: Math.round(size * 0.26), background: "#FFFFFF", color: V.ink, boxShadow: `inset 0 0 0 1px ${V.card}`, fontFamily: V.serif, fontSize: Math.round(size * 0.5) }}>
+      style={{ width: size, height: size, borderRadius: Math.round(size * 0.26), background: "var(--bg-elevated)", color: V.ink, boxShadow: `inset 0 0 0 1px ${V.card}`, fontFamily: V.serif, fontSize: Math.round(size * 0.5) }}>
       {(letter || "?").charAt(0).toUpperCase()}
     </span>
   );
@@ -311,7 +311,7 @@ export function IconTile({ children, tone, size = 34 }: { children: React.ReactN
 export function Figure({ value, label, tone }: { value: React.ReactNode; label: React.ReactNode; tone?: string }) {
   return (
     <div className="min-w-0">
-      <div className="figure-in" style={{ fontFamily: V.serif, fontSize: 30, lineHeight: 1.05, color: tone || V.ink, fontVariantNumeric: "tabular-nums" }}>{value}</div>
+      <div className="figure-in" style={{ fontFamily: V.serif, fontSize: 26, lineHeight: 1.05, color: tone || V.ink, fontVariantNumeric: "tabular-nums" , fontWeight: 500, letterSpacing: "-0.02em"}}>{value}</div>
       <div style={{ fontSize: 12.5, color: V.secondary, marginTop: 4 }}>{label}</div>
     </div>
   );

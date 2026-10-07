@@ -78,12 +78,12 @@ export function Drawer({ titleId, title, onClose, onBack, children, breadcrumb, 
   // context.
   if (typeof document === "undefined") return null;
   // Version 32 shell (handoff §9/§10): 560px panel from the right, white,
-  // #E5E4DF hairline, soft shadow, the page dimmed behind at 28%.
+  // var(--border-default) hairline, soft shadow, the page dimmed behind at 28%.
   return createPortal(
     <>
       <div
         className="hidden lg:block fixed inset-0 z-40 lens-backdrop"
-        style={{ background: "rgba(20,20,18,0.28)" }}
+        style={{ background: "var(--bg-overlay)" }}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -93,11 +93,11 @@ export function Drawer({ titleId, title, onClose, onBack, children, breadcrumb, 
         aria-modal="true"
         aria-labelledby={titleId}
         className="fixed z-50 flex flex-col inset-0 lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[560px] lens-drawer"
-        style={{ background: "#FFFFFF", borderLeft: "1px solid #E5E4DF", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}
+        style={{ background: "var(--bg-elevated)", borderLeft: "1px solid var(--border-default)", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}
       >
-        <div className="shrink-0" style={{ padding: "24px 28px 18px 28px", borderBottom: "1px solid #EBEAE6" }}>
+        <div className="shrink-0" style={{ padding: "24px 28px 18px 28px", borderBottom: "1px solid var(--border-default)" }}>
           <div className="flex items-center justify-between gap-3" style={{ marginBottom: 14 }}>
-            <div className="min-w-0" style={breadcrumb ? { fontSize: 12, color: "#63635F" } : { fontSize: 11, letterSpacing: 0, color: "#63635F" }}>
+            <div className="min-w-0" style={breadcrumb ? { fontSize: 12, color: "var(--text-secondary)" } : { fontSize: 11, letterSpacing: 0, color: "var(--text-secondary)" }}>
               {breadcrumb || eyebrow}
             </div>
             <button
@@ -105,7 +105,7 @@ export function Drawer({ titleId, title, onClose, onBack, children, breadcrumb, 
               onClick={onClose}
               aria-label="Close"
               className="hover-dim shrink-0 flex items-center justify-center"
-              style={{ width: 28, height: 28, marginRight: -6, color: "#63635F" }}
+              style={{ width: 28, height: 28, marginRight: -6, color: "var(--text-secondary)" }}
             >
               <FiX size={16} strokeWidth={1.6} />
             </button>
@@ -118,18 +118,18 @@ export function Drawer({ titleId, title, onClose, onBack, children, breadcrumb, 
                 ref={headingRef}
                 tabIndex={-1}
                 className="outline-none"
-                style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: titleSize, color: "#191917", margin: 0, lineHeight: 1.25 }}
+                style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: titleSize, color: "var(--text-primary)", margin: 0, lineHeight: 1.25 , letterSpacing: "-0.015em"}}
               >
                 {title}
               </h2>
-              {subtitle && <div style={{ fontSize: 12, color: "#63635F", marginTop: 2 }}>{subtitle}</div>}
+              {subtitle && <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>{subtitle}</div>}
             </div>
           </div>
           {actions && <div className="flex flex-wrap items-center" style={{ gap: 8, marginTop: 14 }}>{actions}</div>}
         </div>
         <div className="flex-1 overflow-y-auto" style={{ padding: "20px 28px" }}>{children}</div>
         {footer && (
-          <div className="shrink-0" style={{ padding: "14px 28px", borderTop: "1px solid #EBEAE6", fontSize: 11.5, color: "#63635F" }}>
+          <div className="shrink-0" style={{ padding: "14px 28px", borderTop: "1px solid var(--border-default)", fontSize: 11.5, color: "var(--text-secondary)" }}>
             {footer}
           </div>
         )}

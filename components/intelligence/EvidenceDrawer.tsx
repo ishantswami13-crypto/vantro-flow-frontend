@@ -48,7 +48,7 @@ export function EvidenceDrawer({
       subtitle={record ? <span style={{ fontSize: 12.5 }}>{record}</span> : undefined}
       footer="Conclusion → analysis → evidence → source record. Every figure in Starlane can be traced back to here."
     >
-      <p className="mb-5" style={{ fontSize: 12.5, color: "#63635F", lineHeight: 1.6 }}>
+      <p className="mb-5" style={{ fontSize: 12.5, color: "var(--text-secondary)", lineHeight: 1.6 }}>
         Every number on this screen traces back to one of the items below. Facts are things Starlane read directly from your
         records or the external event. Assumptions are planning parameters you or Starlane recorded. Forecasts are
         projections, not observations.
@@ -65,13 +65,13 @@ export function EvidenceDrawer({
             <div className="mb-1">
               <EvidenceKindBadge kind={group.kind} />
             </div>
-            <ul className="mt-2" style={{ borderTop: "1px solid #EBEAE6" }}>
+            <ul className="mt-2" style={{ borderTop: "1px solid var(--border-default)" }}>
               {group.items.map((item, i) => (
-                <li key={`${group.kind}-${i}`} className="py-3" style={{ borderBottom: "1px solid #EBEAE6" }}>
-                  <p style={{ fontSize: 13, color: "#191917" }}>{item.label}</p>
-                  <p className="mt-1" style={{ fontSize: 12.5, color: "#43433F", lineHeight: 1.55 }}>{item.detail}</p>
+                <li key={`${group.kind}-${i}`} className="py-3" style={{ borderBottom: "1px solid var(--border-default)" }}>
+                  <p style={{ fontSize: 13, color: "var(--text-primary)" }}>{item.label}</p>
+                  <p className="mt-1" style={{ fontSize: 12.5, color: "var(--text-body)", lineHeight: 1.55 }}>{item.detail}</p>
                   <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
-                    <span className="truncate" style={{ fontSize: 11.5, color: "#8A8A86", fontFamily: "'IBM Plex Mono', monospace" }}>
+                    <span className="truncate" style={{ fontSize: 11.5, color: "var(--text-tertiary)", fontFamily: "'IBM Plex Mono', monospace" }}>
                       {item.source}{item.timestamp ? ` · ${formatDateTime(item.timestamp)}` : ""}
                     </span>
                     <ConfidenceBadge level={item.confidence} />

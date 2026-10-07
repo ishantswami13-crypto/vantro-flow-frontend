@@ -40,18 +40,18 @@ export default function CookieBanner() {
       <div
         className="flex flex-col gap-3 px-4 py-3.5 rounded-xl"
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #E5E5E1",
+          background: "var(--bg-elevated)",
+          border: "1px solid var(--border-default)",
           boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
         }}
       >
         {/* Text */}
-        <p className="text-xs leading-relaxed" style={{ color: "#686868" }}>
+        <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
           We use cookies to improve your experience and analyse usage.{" "}
           <Link
             href="/privacy"
-            className="underline transition-colors hover:text-gray-900"
-            style={{ color: "#191917" }}
+            className="underline transition-colors hover:text-text-primary"
+            style={{ color: "var(--text-primary)" }}
           >
             Privacy policy
           </Link>
@@ -61,15 +61,15 @@ export default function CookieBanner() {
         <div className="flex items-center justify-end gap-2 shrink-0">
           <button
             onClick={decline}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50"
-            style={{ color: "#686868" }}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-[var(--bg-subtle)]"
+            style={{ color: "var(--text-secondary)" }}
           >
             Decline
           </button>
           <button
             onClick={accept}
             className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-85"
-            style={{ background: "#191917", color: "#ffffff" }}
+            style={{ background: "var(--bg-inverse)", color: "var(--text-on-inverse)" }}
           >
             Accept all
           </button>

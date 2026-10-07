@@ -137,7 +137,7 @@ export default function TeamPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Team</h2>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "var(--text-primary)", fontWeight: 500, letterSpacing: "-0.01em" }}>Team</h2>
             <p className="text-sm text-muted mt-1">{active.length} active · {workers.length} total</p>
           </div>
           <div className="flex gap-2">
@@ -319,7 +319,7 @@ export default function TeamPage() {
 
       {/* Add Worker Modal */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-inverse/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-border overflow-hidden">
             <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <h3 className="font-bold text-primary">Add Worker</h3>

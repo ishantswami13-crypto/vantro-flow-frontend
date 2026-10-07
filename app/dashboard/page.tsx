@@ -210,35 +210,35 @@ export default function DashboardPage() {
           DashboardLayout's own padding so the canvas reaches the shell
           edges; max content width 1280px per institutional-density spacing,
           not a centered narrow column. */}
-      <div className="-m-4 lg:-m-5 min-h-[calc(100vh-3rem)]" style={{ background: "#F7F7F4" }}>
+      <div className="-m-4 lg:-m-5 min-h-[calc(100vh-3rem)]" style={{ background: "var(--bg-primary)" }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-8 space-y-12">
           {/* ── Page header — left-aligned, normal weight. No centered
               50px serif hero; the greeting is the subtitle, not the title. ── */}
           <div>
-            <h1 className="text-[30px] leading-[1.15] text-gray-900" style={{ fontWeight: 450 }}>Overview</h1>
-            <p className="text-sm text-gray-500 mt-1">{getGreeting()}, {ownerName} · {dateLabel}</p>
+            <h1 className="text-[30px] leading-[1.15] text-text-primary" style={{ fontWeight: 450 }}>Overview</h1>
+            <p className="text-sm text-text-tertiary mt-1">{getGreeting()}, {ownerName} · {dateLabel}</p>
           </div>
 
           {/* ── Command input — compact, no pill row inside it. Real
               destination: the actual AI Founder chat. Suggestions sit below
               as plain text, not chip buttons. ── */}
           <div>
-            <form onSubmit={submitQuery} className="flex items-center gap-2 bg-white border border-gray-200 rounded-[10px] px-3 h-12">
+            <form onSubmit={submitQuery} className="flex items-center gap-2 bg-elevated border border-border-default rounded-[10px] px-3 h-12">
               <input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Ask Starlane about this organization…"
-                className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none"
               />
               <button type="submit" disabled={!query.trim()}
-                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-gray-900 text-white disabled:opacity-25 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors">
+                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-inverse text-white disabled:opacity-25 disabled:cursor-not-allowed hover:bg-raised transition-colors">
                 <FiArrowRight size={13} />
               </button>
             </form>
             <div className="flex flex-wrap gap-x-5 gap-y-1 mt-2.5 px-1">
               {ASK_EXAMPLES.map(q => (
                 <button key={q} type="button" onClick={() => router.push(`/ai-chat?q=${encodeURIComponent(q)}`)}
-                  className="text-xs text-gray-400 hover:text-gray-700 transition-colors text-left">
+                  className="text-xs text-text-tertiary hover:text-text-secondary transition-colors text-left">
                   {q}
                 </button>
               ))}
@@ -251,18 +251,18 @@ export default function DashboardPage() {
               nothing at all while signals is still null (loading). ── */}
           {signals && signals.length > 0 && (
             <div>
-              <p className="text-[13px] font-medium text-gray-500 mb-3">What changed</p>
-              <div className="divide-y divide-gray-200 border-t border-b border-gray-200">
+              <p className="text-[13px] font-medium text-text-tertiary mb-3">What changed</p>
+              <div className="divide-y divide-gray-200 border-t border-b border-border-default">
                 {signals.map(s => (
                   <Link key={s.id} href={`/intelligence/${s.id}`}
                     className="flex items-center justify-between gap-4 py-3.5 group">
                     <div className="min-w-0">
-                      <p className="text-sm text-gray-900 group-hover:text-gray-600 transition-colors truncate">{s.event_title || "External event"}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-sm text-text-primary group-hover:text-text-secondary transition-colors truncate">{s.event_title || "External event"}</p>
+                      <p className="text-xs text-text-tertiary mt-0.5">
                         {s.related_entity_type === "supplier" ? "Supplier exposure" : "Business exposure"} · detected {new Date(s.first_detected_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                       </p>
                     </div>
-                    <FiArrowRight size={13} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                    <FiArrowRight size={13} className="text-text-tertiary group-hover:text-text-secondary transition-colors shrink-0" />
                   </Link>
                 ))}
               </div>
@@ -273,15 +273,15 @@ export default function DashboardPage() {
               column, no cards, no glow, no pulsing icons. Honest "no data"
               state instead of a wall of ₹0.0L. ── */}
           <div>
-            <p className="text-[13px] font-medium text-gray-500 mb-4">Business state</p>
+            <p className="text-[13px] font-medium text-text-tertiary mb-4">Business state</p>
             {!hasBusinessData ? (
-              <p className="text-sm text-gray-400">No business data recorded yet.</p>
+              <p className="text-sm text-text-tertiary">No business data recorded yet.</p>
             ) : (
               <div className="flex flex-wrap gap-x-10 gap-y-5 divide-x divide-gray-200">
                 {healthDomains.map(({ label, value, sub, critical }, i) => (
                   <div key={label} className={i === 0 ? "" : "pl-10"}>
-                    <p className={["metric-value text-[26px]", critical ? "text-danger" : "text-gray-900"].join(" ")}>{value}</p>
-                    <p className="text-xs text-gray-400 mt-1">{label} · {sub}</p>
+                    <p className={["metric-value text-[26px]", critical ? "text-danger" : "text-text-primary"].join(" ")}>{value}</p>
+                    <p className="text-xs text-text-tertiary mt-1">{label} · {sub}</p>
                   </div>
                 ))}
               </div>
@@ -290,17 +290,17 @@ export default function DashboardPage() {
 
           {/* ── AI briefing — a quiet bordered note, not a bouncing-dot
               loading animation or a gradient panel. ── */}
-          <div className="border-t border-gray-200 pt-6">
-            <p className="text-[13px] font-medium text-gray-500 mb-2">Briefing</p>
+          <div className="border-t border-border-default pt-6">
+            <p className="text-[13px] font-medium text-text-tertiary mb-2">Briefing</p>
             {briefingLoading ? (
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin shrink-0" />
-                <span className="text-xs text-gray-400">Preparing...</span>
+                <span className="w-3 h-3 border-2 border-border-emphasis border-t-gray-600 rounded-full animate-spin shrink-0" />
+                <span className="text-xs text-text-tertiary">Preparing...</span>
               </div>
             ) : briefing ? (
-              <p className="text-sm text-gray-600 leading-relaxed">{briefing}</p>
+              <p className="text-sm text-text-secondary leading-relaxed">{briefing}</p>
             ) : (
-              <p className="text-sm text-gray-400">Upload invoices — Starlane will start briefing you daily.</p>
+              <p className="text-sm text-text-tertiary">Upload invoices — Starlane will start briefing you daily.</p>
             )}
           </div>
 
@@ -316,7 +316,7 @@ export default function DashboardPage() {
           {/* ── Free plan nudge — a text line, not a gradient promo card
               with an emoji icon. ── */}
           {userPlan === "free" && (metrics?.pending_invoices ?? 0) > 0 && (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-text-tertiary">
               {metrics!.pending_invoices} invoices are overdue with no automated reminder sent.{" "}
               <Link href="/billing" className="text-accent hover:underline">Enable automation →</Link>
             </p>
@@ -328,13 +328,13 @@ export default function DashboardPage() {
             const dueToday = promises.filter(p => p.promised_payment_date && p.promised_payment_date <= today);
             if (dueToday.length === 0) return null;
             return (
-              <div className="border-t border-gray-200 pt-6">
-                <p className="text-[13px] font-medium text-gray-500 mb-3">Promised today</p>
+              <div className="border-t border-border-default pt-6">
+                <p className="text-[13px] font-medium text-text-tertiary mb-3">Promised today</p>
                 <div className="divide-y divide-gray-200">
                   {dueToday.map((p, i) => (
                     <div key={i} className="flex items-center justify-between py-3">
-                      <span className="text-sm text-gray-900">{p.customer_name}</span>
-                      <span className="text-sm metric-value text-gray-600">{p.amount > 0 ? fmtAmt(p.amount) : "—"}</span>
+                      <span className="text-sm text-text-primary">{p.customer_name}</span>
+                      <span className="text-sm metric-value text-text-secondary">{p.amount > 0 ? fmtAmt(p.amount) : "—"}</span>
                     </div>
                   ))}
                 </div>
@@ -345,36 +345,36 @@ export default function DashboardPage() {
           {/* ── Top customers to call — same table, calmer treatment: no
               colored priority pill, no per-row tinted avatar circle. Row
               height 44px+, hairline horizontal borders only. ── */}
-          <div className="border-t border-gray-200 pt-6">
+          <div className="border-t border-border-default pt-6">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[13px] font-medium text-gray-500">Top customers to call today</p>
-              <Link href="/collections" className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 transition-colors">
+              <p className="text-[13px] font-medium text-text-tertiary">Top customers to call today</p>
+              <Link href="/collections" className="inline-flex items-center gap-1 text-xs text-text-tertiary hover:text-text-primary transition-colors">
                 View all {metrics?.pending_invoices ?? "—"} <FiArrowRight size={11} />
               </Link>
             </div>
             {liveCustomers.length === 0 ? (
-              <p className="text-sm text-gray-400 py-6">
+              <p className="text-sm text-text-tertiary py-6">
                 No outstanding invoices yet. <Link href="/collections" className="text-accent underline">Add your first invoice →</Link>
               </p>
             ) : (
               <table className="w-full text-sm" style={{ fontVariantNumeric: "tabular-nums" }}>
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 text-xs font-medium text-gray-500">Customer</th>
-                    <th className="text-right py-2 text-xs font-medium text-gray-500">Outstanding</th>
-                    <th className="text-right py-2 text-xs font-medium text-gray-500 hidden sm:table-cell">Days overdue</th>
-                    <th className="py-2 text-xs font-medium text-gray-500 hidden md:table-cell">Score</th>
+                  <tr className="border-b border-border-default">
+                    <th className="text-left py-2 text-xs font-medium text-text-tertiary">Customer</th>
+                    <th className="text-right py-2 text-xs font-medium text-text-tertiary">Outstanding</th>
+                    <th className="text-right py-2 text-xs font-medium text-text-tertiary hidden sm:table-cell">Days overdue</th>
+                    <th className="py-2 text-xs font-medium text-text-tertiary hidden md:table-cell">Score</th>
                     <th className="py-2" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {liveCustomers.map((c) => (
-                    <tr key={c.id} className="hover:bg-white transition-colors">
+                    <tr key={c.id} className="hover:bg-elevated transition-colors">
                       <td className="py-3.5">
-                        <p className="font-medium text-gray-900 text-[13px]">{c.name}</p>
-                        <p className="text-xs text-gray-400">{c.contact}</p>
+                        <p className="font-medium text-text-primary text-[13px]">{c.name}</p>
+                        <p className="text-xs text-text-tertiary">{c.contact}</p>
                       </td>
-                      <td className="py-3.5 text-right metric-value text-gray-900">{fmtAmt(c.outstanding)}</td>
+                      <td className="py-3.5 text-right metric-value text-text-primary">{fmtAmt(c.outstanding)}</td>
                       <td className="py-3.5 text-right hidden sm:table-cell">
                         <Badge variant={c.days > 45 ? "danger" : c.days > 30 ? "warning" : "default"}>{c.days}d</Badge>
                       </td>
@@ -386,11 +386,11 @@ export default function DashboardPage() {
                       <td className="py-3.5">
                         <div className="flex items-center gap-1.5 justify-end">
                           <a href={`https://wa.me/91${c.contact}`} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors">
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-border-default text-text-secondary hover:text-text-primary hover:border-border-emphasis transition-colors">
                             <FiMessageSquare size={11} />
                             <span className="hidden sm:inline">WhatsApp</span>
                           </a>
-                          <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors">
+                          <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-border-default text-text-secondary hover:text-text-primary hover:border-border-emphasis transition-colors">
                             <FiCheckSquare size={11} />
                             <span className="hidden sm:inline">Log</span>
                           </button>
@@ -404,7 +404,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Quick actions — plain list, no gradient icon chips. ── */}
-          <div className="border-t border-gray-200 pt-6 pb-10">
+          <div className="border-t border-border-default pt-6 pb-10">
             <div className="grid sm:grid-cols-3 gap-4">
               {[
                 { href: "/collections", Icon: FiList, label: "Full collections", sub: "Sorted by priority" },
@@ -412,12 +412,12 @@ export default function DashboardPage() {
                 { href: "/settings", Icon: FiSettings, label: "Settings", sub: "Tally sync, preferences" },
               ].map(({ href, Icon, label, sub }) => (
                 <Link href={href} key={href} className="flex items-start gap-3 py-2 group">
-                  <Icon size={15} className="text-gray-400 mt-0.5 shrink-0" />
+                  <Icon size={15} className="text-text-tertiary mt-0.5 shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900">{label}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
+                    <p className="text-sm font-medium text-text-primary">{label}</p>
+                    <p className="text-xs text-text-tertiary mt-0.5">{sub}</p>
                   </div>
-                  <FiArrowRight size={12} className="text-gray-300 group-hover:text-gray-600 group-hover:translate-x-0.5 transition-all ml-auto mt-1 shrink-0" />
+                  <FiArrowRight size={12} className="text-text-tertiary group-hover:text-text-secondary group-hover:translate-x-0.5 transition-all ml-auto mt-1 shrink-0" />
                 </Link>
               ))}
             </div>
@@ -428,7 +428,7 @@ export default function DashboardPage() {
       {/* Floating Quick Sale — a real feature, monochrome instead of an
           orange gradient pill. */}
       <button onClick={() => setShowQuickSale(true)}
-        className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-40 hidden lg:flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gray-900 text-white font-medium text-sm hover:bg-gray-700 transition-colors shadow-sm">
+        className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-40 hidden lg:flex items-center gap-2 px-4 py-2.5 rounded-lg bg-inverse text-white font-medium text-sm hover:bg-raised transition-colors shadow-sm">
         <FiPlus size={15} /> Quick Sale
       </button>
     </DashboardLayout>

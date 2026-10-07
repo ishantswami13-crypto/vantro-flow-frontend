@@ -23,7 +23,7 @@ interface CommandPaletteProps {
 type Row = { key: string; href: string; title: string; context?: string; icon: React.ReactNode; shortcut?: string };
 type Group = { label: string; rows: Row[] };
 
-const ICON = { size: 16, style: { color: "#63635F" } };
+const ICON = { size: 16, style: { color: "var(--text-secondary)" } };
 
 // Version 32 command palette (handoff §11): 660px, groups with uppercase
 // labels, 46px rows, the selected row tinted with the user's accent.
@@ -115,7 +115,7 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
   let index = -1;
   return (
     <div className="fixed inset-0 z-[200]" onClick={onClose}>
-      <div className="fixed inset-0 lens-backdrop" style={{ background: "rgba(20,20,18,0.16)" }} />
+      <div className="fixed inset-0 lens-backdrop" style={{ background: "rgb(var(--c-ink) / 0.16)" }} />
       <div
         role="dialog"
         aria-modal="true"
@@ -123,32 +123,32 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
         className="fixed pop-in flex flex-col overflow-hidden"
         style={{
           top: 90, left: "50%", transform: "translateX(-50%)", width: "min(660px, calc(100vw - 32px))", maxHeight: "70vh",
-          background: "#FFFFFF", border: "1px solid #E5E4DF", borderRadius: 10, boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
+          background: "var(--bg-elevated)", border: "1px solid var(--border-default)", borderRadius: 10, boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 shrink-0" style={{ padding: "14px 16px", borderBottom: "1px solid #EBEAE6" }}>
-          <IconSearch size={15} style={{ color: "#8A8A86" }} />
+        <div className="flex items-center gap-3 shrink-0" style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-default)" }}>
+          <IconSearch size={15} style={{ color: "var(--text-tertiary)" }} />
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search Starlane or run a command…"
             className="flex-1 bg-transparent outline-none"
-            style={{ color: "#191917", fontSize: 14.5, boxShadow: "none" }}
+            style={{ color: "var(--text-primary)", fontSize: 14.5, boxShadow: "none" }}
             role="combobox"
             aria-expanded="true"
             aria-controls="command-palette-results"
             aria-activedescendant={flat[activeIndex] ? `command-palette-row-${activeIndex}` : undefined}
           />
-          <kbd style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>Esc</kbd>
+          <kbd style={{ fontFamily: "var(--font-sans)", fontSize: 10.5, color: "var(--text-secondary)", border: "1px solid var(--border-default)", borderRadius: 4, padding: "1px 6px" }}>Esc</kbd>
         </div>
         <div ref={listRef} id="command-palette-results" role="listbox" className="overflow-y-auto" style={{ padding: "4px 8px 8px" }}>
           {flat.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#8A8A86", padding: "28px 0", textAlign: "center" }}>No results</p>
+            <p style={{ fontSize: 13, color: "var(--text-tertiary)", padding: "28px 0", textAlign: "center" }}>No results</p>
           ) : groups.map(g => (
             <div key={g.label}>
-              <div style={{ padding: "10px 14px 4px 14px", fontSize: 10.5, letterSpacing: 0, color: "#8A8A86" }}>{g.label}</div>
+              <div style={{ padding: "10px 14px 4px 14px", fontSize: 10.5, letterSpacing: 0, color: "var(--text-tertiary)" }}>{g.label}</div>
               {g.rows.map(r => {
                 index += 1;
                 const i = index;
@@ -163,14 +163,14 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
                     onClick={() => go(r.href)}
                     onMouseEnter={() => setActiveIndex(i)}
                     className="row-hover w-full flex items-center text-left"
-                    style={{ height: 46, gap: 12, padding: "0 14px", borderRadius: 7, background: selected ? "rgba(var(--accent-rgb), 0.08)" : "transparent" }}
+                    style={{ height: 46, gap: 12, padding: "0 14px", borderRadius: 7, background: selected ? "rgb(var(--c-accent) / 0.08)" : "transparent" }}
                   >
                     {r.icon}
-                    <span className="shrink-0" style={{ fontSize: 13.5, color: "#191917" }}>{r.title}</span>
-                    {r.context && <span className="truncate flex-1" style={{ fontSize: 12, color: "#8A8A86" }}>{r.context}</span>}
+                    <span className="shrink-0" style={{ fontSize: 13.5, color: "var(--text-primary)" }}>{r.title}</span>
+                    {r.context && <span className="truncate flex-1" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{r.context}</span>}
                     {!r.context && <span className="flex-1" />}
                     {r.shortcut
-                      ? <kbd style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>{r.shortcut}</kbd>
+                      ? <kbd style={{ fontFamily: "var(--font-sans)", fontSize: 10.5, color: "var(--text-secondary)", border: "1px solid var(--border-default)", borderRadius: 4, padding: "1px 6px" }}>{r.shortcut}</kbd>
                       : <Chevron size={13} />}
                   </button>
                 );

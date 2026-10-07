@@ -66,18 +66,18 @@ function timeAgo(iso: string): string {
 
 function classifyIntent(text: string): ReplyLog {
   const t = text.toLowerCase();
-  if (!t.trim()) return { intent: "no_response", label: "⚫ No Reply", color: "#6B7280", text, date: new Date().toISOString() };
+  if (!t.trim()) return { intent: "no_response", label: "⚫ No Reply", color: "var(--text-secondary)", text, date: new Date().toISOString() };
   const paidKw = ["paid", "kar diya", "bhej diya", "done", "ho gaya", "send kar", "transferred", "upi kar", "payment kiya", "de diya", "diya"];
   const promisedKw = ["kal", "parso", "pakka", "promise", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "next week", "agli", "agle", "de dunga", "dunga", "sure", "zaroor", "confirm", "by", "tak", "shaam tak", "dopahar", "subah"];
   const uncertainKw = ["dekhunga", "dekhta", "pata nahi", "maybe", "try", "mushkil", "problem", "baad mein", "later", "soch", "nahi pata", "abhi nahi", "thodi der", "wait"];
-  if (paidKw.some(k => t.includes(k))) return { intent: "paid", label: "🟢 Paid", color: "#10D98A", text, date: new Date().toISOString() };
-  if (promisedKw.some(k => t.includes(k))) return { intent: "promised", label: "🟡 Promised", color: "#F5A524", text, date: new Date().toISOString() };
-  if (uncertainKw.some(k => t.includes(k))) return { intent: "uncertain", label: "🔴 Uncertain", color: "#F5424D", text, date: new Date().toISOString() };
-  return { intent: "uncertain", label: "🔴 Uncertain", color: "#F5424D", text, date: new Date().toISOString() };
+  if (paidKw.some(k => t.includes(k))) return { intent: "paid", label: "🟢 Paid", color: "var(--status-success)", text, date: new Date().toISOString() };
+  if (promisedKw.some(k => t.includes(k))) return { intent: "promised", label: "🟡 Promised", color: "var(--status-warning)", text, date: new Date().toISOString() };
+  if (uncertainKw.some(k => t.includes(k))) return { intent: "uncertain", label: "🔴 Uncertain", color: "var(--status-danger)", text, date: new Date().toISOString() };
+  return { intent: "uncertain", label: "🔴 Uncertain", color: "var(--status-danger)", text, date: new Date().toISOString() };
 }
 
 type SortKey = "outstanding" | "daysOverdue" | "score";
-const SCORE_COLOR = (s: number) => s >= 70 ? "#10D98A" : s >= 40 ? "#F5A524" : "#F5424D";
+const SCORE_COLOR = (s: number) => s >= 70 ? "var(--status-success)" : s >= 40 ? "var(--status-warning)" : "var(--status-danger)";
 const STATUS_VARIANT: Record<string, "danger" | "warning" | "default"> = {
   overdue: "danger", promised: "warning", due: "default",
 };
@@ -537,7 +537,7 @@ export default function CollectionsPage() {
 
         {/* Log Reply Modal */}
         {replyModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => { setReplyModal(null); setReplyText(""); }}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-inverse/60 px-4" onClick={() => { setReplyModal(null); setReplyText(""); }}>
             <div className="bg-surface border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -567,13 +567,13 @@ export default function CollectionsPage() {
                 })()}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => persistReply(replyModal, { intent: "no_response", label: "⚫ No Reply", color: "#6B7280", text: "", date: new Date().toISOString() })}
+                    onClick={() => persistReply(replyModal, { intent: "no_response", label: "⚫ No Reply", color: "var(--text-secondary)", text: "", date: new Date().toISOString() })}
                     disabled={savingReply}
                     className="flex-1 py-2 rounded-lg text-xs font-semibold bg-surface-2 border border-border text-secondary hover:text-primary transition-all disabled:opacity-50">
                     ⚫ No Response
                   </button>
                   <button onClick={handleLogReply} disabled={!replyText.trim() || savingReply}
-                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-gray-900 text-white hover:bg-gray-800 transition-all disabled:opacity-50">
+                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-inverse text-white hover:bg-raised transition-all disabled:opacity-50">
                     {savingReply ? "Saving..." : "Save Reply"}
                   </button>
                 </div>
@@ -584,7 +584,7 @@ export default function CollectionsPage() {
 
         {/* Log Call Modal */}
         {logModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => setLogModal(null)}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-inverse/60 px-4" onClick={() => setLogModal(null)}>
             <div className="bg-surface border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <p className="font-bold text-primary text-sm">Log Call — {logModal.name}</p>
@@ -596,7 +596,7 @@ export default function CollectionsPage() {
                   <div className="flex gap-2">
                     {[true, false].map(v => (
                       <button key={String(v)} onClick={() => setCallForm(f => ({ ...f, did_pick_up: v }))}
-                        className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-all ${callForm.did_pick_up === v ? "bg-gray-900 text-white border-border" : "bg-surface-2 text-secondary border-border"}`}>
+                        className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-all ${callForm.did_pick_up === v ? "bg-inverse text-white border-border" : "bg-surface-2 text-secondary border-border"}`}>
                         {v ? "Yes ✓" : "No ✗"}
                       </button>
                     ))}
@@ -637,7 +637,7 @@ export default function CollectionsPage() {
                     className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2 focus:outline-none focus:border-accent resize-none" />
                 </div>
                 <button onClick={handleLogCall} disabled={loggingCall}
-                  className="w-full py-2.5 rounded-lg text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 transition-all disabled:opacity-60">
+                  className="w-full py-2.5 rounded-lg text-sm font-semibold bg-inverse text-white hover:bg-raised transition-all disabled:opacity-60">
                   {loggingCall ? "Saving..." : "Save Call Log"}
                 </button>
               </div>
@@ -647,7 +647,7 @@ export default function CollectionsPage() {
 
         {/* Manual WhatsApp fallback modal */}
         {manualModal && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-inverse/60 backdrop-blur-sm">
             <div className="w-full max-w-md bg-surface-1 border border-border rounded-2xl p-6 space-y-4 shadow-2xl">
               <div className="flex items-center justify-between">
                 <div>
@@ -678,7 +678,7 @@ export default function CollectionsPage() {
 
         {/* ── Add Invoice Modal ── */}
         {showAddInvoice && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-inverse/60 backdrop-blur-sm"
             onClick={() => setShowAddInvoice(false)}>
             <div className="w-full max-w-md bg-surface-1 border border-border rounded-2xl shadow-2xl"
               onClick={e => e.stopPropagation()}>
@@ -788,9 +788,9 @@ export default function CollectionsPage() {
                   Cancel
                 </button>
                 <button onClick={handleAddInvoice} disabled={addSaving}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-gray-900 text-white hover:bg-gray-800 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-inverse text-white hover:bg-raised transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                   {addSaving
-                    ? <><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Saving...</>
+                    ? <><span className="w-4 h-4 border-2 border-inverse/30 border-t-black rounded-full animate-spin" /> Saving...</>
                     : <><FiPlus size={14} /> Add Invoice</>
                   }
                 </button>
@@ -803,11 +803,11 @@ export default function CollectionsPage() {
         {agingSummary && (
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { label: "Due Today", value: agingSummary.buckets.due_today, color: "#10D98A", glow: "rgba(16,217,138,0.06)" },
-              { label: "1-7 Days", value: agingSummary.buckets.overdue_1_7, color: "#F5A524", glow: "rgba(245,165,36,0.06)" },
-              { label: "8-30 Days", value: agingSummary.buckets.overdue_8_30, color: "#F5A524", glow: "rgba(245,165,36,0.06)" },
-              { label: "31-60 Days", value: agingSummary.buckets.overdue_31_60, color: "#F5424D", glow: "rgba(245,66,77,0.06)" },
-              { label: "60+ Days", value: agingSummary.buckets.overdue_60_plus, color: "#F5424D", glow: "rgba(245,66,77,0.06)" }
+              { label: "Due Today", value: agingSummary.buckets.due_today, color: "var(--status-success)", glow: "rgba(16,217,138,0.06)" },
+              { label: "1-7 Days", value: agingSummary.buckets.overdue_1_7, color: "var(--status-warning)", glow: "rgba(245,165,36,0.06)" },
+              { label: "8-30 Days", value: agingSummary.buckets.overdue_8_30, color: "var(--status-warning)", glow: "rgba(245,165,36,0.06)" },
+              { label: "31-60 Days", value: agingSummary.buckets.overdue_31_60, color: "var(--status-danger)", glow: "rgba(245,66,77,0.06)" },
+              { label: "60+ Days", value: agingSummary.buckets.overdue_60_plus, color: "var(--status-danger)", glow: "rgba(245,66,77,0.06)" }
             ].map(b => (
               <div key={b.label} className="rounded-xl border p-3" style={{ background: b.glow, borderColor: `${b.color}20` }}>
                 <p className="text-[10px] text-muted font-medium mb-1">{b.label}</p>
@@ -858,9 +858,9 @@ export default function CollectionsPage() {
             {liveData && liveData.some(c => c.daysOverdue > 0) && (
               <div className="flex flex-col items-end gap-1">
                 <button onClick={handleBulkRemind} disabled={bulkLoading}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all disabled:opacity-60">
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-inverse text-white text-xs font-bold hover:bg-raised transition-all disabled:opacity-60">
                   {bulkLoading
-                    ? <span className="w-3 h-3 border border-black/30 border-t-black rounded-full animate-spin" />
+                    ? <span className="w-3 h-3 border border-inverse/30 border-t-black rounded-full animate-spin" />
                     : <FiZap size={13} />}
                   {bulkLoading ? "Sending..." : "Remind All"}
                 </button>
@@ -878,7 +878,7 @@ export default function CollectionsPage() {
               </button>
             )}
             <button onClick={() => { setShowAddInvoice(true); setAddError(""); }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all">
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-inverse text-white text-xs font-bold hover:bg-raised transition-all">
               <FiPlus size={13} /> Add Invoice
             </button>
             <button onClick={() => setShowImport(true)}
@@ -1018,7 +1018,7 @@ export default function CollectionsPage() {
                           <ScoreRing score={c.score} />
                           {scoreMap[c.name] && (() => {
                             const risk = scoreMap[c.name];
-                            const tierColor = risk.tier === "HIGH_RISK" ? "#F5424D" : risk.tier === "MEDIUM" ? "#F5A524" : "#10D98A";
+                            const tierColor = risk.tier === "HIGH_RISK" ? "var(--status-danger)" : risk.tier === "MEDIUM" ? "var(--status-warning)" : "var(--status-success)";
                             const tierShort = risk.tier === "HIGH_RISK" ? "HIGH" : risk.tier === "MEDIUM" ? "MED" : "LOW";
                             return (
                               <span className="text-[9px] font-bold rounded px-1.5 py-0.5"
@@ -1073,7 +1073,7 @@ export default function CollectionsPage() {
                                 background: isPromiseBroken(c.id)
                                   ? "rgba(245,66,77,0.15)"
                                   : "rgba(245,165,36,0.12)",
-                                color: isPromiseBroken(c.id) ? "#F5424D" : "#F5A524",
+                                color: isPromiseBroken(c.id) ? "var(--status-danger)" : "var(--status-warning)",
                                 border: `1px solid ${isPromiseBroken(c.id) ? "rgba(245,66,77,0.3)" : "rgba(245,165,36,0.25)"}`,
                               }}>
                               {isPromiseBroken(c.id) ? "⚠️" : "🤝"} {promises[c.id].date.slice(5)}
@@ -1132,7 +1132,7 @@ export default function CollectionsPage() {
 
       {/* Import modal with Tally guide */}
       {showImport && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-inverse/60 backdrop-blur-sm">
           <div className="w-full max-w-md bg-surface-1 border border-border rounded-2xl p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between">
               <p className="text-sm font-bold text-primary">Import Excel / CSV</p>

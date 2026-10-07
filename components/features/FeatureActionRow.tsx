@@ -10,11 +10,11 @@ import { useState } from "react";
 import { request } from "@/lib/api";
 import { LIFECYCLE_LABEL, LIFECYCLE_TONE, type FeatureAction } from "../../packages/contracts/src/features";
 
-const RULE = "rgba(25,25,23,0.10)", GRAPHITE = "#63635F";
+const RULE = "rgb(var(--c-ink) / 0.10)", GRAPHITE = "var(--text-secondary)";
 const TONE: Record<string, [string, string]> = {
-  accent: ["#ECEEF6", "#4B5170"], ok: ["#E9F2EC", "#477054"], warn: ["#F7EFDF", "#8A5A12"], bad: ["#F6E6E6", "#A23B3B"], muted: ["#F1F0EC", GRAPHITE],
+  accent: ["#ECEEF6", "#4B5170"], ok: ["#E9F2EC", "var(--status-success)"], warn: ["#F7EFDF", "var(--status-warning)"], bad: ["#F6E6E6", "var(--status-danger)"], muted: ["#F1F0EC", GRAPHITE],
 };
-const btn: React.CSSProperties = { fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "#fff", cursor: "pointer" };
+const btn: React.CSSProperties = { fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "var(--bg-elevated)", cursor: "pointer" };
 
 export function LifecycleChip({ a }: { a: Pick<FeatureAction, "lifecycle"> }) {
   const [bg, fg] = TONE[LIFECYCLE_TONE[a.lifecycle] || "muted"];
@@ -43,14 +43,14 @@ export function FeatureActionRow({ a, first, onDecided }: { a: FeatureAction; fi
     <div style={{ padding: "12px 16px", borderTop: first ? 0 : `1px solid ${RULE}`, display: "grid", gap: 6 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
         <strong style={{ fontWeight: 500, flex: "1 1 240px" }}>{a.title}</strong>
-        {high ? <span style={{ fontSize: 12, color: "#A23B3B" }}>High risk</span> : null}
+        {high ? <span style={{ fontSize: 12, color: "var(--status-danger)" }}>High risk</span> : null}
         <LifecycleChip a={a} />
       </div>
       {a.description ? <span style={{ fontSize: 13, color: GRAPHITE }}>{a.description}</span> : null}
       {a.lifecycleNote ? <span style={{ fontSize: 13, color: GRAPHITE }}>{a.lifecycleNote}</span> : null}
       {a.draft ? (
         <blockquote style={{ margin: 0, padding: "8px 12px", background: "#F7F6F2", borderRadius: 6, fontSize: 13.5, whiteSpace: "pre-wrap" }}>
-          <span style={{ display: "block", fontSize: 11, color: GRAPHITE, marginBottom: 4, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Drafted message</span>
+          <span style={{ display: "block", fontSize: 11, color: GRAPHITE, marginBottom: 4, fontFamily: "var(--font-sans)" }}>Drafted message</span>
           {a.draft}
         </blockquote>
       ) : null}
@@ -62,14 +62,14 @@ export function FeatureActionRow({ a, first, onDecided }: { a: FeatureAction; fi
               I have checked this high-risk action
             </label>
           ) : null}
-          <button style={{ ...btn, background: "#191917", color: "#fff", opacity: high && !confirm ? 0.4 : 1 }} disabled={!!busy || (high && !confirm)} onClick={() => void decide("approve")}>
+          <button style={{ ...btn, background: "var(--bg-inverse)", color: "var(--text-on-inverse)", opacity: high && !confirm ? 0.4 : 1 }} disabled={!!busy || (high && !confirm)} onClick={() => void decide("approve")}>
             {busy === "approve" ? "Approving…" : "Approve"}
           </button>
           <button style={btn} disabled={!!busy} onClick={() => void decide("reject")}>{busy === "reject" ? "Declining…" : "Decline"}</button>
         </div>
       ) : null}
       {note ? <p role="status" style={{ margin: 0, fontSize: 13 }}>{note}</p> : null}
-      {err ? <p role="alert" style={{ margin: 0, fontSize: 13, color: "#A23B3B" }}>{err}</p> : null}
+      {err ? <p role="alert" style={{ margin: 0, fontSize: 13, color: "var(--status-danger)" }}>{err}</p> : null}
     </div>
   );
 }

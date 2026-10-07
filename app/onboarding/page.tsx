@@ -39,8 +39,8 @@ const PRIORITIES = [
   { key: "forecasting", label: "Forecasting" },
 ];
 
-const iBase: React.CSSProperties = { background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 7, padding: "13px 16px", fontFamily: "'Geist', 'Plus Jakarta Sans',system-ui", fontSize: 15, color: "#F5F4F0", outline: "none", width: "100%", transition: "border-color .2s,background .2s" };
-const iFocus: React.CSSProperties = { ...iBase, borderColor: "rgba(255,255,255,.34)", background: "rgba(255,255,255,.08)" };
+const iBase: React.CSSProperties = { background: "rgb(var(--c-ink) / .05)", border: "1px solid rgb(var(--c-ink) / .12)", borderRadius: 7, padding: "13px 16px", fontFamily: "'Geist', system-ui", fontSize: 15, color: "var(--text-primary)", outline: "none", width: "100%", transition: "border-color .2s,background .2s" };
+const iFocus: React.CSSProperties = { ...iBase, borderColor: "rgb(var(--c-ink) / .34)", background: "rgb(var(--c-ink) / .08)" };
 
 function FocusInput(p: React.InputHTMLAttributes<HTMLInputElement>) {
   const [f, setF] = useState(false);
@@ -55,15 +55,15 @@ function OptionCard({ selected, onClick, children }: { selected: boolean; onClic
       className="hover-dim"
       style={{
         textAlign: "left", padding: "13px 16px", borderRadius: 7, cursor: "pointer",
-        border: `1px solid ${selected ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.12)"}`,
-        background: selected ? "rgba(255,255,255,.10)" : "rgba(255,255,255,.03)",
-        color: "#F5F4F0", fontSize: 14, fontFamily: "'Geist', 'Plus Jakarta Sans',system-ui",
+        border: `1px solid ${selected ? "rgb(var(--c-ink) / .55)" : "rgb(var(--c-ink) / .12)"}`,
+        background: selected ? "rgb(var(--c-ink) / .10)" : "rgb(var(--c-ink) / .03)",
+        color: "var(--text-primary)", fontSize: 14, fontFamily: "'Geist', system-ui",
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
         transition: "border-color .15s, background .15s", width: "100%",
       }}
     >
       <span>{children}</span>
-      {selected && <FiCheck size={15} style={{ color: "#10D98A", flexShrink: 0 }} />}
+      {selected && <FiCheck size={15} style={{ color: "var(--status-success)", flexShrink: 0 }} />}
     </button>
   );
 }
@@ -214,7 +214,7 @@ export default function OnboardingPage() {
   if (!ready) {
     return (
       <div className="atlas-page auth-page" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
-        <FiLoader className="spin" size={22} style={{ color: "rgba(255,255,255,.4)" }} />
+        <FiLoader className="spin" size={22} style={{ color: "rgb(var(--c-text-primary) / .4)" }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}} .spin{animation:spin .8s linear infinite}`}</style>
       </div>
     );
@@ -226,11 +226,11 @@ export default function OnboardingPage() {
   return (
     <div className="atlas-page auth-page">
       <header className="topbar">
-        <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "#fff" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "var(--text-on-inverse)" }}>
           <span className="brand-wm">Starlane</span>
         </Link>
         <div className="topbar-right">
-          {stage < 4 && <button onClick={goToWorkspace} className="hover-dim" style={{ background: "none", border: "none", color: "rgba(255,255,255,.4)", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>I&apos;ll do this later</button>}
+          {stage < 4 && <button onClick={goToWorkspace} className="hover-dim" style={{ background: "none", border: "none", color: "rgb(var(--c-ink) / .4)", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>I&apos;ll do this later</button>}
         </div>
       </header>
 
@@ -238,7 +238,7 @@ export default function OnboardingPage() {
         {/* Stage progress */}
         <div className="progress" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
           {[1, 2, 3, 4].map((n) => (
-            <div key={n} style={{ height: 3, flex: 1, borderRadius: 2, background: stage >= n ? "rgba(255,255,255,.75)" : "rgba(255,255,255,.12)", transition: "background .3s" }} />
+            <div key={n} style={{ height: 3, flex: 1, borderRadius: 2, background: stage >= n ? "rgb(var(--c-ink) / .75)" : "rgb(var(--c-ink) / .12)", transition: "background .3s" }} />
           ))}
         </div>
 
@@ -261,14 +261,14 @@ export default function OnboardingPage() {
               <div className="field">
                 <label>Country</label>
                 <select value={country} onChange={(e) => setCountry(e.target.value)} style={{ ...iBase, cursor: "pointer" }} required>
-                  {COUNTRIES.map((c) => <option key={c} value={c} style={{ background: "#1B1B18" }}>{c}</option>)}
+                  {COUNTRIES.map((c) => <option key={c} value={c} style={{ background: "var(--bg-inverse)" }}>{c}</option>)}
                 </select>
               </div>
               <div className="field">
                 <label>Your role</label>
-                <select value={role} onChange={(e) => setRole(e.target.value as Role)} style={{ ...iBase, cursor: "pointer", color: role ? "#fff" : "rgba(255,255,255,.35)" }}>
-                  <option value="" style={{ background: "#1B1B18" }}>Select role</option>
-                  {ROLES.map((r) => <option key={r} value={r} style={{ background: "#1B1B18" }}>{r}</option>)}
+                <select value={role} onChange={(e) => setRole(e.target.value as Role)} style={{ ...iBase, cursor: "pointer", color: role ? "var(--text-on-inverse)" : "rgb(var(--c-text-primary) / .35)" }}>
+                  <option value="" style={{ background: "var(--bg-inverse)" }}>Select role</option>
+                  {ROLES.map((r) => <option key={r} value={r} style={{ background: "var(--bg-inverse)" }}>{r}</option>)}
                 </select>
               </div>
               <button type="submit" className="btn-main" disabled={loading} style={{ opacity: loading ? 0.6 : 1 }}>
@@ -297,7 +297,7 @@ export default function OnboardingPage() {
                 <span className="btn-txt">Continue</span><FiArrowRight size={16} />
               </button>
             </div>
-            <button type="button" onClick={() => submitStage2(true)} disabled={loading} className="hover-dim" style={{ marginTop: 14, width: "100%", background: "none", border: "none", color: "rgba(255,255,255,.4)", cursor: "pointer", fontSize: 13, fontFamily: "inherit", textAlign: "center" }}>
+            <button type="button" onClick={() => submitStage2(true)} disabled={loading} className="hover-dim" style={{ marginTop: 14, width: "100%", background: "none", border: "none", color: "rgb(var(--c-ink) / .4)", cursor: "pointer", fontSize: 13, fontFamily: "inherit", textAlign: "center" }}>
               Let Starlane decide
             </button>
           </div>
@@ -313,11 +313,11 @@ export default function OnboardingPage() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
               {/* Tally — real, wired to the actual device-enrollment flow */}
-              <div style={{ border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: 18 }}>
+              <div style={{ border: "1px solid rgb(var(--c-ink) / .12)", borderRadius: 8, padding: 18 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: enrollment ? 14 : 0 }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600 }}>Tally</div>
-                    <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Connect your Tally install via the local connector</div>
+                    <div style={{ fontSize: 12.5, color: "rgb(var(--c-text-primary) / .4)", marginTop: 2 }}>Connect your Tally install via the local connector</div>
                   </div>
                   {!enrollment && (
                     <button type="button" className="btn-back" disabled={enrolling} onClick={startTallyEnrollment} style={{ whiteSpace: "nowrap" }}>
@@ -327,22 +327,22 @@ export default function OnboardingPage() {
                 </div>
                 {enrollment && (
                   <div>
-                    <p style={{ fontSize: 12.5, color: "rgba(255,255,255,.6)", marginBottom: 8 }}>
+                    <p style={{ fontSize: 12.5, color: "rgb(var(--c-text-primary) / .6)", marginBottom: 8 }}>
                       On the computer that runs TallyPrime (Node.js 18+),{" "}
                       <button type="button" onClick={() => api.connectors.downloadBridge("tally").catch(() => setError("Could not download the bridge — try again"))}
-                        style={{ background: "none", border: "none", padding: 0, color: "#fff", textDecoration: "underline", cursor: "pointer", font: "inherit" }}>download the Starlane bridge</button>, then run this in the same folder:
+                        style={{ background: "none", border: "none", padding: 0, color: "var(--text-on-inverse)", textDecoration: "underline", cursor: "pointer", font: "inherit" }}>download the Starlane bridge</button>, then run this in the same folder:
                     </p>
-                    <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12.5, padding: "10px 12px", background: "rgba(255,255,255,.05)", borderRadius: 6, marginBottom: 10, overflowX: "auto", whiteSpace: "nowrap" }}>
+                    <div style={{ fontFamily:"var(--font-sans)", fontSize: 12.5, padding: "10px 12px", background: "rgb(var(--c-ink) / .05)", borderRadius: 6, marginBottom: 10, overflowX: "auto", whiteSpace: "nowrap" }}>
                       {enrollment.command}
                     </div>
-                    <p style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginBottom: 10 }}>
+                    <p style={{ fontSize: 12, color: "rgb(var(--c-text-primary) / .4)", marginBottom: 10 }}>
                       One-time code, expires {new Date(enrollment.expiresAt).toLocaleTimeString()}. The bridge is read-only and gets its own revocable credential.
                     </p>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
                       {deviceConnected ? (
-                        <><FiCheck size={14} style={{ color: "#10D98A" }} /> <span style={{ color: "#10D98A" }}>Paired — this computer will sync automatically</span></>
+                        <><FiCheck size={14} style={{ color: "var(--status-success)" }} /> <span style={{ color: "var(--status-success)" }}>Paired — this computer will sync automatically</span></>
                       ) : (
-                        <><FiLoader size={13} className="spin" style={{ color: "rgba(255,255,255,.4)" }} /> <span style={{ color: "rgba(255,255,255,.4)" }}>Waiting for the bridge to pair…</span></>
+                        <><FiLoader size={13} className="spin" style={{ color: "rgb(var(--c-text-primary) / .4)" }} /> <span style={{ color: "rgb(var(--c-text-primary) / .4)" }}>Waiting for the bridge to pair…</span></>
                       )}
                     </div>
                   </div>
@@ -350,10 +350,10 @@ export default function OnboardingPage() {
               </div>
 
               {/* CSV / Excel import — real, wired to /api/import/excel */}
-              <div style={{ border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ border: "1px solid rgb(var(--c-ink) / .12)", borderRadius: 8, padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>File import (CSV / Excel)</div>
-                  <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Import customers, sales or purchase records from a spreadsheet</div>
+                  <div style={{ fontSize: 12.5, color: "rgb(var(--c-text-primary) / .4)", marginTop: 2 }}>Import customers, sales or purchase records from a spreadsheet</div>
                 </div>
                 <Link href="/collections?import=1" className="btn-back" style={{ whiteSpace: "nowrap", textDecoration: "none", display: "inline-block" }}>Import</Link>
               </div>
@@ -377,7 +377,7 @@ export default function OnboardingPage() {
             </div>
 
             {stateLoading && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "24px 0", color: "rgba(255,255,255,.4)", fontSize: 13 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "24px 0", color: "rgb(var(--c-text-primary) / .4)", fontSize: 13 }}>
                 <FiLoader className="spin" size={16} /> Loading business state…
               </div>
             )}
@@ -385,14 +385,14 @@ export default function OnboardingPage() {
             {!stateLoading && topItems.length > 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
                 {topItems.map((item: any, i: number) => (
-                  <div key={item.id || i} style={{ border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: 16 }}>
+                  <div key={item.id || i} style={{ border: "1px solid rgb(var(--c-ink) / .12)", borderRadius: 8, padding: 16 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
                       <div style={{ fontSize: 14, fontWeight: 600 }}>{item.title || item.summary || item.description || item.related_entity_name || "Action needed"}</div>
-                      {(item.priority || item.severity) && <span style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".06em", color: "rgba(255,255,255,.4)" }}>{item.priority || item.severity}</span>}
+                      {(item.priority || item.severity) && <span style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".06em", color: "rgb(var(--c-text-primary) / .4)" }}>{item.priority || item.severity}</span>}
                     </div>
-                    {item.reason && <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.45)", marginTop: 6 }}>{item.reason}</div>}
+                    {item.reason && <div style={{ fontSize: 12.5, color: "rgb(var(--c-text-primary) / .45)", marginTop: 6 }}>{item.reason}</div>}
                     {(item.amount || item.due_date || item.related_entity_name) && (
-                      <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", marginTop: 8, display: "flex", gap: 14 }}>
+                      <div style={{ fontSize: 12, color: "rgb(var(--c-text-primary) / .35)", marginTop: 8, display: "flex", gap: 14 }}>
                         {item.amount && <span>₹{Number(item.amount).toLocaleString("en-IN")}</span>}
                         {item.due_date && <span>{new Date(item.due_date).toLocaleDateString()}</span>}
                         {item.related_entity_name && <span>{item.related_entity_name}</span>}
@@ -404,7 +404,7 @@ export default function OnboardingPage() {
             )}
 
             {!stateLoading && topItems.length === 0 && (
-              <div style={{ padding: "20px 0 24px", color: "rgba(255,255,255,.55)", fontSize: 14.5, lineHeight: 1.6 }}>
+              <div style={{ padding: "20px 0 24px", color: "rgb(var(--c-text-primary) / .55)", fontSize: 14.5, lineHeight: 1.6 }}>
                 We need a little more business history before Starlane can rank what matters.
               </div>
             )}

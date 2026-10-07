@@ -20,12 +20,12 @@ export function showValue(v: unknown, unit?: string): string {
 
 function Row({ label, value, mono, note }: { label: string; value: React.ReactNode; mono?: boolean; note?: string }) {
   return (
-    <div style={{ padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>
+    <div style={{ padding: "7px 0", borderBottom: "1px solid var(--border-default)" }}>
       <div className="flex items-baseline justify-between gap-4">
-        <span style={{ fontSize: 12.5, color: "#63635F" }}>{label}</span>
-        <span className="text-right" style={{ fontSize: 13, color: "#191917", fontFamily: mono ? "'Plus Jakarta Sans', system-ui, sans-serif" : undefined }}>{value}</span>
+        <span style={{ fontSize: 12.5, color: "var(--text-secondary)" }}>{label}</span>
+        <span className="text-right" style={{ fontSize: 13, color: "var(--text-primary)", fontFamily: mono ? "system-ui, sans-serif" : undefined }}>{value}</span>
       </div>
-      {note && <div style={{ fontSize: 11.5, color: "#8A8A86", marginTop: 2 }}>{note}</div>}
+      {note && <div style={{ fontSize: 11.5, color: "var(--text-tertiary)", marginTop: 2 }}>{note}</div>}
     </div>
   );
 }
@@ -33,7 +33,7 @@ function Row({ label, value, mono, note }: { label: string; value: React.ReactNo
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 22 }}>
-      <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--text-secondary)", marginBottom: 8 }}>{label}</div>
       {children}
     </div>
   );
@@ -72,7 +72,7 @@ export function EvidenceSetDrawer({ title, record, evidence, onClose, children }
       )}
       {evidence?.summary && (
         <Section label="Why this supports the conclusion">
-          <p style={{ fontSize: 13, color: "#43433F", lineHeight: 1.6 }}>{evidence.summary}</p>
+          <p style={{ fontSize: 13, color: "var(--text-body)", lineHeight: 1.6 }}>{evidence.summary}</p>
         </Section>
       )}
       {children}

@@ -33,7 +33,7 @@ export default function DecisionProofPage() {
         {tr.isError && <ErrorState title="Couldn't load the track record" message={(tr.error as Error).message} onRetry={() => tr.refetch()} />}
         {r && (
           <>
-            <section className="grid grid-cols-2 lg:grid-cols-4 gap-6 rounded-2xl p-5" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+            <section className="grid grid-cols-2 lg:grid-cols-4 gap-6 rounded-2xl p-5" style={{ background: "var(--bg-elevated)", border: `1px solid ${C.line}` }}>
               <Stat label="Decisions carried through" value={r.contracts} sub={Object.entries(r.byStatus).map(([k, v]) => `${v} ${k.replace(/_/g, " ").toLowerCase()}`).join(", ") || "none yet"} />
               <Stat label="Followed the suggestion" value={r.followedRecommendation ? pct(r.followedRecommendation.share) : "—"} sub={r.followedRecommendation ? `${r.followedRecommendation.count} of ${r.contracts}` : "no decisions yet"} />
               <Stat
@@ -116,7 +116,7 @@ export default function DecisionProofPage() {
           </>
         )}
 
-        <section className="mt-12 rounded-2xl p-5" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+        <section className="mt-12 rounded-2xl p-5" style={{ background: "var(--bg-elevated)", border: `1px solid ${C.line}` }}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <SectionLabel>Replay your history</SectionLabel>

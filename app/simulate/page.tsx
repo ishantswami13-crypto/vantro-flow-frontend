@@ -103,9 +103,9 @@ function SimulatePageInner() {
   const selectedInvoice = invoices.find((inv) => inv.id === selectedInvoiceId) || null;
 
   const [tab, setTab] = useState<"new" | "sales" | "replays">("new");
-  const pill: React.CSSProperties = { padding: "8px 30px 8px 14px", border: "1px solid rgba(25,25,23,0.14)", borderRadius: 20, fontSize: 12.5, color: "#43433F", background: "transparent", maxWidth: "100%" };
+  const pill: React.CSSProperties = { padding: "8px 30px 8px 14px", border: "1px solid rgb(var(--c-ink) / 0.14)", borderRadius: 20, fontSize: 12.5, color: "var(--text-body)", background: "transparent", maxWidth: "100%" };
   const tone = (n: number | null | undefined, goodWhenNegative = false) =>
-    n == null || n === 0 ? "#191917" : (n < 0) === goodWhenNegative ? "#477054" : "#A64F4B";
+    n == null || n === 0 ? "var(--text-primary)" : (n < 0) === goodWhenNegative ? "var(--status-success)" : "var(--status-danger)";
 
   return (
     <DashboardLayout pageTitle="Simulate">
@@ -120,14 +120,14 @@ function SimulatePageInner() {
         <>
           {/* Assumptions: the tenant's own open invoices, and the two
               hypotheticals scenarioEngine.js really supports. */}
-          <div style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 18 }}>
-            <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 12 }}>Assumptions</div>
+          <div style={{ boxSizing: "border-box", background: "var(--bg-elevated)", border: "1px solid rgb(var(--c-ink) / 0.10)", borderRadius: 8, padding: 18 }}>
+            <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--text-secondary)", marginBottom: 12 }}>Assumptions</div>
             {invoicesLoading ? (
-              <p style={{ fontSize: 13, color: "#63635F" }}>Loading your open invoices…</p>
+              <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>Loading your open invoices…</p>
             ) : invoicesError ? (
-              <p style={{ fontSize: 13, color: "#A64F4B" }}>{invoicesError}</p>
+              <p style={{ fontSize: 13, color: "var(--status-danger)" }}>{invoicesError}</p>
             ) : invoices.length === 0 ? (
-              <p style={{ fontSize: 13, color: "#63635F" }}>No open invoices to simulate against yet. Import your receivables or connect Tally first.</p>
+              <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>No open invoices to simulate against yet. Import your receivables or connect Tally first.</p>
             ) : (
               <>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -167,24 +167,24 @@ function SimulatePageInner() {
                   </button>
                 </div>
                 {selectedInvoice && (
-                  <p style={{ fontSize: 12, color: "#8A8A86", marginTop: 10 }}>
+                  <p style={{ fontSize: 12, color: "var(--text-tertiary)", marginTop: 10 }}>
                     Invoice amount {fmt(selectedInvoice.invoice_amount)} {selectedInvoice.currency || ""}, from your ledger.
                   </p>
                 )}
-                {runError && <p style={{ fontSize: 12, color: "#A64F4B", marginTop: 8 }}>{runError}</p>}
+                {runError && <p style={{ fontSize: 12, color: "var(--status-danger)", marginTop: 8 }}>{runError}</p>}
               </>
             )}
           </div>
 
           {result && (
             <>
-              <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F" }}>DOWNSTREAM EFFECTS · 30-DAY HORIZON</div>
+              <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--text-secondary)" }}>DOWNSTREAM EFFECTS · 30-DAY HORIZON</div>
               <div className="grid gap-4 md:grid-cols-3">
-                <SimCard label="Projected overdue" value={fmt(result.simulated.projected_state.projectedTotalOverdue)} color="#191917" note={`Today ${fmt(result.baseline.totalOverdue)} overdue of ${fmt(result.baseline.totalOpenReceivables)} open.`} />
+                <SimCard label="Projected overdue" value={fmt(result.simulated.projected_state.projectedTotalOverdue)} color="var(--text-primary)" note={`Today ${fmt(result.baseline.totalOverdue)} overdue of ${fmt(result.baseline.totalOpenReceivables)} open.`} />
                 <SimCard label="Cash" value={fmt(result.simulated.projected_state.cashImpactDelta)} color={tone(result.simulated.projected_state.cashImpactDelta)} note={result.simulated.projected_state.narrative} />
-                <SimCard label="Overdue vs today" value={fmt(result.delta.delta)} color={result.delta.direction === "IMPROVEMENT_VS_BASELINE" ? "#477054" : result.delta.direction === "WORSE_VS_BASELINE" ? "#A64F4B" : "#191917"} note={result.delta.note} />
+                <SimCard label="Overdue vs today" value={fmt(result.delta.delta)} color={result.delta.direction === "IMPROVEMENT_VS_BASELINE" ? "var(--status-success)" : result.delta.direction === "WORSE_VS_BASELINE" ? "var(--status-danger)" : "var(--text-primary)"} note={result.delta.note} />
               </div>
-              <p style={{ fontSize: 12.5, color: "#8A8A86" }}>
+              <p style={{ fontSize: 12.5, color: "var(--text-tertiary)" }}>
                 Currency: {result.fx.reason}
               </p>
             </>
@@ -197,10 +197,10 @@ function SimulatePageInner() {
 
 function SimCard({ label, value, color, note }: { label: string; value: string; color: string; note: string }) {
   return (
-    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 18 }}>
-      <div style={{ fontSize: 12, color: "#63635F", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 22, color, marginBottom: 6 }}>{value}</div>
-      <div style={{ fontSize: 12, color: "#63635F", lineHeight: 1.5 }}>{note}</div>
+    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "var(--bg-elevated)", border: "1px solid rgb(var(--c-ink) / 0.10)", borderRadius: 8, padding: 18 }}>
+      <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontFamily: "var(--font-sans)", fontSize: 22, color, marginBottom: 6 }}>{value}</div>
+      <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>{note}</div>
     </div>
   );
 }

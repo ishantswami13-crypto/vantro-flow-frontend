@@ -84,7 +84,7 @@ function formatMsg(text: string) {
 }
 
 const tierColor: Record<string, string> = {
-  high: "#10D98A", medium: "#F5A524", low: "#F5424D",
+  high: "var(--status-success)", medium: "var(--status-warning)", low: "var(--status-danger)",
 };
 
 const INITIAL_MESSAGES: Message[] = [{
@@ -104,11 +104,11 @@ const QUICK_PROMPTS = [
 function HealthRing({ score }: { score: number }) {
   const r = 38; const circ = 2 * Math.PI * r;
   const filled = (score / 100) * circ;
-  const color = score >= 65 ? "#10D98A" : score >= 40 ? "#F5A524" : "#F5424D";
+  const color = score >= 65 ? "var(--status-success)" : score >= 40 ? "var(--status-warning)" : "var(--status-danger)";
   return (
     <div className="relative w-24 h-24">
       <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
-        <circle cx="48" cy="48" r={r} fill="none" stroke="#E5E5E1" strokeWidth="8" />
+        <circle cx="48" cy="48" r={r} fill="none" stroke="var(--border-default)" strokeWidth="8" />
         <circle cx="48" cy="48" r={r} fill="none" stroke={color} strokeWidth="8"
           strokeDasharray={`${filled} ${circ}`} strokeLinecap="round"
           style={{ transition: "stroke-dasharray 1s ease" }} />
@@ -144,7 +144,7 @@ function CallScriptModal({ debtor, script, onClose }: {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-inverse/70 backdrop-blur-sm">
       <div className="w-full max-w-lg bg-surface-1 border border-border rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="px-5 py-4 border-b border-border flex items-center justify-between shrink-0">
@@ -168,10 +168,10 @@ function CallScriptModal({ debtor, script, onClose }: {
         {/* Script sections */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {[
-            { key: "opening",           label: "Opening (Greeting)", Icon: FiPhone,       text: script.opening,           color: "#0066FF" },
-            { key: "main_ask",          label: "Main Ask",           Icon: FiMessageSquare, text: script.main_ask,        color: "#9B6DFF" },
-            { key: "objection_handler", label: "If They Hesitate",   Icon: FiShield,      text: script.objection_handler, color: "#F5A524" },
-            { key: "closing",           label: "Closing",            Icon: FiCheckCircle, text: script.closing,           color: "#10D98A" },
+            { key: "opening",           label: "Opening (Greeting)", Icon: FiPhone,       text: script.opening,           color: "var(--accent-primary)" },
+            { key: "main_ask",          label: "Main Ask",           Icon: FiMessageSquare, text: script.main_ask,        color: "var(--accent-primary)" },
+            { key: "objection_handler", label: "If They Hesitate",   Icon: FiShield,      text: script.objection_handler, color: "var(--status-warning)" },
+            { key: "closing",           label: "Closing",            Icon: FiCheckCircle, text: script.closing,           color: "var(--status-success)" },
           ].map(({ key, label, Icon, text, color }) => (
             <div key={key} className="bg-surface-2 rounded-xl p-3.5 border border-border">
               <div className="flex items-center justify-between mb-2">
@@ -546,11 +546,11 @@ function AIFounderPageInner() {
             <button key={key} onClick={() => setTab(key)}
               className={[
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-                tab === key ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
+                tab === key ? "bg-inverse text-white" : "text-secondary hover:text-primary",
               ].join(" ")}>
               <Icon size={12} /> {label}
               {key === "callcenter" && (
-                <span className="ml-0.5 text-2xs px-1 py-0 rounded-full bg-black/10 font-mono">
+                <span className="ml-0.5 text-2xs px-1 py-0 rounded-full bg-inverse/10 font-mono">
                   AI
                 </span>
               )}
@@ -592,10 +592,10 @@ function AIFounderPageInner() {
                 {/* Metrics */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {[
-                    { label: "Total Outstanding", value: fmt(briefing.total_outstanding), icon: FiAlertTriangle, color: "#F5424D" },
-                    { label: "Expected This Week", value: fmt(briefing.expected_inflow_7d), icon: FiTrendingUp, color: "#10D98A" },
-                    { label: "Avg Pay Probability", value: `${briefing.avg_payment_probability}%`, icon: FiTarget, color: "#0066FF" },
-                    { label: "High-Priority Leads", value: String(briefing.stats.high_priority), icon: FiActivity, color: "#9B6DFF" },
+                    { label: "Total Outstanding", value: fmt(briefing.total_outstanding), icon: FiAlertTriangle, color: "var(--status-danger)" },
+                    { label: "Expected This Week", value: fmt(briefing.expected_inflow_7d), icon: FiTrendingUp, color: "var(--status-success)" },
+                    { label: "Avg Pay Probability", value: `${briefing.avg_payment_probability}%`, icon: FiTarget, color: "var(--accent-primary)" },
+                    { label: "High-Priority Leads", value: String(briefing.stats.high_priority), icon: FiActivity, color: "var(--accent-primary)" },
                   ].map(({ label, value, icon: Icon, color }) => (
                     <div key={label} className="card-premium p-4">
                       <div className="flex items-center gap-2 mb-2">
@@ -863,7 +863,7 @@ function AIFounderPageInner() {
                             <span className="text-2xs px-1.5 py-0.5 rounded-full font-bold"
                               style={{
                                 background: m.urgency === "high" ? "#F5424D15" : m.urgency === "medium" ? "#F5A52415" : "#10D98A15",
-                                color: m.urgency === "high" ? "#F5424D" : m.urgency === "medium" ? "#F5A524" : "#10D98A",
+                                color: m.urgency === "high" ? "var(--status-danger)" : m.urgency === "medium" ? "var(--status-warning)" : "var(--status-success)",
                                 border: `1px solid ${m.urgency === "high" ? "#F5424D25" : m.urgency === "medium" ? "#F5A52425" : "#10D98A25"}`,
                               }}>
                               {m.urgency}
@@ -900,12 +900,12 @@ function AIFounderPageInner() {
               <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-3">What AI Founder Can Do</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
-                  { Icon: FiTarget,       label: "Priority Scoring", desc: "ML ranks debtors by pay probability",  color: "#0066FF" },
-                  { Icon: FiPhone,        label: "Call Scripts",     desc: "Hinglish scripts per debtor, any tone", color: "#10D98A" },
-                  { Icon: FiMessageSquare,label: "WhatsApp Drafts",  desc: "Personalized messages in seconds",      color: "#9B6DFF" },
-                  { Icon: FiBarChart2,    label: "Cash Forecasting", desc: "Predict inflow for next 7/30 days",     color: "#F5A524" },
-                  { Icon: FiMic,          label: "Voice Input",      desc: "Ask questions by speaking in Hindi",    color: "#F5424D" },
-                  { Icon: FiCpu,          label: "Business Strategy",desc: "LLaMA 70B — your AI co-founder",        color: "#10D98A" },
+                  { Icon: FiTarget,       label: "Priority Scoring", desc: "ML ranks debtors by pay probability",  color: "var(--accent-primary)" },
+                  { Icon: FiPhone,        label: "Call Scripts",     desc: "Hinglish scripts per debtor, any tone", color: "var(--status-success)" },
+                  { Icon: FiMessageSquare,label: "WhatsApp Drafts",  desc: "Personalized messages in seconds",      color: "var(--accent-primary)" },
+                  { Icon: FiBarChart2,    label: "Cash Forecasting", desc: "Predict inflow for next 7/30 days",     color: "var(--status-warning)" },
+                  { Icon: FiMic,          label: "Voice Input",      desc: "Ask questions by speaking in Hindi",    color: "var(--status-danger)" },
+                  { Icon: FiCpu,          label: "Business Strategy",desc: "LLaMA 70B — your AI co-founder",        color: "var(--status-success)" },
                 ].map(({ Icon, label, desc, color }) => (
                   <div key={label} className="flex items-start gap-2.5 p-3 bg-surface-2 rounded-xl border border-border">
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}18`, border: `1px solid ${color}25` }}>

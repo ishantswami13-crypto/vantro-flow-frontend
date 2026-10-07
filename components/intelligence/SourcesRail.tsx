@@ -9,7 +9,7 @@ import type { IntelligenceEvidenceItem } from "@/lib/api";
 export function SourcesRail({ evidence, highlighted }: { evidence: IntelligenceEvidenceItem[]; highlighted: number | null }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase mb-3" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>
+      <p className="text-[11px] font-semibold uppercase mb-3" style={{ color: "var(--text-tertiary)", letterSpacing: "0.08em" }}>
         Sources · {evidence.length}
       </p>
       <ol className="space-y-1.5">
@@ -21,21 +21,21 @@ export function SourcesRail({ evidence, highlighted }: { evidence: IntelligenceE
               key={n}
               id={`source-${n}`}
               className="rounded-lg px-3 py-2.5 transition-colors"
-              style={{ background: active ? "#FFFFFF" : "transparent", border: `1px solid ${active ? "var(--id-b, #D7D6D0)" : "transparent"}` }}
+              style={{ background: active ? "var(--bg-elevated)" : "transparent", border: `1px solid ${active ? "var(--id-b, var(--border-default))" : "transparent"}` }}
             >
               <div className="flex items-start gap-2.5">
                 <span
                   className="shrink-0 mt-[1px] inline-flex items-center justify-center min-w-[18px] h-[18px] rounded text-[10px] font-semibold"
-                  style={{ background: "#EDEDE9", color: "#63635F", fontVariantNumeric: "tabular-nums" }}
+                  style={{ background: "var(--bg-subtle)", color: "var(--text-secondary)", fontVariantNumeric: "tabular-nums" }}
                 >
                   {n}
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[12.5px] font-medium" style={{ color: "#191917" }}>{item.label}</p>
-                  <p className="text-[12px] leading-snug mt-0.5" style={{ color: "#63635F" }}>{item.detail}</p>
+                  <p className="text-[12.5px] font-medium" style={{ color: "var(--text-primary)" }}>{item.label}</p>
+                  <p className="text-[12px] leading-snug mt-0.5" style={{ color: "var(--text-secondary)" }}>{item.detail}</p>
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     <EvidenceKindBadge kind={item.kind} />
-                    <span className="text-[11px]" style={{ color: "#8A8A86" }}>
+                    <span className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
                       {item.confidence === "UNKNOWN" ? "Confidence unknown" : `${humanizeCode(item.confidence)} confidence`}
                       {item.timestamp ? ` · ${formatDateTime(item.timestamp)}` : ""}
                     </span>

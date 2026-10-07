@@ -54,18 +54,18 @@ function StepBar({ current }: { current: number }) {
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all"
                 style={{
-                  background: done   ? "#10D98A"
-                            : active ? "#4F6EF7"
+                  background: done   ? "var(--status-success)"
+                            : active ? "var(--accent-primary)"
                             : "#F2F2EF",
-                  border: done || active ? "none" : "1px solid #E5E5E1",
-                  color: done || active ? "#fff" : "#8A8A86",
+                  border: done || active ? "none" : "1px solid var(--border-default)",
+                  color: done || active ? "var(--text-on-inverse)" : "var(--text-tertiary)",
                 }}
               >
                 {done ? <FiCheck size={13} strokeWidth={3} /> : s.n}
               </div>
               <span
                 className="text-[9px] font-bold mt-1 tracking-wide uppercase"
-                style={{ color: done ? "#10D98A" : active ? "#4F6EF7" : "#8A8A86" }}
+                style={{ color: done ? "var(--status-success)" : active ? "var(--accent-primary)" : "var(--text-tertiary)" }}
               >
                 {s.label}
               </span>
@@ -74,7 +74,7 @@ function StepBar({ current }: { current: number }) {
             {i < STEPS.length - 1 && (
               <div
                 className="flex-1 h-px mx-1 transition-all"
-                style={{ background: done ? "#10D98A" : "rgba(255,255,255,0.08)" }}
+                style={{ background: done ? "var(--status-success)" : "rgb(var(--c-ink) / 0.08)" }}
               />
             )}
           </div>
@@ -550,7 +550,7 @@ export default function NewInvoicePage() {
             disabled={loading}
             className="w-full py-4 rounded-xl btn-primary font-black text-base disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
             {loading ? (
-              <><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Creating Invoice…</>
+              <><span className="w-4 h-4 border-2 border-inverse/30 border-t-black rounded-full animate-spin" /> Creating Invoice…</>
             ) : (
               <><FiCheck size={17} /> Confirm &amp; Create — {fmtINR(total)}</>
             )}

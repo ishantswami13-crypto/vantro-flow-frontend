@@ -20,8 +20,8 @@ const NEXT: Record<Status, Status[]> = {
   waitlisted: ["reviewing", "approved", "rejected"], rejected: ["reviewing"], approved: ["expired"], expired: ["reviewing", "approved"],
 };
 const VERB: Record<Status, string> = { submitted: "Submit", reviewing: "Start review", approved: "Approve", waitlisted: "Waitlist", rejected: "Reject", expired: "Expire access" };
-const TIER_COLOR = { ready: "#477054", review: "#8A5A12", unsupported: "#A64F4B", waitlist: "#63635F" } as const;
-const INK = "#191917", SOFT = "#63635F", FAINT = "#8A8A86", LINE = "#EBEAE6";
+const TIER_COLOR = { ready: "var(--status-success)", review: "var(--status-warning)", unsupported: "var(--status-danger)", waitlist: "var(--text-secondary)" } as const;
+const INK = "var(--text-primary)", SOFT = "var(--text-secondary)", FAINT = "var(--text-tertiary)", LINE = "var(--border-default)";
 const fmt = (d: string) => new Date(d).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 export default function AccessReviewPage() {
@@ -80,13 +80,13 @@ export default function AccessReviewPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 18, minWidth: 0 }}>
         <h1 className="v32-page-title" style={{ margin: 0 }}>Access review</h1>
         <p style={{ fontSize: 13.5, color: SOFT, margin: 0, maxWidth: 680 }}>Applications to the private rollout. Compatibility is assessed by fixed rules at submission; the decision is yours.</p>
-        {error && <p role="alert" style={{ fontSize: 13, color: "#A64F4B", margin: 0 }}>{error}</p>}
+        {error && <p role="alert" style={{ fontSize: 13, color: "var(--status-danger)", margin: 0 }}>{error}</p>}
 
         <nav aria-label="Filter by status" style={{ display: "flex", gap: 20, borderBottom: `1px solid ${LINE}`, overflowX: "auto" }}>
           {FILTERS.map((f) => (
             <button key={f.label} onClick={() => { setFilter(f.key); setSelected(null); }} aria-current={filter === f.key ? "page" : undefined} className="hover-dim"
               style={{ padding: "8px 2px", fontSize: 13, background: "none", border: "none", cursor: "pointer", whiteSpace: "nowrap", color: filter === f.key ? INK : SOFT, fontWeight: filter === f.key ? 500 : 400,
-                borderBottom: `2px solid ${filter === f.key ? "#696D86" : "transparent"}` }}>
+                borderBottom: `2px solid ${filter === f.key ? "var(--status-info)" : "transparent"}` }}>
               {f.label}{f.key && counts[f.key] ? <span style={{ color: FAINT, marginLeft: 6 }}>{counts[f.key]}</span> : null}
             </button>
           ))}
@@ -97,8 +97,8 @@ export default function AccessReviewPage() {
             .access-review-grid[data-open="1"]{grid-template-columns:minmax(0,380px) minmax(0,1fr)}
             .access-review-grid > *{min-width:0}
             @media (max-width:1100px){.access-review-grid[data-open="1"]{grid-template-columns:minmax(0,1fr)}}`}</style>
-          <div style={{ background: "#fff", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, overflow: "hidden" }}>
-            {rows === null && <div aria-busy="true" style={{ padding: 20 }}>{[0, 1, 2].map((i) => <div key={i} style={{ height: 44, background: "#F3F2EE", borderRadius: 6, margin: "8px 0" }} />)}</div>}
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid rgb(var(--c-ink) / 0.10)", borderRadius: 8, overflow: "hidden" }}>
+            {rows === null && <div aria-busy="true" style={{ padding: 20 }}>{[0, 1, 2].map((i) => <div key={i} style={{ height: 44, background: "var(--bg-subtle)", borderRadius: 6, margin: "8px 0" }} />)}</div>}
             {rows && rows.length === 0 && !error && <p style={{ padding: "36px 20px", textAlign: "center", color: SOFT, fontSize: 13.5 }}>No applications here.</p>}
             {rows && rows.length > 0 && (
               <table className="v32-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
@@ -107,7 +107,7 @@ export default function AccessReviewPage() {
                 </tr></thead>
                 <tbody>
                   {rows.map((r) => (
-                    <tr key={r.id} className="row-hover" onClick={() => open(r.id)} style={{ borderTop: `1px solid ${LINE}`, cursor: "pointer", background: selected?.id === r.id ? "#F6F5F2" : undefined }}>
+                    <tr key={r.id} className="row-hover" onClick={() => open(r.id)} style={{ borderTop: `1px solid ${LINE}`, cursor: "pointer", background: selected?.id === r.id ? "var(--bg-subtle)" : undefined }}>
                       <td style={{ padding: "12px 16px" }}>
                         <button type="button" onClick={(e) => { e.stopPropagation(); open(r.id); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", font: "inherit", color: INK, fontWeight: 500 }}>{r.company}</button>
                         <div style={{ color: FAINT, fontSize: 12 }}>{r.name} · {r.role} · {r.company_size} · {r.country}</div>
@@ -122,10 +122,10 @@ export default function AccessReviewPage() {
           </div>
 
           {selected && (
-            <section aria-label={`Application from ${selected.company}`} style={{ background: "#fff", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 20, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 16, overflowWrap: "anywhere" }}>
+            <section aria-label={`Application from ${selected.company}`} style={{ background: "var(--bg-elevated)", border: "1px solid rgb(var(--c-ink) / 0.10)", borderRadius: 8, padding: 20, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 16, overflowWrap: "anywhere" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                 <div>
-                  <h2 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 21, color: INK }}>{selected.company}</h2>
+                  <h2 style={{ margin: 0, fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 21, color: INK , letterSpacing: "-0.015em"}}>{selected.company}</h2>
                   <p style={{ margin: "4px 0 0", fontSize: 12.5, color: SOFT }}>{selected.name} · {selected.role} · <a href={`mailto:${selected.email}`} style={{ color: SOFT }}>{selected.email}</a>{selected.website ? <> · <a href={selected.website} target="_blank" rel="noopener noreferrer" style={{ color: SOFT }}>{selected.website.replace(/^https?:\/\//, "")}</a></> : null}</p>
                 </div>
                 <button type="button" onClick={() => setSelected(null)} aria-label="Close" style={{ background: "none", border: "none", fontSize: 20, color: SOFT, cursor: "pointer" }}>×</button>
@@ -160,12 +160,12 @@ export default function AccessReviewPage() {
                   {NEXT[selected.status].map((s) => (
                     <button key={s} type="button" disabled={!!busy} onClick={() => decide(s)}
                       style={{ borderRadius: 7, padding: "7px 13px", fontSize: 13, fontWeight: 500, cursor: "pointer",
-                        background: s === "approved" ? INK : "#fff", color: s === "approved" ? "#fff" : INK, border: `1px solid ${s === "approved" ? INK : "#D2D0CA"}` }}>
+                        background: s === "approved" ? INK : "var(--bg-elevated)", color: s === "approved" ? "var(--text-on-inverse)" : INK, border: `1px solid ${s === "approved" ? INK : "#D2D0CA"}` }}>
                       {busy === s ? "Saving…" : VERB[s]}
                     </button>
                   ))}
                   {selected.status === "approved" && (
-                    <button type="button" disabled={!!busy} onClick={reissue} style={{ borderRadius: 7, padding: "7px 13px", fontSize: 13, background: "#fff", border: "1px solid #D2D0CA", cursor: "pointer" }}>
+                    <button type="button" disabled={!!busy} onClick={reissue} style={{ borderRadius: 7, padding: "7px 13px", fontSize: 13, background: "var(--bg-elevated)", border: "1px solid #D2D0CA", cursor: "pointer" }}>
                       {busy === "reissue" ? "Issuing…" : "New download link"}
                     </button>
                   )}
@@ -174,8 +174,8 @@ export default function AccessReviewPage() {
                   <div role="status" style={{ border: "1px solid #BFD6C9", background: "#F2F7F4", borderRadius: 6, padding: 12, fontSize: 12.5 }}>
                     <p style={{ margin: "0 0 6px", color: INK }}>{issued.emailed ? "Emailed to the applicant. " : "Email is not configured — send this link yourself. "}It is shown only once; issuing a new one revokes it.</p>
                     <div style={{ display: "flex", gap: 8 }}>
-                      <code style={{ flex: 1, minWidth: 0, overflowX: "auto", whiteSpace: "nowrap", background: "#fff", border: `1px solid ${LINE}`, borderRadius: 4, padding: "6px 8px" }}>{issued.url}</code>
-                      <button type="button" onClick={() => navigator.clipboard?.writeText(issued.url)} style={{ border: `1px solid ${LINE}`, background: "#fff", borderRadius: 4, padding: "0 10px", cursor: "pointer" }}>Copy</button>
+                      <code style={{ flex: 1, minWidth: 0, overflowX: "auto", whiteSpace: "nowrap", background: "var(--bg-elevated)", border: `1px solid ${LINE}`, borderRadius: 4, padding: "6px 8px" }}>{issued.url}</code>
+                      <button type="button" onClick={() => navigator.clipboard?.writeText(issued.url)} style={{ border: `1px solid ${LINE}`, background: "var(--bg-elevated)", borderRadius: 4, padding: "0 10px", cursor: "pointer" }}>Copy</button>
                     </div>
                   </div>
                 )}

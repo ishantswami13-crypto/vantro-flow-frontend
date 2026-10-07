@@ -36,11 +36,11 @@ export function CustomerDrawerView({ name, phone, onOpenInvoice }: CustomerDrawe
     HEALTHY: "Healthy",
   };
   const HEALTH_LABEL_COLOR: Record<string, string> = {
-    DORMANT: "#8B8FA3",
-    AT_RISK: "#F5424D",
-    WATCH: "#F5A524",
-    GROWING: "#10D98A",
-    HEALTHY: "#3B82F6",
+    DORMANT: "var(--text-tertiary)",
+    AT_RISK: "var(--status-danger)",
+    WATCH: "var(--status-warning)",
+    GROWING: "var(--status-success)",
+    HEALTHY: "var(--accent-primary)",
   };
 
   return (

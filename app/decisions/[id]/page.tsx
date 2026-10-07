@@ -58,7 +58,7 @@ function OptionCard({ o, d, max, recommended, selected, canChoose, onChoose, bus
   return (
     <div
       className="rounded-2xl p-5"
-      style={{ background: "#FFFFFF", border: `1px solid ${selected ? C.accent : recommended ? "#CFD0E8" : C.line}`, boxShadow: recommended ? "0 1px 0 rgba(92,95,158,0.06)" : undefined, opacity: o.valid ? 1 : 0.7 }}
+      style={{ background: "var(--bg-elevated)", border: `1px solid ${selected ? C.accent : recommended ? "#CFD0E8" : C.line}`, boxShadow: recommended ? "0 1px 0 rgba(92,95,158,0.06)" : undefined, opacity: o.valid ? 1 : 0.7 }}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
@@ -246,7 +246,7 @@ function Verification({ detail, onVerify, busy }: { detail: DecisionDetail; onVe
   return (
     <section className="mt-10">
       <SectionLabel>What actually happened</SectionLabel>
-      <div className="rounded-2xl p-5" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+      <div className="rounded-2xl p-5" style={{ background: "var(--bg-elevated)", border: `1px solid ${C.line}` }}>
         <div className="flex flex-wrap items-center gap-2">
           <Pill tone={c.status === "MET" || c.status === "ON_TRACK" ? "good" : c.status === "NOT_MET" || c.status === "OFF_TRACK" || c.status === "ABORTED" ? "bad" : "neutral"}>
             {c.status.replace(/_/g, " ").toLowerCase()}
@@ -499,7 +499,7 @@ export default function DecisionDetailPage() {
               onChange={(e) => setNote(e.target.value)}
               placeholder="Optional note for the record (why you chose this)"
               className="w-full max-w-[520px] mb-4 rounded-lg px-3 py-2 text-[13px]"
-              style={{ border: `1px solid ${C.line}`, background: "#FFFFFF" }}
+              style={{ border: `1px solid ${C.line}`, background: "var(--bg-elevated)" }}
               maxLength={1000}
             />
           )}
@@ -525,7 +525,7 @@ export default function DecisionDetailPage() {
 
         {/* Next step */}
         {!canChoose || d.status === "SELECTED" ? (
-          <section className="mt-10 rounded-2xl p-5" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+          <section className="mt-10 rounded-2xl p-5" style={{ background: "var(--bg-elevated)", border: `1px solid ${C.line}` }}>
             <SectionLabel>Next step</SectionLabel>
             {d.status === "SELECTED" && chosen && (
               <>
@@ -690,7 +690,7 @@ export default function DecisionDetailPage() {
               onChange={(e) => setObs(e.target.value)}
               placeholder="Something Starlane can't see, e.g. “They said payment is coming after Diwali”"
               className="flex-1 min-w-[240px] rounded-lg px-3 py-2 text-[13px]"
-              style={{ border: `1px solid ${C.line}`, background: "#FFFFFF" }}
+              style={{ border: `1px solid ${C.line}`, background: "var(--bg-elevated)" }}
               maxLength={2000}
             />
             <Button size="sm" variant="secondary" disabled={!obs.trim()} loading={observe.isPending} onClick={() => observe.mutate()}>Add</Button>

@@ -80,7 +80,7 @@ export default function BridgePage() {
       <div className="fade-once">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            <h1 style={{ margin: "0 0 4px", fontFamily: V.serif, fontWeight: 400, fontSize: 26, color: V.ink }}>
+            <h1 style={{ margin: "0 0 4px", fontFamily: V.serif, fontWeight: 600, fontSize: 20, color: V.ink , letterSpacing: "-0.01em"}}>
               {greeting()}{name ? `, ${name}` : ""}
             </h1>
             <div style={{ fontSize: 13, color: V.secondary }}>
@@ -131,7 +131,7 @@ export default function BridgePage() {
         {/* What changed */}
         <div className="min-w-0 flex flex-col" style={{ flex: 1.2, gap: 22 }}>
           <div>
-            <div style={{ fontFamily: V.serif, fontSize: 16, color: V.ink, marginBottom: 6 }}>What changed</div>
+            <div style={{ fontFamily: V.serif, fontSize: 14, color: V.ink, marginBottom: 6 , fontWeight: 600, letterSpacing: "-0.01em"}}>What changed</div>
             {!data && !error && <SkeletonRows rows={3} height={84} />}
             {data && !data.hasData && (
               <EmptyLine
@@ -158,14 +158,14 @@ export default function BridgePage() {
         {/* Needs you / Prepared / Upcoming */}
         <div className="min-w-0 flex flex-col w-full lg:max-w-[320px]" style={{ flex: 1, gap: 24 }}>
           <div>
-            <div style={{ fontFamily: V.serif, fontSize: 15, color: V.ink, marginBottom: 8 }}>Needs you</div>
+            <div style={{ fontFamily: V.serif, fontSize: 14, color: V.ink, marginBottom: 8 , fontWeight: 600, letterSpacing: "-0.01em"}}>Needs you</div>
             {!data && !error && <SkeletonRows rows={2} height={46} />}
             {data && decisions.length === 0 && <p style={{ fontSize: 12.5, color: V.secondary, padding: "4px 0" }}>No decision is waiting on you.</p>}
             {decisions.slice(0, 4).map((a, i) => <NeedsYouRow key={a.id} a={a} i={i} emphasized={i === 0} />)}
           </div>
 
           <div>
-            <div style={{ fontFamily: V.serif, fontSize: 15, color: V.ink, marginBottom: 8 }}>Prepared for you</div>
+            <div style={{ fontFamily: V.serif, fontSize: 14, color: V.ink, marginBottom: 8 , fontWeight: 600, letterSpacing: "-0.01em"}}>Prepared for you</div>
             {data && prepared.length === 0 && <p style={{ fontSize: 12.5, color: V.secondary, padding: "4px 0" }}>Nothing is due to be prepared.</p>}
             {prepared.map((h) => (
               <SideRow
@@ -180,7 +180,7 @@ export default function BridgePage() {
           </div>
 
           <div>
-            <div style={{ fontFamily: V.serif, fontSize: 15, color: V.ink, marginBottom: 8 }}>Upcoming</div>
+            <div style={{ fontFamily: V.serif, fontSize: 14, color: V.ink, marginBottom: 8 , fontWeight: 600, letterSpacing: "-0.01em"}}>Upcoming</div>
             {data && upcoming.length === 0 && <p style={{ fontSize: 12.5, color: V.secondary, padding: "4px 0" }}>No mission deadline coming up.</p>}
             {upcoming.slice(0, 3).map((m) => (
               <SideRow
@@ -200,7 +200,7 @@ export default function BridgePage() {
       {recent.length > 0 && (
         <div className="fade-once" style={{ marginTop: 8 }}>
           <div className="flex items-baseline justify-between" style={{ marginBottom: 10 }}>
-            <div style={{ fontFamily: V.serif, fontSize: 16, color: V.ink }}>Pick up where you left off</div>
+            <div style={{ fontFamily: V.serif, fontSize: 14, color: V.ink , fontWeight: 600, letterSpacing: "-0.01em"}}>Pick up where you left off</div>
             <Link href="/scan/history" style={{ fontSize: 12, color: V.secondary }}>All conversations</Link>
           </div>
           <div className="lib-grid">

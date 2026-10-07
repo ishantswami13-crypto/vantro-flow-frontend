@@ -78,14 +78,14 @@ export default function AdminPage() {
           {/* Key metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: "Total Users",      value: stats.total_users,      icon: FiUsers,      color: "#0066FF" },
-              { label: "Signups Today",    value: stats.signups_today,    icon: FiTrendingUp, color: "#10D98A" },
-              { label: "Signups (7d)",     value: stats.signups_last_7d,  icon: FiTrendingUp, color: "#F5A524" },
-              { label: "Paid Users",       value: stats.paid_users,       icon: FiDollarSign, color: "#10D98A" },
+              { label: "Total Users",      value: stats.total_users,      icon: FiUsers,      color: "var(--accent-primary)" },
+              { label: "Signups Today",    value: stats.signups_today,    icon: FiTrendingUp, color: "var(--status-success)" },
+              { label: "Signups (7d)",     value: stats.signups_last_7d,  icon: FiTrendingUp, color: "var(--status-warning)" },
+              { label: "Paid Users",       value: stats.paid_users,       icon: FiDollarSign, color: "var(--status-success)" },
               { label: "Free Users",       value: stats.free_users,       icon: FiUsers,      color: "#8899AA" },
-              { label: "With Data",        value: stats.users_with_data,  icon: FiDatabase,   color: "#9B6DFF" },
-              { label: "Total Invoices",   value: stats.total_invoices,   icon: FiDatabase,   color: "#0066FF" },
-              { label: "MRR (₹)",          value: `₹${stats.mrr_inr.toLocaleString("en-IN")}`, icon: FiDollarSign, color: "#10D98A" },
+              { label: "With Data",        value: stats.users_with_data,  icon: FiDatabase,   color: "var(--accent-primary)" },
+              { label: "Total Invoices",   value: stats.total_invoices,   icon: FiDatabase,   color: "var(--accent-primary)" },
+              { label: "MRR (₹)",          value: `₹${stats.mrr_inr.toLocaleString("en-IN")}`, icon: FiDollarSign, color: "var(--status-success)" },
             ].map(m => (
               <div key={m.label} className="bg-surface border border-border rounded-xl p-4">
                 <p className="text-xs text-muted mb-1">{m.label}</p>

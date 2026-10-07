@@ -20,9 +20,9 @@ interface BadDebtAccount {
 // Three severity tiers should not mean three different hues — "medium" is
 // the quiet/neutral tier here (not yet urgent), not a fourth alarm color.
 const RISK_CONFIG = {
-  critical: { label: "Critical",  color: "#F5424D", bg: "bg-danger-dim",   border: "border-danger/30",   badge: "bg-danger/20 text-danger"    },
-  high:     { label: "High Risk", color: "#F5A524", bg: "bg-warning/10",   border: "border-warning/30",  badge: "bg-warning/20 text-warning"  },
-  medium:   { label: "Medium",    color: "#888888", bg: "bg-surface-2",    border: "border-border",      badge: "bg-surface-3 text-secondary" },
+  critical: { label: "Critical",  color: "var(--status-danger)", bg: "bg-danger-dim",   border: "border-danger/30",   badge: "bg-danger/20 text-danger"    },
+  high:     { label: "High Risk", color: "var(--status-warning)", bg: "bg-warning/10",   border: "border-warning/30",  badge: "bg-warning/20 text-warning"  },
+  medium:   { label: "Medium",    color: "var(--text-secondary)", bg: "bg-surface-2",    border: "border-border",      badge: "bg-surface-3 text-secondary" },
 };
 
 export default function BadDebtPage() {
@@ -125,7 +125,7 @@ export default function BadDebtPage() {
           {(["all", "critical", "high", "medium"] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
               className={["px-3 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize",
-                filter === f ? "bg-gray-900 text-white" : "text-muted hover:text-primary",
+                filter === f ? "bg-inverse text-white" : "text-muted hover:text-primary",
               ].join(" ")}>
               {f === "all" ? `All (${accounts.length})` : `${f} (${accounts.filter(a => a.risk_level === f).length})`}
             </button>

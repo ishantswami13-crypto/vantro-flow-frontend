@@ -138,7 +138,7 @@ export default function BillingPage() {
           name: "Starlane",
           description: `${planId.charAt(0).toUpperCase() + planId.slice(1)} Plan — ${billing}`,
           prefill: { email: user?.email || "", contact: user?.phone || "", name: user?.business_name || "" },
-          theme: { color: "#0066FF" },
+          theme: { color: "var(--accent-primary)" },
           handler: async (response: any) => {
             try {
               await api.billing.verify({
@@ -241,7 +241,7 @@ export default function BillingPage() {
                 className={[
                   "px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2",
                   billing === b
-                    ? "bg-gray-900 text-white shadow-sm"
+                    ? "bg-inverse text-white shadow-sm"
                     : "text-muted hover:text-primary",
                 ].join(" ")}>
                 {b.charAt(0).toUpperCase() + b.slice(1)}
@@ -270,38 +270,38 @@ export default function BillingPage() {
             /* White card for Growth, dark for others */
             if (isHighlight) {
               return (
-                <div key={plan.id} className="relative rounded-2xl bg-white p-7 flex flex-col shadow-2xl md:-mt-3 md:mb-3">
+                <div key={plan.id} className="relative rounded-2xl bg-elevated p-7 flex flex-col shadow-2xl md:-mt-3 md:mb-3">
                   {plan.badge && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-2xs font-black tracking-widest uppercase text-white bg-black shadow-lg">
+                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-2xs font-black tracking-widest uppercase text-white bg-inverse shadow-lg">
                         ★ {plan.badge}
                       </span>
                     </div>
                   )}
 
                   <div className="mb-6">
-                    <p className="text-2xs font-bold tracking-[0.12em] uppercase text-black/40 mb-2">{plan.name}</p>
-                    <p className="text-base font-black text-black mb-4 leading-tight">{plan.tagline}</p>
+                    <p className="text-2xs font-bold tracking-[0.12em] uppercase text-text-primary/40 mb-2">{plan.name}</p>
+                    <p className="text-base font-black text-text-primary mb-4 leading-tight">{plan.tagline}</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-black text-black tracking-tight">
+                      <span className="text-4xl font-black text-text-primary tracking-tight">
                         ₹{price.toLocaleString("en-IN")}
                       </span>
-                      <span className="text-black/50 text-sm ml-1">/mo</span>
+                      <span className="text-text-primary/50 text-sm ml-1">/mo</span>
                     </div>
                     {billing === "annual" && (
-                      <p className="text-xs text-black/40 mt-1">
+                      <p className="text-xs text-text-primary/40 mt-1">
                         ₹{(price * 12).toLocaleString("en-IN")}/year · save ₹{annualSave(plan.price, plan.annual)}
                       </p>
                     )}
-                    <p className="text-2xs text-black/40 mt-2 font-medium">{plan.proof}</p>
+                    <p className="text-2xs text-text-primary/40 mt-2 font-medium">{plan.proof}</p>
                   </div>
 
-                  <div className="h-px bg-black/10 mb-6" />
+                  <div className="h-px bg-inverse/10 mb-6" />
 
                   <ul className="space-y-3 mb-7 flex-1">
                     {plan.outcomes.map((o) => (
-                      <li key={o} className="flex items-start gap-3 text-sm text-black/75">
-                        <span className="w-4 h-4 rounded-full bg-black flex items-center justify-center shrink-0 mt-0.5">
+                      <li key={o} className="flex items-start gap-3 text-sm text-text-primary/75">
+                        <span className="w-4 h-4 rounded-full bg-inverse flex items-center justify-center shrink-0 mt-0.5">
                           <FiCheck size={9} className="text-white" />
                         </span>
                         {o}
@@ -312,7 +312,7 @@ export default function BillingPage() {
                   <button
                     onClick={() => !isCurrent && handleUpgrade(plan.id)}
                     disabled={isCurrent || !!loading}
-                    className="w-full py-3.5 rounded-xl text-sm font-black text-white bg-black hover:bg-black/85 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                    className="w-full py-3.5 rounded-xl text-sm font-black text-white bg-inverse hover:bg-inverse/85 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                     {loading === plan.id
                       ? <><span className="w-4 h-4 border-2 border-border border-t-white rounded-full animate-spin" /> Processing...</>
                       : isCurrent
@@ -320,7 +320,7 @@ export default function BillingPage() {
                       : <>{plan.cta} <FiArrowRight size={14} /></>
                     }
                   </button>
-                  <p className="text-2xs text-black/30 text-center mt-2">14-day free trial · cancel anytime</p>
+                  <p className="text-2xs text-text-primary/30 text-center mt-2">14-day free trial · cancel anytime</p>
                 </div>
               );
             }
@@ -393,10 +393,10 @@ export default function BillingPage() {
                     "w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50",
                     isCurrent
                       ? "bg-success/10 text-success border border-success/20 cursor-default"
-                      : "bg-gray-900 text-white hover:bg-gray-800",
+                      : "bg-inverse text-white hover:bg-raised",
                   ].join(" ")}>
                   {loading === plan.id
-                    ? <><span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" /> Processing...</>
+                    ? <><span className="w-4 h-4 border-2 border-inverse/20 border-t-black rounded-full animate-spin" /> Processing...</>
                     : isCurrent
                     ? "✓ Current Plan"
                     : <>{plan.cta} <FiArrowRight size={14} /></>
@@ -440,7 +440,7 @@ export default function BillingPage() {
             <div key={name} className="rounded-2xl border border-border bg-surface-1 p-5 hover:border-border transition-all">
               <div className="flex gap-0.5 mb-3">
                 {[...Array(5)].map((_, i) => (
-                  <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B">
+                  <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="var(--status-warning)">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                   </svg>
                 ))}

@@ -128,7 +128,7 @@ export default function QuickSale({ onClose, onSaved }: QuickSaleProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-inverse/60 backdrop-blur-sm p-4">
       <div className="w-full max-w-lg bg-surface-1 rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
 
         {/* Header */}
@@ -231,11 +231,11 @@ export default function QuickSale({ onClose, onSaved }: QuickSaleProps) {
           {/* Save button */}
           <button onClick={saveSale}
             disabled={saving || items.length === 0 || saved}
-            className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${saved ? "bg-success/20 text-success border border-success/30" : "bg-white text-black shadow-sm hover:bg-white/90 disabled:opacity-40"}`}>
+            className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${saved ? "bg-success/20 text-success border border-success/30" : "bg-elevated text-text-primary shadow-sm hover:bg-elevated/90 disabled:opacity-40"}`}>
             {saved ? (
               <><FiCheck size={15} /> Sale saved! ✓</>
             ) : saving ? (
-              <><div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Saving…</>
+              <><div className="w-4 h-4 border-2 border-inverse/30 border-t-black rounded-full animate-spin" /> Saving…</>
             ) : (
               <><FiZap size={14} /> Save Sale — ₹{total.toLocaleString("en-IN")}</>
             )}

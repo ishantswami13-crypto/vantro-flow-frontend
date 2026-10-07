@@ -53,10 +53,10 @@ export default function AgentsPage() {
                   <Link key={a.key} href={`/agents/${encodeURIComponent(a.key)}`} className="lib-card agent-card rise-in" style={{ animationDelay: `${i * 40}ms` }}>
                     <div className="flex items-center justify-between">
                       <Lettermark letter={a.name} size={38} />
-                      <span style={{ color: "#8A8A86" }}><IconArrowRight size={14} /></span>
+                      <span style={{ color: "var(--text-tertiary)" }}><IconArrowRight size={14} /></span>
                     </div>
                     <div>
-                      <div style={{ fontFamily: V.serif, fontSize: 18, color: "#191917", letterSpacing: "-0.01em" }}>{a.name}</div>
+                      <div style={{ fontFamily: V.serif, fontSize: 15, color: "var(--text-primary)", letterSpacing: "-0.01em" , fontWeight: 600}}>{a.name}</div>
                       <div className="agent-purpose">{a.purpose}</div>
                     </div>
                     {a.permissions.length > 0 && (
@@ -78,13 +78,13 @@ export default function AgentsPage() {
         {data && tab === "planned" && (
           data.notBuilt.length === 0 ? <EmptyLine icon={<IconAgents size={17} />} title="Nothing is waiting to be built" /> : (
             <div>
-              <p style={{ fontSize: 12.5, color: "#8A8A86", margin: "0 0 12px" }}>Not shown as working until they are.</p>
+              <p style={{ fontSize: 12.5, color: "var(--text-tertiary)", margin: "0 0 12px" }}>Not shown as working until they are.</p>
               <div className="lib-grid agent-grid">
                 {data.notBuilt.map((n, i) => (
                   <div key={n.name} className="lib-card agent-card agent-card-muted rise-in" style={{ animationDelay: `${i * 40}ms` }}>
                     <Lettermark letter={n.name} size={38} />
                     <div>
-                      <div style={{ fontFamily: V.serif, fontSize: 18, color: "#43433F", letterSpacing: "-0.01em" }}>{n.name}</div>
+                      <div style={{ fontFamily: V.serif, fontSize: 15, color: "var(--text-body)", letterSpacing: "-0.01em" , fontWeight: 600}}>{n.name}</div>
                       <div className="agent-purpose">{n.reason}</div>
                     </div>
                     <div className="agent-foot"><span>Coming</span></div>
@@ -94,7 +94,7 @@ export default function AgentsPage() {
             </div>
           )
         )}
-        <p style={{ fontSize: 12, color: "#8A8A86", margin: 0, maxWidth: 640 }}>
+        <p style={{ fontSize: 12, color: "var(--text-tertiary)", margin: 0, maxWidth: 640 }}>
           Each agent is fixed code: none calls a language model or sends a message on its own. Stop one from{" "}
           <Link className="underline" href="/control/decisions">Control, Decisions</Link>.
         </p>

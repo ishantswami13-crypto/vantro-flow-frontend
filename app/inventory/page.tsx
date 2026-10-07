@@ -293,7 +293,7 @@ export default function InventoryPage() {
           <button
             onClick={() => { setShowAdd(true); setForm(emptyForm); setFormError(""); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors"
-            style={{ background: "#fff", color: "#000" }}
+            style={{ background: "var(--bg-elevated)", color: "var(--text-primary)" }}
           >
             <FiPlus size={13} /> Add Product
           </button>
@@ -309,10 +309,10 @@ export default function InventoryPage() {
               </div>
             ))
           ) : [
-            { label: "Total Products",   value: summary.total_products.toString(),    icon: <FiPackage size={15}/>,      color: "#0066FF" },
-            { label: "Stock Value",      value: fmtVal(summary.total_value),          icon: <FiTrendingUp size={15}/>,   color: "#10D98A" },
-            { label: "Low Stock",        value: summary.low_stock_count.toString(),   icon: <FiAlertTriangle size={15}/>,color: "#F5A524" },
-            { label: "Out of Stock",     value: summary.out_of_stock_count.toString(),icon: <FiBox size={15}/>,          color: "#F5424D" },
+            { label: "Total Products",   value: summary.total_products.toString(),    icon: <FiPackage size={15}/>,      color: "var(--accent-primary)" },
+            { label: "Stock Value",      value: fmtVal(summary.total_value),          icon: <FiTrendingUp size={15}/>,   color: "var(--status-success)" },
+            { label: "Low Stock",        value: summary.low_stock_count.toString(),   icon: <FiAlertTriangle size={15}/>,color: "var(--status-warning)" },
+            { label: "Out of Stock",     value: summary.out_of_stock_count.toString(),icon: <FiBox size={15}/>,          color: "var(--status-danger)" },
           ].map(k => (
             <div key={k.label} className="card-metric p-5">
               <div className="flex items-center justify-between mb-3">
@@ -332,7 +332,7 @@ export default function InventoryPage() {
           {(["products", "intelligence", "movements", "suppliers"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={["px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all",
-                tab === t ? "bg-gray-900 text-white" : "text-muted hover:text-primary",
+                tab === t ? "bg-inverse text-white" : "text-muted hover:text-primary",
               ].join(" ")}>{{ products: "Products", intelligence: "Stock Details", movements: "Movements", suppliers: "Suppliers" }[t]}</button>
           ))}
         </div>
@@ -543,14 +543,14 @@ export default function InventoryPage() {
             ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
-                  style={{ background: "rgba(255,255,255,0.05)" }}>
-                  <FiPackage size={22} style={{ color: "rgba(255,255,255,0.2)" }} />
+                  style={{ background: "rgb(var(--c-ink) / 0.05)" }}>
+                  <FiPackage size={22} style={{ color: "rgb(var(--c-text-primary) / 0.2)" }} />
                 </div>
                 <p className="text-sm font-semibold text-primary mb-1">No products yet</p>
                 <p className="text-xs text-muted mb-4">Add your first product to start tracking stock</p>
                 <button onClick={() => { setShowAdd(true); setForm(emptyForm); setFormError(""); }}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
-                  style={{ background: "#fff", color: "#000" }}>
+                  style={{ background: "var(--bg-elevated)", color: "var(--text-primary)" }}>
                   <FiPlus size={12} /> Add Product
                 </button>
               </div>
@@ -610,8 +610,8 @@ export default function InventoryPage() {
             ) : movements.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
-                  style={{ background: "rgba(255,255,255,0.05)" }}>
-                  <FiTrendingUp size={22} style={{ color: "rgba(255,255,255,0.2)" }} />
+                  style={{ background: "rgb(var(--c-ink) / 0.05)" }}>
+                  <FiTrendingUp size={22} style={{ color: "rgb(var(--c-text-primary) / 0.2)" }} />
                 </div>
                 <p className="text-sm font-semibold text-primary mb-1">No movements yet</p>
                 <p className="text-xs text-muted">Stock movements will appear here as you record purchases and sales</p>
@@ -648,8 +648,8 @@ export default function InventoryPage() {
             </div>
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
-                style={{ background: "rgba(255,255,255,0.05)" }}>
-                <FiTruck size={22} style={{ color: "rgba(255,255,255,0.2)" }} />
+                style={{ background: "rgb(var(--c-ink) / 0.05)" }}>
+                <FiTruck size={22} style={{ color: "rgb(var(--c-text-primary) / 0.2)" }} />
               </div>
               <p className="text-sm font-semibold text-primary mb-1">No suppliers yet</p>
               <p className="text-xs text-muted">Add your suppliers to track payment terms and contacts</p>
@@ -662,18 +662,18 @@ export default function InventoryPage() {
       {/* ── Add Product Modal ── */}
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.7)" }}
+          style={{ background: "var(--bg-overlay)" }}
           onClick={e => { if (e.target === e.currentTarget) setShowAdd(false); }}>
           <div className="w-full max-w-md rounded-2xl overflow-hidden"
-            style={{ background: "#111", border: "1px solid rgba(255,255,255,0.1)" }}>
+            style={{ background: "#111", border: "1px solid rgb(var(--c-ink) / 0.1)" }}>
 
             {/* Modal header */}
             <div className="flex items-center justify-between px-5 py-4"
-              style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+              style={{ borderBottom: "1px solid rgb(var(--c-ink) / 0.08)" }}>
               <p className="font-bold text-primary text-base">Add Product</p>
               <button aria-label="Close" onClick={() => setShowAdd(false)}
                 className="p-1.5 rounded-lg"
-                style={{ color: "rgba(255,255,255,0.4)" }}>
+                style={{ color: "rgb(var(--c-text-primary) / 0.4)" }}>
                 <FiX size={16} />
               </button>
             </div>
@@ -687,7 +687,7 @@ export default function InventoryPage() {
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. Cotton Fabric 40s"
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                  style={{ background: "rgb(var(--c-ink) / 0.07)", border: "1px solid rgb(var(--c-ink) / 0.1)", color: "var(--text-on-inverse)" }}
                 />
               </div>
 
@@ -699,7 +699,7 @@ export default function InventoryPage() {
                     onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
                     placeholder="e.g. CF-001"
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                    style={{ background: "rgb(var(--c-ink) / 0.07)", border: "1px solid rgb(var(--c-ink) / 0.1)", color: "var(--text-on-inverse)" }}
                   />
                 </div>
                 <div>
@@ -709,7 +709,7 @@ export default function InventoryPage() {
                     onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
                     placeholder="e.g. Fabric"
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                    style={{ background: "rgb(var(--c-ink) / 0.07)", border: "1px solid rgb(var(--c-ink) / 0.1)", color: "var(--text-on-inverse)" }}
                   />
                 </div>
               </div>
@@ -723,7 +723,7 @@ export default function InventoryPage() {
                     onChange={e => setForm(f => ({ ...f, unit_price: e.target.value }))}
                     placeholder="0"
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                    style={{ background: "rgb(var(--c-ink) / 0.07)", border: "1px solid rgb(var(--c-ink) / 0.1)", color: "var(--text-on-inverse)" }}
                   />
                 </div>
                 <div>
@@ -732,7 +732,7 @@ export default function InventoryPage() {
                     value={form.unit}
                     onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                    style={{ background: "#1a1a1a", border: "1px solid rgb(var(--c-ink) / 0.1)", color: "var(--text-on-inverse)" }}
                   >
                     <option value="pcs">Piece (pcs)</option>
                     <option value="set">Set</option>
@@ -762,7 +762,7 @@ export default function InventoryPage() {
                     onChange={e => setForm(f => ({ ...f, current_stock: e.target.value }))}
                     placeholder="0"
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                    style={{ background: "rgb(var(--c-ink) / 0.07)", border: "1px solid rgb(var(--c-ink) / 0.1)", color: "var(--text-on-inverse)" }}
                   />
                 </div>
                 <div>
@@ -773,7 +773,7 @@ export default function InventoryPage() {
                     onChange={e => setForm(f => ({ ...f, low_stock_alert: e.target.value }))}
                     placeholder="10"
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                    style={{ background: "rgb(var(--c-ink) / 0.07)", border: "1px solid rgb(var(--c-ink) / 0.1)", color: "var(--text-on-inverse)" }}
                   />
                 </div>
               </div>
@@ -787,12 +787,12 @@ export default function InventoryPage() {
             <div className="flex gap-2 px-5 pb-5">
               <button onClick={() => setShowAdd(false)}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold"
-                style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}>
+                style={{ background: "rgb(var(--c-ink) / 0.07)", color: "var(--bg-elevated)" }}>
                 Cancel
               </button>
               <button onClick={saveProduct} disabled={saving}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold"
-                style={{ background: saving ? "rgba(255,255,255,0.3)" : "#fff", color: "#000" }}>
+                style={{ background: saving ? "var(--bg-elevated)" : "var(--bg-elevated)", color: "var(--text-primary)" }}>
                 {saving ? "Saving…" : "Add Product"}
               </button>
             </div>

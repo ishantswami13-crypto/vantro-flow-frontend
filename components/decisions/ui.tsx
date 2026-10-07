@@ -9,17 +9,17 @@ import { money, BAND_LABEL } from "@/lib/decisions";
 
 // Version 32 tokens (STARLANE_FRONTEND_HANDOFF.md §3).
 export const C = {
-  ink: "#191917",
-  body: "#43433F",
-  muted: "#63635F",
-  faint: "#6E6E6A", // 4.5:1 on the page background (was #8A8A86, 3.1:1)
-  line: "#EBEAE6",
-  card: "rgba(25,25,23,0.10)",
+  ink: "var(--text-primary)",
+  body: "var(--text-body)",
+  muted: "var(--text-secondary)",
+  faint: "#6E6E6A", // 4.5:1 on the page background (was var(--text-tertiary), 3.1:1)
+  line: "var(--border-default)",
+  card: "rgb(var(--c-ink) / 0.10)",
   wash: "#F3F2EE",
-  good: "#477054",
-  warn: "#9B742B",
-  bad: "#A64F4B",
-  accent: "var(--accent, #696D86)",
+  good: "var(--status-success)",
+  warn: "var(--status-warning)",
+  bad: "var(--status-danger)",
+  accent: "var(--accent, var(--status-info))",
 };
 
 export function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -34,11 +34,11 @@ type Tone = "neutral" | "good" | "warn" | "bad" | "accent";
 // Outlined tag pills, as on the Missions and Memory boards: coloured text
 // and border on white, radius 20px. Never a filled colour block.
 const TONE: Record<Tone, { fg: string; bg: string; bd: string }> = {
-  neutral: { fg: C.muted, bg: "transparent", bd: "rgba(25,25,23,0.14)" },
+  neutral: { fg: C.muted, bg: "transparent", bd: "rgb(var(--c-ink) / 0.14)" },
   good: { fg: C.good, bg: "transparent", bd: "rgba(71,112,84,0.45)" },
   warn: { fg: C.warn, bg: "transparent", bd: "rgba(155,116,43,0.45)" },
   bad: { fg: C.bad, bg: "transparent", bd: "rgba(166,79,75,0.45)" },
-  accent: { fg: C.accent, bg: "transparent", bd: "rgba(var(--accent-rgb, 105, 109, 134), 0.5)" },
+  accent: { fg: C.accent, bg: "transparent", bd: "rgb(var(--c-accent) / 0.5)" },
 };
 
 export function Pill({ tone = "neutral", children, title }: { tone?: Tone; children: React.ReactNode; title?: string }) {
@@ -74,7 +74,7 @@ export function Stat({ label, value, sub, tone }: { label: string; value: React.
   return (
     <div className="min-w-0">
       <p className="text-[12px]" style={{ color: C.faint }}>{label}</p>
-      <p className="text-[22px] leading-tight mt-1 tabular-nums" style={{ color: tone ? C[tone] : C.ink, fontWeight: 400, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", letterSpacing: "-0.01em" }}>{value}</p>
+      <p className="text-[22px] leading-tight mt-1 tabular-nums" style={{ color: tone ? C[tone] : C.ink, fontWeight: 400, fontFamily: "var(--font-sans)", letterSpacing: "-0.01em" }}>{value}</p>
       {sub && <p className="text-[12px] mt-1" style={{ color: C.muted }}>{sub}</p>}
     </div>
   );

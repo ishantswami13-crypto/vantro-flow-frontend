@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { FiInfo } from "react-icons/fi";
 import Sidebar from "./Sidebar";
-import Header from "./Header";
+import TopBar from "./TopBar";
 import InstallPrompt from "@/components/ui/InstallPrompt";
 import PaymentCelebration from "@/components/PaymentCelebration";
 import { usePathname } from "next/navigation";
@@ -165,13 +165,13 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Header onMenuToggle={() => setSidebarOpen(true)} pageTitle={pageTitle} />
+        <TopBar onMenuToggle={() => setSidebarOpen(true)} pageTitle={pageTitle} />
 
         {/* Demo mode notice — a quiet horizontal disclosure strip, not an
             all-caps terminal-style alert. Truthful, low-key, sentence case. */}
         {isDemo && (
-          <div className="flex items-center justify-between gap-3 px-4 py-1.5 shrink-0" style={{ background: "#F7F7F4", borderBottom: "1px solid #EBEAE6" }}>
-            <span className="text-xs flex items-center gap-1.5" style={{ color: "#8A8A86" }}>
+          <div className="sl-banner" role="status">
+            <span className="text-xs flex items-center gap-1.5" style={{ color: "var(--text-tertiary)" }}>
               <FiInfo size={11} />
               Simulated demonstration — sample data, not your business
             </span>
@@ -179,11 +179,11 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
               <Link href="/signup"
                 onClick={() => exitDemoMode()}
                 className="text-xs font-medium transition-colors"
-                style={{ color: "#686868" }}>
+                style={{ color: "var(--text-secondary)" }}>
                 Sign up to save real data →
               </Link>
               <button onClick={() => { exitDemoMode(); window.location.href = "/login"; }}
-                className="text-xs transition-colors" style={{ color: "#8A8A86" }}>
+                className="text-xs transition-colors" style={{ color: "var(--text-tertiary)" }}>
                 Exit
               </button>
             </div>
@@ -192,8 +192,8 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
 
         {/* Push notification permission banner */}
         {showNotifBanner && !isDemo && (
-          <div className="px-4 py-2 flex items-center justify-between gap-3 shrink-0" style={{ background: "#FFFFFF", borderBottom: "1px solid #EBEAE6", fontSize: 12.5 }}>
-            <span style={{ color: "#43433F" }}>
+          <div className="sl-banner" role="status">
+            <span style={{ color: "var(--text-body)" }}>
               Get a notification the moment a payment lands.
             </span>
             <div className="flex gap-2 shrink-0">
@@ -206,7 +206,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
               <button
                 onClick={() => setShowNotifBanner(false)}
                 className="hover-dim px-2 py-1 text-xs"
-                style={{ color: "#63635F" }}
+                style={{ color: "var(--text-secondary)" }}
               >
                 Later
               </button>

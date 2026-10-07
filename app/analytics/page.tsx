@@ -14,11 +14,11 @@ import { api, getUser } from "@/lib/api";
 import Link from "next/link";
 
 const TOOLTIP_STYLE = {
-  backgroundColor: "#FFFFFF",
-  border: "1px solid #E5E5E1",
+  backgroundColor: "var(--bg-elevated)",
+  border: "1px solid var(--border-default)",
   borderRadius: 8,
   fontSize: 12,
-  color: "#191917",
+  color: "var(--text-primary)",
   boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
 };
 
@@ -156,10 +156,10 @@ export default function AnalyticsPage() {
   const totalCalls     = callLogs.reduce((s, d) => s + d.made, 0);
 
   const kpis = [
-    { label: "Sales Booked",        value: salesBooked >= 100000 ? `₹${(salesBooked/100000).toFixed(2)}L` : `₹${salesBooked.toLocaleString("en-IN")}`, color: "#10D98A", icon: <FiTrendingUp size={16} /> },
-    { label: "Purchases Booked",    value: purchasesBooked >= 100000 ? `₹${(purchasesBooked/100000).toFixed(2)}L` : `₹${purchasesBooked.toLocaleString("en-IN")}`, color: "#F5A524", icon: <FiBarChart2 size={16} /> },
-    { label: "Booked Net",          value: `${bookedNet < 0 ? "-" : ""}₹${Math.abs(bookedNet) >= 100000 ? `${(Math.abs(bookedNet)/100000).toFixed(2)}L` : Math.abs(bookedNet).toLocaleString("en-IN")}`, color: bookedNet >= 0 ? "#0066FF" : "#F5424D", icon: <FiActivity size={16} /> },
-    { label: "Cash Collected",      value: totalCollected >= 100000 ? `₹${(totalCollected/100000).toFixed(2)}L` : `₹${totalCollected.toLocaleString("en-IN")}`, color: "#10D98A", icon: <FiDollarSign size={16} /> },
+    { label: "Sales Booked",        value: salesBooked >= 100000 ? `₹${(salesBooked/100000).toFixed(2)}L` : `₹${salesBooked.toLocaleString("en-IN")}`, color: "var(--status-success)", icon: <FiTrendingUp size={16} /> },
+    { label: "Purchases Booked",    value: purchasesBooked >= 100000 ? `₹${(purchasesBooked/100000).toFixed(2)}L` : `₹${purchasesBooked.toLocaleString("en-IN")}`, color: "var(--status-warning)", icon: <FiBarChart2 size={16} /> },
+    { label: "Booked Net",          value: `${bookedNet < 0 ? "-" : ""}₹${Math.abs(bookedNet) >= 100000 ? `${(Math.abs(bookedNet)/100000).toFixed(2)}L` : Math.abs(bookedNet).toLocaleString("en-IN")}`, color: bookedNet >= 0 ? "var(--accent-primary)" : "var(--status-danger)", icon: <FiActivity size={16} /> },
+    { label: "Cash Collected",      value: totalCollected >= 100000 ? `₹${(totalCollected/100000).toFixed(2)}L` : `₹${totalCollected.toLocaleString("en-IN")}`, color: "var(--status-success)", icon: <FiDollarSign size={16} /> },
   ];
 
   return (
@@ -169,14 +169,14 @@ export default function AnalyticsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Analytics</h2>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "var(--text-primary)", fontWeight: 500, letterSpacing: "-0.01em" }}>Analytics</h2>
             <p className="text-sm text-secondary mt-1">Collections performance based on your real data</p>
           </div>
           <div className="flex gap-1 p-1 bg-surface-2 rounded-xl border border-border">
             {(["1m", "3m", "6m"] as const).map(r => (
               <button key={r} onClick={() => setRange(r)}
                 className={["px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-                  range === r ? "bg-gray-900 text-white" : "text-muted hover:text-primary",
+                  range === r ? "bg-inverse text-white" : "text-muted hover:text-primary",
                 ].join(" ")}>
                 {r}
               </button>
@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
             </div>
             <p className="text-sm font-bold text-primary mb-1">No analytics data yet</p>
             <p className="text-xs text-muted mb-4 max-w-xs">Upload your invoices and log some calls — analytics will populate automatically as you collect.</p>
-            <Link href="/collections" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-semibold hover:bg-gray-800 transition-all">
+            <Link href="/collections" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-inverse text-white text-xs font-semibold hover:bg-raised transition-all">
               <FiUpload size={13} /> Upload Invoices <FiArrowRight size={12} />
             </Link>
           </div>
@@ -236,17 +236,17 @@ export default function AnalyticsPage() {
                   <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="gc" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor="#10D98A" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#10D98A" stopOpacity={0} />
+                        <stop offset="5%"  stopColor="var(--status-success)" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="var(--status-success)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
-                    <XAxis dataKey="month" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" />
+                    <XAxis dataKey="month" tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number, name: string) => [`₹${v}L`, name]} />
-                    <Area type="monotone" dataKey="sales" name="Sales booked" stroke="#10D98A" strokeWidth={2} fill="url(#gc)" />
-                    <Area type="monotone" dataKey="purchases" name="Purchases booked" stroke="#F5A524" strokeWidth={2} fill="transparent" />
-                    <Area type="monotone" dataKey="collected" name="Cash collected" stroke="#0066FF" strokeWidth={2} fill="transparent" />
+                    <Area type="monotone" dataKey="sales" name="Sales booked" stroke="var(--status-success)" strokeWidth={2} fill="url(#gc)" />
+                    <Area type="monotone" dataKey="purchases" name="Purchases booked" stroke="var(--status-warning)" strokeWidth={2} fill="transparent" />
+                    <Area type="monotone" dataKey="collected" name="Cash collected" stroke="var(--accent-primary)" strokeWidth={2} fill="transparent" />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
@@ -262,13 +262,13 @@ export default function AnalyticsPage() {
                 {totalCalls > 0 ? (
                   <ResponsiveContainer width="100%" height={180}>
                     <BarChart data={callLogs} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
-                      <XAxis dataKey="day" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" />
+                      <XAxis dataKey="day" tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
                       <Tooltip contentStyle={TOOLTIP_STYLE} />
-                      <Bar dataKey="made"     name="Called"   fill="#191917" radius={[4,4,0,0]} />
-                      <Bar dataKey="answered" name="Answered" fill="#0066FF" radius={[4,4,0,0]} />
-                      <Bar dataKey="promised" name="Promised" fill="#10D98A" radius={[4,4,0,0]} />
+                      <Bar dataKey="made"     name="Called"   fill="var(--text-primary)" radius={[4,4,0,0]} />
+                      <Bar dataKey="answered" name="Answered" fill="var(--accent-primary)" radius={[4,4,0,0]} />
+                      <Bar dataKey="promised" name="Promised" fill="var(--status-success)" radius={[4,4,0,0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -320,10 +320,10 @@ export default function AnalyticsPage() {
                 <p className="text-sm font-bold text-primary mb-4">Connected Cash Position</p>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: "Receivable", value: analytics?.total_outstanding || 0, color: "#F5424D" },
-                    { label: "Payable", value: analytics?.total_payable || 0, color: "#F5A524" },
-                    { label: "Gross Margin", value: analytics?.gross_margin_pct || 0, suffix: "%", color: (analytics?.gross_margin_pct || 0) >= 0 ? "#10D98A" : "#F5424D" },
-                    { label: "Cash Net", value: analytics?.cash_net || 0, color: (analytics?.cash_net || 0) >= 0 ? "#0066FF" : "#F5424D" },
+                    { label: "Receivable", value: analytics?.total_outstanding || 0, color: "var(--status-danger)" },
+                    { label: "Payable", value: analytics?.total_payable || 0, color: "var(--status-warning)" },
+                    { label: "Gross Margin", value: analytics?.gross_margin_pct || 0, suffix: "%", color: (analytics?.gross_margin_pct || 0) >= 0 ? "var(--status-success)" : "var(--status-danger)" },
+                    { label: "Cash Net", value: analytics?.cash_net || 0, color: (analytics?.cash_net || 0) >= 0 ? "var(--accent-primary)" : "var(--status-danger)" },
                   ].map(item => (
                     <div key={item.label} className="rounded-xl border border-border bg-surface-2 p-4">
                       <p className="section-label mb-2">{item.label}</p>
@@ -363,12 +363,12 @@ export default function AnalyticsPage() {
                 <p className="text-xs text-muted mb-4">Collection trend based on logged call activity</p>
                 <ResponsiveContainer width="100%" height={160}>
                   <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
-                    <XAxis dataKey="month" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" />
+                    <XAxis dataKey="month" tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} />
-                    <Legend wrapperStyle={{ fontSize: 12, color: "#8A8A86" }} />
-                    <Line type="monotone" dataKey="collected" name="Collected ₹L" stroke="#10D98A" strokeWidth={2} dot={false} activeDot={{ r: 3, fill: "#10D98A" }} />
+                    <Legend wrapperStyle={{ fontSize: 12, color: "var(--text-tertiary)" }} />
+                    <Line type="monotone" dataKey="collected" name="Collected ₹L" stroke="var(--status-success)" strokeWidth={2} dot={false} activeDot={{ r: 3, fill: "var(--status-success)" }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

@@ -53,13 +53,13 @@ function conditionLabel(w: Watch): string {
 }
 
 function statusOf(w: Watch): { label: string; color: string } {
-  if (w.status === "paused") return { label: "Paused", color: "#63635F" };
+  if (w.status === "paused") return { label: "Paused", color: "var(--text-secondary)" };
   if (w.last_triggered_at && w.last_evaluated_at && w.last_triggered_at === w.last_evaluated_at) {
-    return { label: "Triggered", color: "#A64F4B" };
+    return { label: "Triggered", color: "var(--status-danger)" };
   }
   // Triggered at some earlier check, clear at the latest one.
-  if (w.last_triggered_at) return { label: "Clear now, triggered before", color: "#9B742B" };
-  return { label: w.last_evaluated_at ? "Clear" : "Not checked yet", color: w.last_evaluated_at ? "#477054" : "#8A8A86" };
+  if (w.last_triggered_at) return { label: "Clear now, triggered before", color: "var(--status-warning)" };
+  return { label: w.last_evaluated_at ? "Clear" : "Not checked yet", color: w.last_evaluated_at ? "var(--status-success)" : "var(--text-tertiary)" };
 }
 
 function formatChecked(w: Watch): string {
@@ -169,13 +169,13 @@ function WatchPageInner() {
     <DashboardLayout pageTitle="Watch">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
+          <h1 style={{ margin: 0, fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 20, color: "var(--text-primary)" , letterSpacing: "-0.015em"}}>
             Watch
           </h1>
           <Button primary small onClick={() => setShowModal(true)}><IconPlus size={13} />New watch</Button>
         </div>
 
-        <div style={{ fontSize: 13.5, color: "#63635F", marginTop: -16 }}>
+        <div style={{ fontSize: 13.5, color: "var(--text-secondary)", marginTop: -16 }}>
           {loading
             ? "Loading what Starlane is watching…"
             : list.length === 0
@@ -185,7 +185,7 @@ function WatchPageInner() {
 
         <nav
           aria-label="Secondary"
-          style={{ display: "flex", alignItems: "center", gap: 22, borderBottom: "1px solid #EBEAE6", marginBottom: 4 }}
+          style={{ display: "flex", alignItems: "center", gap: 22, borderBottom: "1px solid var(--border-default)", marginBottom: 4 }}
         >
           {TABS.map((t) => (
             <button
@@ -196,10 +196,10 @@ function WatchPageInner() {
                 padding: "8px 2px",
                 fontSize: 13,
                 fontWeight: t.key === tab ? 500 : 400,
-                color: t.key === tab ? "#191917" : "#63635F",
+                color: t.key === tab ? "var(--text-primary)" : "var(--text-secondary)",
                 background: "none",
                 border: "none",
-                borderBottomColor: t.key === tab ? "var(--accent)" : "transparent",
+                borderBottomColor: t.key === tab ? "var(--accent-primary)" : "transparent",
                 borderBottomWidth: 2,
                 borderBottomStyle: "solid",
                 cursor: "pointer",
@@ -213,8 +213,8 @@ function WatchPageInner() {
         <div
           style={{
             boxSizing: "border-box",
-            background: "#FFFFFF",
-            border: "1px solid rgba(25,25,23,0.10)",
+            background: "var(--bg-elevated)",
+            border: "1px solid rgb(var(--c-ink) / 0.10)",
             borderRadius: 8,
             overflow: "hidden",
             display: "flex",
@@ -225,10 +225,10 @@ function WatchPageInner() {
             className="watch-grid watch-head"
             style={{
               padding: "10px 14px",
-              background: "#F3F2EE",
+              background: "var(--bg-subtle)",
               fontSize: 11,
               letterSpacing: 0.5,
-              color: "#63635F",
+              color: "var(--text-secondary)",
             }}
           >
             <span>Watching</span>
@@ -238,31 +238,31 @@ function WatchPageInner() {
           </div>
 
           {actionError && (
-            <div role="alert" style={{ padding: "10px 14px", color: "#A64F4B", fontSize: 13 }}>
+            <div role="alert" style={{ padding: "10px 14px", color: "var(--status-danger)", fontSize: 13 }}>
               {actionError}
             </div>
           )}
           {error && (
-            <div role="alert" style={{ padding: "16px 14px", color: "#A64F4B", fontSize: 13 }}>
+            <div role="alert" style={{ padding: "16px 14px", color: "var(--status-danger)", fontSize: 13 }}>
               {error}
             </div>
           )}
 
           {!error && loading && (
-            <div style={{ padding: "40px 24px", textAlign: "center", color: "#63635F", fontSize: 13.5 }}>
+            <div style={{ padding: "40px 24px", textAlign: "center", color: "var(--text-secondary)", fontSize: 13.5 }}>
               Loading…
             </div>
           )}
 
           {!error && !loading && filtered.length === 0 && (
             <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
-              <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, color: "#191917", marginBottom: 6 }}>
+              <p style={{ fontFamily: "var(--font-sans)", fontSize: 16, color: "var(--text-primary)", marginBottom: 6 , fontWeight: 600, letterSpacing: "-0.015em"}}>
                 {tab === "active" && "No active watch conditions"}
                 {tab === "changed" && "No status changes to show"}
                 {tab === "paused" && "No paused watches"}
                 {tab === "history" && "No watch history yet"}
               </p>
-              <p className="v32-body max-w-md mx-auto" style={{ color: "#63635F" }}>
+              <p className="v32-body max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
                 {tab === "active" && 'Create one with "New watch" to have Starlane re-evaluate a condition against live data every 15 minutes, or check it on demand.'}
                 {tab === "changed" && "This lists watches whose status just moved into a triggered state."}
                 {tab === "paused" && "Paused watches stop being evaluated by the 15-minute cron until resumed."}
@@ -281,12 +281,12 @@ function WatchPageInner() {
                   padding: "16px 14px",
                   minHeight: 52,
                   boxSizing: "border-box",
-                  borderBottom: "1px solid rgba(25,25,23,0.06)",
+                  borderBottom: "1px solid rgb(var(--c-ink) / 0.06)",
                   alignItems: "center",
                 }}
               >
-                <span style={{ fontSize: 13.5, color: "#191917" }}>{w.name}</span>
-                <span style={{ fontSize: 12.5, color: "#63635F" }}>{conditionLabel(w)}</span>
+                <span style={{ fontSize: 13.5, color: "var(--text-primary)" }}>{w.name}</span>
+                <span style={{ fontSize: 12.5, color: "var(--text-secondary)" }}>{conditionLabel(w)}</span>
                 <span style={{ fontSize: 12.5, color: s.color }}>
                   {s.label}
                 </span>
@@ -296,7 +296,7 @@ function WatchPageInner() {
                     onClick={() => handleEvaluate(w)}
                     disabled={busyId === w.id}
                     className="hover-dim"
-                    style={{ fontSize: 11.5, background: "none", border: "none", color: "#63635F", cursor: "pointer" }}
+                    style={{ fontSize: 11.5, background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer" }}
                     title="Evaluate now"
                   >
                     Check now
@@ -305,7 +305,7 @@ function WatchPageInner() {
                     onClick={() => handlePauseResume(w)}
                     disabled={busyId === w.id}
                     className="hover-dim"
-                    style={{ fontSize: 11.5, background: "none", border: "none", color: "#63635F", cursor: "pointer" }}
+                    style={{ fontSize: 11.5, background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer" }}
                   >
                     {w.status === "paused" ? "Resume" : "Pause"}
                   </button>
@@ -313,12 +313,12 @@ function WatchPageInner() {
                     onClick={() => handleDelete(w)}
                     disabled={busyId === w.id}
                     className="hover-dim"
-                    style={{ fontSize: 11.5, background: "none", border: "none", color: "#A64F4B", cursor: "pointer" }}
+                    style={{ fontSize: 11.5, background: "none", border: "none", color: "var(--status-danger)", cursor: "pointer" }}
                   >
                     Delete
                   </button>
                   </span>
-                  <span style={{ color: "#63635F", fontSize: 12 }}>{formatChecked(w)}</span>
+                  <span style={{ color: "var(--text-secondary)", fontSize: 12 }}>{formatChecked(w)}</span>
                 </span>
               </div>
             );
@@ -394,7 +394,7 @@ function NewWatchModal({
   return (
     <div
       style={{
-        position: "fixed", inset: 0, background: "rgba(20,20,18,0.28)",
+        position: "fixed", inset: 0, background: "var(--bg-overlay)",
         display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
       }}
       onClick={onClose}
@@ -403,16 +403,16 @@ function NewWatchModal({
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: "#FFFFFF", border: "1px solid #E5E4DF", borderRadius: 10, padding: 24, width: 420, maxWidth: "calc(100vw - 32px)",
+          background: "var(--bg-elevated)", border: "1px solid var(--border-default)", borderRadius: 10, padding: 24, width: 420, maxWidth: "calc(100vw - 32px)",
           display: "flex", flexDirection: "column", gap: 14,
           boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
         }}
       >
-        <h2 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 20, color: "#191917" }}>
+        <h2 style={{ margin: 0, fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 20, color: "var(--text-primary)" , letterSpacing: "-0.015em"}}>
           New watch
         </h2>
 
-        <label style={{ fontSize: 12, color: "#63635F" }}>
+        <label style={{ fontSize: 12, color: "var(--text-secondary)" }}>
           Name
           <input
             value={name}
@@ -422,7 +422,7 @@ function NewWatchModal({
           />
         </label>
 
-        <label style={{ fontSize: 12, color: "#63635F" }}>
+        <label style={{ fontSize: 12, color: "var(--text-secondary)" }}>
           Metric
           <select value={metricKey} onChange={(e) => setMetricKey(e.target.value as Watch["metric_key"])} style={inputStyle}>
             {METRIC_OPTIONS.map((m) => (
@@ -432,14 +432,14 @@ function NewWatchModal({
         </label>
 
         {needsEntity && (
-          <label style={{ fontSize: 12, color: "#63635F" }}>
+          <label style={{ fontSize: 12, color: "var(--text-secondary)" }}>
             Customer name
             <input value={entityName} onChange={(e) => setEntityName(e.target.value)} placeholder="Customer name" style={inputStyle} />
           </label>
         )}
 
         <div style={{ display: "flex", gap: 10 }}>
-          <label style={{ fontSize: 12, color: "#63635F", flex: 1 }}>
+          <label style={{ fontSize: 12, color: "var(--text-secondary)", flex: 1 }}>
             Operator
             <select value={operator} onChange={(e) => setOperator(e.target.value as WatchConditionConfig["operator"])} style={inputStyle}>
               {OPERATOR_OPTIONS.map((o) => (
@@ -447,7 +447,7 @@ function NewWatchModal({
               ))}
             </select>
           </label>
-          <label style={{ fontSize: 12, color: "#63635F", flex: 1 }}>
+          <label style={{ fontSize: 12, color: "var(--text-secondary)", flex: 1 }}>
             Threshold
             <input
               type="number"
@@ -459,7 +459,7 @@ function NewWatchModal({
           </label>
         </div>
 
-        {formError && <div style={{ color: "#A64F4B", fontSize: 12 }}>{formError}</div>}
+        {formError && <div style={{ color: "var(--status-danger)", fontSize: 12 }}>{formError}</div>}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}>
           <button
@@ -490,9 +490,9 @@ const inputStyle: React.CSSProperties = {
   marginTop: 4,
   padding: "8px 10px",
   fontSize: 13,
-  color: "#191917",
-  background: "#FFFFFF",
-  border: "1px solid rgba(25,25,23,0.12)",
+  color: "var(--text-primary)",
+  background: "var(--bg-elevated)",
+  border: "1px solid rgb(var(--c-ink) / 0.12)",
   borderRadius: 6,
   boxSizing: "border-box",
 };

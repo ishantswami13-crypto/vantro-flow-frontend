@@ -52,3 +52,6 @@ export const IconLibrary = (p: P) => <Svg {...p}><path d="M5 4.5h4v15H5z" /><pat
 export const IconBookmark = (p: P) => <Svg {...p}><path d="M6.5 4h11v16l-5.5-4-5.5 4z" /></Svg>;
 export const IconBookmarkFilled = (p: P) => <Svg {...p}><path d="M6.5 4h11v16l-5.5-4-5.5 4z" fill="currentColor" /></Svg>;
 export const IconArrowRight = (p: P) => <Svg {...p}><line x1="5" y1="12" x2="19" y2="12" /><polyline points="13,6 19,12 13,18" /></Svg>;
+export const IconAudit = (p: P) => <Svg {...p}><path d="M7 3.5h7l4 4v13H7z" /><polyline points="14,3.5 14,7.5 18,7.5" /><line x1="10" y1="12" x2="15" y2="12" /><line x1="10" y1="15.5" x2="15" y2="15.5" /></Svg>;
+export const IconHelp = (p: P) => <Svg {...p}><circle cx="12" cy="12" r="9" /><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8 1c0 1.7-2.4 2.2-2.4 3.7" /><circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none" /></Svg>;
+export const IconTools = (p: P) => <Svg {...p}><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></Svg>;

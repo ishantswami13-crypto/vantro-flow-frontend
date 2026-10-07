@@ -19,8 +19,8 @@ const ACTION_ICON: Record<ActionType, React.ReactNode> = {
 };
 const ACTION_COLOR: Record<ActionType, string> = {
   whatsapp: "#25D366",
-  call:     "#0066FF",
-  email:    "#F5A524",
+  call:     "var(--accent-primary)",
+  email:    "var(--status-warning)",
 };
 const TONE_BADGE: Record<ToneType, "success"|"warning"|"danger"> = {
   gentle: "success",
@@ -134,7 +134,7 @@ export default function DunningPage() {
             <p className="text-sm text-secondary mt-0.5">Auto-send reminders based on days overdue — set it and forget it</p>
           </div>
           <button onClick={() => { setForm({ ...EMPTY_FORM }); setError(""); setShowModal(true); }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-all shadow-sm self-start sm:self-auto">
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-inverse text-white text-sm font-semibold hover:bg-raised transition-all shadow-sm self-start sm:self-auto">
             <FiPlus size={14} /> New Rule
           </button>
         </div>
@@ -143,10 +143,10 @@ export default function DunningPage() {
         {!loading && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
             {[
-              { label: "Active Rules",       value: activeRules.toString(),  color: "#0066FF" },
-              { label: "Messages Sent",      value: totalSent.toString(),    color: "#F5A524" },
-              { label: "Payments Triggered", value: totalPaid.toString(),    color: "#10D98A" },
-              { label: "Recovery Rate",      value: totalSent > 0 ? `${recoveryPct}%` : "—", color: "#10D98A" },
+              { label: "Active Rules",       value: activeRules.toString(),  color: "var(--accent-primary)" },
+              { label: "Messages Sent",      value: totalSent.toString(),    color: "var(--status-warning)" },
+              { label: "Payments Triggered", value: totalPaid.toString(),    color: "var(--status-success)" },
+              { label: "Recovery Rate",      value: totalSent > 0 ? `${recoveryPct}%` : "—", color: "var(--status-success)" },
             ].map(k => (
               <div key={k.label} className="card-metric p-5">
                 <p className="section-label mb-3">{k.label}</p>
@@ -188,9 +188,9 @@ export default function DunningPage() {
                     <div className="shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center border z-10 relative"
                       style={{
                         background:   rule.enabled ? `${ACTION_COLOR[rule.action as ActionType]}15` : "#F2F2EF",
-                        borderColor:  rule.enabled ? `${ACTION_COLOR[rule.action as ActionType]}40` : "#E5E5E1",
+                        borderColor:  rule.enabled ? `${ACTION_COLOR[rule.action as ActionType]}40` : "var(--text-tertiary)",
                       }}>
-                      <p className="text-xs font-black" style={{ color: rule.enabled ? ACTION_COLOR[rule.action as ActionType] : "#8A8A86" }}>
+                      <p className="text-xs font-black" style={{ color: rule.enabled ? ACTION_COLOR[rule.action as ActionType] : "var(--text-tertiary)" }}>
                         D+{rule.trigger_day}
                       </p>
                       <p className="text-2xs text-muted">days</p>
@@ -253,12 +253,12 @@ export default function DunningPage() {
               {(["gentle","firm","urgent"] as ToneType[]).map(t => (
                 <button key={t} onClick={() => setPreview(t)}
                   className={["px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all",
-                    preview === t ? "bg-gray-900 text-white" : "text-muted hover:text-primary",
+                    preview === t ? "bg-inverse text-white" : "text-muted hover:text-primary",
                   ].join(" ")}>{t}</button>
               ))}
             </div>
           </div>
-          <div className="bg-[#0B1418] rounded-xl p-4 border border-[#1E2D4A]">
+          <div className="bg-[var(--bg-secondary)] rounded-xl p-4 border border-[#1E2D4A]">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-7 h-7 rounded-full bg-[#25D366] flex items-center justify-center">
                 <FiMessageSquare size={12} className="text-white" />
@@ -282,7 +282,7 @@ export default function DunningPage() {
         {/* Add Rule Modal */}
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+            <div className="absolute inset-0 bg-inverse/70 backdrop-blur-sm" onClick={() => setShowModal(false)} />
             <div className="relative w-full max-w-sm card-premium p-6 shadow-card-hover z-10">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-bold text-primary">New Automation Rule</p>
@@ -323,7 +323,7 @@ export default function DunningPage() {
                     {(["gentle","firm","urgent"] as ToneType[]).map(t => (
                       <button key={t} type="button" onClick={() => setForm(f => ({ ...f, tone: t }))}
                         className={["flex-1 py-2 rounded-xl text-xs font-semibold capitalize border transition-all",
-                          form.tone === t ? "bg-gray-900 text-white border-border" : "text-muted border-border hover:text-primary",
+                          form.tone === t ? "bg-inverse text-white border-border" : "text-muted border-border hover:text-primary",
                         ].join(" ")}>{t}</button>
                     ))}
                   </div>
@@ -334,7 +334,7 @@ export default function DunningPage() {
                     Cancel
                   </button>
                   <button type="submit" disabled={saving}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-60 transition-all shadow-sm flex items-center justify-center gap-2">
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-inverse text-white hover:bg-raised disabled:opacity-60 transition-all shadow-sm flex items-center justify-center gap-2">
                     {saving ? <><FiLoader size={13} className="animate-spin" /> Saving…</> : <><FiCheck size={13} /> Create Rule</>}
                   </button>
                 </div>

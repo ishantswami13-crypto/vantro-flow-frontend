@@ -85,13 +85,13 @@ export default function LoginPage() {
     } finally { setLoading(false); }
   };
 
-  const iBase = { background:"rgba(255,255,255,.05)", borderWidth:"1px", borderStyle:"solid", borderColor:"rgba(255,255,255,.12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Geist', 'Plus Jakarta Sans',system-ui", fontSize:"15px", color:"#F5F4F0", outline:"none", width:"100%", transition:"border-color .2s,background .2s" };
-  const iFocus = { ...iBase, borderColor:"rgba(255,255,255,.34)", background:"rgba(255,255,255,.08)" };
+  const iBase = { background:"rgb(var(--c-ink) / .05)", borderWidth:"1px", borderStyle:"solid", borderColor:"rgb(var(--c-ink) / .12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Geist', system-ui", fontSize:"15px", color:"var(--text-primary)", outline:"none", width:"100%", transition:"border-color .2s,background .2s" };
+  const iFocus = { ...iBase, borderColor:"rgb(var(--c-ink) / .34)", background:"rgb(var(--c-ink) / .08)" };
 
   return (
     <div className="atlas-page auth-page">
       <header className="topbar">
-        <Link href="/" style={{display:"flex",alignItems:"center",textDecoration:"none",color:"#fff"}}>
+        <Link href="/" style={{display:"flex",alignItems:"center",textDecoration:"none",color:"var(--text-on-inverse)"}}>
           <span className="brand-wm">Starlane</span>
         </Link>
         <div className="topbar-right">No account? <Link href="/signup">Start free</Link></div>
@@ -100,11 +100,11 @@ export default function LoginPage() {
       <main className="center fade-once">
         <div className="auth-head">
           <h1>{appState ? "Sign in to the app." : "Welcome back."}</h1>
-          <p style={{fontFamily:"'Hanken Grotesk',system-ui"}}>{step === "email" ? (appState ? "Sign in here and Starlane on your computer opens signed in." : "Sign in to your Starlane workspace.") : form.email}</p>
+          <p style={{fontFamily:"var(--font-sans)"}}>{step === "email" ? (appState ? "Sign in here and Starlane on your computer opens signed in." : "Sign in to your Starlane workspace.") : form.email}</p>
         </div>
 
         {error && (
-          <div style={{marginBottom:"16px",padding:"12px 16px",borderRadius:"6px",background:"rgba(255,80,80,.08)",border:"1px solid rgba(255,80,80,.2)",fontSize:"13px",color:"rgba(255,100,100,.9)",fontFamily:"'JetBrains Mono',monospace",letterSpacing:".04em"}}>
+          <div style={{marginBottom:"16px",padding:"12px 16px",borderRadius:"6px",background:"rgba(255,80,80,.08)",border:"1px solid rgba(255,80,80,.2)",fontSize:"13px",color:"rgba(255,100,100,.9)",fontFamily:"var(--font-sans)",letterSpacing:".04em"}}>
             {error}
           </div>
         )}
@@ -138,7 +138,7 @@ export default function LoginPage() {
                   onFocus={()=>setEmailFocused(true)} onBlur={()=>setEmailFocused(false)}
                   style={emailFocused?iFocus:iBase}
                 />
-                {emailValid&&<div style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",width:"20px",height:"20px",borderRadius:"50%",background:"rgba(16,217,138,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><FiCheck size={11} style={{color:"#10D98A"}}/></div>}
+                {emailValid&&<div style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",width:"20px",height:"20px",borderRadius:"50%",background:"rgba(16,217,138,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><FiCheck size={11} style={{color:"var(--status-success)"}}/></div>}
               </div>
             </div>
             <button type="submit" className="btn-login" disabled={!emailValid} style={{marginTop:"8px",opacity:emailValid?1:0.4}}>
@@ -150,15 +150,15 @@ export default function LoginPage() {
 
         {!handedOff && step === "password" && (
           <form className="auth-form" onSubmit={handleLogin}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",borderRadius:"6px",background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.08)"}}>
-              <span style={{fontSize:"13px",color:"rgba(255,255,255,.7)"}}>{form.email}</span>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",borderRadius:"6px",background:"rgb(var(--c-ink) / .04)",border:"1px solid rgb(var(--c-ink) / .08)"}}>
+              <span style={{fontSize:"13px",color:"rgb(var(--c-text-primary) / .7)"}}>{form.email}</span>
               <button type="button" onClick={()=>{setStep("email");setForm(f=>({...f,password:""}));setError("");}}
-                style={{fontSize:"12px",color:"rgba(255,255,255,.62)",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>Change</button>
+                style={{fontSize:"12px",color:"rgb(var(--c-text-primary) / .62)",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>Change</button>
             </div>
             <div className="field">
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:"8px"}}>
                 <label htmlFor="password">Password</label>
-                <Link href="/forgot-password" style={{fontSize:"12px",color:"rgba(255,255,255,.62)",textDecoration:"none"}}>Forgot password?</Link>
+                <Link href="/forgot-password" style={{fontSize:"12px",color:"rgb(var(--c-text-primary) / .62)",textDecoration:"none"}}>Forgot password?</Link>
               </div>
               <div style={{position:"relative"}}>
                 <input ref={passRef} id="password" type={showPass?"text":"password"} placeholder="••••••••••••"
@@ -167,20 +167,20 @@ export default function LoginPage() {
                   autoComplete="current-password" required style={{...(passFocused?iFocus:iBase),paddingRight:"44px"}}
                 />
                 <button type="button" onClick={()=>setShowPass(!showPass)} aria-label={showPass?"Hide password":"Show password"}
-                  style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.55)"}}>
+                  style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgb(var(--c-ink) / .55)"}}>
                   {showPass?<FiEyeOff size={14}/>:<FiEye size={14}/>}
                 </button>
               </div>
             </div>
             <label style={{display:"flex",alignItems:"center",gap:"12px",cursor:"pointer"}}>
-              <div onClick={()=>setRememberMe(r=>!r)} style={{width:"36px",height:"20px",borderRadius:"10px",background:rememberMe?"rgba(255,255,255,.9)":"rgba(255,255,255,.1)",position:"relative",transition:"background .2s",cursor:"pointer",flexShrink:0}}>
-                <div style={{position:"absolute",top:"2px",width:"16px",height:"16px",background:"#000",borderRadius:"50%",transition:"transform .2s",transform:rememberMe?"translateX(18px)":"translateX(2px)"}}/>
+              <div onClick={()=>setRememberMe(r=>!r)} style={{width:"36px",height:"20px",borderRadius:"10px",background:rememberMe?"rgb(var(--c-ink) / .9)":"rgb(var(--c-ink) / .1)",position:"relative",transition:"background .2s",cursor:"pointer",flexShrink:0}}>
+                <div style={{position:"absolute",top:"2px",width:"16px",height:"16px",background:"var(--bg-inverse)",borderRadius:"50%",transition:"transform .2s",transform:rememberMe?"translateX(18px)":"translateX(2px)"}}/>
               </div>
-              <span style={{fontSize:"13px",color:"rgba(255,255,255,.66)"}}>Stay signed in for 30 days</span>
+              <span style={{fontSize:"13px",color:"rgb(var(--c-text-primary) / .66)"}}>Stay signed in for 30 days</span>
             </label>
             <button type="submit" className="btn-login" disabled={loading||!form.password} style={{marginTop:"8px",opacity:loading||!form.password?0.4:1,position:"relative"}}>
               {loading
-                ? <><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid #F5F4F0",borderRadius:"50%",animation:"lspin .7s linear infinite"}}/> Signing in…</>
+                ? <><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid var(--border-default)",borderRadius:"50%",animation:"lspin .7s linear infinite"}}/> Signing in…</>
                 : <><span className="btn-txt">Sign in</span><FiArrowRight size={16}/></>}
             </button>
           </form>

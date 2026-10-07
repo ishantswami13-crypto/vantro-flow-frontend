@@ -48,7 +48,7 @@ function Breadcrumb({ router, title }: { router: ReturnType<typeof useRouter>; t
       type="button"
       onClick={() => router.push("/intelligence")}
       className="block text-left text-[12px] mb-2 hover:underline"
-      style={{ color: "#8A8A86" }}
+      style={{ color: "var(--text-tertiary)" }}
     >
       Intelligence / {title}
     </button>
@@ -64,11 +64,11 @@ function Turn({ label, className = "", children }: { label: string; className?: 
         <span
           aria-hidden="true"
           className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px]"
-          style={{ background: "#191917", color: "#F5F4F0", fontFamily: "'Fraunces', Georgia, serif" }}
+          style={{ background: "var(--bg-inverse)", color: "var(--text-primary)", fontFamily: "var(--font-sans)" , fontWeight: 600, letterSpacing: "-0.015em"}}
         >
           S
         </span>
-        <span className="text-[12.5px] font-medium" style={{ color: "#63635F" }}>{label}</span>
+        <span className="text-[12.5px] font-medium" style={{ color: "var(--text-secondary)" }}>{label}</span>
       </div>
       <div className="sm:pl-8">{children}</div>
     </div>
@@ -77,10 +77,10 @@ function Turn({ label, className = "", children }: { label: string; className?: 
 
 function Fact({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "danger" }) {
   return (
-    <div className="px-4 py-3.5 [&:not(:last-child)]:border-r border-b sm:border-b-0" style={{ borderColor: "#EBEAE6" }}>
-      <dt className="text-[11.5px]" style={{ color: "#8A8A86" }}>{label}</dt>
-      <dd className="text-[19px] leading-tight mt-1" style={{ color: tone === "danger" ? "#A64F4B" : "#191917", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>{value}</dd>
-      {sub && <dd className="text-[11px] mt-0.5 truncate" style={{ color: "#8A8A86" }}>{sub}</dd>}
+    <div className="px-4 py-3.5 [&:not(:last-child)]:border-r border-b sm:border-b-0" style={{ borderColor: "var(--border-default)" }}>
+      <dt className="text-[11.5px]" style={{ color: "var(--text-tertiary)" }}>{label}</dt>
+      <dd className="text-[19px] leading-tight mt-1" style={{ color: tone === "danger" ? "var(--status-danger)" : "var(--text-primary)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>{value}</dd>
+      {sub && <dd className="text-[11px] mt-0.5 truncate" style={{ color: "var(--text-tertiary)" }}>{sub}</dd>}
     </div>
   );
 }
@@ -167,7 +167,7 @@ export default function SignalImpactPage() {
             type="button"
             onClick={() => router.push("/intelligence")}
             className="inline-flex items-center gap-1.5 text-[12px] mb-4 focus-ring rounded"
-            style={{ color: "#8A8A86" }}
+            style={{ color: "var(--text-tertiary)" }}
           >
             <FiArrowLeft size={12} /> Back to Intelligence
           </button>
@@ -178,7 +178,7 @@ export default function SignalImpactPage() {
       {!isLoading && !isError && impact && !impact.sufficientDataForQuantification && (
         <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
           <Breadcrumb router={router} title={impact.signal.event_title || "External signal"} />
-          <h1 className="text-[26px] lg:text-[32px] leading-[1.15] mb-6" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>
+          <h1 className="text-[26px] lg:text-[32px] leading-[1.15] mb-6" style={{ color: "var(--text-primary)", fontWeight: 500, letterSpacing: "-0.01em" }}>
             {impact.signal.event_title || "External signal"}
           </h1>
           <EmptyState
@@ -195,15 +195,15 @@ export default function SignalImpactPage() {
               citations, the reasoning behind it, then the decision. */}
           <div className="min-w-0 max-w-[700px]">
             <Breadcrumb router={router} title={impact.signal.event_title || "Investigation"} />
-            <h1 className="text-[24px] lg:text-[30px] leading-[1.2] mb-2" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>
+            <h1 className="text-[24px] lg:text-[30px] leading-[1.2] mb-2" style={{ color: "var(--text-primary)", fontWeight: 500, letterSpacing: "-0.01em" }}>
               {impact.signal.event_title || "External signal"}
             </h1>
-            <p className="text-[13px]" style={{ color: "#686868" }}>
+            <p className="text-[13px]" style={{ color: "var(--text-secondary)" }}>
               {impact.supplier?.name}{impact.supplier?.country ? ` · ${impact.supplier.country}` : ""} · Detected {formatDateTime(impact.signal.first_detected_at)} · {confidenceLabel(impact.signal.event_confidence)} confidence
             </p>
 
             <Turn label="Starlane" className="mt-8">
-              <p className="text-[17px] leading-[1.55]" style={{ color: "#191917", fontWeight: 500 }}>
+              <p className="text-[17px] leading-[1.55]" style={{ color: "var(--text-primary)", fontWeight: 500 }}>
                 {formatINR(impact.totalRevenueExposure)} in open orders is at risk
                 <Cite n={components.length === 1 ? citations.byComponent[primaryComponent.component.id]?.revenue : undefined} onCite={onCite} />
                 {soonest && (
@@ -216,21 +216,21 @@ export default function SignalImpactPage() {
                 )}
                 .
               </p>
-              <p className="text-[14.5px] leading-[1.65] mt-3" style={{ color: "#43433F" }}>
+              <p className="text-[14.5px] leading-[1.65] mt-3" style={{ color: "var(--text-body)" }}>
                 {humanReason(impact.signal, impact.supplier?.name)}
                 <Cite n={citations.event} onCite={onCite} />
                 {impact.signal.event_summary && <> {impact.signal.event_summary}</>}
                 {impact.signal.event_source_url && (
                   <>
                     {" "}
-                    <a href={impact.signal.event_source_url} target="_blank" rel="noreferrer" className="underline" style={{ color: "#63635F" }}>
+                    <a href={impact.signal.event_source_url} target="_blank" rel="noreferrer" className="underline" style={{ color: "var(--text-secondary)" }}>
                       Source record
                     </a>
                   </>
                 )}
               </p>
 
-              <dl className="grid grid-cols-2 sm:grid-cols-4 mt-6 rounded-xl overflow-hidden" style={{ border: "1px solid #E5E4DF", background: "#FFFFFF" }}>
+              <dl className="grid grid-cols-2 sm:grid-cols-4 mt-6 rounded-xl overflow-hidden" style={{ border: "1px solid var(--border-default)", background: "var(--bg-elevated)" }}>
                 <Fact label="Revenue exposed" value={formatINR(impact.totalRevenueExposure)} sub={components.length > 1 ? `Across ${components.length} parts` : undefined} tone="danger" />
                 <Fact
                   label="Time to stockout"
@@ -246,7 +246,7 @@ export default function SignalImpactPage() {
                 type="button"
                 onClick={() => setEvidenceOpen(true)}
                 className="lg:hidden inline-flex items-center gap-1.5 mt-4 text-[13px] font-medium rounded-full px-3 py-1.5 focus-ring"
-                style={{ color: "#191917", border: "1px solid #E5E4DF", background: "#FFFFFF" }}
+                style={{ color: "var(--text-primary)", border: "1px solid var(--border-default)", background: "var(--bg-elevated)" }}
               >
                 <FiFileText size={13} /> Sources · {impact.evidence.length}
               </button>
@@ -254,7 +254,7 @@ export default function SignalImpactPage() {
 
             {/* REASONING — collapsible like a model's working, open by default. */}
             <details open className="group mt-10">
-              <summary className="list-none cursor-pointer select-none inline-flex items-center gap-1.5 text-[13px] font-medium focus-ring rounded" style={{ color: "#63635F" }}>
+              <summary className="list-none cursor-pointer select-none inline-flex items-center gap-1.5 text-[13px] font-medium focus-ring rounded" style={{ color: "var(--text-secondary)" }}>
                 <FiChevronRight size={14} className="transition-transform group-open:rotate-90" />
                 How Starlane got here
               </summary>
@@ -271,10 +271,10 @@ export default function SignalImpactPage() {
                           aria-selected={selected}
                           onClick={() => setComponentIndex(i)}
                           className="text-left rounded-full px-3.5 py-1.5 text-[12.5px] focus-ring"
-                          style={{ border: `1px solid ${selected ? "#191917" : "#E5E4DF"}`, color: "#191917", background: selected ? "#FFFFFF" : "transparent" }}
+                          style={{ border: `1px solid ${selected ? "var(--text-primary)" : "var(--border-default)"}`, color: "var(--text-primary)", background: selected ? "var(--bg-elevated)" : "transparent" }}
                         >
                           <span className="font-medium">{c.component.name}</span>
-                          <span className="ml-2" style={{ color: "#8A8A86", fontVariantNumeric: "tabular-nums" }}>{formatINR(c.revenueExposure.totalRevenueExposure)}</span>
+                          <span className="ml-2" style={{ color: "var(--text-tertiary)", fontVariantNumeric: "tabular-nums" }}>{formatINR(c.revenueExposure.totalRevenueExposure)}</span>
                         </button>
                       );
                     })}
@@ -282,7 +282,7 @@ export default function SignalImpactPage() {
                 )}
                 <CausalChain impact={impact} component={primaryComponent} citations={citations} onCite={onCite} />
                 {impact.signal.rule_explanation && (
-                  <p className="text-[12.5px] mt-5 pl-9 italic" style={{ color: "#8A8A86" }}>Rule applied: {impact.signal.rule_explanation}</p>
+                  <p className="text-[12.5px] mt-5 pl-9 italic" style={{ color: "var(--text-tertiary)" }}>Rule applied: {impact.signal.rule_explanation}</p>
                 )}
               </div>
             </details>
@@ -292,27 +292,27 @@ export default function SignalImpactPage() {
                 rows on every page view. */}
             {!actions && !predictions && (
               <div className="mt-10">
-                <p className="text-[12px] mb-2.5" style={{ color: "#8A8A86" }}>Next step</p>
+                <p className="text-[12px] mb-2.5" style={{ color: "var(--text-tertiary)" }}>Next step</p>
                 <button
                   type="button"
                   onClick={() => analyzeMutation.mutate()}
                   disabled={analyzeMutation.isPending}
-                  className="w-full text-left rounded-2xl px-5 py-4 flex items-center justify-between gap-4 focus-ring transition-colors hover:bg-white disabled:opacity-70"
-                  style={{ border: "1px solid #D7D6D0", background: "#FBFBF9" }}
+                  className="w-full text-left rounded-2xl px-5 py-4 flex items-center justify-between gap-4 focus-ring transition-colors hover:bg-elevated disabled:opacity-70"
+                  style={{ border: "1px solid var(--border-strong)", background: "#FBFBF9" }}
                 >
                   <span>
-                    <span className="block text-[14.5px] font-medium" style={{ color: "#191917" }}>
+                    <span className="block text-[14.5px] font-medium" style={{ color: "var(--text-primary)" }}>
                       {analyzeMutation.isPending ? "Forecasting and ranking options…" : "Forecast this and recommend what to do"}
                     </span>
-                    <span className="block text-[12.5px] mt-0.5" style={{ color: "#8A8A86" }}>
+                    <span className="block text-[12.5px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>
                       Runs Starlane's deterministic forecast and ranks interventions for {components.length > 1 ? "each part" : primaryComponent.component.name}.
                     </span>
                   </span>
-                  <span className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full id-gradient" style={{ color: "#FFFFFF", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.25)" }}>
+                  <span className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full id-gradient" style={{ color: "var(--text-on-inverse)", boxShadow: "inset 0 0 0 1px rgb(var(--c-ink) / 0.25)" }}>
                     {analyzeMutation.isPending ? <FiLoader size={15} className="animate-spin" /> : <FiArrowUp size={16} />}
                   </span>
                 </button>
-                {analyzeMutation.isError && <p className="text-[12px] mt-2" style={{ color: "#A64F4B" }}>Analysis failed. Try again, or check the backend log.</p>}
+                {analyzeMutation.isError && <p className="text-[12px] mt-2" style={{ color: "var(--status-danger)" }}>Analysis failed. Try again, or check the backend log.</p>}
               </div>
             )}
 
@@ -320,18 +320,18 @@ export default function SignalImpactPage() {
               <Turn label={components.length > 1 ? `Starlane · ${primaryComponent.component.name}` : "Starlane"} className="mt-12">
                 {componentPredictions && (
                   <section className="mb-10">
-                    <p className="text-[14.5px] mb-4" style={{ color: "#191917", fontWeight: 500 }}>Here's what happens if nothing changes.</p>
+                    <p className="text-[14.5px] mb-4" style={{ color: "var(--text-primary)", fontWeight: 500 }}>Here's what happens if nothing changes.</p>
                     <ForecastTimeline predictions={componentPredictions} component={primaryComponent} />
                   </section>
                 )}
                 {componentActions && componentActions.length > 0 && (
                   <section className="mb-10">
-                    <p className="text-[14.5px] mb-4" style={{ color: "#191917", fontWeight: 500 }}>Here's what I'd do, ranked by benefit to cost.</p>
+                    <p className="text-[14.5px] mb-4" style={{ color: "var(--text-primary)", fontWeight: 500 }}>Here's what I'd do, ranked by benefit to cost.</p>
                     <DecisionSection actions={componentActions} component={primaryComponent} />
                   </section>
                 )}
                 {componentActions && componentActions.length === 0 && (
-                  <p className="text-[14px] mb-10" style={{ color: "#63635F" }}>No intervention is recommended for this part right now.</p>
+                  <p className="text-[14px] mb-10" style={{ color: "var(--text-secondary)" }}>No intervention is recommended for this part right now.</p>
                 )}
               </Turn>
             )}

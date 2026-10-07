@@ -94,7 +94,7 @@ function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string
         <span className="inline-block" style={{ fontSize: 11, letterSpacing: 0, color, border: `1px solid ${color}`, borderRadius: 20, padding: "3px 10px", whiteSpace: "nowrap", marginBottom: 10 }}>
           {MISSION_STATE_LABEL[m.state]}
         </span>
-        <div style={{ fontFamily: V.serif, fontSize: 18, lineHeight: 1.35, color: V.ink, marginBottom: 4 }}>{m.title}</div>
+        <div style={{ fontFamily: V.serif, fontSize: 15, lineHeight: 1.35, color: V.ink, marginBottom: 4 , fontWeight: 600, letterSpacing: "-0.01em"}}>{m.title}</div>
         {m.objective && <div style={{ fontSize: 12.5, color: V.secondary }}>{m.source === "DECISION" ? "Chosen option: " : ""}{m.objective}</div>}
       </div>
       {(m.stateReason || m.outcome.detail) && (
@@ -108,7 +108,7 @@ function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string
         </div>
       )}
       <div>
-        <div style={{ height: 5, background: "rgba(25,25,23,0.08)", borderRadius: 3, overflow: "hidden" }}>
+        <div style={{ height: 5, background: "rgb(var(--c-ink) / 0.08)", borderRadius: 3, overflow: "hidden" }}>
           <div style={{ width: `${pct}%`, height: "100%", background: V.ink }} />
         </div>
         <div className="flex items-center justify-between" style={{ marginTop: 6, fontSize: 11.5, color: V.tertiary }}>
@@ -126,7 +126,7 @@ function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string
     </>
   );
   const cls = "card-in hover-lift flex flex-col";
-  const style: React.CSSProperties = { boxSizing: "border-box", background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 8, padding: 20, gap: 12, minHeight: 200 };
+  const style: React.CSSProperties = { boxSizing: "border-box", background: "var(--bg-elevated)", border: `1px solid ${V.card}`, borderRadius: 8, padding: 20, gap: 12, minHeight: 200 };
   if (m.source !== "WORKFLOW") return <Link href={m.href} className={cls} style={style}>{body}</Link>;
   return <div className={cls} style={style}>{body}</div>;
 }

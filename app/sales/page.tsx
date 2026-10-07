@@ -668,7 +668,7 @@ export default function SalesPage() {
 
         {/* ══════════ BULK SCAN — PROGRESS ══════════ */}
         {mounted && bulkScanning && createPortal(
-          <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.75)" }}
+          <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "var(--bg-overlay)" }}
                className="flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-border p-6 text-center">
               <div className="w-10 h-10 border-2 border-border border-t-primary rounded-full animate-spin mx-auto mb-4" />
@@ -694,7 +694,7 @@ export default function SalesPage() {
 
         {/* ══════════ BULK SCAN — RESULTS ══════════ */}
         {mounted && bulkResults && !bulkScanning && createPortal(
-          <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.75)" }}
+          <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "var(--bg-overlay)" }}
                className="flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="w-full max-w-lg bg-surface-1 rounded-2xl border border-border p-6">
               <div className="text-center mb-5">
@@ -775,7 +775,7 @@ export default function SalesPage() {
           <div style={{
             position: "fixed", top: 0, left: 0,
             width: "100vw", height: "100dvh",
-            zIndex: 99999, background: "#000",
+            zIndex: 99999, background: "var(--bg-inverse)",
             minHeight: "-webkit-fill-available",
           }}>
             {/* Video fills entire screen */}
@@ -784,7 +784,7 @@ export default function SalesPage() {
 
             {/* Loading spinner */}
             {!cameraReady && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+              <div className="absolute inset-0 flex items-center justify-center bg-inverse z-10">
                 <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
               </div>
             )}
@@ -795,7 +795,7 @@ export default function SalesPage() {
                    style={{ paddingBottom: "20%" }}>
                 <div className="rounded-2xl" style={{
                   width: "88%", height: "55%",
-                  border: "2px solid rgba(255,255,255,0.7)",
+                  border: "2px solid rgb(var(--c-ink) / 0.7)",
                   boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)",
                 }} />
               </div>
@@ -803,25 +803,25 @@ export default function SalesPage() {
 
             {/* Top hint + close */}
             <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-12 pb-4"
-                 style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)" }}>
+                 style={{ background: "linear-gradient(to bottom, var(--bg-overlay), transparent)" }}>
               <p className="text-white/80 text-sm font-medium">Invoice ko frame ke andar rakho</p>
               <button aria-label="Stop camera" onClick={stopCamera}
-                className="p-2.5 rounded-full bg-black/40 backdrop-blur-sm text-white border border-white/20">
+                className="p-2.5 rounded-full bg-inverse/40 backdrop-blur-sm text-white border border-white/20">
                 <FiX size={18} />
               </button>
             </div>
 
             {/* Bottom shutter + upload */}
             <div className="absolute bottom-0 left-0 right-0 z-20 flex flex-col items-center gap-4 pb-16 pt-8"
-                 style={{ background: "linear-gradient(to top, rgba(0,0,0,0.75), transparent)" }}>
+                 style={{ background: "linear-gradient(to top, var(--bg-overlay), transparent)" }}>
               <button onClick={captureFromCamera} disabled={!cameraReady}
                 className="flex items-center justify-center disabled:opacity-30 transition-transform active:scale-95"
                 style={{
                   width: 80, height: 80, borderRadius: "50%",
-                  background: "#ffffff",
-                  boxShadow: "0 0 0 5px rgba(255,255,255,0.25), 0 8px 32px rgba(0,0,0,0.5)",
+                  background: "var(--bg-elevated)",
+                  boxShadow: "0 0 0 5px rgb(var(--c-ink) / 0.25), 0 8px 32px rgba(0,0,0,0.5)",
                 }}>
-                <FiCamera size={32} className="text-black" />
+                <FiCamera size={32} className="text-text-primary" />
               </button>
               <button onClick={() => { stopCamera(); fileInputRef.current?.click(); }}
                 className="flex items-center gap-1.5 text-white/50 text-xs mt-1">
@@ -835,7 +835,7 @@ export default function SalesPage() {
         {/* ══════════ PAGE HEADER ══════════ */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Sales</h1>
+            <h1 className="text-[26px] leading-[1.15]" style={{ color: "var(--text-primary)", fontWeight: 500, letterSpacing: "-0.01em" }}>Sales</h1>
             <p className="text-xs text-muted mt-1">What customers owe you</p>
           </div>
           <div className="flex items-center gap-2">
@@ -954,7 +954,7 @@ export default function SalesPage() {
         <div className="flex gap-2 mb-4">
           {["all", "unpaid", "partial", "paid"].map(s => (
             <button key={s} onClick={() => setFilterStatus(s)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${filterStatus === s ? "bg-gray-900 text-white" : "bg-surface-2 text-muted hover:text-primary"}`}>
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${filterStatus === s ? "bg-inverse text-white" : "bg-surface-2 text-muted hover:text-primary"}`}>
               {s === "all" ? "All" : statusConfig[s as keyof typeof statusConfig]?.label}
               {s !== "all" && <span className="ml-1 opacity-60">({sales.filter(x => x.status === s).length})</span>}
             </button>
@@ -996,7 +996,7 @@ export default function SalesPage() {
                         </div>
                       )}
                       {s.gst_type && s.gst_amount && (
-                        <p className="text-xs mt-0.5" style={{ color: "#F5A524" }}>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--status-warning)" }}>
                           {s.gst_type}{s.gst_rate ? ` @${s.gst_rate}%` : ""}: {fmtINR(s.gst_amount)}
                         </p>
                       )}
@@ -1052,7 +1052,7 @@ export default function SalesPage() {
         {/* ══════════ ADD / EDIT / SCAN MODAL (portaled) ══════════ */}
         {mounted && showAdd && createPortal(
           <div style={{ position: "fixed", inset: 0, zIndex: 99998 }}
-               className="flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4"
+               className="flex items-end sm:items-center justify-center bg-inverse/60 backdrop-blur-sm p-3 sm:p-4"
                onClick={closeModal}>
             <div className="w-full max-w-lg bg-surface-1 rounded-2xl border border-border overflow-hidden"
                  style={{ maxHeight: "92vh", overflowY: "auto" }}
@@ -1078,7 +1078,7 @@ export default function SalesPage() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={scanPreview} alt="Invoice" className="w-full object-cover object-top" style={{ maxHeight: 170 }} />
                     {scanning && (
-                      <div className="absolute inset-0 bg-black/65 flex flex-col items-center justify-center gap-2">
+                      <div className="absolute inset-0 bg-inverse/65 flex flex-col items-center justify-center gap-2">
                         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                         <p className="text-xs text-white font-semibold">
                           {scanCountdown !== null
@@ -1125,7 +1125,7 @@ export default function SalesPage() {
                   <div className="rounded-xl border border-border overflow-x-auto">
                     <table className="w-full" style={{ minWidth: 420 }}>
                       <thead>
-                        <tr style={{ background: "#FAFAF8", borderBottom: "1px solid #E5E5E1" }}>
+                        <tr style={{ background: "var(--bg-subtle)", borderBottom: "1px solid var(--border-default)" }}>
                           <th className="text-left px-3 py-2 text-2xs font-semibold text-muted uppercase tracking-wide">Description</th>
                           <th className="text-center px-2 py-2 text-2xs font-semibold text-muted uppercase tracking-wide">HSN/SAC</th>
                           <th className="text-center px-2 py-2 text-2xs font-semibold text-muted uppercase tracking-wide">Qty</th>
@@ -1135,7 +1135,7 @@ export default function SalesPage() {
                       </thead>
                       <tbody>
                         {scannedItems.map((item, i) => (
-                          <tr key={i} style={{ borderTop: i > 0 ? "1px solid #EDEDE9" : "none" }}>
+                          <tr key={i} style={{ borderTop: i > 0 ? "1px solid var(--border-default)" : "none" }}>
                             <td className="px-3 py-2.5" style={{ maxWidth: 200 }}>
                               <p className="text-xs text-primary font-medium leading-snug">{item.description}</p>
                             </td>
@@ -1156,17 +1156,17 @@ export default function SalesPage() {
                       {form.total_amount && (
                         <tfoot>
                           {scannedGst && (
-                            <tr style={{ borderTop: "1px solid #E5E5E1" }}>
+                            <tr style={{ borderTop: "1px solid var(--border-default)" }}>
                               <td colSpan={3} className="px-3 py-2 text-xs text-muted text-right">
                                 {scannedGst.type}{scannedGst.rate ? ` @ ${scannedGst.rate}%` : ""}
                               </td>
                               <td />
-                              <td className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "#F5A524" }}>
+                              <td className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "var(--status-warning)" }}>
                                 +{fmtINR(scannedGst.amount)}
                               </td>
                             </tr>
                           )}
-                          <tr style={{ borderTop: "1px solid #D8D8D3", background: "#FAFAF8" }}>
+                          <tr style={{ borderTop: "1px solid var(--border-strong)", background: "var(--bg-subtle)" }}>
                             <td colSpan={4} className="px-3 py-2 text-xs font-semibold text-muted text-right">Grand Total</td>
                             <td className="px-3 py-2 text-right text-sm font-bold text-success">
                               {fmtINR(parseFloat(form.total_amount))}
@@ -1208,7 +1208,7 @@ export default function SalesPage() {
                       <div>
                         <label className="text-xs text-muted mb-1 block">Seller GSTIN (Yours)</label>
                         <div className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm font-mono tracking-wide"
-                          style={{ color: myGstin ? "#686868" : "#B5B5B0" }}>
+                          style={{ color: myGstin ? "var(--text-secondary)" : "var(--text-tertiary)" }}>
                           {myGstin || <span className="text-xs not-italic" style={{ fontFamily: "inherit", letterSpacing: 0 }}>Set in Settings</span>}
                         </div>
                       </div>
@@ -1306,7 +1306,7 @@ export default function SalesPage() {
         {/* Quick Collect Modal (portaled) */}
         {mounted && payModal && createPortal(
           <div style={{ position: "fixed", inset: 0, zIndex: 99998 }}
-               className="flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+               className="flex items-center justify-center bg-inverse/60 backdrop-blur-sm p-4"
                onClick={() => setPayModal(null)}>
             <div className="w-full max-w-sm bg-surface-1 rounded-2xl border border-border p-5"
                  onClick={e => e.stopPropagation()}>

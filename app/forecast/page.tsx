@@ -209,7 +209,7 @@ export default function ForecastPage() {
               {([{ k: "classic", label: "Classic" }, { k: "v2", label: "V2" }] as const).map(({ k, label }) => (
                 <button key={k} onClick={() => setMode(k)}
                   className={["px-4 py-1.5 text-2xs font-bold rounded-lg transition-all",
-                    mode === k ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
+                    mode === k ? "bg-inverse text-white" : "text-secondary hover:text-primary",
                   ].join(" ")}>
                   {label}
                 </button>
@@ -220,7 +220,7 @@ export default function ForecastPage() {
                 {([30, 60, 90] as const).map(r => (
                   <button key={r} onClick={() => setRange(r)}
                     className={["px-5 py-2 text-xs font-bold rounded-lg transition-all",
-                      range === r ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
+                      range === r ? "bg-inverse text-white" : "text-secondary hover:text-primary",
                     ].join(" ")}>
                     {r}d
                   </button>
@@ -231,7 +231,7 @@ export default function ForecastPage() {
                 {([7, 14, 30] as const).map(r => (
                   <button key={r} onClick={() => setV2Horizon(r)}
                     className={["px-5 py-2 text-xs font-bold rounded-lg transition-all",
-                      v2Horizon === r ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
+                      v2Horizon === r ? "bg-inverse text-white" : "text-secondary hover:text-primary",
                     ].join(" ")}>
                     {r}d
                   </button>
@@ -254,13 +254,13 @@ export default function ForecastPage() {
         {!loading && !openingCash && (
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
             style={{ background: "rgba(0,102,255,0.08)", border: "1px solid rgba(0,102,255,0.2)" }}>
-            <FiDollarSign size={15} style={{ color: "#0066FF", flexShrink: 0 }} />
-            <p className="text-sm flex-1" style={{ color: "#191917" }}>
+            <FiDollarSign size={15} style={{ color: "var(--accent-primary)", flexShrink: 0 }} />
+            <p className="text-sm flex-1" style={{ color: "var(--text-primary)" }}>
               Set your current cash balance to get an accurate forecast
             </p>
             {showCashInput ? (
               <div className="flex items-center gap-2">
-                <span className="text-sm" style={{ color: "#8A8A86" }}>₹</span>
+                <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>₹</span>
                 <input
                   type="number"
                   value={cashInput}
@@ -269,16 +269,16 @@ export default function ForecastPage() {
                   placeholder="e.g. 50000"
                   autoFocus
                   className="w-28 px-2 py-1 text-sm rounded-lg outline-none"
-                  style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", color: "#191917" }}
+                  style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
                 />
                 <button onClick={saveCash}
                   className="px-3 py-1 rounded-lg text-xs font-semibold"
-                  style={{ background: "#0066FF", color: "#fff" }}>Save</button>
+                  style={{ background: "var(--accent-primary)", color: "var(--text-on-inverse)" }}>Save</button>
               </div>
             ) : (
               <button onClick={() => setShowCashInput(true)}
                 className="px-3 py-1 rounded-lg text-xs font-semibold"
-                style={{ background: "#0066FF", color: "#fff" }}>Set Cash</button>
+                style={{ background: "var(--accent-primary)", color: "var(--text-on-inverse)" }}>Set Cash</button>
             )}
           </div>
         )}
@@ -291,10 +291,10 @@ export default function ForecastPage() {
         ) : !noData ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 stagger-children">
             {[
-              { label: "Opening Cash",         value: openingCash ? fmt(kpis.cashStart) : "Set →", sub: openingCash ? "tap to update" : "not set yet", icon: FiDollarSign,    color: "#0066FF", clickable: true },
-              { label: "Daily Burn Rate",       value: fmt(kpis.burnRate),       sub: "from your purchases",    icon: FiTrendingDown,  color: "#F5424D", clickable: false },
-              { label: "Avg Daily Collections", value: fmt(kpis.avgCollections), sub: "based on history",       icon: FiDollarSign,    color: "#10D98A", clickable: false },
-              { label: "Cash Runway",           value: kpis.runwayDays > 0 ? `${kpis.runwayDays}d` : "—", sub: "pessimistic case", icon: FiAlertTriangle, color: kpis.runwayDays < 15 ? "#F5424D" : "#F5A524", clickable: false },
+              { label: "Opening Cash",         value: openingCash ? fmt(kpis.cashStart) : "Set →", sub: openingCash ? "tap to update" : "not set yet", icon: FiDollarSign,    color: "var(--accent-primary)", clickable: true },
+              { label: "Daily Burn Rate",       value: fmt(kpis.burnRate),       sub: "from your purchases",    icon: FiTrendingDown,  color: "var(--status-danger)", clickable: false },
+              { label: "Avg Daily Collections", value: fmt(kpis.avgCollections), sub: "based on history",       icon: FiDollarSign,    color: "var(--status-success)", clickable: false },
+              { label: "Cash Runway",           value: kpis.runwayDays > 0 ? `${kpis.runwayDays}d` : "—", sub: "pessimistic case", icon: FiAlertTriangle, color: kpis.runwayDays < 15 ? "var(--status-danger)" : "var(--status-warning)", clickable: false },
             ].map(({ label, value, sub, icon: Icon, color, clickable }) => (
               <div key={label} className="card-metric p-5"
                 onClick={() => clickable && setShowCashInput(true)}
@@ -322,7 +322,7 @@ export default function ForecastPage() {
             <p className="text-xs text-muted mb-4 max-w-xs">
               Upload your invoices and mark some payments as received — the forecast model needs at least a few data points to project scenarios.
             </p>
-            <Link href="/collections" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-semibold hover:bg-gray-800 transition-all shadow-sm">
+            <Link href="/collections" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-inverse text-white text-xs font-semibold hover:bg-raised transition-all shadow-sm">
               <FiUpload size={13} /> Upload Invoices <FiArrowRight size={12} />
             </Link>
           </div>
@@ -338,9 +338,9 @@ export default function ForecastPage() {
               </div>
               <div className="flex items-center gap-5 text-2xs">
                 {[
-                  { label: "Optimistic",  color: "#10D98A", dash: false },
-                  { label: "Expected",    color: "#0066FF", dash: false },
-                  { label: "Pessimistic", color: "#F5424D", dash: true  },
+                  { label: "Optimistic",  color: "var(--status-success)", dash: false },
+                  { label: "Expected",    color: "var(--accent-primary)", dash: false },
+                  { label: "Pessimistic", color: "var(--status-danger)", dash: true  },
                 ].map(({ label, color, dash }) => (
                   <span key={label} className="flex items-center gap-1.5 text-secondary">
                     <span className="w-5 inline-block" style={{ height: "2px", background: dash ? `repeating-linear-gradient(90deg, ${color} 0, ${color} 4px, transparent 4px, transparent 8px)` : color }} />
@@ -354,23 +354,23 @@ export default function ForecastPage() {
               <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gradOpt"  x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor="#10D98A" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="#10D98A" stopOpacity={0} />
+                    <stop offset="0%"   stopColor="var(--status-success)" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="var(--status-success)" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="gradExp"  x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor="#0066FF" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#0066FF" stopOpacity={0} />
+                    <stop offset="0%"   stopColor="var(--accent-primary)" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="var(--accent-primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" vertical={false} />
-                <XAxis dataKey="date" tick={{ fill: "#8A8A86", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis tickFormatter={fmt} tick={{ fill: "#8A8A86", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: "var(--text-tertiary)", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                <YAxis tickFormatter={fmt} tick={{ fill: "var(--text-tertiary)", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
                 <Tooltip content={<CustomTooltip />} />
-                <ReferenceLine y={0} stroke="#F5424D" strokeDasharray="4 2" strokeWidth={1}
-                  label={{ value: "Zero Cash", fill: "#F5424D", fontSize: 9, position: "insideTopLeft" }} />
-                <Area type="monotone" dataKey="optimistic"  name="Optimistic"  stroke="#10D98A" strokeWidth={2}   fill="url(#gradOpt)" dot={false} />
-                <Area type="monotone" dataKey="expected"    name="Expected"    stroke="#0066FF" strokeWidth={2.5} fill="url(#gradExp)" dot={false} />
-                <Line type="monotone" dataKey="pessimistic" name="Pessimistic" stroke="#F5424D" strokeWidth={2}   strokeDasharray="5 3" dot={false} />
+                <ReferenceLine y={0} stroke="var(--status-danger)" strokeDasharray="4 2" strokeWidth={1}
+                  label={{ value: "Zero Cash", fill: "var(--status-danger)", fontSize: 9, position: "insideTopLeft" }} />
+                <Area type="monotone" dataKey="optimistic"  name="Optimistic"  stroke="var(--status-success)" strokeWidth={2}   fill="url(#gradOpt)" dot={false} />
+                <Area type="monotone" dataKey="expected"    name="Expected"    stroke="var(--accent-primary)" strokeWidth={2.5} fill="url(#gradExp)" dot={false} />
+                <Line type="monotone" dataKey="pessimistic" name="Pessimistic" stroke="var(--status-danger)" strokeWidth={2}   strokeDasharray="5 3" dot={false} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -411,9 +411,9 @@ export default function ForecastPage() {
                       {c.priority_score != null && (
                         <div className="flex items-center gap-2">
                           <div className="score-bar-track">
-                            <div className="score-bar-fill" style={{ width: `${c.priority_score}%`, background: c.priority_score >= 70 ? "#10D98A" : "#F5A524" }} />
+                            <div className="score-bar-fill" style={{ width: `${c.priority_score}%`, background: c.priority_score >= 70 ? "var(--status-success)" : "var(--status-warning)" }} />
                           </div>
-                          <span className="text-xs metric-value" style={{ color: c.priority_score >= 70 ? "#10D98A" : "#F5A524" }}>{c.priority_score}%</span>
+                          <span className="text-xs metric-value" style={{ color: c.priority_score >= 70 ? "var(--status-success)" : "var(--status-warning)" }}>{c.priority_score}%</span>
                         </div>
                       )}
                     </td>
@@ -490,14 +490,14 @@ export default function ForecastPage() {
                       ]}
                       margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" vertical={false} />
-                      <XAxis dataKey="label" tick={{ fill: "#8A8A86", fontSize: 9 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                      <YAxis tickFormatter={fmt} tick={{ fill: "#8A8A86", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border-default)" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fill: "var(--text-tertiary)", fontSize: 9 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                      <YAxis tickFormatter={fmt} tick={{ fill: "var(--text-tertiary)", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Line type="monotone" dataKey="observed" name="Observed" stroke="#8A8A86" strokeWidth={2} dot={false} connectNulls />
-                      <Line type="monotone" dataKey="predicted" name="Predicted" stroke="#0066FF" strokeWidth={2.5} dot={false} connectNulls />
-                      <Line type="monotone" dataKey="low" name="Uncertainty (low)" stroke="#F5424D" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
-                      <Line type="monotone" dataKey="high" name="Uncertainty (high)" stroke="#10D98A" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
+                      <Line type="monotone" dataKey="observed" name="Observed" stroke="var(--text-tertiary)" strokeWidth={2} dot={false} connectNulls />
+                      <Line type="monotone" dataKey="predicted" name="Predicted" stroke="var(--accent-primary)" strokeWidth={2.5} dot={false} connectNulls />
+                      <Line type="monotone" dataKey="low" name="Uncertainty (low)" stroke="var(--status-danger)" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
+                      <Line type="monotone" dataKey="high" name="Uncertainty (high)" stroke="var(--status-success)" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
                     </ComposedChart>
                   </ResponsiveContainer>
 

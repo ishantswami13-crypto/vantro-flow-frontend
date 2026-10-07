@@ -123,7 +123,7 @@ export default function LibraryPage() {
           )}
 
           {q && prompts.length === 0 && savedShown.length === 0 && (
-            <EmptyLine icon={<IconLibrary size={17} />} title="No prompt matches" body={<>Ask it in Scan instead. <Link href={`/scan?q=${encodeURIComponent(query.trim())}`} style={{ color: "#191917", textDecoration: "underline" }}>Ask &ldquo;{query.trim()}&rdquo;</Link></>} />
+            <EmptyLine icon={<IconLibrary size={17} />} title="No prompt matches" body={<>Ask it in Scan instead. <Link href={`/scan?q=${encodeURIComponent(query.trim())}`} style={{ color: "var(--text-primary)", textDecoration: "underline" }}>Ask &ldquo;{query.trim()}&rdquo;</Link></>} />
           )}
         </div>
       )}
@@ -137,11 +137,11 @@ export default function LibraryPage() {
                   <Link key={w.title} href={w.href} className="lib-card rise-in" style={{ animationDelay: `${i * 40}ms` }}>
                     <div className="flex items-center justify-between">
                       <IconTile size={32}>{w.icon}</IconTile>
-                      <span style={{ color: "#8A8A86" }}><IconArrowRight size={14} /></span>
+                      <span style={{ color: "var(--text-tertiary)" }}><IconArrowRight size={14} /></span>
                     </div>
                     <div>
-                      <div style={{ fontSize: 14, color: "#191917" }}>{w.title}</div>
-                      <div style={{ fontSize: 12.5, color: "#63635F", marginTop: 3, lineHeight: 1.5 }}>{w.does}</div>
+                      <div style={{ fontSize: 14, color: "var(--text-primary)" }}>{w.title}</div>
+                      <div style={{ fontSize: 12.5, color: "var(--text-secondary)", marginTop: 3, lineHeight: 1.5 }}>{w.does}</div>
                     </div>
                     <div className="lib-tag">{w.area} · You get: {w.get}</div>
                   </Link>
@@ -161,7 +161,7 @@ function PromptCard({ text, tag, icon, delay, onAsk, onRemove }: { text: string;
     <div className="lib-card rise-in" style={{ animationDelay: `${delay * 40}ms` }} role="button" tabIndex={0} onClick={onAsk}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onAsk(); } }} aria-label={`Ask: ${text}`}>
       <IconTile size={32}>{icon}</IconTile>
-      <div style={{ fontSize: 14, color: "#191917", lineHeight: 1.45 }}>{text}</div>
+      <div style={{ fontSize: 14, color: "var(--text-primary)", lineHeight: 1.45 }}>{text}</div>
       <div className="lib-tag">{tag}</div>
       {onRemove && (
         <button type="button" className="scan-tool lib-star" aria-label={`Remove saved prompt: ${text}`} title="Remove"

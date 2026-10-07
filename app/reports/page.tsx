@@ -25,7 +25,7 @@ const REPORTS = [
     name: "Outstanding Receivables",
     desc: "Full list of all unpaid invoices with customer details, days overdue, and AI collection score",
     icon: <FiDollarSign size={18}/>,
-    color: "#F5424D",
+    color: "var(--status-danger)",
     formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "Today 9:00 AM",
     pages: 4,
@@ -35,7 +35,7 @@ const REPORTS = [
     name: "Collection Performance",
     desc: "Monthly recovery rates, call logs, WhatsApp delivery, payment trends over time",
     icon: <FiTrendingUp size={18}/>,
-    color: "#10D98A",
+    color: "var(--status-success)",
     formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "Yesterday",
     pages: 6,
@@ -45,7 +45,7 @@ const REPORTS = [
     name: "Customer Statement",
     desc: "Individual customer account statement — all invoices, payments, and outstanding balance",
     icon: <FiUsers size={18}/>,
-    color: "#0066FF",
+    color: "var(--accent-primary)",
     formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "12 May 2025",
     pages: 2,
@@ -55,7 +55,7 @@ const REPORTS = [
     name: "Cash Flow Forecast Report",
     desc: "30/60/90-day cash projection with optimistic, expected, and pessimistic scenarios",
     icon: <FiCalendar size={18}/>,
-    color: "#F5A524",
+    color: "var(--status-warning)",
     formats: ["Excel", "PDF"],
     lastGenerated: "14 May 2025",
     pages: 3,
@@ -65,7 +65,7 @@ const REPORTS = [
     name: "Call Activity Log",
     desc: "All collection calls — duration, outcome, promises made, follow-up status",
     icon: <FiPhone size={18}/>,
-    color: "#9B6DFF",
+    color: "var(--accent-primary)",
     formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "13 May 2025",
     pages: 5,
@@ -75,7 +75,7 @@ const REPORTS = [
     name: "GST Summary Report",
     desc: "GSTIN-wise breakdown of all sales and outstanding — ready for CA and filing",
     icon: <FiFileText size={18}/>,
-    color: "#0066FF",
+    color: "var(--accent-primary)",
     formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "1 May 2025",
     pages: 2,
@@ -154,7 +154,7 @@ export default function ReportsPage() {
               {DATE_RANGES.map(r => (
                 <button key={r} onClick={() => setDateRange(r)}
                   className={["px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
-                    dateRange === r ? "bg-gray-900 text-white" : "text-muted hover:text-primary",
+                    dateRange === r ? "bg-inverse text-white" : "text-muted hover:text-primary",
                   ].join(" ")}>{r}</button>
               ))}
             </div>

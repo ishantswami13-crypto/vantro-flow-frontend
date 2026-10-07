@@ -129,7 +129,7 @@ export default function ForgotPasswordPage() {
 
         {/* Wordmark */}
         <div className="flex items-center justify-center mb-8">
-          <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: "22px", letterSpacing: "-0.3px", color: "#191917" }}>
+          <span style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 20, letterSpacing: "-0.015em", color: "var(--text-primary)" }}>
             Starlane
           </span>
         </div>
@@ -142,7 +142,7 @@ export default function ForgotPasswordPage() {
               <div className="w-16 h-16 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center mx-auto">
                 <FiCheckCircle size={28} className="text-success" />
               </div>
-              <h1 className="text-xl text-primary" style={{fontFamily:"'Fraunces', Georgia, serif", fontWeight:400}}>Password reset!</h1>
+              <h1 className="text-xl text-primary" style={{fontFamily: "var(--font-sans)", fontWeight: 600, letterSpacing: "-0.015em"}}>Password reset!</h1>
               <p className="text-sm text-secondary leading-relaxed">
                 Your password has been updated. Sign in with your new password.
               </p>
@@ -159,7 +159,7 @@ export default function ForgotPasswordPage() {
           {step === "email" && (
             <>
               <div className="mb-6">
-                <h1 className="text-xl text-primary" style={{fontFamily:"'Fraunces', Georgia, serif", fontWeight:400}}>Forgot password?</h1>
+                <h1 className="text-xl text-primary" style={{fontFamily: "var(--font-sans)", fontWeight: 600, letterSpacing: "-0.015em"}}>Forgot password?</h1>
                 <p className="text-sm text-secondary mt-1">
                   Enter your email — we&apos;ll send a reset OTP.
                 </p>
@@ -201,7 +201,7 @@ export default function ForgotPasswordPage() {
           {step === "otp" && (
             <>
               <div className="mb-6">
-                <h1 className="text-xl text-primary" style={{fontFamily:"'Fraunces', Georgia, serif", fontWeight:400}}>Reset password</h1>
+                <h1 className="text-xl text-primary" style={{fontFamily: "var(--font-sans)", fontWeight: 600, letterSpacing: "-0.015em"}}>Reset password</h1>
                 <p className="text-sm text-secondary mt-1">
                   We sent a 6-digit OTP to{" "}
                   <span className="font-semibold text-primary">{maskedEmail}</span>.

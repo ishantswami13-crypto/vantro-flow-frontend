@@ -57,14 +57,14 @@ function ConnectionSection({ connections }: { connections: DataConnection[] }) {
   return (
     <div>
       {connections.map(c => (
-        <div key={c.id} className="flex items-center justify-between" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid #EBEAE6" }}>
+        <div key={c.id} className="flex items-center justify-between" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid var(--border-default)" }}>
           <div className="min-w-0">
-            <div style={{ fontSize: 13, color: "#191917" }}>{c.source_type.charAt(0) + c.source_type.slice(1).toLowerCase()}</div>
-            {c.last_sync_error && <div style={{ fontSize: 12, color: "#A64F4B", marginTop: 2 }}>{c.last_sync_error}</div>}
+            <div style={{ fontSize: 13, color: "var(--text-primary)" }}>{c.source_type.charAt(0) + c.source_type.slice(1).toLowerCase()}</div>
+            {c.last_sync_error && <div style={{ fontSize: 12, color: "var(--status-danger)", marginTop: 2 }}>{c.last_sync_error}</div>}
           </div>
           <div className="flex items-center shrink-0" style={{ gap: 16 }}>
-            <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "#43433F" }}>{timeSince(c.last_sync_at)}</span>
-            <StatusDot label={String(c.status).toUpperCase() === "CONNECTED" ? "Connected" : "Not connected"} color={String(c.status).toUpperCase() === "CONNECTED" ? "#477054" : "rgba(25,25,23,0.25)"} />
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--text-body)" }}>{timeSince(c.last_sync_at)}</span>
+            <StatusDot label={String(c.status).toUpperCase() === "CONNECTED" ? "Connected" : "Not connected"} color={String(c.status).toUpperCase() === "CONNECTED" ? "var(--status-success)" : "rgb(var(--c-ink) / 0.25)"} />
           </div>
         </div>
       ))}
@@ -77,11 +77,11 @@ function ConnectionSection({ connections }: { connections: DataConnection[] }) {
 function Stat({ value, label, tone }: { value: React.ReactNode; label: string; tone?: "danger" | "warning" | "success" }) {
   // Tone only when there is something to report: a coloured zero is noise.
   const empty = value === 0 || value === null || value === undefined || value === "—";
-  const color = empty ? "#191917" : tone === "danger" ? "#A64F4B" : tone === "warning" ? "#9B742B" : tone === "success" ? "#477054" : "#191917";
+  const color = empty ? "var(--text-primary)" : tone === "danger" ? "var(--status-danger)" : tone === "warning" ? "var(--status-warning)" : tone === "success" ? "var(--status-success)" : "var(--text-primary)";
   return (
     <div>
-      <div style={{ fontSize: 12, color: "#63635F", marginBottom: 6 }}>{label}</div>
-      <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 22, color, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontFamily: "var(--font-sans)", fontSize: 22, color, lineHeight: 1 }}>{value}</div>
     </div>
   );
 }
@@ -115,19 +115,19 @@ function OutcomesSection({ stats }: { stats: CortexHealthResponse["stats"] }) {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 8 }}>{children}</div>;
+  return <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--text-secondary)", marginBottom: 8 }}>{children}</div>;
 }
 
 function PolicyRows() {
   return (
     <div>
       {POLICY_LEVELS.map((p) => (
-        <div key={p.level} className="flex items-start flex-wrap md:flex-nowrap" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid #EBEAE6" }}>
-          <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: "#8A8A86", width: 20, paddingTop: 1, flexShrink: 0 }}>{p.level}</span>
-          <div style={{ width: 110, flexShrink: 0, fontSize: 13, color: "#191917" }}>{p.name}</div>
-          <div style={{ flex: 1, minWidth: 180, fontSize: 12.5, color: "#63635F" }}>{p.description}</div>
+        <div key={p.level} className="flex items-start flex-wrap md:flex-nowrap" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid var(--border-default)" }}>
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--text-tertiary)", width: 20, paddingTop: 1, flexShrink: 0 }}>{p.level}</span>
+          <div style={{ width: 110, flexShrink: 0, fontSize: 13, color: "var(--text-primary)" }}>{p.name}</div>
+          <div style={{ flex: 1, minWidth: 180, fontSize: 12.5, color: "var(--text-secondary)" }}>{p.description}</div>
           <div style={{ width: 210, flexShrink: 0 }}>
-            <StatusDot label={p.granted ? "Allowed" : "Requires approval every time"} color={p.granted ? "#477054" : "#9B742B"} />
+            <StatusDot label={p.granted ? "Allowed" : "Requires approval every time"} color={p.granted ? "var(--status-success)" : "var(--status-warning)"} />
           </div>
         </div>
       ))}
@@ -167,17 +167,17 @@ function OverviewTab() {
 
   return (
     <div className="flex flex-col" style={{ gap: 26 }}>
-      <div className="flex items-center flex-wrap" style={{ gap: 10, fontSize: 13, color: "#43433F" }}>
+      <div className="flex items-center flex-wrap" style={{ gap: 10, fontSize: 13, color: "var(--text-body)" }}>
         <span>1 user</span><Sep />
         <span>{connectedN} connected source{connectedN === 1 ? "" : "s"}</span><Sep />
-        <span style={{ color: pending > 0 ? "#9B742B" : undefined }}>
+        <span style={{ color: pending > 0 ? "var(--status-warning)" : undefined }}>
           {pending} pending approval{pending === 1 ? "" : "s"}
         </span>
       </div>
 
       <div>
         <SectionLabel>What Starlane is allowed to do</SectionLabel>
-        <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: 10 }}>The same four levels used on every agent.</div>
+        <div style={{ fontSize: 12.5, color: "var(--text-secondary)", marginBottom: 10 }}>The same four levels used on every agent.</div>
         <PolicyRows />
       </div>
 
@@ -219,15 +219,15 @@ function UsersTab() {
     <div className="space-y-8">
       <div>
         <SectionLabel>Owner</SectionLabel>
-        <div className="flex items-center justify-between" style={{ gap: 14, padding: "14px 10px", borderBottom: "1px solid #EBEAE6" }}>
+        <div className="flex items-center justify-between" style={{ gap: 14, padding: "14px 10px", borderBottom: "1px solid var(--border-default)" }}>
           <div className="flex items-center" style={{ gap: 12 }}>
             <Lettermark letter={u?.business_name || u?.email || "O"} />
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: "#191917" }}>{u?.business_name || "Owner"}</div>
-              <div style={{ fontSize: 12, color: "#8A8A86" }}>{u?.email}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>{u?.business_name || "Owner"}</div>
+              <div style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{u?.email}</div>
             </div>
           </div>
-          <span style={{ fontSize: 12.5, color: "#43433F" }}>Owner · full access</span>
+          <span style={{ fontSize: 12.5, color: "var(--text-body)" }}>Owner · full access</span>
         </div>
       </div>
       <div>
@@ -252,7 +252,7 @@ function PermissionsTab() {
   return (
     <div>
       <SectionLabel>Organization-wide policy</SectionLabel>
-      <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: 10, maxWidth: 640 }}>
+      <div style={{ fontSize: 12.5, color: "var(--text-secondary)", marginBottom: 10, maxWidth: 640 }}>
         This governs every agent in Starlane. It applies the same way to all agents and cannot be changed per agent.
       </div>
       <PolicyRows />
@@ -262,7 +262,7 @@ function PermissionsTab() {
 
 function AutomationTab() {
   return (
-    <div className="max-w-[640px] space-y-3 text-[13.5px]" style={{ color: "#63635F" }}>
+    <div className="max-w-[640px] space-y-3 text-[13.5px]" style={{ color: "var(--text-secondary)" }}>
       <p>
         Automations in Starlane are workflows you deploy from a proposal on{" "}
         <Link className="underline" href="/prepared">Prepared</Link>. Each one starts in shadow mode, never sends a message on its own,

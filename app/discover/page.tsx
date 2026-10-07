@@ -172,19 +172,19 @@ export default function DiscoverPage() {
         title="Discover"
         subtitle="Things Starlane found that may be worth your attention."
         right={latest ? (
-          <span style={{ fontSize: 12, color: "#8A8A86" }}>Last signal {relativeTime(latest)}</span>
+          <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Last signal {relativeTime(latest)}</span>
         ) : undefined}
       />
 
       {!loading && (all.length > 0 || oppCount > 0) && (
-        <div className="flex items-center flex-wrap" style={{ gap: 10, fontSize: 13, color: "#43433F", paddingBottom: 4 }}>
+        <div className="flex items-center flex-wrap" style={{ gap: 10, fontSize: 13, color: "var(--text-body)", paddingBottom: 4 }}>
           <span>{all.length} worth investigating</span>
           <Sep />
           <span>{oppCount} opportunit{oppCount === 1 ? "y" : "ies"}</span>
           <Sep />
-          <span style={{ color: risks.length ? "#A64F4B" : undefined }}>{risks.length} risk{risks.length === 1 ? "" : "s"}</span>
+          <span style={{ color: risks.length ? "var(--status-danger)" : undefined }}>{risks.length} risk{risks.length === 1 ? "" : "s"}</span>
           <Sep />
-          <span style={{ color: "#63635F" }}>{changed.length} changed</span>
+          <span style={{ color: "var(--text-secondary)" }}>{changed.length} changed</span>
         </div>
       )}
       {loadError && <ErrorBanner>{loadError}</ErrorBanner>}
@@ -196,7 +196,7 @@ export default function DiscoverPage() {
       />
 
       {tab === "opportunities" && !opportunitiesLoading && opportunitiesError && (
-        <p className="v32-meta mt-1 mb-3" style={{ color: "#A64F4B" }}>{opportunitiesError}</p>
+        <p className="v32-meta mt-1 mb-3" style={{ color: "var(--status-danger)" }}>{opportunitiesError}</p>
       )}
 
       {tab === "opportunities" && !opportunitiesLoading && (opportunities || []).length === 0 && !opportunitiesError && (
@@ -266,7 +266,7 @@ function DiscoveryRow({
   return (
     <div
       className="row-hover flex items-start cursor-pointer"
-      style={{ gap: 14, padding: "16px 10px", borderBottom: "1px solid #EBEAE6", borderRadius: 6 }}
+      style={{ gap: 14, padding: "16px 10px", borderBottom: "1px solid var(--border-default)", borderRadius: 6 }}
       onClick={onOpen}
       onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
       role="button"
@@ -274,19 +274,19 @@ function DiscoveryRow({
     >
       <IconTile tone={signal.status === "ACTIVE" ? "critical" : signal.status === "UPDATED" ? "warning" : undefined}><IconDiscover size={16} /></IconTile>
       <div className="min-w-0 flex-1">
-        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "#63635F", marginBottom: 4 }}>
+        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "var(--text-secondary)", marginBottom: 4 }}>
           {(signal.related_entity_type || signal.event_type || "Signal").replace(/_/g, " ")}
         </div>
-        <div style={{ fontSize: 15.5, fontWeight: 600, color: "#191917", marginBottom: 4 }}>
+        <div style={{ fontSize: 15.5, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
           {signal.event_title || signal.why_exists}
         </div>
         {signal.event_title && signal.why_exists && (
-          <div style={{ fontSize: 13, color: "#43433F", marginBottom: 6 }}>
+          <div style={{ fontSize: 13, color: "var(--text-body)", marginBottom: 6 }}>
             {signal.why_exists}
             <EvMark onClick={onOpenEvidence} />
           </div>
         )}
-        <div className="flex items-center flex-wrap" style={{ gap: 8, fontSize: 11.5, color: "#8A8A86" }}>
+        <div className="flex items-center flex-wrap" style={{ gap: 8, fontSize: 11.5, color: "var(--text-tertiary)" }}>
           <span>{signal.impact_status ? signal.impact_status.replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase()) : signal.status.toLowerCase()}</span>
           <Sep />
           <span>{relativeTime(signal.last_updated_at || signal.first_detected_at)}</span>
@@ -303,22 +303,22 @@ function OpportunityRow({
   opportunity, onOpenEvidence,
 }: { opportunity: IntelligenceOpportunity; onOpenEvidence: (e: React.MouseEvent) => void }) {
   return (
-    <div className="row-hover flex items-start" style={{ gap: 14, padding: "16px 10px", borderBottom: "1px solid #EBEAE6", borderRadius: 6 }}>
+    <div className="row-hover flex items-start" style={{ gap: 14, padding: "16px 10px", borderBottom: "1px solid var(--border-default)", borderRadius: 6 }}>
       <IconTile tone="positive"><IconSparkle size={16} /></IconTile>
       <div className="min-w-0 flex-1">
-        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "#63635F", marginBottom: 4 }}>
+        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "var(--text-secondary)", marginBottom: 4 }}>
           Opportunity · {opportunity.affectedEntities.supplierName}
         </div>
-        <div style={{ fontSize: 15.5, fontWeight: 600, color: "#191917", marginBottom: 4 }}>{opportunity.opportunity}</div>
-        <div style={{ fontSize: 13, color: "#43433F", marginBottom: 6 }}>
+        <div style={{ fontSize: 15.5, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>{opportunity.opportunity}</div>
+        <div style={{ fontSize: 13, color: "var(--text-body)", marginBottom: 6 }}>
           {opportunity.reasoning}
           <EvMark onClick={onOpenEvidence} />
         </div>
         <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
           {opportunity.materiality != null && <><Mono size={13}>+{opportunity.materiality}% demand</Mono><Sep /></>}
-          <span style={{ fontSize: 11.5, color: "#8A8A86" }}>Bounded opportunity</span>
+          <span style={{ fontSize: 11.5, color: "var(--text-tertiary)" }}>Bounded opportunity</span>
           <Sep />
-          <span style={{ fontSize: 11.5, color: "#8A8A86" }}>{relativeTime(opportunity.timestamp)}</span>
+          <span style={{ fontSize: 11.5, color: "var(--text-tertiary)" }}>{relativeTime(opportunity.timestamp)}</span>
         </div>
       </div>
     </div>

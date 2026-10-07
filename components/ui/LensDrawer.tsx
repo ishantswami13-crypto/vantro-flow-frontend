@@ -40,7 +40,7 @@ export interface LensDrawerProps {
   onClose: () => void;
 }
 
-const DEFAULT_ACCENT = "var(--accent, #696D86)";
+const DEFAULT_ACCENT = "var(--accent, var(--status-info))";
 
 export function LensDrawer({
   entityType,
@@ -100,17 +100,17 @@ export function LensDrawer({
       <div>
         {sections.map(section => (
           <div key={section.label} style={{ marginBottom: 22 }}>
-            <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 8 }}>{section.label}</div>
+            <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--text-secondary)", marginBottom: 8 }}>{section.label}</div>
             {section.rows.map(row => (
-              <div key={row.label} className="flex items-baseline justify-between gap-3" style={{ padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>
-                <span style={{ fontSize: 12.5, color: "#63635F" }}>{row.label}</span>
-                <span className="text-right" style={{ fontSize: 13, color: "#191917" }}>{row.value}</span>
+              <div key={row.label} className="flex items-baseline justify-between gap-3" style={{ padding: "7px 0", borderBottom: "1px solid var(--border-default)" }}>
+                <span style={{ fontSize: 12.5, color: "var(--text-secondary)" }}>{row.label}</span>
+                <span className="text-right" style={{ fontSize: 13, color: "var(--text-primary)" }}>{row.value}</span>
               </div>
             ))}
           </div>
         ))}
         {sections.length === 0 && (
-          <p style={{ fontSize: 12.5, color: "#8A8A86" }}>No further detail is available for this entity yet.</p>
+          <p style={{ fontSize: 12.5, color: "var(--text-tertiary)" }}>No further detail is available for this entity yet.</p>
         )}
       </div>
     </Drawer>

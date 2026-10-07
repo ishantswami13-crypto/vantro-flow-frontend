@@ -38,10 +38,10 @@ interface MetricCardProps {
 }
 
 const ACCENT_COLOR: Record<string, string> = {
-  default: "#0066FF",
-  success: "#10D98A",
-  warning: "#F5A524",
-  danger:  "#F5424D",
+  default: "var(--accent-primary)",
+  success: "var(--status-success)",
+  warning: "var(--status-warning)",
+  danger:  "var(--status-danger)",
   gold:    "#F5A623",
 };
 

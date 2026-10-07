@@ -12,8 +12,8 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-pro
 
 const businessTypes = [{ value: "", label: "Select type" }, ...INDUSTRY_OPTIONS];
 
-const iBase = { background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Geist', 'Plus Jakarta Sans',system-ui", fontSize:"15px", color:"#F5F4F0", outline:"none", width:"100%", transition:"border-color .2s,background .2s", WebkitAppearance:"none" as const };
-const iFocus = { ...iBase, borderColor:"rgba(255,255,255,.34)", background:"rgba(255,255,255,.08)" };
+const iBase = { background:"rgb(var(--c-ink) / .05)", border:"1px solid rgb(var(--c-ink) / .12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Geist', system-ui", fontSize:"15px", color:"var(--text-primary)", outline:"none", width:"100%", transition:"border-color .2s,background .2s", WebkitAppearance:"none" as const };
+const iFocus = { ...iBase, borderColor:"rgb(var(--c-ink) / .34)", background:"rgb(var(--c-ink) / .08)" };
 
 function FocusInput(p: React.InputHTMLAttributes<HTMLInputElement>) {
   const [f, setF] = useState(false);
@@ -71,27 +71,27 @@ function OTPStep({ preToken, userEmail, userPhone, onVerified }: {
       <div className="step-head">
         <div className="step-num">Step 3 of 3</div>
         <h2>Check your phone</h2>
-        <p>6-digit code sent to{maskedPhone&&<> <strong style={{color:"#fff"}}>{maskedPhone}</strong></>}{maskedPhone&&maskedEmail&&" and"}{maskedEmail&&<> <strong style={{color:"#fff"}}>{maskedEmail}</strong></>}</p>
+        <p>6-digit code sent to{maskedPhone&&<> <strong style={{color:"var(--text-on-inverse)"}}>{maskedPhone}</strong></>}{maskedPhone&&maskedEmail&&" and"}{maskedEmail&&<> <strong style={{color:"var(--text-on-inverse)"}}>{maskedEmail}</strong></>}</p>
       </div>
       <div style={{display:"flex",justifyContent:"center",gap:"10px",marginBottom:"24px"}} onPaste={handlePaste}>
         {otp.map((d,i)=>(
           <input key={i} ref={el=>{inputs.current[i]=el;}} type="tel" inputMode="numeric" maxLength={1}
             value={d} autoFocus={i===0}
             onChange={e=>handleDigit(i,e.target.value)} onKeyDown={e=>handleKeyDown(i,e)}
-            style={{width:"44px",height:"52px",textAlign:"center",fontSize:"20px",fontWeight:700,background:d?"rgba(255,255,255,.09)":"rgba(255,255,255,.05)",border:`1px solid ${d?"rgba(255,255,255,.34)":"rgba(255,255,255,.12)"}`,borderRadius:"7px",color:"#F5F4F0",outline:"none",opacity:loading?.5:1,fontFamily:"'Geist', 'Plus Jakarta Sans',system-ui"}}
+            style={{width:"44px",height:"52px",textAlign:"center",fontSize:"20px",fontWeight:700,background:d?"rgb(var(--c-ink) / .09)":"rgb(var(--c-ink) / .05)",border:`1px solid ${d?"rgb(var(--c-ink) / .34)":"rgb(var(--c-ink) / .12)"}`,borderRadius:"7px",color:"var(--text-primary)",outline:"none",opacity:loading?.5:1,fontFamily:"'Geist', system-ui"}}
           />
         ))}
       </div>
-      {error&&<p style={{textAlign:"center",fontSize:"12px",color:"rgba(255,100,100,.9)",fontFamily:"'JetBrains Mono',monospace",marginBottom:"16px"}}>{error}</p>}
-      {resent&&<div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"6px",fontSize:"12px",color:"#10D98A",marginBottom:"16px"}}><FiCheckCircle size={13}/> New code sent</div>}
+      {error&&<p style={{textAlign:"center",fontSize:"12px",color:"rgba(255,100,100,.9)",fontFamily:"var(--font-sans)",marginBottom:"16px"}}>{error}</p>}
+      {resent&&<div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"6px",fontSize:"12px",color:"var(--status-success)",marginBottom:"16px"}}><FiCheckCircle size={13}/> New code sent</div>}
       <button disabled={loading||otp.join("").length<6} onClick={()=>handleVerify()}
         className="btn-main" style={{opacity:loading||otp.join("").length<6?.4:1}}>
-        {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid #F5F4F0",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Verifying…</>:<><span className="btn-txt">Verify &amp; continue</span><FiArrowRight size={16}/></>}
+        {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid var(--border-default)",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Verifying…</>:<><span className="btn-txt">Verify &amp; continue</span><FiArrowRight size={16}/></>}
       </button>
       <div style={{textAlign:"center",marginTop:"20px"}}>
         {countdown>0
-          ? <p style={{fontSize:"11px",color:"rgba(255,255,255,.55)",fontFamily:"'JetBrains Mono',monospace"}}>Resend in {countdown}s</p>
-          : <button onClick={handleResend} disabled={resending} style={{fontSize:"12px",color:"rgba(255,255,255,.66)",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>
+          ? <p style={{fontSize:"11px",color:"rgb(var(--c-text-primary) / .55)",fontFamily:"var(--font-sans)"}}>Resend in {countdown}s</p>
+          : <button onClick={handleResend} disabled={resending} style={{fontSize:"12px",color:"rgb(var(--c-text-primary) / .66)",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>
               {resending?<><FiRefreshCw size={11} style={{display:"inline",marginRight:"4px",animation:"sspin .7s linear infinite"}}/>Sending…</>:"Resend code"}
             </button>}
       </div>
@@ -163,8 +163,8 @@ function SignupForm() {
         ))}
       </div>
 
-      {error&&<div style={{marginBottom:"16px",padding:"12px 16px",borderRadius:"6px",background:"rgba(255,80,80,.08)",border:"1px solid rgba(255,80,80,.2)",fontSize:"13px",color:"rgba(255,100,100,.9)",fontFamily:"'JetBrains Mono',monospace"}}>{error}</div>}
-      {referredBy&&step===1&&<div style={{marginBottom:"16px",padding:"12px 16px",borderRadius:"6px",background:"rgba(16,217,138,.08)",border:"1px solid rgba(16,217,138,.2)",fontSize:"12px",color:"#10D98A"}}>🎉 You were invited — join free</div>}
+      {error&&<div style={{marginBottom:"16px",padding:"12px 16px",borderRadius:"6px",background:"rgba(255,80,80,.08)",border:"1px solid rgba(255,80,80,.2)",fontSize:"13px",color:"rgba(255,100,100,.9)",fontFamily:"var(--font-sans)"}}>{error}</div>}
+      {referredBy&&step===1&&<div style={{marginBottom:"16px",padding:"12px 16px",borderRadius:"6px",background:"rgba(16,217,138,.08)",border:"1px solid rgba(16,217,138,.2)",fontSize:"12px",color:"var(--status-success)"}}>🎉 You were invited — join free</div>}
 
       {/* Step 1 */}
       {step===1&&(
@@ -183,8 +183,8 @@ function SignupForm() {
             <div className="field">
               <label>Business type</label>
               <select value={form.business_type} onChange={set("business_type")}
-                style={{...iBase,backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")",backgroundRepeat:"no-repeat",backgroundPosition:"right 14px center",paddingRight:"38px",cursor:"pointer",color:form.business_type?"#fff":"rgba(255,255,255,.55)"}} aria-label="Business type">
-                {businessTypes.map(o=><option key={o.value} value={o.value} style={{background:"#1B1B18",color:"#F5F4F0"}}>{o.label}</option>)}
+                style={{...iBase,backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgb(var(--c-ink) / 0.4)' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")",backgroundRepeat:"no-repeat",backgroundPosition:"right 14px center",paddingRight:"38px",cursor:"pointer",color:form.business_type?"var(--text-on-inverse)":"rgb(var(--c-text-primary) / .55)"}} aria-label="Business type">
+                {businessTypes.map(o=><option key={o.value} value={o.value} style={{background:"var(--bg-inverse)",color:"var(--text-primary)"}}>{o.label}</option>)}
               </select>
             </div>
             <button type="submit" className="btn-main">
@@ -214,7 +214,7 @@ function SignupForm() {
             <div className="field">
               <label>Phone (WhatsApp — OTP sent here)</label>
               <div style={{display:"flex"}}>
-                <span style={{display:"flex",alignItems:"center",padding:"0 14px",background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.1)",borderRight:"none",borderRadius:"6px 0 0 6px",fontSize:"13px",fontFamily:"'JetBrains Mono',monospace",color:"rgba(255,255,255,.66)",flexShrink:0}}>+91</span>
+                <span style={{display:"flex",alignItems:"center",padding:"0 14px",background:"rgb(var(--c-ink) / .04)",border:"1px solid rgb(var(--c-ink) / .1)",borderRight:"none",borderRadius:"6px 0 0 6px",fontSize:"13px",fontFamily:"var(--font-sans)",color:"rgb(var(--c-ink) / .66)",flexShrink:0}}>+91</span>
                 <FocusInput type="tel" placeholder="9876543210" value={form.phone} onChange={set("phone")} required maxLength={10} pattern="\d{10}" autoComplete="tel" style={{borderRadius:"0 6px 6px 0"} as React.CSSProperties}/>
               </div>
             </div>
@@ -223,28 +223,28 @@ function SignupForm() {
               <label>Password</label>
               <div style={{position:"relative"}}>
                 <FocusInput type={showPassword?"text":"password"} placeholder="Min 8 characters" value={form.password} onChange={set("password")} required minLength={8} style={{paddingRight:"44px"} as React.CSSProperties}/>
-                <button type="button" onClick={()=>setShowPassword(v=>!v)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.55)"}} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>
+                <button type="button" onClick={()=>setShowPassword(v=>!v)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgb(var(--c-ink) / .55)"}} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>
               </div>
-              {form.password.length>0&&form.password.length<8&&<p style={{fontSize:"10px",marginTop:"4px",color:"rgba(255,80,80,.8)",fontFamily:"'JetBrains Mono',monospace"}}>At least 8 characters</p>}
+              {form.password.length>0&&form.password.length<8&&<p style={{fontSize:"10px",marginTop:"4px",color:"rgba(255,80,80,.8)",fontFamily:"var(--font-sans)"}}>At least 8 characters</p>}
             </div>
             {/* Confirm */}
             <div className="field">
               <label>Confirm password</label>
               <div style={{position:"relative"}}>
                 <FocusInput type={showConfirm?"text":"password"} placeholder="Re-enter password" value={form.confirm_password} onChange={set("confirm_password")} required style={{paddingRight:"44px"} as React.CSSProperties}/>
-                <button type="button" onClick={()=>setShowConfirm(v=>!v)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.55)"}} aria-label={showConfirm?"Hide password":"Show password"}>{showConfirm?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>
+                <button type="button" onClick={()=>setShowConfirm(v=>!v)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgb(var(--c-ink) / .55)"}} aria-label={showConfirm?"Hide password":"Show password"}>{showConfirm?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>
               </div>
-              {form.confirm_password.length>0&&form.password!==form.confirm_password&&<p style={{fontSize:"10px",marginTop:"4px",color:"rgba(255,80,80,.8)",fontFamily:"'JetBrains Mono',monospace"}}>Passwords do not match</p>}
-              {form.confirm_password.length>0&&form.password===form.confirm_password&&form.password.length>=8&&<p style={{fontSize:"10px",marginTop:"4px",color:"#10D98A",fontFamily:"'JetBrains Mono',monospace"}}>✓ Looks good</p>}
+              {form.confirm_password.length>0&&form.password!==form.confirm_password&&<p style={{fontSize:"10px",marginTop:"4px",color:"rgba(255,80,80,.8)",fontFamily:"var(--font-sans)"}}>Passwords do not match</p>}
+              {form.confirm_password.length>0&&form.password===form.confirm_password&&form.password.length>=8&&<p style={{fontSize:"10px",marginTop:"4px",color:"var(--status-success)",fontFamily:"var(--font-sans)"}}>✓ Looks good</p>}
             </div>
             <div className="btn-row">
               <button type="button" className="btn-back" onClick={()=>{setStep(1);setError("");}}>Back</button>
               <button type="submit" className="btn-main" disabled={loading} style={{opacity:loading?.6:1,position:"relative"}}>
-                {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid #F5F4F0",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Creating workspace…</>:<><span className="btn-txt">Create workspace</span><FiArrowRight size={16}/></>}
+                {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid var(--border-default)",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Creating workspace…</>:<><span className="btn-txt">Create workspace</span><FiArrowRight size={16}/></>}
               </button>
             </div>
-            <p style={{marginTop:"8px",fontSize:"12px",color:"rgba(255,255,255,.55)",textAlign:"center",lineHeight:1.6}}>
-              By creating an account you agree to our <Link href="/terms" style={{color:"rgba(255,255,255,.55)"}}>Terms</Link> and <Link href="/privacy" style={{color:"rgba(255,255,255,.55)"}}>Privacy Policy</Link>.
+            <p style={{marginTop:"8px",fontSize:"12px",color:"rgb(var(--c-text-primary) / .55)",textAlign:"center",lineHeight:1.6}}>
+              By creating an account you agree to our <Link href="/terms" style={{color:"rgb(var(--c-text-primary) / .55)"}}>Terms</Link> and <Link href="/privacy" style={{color:"rgb(var(--c-text-primary) / .55)"}}>Privacy Policy</Link>.
             </p>
           </div>
         </form>
@@ -257,7 +257,7 @@ export default function SignupPage() {
   return (
     <div className="atlas-page auth-page">
       <header className="topbar">
-        <Link href="/" style={{display:"flex",alignItems:"center",textDecoration:"none",color:"#fff"}}>
+        <Link href="/" style={{display:"flex",alignItems:"center",textDecoration:"none",color:"var(--text-on-inverse)"}}>
           <span className="brand-wm">Starlane</span>
         </Link>
         <div className="topbar-right">Already have an account? <Link href="/login">Log in</Link></div>

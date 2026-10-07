@@ -310,7 +310,7 @@ export default function OrdersPage() {
 
       {/* Add Order Modal */}
       {showAdd && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-inverse/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-md card-base p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-primary">Add Order Manually</h3>

@@ -52,22 +52,22 @@ export default function DiscoverDetailPage() {
       <button
         onClick={() => router.push("/discover")}
         className="hover-dim flex items-center gap-1 mb-4"
-        style={{ fontSize: 12.5, color: "#63635F", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+        style={{ fontSize: 12.5, color: "var(--text-secondary)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
       >
         <FiChevronLeft size={13} /> Discover
       </button>
 
-      {loading && <p style={{ fontSize: 13, color: "#63635F" }}>Loading this finding…</p>}
-      {error && <p className="v32-body" style={{ color: "#A64F4B" }}>{error}</p>}
+      {loading && <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>Loading this finding…</p>}
+      {error && <p className="v32-body" style={{ color: "var(--status-danger)" }}>{error}</p>}
 
       {impact && (
         <div className="flex flex-col lg:flex-row fade-once" style={{ gap: 32 }}>
           {/* Left column — the finding itself (flex:1.4) */}
           <div style={{ flex: 1.4, minWidth: 0 }}>
-            <div style={{ fontSize: 11, letterSpacing: "0.6px", color: RISKY.has(impact.signal.impact_status) ? "#A64F4B" : "#63635F", marginBottom: 6 }}>
+            <div style={{ fontSize: 11, letterSpacing: "0.6px", color: RISKY.has(impact.signal.impact_status) ? "var(--status-danger)" : "var(--text-secondary)", marginBottom: 6 }}>
               {(impact.signal.related_entity_type || impact.signal.event_type || "Signal").replace(/_/g, " ")}
             </div>
-            <h1 style={{ margin: "0 0 16px", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 21, color: "#191917", lineHeight: 1.4 }}>
+            <h1 style={{ margin: "0 0 16px", fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 21, color: "var(--text-primary)", lineHeight: 1.4 , letterSpacing: "-0.015em"}}>
               {impact.signal.event_title || impact.signal.why_exists}
             </h1>
             {impact.signal.event_title && impact.signal.why_exists && (
@@ -137,7 +137,7 @@ export default function DiscoverDetailPage() {
                   role="button"
                   tabIndex={0}
                 >
-                  <p style={{ fontSize: 12.5, color: "#191917" }}>{impact.supplier.name}</p>
+                  <p style={{ fontSize: 12.5, color: "var(--text-primary)" }}>{impact.supplier.name}</p>
                   <p className="v32-meta">Supplier · {impact.supplier.country}</p>
                 </div>
               </div>
@@ -190,18 +190,18 @@ function buildSupplierLensSections(impact: SignalImpact): LensSection[] {
 const RISKY = new Set(["EXPOSED", "OBSERVED_IMPACT"]);
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 8 }}>{children}</div>;
+  return <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--text-secondary)", marginBottom: 8 }}>{children}</div>;
 }
 
 function RailLabel({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 10.5, letterSpacing: 0, color: "#8A8A86", marginBottom: 6 }}>{children}</div>;
+  return <div style={{ fontSize: 10.5, letterSpacing: 0, color: "var(--text-tertiary)", marginBottom: 6 }}>{children}</div>;
 }
 
 function Block({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 5 }}>{label}</div>
-      <div style={{ fontSize: 13.5, lineHeight: 1.6, color: "#43433F" }}>{children}</div>
+      <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--text-secondary)", marginBottom: 5 }}>{label}</div>
+      <div style={{ fontSize: 13.5, lineHeight: 1.6, color: "var(--text-body)" }}>{children}</div>
     </div>
   );
 }
@@ -212,20 +212,20 @@ function KVLine({ label, value, tone }: { label: string; value: string; tone: "k
       <span
         className="shrink-0"
         style={{
-          fontSize: 11, color: tone === "known" ? "#477054" : "#8A8A86",
+          fontSize: 11, color: tone === "known" ? "var(--status-success)" : "var(--text-tertiary)",
           width: 62,
         }}
       >
         {label}
       </span>
-      <span className="v32-body" style={{ color: "#43433F" }}>{value}</span>
+      <span className="v32-body" style={{ color: "var(--text-body)" }}>{value}</span>
     </div>
   );
 }
 
 function RailRow({ text }: { text: string }) {
   return (
-    <div style={{ fontSize: 12.5, color: "#43433F", padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>{text}</div>
+    <div style={{ fontSize: 12.5, color: "var(--text-body)", padding: "7px 0", borderBottom: "1px solid var(--border-default)" }}>{text}</div>
   );
 }
 
@@ -238,14 +238,14 @@ function ComponentRow({ component }: { component: ImpactComponent }) {
         : "Stockout timing unknown"
     : component.stockout.reason || "Insufficient data";
   return (
-    <div className="row-hover py-2.5 px-2 -mx-2" style={{ borderBottom: "1px solid #EBEAE6" }}>
+    <div className="row-hover py-2.5 px-2 -mx-2" style={{ borderBottom: "1px solid var(--border-default)" }}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p style={{ fontSize: 13, color: "#191917" }}>{component.component.name}</p>
+          <p style={{ fontSize: 13, color: "var(--text-primary)" }}>{component.component.name}</p>
           <p className="v32-meta">{relevance}</p>
         </div>
         {component.revenueExposure.sufficientData && (
-          <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12.5, color: "#191917" }}>
+          <span style={{ fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--text-primary)" }}>
             ₹{(component.revenueExposure.totalRevenueExposure / 100000).toFixed(1)}L
           </span>
         )}

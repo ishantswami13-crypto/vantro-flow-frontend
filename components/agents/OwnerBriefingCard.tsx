@@ -16,10 +16,10 @@ import {
 // alarming; medium/low are neutral grades, not a blue "info" hue reusing
 // the interactive accent color (which reads as a link, not a risk level).
 const RISK_COLOR: Record<string, string> = {
-  critical: "#F5424D",
-  high:     "#F5A524",
-  medium:   "#888888",
-  low:      "#555555",
+  critical: "var(--status-danger)",
+  high:     "var(--status-warning)",
+  medium:   "var(--text-secondary)",
+  low:      "var(--text-secondary)",
 };
 
 function confidenceLabel(c: number): string {
@@ -30,9 +30,9 @@ function confidenceLabel(c: number): string {
 // Same three hues the rest of the product uses for confidence
 // (success/warning/danger) - not a separately-invented green/orange/red.
 function confidenceColor(c: number): string {
-  if (c >= 0.9) return "#10D98A";
-  if (c >= 0.65) return "#F5A524";
-  return "#F5424D";
+  if (c >= 0.9) return "var(--status-success)";
+  if (c >= 0.65) return "var(--status-warning)";
+  return "var(--status-danger)";
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ interface Props {
 
 // ─── Legacy action row (Phase 2C.8 actions without evidence contract) ─────────
 function ActionRow({ action }: { action: OwnerBriefingAction }) {
-  const color = RISK_COLOR[action.priority] ?? "#6B7280";
+  const color = RISK_COLOR[action.priority] ?? "var(--text-secondary)";
   return (
     <div className="flex items-start gap-2.5 py-2 border-b border-white/5 last:border-0">
       <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: color }} />
@@ -64,7 +64,7 @@ function ActionRow({ action }: { action: OwnerBriefingAction }) {
 
 // ─── Verified claim row ───────────────────────────────────────────────────────
 function ClaimRow({ claim }: { claim: AgentClaim }) {
-  const color = RISK_COLOR[claim.risk_level ?? "low"] ?? "#6B7280";
+  const color = RISK_COLOR[claim.risk_level ?? "low"] ?? "var(--text-secondary)";
   const confColor = confidenceColor(claim.confidence);
   return (
     <div className="flex items-start gap-2.5 py-2 border-b border-white/5 last:border-0">
@@ -89,7 +89,7 @@ function ClaimRow({ claim }: { claim: AgentClaim }) {
 
 // ─── Recommendation row ───────────────────────────────────────────────────────
 function RecRow({ rec }: { rec: AgentRecommendation }) {
-  const color = RISK_COLOR[rec.risk_level] ?? "#6B7280";
+  const color = RISK_COLOR[rec.risk_level] ?? "var(--text-secondary)";
   return (
     <div className="flex items-start gap-2.5 py-2 border-b border-white/5 last:border-0">
       <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: color }} />
@@ -117,7 +117,7 @@ function EvidenceContractPanel({ ec }: { ec: OwnerBriefingEvidenceContract }) {
   return (
     <div className="px-3.5 pb-3">
       {/* Summary */}
-      <div className="mb-3 px-3 py-2 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
+      <div className="mb-3 px-3 py-2 rounded-lg" style={{ background: "rgb(var(--c-ink) / 0.04)" }}>
         <p className="text-xs text-secondary leading-relaxed">{ec.summary}</p>
       </div>
 
@@ -209,7 +209,7 @@ export default function OwnerBriefingCard({ data, loading, error, fetchedAt }: P
     return (
       <div
         className="mx-5 my-3 p-3.5 rounded-xl"
-        style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ background: "rgb(var(--c-ink) / 0.02)", border: "1px solid rgb(var(--c-ink) / 0.07)" }}
       >
         <div className="flex items-center gap-1.5">
           <FiWifiOff size={11} className="text-muted" />
@@ -274,7 +274,7 @@ export default function OwnerBriefingCard({ data, loading, error, fetchedAt }: P
         <>
           {/* Legacy cash summary strip (no evidence contract) */}
           {data.cash_summary && (
-            <div className="mx-3 mb-2 px-3 py-2 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
+            <div className="mx-3 mb-2 px-3 py-2 rounded-lg" style={{ background: "rgb(var(--c-ink) / 0.04)" }}>
               <p className="text-xs text-secondary leading-relaxed">{data.cash_summary}</p>
             </div>
           )}
@@ -300,7 +300,7 @@ export default function OwnerBriefingCard({ data, loading, error, fetchedAt }: P
       )}
 
       {/* Source / evidence badge */}
-      <div className="px-3.5 py-1.5 flex items-center gap-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      <div className="px-3.5 py-1.5 flex items-center gap-1.5" style={{ borderTop: "1px solid rgb(var(--c-ink) / 0.05)" }}>
         <span className="text-2xs text-muted/60">
           {ec
             ? `Evidence contract v${ec.contract_version ?? "?"} · ${ec.evidence.length} sources · ${Math.round((ec.confidence ?? 0) * 100)}% confidence`

@@ -34,7 +34,7 @@ export default function TermsPage() {
       <nav className="nav on">
         <div className="wrap nav-inner">
           <Link href="/" className="brand" style={{display:"flex",alignItems:"center",gap:"9px",textDecoration:"none"}}>
-            <StarlaneMark/> <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13.5px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
+            <StarlaneMark/> <span style={{fontFamily:"var(--font-sans)",fontWeight:700,fontSize:"13.5px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
           </Link>
           <div className="nav-links"><Link href="/#features">Features</Link><Link href="/#pricing">Pricing</Link><Link href="/#faq">FAQ</Link></div>
           <div className="nav-cta">
@@ -112,7 +112,7 @@ export default function TermsPage() {
               <strong>Starlane</strong><br/>
               Mumbai, India &middot; <a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a>
             </div>
-            <p style={{marginTop:"16px",fontSize:"13px",color:"rgba(255,255,255,.55)"}}>This is a draft template and should be reviewed by a qualified legal professional before paid public launch.</p>
+            <p style={{marginTop:"16px",fontSize:"13px",color:"rgb(var(--c-text-primary) / .55)"}}>This is a draft template and should be reviewed by a qualified legal professional before paid public launch.</p>
           </div>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function TermsPage() {
           <div className="foot-grid">
             <div className="foot-brand">
               <Link href="/" className="brand" style={{display:"flex",alignItems:"center",gap:"9px",textDecoration:"none"}}>
-                <StarlaneMark/> <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
+                <StarlaneMark/> <span style={{fontFamily:"var(--font-sans)",fontWeight:700,fontSize:"13px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
               </Link>
               <p>Starlane — the AI business control room for Indian founders.</p>
               <p className="foot-made">Made in India &middot; Data stays in India</p>

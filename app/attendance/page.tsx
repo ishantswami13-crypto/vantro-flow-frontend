@@ -15,7 +15,7 @@ const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const statusConfig = {
   present: { label: "P", bg: "bg-success text-white", icon: FiCheck },
   absent:  { label: "A", bg: "bg-danger text-white",  icon: FiX },
-  half:    { label: "H", bg: "bg-warning text-black", icon: FiMinus },
+  half:    { label: "H", bg: "bg-warning text-text-primary", icon: FiMinus },
 };
 
 export default function AttendancePage() {
@@ -100,7 +100,7 @@ export default function AttendancePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Staff Attendance</h1>
+          <h1 className="text-[26px] leading-[1.15]" style={{ color: "var(--text-primary)", fontWeight: 500, letterSpacing: "-0.01em" }}>Staff Attendance</h1>
           <p className="text-xs text-muted mt-1">Haazri aur salary calculator</p>
         </div>
         <div className="flex items-center gap-2">
@@ -131,7 +131,7 @@ export default function AttendancePage() {
       <div className="flex gap-2 mb-4">
         {[{ k: "attendance", l: "Attendance", i: FiCalendar }, { k: "salary", l: "Salary", i: FiDollarSign }].map(t => (
           <button key={t.k} onClick={() => setTab(t.k as any)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${tab === t.k ? "bg-gray-900 text-white" : "bg-surface-2 text-muted hover:text-primary"}`}>
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${tab === t.k ? "bg-inverse text-white" : "bg-surface-2 text-muted hover:text-primary"}`}>
             <t.i size={13} /> {t.l}
           </button>
         ))}

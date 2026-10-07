@@ -33,7 +33,7 @@ export default function FeedbackBar({ decisionId }: { decisionId: string }) {
             style={{
               border: `1px solid ${picked === f.kind ? C.accent : C.line}`,
               color: picked === f.kind ? C.accent : C.body,
-              background: picked === f.kind ? "#F1F1F8" : "#FFFFFF",
+              background: picked === f.kind ? "#F1F1F8" : "var(--bg-elevated)",
             }}
           >
             {f.label}
@@ -49,14 +49,14 @@ export default function FeedbackBar({ decisionId }: { decisionId: string }) {
             placeholder="What was wrong or missing, in a few words"
             maxLength={1000}
             className="flex-1 min-w-[200px] rounded-lg px-2.5 py-1 text-[12px]"
-            style={{ border: `1px solid ${C.line}`, background: "#FFFFFF" }}
+            style={{ border: `1px solid ${C.line}`, background: "var(--bg-elevated)" }}
           />
           <button
             type="button"
             disabled={!note.trim() || send.isPending}
             onClick={() => { send.mutate({ kind: picked, note: note.trim() }); setNote(""); }}
             className="text-[12px] px-2.5 py-1 rounded-lg disabled:opacity-50"
-            style={{ border: `1px solid ${C.line}`, color: C.body, background: "#FFFFFF" }}
+            style={{ border: `1px solid ${C.line}`, color: C.body, background: "var(--bg-elevated)" }}
           >
             Add note
           </button>

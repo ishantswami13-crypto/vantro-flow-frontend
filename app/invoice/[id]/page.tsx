@@ -68,10 +68,10 @@ export default function InvoiceViewPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-subtle)]">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Loading invoice…</p>
+          <p className="text-text-tertiary text-sm">Loading invoice…</p>
         </div>
       </div>
     );
@@ -79,11 +79,11 @@ export default function InvoiceViewPage() {
 
   if (error || !invoice) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-subtle)]">
         <div className="text-center">
-          <p className="text-red-500 font-semibold mb-2">Invoice not found</p>
-          <p className="text-gray-400 text-sm mb-4">{error}</p>
-          <button onClick={() => router.push("/collections")} className="text-blue-600 text-sm underline">← Back to Collections</button>
+          <p className="text-danger font-semibold mb-2">Invoice not found</p>
+          <p className="text-text-tertiary text-sm mb-4">{error}</p>
+          <button onClick={() => router.push("/collections")} className="text-accent text-sm underline">← Back to Collections</button>
         </div>
       </div>
     );
@@ -111,9 +111,9 @@ export default function InvoiceViewPage() {
       `}</style>
 
       {/* Action bar — hidden when printing */}
-      <div className="no-print bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+      <div className="no-print bg-elevated border-b border-border-default px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm">
         <button onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors">
+          className="flex items-center gap-1.5 text-sm text-text-tertiary hover:text-text-primary transition-colors">
           <FiArrowLeft size={14} /> Back
         </button>
         <div className="flex items-center gap-2">
@@ -122,19 +122,19 @@ export default function InvoiceViewPage() {
             <FiMessageSquare size={12} /> Send via WhatsApp
           </button>
           <button onClick={handleShare}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-all">
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-dim border border-blue-200 text-accent text-xs font-semibold hover:bg-blue-100 transition-all">
             <FiShare2 size={12} /> Share Link
           </button>
           <button onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800 text-white text-xs font-semibold hover:bg-black transition-all">
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-raised text-white text-xs font-semibold hover:bg-inverse transition-all">
             <FiPrinter size={12} /> Print / PDF
           </button>
         </div>
       </div>
 
       {/* Invoice document */}
-      <div className="max-w-3xl mx-auto my-8 print-shadow" style={{ filter: "drop-shadow(0 4px 32px rgba(0,0,0,0.10))" }}>
-        <div className="bg-white overflow-hidden rounded-xl">
+      <div className="max-w-3xl mx-auto my-8 print-shadow" style={{ filter: "drop-shadow(0 4px 32px rgb(var(--c-ink) / 0.10))" }}>
+        <div className="bg-elevated overflow-hidden rounded-xl">
 
           {/* Header band */}
           <div className="bg-[#0A0F1E] px-8 py-7">
@@ -142,7 +142,7 @@ export default function InvoiceViewPage() {
               {/* Business details */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-sm">
+                  <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-black text-sm">
                     {(biz.business_name || "V").charAt(0).toUpperCase()}
                   </div>
                   <span className="text-white font-bold text-base tracking-tight">
@@ -150,39 +150,39 @@ export default function InvoiceViewPage() {
                   </span>
                 </div>
                 {biz.business_address && (
-                  <p className="text-gray-400 text-xs leading-relaxed max-w-[200px]">{biz.business_address}{biz.city ? `, ${biz.city}` : ""}</p>
+                  <p className="text-text-tertiary text-xs leading-relaxed max-w-[200px]">{biz.business_address}{biz.city ? `, ${biz.city}` : ""}</p>
                 )}
                 {biz.gstin && (
-                  <p className="text-gray-400 text-xs font-mono mt-1">GSTIN: {biz.gstin}</p>
+                  <p className="text-text-tertiary text-xs font-mono mt-1">GSTIN: {biz.gstin}</p>
                 )}
               </div>
 
               {/* Invoice meta */}
               <div className="text-right">
-                <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-1">Invoice</p>
+                <p className="text-text-tertiary text-xs font-semibold uppercase tracking-widest mb-1">Invoice</p>
                 <p className="text-white font-black text-xl font-mono">{invoice.invoice_number || `INV-${id?.slice(0,8)}`}</p>
 
                 {/* Status pill */}
                 <div className="mt-2 flex justify-end">
                   {isPaid ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/20 border border-green-500/40 text-green-400 text-xs font-bold">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/20 border border-green-500/40 text-success text-xs font-bold">
                       <FiCheck size={10} /> PAID
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-bold">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-warning text-xs font-bold">
                       <FiClock size={10} /> PENDING
                     </span>
                   )}
                 </div>
 
                 {/* Dates */}
-                <div className="mt-3 space-y-1 text-xs text-gray-400">
+                <div className="mt-3 space-y-1 text-xs text-text-tertiary">
                   <div className="flex items-center gap-1.5 justify-end">
                     <FiCalendar size={10} />
                     <span>Date: {fmtDate(invoice.invoice_date)}</span>
                   </div>
                   {invoice.due_date && (
-                    <div className="flex items-center gap-1.5 justify-end text-amber-400">
+                    <div className="flex items-center gap-1.5 justify-end text-warning">
                       <FiClock size={10} />
                       <span>Due: {fmtDate(invoice.due_date)}</span>
                     </div>
@@ -195,30 +195,30 @@ export default function InvoiceViewPage() {
           {/* Bill To */}
           <div className="px-8 pt-6 pb-4">
             <div className="flex items-start justify-between">
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex-1 max-w-xs">
-                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2">Bill To</p>
-                <p className="font-bold text-gray-800 text-base">{invoice.customer_name}</p>
+              <div className="bg-[var(--bg-subtle)] border border-border-default rounded-xl p-4 flex-1 max-w-xs">
+                <p className="text-xs text-text-tertiary font-semibold uppercase tracking-wider mb-2">Bill To</p>
+                <p className="font-bold text-text-primary text-base">{invoice.customer_name}</p>
                 {invoice.customer_phone && (
-                  <p className="text-gray-500 text-xs mt-1">📞 {invoice.customer_phone}</p>
+                  <p className="text-text-tertiary text-xs mt-1">📞 {invoice.customer_phone}</p>
                 )}
                 {invoice.customer_email && (
-                  <p className="text-gray-500 text-xs">✉ {invoice.customer_email}</p>
+                  <p className="text-text-tertiary text-xs">✉ {invoice.customer_email}</p>
                 )}
                 {invoice.customer_address && (
-                  <p className="text-gray-500 text-xs mt-1">{invoice.customer_address}</p>
+                  <p className="text-text-tertiary text-xs mt-1">{invoice.customer_address}</p>
                 )}
                 {invoice.customer_gstin && (
-                  <p className="text-gray-500 text-xs font-mono mt-1">GSTIN: {invoice.customer_gstin}</p>
+                  <p className="text-text-tertiary text-xs font-mono mt-1">GSTIN: {invoice.customer_gstin}</p>
                 )}
               </div>
 
               {/* Quick stats */}
               <div className="text-right ml-4">
-                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Amount Due</p>
-                <p className="text-3xl font-black text-gray-900 tracking-tight">{fmtINR(invoice.invoice_amount)}</p>
+                <p className="text-xs text-text-tertiary uppercase tracking-wider mb-1">Amount Due</p>
+                <p className="text-3xl font-black text-text-primary tracking-tight">{fmtINR(invoice.invoice_amount)}</p>
                 {invoice.payment_link && !isPaid && (
                   <a href={invoice.payment_link} target="_blank" rel="noopener noreferrer"
-                    className="no-print inline-block mt-2 px-4 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-all">
+                    className="no-print inline-block mt-2 px-4 py-1.5 rounded-lg bg-accent text-white text-xs font-bold hover:bg-accent transition-all">
                     Pay Online →
                   </a>
                 )}
@@ -228,7 +228,7 @@ export default function InvoiceViewPage() {
 
           {/* Divider */}
           <div className="px-8">
-            <div className="h-px bg-gray-100" />
+            <div className="h-px bg-[var(--bg-subtle)]" />
           </div>
 
           {/* Line items */}
@@ -236,7 +236,7 @@ export default function InvoiceViewPage() {
             {items ? (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-xs text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                  <tr className="text-xs text-text-tertiary uppercase tracking-wider border-b border-border-default">
                     <th className="text-left pb-3 font-semibold w-8">#</th>
                     <th className="text-left pb-3 font-semibold">Item / Service</th>
                     {hasHsn && <th className="text-left pb-3 font-semibold w-20">HSN</th>}
@@ -248,14 +248,14 @@ export default function InvoiceViewPage() {
                 </thead>
                 <tbody>
                   {items.map((item, i) => (
-                    <tr key={i} className={`border-b ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
-                      <td className="py-3 text-gray-400 text-xs">{i + 1}</td>
-                      <td className="py-3 text-gray-800 font-medium">{item.name}</td>
-                      {hasHsn && <td className="py-3 text-gray-400 text-xs font-mono">{item.hsn || "—"}</td>}
-                      <td className="py-3 text-right text-gray-600">{item.qty}</td>
-                      <td className="py-3 text-gray-400 text-xs pl-3">{item.unit}</td>
-                      <td className="py-3 text-right text-gray-600">{fmtINR(item.rate)}</td>
-                      <td className="py-3 text-right text-gray-900 font-semibold">{fmtINR(item.amount)}</td>
+                    <tr key={i} className={`border-b ${i % 2 === 0 ? "bg-elevated" : "bg-[var(--bg-subtle)]/50"}`}>
+                      <td className="py-3 text-text-tertiary text-xs">{i + 1}</td>
+                      <td className="py-3 text-text-primary font-medium">{item.name}</td>
+                      {hasHsn && <td className="py-3 text-text-tertiary text-xs font-mono">{item.hsn || "—"}</td>}
+                      <td className="py-3 text-right text-text-secondary">{item.qty}</td>
+                      <td className="py-3 text-text-tertiary text-xs pl-3">{item.unit}</td>
+                      <td className="py-3 text-right text-text-secondary">{fmtINR(item.rate)}</td>
+                      <td className="py-3 text-right text-text-primary font-semibold">{fmtINR(item.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -264,17 +264,17 @@ export default function InvoiceViewPage() {
               // No line items — show single row summary
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-xs text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                  <tr className="text-xs text-text-tertiary uppercase tracking-wider border-b border-border-default">
                     <th className="text-left pb-3 font-semibold">Description</th>
                     <th className="text-right pb-3 font-semibold w-28">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b border-gray-100">
-                    <td className="py-3 text-gray-800 font-medium">
+                  <tr className="border-b border-border-default">
+                    <td className="py-3 text-text-primary font-medium">
                       {invoice.notes || `Invoice ${invoice.invoice_number || ""}`}
                     </td>
-                    <td className="py-3 text-right text-gray-900 font-semibold">
+                    <td className="py-3 text-right text-text-primary font-semibold">
                       {fmtINR(invoice.invoice_amount)}
                     </td>
                   </tr>
@@ -286,25 +286,25 @@ export default function InvoiceViewPage() {
             <div className="flex justify-end mt-4">
               <div className="w-64">
                 {hasGstBreakdown && (
-                  <div className="space-y-1.5 pb-2 border-b border-gray-100">
-                    <div className="flex justify-between text-sm text-gray-500">
+                  <div className="space-y-1.5 pb-2 border-b border-border-default">
+                    <div className="flex justify-between text-sm text-text-tertiary">
                       <span>Subtotal</span>
                       <span>{fmtINR(invoice.subtotal || 0)}</span>
                     </div>
                     {(invoice.cgst || 0) > 0 && (
-                      <div className="flex justify-between text-sm text-gray-500">
+                      <div className="flex justify-between text-sm text-text-tertiary">
                         <span>CGST {invoice.gst_rate != null ? `(${invoice.gst_rate / 2}%)` : ""}</span>
                         <span>{fmtINR(invoice.cgst || 0)}</span>
                       </div>
                     )}
                     {(invoice.sgst || 0) > 0 && (
-                      <div className="flex justify-between text-sm text-gray-500">
+                      <div className="flex justify-between text-sm text-text-tertiary">
                         <span>SGST {invoice.gst_rate != null ? `(${invoice.gst_rate / 2}%)` : ""}</span>
                         <span>{fmtINR(invoice.sgst || 0)}</span>
                       </div>
                     )}
                     {(invoice.igst || 0) > 0 && (
-                      <div className="flex justify-between text-sm text-gray-500">
+                      <div className="flex justify-between text-sm text-text-tertiary">
                         <span>IGST {invoice.gst_rate != null ? `(${invoice.gst_rate}%)` : ""}</span>
                         <span>{fmtINR(invoice.igst || 0)}</span>
                       </div>
@@ -312,31 +312,31 @@ export default function InvoiceViewPage() {
                   </div>
                 )}
                 <div className="flex justify-between items-center py-3 border-t-2 border-gray-900">
-                  <span className="font-black text-gray-900 text-base">Total</span>
-                  <span className="font-black text-gray-900 text-xl">{fmtINR(invoice.invoice_amount)}</span>
+                  <span className="font-black text-text-primary text-base">Total</span>
+                  <span className="font-black text-text-primary text-xl">{fmtINR(invoice.invoice_amount)}</span>
                 </div>
               </div>
             </div>
 
             {/* Amount in words */}
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl">
-              <p className="text-xs text-blue-500 font-semibold mb-0.5">Amount in Words</p>
-              <p className="text-sm text-blue-800 font-medium">{toWords(invoice.invoice_amount)}</p>
+            <div className="mt-4 p-3 bg-accent-dim border border-blue-100 rounded-xl">
+              <p className="text-xs text-accent font-semibold mb-0.5">Amount in Words</p>
+              <p className="text-sm text-accent font-medium">{toWords(invoice.invoice_amount)}</p>
             </div>
           </div>
 
           {/* UPI QR / Payment info */}
           {biz.upi_id && !isPaid && (
             <div className="px-8 pb-4">
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">Payment Details</p>
+              <div className="p-4 bg-[var(--bg-subtle)] border border-border-default rounded-xl">
+                <p className="text-xs text-text-tertiary font-semibold uppercase tracking-wider mb-2">Payment Details</p>
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
                     <span className="text-sm">💳</span>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">UPI ID</p>
-                    <p className="text-sm font-mono font-bold text-gray-800">{biz.upi_id}</p>
+                    <p className="text-xs text-text-tertiary">UPI ID</p>
+                    <p className="text-sm font-mono font-bold text-text-primary">{biz.upi_id}</p>
                   </div>
                 </div>
               </div>
@@ -347,30 +347,30 @@ export default function InvoiceViewPage() {
           {invoice.notes && (
             <div className="px-8 pb-4">
               <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
-                <p className="text-xs text-amber-600 font-semibold uppercase tracking-wider mb-1">Notes / Terms</p>
-                <p className="text-sm text-gray-700 leading-relaxed">{invoice.notes}</p>
+                <p className="text-xs text-warning font-semibold uppercase tracking-wider mb-1">Notes / Terms</p>
+                <p className="text-sm text-text-secondary leading-relaxed">{invoice.notes}</p>
               </div>
             </div>
           )}
 
           {/* Footer */}
           <div className="px-8 pb-8">
-            <div className="pt-4 border-t border-gray-100 flex items-end justify-between">
+            <div className="pt-4 border-t border-border-default flex items-end justify-between">
               <div>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-text-tertiary">
                   Generated by{" "}
-                  <span className="font-semibold text-gray-600">Starlane</span>
+                  <span className="font-semibold text-text-secondary">Starlane</span>
                 </p>
                 {isPaid && invoice.payment_date && (
-                  <p className="text-xs text-green-600 font-semibold mt-1">
+                  <p className="text-xs text-success font-semibold mt-1">
                     ✅ Paid on {fmtDate(invoice.payment_date)}
                   </p>
                 )}
               </div>
               <div className="text-right">
-                <div className="border-t border-gray-300 mt-10 pt-1 w-36">
-                  <p className="text-xs text-gray-400">Authorised Signatory</p>
-                  <p className="text-sm font-semibold text-gray-700">{biz.business_name || ""}</p>
+                <div className="border-t border-border-emphasis mt-10 pt-1 w-36">
+                  <p className="text-xs text-text-tertiary">Authorised Signatory</p>
+                  <p className="text-sm font-semibold text-text-secondary">{biz.business_name || ""}</p>
                 </div>
               </div>
             </div>

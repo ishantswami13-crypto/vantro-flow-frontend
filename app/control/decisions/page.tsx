@@ -57,7 +57,7 @@ export default function DecisionControlsPage() {
 
             <section className="mt-8">
               <SectionLabel>Pilot mode</SectionLabel>
-              <div className="rounded-2xl p-5" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+              <div className="rounded-2xl p-5" style={{ background: "var(--bg-elevated)", border: `1px solid ${C.line}` }}>
                 <div className="flex flex-wrap items-center gap-3">
                   {c.pilotMode === "SHADOW" ? <Pill tone="accent">Shadow</Pill> : <Pill tone="good">Live</Pill>}
                   <p className="text-[13px] flex-1 min-w-[240px]" style={{ color: C.body }}>
@@ -86,7 +86,7 @@ export default function DecisionControlsPage() {
 
             <section className="mt-8">
               <SectionLabel>Stop switches</SectionLabel>
-              <div className="rounded-2xl" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+              <div className="rounded-2xl" style={{ background: "var(--bg-elevated)", border: `1px solid ${C.line}` }}>
                 {[
                   { scope: "TENANT", key: "tenant", label: "Stop everything", detail: "No analysis runs and no action executes for this business." },
                   { scope: "AGENT", key: c.agent.key, label: "Stop the decision engine", detail: `${c.agent.key} ${c.agent.version} (${c.agent.model}).` },

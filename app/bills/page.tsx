@@ -237,7 +237,7 @@ export default function BillsPage() {
 
       {/* Create Invoice Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-inverse/60 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto">
           <div className="w-full max-w-2xl card-base p-5 my-4 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-primary text-lg">New GST Invoice</h2>

@@ -44,7 +44,7 @@ const STEPS: Step[] = [
     desc: "Daily 9 AM auto-chase runs for Pro users — hands-free collections",
     action: "Upgrade Plan",
     href: "/billing",
-    color: "#F5A524",
+    color: "var(--status-warning)",
   },
 ];
 
@@ -150,7 +150,7 @@ export default function WelcomeGuide({ waConnected, hasInvoices, autoEnabled, on
       {allDone && (
         <button
           onClick={handleDismiss}
-          className="w-full mt-4 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 transition-all flex items-center justify-center gap-2 shadow-sm">
+          className="w-full mt-4 py-2.5 rounded-xl bg-elevated text-text-primary text-xs font-bold hover:bg-elevated/90 transition-all flex items-center justify-center gap-2 shadow-sm">
           Got it — dismiss guide <FiArrowRight size={12} />
         </button>
       )}

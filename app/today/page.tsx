@@ -198,7 +198,7 @@ export default function TodayPage() {
           {/* Jump to today */}
           {!isToday && (
             <button onClick={() => changeDate(todayStr())}
-              className="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all">
+              className="px-3 py-1.5 rounded-lg bg-inverse text-white text-xs font-bold hover:bg-raised transition-all">
               Today
             </button>
           )}
@@ -226,56 +226,56 @@ export default function TodayPage() {
         <div role="alert" className="rounded-2xl p-5 mb-5 border border-danger/20 bg-danger/5">
           <p className="text-sm font-semibold text-danger">This day&apos;s sales and expenses could not be loaded.</p>
           <p className="text-sm text-secondary mt-1">{loadError} Nothing has been changed. The figures are hidden rather than shown as zero.</p>
-          <button type="button" onClick={() => load(date)} className="mt-3 px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-bold">Try again</button>
+          <button type="button" onClick={() => load(date)} className="mt-3 px-3 py-1.5 rounded-lg bg-inverse text-white text-xs font-bold">Try again</button>
         </div>
       ) : (
         <>
           {/* ── NET MONEY (V32 sim_card style: white card, mono figure) ─────── */}
-          <div className="fade-once mb-5" style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 20 }}>
-            <p style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 4 }}>
+          <div className="fade-once mb-5" style={{ background: "var(--bg-elevated)", border: "1px solid rgb(var(--c-ink) / 0.10)", borderRadius: 8, padding: 20 }}>
+            <p style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "var(--text-secondary)", marginBottom: 4 }}>
               Net money {isProfit ? "in" : "out"} {isToday ? "today" : "on this day"}
             </p>
-            <p style={{ fontSize: 12, color: "#8A8A86", marginBottom: 10 }}>
+            <p style={{ fontSize: 12, color: "var(--text-tertiary)", marginBottom: 10 }}>
               Sales booked and payments received, minus expenses and purchases. This is not profit: it has no cost of goods.
             </p>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 34, color: isProfit ? "#477054" : "#A64F4B", marginBottom: 18, lineHeight: 1 }}>
+            <p style={{ fontFamily: "var(--font-sans)", fontVariantNumeric: "tabular-nums", fontSize: 34, color: isProfit ? "var(--status-success)" : "var(--status-danger)", marginBottom: 18, lineHeight: 1 }}>
               {isProfit ? "+" : ""}{fmtINR(net)}
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderTop: "1px solid #EBEAE6" }}>
+            <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderTop: "1px solid var(--border-default)" }}>
               {[
-                { label: "Money in", value: `+${fmtINR(income, true)}`, color: "#477054" },
-                { label: "Money out", value: `-${fmtINR(expenses, true)}`, color: "#A64F4B" },
-                { label: "Orders", value: String(s?.order_count || 0), color: "#191917" },
-                { label: "Invoices paid", value: String(s?.invoices_collected || 0), color: "#191917" },
+                { label: "Money in", value: `+${fmtINR(income, true)}`, color: "var(--status-success)" },
+                { label: "Money out", value: `-${fmtINR(expenses, true)}`, color: "var(--status-danger)" },
+                { label: "Orders", value: String(s?.order_count || 0), color: "var(--text-primary)" },
+                { label: "Invoices paid", value: String(s?.invoices_collected || 0), color: "var(--text-primary)" },
               ].map(({ label, value, color }) => (
                 <div key={label} style={{ padding: "12px 0 0" }}>
-                  <p style={{ fontSize: 12, color: "#63635F", marginBottom: 4 }}>{label}</p>
-                  <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 15, color }}>{value}</p>
+                  <p style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 4 }}>{label}</p>
+                  <p style={{ fontFamily: "var(--font-sans)", fontVariantNumeric: "tabular-nums", fontSize: 15, color }}>{value}</p>
                 </div>
               ))}
             </div>
           </div>
 
           {/* ── QUICK STATS ───────────────────────────────────────────────── */}
-          <div className="flex items-center flex-wrap mb-5" style={{ gap: 10, fontSize: 13, color: "#43433F" }}>
+          <div className="flex items-center flex-wrap mb-5" style={{ gap: 10, fontSize: 13, color: "var(--text-body)" }}>
             {[
-              { label: "delivered", value: s?.orders_by_status?.delivered || 0, color: "#477054" },
-              { label: "pending", value: (s?.orders_by_status?.new || 0) + (s?.orders_by_status?.confirmed || 0) + (s?.orders_by_status?.dispatched || 0), color: "#9B742B" },
-              { label: "calls", value: s?.calls_made || 0, color: "var(--accent)" },
-              { label: "cancelled", value: s?.orders_by_status?.cancelled || 0, color: "#A64F4B" },
+              { label: "delivered", value: s?.orders_by_status?.delivered || 0, color: "var(--status-success)" },
+              { label: "pending", value: (s?.orders_by_status?.new || 0) + (s?.orders_by_status?.confirmed || 0) + (s?.orders_by_status?.dispatched || 0), color: "var(--status-warning)" },
+              { label: "calls", value: s?.calls_made || 0, color: "var(--accent-primary)" },
+              { label: "cancelled", value: s?.orders_by_status?.cancelled || 0, color: "var(--status-danger)" },
             ].map((stat, i) => (
               <span key={stat.label} className="flex items-center" style={{ gap: 6 }}>
-                {i > 0 && <span aria-hidden style={{ color: "#D7D6D0", marginRight: 4 }}>·</span>}
-                <span style={{ fontFamily: "'IBM Plex Mono', Menlo, monospace", color: "#191917" }}>{stat.value}</span> {stat.label}
+                {i > 0 && <span aria-hidden style={{ color: "var(--text-tertiary)", marginRight: 4 }}>·</span>}
+                <span style={{ fontFamily: "var(--font-sans)", fontVariantNumeric: "tabular-nums", color: "var(--text-primary)" }}>{stat.value}</span> {stat.label}
               </span>
             ))}
           </div>
 
           {/* ── TABS ──────────────────────────────────────────────────────── */}
-          <nav aria-label="Today" className="flex items-center mb-4" style={{ gap: 22, borderBottom: "1px solid #EBEAE6" }}>
+          <nav aria-label="Today" className="flex items-center mb-4" style={{ gap: 22, borderBottom: "1px solid var(--border-default)" }}>
             {(["overview","sales","expenses"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} className="hover-dim"
-                style={{ padding: "8px 2px", marginBottom: -1, fontSize: 13, fontWeight: tab === t ? 500 : 400, color: tab === t ? "#191917" : "#63635F", borderBottom: `2px solid ${tab === t ? "var(--accent)" : "transparent"}` }}>
+                style={{ padding: "8px 2px", marginBottom: -1, fontSize: 13, fontWeight: tab === t ? 500 : 400, color: tab === t ? "var(--text-primary)" : "var(--text-secondary)", borderBottom: `2px solid ${tab === t ? "var(--accent-primary)" : "transparent"}` }}>
                 {t==="sales" ? `Sales (${(summary?.orders||[]).length})`
                  : t==="expenses" ? `Expenses (${(summary?.expenses||[]).length})`
                  : "Overview"}
@@ -290,8 +290,8 @@ export default function TodayPage() {
                 <p className="text-2xs font-bold text-muted uppercase tracking-wider mb-3">Money in, by source</p>
                 <div className="space-y-3">
                   {[
-                    { icon: FiShoppingBag, label:"Orders booked",       color:"#0066FF", value: s?.income?.orders   || 0 },
-                    { icon: FiFileText,    label:"Invoice payments received",   color:"#10D98A", value: s?.income?.invoices || 0 },
+                    { icon: FiShoppingBag, label:"Orders booked",       color:"var(--accent-primary)", value: s?.income?.orders   || 0 },
+                    { icon: FiFileText,    label:"Invoice payments received",   color:"var(--status-success)", value: s?.income?.invoices || 0 },
                     { icon: FiDollarSign,  label:"Sales Recorded",       color:"#7C5CFC", value: s?.sales_total || 0 },
                   ].filter((r) => r.label !== "Sales Recorded" || r.value > 0).map(({ icon: Icon, label, color, value }) => (
                     <div key={label} className="flex items-center justify-between">
@@ -364,7 +364,7 @@ export default function TodayPage() {
                   <p className="text-sm text-muted mb-4">Add a sale or an expense above.</p>
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => setShowSaleForm(true)}
-                      className="px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all">
+                      className="px-4 py-2 rounded-xl bg-inverse text-white text-xs font-bold hover:bg-raised transition-all">
                       + Add Sale
                     </button>
                     <button onClick={() => setShowExpForm(true)}
@@ -385,7 +385,7 @@ export default function TodayPage() {
                   <FiShoppingBag size={32} className="text-muted mx-auto mb-3 opacity-40" />
                   <p className="font-bold text-primary mb-1">Koi sale nahi aaj</p>
                   <button onClick={() => setShowSaleForm(true)}
-                    className="mt-3 px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all flex items-center gap-1.5 mx-auto">
+                    className="mt-3 px-4 py-2 rounded-xl bg-inverse text-white text-xs font-bold hover:bg-raised transition-all flex items-center gap-1.5 mx-auto">
                     <FiPlus size={13} /> Add Sale
                   </button>
                 </div>
@@ -484,7 +484,7 @@ export default function TodayPage() {
 
       {/* ── ADD EXPENSE MODAL ─────────────────────────────────────────────── */}
       {showExpForm && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-inverse/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm bg-surface-1 border border-border rounded-2xl p-5 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -528,7 +528,7 @@ export default function TodayPage() {
 
       {/* ── ADD SALE MODAL ───────────────────────────────────────────────── */}
       {showSaleForm && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-inverse/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm bg-surface-1 border border-border rounded-2xl p-5 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -558,7 +558,7 @@ export default function TodayPage() {
               </div>
               {formError && <p role="alert" className="text-sm text-danger">{formError}</p>}
               <button type="submit" disabled={submitting}
-                className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all shadow-sm flex items-center justify-center gap-2">
+                className="w-full bg-inverse text-white py-3 rounded-xl font-bold text-sm hover:bg-raised transition-all shadow-sm flex items-center justify-center gap-2">
                 {submitting ? <FiRefreshCw className="animate-spin" size={14} /> : <FiPlus size={14} />}
                 {submitting ? "Saving…" : "Add Sale"}
               </button>

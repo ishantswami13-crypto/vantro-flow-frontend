@@ -141,7 +141,7 @@ export default function CRMPage() {
             <p className="text-sm text-secondary mt-0.5">Track leads, trials, and customer conversions</p>
           </div>
           <button onClick={openAdd}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-all shadow-button-accent self-start sm:self-auto">
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-inverse text-white text-sm font-semibold hover:bg-raised transition-all shadow-button-accent self-start sm:self-auto">
             <FiPlus size={14} /> Add Prospect
           </button>
         </div>
@@ -150,10 +150,10 @@ export default function CRMPage() {
         {!loading && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
             {[
-              { label: "Total Prospects", value: counts.total.toString(),  color: "#0066FF" },
-              { label: "On Trial",        value: counts.trial.toString(),   color: "#F5A524" },
-              { label: "Customers",       value: counts.customer.toString(),color: "#10D98A" },
-              { label: "Pipeline Value",  value: counts.pipeline > 0 ? (counts.pipeline >= 100000 ? `₹${(counts.pipeline/100000).toFixed(1)}L` : `₹${counts.pipeline.toLocaleString("en-IN")}`) : "—", color: "#9B6DFF" },
+              { label: "Total Prospects", value: counts.total.toString(),  color: "var(--accent-primary)" },
+              { label: "On Trial",        value: counts.trial.toString(),   color: "var(--status-warning)" },
+              { label: "Customers",       value: counts.customer.toString(),color: "var(--status-success)" },
+              { label: "Pipeline Value",  value: counts.pipeline > 0 ? (counts.pipeline >= 100000 ? `₹${(counts.pipeline/100000).toFixed(1)}L` : `₹${counts.pipeline.toLocaleString("en-IN")}`) : "—", color: "var(--accent-primary)" },
             ].map(k => (
               <div key={k.label} className="card-metric p-5">
                 <p className="section-label mb-3">{k.label}</p>
@@ -169,7 +169,7 @@ export default function CRMPage() {
             {ALL_STATUS.map(s => (
               <button key={s} onClick={() => setFilter(s)}
                 className={["px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all",
-                  filter === s ? "bg-gray-900 text-white" : "text-muted hover:text-primary",
+                  filter === s ? "bg-inverse text-white" : "text-muted hover:text-primary",
                 ].join(" ")}>{s}</button>
             ))}
           </div>
@@ -258,7 +258,7 @@ export default function CRMPage() {
                         <button key={s} onClick={() => updateStatus(p, s)}
                           className={["px-2 py-1 rounded-lg text-2xs font-semibold capitalize transition-all border",
                             p.status === s
-                              ? "bg-gray-900 text-white border-accent"
+                              ? "bg-inverse text-white border-accent"
                               : "text-muted border-border hover:text-primary hover:border-border-2",
                           ].join(" ")}>
                           {s}
@@ -298,7 +298,7 @@ export default function CRMPage() {
             </p>
             {prospects.length === 0 && (
               <button onClick={openAdd}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-semibold hover:bg-gray-800 transition-all">
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-inverse text-white text-xs font-semibold hover:bg-raised transition-all">
                 <FiPlus size={13} /> Add First Prospect
               </button>
             )}
@@ -308,7 +308,7 @@ export default function CRMPage() {
         {/* Add / Edit Modal */}
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+            <div className="absolute inset-0 bg-inverse/70 backdrop-blur-sm" onClick={() => setShowModal(false)} />
             <div className="relative w-full max-w-md card-premium p-6 shadow-card-hover z-10">
               <div className="flex items-center justify-between mb-5">
                 <p className="text-sm font-bold text-primary">{editId ? "Edit Prospect" : "Add New Prospect"}</p>
@@ -378,7 +378,7 @@ export default function CRMPage() {
                     Cancel
                   </button>
                   <button type="submit" disabled={saving}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-60 transition-all shadow-button-accent flex items-center justify-center gap-2">
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-inverse text-white hover:bg-raised disabled:opacity-60 transition-all shadow-button-accent flex items-center justify-center gap-2">
                     {saving ? <><FiLoader size={13} className="animate-spin" /> Saving…</> : <><FiCheck size={13} /> {editId ? "Update" : "Add Prospect"}</>}
                   </button>
                 </div>

@@ -14,13 +14,13 @@ import { api, type Connector } from "@/lib/api";
 type Pairing = { code: string; expiresAt: string; command: string; knownDeviceIds: string[] };
 const POLL_MS = 4000;
 
-const ink = "#191917", soft = "#63635F", faint = "#8A8A86", line = "#EBEAE6", ok = "#477054", bad = "#A64F4B";
+const ink = "var(--text-primary)", soft = "var(--text-secondary)", faint = "var(--text-tertiary)", line = "var(--border-default)", ok = "var(--status-success)", bad = "var(--status-danger)";
 
 function Step({ n, title, done, active, children }: { n: number; title: string; done: boolean; active: boolean; children?: React.ReactNode }) {
   return (
     <li style={{ display: "grid", gridTemplateColumns: "28px 1fr", gap: 14, padding: "18px 0", borderTop: `1px solid ${line}`, opacity: active || done ? 1 : 0.5 }}>
       <span aria-hidden style={{ width: 24, height: 24, borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600,
-        background: done ? ok : active ? ink : "#F3F2EE", color: done || active ? "#fff" : soft }}>{done ? "✓" : n}</span>
+        background: done ? ok : active ? ink : "var(--bg-subtle)", color: done || active ? "var(--text-on-inverse)" : soft }}>{done ? "✓" : n}</span>
       <div style={{ minWidth: 0 }}>
         <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: ink }}>{title}<span className="sr-only">{done ? " — done" : active ? " — current step" : ""}</span></p>
         {children && <div style={{ marginTop: 8 }}>{children}</div>}
@@ -101,7 +101,7 @@ export function TallyPairing({ onConnected }: { onConnected?: (tally: Connector)
           <p style={{ fontSize: 13, color: soft, margin: "0 0 10px", lineHeight: 1.55 }}>
             Save it on the computer that runs TallyPrime. It needs Node.js 18 or newer, and Tally&apos;s XML server enabled (F1 › Settings › Connectivity, port 9000).
           </p>
-          <button type="button" onClick={download} disabled={downloading} className="btn-primary" style={{ background: ink, color: "#fff", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500, border: "none", cursor: "pointer" }}>
+          <button type="button" onClick={download} disabled={downloading} className="btn-primary" style={{ background: ink, color: "var(--text-on-inverse)", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500, border: "none", cursor: "pointer" }}>
             {downloading ? "Downloading…" : downloaded ? "Download again" : "Download tally-sync.mjs"}
           </button>
           {downloaded?.sha256 && <p style={{ fontSize: 11, color: faint, marginTop: 8, wordBreak: "break-all" }}>SHA-256 {downloaded.sha256}</p>}
@@ -119,7 +119,7 @@ export function TallyPairing({ onConnected }: { onConnected?: (tally: Connector)
             <>
               <p style={{ fontSize: 13, color: soft, margin: "0 0 8px" }}>In the folder where you saved the bridge, run:</p>
               <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
-                <code style={{ flex: 1, minWidth: 0, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12.5, background: "#F6F5F2", border: `1px solid ${line}`, borderRadius: 8, padding: "10px 12px", overflowX: "auto", whiteSpace: "nowrap", color: ink }}>{pairing.command}</code>
+                <code style={{ flex: 1, minWidth: 0, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12.5, background: "var(--bg-subtle)", border: `1px solid ${line}`, borderRadius: 8, padding: "10px 12px", overflowX: "auto", whiteSpace: "nowrap", color: ink }}>{pairing.command}</code>
                 <button type="button" onClick={copy} style={{ background: "none", border: `1px solid ${line}`, borderRadius: 8, padding: "0 12px", fontSize: 12.5, cursor: "pointer", color: ink }}>{copied ? "Copied" : "Copy"}</button>
               </div>
               <p style={{ fontSize: 12, color: faint, marginTop: 8 }} aria-live="polite">

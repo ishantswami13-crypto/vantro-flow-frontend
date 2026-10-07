@@ -110,7 +110,7 @@ export default function SuppliersPage() {
       <div className="space-y-5 page-enter">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
-            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Suppliers</h2>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "var(--text-primary)", fontWeight: 500, letterSpacing: "-0.01em" }}>Suppliers</h2>
             <p className="text-sm text-secondary mt-1">Payables generated from your purchase bills</p>
           </div>
           <button onClick={loadSuppliers} className="px-4 py-2 rounded-xl border border-border text-secondary text-xs font-bold hover:text-primary hover:border-border-2 transition-colors">
@@ -230,7 +230,7 @@ export default function SuppliersPage() {
         )}
 
         {selectedSupplier && (
-          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-inverse/70 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="w-full max-w-5xl max-h-[88vh] overflow-hidden rounded-2xl bg-surface border border-border shadow-2xl">
               <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-border">
                 <div className="min-w-0">
@@ -242,7 +242,7 @@ export default function SuppliersPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedSupplier(null)}
-                  className="w-9 h-9 rounded-xl bg-surface-2 border border-border text-primary flex items-center justify-center hover:bg-white hover:text-black transition-all"
+                  className="w-9 h-9 rounded-xl bg-surface-2 border border-border text-primary flex items-center justify-center hover:bg-elevated hover:text-text-primary transition-all"
                   aria-label="Close supplier details"
                 >
                   <FiX size={16} />
