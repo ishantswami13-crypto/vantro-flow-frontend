@@ -1,17 +1,21 @@
 "use client";
 
 // MISSIONS: everything Starlane is handling, in one list. A mission is
-// either a decision you told Starlane to handle or a workflow you deployed.
-// Its state and outcome come from the backend (GET /api/os/missions), which
-// derives them from the decision, its contract and its action runs, or from
-// the workflow's runs and items. "Steps ran" is never shown as "it worked":
-// the outcome is only verified from the ledger.
+// either a decision you told Starlane to handle, a workflow you deployed or
+// a collections mission. Its state and outcome come from the backend
+// (GET /api/os/missions), which derives them from the decision, its contract
+// and its action runs, or from the workflow's runs and items. "Steps ran" is
+// never shown as "it worked": the outcome is only verified from the ledger.
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { Mission, MissionState, MISSION_STATE_LABEL, MISSION_OUTCOME_LABEL } from "@/lib/os";
-import { V, SkeletonRows, EmptyLine, ErrorBanner, ago } from "@/components/v32/ui";
-import { errorText } from "./shared";
+import { Mission, MissionState, MISSION_STATE_LABEL } from "@/lib/os";
+import { StatusChip } from "@/components/ui/Badge";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { EmptyLine } from "@/components/v32/ui";
+import { IconMissions, IconArrowRight } from "@/components/v32/icons";
+import { formatRelative } from "@/lib/format";
+import { cleanTitle, humanDates, humaneError, missionTone, outcomeColor, OUTCOME_SHORT, NETWORK_ERROR } from "./missions/ui";
 
 export type MissionFilter = "active" | "at_risk" | "completed";
 const FILTERS: { key: MissionFilter; label: string; states: MissionState[] }[] = [
@@ -39,94 +43,126 @@ export function missionCount(all: Mission[], k: MissionFilter): number {
   return all.filter((m) => f.states.includes(m.state)).length;
 }
 
-// Status pill colours (handoff §5): outlined, 11px, radius 20.
-function stateColor(s: MissionState): string {
-  if (s === "COMPLETED") return V.positive;
-  if (s === "BLOCKED" || s === "FAILED") return V.critical;
-  if (s === "WAITING_FOR_APPROVAL" || s === "WAITING_FOR_INFORMATION") return V.warning;
-  if (s === "RUNNING" || s === "VERIFYING") return V.accent;
-  return V.secondary;
-}
+// decision_action_runs statuses that count as a finished step (060_decision_core.sql).
+const STEP_DONE = new Set(["SUCCEEDED", "SHADOWED", "PREPARED"]);
 
-function outcomeColor(o: string): string {
-  if (o === "VERIFIED_SUCCESS") return V.positive;
-  if (o === "VERIFIED_FAILURE") return V.critical;
-  if (o === "OUTCOME_UNKNOWN") return V.warning;
-  return V.tertiary;
-}
+const GRID = "md:grid md:grid-cols-[minmax(0,1fr)_172px_176px_84px] md:items-center";
 
-/** Mission cards for one subnav tab. The list is loaded by the page. */
-export function MissionsList({ all, filter, loading, error, agentNames }: { all: Mission[]; filter: MissionFilter; loading: boolean; error: unknown; agentNames?: Record<string, string> }) {
+/** Mission rows for one subnav tab. The list is loaded by the page. */
+export function MissionsList({ all, filter, loading, error, agentNames, onRetry, onOpenWorkflows }: {
+  all: Mission[]; filter: MissionFilter; loading: boolean; error: unknown; agentNames?: Record<string, string>;
+  onRetry?: () => void; onOpenWorkflows?: () => void;
+}) {
   const f = FILTERS.find((x) => x.key === filter)!;
   const list = all.filter((m) => f.states.includes(m.state));
 
-  if (loading) return <SkeletonRows rows={3} />;
-  if (error) return <ErrorBanner>Missions could not be loaded: {errorText(error)} Nothing has been changed.</ErrorBanner>;
+  if (loading) return <MissionsSkeleton />;
+  if (error) {
+    const msg = humaneError(error, NETWORK_ERROR);
+    return <ErrorState title="Missions didn't load" message={`${msg} Nothing has been changed.`} onRetry={onRetry} className="ui-panel" />;
+  }
   if (all.length === 0) {
     return (
       <EmptyLine
-        title="Nothing is being handled yet."
-        body={<>Open a decision in <Link className="underline" href="/prepared">Prepared</Link> and choose Handle it, or deploy a proposed workflow. Starlane runs it in shadow mode first.</>}
+        icon={<IconMissions size={17} />}
+        title="Nothing is being handled yet"
+        body={<>Start a collections mission, or open a decision in <Link className="underline" href="/prepared">Prepared</Link> and choose Handle it. Workflows you deploy appear here too, running in shadow mode first.</>}
       />
     );
   }
-  if (list.length === 0) return <EmptyLine title={filter === "at_risk" ? "No mission is at risk." : filter === "completed" ? "No mission has finished yet." : "No active mission."} />;
+  if (list.length === 0) {
+    return (
+      <EmptyLine
+        icon={<IconMissions size={17} />}
+        title={filter === "at_risk" ? "No mission is at risk" : filter === "completed" ? "No mission has finished yet" : "No active mission"}
+        body={filter === "at_risk" ? "Nothing is blocked or waiting on you right now." : filter === "completed" ? "Finished missions show here with their verified outcome." : undefined}
+      />
+    );
+  }
   return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-      {list.map((m) => <MissionCard key={m.id} m={m} agentNames={agentNames} />)}
+    <div className="ui-panel overflow-hidden" style={{ borderRadius: "var(--radius-lg)" }}>
+      <div className={`hidden ${GRID}`} style={{ padding: "0 18px", columnGap: 20, height: 36, fontSize: 12, color: "var(--ink-3)", borderBottom: "1px solid var(--line)" }}>
+        <span>Mission</span>
+        <span>State</span>
+        <span>Outcome</span>
+        <span style={{ textAlign: "right" }}>Updated</span>
+      </div>
+      <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+        {list.map((m, i) => <MissionRow key={m.id} m={m} first={i === 0} agentNames={agentNames} onOpenWorkflows={onOpenWorkflows} />)}
+      </ul>
     </div>
   );
 }
 
-// decision_action_runs statuses that count as a finished step (060_decision_core.sql).
-const STEP_DONE = new Set(["SUCCEEDED", "SHADOWED", "PREPARED"]);
-
-function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string, string> }) {
+function MissionRow({ m, first, agentNames, onOpenWorkflows }: { m: Mission; first: boolean; agentNames?: Record<string, string>; onOpenWorkflows?: () => void }) {
   const tools = missionTools(m);
   const total = m.steps.length;
   const done = m.steps.filter((s) => STEP_DONE.has((s.status || "").toUpperCase())).length;
-  const pct = m.state === "COMPLETED" ? 100 : total ? Math.round((done / total) * 100) : 0;
-  const blockers = m.steps.filter((s) => s.error).length + (m.state === "BLOCKED" ? 1 : 0);
-  const color = stateColor(m.state);
-  const body = (
+  const showSteps = m.source === "DECISION" && total > 0;
+  const mode = m.mode === "SHADOW" ? "Shadow mode" : m.mode === "WITH_APPROVAL" ? "Waits for your approval" : m.mode ? "Live" : null;
+  const source = m.source === "DECISION" ? "Decision" : m.source === "COLLECTION" ? "Collections" : "Workflow";
+  const meta = [
+    source,
+    m.assigned ? agentLabel(m.assigned.agent, agentNames) : null,
+    tools.length ? `Tools: ${tools.join(", ")}` : null,
+    showSteps ? `${done} of ${total} steps ran` : null,
+    mode,
+  ].filter(Boolean) as string[];
+  const outcome = m.outcome.status;
+  const outcomeExtra = m.outcome.met != null && m.outcome.notMet != null && (m.outcome.met + m.outcome.notMet) > 0
+    ? `${m.outcome.met} of ${m.outcome.met + m.outcome.notMet} paid after`
+    : null;
+
+  const inner = (
     <>
-      <div>
-        <span className="inline-block" style={{ fontSize: 11, letterSpacing: 0, color, border: `1px solid ${color}`, borderRadius: 20, padding: "3px 10px", whiteSpace: "nowrap", marginBottom: 10 }}>
-          {MISSION_STATE_LABEL[m.state]}
-        </span>
-        <div style={{ fontFamily: V.serif, fontSize: 18, lineHeight: 1.35, color: V.ink, marginBottom: 4 }}>{m.title}</div>
-        {m.objective && <div style={{ fontSize: 12.5, color: V.secondary }}>{m.source === "DECISION" ? "Chosen option: " : ""}{m.objective}</div>}
+      <div className="min-w-0">
+        <div className="md:truncate" style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)", lineHeight: 1.4 }}>{cleanTitle(m.title)}</div>
+        {(m.stateReason || m.objective) && (
+          <div className="line-clamp-2 md:truncate" style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 3, lineHeight: 1.5 }}>
+            {humanDates(m.stateReason || m.objective || "")}
+          </div>
+        )}
+        <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 6, lineHeight: 1.6 }}>{meta.join("  ·  ")}</div>
       </div>
-      {(m.stateReason || m.outcome.detail) && (
-        <div style={{ fontSize: 13, color: V.body, lineHeight: 1.55 }}>{m.stateReason || m.outcome.detail}</div>
-      )}
-      {m.assigned && (
-        <div style={{ fontSize: 12, color: V.secondary, lineHeight: 1.5 }}>
-          Agent: <span style={{ color: V.body }}>{agentLabel(m.assigned.agent, agentNames)}</span>
-          {tools.length ? <> · Tools: <span style={{ color: V.body }}>{tools.join(", ")}</span></> : null}
-          {" "}· You approve
+      <div className="flex flex-wrap items-center mt-3 md:contents" style={{ columnGap: 10, rowGap: 6 }}>
+        <div><StatusChip tone={missionTone(m.state)}>{MISSION_STATE_LABEL[m.state]}</StatusChip></div>
+        <div className="min-w-0">
+          <div style={{ fontSize: 13, color: outcomeColor(outcome) }}>{OUTCOME_SHORT[outcome]}</div>
+          {outcomeExtra && <div className="tabular-nums hidden md:block" style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{outcomeExtra}</div>}
         </div>
-      )}
-      <div>
-        <div style={{ height: 5, background: "rgb(var(--tk-ink) / 0.08)", borderRadius: 3, overflow: "hidden" }}>
-          <div style={{ width: `${pct}%`, height: "100%", background: V.ink }} />
+        <div className="ml-auto md:ml-0 md:text-right" style={{ fontSize: 12, color: "var(--ink-3)" }}>
+          <span className="tabular-nums inline-flex items-center" style={{ gap: 6 }}>
+            {m.updatedAt ? formatRelative(m.updatedAt) : "Not yet"}
+            <IconArrowRight size={12} className="row-chevron hidden md:inline" style={{ color: "var(--ink-3)" }} />
+          </span>
         </div>
-        <div className="flex items-center justify-between" style={{ marginTop: 6, fontSize: 11.5, color: V.tertiary }}>
-          <span>{total ? `${done} of ${total} steps` : "No step has run yet"}</span>
-          <span style={{ color: outcomeColor(m.outcome.status) }}>{MISSION_OUTCOME_LABEL[m.outcome.status]}</span>
-        </div>
-      </div>
-      <div className="flex items-center justify-between" style={{ marginTop: "auto", fontSize: 12, color: V.secondary }}>
-        <span>{blockers > 0 ? `${blockers} blocker${blockers === 1 ? "" : "s"}` : m.source === "DECISION" ? "From a decision" : m.source === "COLLECTION" ? "Collection mission" : "Deployed workflow"}</span>
-        <span style={{ color: V.tertiary }}>
-          {m.mode === "SHADOW" ? "Shadow" : m.mode === "WITH_APPROVAL" ? "Waits for approval" : m.mode ? "Live" : ""}
-          {m.updatedAt ? `${m.mode ? " · " : ""}${ago(m.updatedAt)}` : ""}
-        </span>
       </div>
     </>
   );
-  const cls = "card-in hover-lift flex flex-col";
-  const style: React.CSSProperties = { boxSizing: "border-box", background: "var(--surface)", border: `1px solid ${V.card}`, borderRadius: 8, padding: 20, gap: 12, minHeight: 200 };
-  if (m.source !== "WORKFLOW") return <Link href={m.href} className={cls} style={style}>{body}</Link>;
-  return <div className={cls} style={style}>{body}</div>;
+  const cls = `row-hover block w-full text-left ${GRID}`;
+  const style: React.CSSProperties = { padding: "14px 18px", columnGap: 20, borderTop: first ? 0 : "1px solid var(--line)", color: "inherit", background: "transparent" };
+  return (
+    <li>
+      {m.source === "WORKFLOW"
+        ? <button type="button" onClick={onOpenWorkflows} className={cls} style={style} aria-label={`${cleanTitle(m.title)}: open in Workflows`}>{inner}</button>
+        : <Link href={m.href} className={cls} style={style}>{inner}</Link>}
+    </li>
+  );
+}
+
+function MissionsSkeleton() {
+  return (
+    <div className="ui-panel" role="status" aria-busy="true" aria-label="Loading missions" style={{ borderRadius: "var(--radius-lg)" }}>
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="flex items-center" style={{ gap: 20, padding: "18px 18px", borderTop: i ? "1px solid var(--line)" : 0 }}>
+          <div className="flex-1 min-w-0" style={{ display: "grid", gap: 8 }}>
+            <div className="skeleton" style={{ height: 12, width: "46%" }} />
+            <div className="skeleton" style={{ height: 10, width: "70%" }} />
+          </div>
+          <div className="skeleton hidden md:block" style={{ height: 18, width: 96, borderRadius: 999 }} />
+          <div className="skeleton hidden md:block" style={{ height: 10, width: 110 }} />
+        </div>
+      ))}
+    </div>
+  );
 }
