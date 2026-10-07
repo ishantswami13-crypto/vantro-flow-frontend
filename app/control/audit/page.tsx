@@ -36,7 +36,7 @@ function AuditHeaderRow() {
     <div
       style={{
         display: "grid", gridTemplateColumns: GRID_COLS, gap: 12, padding: "10px 4px",
-        borderBottom: "1px solid #EBEAE6", fontSize: 11, fontWeight: 600, color: "#8A8A86",
+        borderBottom: "1px solid var(--line)", fontSize: 11, fontWeight: 600, color: "var(--ink-3)",
         letterSpacing: 0,
       }}
     >
@@ -56,22 +56,22 @@ function AuditRow({ event }: { event: AuditEvent }) {
       className="row-hover"
       style={{
         display: "grid", gridTemplateColumns: GRID_COLS, gap: 12, padding: "12px 4px",
-        borderBottom: "1px solid #EBEAE6", alignItems: "start",
+        borderBottom: "1px solid var(--line)", alignItems: "start",
       }}
     >
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>{formatTime(event.created_at)}</span>
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>{event.actor || "—"}</span>
-      <span className="text-sm font-medium" style={{ color: "#191917" }}>
+      <span className="text-2xs" style={{ color: "var(--ink-3)" }}>{formatTime(event.created_at)}</span>
+      <span className="text-2xs" style={{ color: "var(--ink-3)" }}>{event.actor || "—"}</span>
+      <span className="text-sm font-medium" style={{ color: "var(--ink)" }}>
         {humanizeAction(event.action)}
-        {event.title && <span className="block text-2xs font-normal" style={{ color: "#63635F" }}>{event.title}</span>}
+        {event.title && <span className="block text-2xs font-normal" style={{ color: "var(--ink-2)" }}>{event.title}</span>}
       </span>
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>
+      <span className="text-2xs" style={{ color: "var(--ink-3)" }}>
         {event.source === "decision" && event.entity_id
           ? <Link className="underline" href={`/decisions/${event.entity_id}`}>Decision</Link>
           : event.entity_type ? `${event.entity_type}${event.entity_id ? ` · ${event.entity_id.slice(0, 8)}…` : ""}` : "—"}
       </span>
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>{event.source === "decision" ? (event.model || "Starlane") : "Ledger"}</span>
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>{event.result ? humanizeAction(event.result) : "—"}</span>
+      <span className="text-2xs" style={{ color: "var(--ink-3)" }}>{event.source === "decision" ? (event.model || "Starlane") : "Ledger"}</span>
+      <span className="text-2xs" style={{ color: "var(--ink-3)" }}>{event.result ? humanizeAction(event.result) : "—"}</span>
     </div>
   );
 }
@@ -87,10 +87,10 @@ export default function AuditPage() {
     <DashboardLayout pageTitle="Audit">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
         <div>
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
+          <h1 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, color: "var(--ink)" }}>
             Control
           </h1>
-          <p className="text-[13.5px] mt-2 max-w-[640px]" style={{ color: "#63635F" }}>
+          <p className="text-[13.5px] mt-2 max-w-[640px]" style={{ color: "var(--ink-2)" }}>
             A chronological record of every decision step and financial change: who acted, through which agent, and what happened.
           </p>
         </div>

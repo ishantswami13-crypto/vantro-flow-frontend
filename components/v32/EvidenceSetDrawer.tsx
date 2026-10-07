@@ -20,12 +20,12 @@ export function showValue(v: unknown, unit?: string): string {
 
 function Row({ label, value, mono, note }: { label: string; value: React.ReactNode; mono?: boolean; note?: string }) {
   return (
-    <div style={{ padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>
+    <div style={{ padding: "7px 0", borderBottom: "1px solid var(--line)" }}>
       <div className="flex items-baseline justify-between gap-4">
-        <span style={{ fontSize: 12.5, color: "#63635F" }}>{label}</span>
-        <span className="text-right" style={{ fontSize: 13, color: "#191917", fontFamily: mono ? "'Plus Jakarta Sans', system-ui, sans-serif" : undefined }}>{value}</span>
+        <span style={{ fontSize: 12.5, color: "var(--ink-2)" }}>{label}</span>
+        <span className="text-right" style={{ fontSize: 13, color: "var(--ink)", fontFamily: mono ? "var(--font-sans)" : undefined }}>{value}</span>
       </div>
-      {note && <div style={{ fontSize: 11.5, color: "#8A8A86", marginTop: 2 }}>{note}</div>}
+      {note && <div style={{ fontSize: 11.5, color: "var(--ink-3)", marginTop: 2 }}>{note}</div>}
     </div>
   );
 }
@@ -33,7 +33,7 @@ function Row({ label, value, mono, note }: { label: string; value: React.ReactNo
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 22 }}>
-      <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--ink-2)", marginBottom: 8 }}>{label}</div>
       {children}
     </div>
   );
@@ -72,7 +72,7 @@ export function EvidenceSetDrawer({ title, record, evidence, onClose, children }
       )}
       {evidence?.summary && (
         <Section label="Why this supports the conclusion">
-          <p style={{ fontSize: 13, color: "#43433F", lineHeight: 1.6 }}>{evidence.summary}</p>
+          <p style={{ fontSize: 13, color: "var(--body)", lineHeight: 1.6 }}>{evidence.summary}</p>
         </Section>
       )}
       {children}

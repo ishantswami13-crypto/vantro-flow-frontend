@@ -66,18 +66,18 @@ function timeAgo(iso: string): string {
 
 function classifyIntent(text: string): ReplyLog {
   const t = text.toLowerCase();
-  if (!t.trim()) return { intent: "no_response", label: "⚫ No Reply", color: "#6B7280", text, date: new Date().toISOString() };
+  if (!t.trim()) return { intent: "no_response", label: "⚫ No Reply", color: "var(--ink-2)", text, date: new Date().toISOString() };
   const paidKw = ["paid", "kar diya", "bhej diya", "done", "ho gaya", "send kar", "transferred", "upi kar", "payment kiya", "de diya", "diya"];
   const promisedKw = ["kal", "parso", "pakka", "promise", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "next week", "agli", "agle", "de dunga", "dunga", "sure", "zaroor", "confirm", "by", "tak", "shaam tak", "dopahar", "subah"];
   const uncertainKw = ["dekhunga", "dekhta", "pata nahi", "maybe", "try", "mushkil", "problem", "baad mein", "later", "soch", "nahi pata", "abhi nahi", "thodi der", "wait"];
-  if (paidKw.some(k => t.includes(k))) return { intent: "paid", label: "🟢 Paid", color: "#10D98A", text, date: new Date().toISOString() };
-  if (promisedKw.some(k => t.includes(k))) return { intent: "promised", label: "🟡 Promised", color: "#F5A524", text, date: new Date().toISOString() };
-  if (uncertainKw.some(k => t.includes(k))) return { intent: "uncertain", label: "🔴 Uncertain", color: "#F5424D", text, date: new Date().toISOString() };
-  return { intent: "uncertain", label: "🔴 Uncertain", color: "#F5424D", text, date: new Date().toISOString() };
+  if (paidKw.some(k => t.includes(k))) return { intent: "paid", label: "🟢 Paid", color: "var(--positive)", text, date: new Date().toISOString() };
+  if (promisedKw.some(k => t.includes(k))) return { intent: "promised", label: "🟡 Promised", color: "var(--warning)", text, date: new Date().toISOString() };
+  if (uncertainKw.some(k => t.includes(k))) return { intent: "uncertain", label: "🔴 Uncertain", color: "var(--critical)", text, date: new Date().toISOString() };
+  return { intent: "uncertain", label: "🔴 Uncertain", color: "var(--critical)", text, date: new Date().toISOString() };
 }
 
 type SortKey = "outstanding" | "daysOverdue" | "score";
-const SCORE_COLOR = (s: number) => s >= 70 ? "#10D98A" : s >= 40 ? "#F5A524" : "#F5424D";
+const SCORE_COLOR = (s: number) => s >= 70 ? "var(--positive)" : s >= 40 ? "var(--warning)" : "var(--critical)";
 const STATUS_VARIANT: Record<string, "danger" | "warning" | "default"> = {
   overdue: "danger", promised: "warning", due: "default",
 };
@@ -556,7 +556,7 @@ export default function CollectionsPage() {
                 {replyText.trim() && (() => {
                   const preview = classifyIntent(replyText);
                   return (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ background: `${preview.color}10`, borderColor: `${preview.color}30` }}>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ background: `color-mix(in srgb, ${preview.color} 6%, transparent)`, borderColor: `color-mix(in srgb, ${preview.color} 19%, transparent)` }}>
                       <span className="text-sm">{preview.label.split(" ")[0]}</span>
                       <div>
                         <p className="text-xs font-bold" style={{ color: preview.color }}>{preview.label.slice(2)}</p>
@@ -567,7 +567,7 @@ export default function CollectionsPage() {
                 })()}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => persistReply(replyModal, { intent: "no_response", label: "⚫ No Reply", color: "#6B7280", text: "", date: new Date().toISOString() })}
+                    onClick={() => persistReply(replyModal, { intent: "no_response", label: "⚫ No Reply", color: "var(--ink-2)", text: "", date: new Date().toISOString() })}
                     disabled={savingReply}
                     className="flex-1 py-2 rounded-lg text-xs font-semibold bg-surface-2 border border-border text-secondary hover:text-primary transition-all disabled:opacity-50">
                     ⚫ No Response
@@ -803,13 +803,13 @@ export default function CollectionsPage() {
         {agingSummary && (
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { label: "Due Today", value: agingSummary.buckets.due_today, color: "#10D98A", glow: "rgba(16,217,138,0.06)" },
-              { label: "1-7 Days", value: agingSummary.buckets.overdue_1_7, color: "#F5A524", glow: "rgba(245,165,36,0.06)" },
-              { label: "8-30 Days", value: agingSummary.buckets.overdue_8_30, color: "#F5A524", glow: "rgba(245,165,36,0.06)" },
-              { label: "31-60 Days", value: agingSummary.buckets.overdue_31_60, color: "#F5424D", glow: "rgba(245,66,77,0.06)" },
-              { label: "60+ Days", value: agingSummary.buckets.overdue_60_plus, color: "#F5424D", glow: "rgba(245,66,77,0.06)" }
+              { label: "Due Today", value: agingSummary.buckets.due_today, color: "var(--positive)", glow: "rgba(16,217,138,0.06)" },
+              { label: "1-7 Days", value: agingSummary.buckets.overdue_1_7, color: "var(--warning)", glow: "rgba(245,165,36,0.06)" },
+              { label: "8-30 Days", value: agingSummary.buckets.overdue_8_30, color: "var(--warning)", glow: "rgba(245,165,36,0.06)" },
+              { label: "31-60 Days", value: agingSummary.buckets.overdue_31_60, color: "var(--critical)", glow: "rgba(245,66,77,0.06)" },
+              { label: "60+ Days", value: agingSummary.buckets.overdue_60_plus, color: "var(--critical)", glow: "rgba(245,66,77,0.06)" }
             ].map(b => (
-              <div key={b.label} className="rounded-xl border p-3" style={{ background: b.glow, borderColor: `${b.color}20` }}>
+              <div key={b.label} className="rounded-xl border p-3" style={{ background: b.glow, borderColor: `color-mix(in srgb, ${b.color} 13%, transparent)` }}>
                 <p className="text-[10px] text-muted font-medium mb-1">{b.label}</p>
                 <p className="text-sm font-black" style={{ color: b.color }}>
                   ₹{b.value >= 100000 ? `${(b.value / 100000).toFixed(1)}L` : b.value >= 1000 ? `${(b.value / 1000).toFixed(0)}K` : b.value}
@@ -987,7 +987,7 @@ export default function CollectionsPage() {
                             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                               <p className="text-2xs text-muted">{c.industry} · {c.contact}</p>
                               {reply && (
-                                <span className="text-2xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: `${reply.color}20`, color: reply.color }}>
+                                <span className="text-2xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: `color-mix(in srgb, ${reply.color} 13%, transparent)`, color: reply.color }}>
                                   {reply.label}
                                 </span>
                               )}
@@ -1018,11 +1018,11 @@ export default function CollectionsPage() {
                           <ScoreRing score={c.score} />
                           {scoreMap[c.name] && (() => {
                             const risk = scoreMap[c.name];
-                            const tierColor = risk.tier === "HIGH_RISK" ? "#F5424D" : risk.tier === "MEDIUM" ? "#F5A524" : "#10D98A";
+                            const tierColor = risk.tier === "HIGH_RISK" ? "var(--critical)" : risk.tier === "MEDIUM" ? "var(--warning)" : "var(--positive)";
                             const tierShort = risk.tier === "HIGH_RISK" ? "HIGH" : risk.tier === "MEDIUM" ? "MED" : "LOW";
                             return (
                               <span className="text-[9px] font-bold rounded px-1.5 py-0.5"
-                                style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}35` }}>
+                                style={{ color: tierColor, background: `color-mix(in srgb, ${tierColor} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${tierColor} 21%, transparent)` }}>
                                 {tierShort}
                               </span>
                             );
@@ -1073,7 +1073,7 @@ export default function CollectionsPage() {
                                 background: isPromiseBroken(c.id)
                                   ? "rgba(245,66,77,0.15)"
                                   : "rgba(245,165,36,0.12)",
-                                color: isPromiseBroken(c.id) ? "#F5424D" : "#F5A524",
+                                color: isPromiseBroken(c.id) ? "var(--critical)" : "var(--warning)",
                                 border: `1px solid ${isPromiseBroken(c.id) ? "rgba(245,66,77,0.3)" : "rgba(245,165,36,0.25)"}`,
                               }}>
                               {isPromiseBroken(c.id) ? "⚠️" : "🤝"} {promises[c.id].date.slice(5)}

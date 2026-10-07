@@ -67,14 +67,14 @@ export default function ScanHistoryPage() {
 
         {groups.map(g => (
           <section key={g.label} style={{ marginTop: 22 }}>
-            <div style={{ fontSize: 11.5, color: "#8A8A86", marginBottom: 4 }}>{g.label}</div>
+            <div style={{ fontSize: 11.5, color: "var(--ink-3)", marginBottom: 4 }}>{g.label}</div>
             {g.items.map((t, i) => (
               <div key={t.id} className="scan-hist-row rise-in" style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}>
                 <Link href={`/scan/${t.id}`} className="flex items-center min-w-0" style={{ gap: 14, flex: 1, textDecoration: "none" }}>
                   <IconTile size={34}><IconScan size={15} /></IconTile>
                   <span className="flex flex-col min-w-0">
-                    <span className="truncate" style={{ fontSize: 14, color: "#191917" }}>{t.title}</span>
-                    <span style={{ fontSize: 12, color: "#8A8A86", marginTop: 2 }}>
+                    <span className="truncate" style={{ fontSize: 14, color: "var(--ink)" }}>{t.title}</span>
+                    <span style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>
                       {t.turns.length} {t.turns.length === 1 ? "question" : "questions"} · {timeAgo(t.updatedAt)}
                     </span>
                   </span>

@@ -68,15 +68,15 @@ const TABS: { key: TabKey; label: string }[] = [
 
 const DECISION_HINTS = ["approve", "reject", "decline", "status", "confirm", "cancel"];
 const TURNING_POINT_RULES: { match: string; outcome: string; color: string }[] = [
-  { match: "approve", outcome: "Approved", color: "#477054" },
-  { match: "reject", outcome: "Rejected", color: "#A64F4B" },
-  { match: "decline", outcome: "Declined", color: "#A64F4B" },
-  { match: "overdue", outcome: "Went overdue", color: "#A64F4B" },
-  { match: "risk", outcome: "Flagged at risk", color: "#A64F4B" },
-  { match: "default", outcome: "Defaulted", color: "#A64F4B" },
-  { match: "write_off", outcome: "Written off", color: "#A64F4B" },
-  { match: "paid", outcome: "Paid", color: "#477054" },
-  { match: "cancel", outcome: "Cancelled", color: "#8A8A86" },
+  { match: "approve", outcome: "Approved", color: "var(--positive)" },
+  { match: "reject", outcome: "Rejected", color: "var(--critical)" },
+  { match: "decline", outcome: "Declined", color: "var(--critical)" },
+  { match: "overdue", outcome: "Went overdue", color: "var(--critical)" },
+  { match: "risk", outcome: "Flagged at risk", color: "var(--critical)" },
+  { match: "default", outcome: "Defaulted", color: "var(--critical)" },
+  { match: "write_off", outcome: "Written off", color: "var(--critical)" },
+  { match: "paid", outcome: "Paid", color: "var(--positive)" },
+  { match: "cancel", outcome: "Cancelled", color: "var(--ink-3)" },
 ];
 
 function humanize(action: string): string {
@@ -130,13 +130,13 @@ function TimelineNode({ e }: { e: AuditEvent }) {
   const cls = classify(e.action);
   return (
     <div className="card-in" style={{ display: "flex", gap: 16 }}>
-      <div title={formatDate(e.created_at)} style={{ width: 70, flexShrink: 0, fontSize: 12, color: "#63635F", paddingTop: 2 }}>{shortDate(e.created_at)}</div>
+      <div title={formatDate(e.created_at)} style={{ width: 70, flexShrink: 0, fontSize: 12, color: "var(--ink-2)", paddingTop: 2 }}>{shortDate(e.created_at)}</div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-        <span style={{ width: 1, flex: 1, background: "rgba(25,25,23,0.12)", marginTop: 4 }} />
+        <span style={{ width: 1, flex: 1, background: "rgb(var(--tk-ink) / 0.12)", marginTop: 4 }} />
       </div>
       <div style={{ paddingBottom: 20, minWidth: 0 }}>
-        <div style={{ fontSize: 14, color: "#191917", marginBottom: 4 }}>{humanize(e.action)}</div>
-        <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: cls ? 6 : 0 }}>{reasonFor(e)}</div>
+        <div style={{ fontSize: 14, color: "var(--ink)", marginBottom: 4 }}>{humanize(e.action)}</div>
+        <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginBottom: cls ? 6 : 0 }}>{reasonFor(e)}</div>
         {cls && (
           <span style={{ fontSize: 11, color: cls.color, border: `1px solid ${cls.color}`, borderRadius: 20, padding: "3px 9px", display: "inline-block" }}>
             {cls.outcome}
@@ -211,13 +211,13 @@ export default function MemoryPage() {
         )}
 
         {tab !== "learning" && isLoading && (
-          <div className="fade-once v32-body" style={{ color: "#63635F", padding: "24px 0" }}>Loading audit trail…</div>
+          <div className="fade-once v32-body" style={{ color: "var(--ink-2)", padding: "24px 0" }}>Loading audit trail…</div>
         )}
 
         {tab !== "learning" && isError && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
             <EmptyPanel title="Couldn't load the audit trail" body="Check your connection and try again." />
-            <button onClick={() => refetch()} className="hover-dim" style={{ fontSize: 12.5, color: "#63635F", textDecoration: "underline", background: "none", border: "none", cursor: "pointer" }}>
+            <button onClick={() => refetch()} className="hover-dim" style={{ fontSize: 12.5, color: "var(--ink-2)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer" }}>
               Retry
             </button>
           </div>
@@ -244,7 +244,7 @@ export default function MemoryPage() {
         )}
 
         {!isLoading && !isError && tab === "replay" && entities.length > 0 && replaySequence.length > 0 && (
-          <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F" }}>
+          <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--ink-2)" }}>
             Replay · {entities.find((x) => x.entity_id === activeReplayEntity)?.entity_type || "record"}
           </div>
         )}
@@ -263,9 +263,9 @@ export default function MemoryPage() {
                       style={{
                         padding: "6px 12px",
                         borderRadius: 999,
-                        border: `1px solid ${ent.entity_id === activeReplayEntity ? "var(--accent)" : "rgba(25,25,23,0.14)"}`,
+                        border: `1px solid ${ent.entity_id === activeReplayEntity ? "var(--accent)" : "rgb(var(--tk-ink) / 0.14)"}`,
                         background: "transparent",
-                        color: ent.entity_id === activeReplayEntity ? "#191917" : "#63635F",
+                        color: ent.entity_id === activeReplayEntity ? "var(--ink)" : "var(--ink-2)",
                         fontSize: 12.5,
                         cursor: "pointer",
                       }}

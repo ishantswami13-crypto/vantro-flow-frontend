@@ -27,8 +27,8 @@ function priorityLabel(priority: RankedAction["priority"]): string {
 }
 
 function priorityColor(priority: RankedAction["priority"]): string {
-  if (priority === "urgent" || priority === "high") return "#A64F4B";
-  return "#8A8A86";
+  if (priority === "urgent" || priority === "high") return "var(--critical)";
+  return "var(--ink-3)";
 }
 
 function actorLabel(action: RankedAction): string {
@@ -53,18 +53,18 @@ function ApprovalRow({
       style={{
         display: "flex", flexDirection: "column", gap: 4, width: "100%", textAlign: "left",
         padding: "12px 14px", borderRadius: 10, border: "1px solid",
-        borderColor: selected ? "var(--accent)" : "#EBEAE6",
+        borderColor: selected ? "var(--accent)" : "var(--line)",
         background: selected ? "#F4F6FE" : "transparent",
         cursor: "pointer", marginBottom: 8,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-        <span className="text-sm font-medium" style={{ color: "#191917" }}>{action.title}</span>
+        <span className="text-sm font-medium" style={{ color: "var(--ink)" }}>{action.title}</span>
         <span className="text-2xs" style={{ color: priorityColor(action.priority), fontWeight: 600, whiteSpace: "nowrap" }}>
           {priorityLabel(action.priority)}
         </span>
       </div>
-      <div className="text-2xs" style={{ color: "#8A8A86" }}>
+      <div className="text-2xs" style={{ color: "var(--ink-3)" }}>
         {actorLabel(action)} · {formatDateTime(action.created_at)}
       </div>
     </button>
@@ -121,10 +121,10 @@ export default function ControlApprovalsPage() {
     <DashboardLayout pageTitle="Approvals">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
         <div className="fade-once">
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
+          <h1 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, color: "var(--ink)" }}>
             Control
           </h1>
-          <p className="text-[13.5px] mt-2 max-w-[640px]" style={{ color: "#63635F" }}>
+          <p className="text-[13.5px] mt-2 max-w-[640px]" style={{ color: "var(--ink-2)" }}>
             Actions waiting on your decision before Starlane carries them out.
           </p>
         </div>
@@ -162,14 +162,14 @@ export default function ControlApprovalsPage() {
 
           <div
             style={{
-              flex: 1, maxWidth: 380, minWidth: 280, borderLeft: "1px solid #EBEAE6",
+              flex: 1, maxWidth: 380, minWidth: 280, borderLeft: "1px solid var(--line)",
               paddingLeft: 20, display: "flex", flexDirection: selected ? "column" : "row",
               alignItems: selected ? "stretch" : "center", justifyContent: selected ? "flex-start" : "center",
               gap: 14, overflow: "auto",
             }}
           >
             {!selected && (
-              <p className="text-[13px] text-center" style={{ color: "#8A8A86", maxWidth: 260 }}>
+              <p className="text-[13px] text-center" style={{ color: "var(--ink-3)", maxWidth: 260 }}>
                 Select an item from the queue to see its details here.
               </p>
             )}
@@ -180,39 +180,39 @@ export default function ControlApprovalsPage() {
                   <div className="text-2xs" style={{ color: priorityColor(selected.priority), fontWeight: 600, letterSpacing: "0.04em" }}>
                     {priorityLabel(selected.priority)}
                   </div>
-                  <h2 style={{ margin: "6px 0 0", fontSize: 17, fontWeight: 600, color: "#191917" }}>{selected.title}</h2>
+                  <h2 style={{ margin: "6px 0 0", fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>{selected.title}</h2>
                 </div>
 
                 {selected.description && (
-                  <p className="text-sm" style={{ color: "#43433F", lineHeight: 1.5 }}>{selected.description}</p>
+                  <p className="text-sm" style={{ color: "var(--body)", lineHeight: 1.5 }}>{selected.description}</p>
                 )}
 
                 {selected.recommended_message && (
-                  <div style={{ padding: 12, borderRadius: 8, background: "#F7F7F5", border: "1px solid #EBEAE6" }}>
-                    <div className="text-2xs" style={{ color: "#8A8A86", marginBottom: 4 }}>Recommended message</div>
-                    <p className="text-sm" style={{ color: "#43433F" }}>{selected.recommended_message}</p>
+                  <div style={{ padding: 12, borderRadius: 8, background: "#F7F7F5", border: "1px solid var(--line)" }}>
+                    <div className="text-2xs" style={{ color: "var(--ink-3)", marginBottom: 4 }}>Recommended message</div>
+                    <p className="text-sm" style={{ color: "var(--body)" }}>{selected.recommended_message}</p>
                   </div>
                 )}
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <div className="text-2xs" style={{ color: "#8A8A86" }}>
-                    Actor: <span style={{ color: "#43433F" }}>{actorLabel(selected)}</span>
+                  <div className="text-2xs" style={{ color: "var(--ink-3)" }}>
+                    Actor: <span style={{ color: "var(--body)" }}>{actorLabel(selected)}</span>
                   </div>
-                  <div className="text-2xs" style={{ color: "#8A8A86" }}>
-                    Action type: <span style={{ color: "#43433F" }}>{selected.action_type}</span>
+                  <div className="text-2xs" style={{ color: "var(--ink-3)" }}>
+                    Action type: <span style={{ color: "var(--body)" }}>{selected.action_type}</span>
                   </div>
-                  <div className="text-2xs" style={{ color: "#8A8A86" }}>
-                    Created: <span style={{ color: "#43433F" }}>{formatDateTime(selected.created_at)}</span>
+                  <div className="text-2xs" style={{ color: "var(--ink-3)" }}>
+                    Created: <span style={{ color: "var(--body)" }}>{formatDateTime(selected.created_at)}</span>
                   </div>
                   {selected.risk_level && (
-                    <div className="text-2xs" style={{ color: "#8A8A86" }}>
-                      Risk: <span style={{ color: "#43433F" }}>{selected.risk_level}</span>
+                    <div className="text-2xs" style={{ color: "var(--ink-3)" }}>
+                      Risk: <span style={{ color: "var(--body)" }}>{selected.risk_level}</span>
                     </div>
                   )}
                 </div>
 
                 {decisionError && (
-                  <p className="text-2xs" style={{ color: "#A64F4B" }}>{decisionError}</p>
+                  <p className="text-2xs" style={{ color: "var(--critical)" }}>{decisionError}</p>
                 )}
 
                 <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
@@ -221,7 +221,7 @@ export default function ControlApprovalsPage() {
                     disabled={decisionPending}
                     style={{
                       flex: 1, padding: "9px 14px", borderRadius: 8, border: "none",
-                      background: "#191917", color: "#FAFAF8", fontSize: 13, fontWeight: 600,
+                      background: "var(--ink)", color: "var(--surface-2)", fontSize: 13, fontWeight: 600,
                       cursor: decisionPending ? "default" : "pointer", opacity: decisionPending ? 0.6 : 1,
                     }}
                   >
@@ -231,8 +231,8 @@ export default function ControlApprovalsPage() {
                     onClick={() => decide("rejected")}
                     disabled={decisionPending}
                     style={{
-                      flex: 1, padding: "9px 14px", borderRadius: 8, border: "1px solid #EBEAE6",
-                      background: "transparent", color: "#43433F", fontSize: 13, fontWeight: 600,
+                      flex: 1, padding: "9px 14px", borderRadius: 8, border: "1px solid var(--line)",
+                      background: "transparent", color: "var(--body)", fontSize: 13, fontWeight: 600,
                       cursor: decisionPending ? "default" : "pointer", opacity: decisionPending ? 0.6 : 1,
                     }}
                   >

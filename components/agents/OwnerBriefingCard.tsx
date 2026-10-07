@@ -16,9 +16,9 @@ import {
 // alarming; medium/low are neutral grades, not a blue "info" hue reusing
 // the interactive accent color (which reads as a link, not a risk level).
 const RISK_COLOR: Record<string, string> = {
-  critical: "#F5424D",
-  high:     "#F5A524",
-  medium:   "#888888",
+  critical: "var(--critical)",
+  high:     "var(--warning)",
+  medium:   "var(--ink-2)",
   low:      "#555555",
 };
 
@@ -30,9 +30,9 @@ function confidenceLabel(c: number): string {
 // Same three hues the rest of the product uses for confidence
 // (success/warning/danger) - not a separately-invented green/orange/red.
 function confidenceColor(c: number): string {
-  if (c >= 0.9) return "#10D98A";
-  if (c >= 0.65) return "#F5A524";
-  return "#F5424D";
+  if (c >= 0.9) return "var(--positive)";
+  if (c >= 0.65) return "var(--warning)";
+  return "var(--critical)";
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ interface Props {
 
 // ─── Legacy action row (Phase 2C.8 actions without evidence contract) ─────────
 function ActionRow({ action }: { action: OwnerBriefingAction }) {
-  const color = RISK_COLOR[action.priority] ?? "#6B7280";
+  const color = RISK_COLOR[action.priority] ?? "var(--ink-2)";
   return (
     <div className="flex items-start gap-2.5 py-2 border-b border-white/5 last:border-0">
       <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: color }} />
@@ -64,7 +64,7 @@ function ActionRow({ action }: { action: OwnerBriefingAction }) {
 
 // ─── Verified claim row ───────────────────────────────────────────────────────
 function ClaimRow({ claim }: { claim: AgentClaim }) {
-  const color = RISK_COLOR[claim.risk_level ?? "low"] ?? "#6B7280";
+  const color = RISK_COLOR[claim.risk_level ?? "low"] ?? "var(--ink-2)";
   const confColor = confidenceColor(claim.confidence);
   return (
     <div className="flex items-start gap-2.5 py-2 border-b border-white/5 last:border-0">
@@ -89,7 +89,7 @@ function ClaimRow({ claim }: { claim: AgentClaim }) {
 
 // ─── Recommendation row ───────────────────────────────────────────────────────
 function RecRow({ rec }: { rec: AgentRecommendation }) {
-  const color = RISK_COLOR[rec.risk_level] ?? "#6B7280";
+  const color = RISK_COLOR[rec.risk_level] ?? "var(--ink-2)";
   return (
     <div className="flex items-start gap-2.5 py-2 border-b border-white/5 last:border-0">
       <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: color }} />

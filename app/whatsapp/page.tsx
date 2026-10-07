@@ -270,7 +270,7 @@ export default function WhatsAppPage() {
                   <button
                     onClick={() => setIncludeUPI(v => !v)}
                     className={`relative w-10 h-5.5 rounded-full transition-colors ${includeUPI ? "bg-accent" : "bg-surface-2 border border-border"}`}>
-                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${includeUPI ? "left-5.5" : "left-0.5"}`} />
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-surface transition-all shadow-sm ${includeUPI ? "left-5.5" : "left-0.5"}`} />
                   </button>
                 </div>
                 {includeUPI && (

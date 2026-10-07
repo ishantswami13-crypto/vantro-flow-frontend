@@ -1,4 +1,5 @@
 "use client";
+import "../atlas.css";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";

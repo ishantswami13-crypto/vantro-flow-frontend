@@ -108,7 +108,7 @@ function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string
         </div>
       )}
       <div>
-        <div style={{ height: 5, background: "rgba(25,25,23,0.08)", borderRadius: 3, overflow: "hidden" }}>
+        <div style={{ height: 5, background: "rgb(var(--tk-ink) / 0.08)", borderRadius: 3, overflow: "hidden" }}>
           <div style={{ width: `${pct}%`, height: "100%", background: V.ink }} />
         </div>
         <div className="flex items-center justify-between" style={{ marginTop: 6, fontSize: 11.5, color: V.tertiary }}>
@@ -126,7 +126,7 @@ function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string
     </>
   );
   const cls = "card-in hover-lift flex flex-col";
-  const style: React.CSSProperties = { boxSizing: "border-box", background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 8, padding: 20, gap: 12, minHeight: 200 };
+  const style: React.CSSProperties = { boxSizing: "border-box", background: "var(--surface)", border: `1px solid ${V.card}`, borderRadius: 8, padding: 20, gap: 12, minHeight: 200 };
   if (m.source !== "WORKFLOW") return <Link href={m.href} className={cls} style={style}>{body}</Link>;
   return <div className={cls} style={style}>{body}</div>;
 }

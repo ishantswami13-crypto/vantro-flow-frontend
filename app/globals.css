@@ -1,103 +1,45 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300..500;1,9..144,300..500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ============================================================
-   DESIGN TOKENS
+   TOKENS live in app/tokens.css (imported first by app/layout.tsx).
+   Legacy names kept so older classes keep resolving.
    ============================================================ */
 :root {
-  --bg:          #F7F7F4;
-  --surface:     #FFFFFF;
-  --surface-1:   #FFFFFF;
-  --surface-2:   #F3F2EE;
-  --border:      #EBEAE6;
-  /* User accent (lib/identity.ts writes the signed-in user's own). */
-  --accent:      #696D86;
-  --accent-rgb:  105, 109, 134;
-  /* Version 32 tokens (STARLANE_FRONTEND_HANDOFF.md §3) */
-  --ink:            #191917;
-  --ink-secondary:  #63635F;
-  --ink-tertiary:   #8A8A86;
-  --ink-body:       #43433F;
-  --line:           #EBEAE6;
-  --line-hairline:  #E5E4DF;
-  --line-strong:    #D7D6D0;
-  --line-card:      rgba(25,25,23,0.10);
-  --line-input:     rgba(25,25,23,0.12);
-  --line-button:    rgba(25,25,23,0.14);
-  --line-emphasis:  rgba(25,25,23,0.16);
-  --line-row:       rgba(25,25,23,0.06);
-  --positive:       #477054;
-  --warning:        #9B742B;
-  --critical:       #A64F4B;
-  --ease:           cubic-bezier(0.2,0.8,0.2,1);
-  --cta:         #FF6B35;
-  --cta-rgb:     255, 107, 53;
-  --success-rgb: 16, 217, 138;
-  --danger-rgb:  245, 66, 77;
-  --warning-rgb: 245, 165, 36;
+  --border:      var(--line);
+  --ink-secondary: var(--ink-2);
+  --ink-tertiary:  var(--ink-3);
+  --ink-body:      var(--body);
+  --cta:         var(--inverse);
+  --cta-rgb:     var(--tk-ink);
+  --success-rgb: var(--tk-positive);
+  --danger-rgb:  var(--tk-critical);
+  --warning-rgb: var(--tk-warning);
 }
 
 /* ============================================================
-   STARLANE PRODUCT DESIGN SYSTEM — semantic map
-   Canonical roles, mapped onto the existing tokens above and the
-   Tailwind color scale in tailwind.config.ts. Nothing renamed here —
-   this documents which existing token plays which semantic role so
-   future components pick the right one instead of inventing a new one.
-
-   BACKGROUND
-     page       → bg            (#080808)
-     elevated   → surface-1     (#111111)  — cards, panels
-     inset      → surface-2     (#161616)  — nested/sunken content within a card
-     sidebar    → #080808 (same as page — shell reads as one plane, not a separate surface)
-
-   TEXT
-     primary    → primary       (#F2F2F2)
-     secondary  → secondary     (#888888)
-     tertiary   → muted         (#555555)
-     disabled   → muted at reduced opacity (text-muted/50) — never a 4th gray token
-
-   BORDER
-     subtle     → rgba(255,255,255,0.06)  — shell seams, header/sidebar dividers
-     standard   → border        (#222222) — card edges, table rows
-     strong     → border-2      (#2a2a2a) — hover/focus emphasis on a border
-
-   INTERACTION
-     primary interactive accent → accent (#4F6EF7) — links, selection, focus ring.
-     Do not use `cta` (orange) as a second interactive accent — see .btn-cta below.
-
-   SEMANTIC STATUS — scarce, always paired with a text label, never color-only
-     neutral            → secondary/border  (no color — most states are neutral)
-     attention          → warning (#F5A524) — one hue for "needs a look"
-     critical           → danger  (#F5424D) — one hue for "needs action now"
-     success / verified → success (#10D98A) — confirmation only, used sparingly
-
-   Do not add a 5th or 6th status hue (gold, accent-as-status, etc.) to a
-   badge/metric/table row. If a new state doesn't fit neutral / attention /
-   critical / success, it's neutral with a clearer text label — not a new color.
-   ============================================================ */
-
-/* ============================================================
-   BASE RESET
+   BASE
    ============================================================ */
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
 
   html {
-    color-scheme: light;
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    background-color: var(--bg);
   }
 
   body {
     background-color: var(--bg);
-    color: #191917;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: var(--ink);
+    font-family: var(--font-sans);
     font-size: 14px;
     font-weight: 400;
-    line-height: 1.6;
+    line-height: 1.55;
+    letter-spacing: -0.003em;
+    font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -106,21 +48,26 @@
   h1, h2, h3, h4, h5, h6 {
     font-weight: 500;
     line-height: 1.25;
-    letter-spacing: -0.005em;
+    letter-spacing: -0.012em;
   }
   a:hover { color: var(--accent); }
-  ::placeholder { color: #8A8A86; }
+  ::placeholder { color: var(--ink-3); }
 
   ::selection {
-    background: rgba(var(--accent-rgb), 0.18);
-    color: #171717;
+    background: rgba(var(--accent-rgb), 0.28);
+    color: var(--ink);
   }
 
+  :focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 4px; }
+
+  /* Figures line up in every table and card. */
+  table, .tabular, [data-numeric] { font-variant-numeric: tabular-nums; }
+
   /* Scrollbar */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.24); }
+  ::-webkit-scrollbar-thumb { background: rgb(var(--tk-ink) / 0.12); border-radius: 99px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--tk-ink) / 0.22); background-clip: padding-box; border: 2px solid transparent; }
 }
 
 /* ============================================================
@@ -195,24 +142,9 @@
   border: 1px solid rgba(255,255,255,0.06);
 }
 
-/* ============================================================
-   METRIC & TYPOGRAPHY
-
-   Previously set in IBM Plex Mono — monospace on every financial figure
-   across the app read as "technical/cyberpunk" rather than editorial.
-   Monospace is now reserved for genuinely technical values (IDs, SKUs,
-   evidence). Metrics stay in the primary sans with tabular-nums so
-   digits still align in columns/tables without looking like a terminal.
-   Weight dialed back from 700 to 600 — size alone carries emphasis at
-   this scale; 700 read heavier than the rest of the restrained system.
-   ============================================================ */
-/* Reverted per Version 32 handoff (§3 Typography): every numeric/technical value
-   in the frozen design is IBM Plex Mono, never the UI sans. The prior rationale
-   comment above (sans + tabular-nums) is superseded by the V32 spec — kept the
-   sans/tabular-nums approach out because it directly conflicts with a frozen,
-   verbatim-extracted design decision, not because it was wrong in the abstract. */
+/* Figures: the UI sans with tabular numbers. */
 .metric-value {
-  font-family: 'IBM Plex Mono', Menlo, monospace;
+  font-family: var(--font-sans);
   font-weight: 500;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
@@ -220,7 +152,7 @@
 }
 
 .metric-lg {
-  font-family: 'IBM Plex Mono', Menlo, monospace;
+  font-family: var(--font-sans);
   font-weight: 500;
   font-size: 2rem;
   letter-spacing: -0.02em;
@@ -230,7 +162,7 @@
 }
 
 .metric-xl {
-  font-family: 'IBM Plex Mono', Menlo, monospace;
+  font-family: var(--font-sans);
   font-weight: 500;
   font-size: 2.5rem;
   letter-spacing: -0.02em;
@@ -284,7 +216,7 @@
 .card:hover,
 .card-premium:hover,
 .card-metric:hover {
-  border-color: #D8D8D3; /* border-2 in tailwind.config.ts — no matching CSS var exists */
+  border-color: var(--line-strong); /* border-2 in tailwind.config.ts — no matching CSS var exists */
 }
 
 /* ============================================================
@@ -307,21 +239,21 @@
    surface/card primitive block — kept as one alias, not redefined here)
    ============================================================ */
 .input-base {
-  background: #FFFFFF;
-  border: 1px solid #E5E5E1;
+  background: var(--surface);
+  border: 1px solid var(--line-hairline);
   border-radius: 8px;
   padding: 8px 12px;
-  color: #171717;
+  color: var(--ink);
   font-size: 13px;
   outline: none;
   transition: border-color 0.2s, background 0.2s;
   width: 100%;
 }
 .input-base:focus {
-  border-color: #C7CFEF;
-  background: #FFFFFF;
+  border-color: rgba(var(--accent-rgb), 0.5);
+  background: var(--surface);
 }
-.input-base::placeholder { color: rgba(0,0,0,0.32); }
+.input-base::placeholder { color: var(--ink-3); }
 
 /* ============================================================
    TABLE PREMIUM
@@ -332,14 +264,14 @@
 }
 .table-premium tbody tr:last-child { border-bottom: none; }
 .table-premium tbody tr:hover {
-  background: rgba(0,0,0,0.02);
+  background: var(--hover);
 }
 
 /* ============================================================
    SIDEBAR
    ============================================================ */
 .sidebar-glass {
-  background: #080808;
+  background: var(--sidebar);
   border-right: 1px solid rgba(255,255,255,0.06);
 }
 
@@ -347,26 +279,26 @@
    BUTTONS
    ============================================================ */
 .btn-primary {
-  background: #171717;
-  color: #ffffff;
-  border: 1px solid #171717;
-  transition: background 0.15s ease;
+  background: var(--inverse);
+  color: var(--on-inverse);
+  border: 1px solid var(--inverse);
+  transition: background var(--dur-fast) var(--ease);
 }
-.btn-primary:hover { background: #2A2A2A; }
-.btn-primary:active { background: #000000; }
+.btn-primary:hover { background: var(--inverse-hover); }
+.btn-primary:active { background: var(--inverse-hover); }
 
 /* ── Primary action button — monochrome, no brand-color CTA system.
    Kept as .btn-cta for now (call sites unchanged) but restyled to the
    same restrained near-black-fill language as .btn-primary. ── */
 .btn-cta {
-  background: #171717;
-  color: #ffffff;
-  font-weight: 600;
-  border: 1px solid #171717;
-  transition: background 0.15s ease;
+  background: var(--inverse);
+  color: var(--on-inverse);
+  font-weight: 500;
+  border: 1px solid var(--inverse);
+  transition: background var(--dur-fast) var(--ease);
 }
-.btn-cta:hover { background: #2A2A2A; }
-.btn-cta:active { background: #000000; }
+.btn-cta:hover { background: var(--inverse-hover); }
+.btn-cta:active { background: var(--inverse-hover); }
 
 /* ============================================================
    STATUS INDICATOR — a static dot, not an infinite pulsing glow.
@@ -385,7 +317,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #10D98A;
+  background: var(--positive);
 }
 
 /* ============================================================
@@ -459,63 +391,63 @@ a, button, input, textarea {
 /* Canonical light-surface row hover (handoff §4) — used by every list/table
    row except the dark sidebar, which uses .hover-fade instead. */
 .row-hover { transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1); }
-.row-hover:hover { background: #F5F4F1 !important; }
-.row-chevron { transition: transform 120ms cubic-bezier(0.2,0.8,0.2,1), color 120ms cubic-bezier(0.2,0.8,0.2,1); color: #8A8A86; }
-.row-hover:hover .row-chevron { transform: translateX(2px); color: #343431; }
+.row-hover:hover { background: var(--surface-2) !important; }
+.row-chevron { transition: transform 120ms cubic-bezier(0.2,0.8,0.2,1), color 120ms cubic-bezier(0.2,0.8,0.2,1); color: var(--ink-3); }
+.row-hover:hover .row-chevron { transform: translateX(2px); color: var(--ink); }
 
 .hover-fade { transition: color 120ms cubic-bezier(0.2,0.8,0.2,1), background-color 120ms cubic-bezier(0.2,0.8,0.2,1); }
 .hover-fade:hover { color: #F5F4F0 !important; background: rgba(255,255,255,0.08); }
 .hover-dim { transition: opacity 120ms cubic-bezier(0.2,0.8,0.2,1); }
 .hover-dim:hover { opacity: 0.72; }
 .hover-lift { transition: transform 120ms cubic-bezier(0.2,0.8,0.2,1), box-shadow 180ms cubic-bezier(0.2,0.8,0.2,1), border-color 120ms cubic-bezier(0.2,0.8,0.2,1); }
-.hover-lift:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(25,25,23,0.07); border-color: rgba(25,25,23,0.16); }
+.hover-lift:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); border-color: var(--line-emphasis); }
 
 /* Buttons — page-local (.btn-primary-v32) vs on-dark-sidebar (.btn-primary-sidebar)
-   variants per §17.1: the two dark hexes (#191917 vs #1B1B18) are kept as two
+   variants: the sidebar is dark in both themes, so its CTA keeps fixed hexes;
    distinct classes rather than forced to one, since the handoff explicitly notes
    both usages can legitimately coexist (light-surface button vs. dark-sidebar CTA). */
 .btn-primary-v32 {
-  background: #191917; color: #F7F7F4; border: none; border-radius: 6px;
+  background: var(--inverse); color: var(--on-inverse); border: none; border-radius: var(--radius-sm); font-weight: 500;
   transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
 }
-.btn-primary-v32:hover { background: #2A2A2E !important; }
+.btn-primary-v32:hover { background: var(--inverse-hover) !important; }
 .btn-primary-sidebar {
   background: #1B1B18; color: #F5F4F0; border: 1px solid rgba(255,255,255,0.14); border-radius: 7px;
   transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
 }
 .btn-primary-sidebar:hover { background: #2A2A2E !important; }
 .btn-secondary-v32 {
-  background: none; border: 1px solid rgba(25,25,23,0.14); color: #43433F; border-radius: 6px;
+  background: none; border: 1px solid rgb(var(--tk-ink) / 0.14); color: var(--body); border-radius: 6px;
   transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), border-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
 }
-.btn-secondary-v32:hover { background: rgba(25,25,23,0.04) !important; border-color: rgba(25,25,23,0.22) !important; }
-button:active { transform: scale(0.97); }
+.btn-secondary-v32:hover { background: rgb(var(--tk-ink) / 0.04) !important; border-color: rgb(var(--tk-ink) / 0.22) !important; }
+button:not(:disabled):active { transform: scale(0.98); }
 
 /* Type scale (handoff §3) */
-.v32-page-title { font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: 26px; color: #191917; }
+.v32-page-title { font-family: var(--font-display); font-weight: 400; font-size: 26px; color: var(--ink); }
 .v32-section-label {
-  font-size: 12px; color: #8A8A86; font-weight: 400;
+  font-size: 12px; color: var(--ink-3); font-weight: 400;
 }
-.v32-meta { font-size: 11.5px; color: #8A8A86; }
-.v32-body { font-size: 13.5px; color: #43433F; }
+.v32-meta { font-size: 11.5px; color: var(--ink-3); }
+.v32-body { font-size: 13.5px; color: var(--body); }
 
 /* Table visual language (handoff §12) */
 .v32-table thead th {
-  background: #F3F2EE; font-size: 12px; color: #8A8A86;
+  background: var(--surface-2); font-size: 12px; color: var(--ink-3);
   text-align: left; padding: 10px 16px; font-weight: 500;
 }
-.v32-table tbody td { padding: 10px 16px; font-size: 13px; color: #191917; }
+.v32-table tbody td { padding: 10px 16px; font-size: 13px; color: var(--ink); }
 .v32-table tbody td.v32-numeric { font-variant-numeric: tabular-nums; }
-.v32-table tbody tr { border-bottom: 1px solid rgba(25,25,23,0.06); }
+.v32-table tbody tr { border-bottom: 1px solid rgb(var(--tk-ink) / 0.06); }
 
 /* Drawer shell (Lens / Evidence — handoff §9/§10) */
 .v32-drawer-backdrop {
-  position: fixed; inset: 0; background: rgba(20,20,18,0.28);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: var(--z-drawer);
   animation: backdropIn 200ms cubic-bezier(0.2,0.8,0.2,1) both;
 }
 .v32-drawer-panel {
-  position: fixed; top: 0; right: 0; bottom: 0; width: 560px; background: #FFFFFF;
-  border-left: 1px solid #E5E4DF; box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  position: fixed; top: 0; right: 0; bottom: 0; width: 560px; background: var(--elevated); z-index: var(--z-drawer);
+  border-left: 1px solid var(--line); box-shadow: var(--shadow-lg);
   animation: drawerIn 220ms cubic-bezier(0.2,0.8,0.2,1) both;
   display: flex; flex-direction: column;
 }
@@ -575,16 +507,17 @@ button:active { transform: scale(0.97); }
    ============================================================ */
 .recharts-tooltip-wrapper { outline: none !important; }
 .recharts-default-tooltip {
-  background: #FFFFFF !important;
-  border: 1px solid #E5E5E1 !important;
+  background: var(--elevated) !important;
+  border: 1px solid var(--line) !important;
   border-radius: 8px !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+  box-shadow: var(--shadow-md) !important;
+  color: var(--ink) !important;
   padding: 8px 10px !important;
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  font-family: var(--font-sans) !important;
 }
 .recharts-default-tooltip .recharts-tooltip-label {
   font-size: 11px !important;
-  color: #8A8A86 !important;
+  color: var(--ink-3) !important;
   margin-bottom: 2px !important;
 }
 .recharts-default-tooltip .recharts-tooltip-item {
@@ -593,15 +526,15 @@ button:active { transform: scale(0.97); }
 }
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  stroke: #EDEDE9 !important;
+  stroke: var(--line) !important;
 }
 .recharts-cartesian-axis-tick-value {
   font-size: 11px !important;
-  fill: #8A8A86 !important;
+  fill: var(--ink-3) !important;
 }
 .recharts-cartesian-axis-line,
 .recharts-cartesian-axis-tick-line {
-  stroke: #E5E5E1 !important;
+  stroke: var(--line-hairline) !important;
 }
 
 /* ============================================================
@@ -610,7 +543,7 @@ button:active { transform: scale(0.97); }
 .section-label {
   font-size: 0.75rem;
   font-weight: 400;
-  color: #8A8A86;
+  color: var(--ink-3);
 }
 
 /* ============================================================
@@ -673,13 +606,13 @@ input:focus, select:focus, textarea:focus {
    border is the calmer, more legible way to say "this one needs a look."
    ============================================================ */
 .card-metric-critical {
-  border-color: rgba(245,66,77,0.4) !important;
+  border-color: rgb(var(--tk-critical) / 0.4) !important;
 }
 
 /* ============================================================
    SCORE RING — SVG circular progress
    ============================================================ */
-.score-ring-track { fill: none; stroke: rgba(0,0,0,0.08); }
+.score-ring-track { fill: none; stroke: var(--line); }
 .score-ring-fill  { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1); }
 
 /* ============================================================
@@ -711,18 +644,18 @@ input:focus, select:focus, textarea:focus {
 
 /* ============================================================
    VERSION 32 TYPE + USER ACCENT
-   Plus Jakarta Sans for the UI, Fraunces for titles and editorial
-   moments, IBM Plex Mono for every number. The signed-in user's accent
+   Geist for the UI and every figure (tabular numbers), Fraunces for
+   page titles and headline figures only. The signed-in user's accent
    (--accent, see lib/identity.ts) is used sparingly: the active subnav
    underline, link hover, selected-row tints and their avatar.
    ============================================================ */
 main h1 {
-  font-family: 'Fraunces', Georgia, serif !important;
+  font-family: var(--font-display) !important;
   font-weight: 400 !important;
   font-size: 26px;
   letter-spacing: -0.2px !important;
   line-height: 1.2;
-  color: #191917;
+  color: var(--ink);
 }
 
 /* Section titles inside pages read quiet (Fraunces 17px, the design's
@@ -731,15 +664,10 @@ main h2 {
   letter-spacing: -0.005em;
 }
 
-::selection {
-  background: rgba(var(--accent-rgb), 0.18);
-  color: #191917;
-}
-
 .id-gradient { background: var(--accent); }
 .id-gradient-text { color: var(--accent); }
 
-/* Kept as a no-op: the canvas is flat #F7F7F4 in Version 32. */
+/* Kept as a no-op: the canvas is flat. */
 .id-wash { background-image: none; }
 
 /* Reduced motion, everywhere: people who ask the OS for less motion get none,
@@ -758,7 +686,7 @@ main h2 {
    VERSION 32 SHELL — main content wrapper (WRAP_OPEN, handoff §6):
    padding 32px 48px 32px 40px at desktop; 16px gutters on phones.
    ============================================================ */
-.v32-main { background: #F7F7F4; }
+.v32-main { background: var(--bg); }
 .v32-wrap {
   display: flex; flex-direction: column; gap: 20px;
   padding: 20px 16px 40px;
@@ -777,8 +705,9 @@ main h2 {
 
 /* Keyboard focus (handoff §8 recommendation): the user's accent ring. */
 a:focus-visible, button:focus-visible, [role="button"]:focus-visible, [tabindex]:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid rgba(var(--accent-rgb), 0.7);
   outline-offset: 2px;
+  box-shadow: none;
 }
 button:disabled { cursor: default; }
 
@@ -818,7 +747,7 @@ button:disabled { cursor: default; }
 /* Paper grain: a barely-there texture so the off-white reads as paper,
    not a flat screen fill. */
 :root { --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.09 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-.v32-main {
+:root[data-theme="light"] .v32-main {
   background-image: var(--paper-grain);
 }
 
@@ -847,7 +776,7 @@ button:disabled { cursor: default; }
 
 /* Hairline rules draw in from the left. */
 @keyframes ruleDraw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.rule-draw { height: 1px; background: #EBEAE6; transform-origin: left center; animation: ruleDraw 900ms var(--ease-out-soft) 120ms both; }
+.rule-draw { height: 1px; background: var(--line); transform-origin: left center; animation: ruleDraw 900ms var(--ease-out-soft) 120ms both; }
 
 /* Thinking: three small dots, each lifting in turn. */
 .thinking-dots { display: inline-flex; gap: 4px; align-items: center; }
@@ -864,7 +793,7 @@ button:disabled { cursor: default; }
 
 /* Warmer, slower skeleton shimmer on paper. */
 .v32-wrap .skeleton {
-  background: linear-gradient(90deg, #EFEEEA 0%, #F7F6F3 40%, #EFEEEA 80%);
+  background: linear-gradient(90deg, var(--skeleton-a) 0%, var(--skeleton-b) 40%, var(--skeleton-a) 80%);
   background-size: 240% 100%;
   animation: shimmer 2.2s ease-in-out infinite;
   border-radius: 4px;
@@ -874,7 +803,7 @@ button:disabled { cursor: default; }
 .btn-primary-v32, .btn-primary-sidebar { position: relative; overflow: hidden; isolation: isolate; }
 .btn-primary-v32::after, .btn-primary-sidebar::after {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.14) 50%, transparent 70%);
+  background: linear-gradient(110deg, transparent 30%, rgb(var(--tk-ink) / 0.10) 50%, transparent 70%);
   transform: translateX(-120%);
 }
 .btn-primary-v32:hover::after, .btn-primary-sidebar:hover::after {
@@ -894,7 +823,7 @@ button:disabled { cursor: default; }
 .composer-glow { transition: border-color 200ms ease, box-shadow 260ms var(--ease-out-soft); }
 .composer-glow:focus-within {
   border-color: rgba(var(--accent-rgb), 0.45) !important;
-  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.08), 0 10px 30px -12px rgba(25,25,23,0.18);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.08), 0 10px 30px -12px rgb(var(--tk-ink) / 0.18);
 }
 
 /* Command palette and pop-overs scale in from 98%. */
@@ -918,68 +847,68 @@ button:disabled { cursor: default; }
 /* Scan composer: one rounded box like a chat app, a plus menu on the left
    and the send button on the right. */
 .scan-composer {
-  width: 100%; box-sizing: border-box; background: #FFFFFF;
-  border: 1px solid rgba(25,25,23,0.12); border-radius: 26px;
-  box-shadow: 0 1px 2px rgba(25,25,23,0.04), 0 12px 32px -18px rgba(25,25,23,0.18);
+  width: 100%; box-sizing: border-box; background: var(--surface);
+  border: 1px solid rgb(var(--tk-ink) / 0.12); border-radius: 26px;
+  box-shadow: 0 1px 2px rgb(var(--tk-ink) / 0.04), 0 12px 32px -18px rgb(var(--tk-ink) / 0.18);
 }
 .scan-input {
   display: block; width: 100%; box-sizing: border-box; min-height: 56px; max-height: 200px;
   padding: 18px 20px 6px 20px; border: none; outline: none; box-shadow: none; resize: none; background: none;
-  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15.5px; line-height: 1.5; color: #191917;
+  font-family: var(--font-sans); font-size: 15.5px; line-height: 1.5; color: var(--ink);
 }
-.scan-input::placeholder { color: #8A8A86; }
+.scan-input::placeholder { color: var(--ink-3); }
 .scan-round {
   width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.scan-plus { background: transparent; border: 1px solid rgba(25,25,23,0.14); color: #43433F; }
-.scan-plus:hover, .scan-plus[aria-expanded="true"] { background: rgba(25,25,23,0.05); border-color: rgba(25,25,23,0.22); }
-.scan-send { background: #191917; border: none; color: #F7F7F4; }
-.scan-send:hover:not(:disabled) { background: #2A2A2E; }
+.scan-plus { background: transparent; border: 1px solid rgb(var(--tk-ink) / 0.14); color: var(--body); }
+.scan-plus:hover, .scan-plus[aria-expanded="true"] { background: rgb(var(--tk-ink) / 0.05); border-color: rgb(var(--tk-ink) / 0.22); }
+.scan-send { background: var(--ink); border: none; color: var(--bg); }
+.scan-send:hover:not(:disabled) { background: var(--inverse-hover); }
 .scan-send:disabled { opacity: 0.25; cursor: default; }
 .scan-menu {
   position: absolute; left: 0; top: calc(100% + 8px); z-index: 30; width: 260px; padding: 6px;
-  background: #FFFFFF; border: 1px solid #E5E4DF; border-radius: 14px; box-shadow: 0 12px 32px -8px rgba(25,25,23,0.18);
+  background: var(--surface); border: 1px solid var(--line-hairline); border-radius: 14px; box-shadow: 0 12px 32px -8px rgb(var(--tk-ink) / 0.18);
 }
 .scan-menu-item {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 10px; border-radius: 9px; background: none; border: none; cursor: pointer;
 }
-.scan-menu-item:hover, .scan-menu-item:focus-visible { background: #F5F4F1; outline: none; }
+.scan-menu-item:hover, .scan-menu-item:focus-visible { background: var(--surface-2); outline: none; }
 .scan-menu-icon {
   width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
-  background: #F3F2EE; color: #43433F;
+  background: var(--surface-2); color: var(--body);
 }
 .scan-chip {
-  padding: 7px 14px; border: 1px solid rgba(25,25,23,0.10); border-radius: 999px; background: rgba(255,255,255,0.7);
-  font-size: 12.5px; color: #43433F; cursor: pointer;
+  padding: 7px 14px; border: 1px solid rgb(var(--tk-ink) / 0.10); border-radius: 999px; background: rgb(var(--tk-surface) / 0.7);
+  font-size: 12.5px; color: var(--body); cursor: pointer;
 }
-.scan-chip:hover { background: #FFFFFF; border-color: rgba(25,25,23,0.18); color: #191917; }
+.scan-chip:hover { background: var(--surface); border-color: rgb(var(--tk-ink) / 0.18); color: var(--ink); }
 
 /* Scan: workflow cards under the box, the conversation turns, and History. */
 .scan-flows { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 @media (min-width: 900px) { .scan-flows { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .scan-flow {
   display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 14px; text-align: left;
-  background: rgba(255,255,255,0.62); border: 1px solid rgba(25,25,23,0.08); border-radius: 14px;
+  background: rgb(var(--tk-surface) / 0.62); border: 1px solid rgb(var(--tk-ink) / 0.08); border-radius: 14px;
   cursor: pointer; text-decoration: none; transition: background .18s ease, border-color .18s ease, translate .18s ease, box-shadow .18s ease;
 }
-.scan-flow:hover { background: #FFFFFF; border-color: rgba(25,25,23,0.14); translate: 0 -1px; box-shadow: 0 10px 24px -18px rgba(25,25,23,0.35); }
+.scan-flow:hover { background: var(--surface); border-color: rgb(var(--tk-ink) / 0.14); translate: 0 -1px; box-shadow: 0 10px 24px -18px rgb(var(--tk-ink) / 0.35); }
 .scan-flow:disabled { opacity: .5; cursor: default; translate: none; }
 .scan-q {
   align-self: flex-end; max-width: 82%; padding: 10px 15px; border-radius: 18px 18px 6px 18px;
-  background: #EFEEE9; color: #191917; font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
+  background: var(--surface-3); color: var(--ink); font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
 }
 .scan-tool {
   display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 8px; border: none; background: none;
-  font-size: 12px; color: #8A8A86; cursor: pointer; text-decoration: none; transition: background .15s ease, color .15s ease;
+  font-size: 12px; color: var(--ink-3); cursor: pointer; text-decoration: none; transition: background .15s ease, color .15s ease;
 }
-.scan-tool:hover { background: rgba(25,25,23,0.05); color: #191917; }
+.scan-tool:hover { background: rgb(var(--tk-ink) / 0.05); color: var(--ink); }
 .scan-dock {
   position: sticky; bottom: 0; padding: 22px 0 18px;
-  background-image: var(--paper-grain), linear-gradient(to bottom, rgba(247,247,244,0), #F7F7F4 30%);
+  background-image: linear-gradient(to bottom, rgb(var(--tk-bg) / 0), var(--bg) 30%);
   -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22px); mask-image: linear-gradient(to bottom, transparent, #000 22px);
 }
 .scan-hist-row { position: relative; display: flex; align-items: center; gap: 14px; padding: 12px 10px; margin: 0 -10px; border-radius: 12px; text-decoration: none; transition: background .15s ease; }
-.scan-hist-row:hover { background: rgba(255,255,255,0.75); }
+.scan-hist-row:hover { background: rgb(var(--tk-surface) / 0.75); }
 .scan-hist-del { opacity: 0; }
 .scan-hist-row:hover .scan-hist-del, .scan-hist-del:focus-visible { opacity: 1; }
 @media (hover: none) { .scan-hist-del { opacity: 1; } }
@@ -987,29 +916,148 @@ button:disabled { cursor: default; }
 /* Page search: one shape on every page, under the title and tabs. */
 .page-search {
   display: flex; align-items: center; gap: 8px; width: 100%; max-width: 360px; box-sizing: border-box;
-  padding: 0 12px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.7);
-  border: 1px solid rgba(25,25,23,0.10); color: #8A8A86; transition: border-color .15s ease, background .15s ease;
+  padding: 0 12px; height: 36px; border-radius: 10px; background: rgb(var(--tk-surface) / 0.7);
+  border: 1px solid rgb(var(--tk-ink) / 0.10); color: var(--ink-3); transition: border-color .15s ease, background .15s ease;
 }
-.page-search:focus-within { background: #FFFFFF; border-color: rgba(25,25,23,0.22); }
-.page-search input { flex: 1; min-width: 0; border: none; outline: none; background: none; font-size: 13px; color: #191917; font-family: inherit; }
-.page-search input::placeholder { color: #8A8A86; }
+.page-search:focus-within { background: var(--surface); border-color: rgb(var(--tk-ink) / 0.22); }
+.page-search input { flex: 1; min-width: 0; border: none; outline: none; background: none; font-size: 13px; color: var(--ink); font-family: inherit; }
+.page-search input::placeholder { color: var(--ink-3); }
 
 /* Library cards: prompts and workflows. */
 .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
 .lib-card {
   position: relative; display: flex; flex-direction: column; gap: 10px; padding: 16px; text-align: left; box-sizing: border-box;
-  background: rgba(255,255,255,0.62); border: 1px solid rgba(25,25,23,0.08); border-radius: 14px; cursor: pointer; text-decoration: none;
+  background: rgb(var(--tk-surface) / 0.62); border: 1px solid rgb(var(--tk-ink) / 0.08); border-radius: 14px; cursor: pointer; text-decoration: none;
   transition: background .18s ease, border-color .18s ease, translate .18s ease, box-shadow .18s ease;
 }
-.lib-card:hover, .lib-card:focus-visible { background: #FFFFFF; border-color: rgba(25,25,23,0.14); translate: 0 -1px; box-shadow: 0 10px 24px -18px rgba(25,25,23,0.35); outline: none; }
-.lib-tag { font-size: 11px; color: #8A8A86; }
+.lib-card:hover, .lib-card:focus-visible { background: var(--surface); border-color: rgb(var(--tk-ink) / 0.14); translate: 0 -1px; box-shadow: 0 10px 24px -18px rgb(var(--tk-ink) / 0.35); outline: none; }
+.lib-tag { font-size: 11px; color: var(--ink-3); }
 .lib-star { position: absolute; top: 10px; right: 10px; }
 
 /* Agents gallery: ready-agent cards in the Library card style. */
 .agent-grid { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
 .agent-card { gap: 14px; padding: 20px; min-height: 210px; }
-.agent-purpose { font-size: 13px; color: #63635F; line-height: 1.55; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.agent-perm { font-size: 11.5px; color: #63635F; padding: 3px 9px; border-radius: 999px; background: rgba(25,25,23,0.04); }
-.agent-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(25,25,23,0.06); display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: #8A8A86; }
-.agent-card-muted { cursor: default; background: rgba(255,255,255,0.35); }
-.agent-card-muted:hover { background: rgba(255,255,255,0.35); translate: none; box-shadow: none; border-color: rgba(25,25,23,0.08); }
+.agent-purpose { font-size: 13px; color: var(--ink-2); line-height: 1.55; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.agent-perm { font-size: 11.5px; color: var(--ink-2); padding: 3px 9px; border-radius: 999px; background: rgb(var(--tk-ink) / 0.04); }
+.agent-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid rgb(var(--tk-ink) / 0.06); display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--ink-3); }
+.agent-card-muted { cursor: default; background: rgb(var(--tk-surface) / 0.35); }
+.agent-card-muted:hover { background: rgb(var(--tk-surface) / 0.35); translate: none; box-shadow: none; border-color: rgb(var(--tk-ink) / 0.08); }
+
+/* ============================================================
+   SHARED CONTROLS (tokens only)
+   One button family: primary (the inverse of the page, one per view),
+   secondary (outline), ghost (quiet), danger (destructive).
+   ============================================================ */
+.ui-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 12px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500; line-height: 1; white-space: nowrap;
+  border: 1px solid transparent; cursor: pointer; user-select: none;
+  transition: background-color var(--dur-instant) var(--ease), border-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease), opacity var(--dur-instant) var(--ease);
+}
+.ui-btn:disabled, .ui-btn[aria-disabled="true"] { opacity: 0.45; cursor: default; pointer-events: none; }
+.ui-btn-sm { height: 28px; padding: 0 10px; font-size: 12.5px; }
+.ui-btn-lg { height: 38px; padding: 0 16px; font-size: 13.5px; }
+.ui-btn-primary { background: var(--inverse); color: var(--on-inverse); }
+.ui-btn-primary:hover { background: var(--inverse-hover); color: var(--on-inverse); }
+.ui-btn-secondary { background: transparent; color: var(--ink); border-color: var(--line-button); }
+.ui-btn-secondary:hover { background: var(--hover); border-color: var(--line-emphasis); color: var(--ink); }
+.ui-btn-ghost { background: transparent; color: var(--ink-2); }
+.ui-btn-ghost:hover { background: var(--hover); color: var(--ink); }
+.ui-btn-danger { background: transparent; color: var(--critical); border-color: rgb(var(--tk-critical) / 0.35); }
+.ui-btn-danger:hover { background: rgb(var(--tk-critical) / 0.10); color: var(--critical); }
+
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 28px; height: 28px; border-radius: var(--radius-sm); color: var(--ink-3);
+  background: transparent; border: none; cursor: pointer;
+  transition: background-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease);
+}
+.icon-btn:hover { background: var(--hover); color: var(--ink); }
+
+/* Status chip: one status language across the product. */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px;
+  border-radius: var(--radius-full); font-size: 11.5px; font-weight: 500; line-height: 1; white-space: nowrap;
+  color: var(--ink-2); background: rgb(var(--tk-ink) / 0.06);
+}
+.chip-positive { color: var(--positive); background: rgb(var(--tk-positive) / 0.12); }
+.chip-attention { color: var(--warning); background: rgb(var(--tk-warning) / 0.12); }
+.chip-critical { color: var(--critical); background: rgb(var(--tk-critical) / 0.12); }
+.chip-info { color: var(--info); background: rgb(var(--tk-info) / 0.12); }
+.chip-unknown { color: var(--ink-3); background: transparent; box-shadow: inset 0 0 0 1px var(--line-button); }
+
+/* Inputs */
+.ui-input {
+  width: 100%; height: 34px; padding: 0 11px; border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line-input);
+  font-size: 13px; font-family: inherit; outline: none;
+  transition: border-color var(--dur-instant) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.ui-input:hover { border-color: var(--line-emphasis); }
+.ui-input:focus { border-color: rgba(var(--accent-rgb), 0.6); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16); }
+textarea.ui-input { height: auto; padding: 8px 11px; line-height: 1.5; }
+
+/* Panel: the one card surface. */
+.ui-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--highlight); }
+
+/* Native form controls follow the theme. */
+select, input, textarea { color: inherit; }
+select option { background: var(--elevated); color: var(--ink); }
+input[type="checkbox"], input[type="radio"] { accent-color: rgb(var(--accent-rgb)); }
+
+/* ============================================================
+   APP SHELL: sidebar rail (dark in both themes) and the top bar.
+   ============================================================ */
+.sb { background: var(--sidebar); border-right: 1px solid rgba(255,255,255,0.06); color: #9E9D97; }
+.sb-row {
+  display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 9px; border-radius: var(--radius-sm);
+  font-size: 13px; color: #A3A29C; background: transparent; border: none; cursor: pointer; text-align: left; width: 100%;
+  transition: background-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease);
+}
+.sb[data-rail] .sb-row { justify-content: center; padding: 0; }
+.sb-row:hover { background: rgba(255,255,255,0.05); color: #EDECE8; }
+.sb-row-active, .sb-row-active:hover { background: rgba(255,255,255,0.08); color: #F5F4F0; }
+.sb-row-active svg { color: #F5F4F0; }
+.sb-row-quiet { height: 28px; font-size: 12.5px; color: #85847E; }
+.sb-row:focus-visible, .sb-search:focus-visible, .sb-icon:focus-visible, .sb-label-btn:focus-visible { outline: 2px solid rgba(var(--accent-rgb), 0.8); outline-offset: -2px; }
+.sb-label { padding: 0 9px 6px; font-size: 11.5px; color: #6F6E69; margin: 0; }
+.sb-label-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: none; cursor: pointer; padding-top: 0; height: 22px; }
+.sb-label-btn:hover { color: #A3A29C; }
+.sb-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 0 8px 8px; }
+.sb-icon {
+  display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--radius-sm);
+  color: #7C7B75; background: none; border: none; cursor: pointer;
+}
+.sb-icon:hover { background: rgba(255,255,255,0.06); color: #EDECE8; }
+.sb-search {
+  display: flex; align-items: center; gap: 8px; width: 100%; height: 32px; padding: 0 9px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); color: #85847E; font-size: 12.5px; cursor: pointer;
+  transition: background-color var(--dur-instant) var(--ease), border-color var(--dur-instant) var(--ease);
+}
+.sb[data-rail] .sb-search { justify-content: center; padding: 0; }
+.sb-search:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.12); color: #C9C8C2; }
+.sb-kbd { font-family: inherit; font-size: 10.5px; color: #6F6E69; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 1px 5px; }
+.sb-menu {
+  position: absolute; z-index: 40; background: #1A1A18; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-md); box-shadow: 0 16px 48px rgba(0,0,0,0.55); overflow: hidden;
+}
+.sb-menu-item {
+  display: flex; align-items: center; gap: 9px; width: 100%; height: 32px; padding: 0 10px; border-radius: var(--radius-xs);
+  font-size: 13px; color: #C9C8C2; background: none; border: none; cursor: pointer; text-align: left;
+}
+.sb-menu-item:hover, .sb-menu-item:focus-visible { background: rgba(255,255,255,0.06); color: #F5F4F0; outline: none; }
+
+.topbar {
+  position: sticky; top: 0; z-index: var(--z-sticky);
+  display: flex; align-items: center; gap: 10px; height: var(--topbar-h); padding: 0 16px 0 20px; flex-shrink: 0;
+  background: rgb(var(--tk-bg) / 0.82); backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.crumbs { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 13px; color: var(--ink-3); }
+.crumbs a { color: var(--ink-3); }
+.crumbs a:hover { color: var(--ink); }
+.crumbs [aria-current="page"] { color: var(--ink); }
+.kbd { font-family: inherit; font-size: 10.5px; color: var(--ink-3); border: 1px solid var(--line-button); border-radius: 4px; padding: 1px 5px; line-height: 1.4; }
+
+.app-main { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }

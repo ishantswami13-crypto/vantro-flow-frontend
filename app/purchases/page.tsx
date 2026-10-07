@@ -642,7 +642,7 @@ export default function PurchasesPage() {
       {/* ══════════ BULK SCAN PROGRESS MODAL ══════════ */}
       {mounted && bulkScanning && createPortal(
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 360 }}>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--line-hairline)", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 360 }}>
             <p className="font-bold text-primary text-base mb-1">Scanning Bills…</p>
             <p className="text-xs text-muted mb-4">
               {bulkWaiting
@@ -666,7 +666,7 @@ export default function PurchasesPage() {
       {/* ══════════ BULK RESULTS MODAL ══════════ */}
       {mounted && bulkResults && createPortal(
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 520 }}>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--line-hairline)", borderRadius: "1.25rem", padding: "1.5rem", width: "100%", maxWidth: 520 }}>
             <p className="font-bold text-primary text-base mb-4">Bulk Scan Complete</p>
             <div className="space-y-2.5 mb-5">
               <div className="flex items-center justify-between">
@@ -788,7 +788,7 @@ export default function PurchasesPage() {
               style={{
                 width: 80, height: 80,
                 borderRadius: "50%",
-                background: "#ffffff",
+                background: "var(--surface)",
                 boxShadow: "0 0 0 5px rgba(255,255,255,0.25), 0 8px 32px rgba(0,0,0,0.5)",
               }}
             >
@@ -818,7 +818,7 @@ export default function PurchasesPage() {
 
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Purchases</h1>
+          <h1 className="text-[26px] leading-[1.15]" style={{ color: "var(--ink)", fontWeight: 500, letterSpacing: "-0.01em" }}>Purchases</h1>
           <p className="text-xs text-muted mt-1">What you owe your suppliers</p>
         </div>
         <div className="flex items-center gap-2">
@@ -1113,7 +1113,7 @@ export default function PurchasesPage() {
                 <div className="rounded-xl border border-border overflow-x-auto">
                   <table className="w-full" style={{ minWidth: 420 }}>
                     <thead>
-                      <tr style={{ background: "#FAFAF8", borderBottom: "1px solid #E5E5E1" }}>
+                      <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--line-hairline)" }}>
                         <th className="text-left px-3 py-2 text-2xs font-semibold text-muted uppercase tracking-wide">Description</th>
                         <th className="text-center px-2 py-2 text-2xs font-semibold text-muted uppercase tracking-wide">HSN/SAC</th>
                         <th className="text-center px-2 py-2 text-2xs font-semibold text-muted uppercase tracking-wide">Qty</th>
@@ -1123,7 +1123,7 @@ export default function PurchasesPage() {
                     </thead>
                     <tbody>
                       {scannedItems.map((item, i) => (
-                        <tr key={i} style={{ borderTop: i > 0 ? "1px solid #EDEDE9" : "none" }}>
+                        <tr key={i} style={{ borderTop: i > 0 ? "1px solid var(--surface-3)" : "none" }}>
                           <td className="px-3 py-2.5" style={{ maxWidth: 200 }}>
                             <p className="text-xs text-primary font-medium leading-snug">{item.description}</p>
                           </td>
@@ -1144,17 +1144,17 @@ export default function PurchasesPage() {
                     {form.total_amount && (
                       <tfoot>
                         {scannedGst && (
-                          <tr style={{ borderTop: "1px solid #E5E5E1" }}>
+                          <tr style={{ borderTop: "1px solid var(--line-hairline)" }}>
                             <td colSpan={3} className="px-3 py-2 text-xs text-muted text-right">
                               {scannedGst.type}{scannedGst.rate ? ` @ ${scannedGst.rate}%` : ""}
                             </td>
                             <td />
-                            <td className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "#F5A524" }}>
+                            <td className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "var(--warning)" }}>
                               +{fmtINR(scannedGst.amount)}
                             </td>
                           </tr>
                         )}
-                        <tr style={{ borderTop: "1px solid #D8D8D3", background: "#FAFAF8" }}>
+                        <tr style={{ borderTop: "1px solid var(--line-strong)", background: "var(--surface-2)" }}>
                           <td colSpan={4} className="px-3 py-2 text-xs font-semibold text-muted text-right">Grand Total</td>
                           <td className="px-3 py-2 text-right text-sm font-bold text-primary">
                             {fmtINR(parseFloat(form.total_amount))}

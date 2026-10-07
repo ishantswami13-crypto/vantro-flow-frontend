@@ -38,10 +38,10 @@ interface MetricCardProps {
 }
 
 const ACCENT_COLOR: Record<string, string> = {
-  default: "#0066FF",
-  success: "#10D98A",
-  warning: "#F5A524",
-  danger:  "#F5424D",
+  default: "var(--accent)",
+  success: "var(--positive)",
+  warning: "var(--warning)",
+  danger:  "var(--critical)",
   gold:    "#F5A623",
 };
 
@@ -64,7 +64,7 @@ export function MetricCard({ label, value, sub, trend, trendValue, accent = "def
         {icon && (
           <div
             className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: glow, border: `1px solid ${color}30` }}
+            style={{ background: glow, border: `1px solid color-mix(in srgb, ${color} 19%, transparent)` }}
           >
             <span style={{ color }}>{icon}</span>
           </div>

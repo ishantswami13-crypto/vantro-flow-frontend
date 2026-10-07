@@ -14,11 +14,11 @@ import { api, getUser } from "@/lib/api";
 import Link from "next/link";
 
 const TOOLTIP_STYLE = {
-  backgroundColor: "#FFFFFF",
-  border: "1px solid #E5E5E1",
+  backgroundColor: "var(--surface)",
+  border: "1px solid var(--line-hairline)",
   borderRadius: 8,
   fontSize: 12,
-  color: "#191917",
+  color: "var(--ink)",
   boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
 };
 
@@ -156,10 +156,10 @@ export default function AnalyticsPage() {
   const totalCalls     = callLogs.reduce((s, d) => s + d.made, 0);
 
   const kpis = [
-    { label: "Sales Booked",        value: salesBooked >= 100000 ? `₹${(salesBooked/100000).toFixed(2)}L` : `₹${salesBooked.toLocaleString("en-IN")}`, color: "#10D98A", icon: <FiTrendingUp size={16} /> },
-    { label: "Purchases Booked",    value: purchasesBooked >= 100000 ? `₹${(purchasesBooked/100000).toFixed(2)}L` : `₹${purchasesBooked.toLocaleString("en-IN")}`, color: "#F5A524", icon: <FiBarChart2 size={16} /> },
-    { label: "Booked Net",          value: `${bookedNet < 0 ? "-" : ""}₹${Math.abs(bookedNet) >= 100000 ? `${(Math.abs(bookedNet)/100000).toFixed(2)}L` : Math.abs(bookedNet).toLocaleString("en-IN")}`, color: bookedNet >= 0 ? "#0066FF" : "#F5424D", icon: <FiActivity size={16} /> },
-    { label: "Cash Collected",      value: totalCollected >= 100000 ? `₹${(totalCollected/100000).toFixed(2)}L` : `₹${totalCollected.toLocaleString("en-IN")}`, color: "#10D98A", icon: <FiDollarSign size={16} /> },
+    { label: "Sales Booked",        value: salesBooked >= 100000 ? `₹${(salesBooked/100000).toFixed(2)}L` : `₹${salesBooked.toLocaleString("en-IN")}`, color: "var(--positive)", icon: <FiTrendingUp size={16} /> },
+    { label: "Purchases Booked",    value: purchasesBooked >= 100000 ? `₹${(purchasesBooked/100000).toFixed(2)}L` : `₹${purchasesBooked.toLocaleString("en-IN")}`, color: "var(--warning)", icon: <FiBarChart2 size={16} /> },
+    { label: "Booked Net",          value: `${bookedNet < 0 ? "-" : ""}₹${Math.abs(bookedNet) >= 100000 ? `${(Math.abs(bookedNet)/100000).toFixed(2)}L` : Math.abs(bookedNet).toLocaleString("en-IN")}`, color: bookedNet >= 0 ? "var(--accent)" : "var(--critical)", icon: <FiActivity size={16} /> },
+    { label: "Cash Collected",      value: totalCollected >= 100000 ? `₹${(totalCollected/100000).toFixed(2)}L` : `₹${totalCollected.toLocaleString("en-IN")}`, color: "var(--positive)", icon: <FiDollarSign size={16} /> },
   ];
 
   return (
@@ -169,7 +169,7 @@ export default function AnalyticsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Analytics</h2>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "var(--ink)", fontWeight: 500, letterSpacing: "-0.01em" }}>Analytics</h2>
             <p className="text-sm text-secondary mt-1">Collections performance based on your real data</p>
           </div>
           <div className="flex gap-1 p-1 bg-surface-2 rounded-xl border border-border">
@@ -196,7 +196,7 @@ export default function AnalyticsPage() {
                 <div className="flex items-center justify-between mb-3">
                   <p className="section-label">{k.label}</p>
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: `${k.color}18`, border: `1px solid ${k.color}30` }}>
+                    style={{ background: `color-mix(in srgb, ${k.color} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${k.color} 19%, transparent)` }}>
                     <span style={{ color: k.color }}>{k.icon}</span>
                   </div>
                 </div>
@@ -236,17 +236,17 @@ export default function AnalyticsPage() {
                   <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="gc" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor="#10D98A" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#10D98A" stopOpacity={0} />
+                        <stop offset="5%"  stopColor="var(--positive)" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="var(--positive)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
-                    <XAxis dataKey="month" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-3)" />
+                    <XAxis dataKey="month" tick={{ fill: "var(--ink-3)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "var(--ink-3)", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number, name: string) => [`₹${v}L`, name]} />
-                    <Area type="monotone" dataKey="sales" name="Sales booked" stroke="#10D98A" strokeWidth={2} fill="url(#gc)" />
-                    <Area type="monotone" dataKey="purchases" name="Purchases booked" stroke="#F5A524" strokeWidth={2} fill="transparent" />
-                    <Area type="monotone" dataKey="collected" name="Cash collected" stroke="#0066FF" strokeWidth={2} fill="transparent" />
+                    <Area type="monotone" dataKey="sales" name="Sales booked" stroke="var(--positive)" strokeWidth={2} fill="url(#gc)" />
+                    <Area type="monotone" dataKey="purchases" name="Purchases booked" stroke="var(--warning)" strokeWidth={2} fill="transparent" />
+                    <Area type="monotone" dataKey="collected" name="Cash collected" stroke="var(--accent)" strokeWidth={2} fill="transparent" />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
@@ -262,13 +262,13 @@ export default function AnalyticsPage() {
                 {totalCalls > 0 ? (
                   <ResponsiveContainer width="100%" height={180}>
                     <BarChart data={callLogs} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
-                      <XAxis dataKey="day" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-3)" />
+                      <XAxis dataKey="day" tick={{ fill: "var(--ink-3)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: "var(--ink-3)", fontSize: 11 }} axisLine={false} tickLine={false} />
                       <Tooltip contentStyle={TOOLTIP_STYLE} />
-                      <Bar dataKey="made"     name="Called"   fill="#191917" radius={[4,4,0,0]} />
-                      <Bar dataKey="answered" name="Answered" fill="#0066FF" radius={[4,4,0,0]} />
-                      <Bar dataKey="promised" name="Promised" fill="#10D98A" radius={[4,4,0,0]} />
+                      <Bar dataKey="made"     name="Called"   fill="var(--ink)" radius={[4,4,0,0]} />
+                      <Bar dataKey="answered" name="Answered" fill="var(--accent)" radius={[4,4,0,0]} />
+                      <Bar dataKey="promised" name="Promised" fill="var(--positive)" radius={[4,4,0,0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -320,10 +320,10 @@ export default function AnalyticsPage() {
                 <p className="text-sm font-bold text-primary mb-4">Connected Cash Position</p>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: "Receivable", value: analytics?.total_outstanding || 0, color: "#F5424D" },
-                    { label: "Payable", value: analytics?.total_payable || 0, color: "#F5A524" },
-                    { label: "Gross Margin", value: analytics?.gross_margin_pct || 0, suffix: "%", color: (analytics?.gross_margin_pct || 0) >= 0 ? "#10D98A" : "#F5424D" },
-                    { label: "Cash Net", value: analytics?.cash_net || 0, color: (analytics?.cash_net || 0) >= 0 ? "#0066FF" : "#F5424D" },
+                    { label: "Receivable", value: analytics?.total_outstanding || 0, color: "var(--critical)" },
+                    { label: "Payable", value: analytics?.total_payable || 0, color: "var(--warning)" },
+                    { label: "Gross Margin", value: analytics?.gross_margin_pct || 0, suffix: "%", color: (analytics?.gross_margin_pct || 0) >= 0 ? "var(--positive)" : "var(--critical)" },
+                    { label: "Cash Net", value: analytics?.cash_net || 0, color: (analytics?.cash_net || 0) >= 0 ? "var(--accent)" : "var(--critical)" },
                   ].map(item => (
                     <div key={item.label} className="rounded-xl border border-border bg-surface-2 p-4">
                       <p className="section-label mb-2">{item.label}</p>
@@ -363,12 +363,12 @@ export default function AnalyticsPage() {
                 <p className="text-xs text-muted mb-4">Collection trend based on logged call activity</p>
                 <ResponsiveContainer width="100%" height={160}>
                   <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
-                    <XAxis dataKey="month" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-3)" />
+                    <XAxis dataKey="month" tick={{ fill: "var(--ink-3)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "var(--ink-3)", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} />
-                    <Legend wrapperStyle={{ fontSize: 12, color: "#8A8A86" }} />
-                    <Line type="monotone" dataKey="collected" name="Collected ₹L" stroke="#10D98A" strokeWidth={2} dot={false} activeDot={{ r: 3, fill: "#10D98A" }} />
+                    <Legend wrapperStyle={{ fontSize: 12, color: "var(--ink-3)" }} />
+                    <Line type="monotone" dataKey="collected" name="Collected ₹L" stroke="var(--positive)" strokeWidth={2} dot={false} activeDot={{ r: 3, fill: "var(--positive)" }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

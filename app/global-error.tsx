@@ -20,14 +20,14 @@ export default function GlobalError({
       <body>
         <div style={{ minHeight: '100vh', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ padding: '2rem', maxWidth: '600px', width: '100%', textAlign: 'center' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#F2F2F2' }}>A critical error occurred</h1>
-            <p style={{ marginBottom: '2rem', color: '#888888' }}>We've been notified. Please try reloading the page.</p>
-            <div style={{ background: '#161616', border: '1px solid #222222', padding: '1rem', borderRadius: '0.5rem', fontFamily: 'monospace', marginBottom: '2rem', color: '#888888' }}>
-              Error ID: <span style={{ color: '#F2F2F2', fontWeight: 'bold' }}>{errorId}</span>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: 'var(--ink)' }}>A critical error occurred</h1>
+            <p style={{ marginBottom: '2rem', color: 'var(--ink-2)' }}>We've been notified. Please try reloading the page.</p>
+            <div style={{ background: '#161616', border: '1px solid #222222', padding: '1rem', borderRadius: '0.5rem', fontFamily: 'monospace', marginBottom: '2rem', color: 'var(--ink-2)' }}>
+              Error ID: <span style={{ color: 'var(--ink)', fontWeight: 'bold' }}>{errorId}</span>
             </div>
             <button
               onClick={reset}
-              style={{ padding: '0.75rem 1.5rem', background: '#191917', color: 'white', borderRadius: '0.75rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+              style={{ padding: '0.75rem 1.5rem', background: 'var(--inverse)', color: 'var(--on-inverse)', borderRadius: '0.75rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
             >
               Reload application
             </button>

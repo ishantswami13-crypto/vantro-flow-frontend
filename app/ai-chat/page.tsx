@@ -84,7 +84,7 @@ function formatMsg(text: string) {
 }
 
 const tierColor: Record<string, string> = {
-  high: "#10D98A", medium: "#F5A524", low: "#F5424D",
+  high: "var(--positive)", medium: "var(--warning)", low: "var(--critical)",
 };
 
 const INITIAL_MESSAGES: Message[] = [{
@@ -104,11 +104,11 @@ const QUICK_PROMPTS = [
 function HealthRing({ score }: { score: number }) {
   const r = 38; const circ = 2 * Math.PI * r;
   const filled = (score / 100) * circ;
-  const color = score >= 65 ? "#10D98A" : score >= 40 ? "#F5A524" : "#F5424D";
+  const color = score >= 65 ? "var(--positive)" : score >= 40 ? "var(--warning)" : "var(--critical)";
   return (
     <div className="relative w-24 h-24">
       <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
-        <circle cx="48" cy="48" r={r} fill="none" stroke="#E5E5E1" strokeWidth="8" />
+        <circle cx="48" cy="48" r={r} fill="none" stroke="var(--line-hairline)" strokeWidth="8" />
         <circle cx="48" cy="48" r={r} fill="none" stroke={color} strokeWidth="8"
           strokeDasharray={`${filled} ${circ}`} strokeLinecap="round"
           style={{ transition: "stroke-dasharray 1s ease" }} />
@@ -168,10 +168,10 @@ function CallScriptModal({ debtor, script, onClose }: {
         {/* Script sections */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {[
-            { key: "opening",           label: "Opening (Greeting)", Icon: FiPhone,       text: script.opening,           color: "#0066FF" },
-            { key: "main_ask",          label: "Main Ask",           Icon: FiMessageSquare, text: script.main_ask,        color: "#9B6DFF" },
-            { key: "objection_handler", label: "If They Hesitate",   Icon: FiShield,      text: script.objection_handler, color: "#F5A524" },
-            { key: "closing",           label: "Closing",            Icon: FiCheckCircle, text: script.closing,           color: "#10D98A" },
+            { key: "opening",           label: "Opening (Greeting)", Icon: FiPhone,       text: script.opening,           color: "var(--accent)" },
+            { key: "main_ask",          label: "Main Ask",           Icon: FiMessageSquare, text: script.main_ask,        color: "var(--info)" },
+            { key: "objection_handler", label: "If They Hesitate",   Icon: FiShield,      text: script.objection_handler, color: "var(--warning)" },
+            { key: "closing",           label: "Closing",            Icon: FiCheckCircle, text: script.closing,           color: "var(--positive)" },
           ].map(({ key, label, Icon, text, color }) => (
             <div key={key} className="bg-surface-2 rounded-xl p-3.5 border border-border">
               <div className="flex items-center justify-between mb-2">
@@ -275,7 +275,7 @@ function DebtorCallCard({ d, rank, twilioReady }: { d: Debtor; rank: number; twi
       <div className="flex items-center gap-3 p-4 bg-surface-2 rounded-xl border border-border hover:border-border/70 transition-all">
         {/* Rank */}
         <div className="w-7 h-7 rounded-lg flex items-center justify-center text-2xs font-black shrink-0"
-          style={{ background: `${color}18`, color, border: `1px solid ${color}30` }}>
+          style={{ background: `color-mix(in srgb, ${color} 9%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 19%, transparent)` }}>
           {rank}
         </div>
 
@@ -592,15 +592,15 @@ function AIFounderPageInner() {
                 {/* Metrics */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {[
-                    { label: "Total Outstanding", value: fmt(briefing.total_outstanding), icon: FiAlertTriangle, color: "#F5424D" },
-                    { label: "Expected This Week", value: fmt(briefing.expected_inflow_7d), icon: FiTrendingUp, color: "#10D98A" },
-                    { label: "Avg Pay Probability", value: `${briefing.avg_payment_probability}%`, icon: FiTarget, color: "#0066FF" },
-                    { label: "High-Priority Leads", value: String(briefing.stats.high_priority), icon: FiActivity, color: "#9B6DFF" },
+                    { label: "Total Outstanding", value: fmt(briefing.total_outstanding), icon: FiAlertTriangle, color: "var(--critical)" },
+                    { label: "Expected This Week", value: fmt(briefing.expected_inflow_7d), icon: FiTrendingUp, color: "var(--positive)" },
+                    { label: "Avg Pay Probability", value: `${briefing.avg_payment_probability}%`, icon: FiTarget, color: "var(--accent)" },
+                    { label: "High-Priority Leads", value: String(briefing.stats.high_priority), icon: FiActivity, color: "var(--info)" },
                   ].map(({ label, value, icon: Icon, color }) => (
                     <div key={label} className="card-premium p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-6 h-6 rounded-lg flex items-center justify-center"
-                          style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
+                          style={{ background: `color-mix(in srgb, ${color} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 19%, transparent)` }}>
                           <Icon size={11} style={{ color }} />
                         </div>
                         <p className="text-2xs text-muted">{label}</p>
@@ -620,7 +620,7 @@ function AIFounderPageInner() {
                     {briefing.debtors.slice(0, 8).map((d, i) => (
                       <div key={i} className="flex items-center gap-4 px-5 py-3.5 hover:bg-surface-2/50 transition-colors">
                         <div className="w-6 h-6 rounded-lg flex items-center justify-center text-2xs font-black shrink-0"
-                          style={{ background: `${tierColor[d.tier]}18`, color: tierColor[d.tier], border: `1px solid ${tierColor[d.tier]}30` }}>
+                          style={{ background: `color-mix(in srgb, ${tierColor[d.tier]} 9%, transparent)`, color: tierColor[d.tier], border: `1px solid color-mix(in srgb, ${tierColor[d.tier]} 19%, transparent)` }}>
                           {i + 1}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -863,7 +863,7 @@ function AIFounderPageInner() {
                             <span className="text-2xs px-1.5 py-0.5 rounded-full font-bold"
                               style={{
                                 background: m.urgency === "high" ? "#F5424D15" : m.urgency === "medium" ? "#F5A52415" : "#10D98A15",
-                                color: m.urgency === "high" ? "#F5424D" : m.urgency === "medium" ? "#F5A524" : "#10D98A",
+                                color: m.urgency === "high" ? "var(--critical)" : m.urgency === "medium" ? "var(--warning)" : "var(--positive)",
                                 border: `1px solid ${m.urgency === "high" ? "#F5424D25" : m.urgency === "medium" ? "#F5A52425" : "#10D98A25"}`,
                               }}>
                               {m.urgency}
@@ -900,15 +900,15 @@ function AIFounderPageInner() {
               <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-3">What AI Founder Can Do</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
-                  { Icon: FiTarget,       label: "Priority Scoring", desc: "ML ranks debtors by pay probability",  color: "#0066FF" },
-                  { Icon: FiPhone,        label: "Call Scripts",     desc: "Hinglish scripts per debtor, any tone", color: "#10D98A" },
-                  { Icon: FiMessageSquare,label: "WhatsApp Drafts",  desc: "Personalized messages in seconds",      color: "#9B6DFF" },
-                  { Icon: FiBarChart2,    label: "Cash Forecasting", desc: "Predict inflow for next 7/30 days",     color: "#F5A524" },
-                  { Icon: FiMic,          label: "Voice Input",      desc: "Ask questions by speaking in Hindi",    color: "#F5424D" },
-                  { Icon: FiCpu,          label: "Business Strategy",desc: "LLaMA 70B — your AI co-founder",        color: "#10D98A" },
+                  { Icon: FiTarget,       label: "Priority Scoring", desc: "ML ranks debtors by pay probability",  color: "var(--accent)" },
+                  { Icon: FiPhone,        label: "Call Scripts",     desc: "Hinglish scripts per debtor, any tone", color: "var(--positive)" },
+                  { Icon: FiMessageSquare,label: "WhatsApp Drafts",  desc: "Personalized messages in seconds",      color: "var(--info)" },
+                  { Icon: FiBarChart2,    label: "Cash Forecasting", desc: "Predict inflow for next 7/30 days",     color: "var(--warning)" },
+                  { Icon: FiMic,          label: "Voice Input",      desc: "Ask questions by speaking in Hindi",    color: "var(--critical)" },
+                  { Icon: FiCpu,          label: "Business Strategy",desc: "LLaMA 70B — your AI co-founder",        color: "var(--positive)" },
                 ].map(({ Icon, label, desc, color }) => (
                   <div key={label} className="flex items-start gap-2.5 p-3 bg-surface-2 rounded-xl border border-border">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}18`, border: `1px solid ${color}25` }}>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `color-mix(in srgb, ${color} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 15%, transparent)` }}>
                       <Icon size={13} style={{ color }} />
                     </div>
                     <div>

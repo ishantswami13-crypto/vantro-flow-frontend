@@ -77,7 +77,7 @@ export default function ScanPage() {
     <DashboardLayout pageTitle="Scan">
       <div className="scan-stage" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: showFindings ? "flex-start" : "center", minHeight: showFindings ? undefined : "calc(100vh - 190px)", padding: showFindings ? "32px 0 8px" : "24px 0", boxSizing: "border-box" }}>
         <div className="fade-once" style={{ width: 720, maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <h1 className="scan-greeting" style={{ margin: "0 0 26px 0", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, color: "#191917", textAlign: "center" }}>
+          <h1 className="scan-greeting" style={{ margin: "0 0 26px 0", fontFamily: "var(--font-display)", fontWeight: 400, color: "var(--ink)", textAlign: "center" }}>
             {getGreeting()}, {ownerName}
           </h1>
 
@@ -121,8 +121,8 @@ export default function ScanPage() {
                   <>
                     <IconTile size={32}>{w.icon}</IconTile>
                     <span className="flex flex-col min-w-0">
-                      <span style={{ fontSize: 13, color: "#191917" }}>{w.title}</span>
-                      <span style={{ fontSize: 11.5, color: "#8A8A86", marginTop: 2 }}>{w.hint}</span>
+                      <span style={{ fontSize: 13, color: "var(--ink)" }}>{w.title}</span>
+                      <span style={{ fontSize: 11.5, color: "var(--ink-3)", marginTop: 2 }}>{w.hint}</span>
                     </span>
                   </>
                 );
@@ -133,11 +133,11 @@ export default function ScanPage() {
             </div>
           )}
 
-          {error && <p role="alert" style={{ fontSize: 12.5, color: "#A64F4B", marginTop: 14 }}>{error}</p>}
-          <div className="flex items-center justify-center" style={{ gap: 14, marginTop: 20, fontSize: 11.5, color: "#8A8A86" }}>
+          {error && <p role="alert" style={{ fontSize: 12.5, color: "var(--critical)", marginTop: 14 }}>{error}</p>}
+          <div className="flex items-center justify-center" style={{ gap: 14, marginTop: 20, fontSize: 11.5, color: "var(--ink-3)" }}>
             <span>Starlane answers only from your connected data.</span>
             {hasHistory && (
-              <Link href="/scan/history" className="inline-flex items-center hover:text-[#191917]" style={{ gap: 5, color: "#63635F" }}>
+              <Link href="/scan/history" className="inline-flex items-center hover:text-[var(--ink)]" style={{ gap: 5, color: "var(--ink-2)" }}>
                 <IconHistory size={13} /> History
               </Link>
             )}
@@ -159,8 +159,8 @@ function MenuItem({ icon, title, hint, onClick }: { icon: React.ReactNode; title
     <button type="button" role="menuitem" onClick={onClick} className="scan-menu-item">
       <span className="scan-menu-icon">{icon}</span>
       <span className="flex flex-col text-left min-w-0">
-        <span style={{ fontSize: 13, color: "#191917" }}>{title}</span>
-        <span style={{ fontSize: 11.5, color: "#8A8A86" }}>{hint}</span>
+        <span style={{ fontSize: 13, color: "var(--ink)" }}>{title}</span>
+        <span style={{ fontSize: 11.5, color: "var(--ink-3)" }}>{hint}</span>
       </span>
     </button>
   );

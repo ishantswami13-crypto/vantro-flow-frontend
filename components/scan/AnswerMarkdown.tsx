@@ -7,12 +7,12 @@ import remarkGfm from "remark-gfm";
 // asterisks as literal text). react-markdown does not render raw HTML unless
 // the rehype-raw plugin is added — it is deliberately NOT added here, so
 // model-generated text can never execute as HTML/script. Component overrides
-// below reuse V32's existing typography tokens (16.5px / #191917 / 1.5
+// below reuse V32's existing typography tokens (16.5px / var(--ink) / 1.5
 // line-height for the answer body, 600 weight for emphasis) instead of
 // introducing new arbitrary styling or spacing tokens.
 const components = {
   p: ({ children }: { children?: React.ReactNode }) => (
-    <p style={{ margin: "0 0 10px", fontSize: 16.5, lineHeight: 1.5, color: "#191917" }}>{children}</p>
+    <p style={{ margin: "0 0 10px", fontSize: 16.5, lineHeight: 1.5, color: "var(--ink)" }}>{children}</p>
   ),
   strong: ({ children }: { children?: React.ReactNode }) => (
     <strong style={{ fontWeight: 600 }}>{children}</strong>
@@ -27,7 +27,7 @@ const components = {
     <ol style={{ margin: "0 0 10px", paddingLeft: 20 }}>{children}</ol>
   ),
   li: ({ children }: { children?: React.ReactNode }) => (
-    <li style={{ fontSize: 16.5, lineHeight: 1.5, color: "#191917", marginBottom: 4 }}>{children}</li>
+    <li style={{ fontSize: 16.5, lineHeight: 1.5, color: "var(--ink)", marginBottom: 4 }}>{children}</li>
   ),
   code: ({ children }: { children?: React.ReactNode }) => (
     <code style={{ fontFamily: "monospace", fontSize: 14, background: "#F3F2ED", borderRadius: 4, padding: "1px 5px" }}>{children}</code>
@@ -43,19 +43,19 @@ const components = {
   thead: ({ children }: { children?: React.ReactNode }) => <thead>{children}</thead>,
   tbody: ({ children }: { children?: React.ReactNode }) => <tbody>{children}</tbody>,
   tr: ({ children }: { children?: React.ReactNode }) => (
-    <tr style={{ borderBottom: "1px solid #E5E4DF" }}>{children}</tr>
+    <tr style={{ borderBottom: "1px solid var(--line-hairline)" }}>{children}</tr>
   ),
   th: ({ children }: { children?: React.ReactNode }) => (
-    <th style={{ textAlign: "left", padding: "6px 10px 6px 0", fontWeight: 600, color: "#191917" }}>{children}</th>
+    <th style={{ textAlign: "left", padding: "6px 10px 6px 0", fontWeight: 600, color: "var(--ink)" }}>{children}</th>
   ),
   td: ({ children }: { children?: React.ReactNode }) => (
-    <td style={{ textAlign: "left", padding: "6px 10px 6px 0", color: "#191917" }}>{children}</td>
+    <td style={{ textAlign: "left", padding: "6px 10px 6px 0", color: "var(--ink)" }}>{children}</td>
   ),
 };
 
 export function AnswerMarkdown({ children }: { children: string }) {
   return (
-    <div style={{ fontSize: 16.5, lineHeight: 1.5, color: "#191917" }}>
+    <div style={{ fontSize: 16.5, lineHeight: 1.5, color: "var(--ink)" }}>
       <ReactMarkdown remarkPlugins={[remarkBreaks, remarkGfm]} components={components}>
         {children}
       </ReactMarkdown>

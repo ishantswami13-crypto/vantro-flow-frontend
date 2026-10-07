@@ -98,7 +98,7 @@ export default function CustomersPage() {
     DORMANT: "Dormant", AT_RISK: "At Risk", WATCH: "Watch", GROWING: "Growing", HEALTHY: "Healthy",
   };
   const HEALTH_LABEL_COLOR: Record<string, string> = {
-    DORMANT: "#8B8FA3", AT_RISK: "#F5424D", WATCH: "#F5A524", GROWING: "#10D98A", HEALTHY: "#3B82F6",
+    DORMANT: "var(--ink-3)", AT_RISK: "var(--critical)", WATCH: "var(--warning)", GROWING: "var(--positive)", HEALTHY: "var(--accent)",
   };
   const attentionList = (portfolio?.customers || [])
     .filter(c => c.healthLabel !== "HEALTHY")
@@ -138,7 +138,7 @@ export default function CustomersPage() {
       <div className="space-y-5 page-enter">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
-            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Customers</h2>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "var(--ink)", fontWeight: 500, letterSpacing: "-0.01em" }}>Customers</h2>
             <p className="text-sm text-secondary mt-1">Auto-added from Sales, Invoices and Khata</p>
           </div>
           <div className="flex gap-2">
@@ -222,7 +222,7 @@ export default function CustomersPage() {
                           <p className="text-sm font-bold text-primary truncate">{c.customerName}</p>
                           <span
                             className="text-[10px] font-semibold rounded-full px-2 py-0.5 shrink-0"
-                            style={{ color: HEALTH_LABEL_COLOR[c.healthLabel], background: `${HEALTH_LABEL_COLOR[c.healthLabel]}18`, border: `1px solid ${HEALTH_LABEL_COLOR[c.healthLabel]}40` }}
+                            style={{ color: HEALTH_LABEL_COLOR[c.healthLabel], background: `color-mix(in srgb, ${HEALTH_LABEL_COLOR[c.healthLabel]} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${HEALTH_LABEL_COLOR[c.healthLabel]} 25%, transparent)` }}
                           >
                             {HEALTH_LABEL_TEXT[c.healthLabel] || c.healthLabel}
                           </span>
@@ -277,24 +277,24 @@ export default function CustomersPage() {
                       <p className="text-2xs text-muted">{balance > 0 ? "lena hai" : balance < 0 ? "advance" : "clear"}</p>
                       {scoreMap[customer.customer_name] && (() => {
                         const risk = scoreMap[customer.customer_name];
-                        const tierColor = risk.tier === "HIGH_RISK" ? "#F5424D" : risk.tier === "MEDIUM" ? "#F5A524" : "#10D98A";
+                        const tierColor = risk.tier === "HIGH_RISK" ? "var(--critical)" : risk.tier === "MEDIUM" ? "var(--warning)" : "var(--positive)";
                         const tierLabel = risk.tier === "HIGH_RISK" ? "High Risk" : risk.tier === "MEDIUM" ? "Medium" : "Low Risk";
                         const HEALTH_LABEL_TEXT: Record<string, string> = {
                           DORMANT: "Dormant", AT_RISK: "At Risk", WATCH: "Watch", GROWING: "Growing", HEALTHY: "Healthy",
                         };
                         const HEALTH_LABEL_COLOR: Record<string, string> = {
-                          DORMANT: "#8B8FA3", AT_RISK: "#F5424D", WATCH: "#F5A524", GROWING: "#10D98A", HEALTHY: "#3B82F6",
+                          DORMANT: "var(--ink-3)", AT_RISK: "var(--critical)", WATCH: "var(--warning)", GROWING: "var(--positive)", HEALTHY: "var(--accent)",
                         };
                         const health = risk.health_label;
                         return (
                           <div className="flex flex-col items-end gap-1 mt-1">
                             <span className="inline-block text-[10px] font-semibold rounded-full px-2 py-0.5"
-                              style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}40` }}>
+                              style={{ color: tierColor, background: `color-mix(in srgb, ${tierColor} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${tierColor} 25%, transparent)` }}>
                               {tierLabel} · {risk.score}
                             </span>
                             {health && HEALTH_LABEL_TEXT[health] && (
                               <span className="inline-block text-[10px] font-semibold rounded-full px-2 py-0.5"
-                                style={{ color: HEALTH_LABEL_COLOR[health], background: `${HEALTH_LABEL_COLOR[health]}18`, border: `1px solid ${HEALTH_LABEL_COLOR[health]}40` }}>
+                                style={{ color: HEALTH_LABEL_COLOR[health], background: `color-mix(in srgb, ${HEALTH_LABEL_COLOR[health]} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${HEALTH_LABEL_COLOR[health]} 25%, transparent)` }}>
                                 {HEALTH_LABEL_TEXT[health]}
                               </span>
                             )}

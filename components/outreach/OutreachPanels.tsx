@@ -70,7 +70,7 @@ export function OutreachControl({ status, onChange }: { status: OutreachStatus |
           ].map(([k, v]) => (
             <div key={String(k)}>
               <div className="text-[11px]" style={{ color: C.faint }}>{k}</div>
-              <div className="text-[20px]" style={{ color: C.ink, fontFamily: "'Fraunces', Georgia, serif" }}>{v}</div>
+              <div className="text-[20px]" style={{ color: C.ink, fontFamily: "var(--font-display)" }}>{v}</div>
             </div>
           ))}
         </div>
@@ -309,7 +309,7 @@ export function CampaignsPanel({ campaigns, accounts, onChange }: { campaigns: C
           placeholder={CSV_EXAMPLE}
           rows={5}
           className="w-full mt-2 rounded-md p-2 text-[12px]"
-          style={{ border: `1px solid ${C.line}`, fontFamily: "'IBM Plex Mono', monospace", color: C.ink }}
+          style={{ border: `1px solid ${C.line}`, fontFamily: "var(--font-sans)", color: C.ink }}
         />
         <div className="flex flex-wrap items-center gap-2 mt-2">
           <select value={selected} onChange={(e) => setTarget(e.target.value)} className="rounded-md px-2 py-[5px] text-[12.5px]" style={{ border: `1px solid ${C.line}` }}>

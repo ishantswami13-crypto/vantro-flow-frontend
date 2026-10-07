@@ -22,7 +22,7 @@ export function SalesWhatIf() {
     setBusy(true); setErr(null);
     try { setRes(await osApi.salesWhatIf(change, days)); } catch (e) { setErr(errorText(e)); } finally { setBusy(false); }
   };
-  const field: React.CSSProperties = { width: 84, padding: "6px 10px", border: `1px solid ${C.line}`, borderRadius: 8, fontSize: 13, color: C.ink, background: "#FFFFFF" };
+  const field: React.CSSProperties = { width: 84, padding: "6px 10px", border: `1px solid ${C.line}`, borderRadius: 8, fontSize: 13, color: C.ink, background: "var(--surface)" };
   return (
     <Panel title="What if sales change?" subtitle="Plays a change in sales through how fast your customers really pay. Nothing is saved.">
       <div className="flex items-end gap-3 flex-wrap">

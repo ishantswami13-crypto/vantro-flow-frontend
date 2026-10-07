@@ -44,7 +44,7 @@ const STEPS: Step[] = [
     desc: "Daily 9 AM auto-chase runs for Pro users — hands-free collections",
     action: "Upgrade Plan",
     href: "/billing",
-    color: "#F5A524",
+    color: "var(--warning)",
   },
 ];
 
@@ -118,7 +118,7 @@ export default function WelcomeGuide({ waConnected, hasInvoices, autoEnabled, on
               {/* Icon / check */}
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
-                style={{ background: done ? "rgba(16,217,138,0.12)" : `${step.color}18`, border: `1px solid ${done ? "rgba(16,217,138,0.3)" : `${step.color}30`}` }}
+                style={{ background: done ? "rgba(16,217,138,0.12)" : `color-mix(in srgb, ${step.color} 9%, transparent)`, border: `1px solid ${done ? "rgba(16,217,138,0.3)" : `color-mix(in srgb, ${step.color} 19%, transparent)`}` }}
               >
                 {done
                   ? <FiCheck size={14} className="text-success" />
@@ -150,7 +150,7 @@ export default function WelcomeGuide({ waConnected, hasInvoices, autoEnabled, on
       {allDone && (
         <button
           onClick={handleDismiss}
-          className="w-full mt-4 py-2.5 rounded-xl bg-white text-black text-xs font-bold hover:bg-white/90 transition-all flex items-center justify-center gap-2 shadow-sm">
+          className="w-full mt-4 py-2.5 rounded-xl bg-surface text-black text-xs font-bold hover:bg-surface/90 transition-all flex items-center justify-center gap-2 shadow-sm">
           Got it — dismiss guide <FiArrowRight size={12} />
         </button>
       )}

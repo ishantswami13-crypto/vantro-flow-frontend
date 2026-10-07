@@ -8,12 +8,12 @@ import Link from "next/link";
 import { request } from "@/lib/api";
 import type { WatchEvent, WatchList } from "../../packages/contracts/src/features";
 
-const SEV: Record<string, string> = { critical: "#A23B3B", high: "#A23B3B", normal: "#C7962F", low: "#D9D7D0" };
+const SEV: Record<string, string> = { critical: "var(--critical)", high: "var(--critical)", normal: "#C7962F", low: "#D9D7D0" };
 const RESOLUTION: Record<string, string> = {
   paid_or_removed: "Paid or no longer in your books", moved_to_next_band: "Moved to a later overdue band", sync_recovered: "Sync recovered",
   promise_closed: "Promise closed", dismissed_by_owner: "Dismissed by you", cleared: "Condition cleared",
 };
-const RULE = "rgba(25,25,23,0.10)";
+const RULE = "rgb(var(--tk-ink) / 0.10)";
 
 function show(v: unknown, unit?: string) {
   if (v === null || v === undefined || v === "") return "—";
@@ -39,21 +39,21 @@ export default function WatchEvents() {
   return (
     <section aria-labelledby="watch-events-h" style={{ display: "grid", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <h2 id="watch-events-h" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#191917" }}>What Watch raised</h2>
+        <h2 id="watch-events-h" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--ink)" }}>What Watch raised</h2>
         <div role="tablist" style={{ display: "flex", gap: 4, marginLeft: "auto" }}>
           {(["active", "closed"] as const).map((k) => (
             <button key={k} role="tab" aria-selected={state === k} onClick={() => setState(k)}
-              style={{ padding: "5px 10px", fontSize: 12.5, borderRadius: 6, border: `1px solid ${RULE}`, background: state === k ? "#191917" : "#fff", color: state === k ? "#fff" : "#191917", cursor: "pointer" }}>
+              style={{ padding: "5px 10px", fontSize: 12.5, borderRadius: 6, border: `1px solid ${RULE}`, background: state === k ? "var(--inverse)" : "var(--surface)", color: state === k ? "var(--on-inverse)" : "var(--ink)", cursor: "pointer" }}>
               {k === "active" ? "Needs attention" : "Resolved"}
             </button>
           ))}
         </div>
       </div>
-      {error ? <p role="alert" style={{ color: "#A23B3B", margin: 0 }}>{error}</p> : null}
-      <div style={{ background: "#fff", border: `1px solid ${RULE}`, borderRadius: 8, overflow: "hidden" }}>
-        {!data ? <p style={{ padding: 16, margin: 0, color: "#63635F" }}>Loading…</p>
+      {error ? <p role="alert" style={{ color: "var(--critical)", margin: 0 }}>{error}</p> : null}
+      <div style={{ background: "var(--surface)", border: `1px solid ${RULE}`, borderRadius: 8, overflow: "hidden" }}>
+        {!data ? <p style={{ padding: 16, margin: 0, color: "var(--ink-2)" }}>Loading…</p>
           : data.events.length === 0 ? (
-            <p style={{ padding: 16, margin: 0, color: "#63635F" }}>{state === "active" ? "Nothing needs watching right now. Invoices slipping into worse overdue bands, missed promises and sync problems appear here." : "Nothing has been resolved yet."}</p>
+            <p style={{ padding: 16, margin: 0, color: "var(--ink-2)" }}>{state === "active" ? "Nothing needs watching right now. Invoices slipping into worse overdue bands, missed promises and sync problems appear here." : "Nothing has been resolved yet."}</p>
           ) : data.events.map((e, i) => (
             <div key={e.id} style={{ borderTop: i ? `1px solid ${RULE}` : 0 }}>
               <button onClick={() => setOpen(open === e.id ? null : e.id)} aria-expanded={open === e.id}
@@ -61,36 +61,36 @@ export default function WatchEvents() {
                 <span style={{ width: 3, alignSelf: "stretch", borderRadius: 2, background: SEV[e.severity] }} />
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <strong style={{ fontWeight: 500 }}>{e.title}</strong><br />
-                  <span style={{ fontSize: 13, color: "#63635F" }}>{e.detail}{e.resolution ? ` · ${RESOLUTION[e.resolution] || e.resolution}` : ""}</span>
+                  <span style={{ fontSize: 13, color: "var(--ink-2)" }}>{e.detail}{e.resolution ? ` · ${RESOLUTION[e.resolution] || e.resolution}` : ""}</span>
                 </span>
                 <span aria-hidden style={{ color: "#6E6D67" }}>{open === e.id ? "▾" : "▸"}</span>
               </button>
               {open === e.id ? (
                 <div style={{ padding: "0 16px 14px 31px", display: "grid", gap: 8 }}>
-                  <div style={{ fontSize: 13, color: "#63635F" }}>{e.evidence.summary}</div>
+                  <div style={{ fontSize: 13, color: "var(--ink-2)" }}>{e.evidence.summary}</div>
                   <dl style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto auto", gap: "6px 12px", margin: 0, fontSize: 13 }}>
                     {e.evidence.facts.map((f, j) => (
                       <div key={j} style={{ display: "contents" }}>
                         <dt>{f.label}</dt>
-                        <dd style={{ margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{show(f.value, f.unit)}</dd>
-                        <dd style={{ margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: "#63635F" }}>{f.kind}</dd>
+                        <dd style={{ margin: 0, fontFamily: "var(--font-sans)" }}>{show(f.value, f.unit)}</dd>
+                        <dd style={{ margin: 0, fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--ink-2)" }}>{f.kind}</dd>
                       </div>
                     ))}
                   </dl>
                   {e.entity?.type === "invoice" ? (
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <Link href={`/scan?invoice=${encodeURIComponent(e.entity.id)}`} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "#fff", color: "#191917", textDecoration: "none" }}>Why — open in Scan</Link>
+                      <Link href={`/scan?invoice=${encodeURIComponent(e.entity.id)}`} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "var(--surface)", color: "var(--ink)", textDecoration: "none" }}>Why — open in Scan</Link>
                       {e.missionId ? (
-                        <Link href={`/missions/${e.missionId}`} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "#fff", color: "#191917", textDecoration: "none" }}>Open its mission</Link>
+                        <Link href={`/missions/${e.missionId}`} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "var(--surface)", color: "var(--ink)", textDecoration: "none" }}>Open its mission</Link>
                       ) : e.state === "open" || e.state === "acknowledged" ? (
-                        <Link href={`/missions/new?invoice=${encodeURIComponent(e.entity.id)}`} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, background: "#191917", color: "#fff", textDecoration: "none" }}>Start a mission to collect</Link>
+                        <Link href={`/missions/new?invoice=${encodeURIComponent(e.entity.id)}`} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, background: "var(--inverse)", color: "var(--on-inverse)", textDecoration: "none" }}>Start a mission to collect</Link>
                       ) : null}
                     </div>
                   ) : null}
                   {e.state === "open" || e.state === "acknowledged" ? (
                     <div style={{ display: "flex", gap: 8 }}>
-                      {e.state === "open" ? <button onClick={() => void move(e, "acknowledged")} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "#fff", cursor: "pointer" }}>Mark as seen</button> : null}
-                      <button onClick={() => void move(e, "dismissed")} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "#fff", cursor: "pointer" }}>Dismiss</button>
+                      {e.state === "open" ? <button onClick={() => void move(e, "acknowledged")} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "var(--surface)", cursor: "pointer" }}>Mark as seen</button> : null}
+                      <button onClick={() => void move(e, "dismissed")} style={{ fontSize: 12.5, padding: "5px 10px", borderRadius: 6, border: `1px solid ${RULE}`, background: "var(--surface)", cursor: "pointer" }}>Dismiss</button>
                     </div>
                   ) : null}
                 </div>

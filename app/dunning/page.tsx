@@ -19,8 +19,8 @@ const ACTION_ICON: Record<ActionType, React.ReactNode> = {
 };
 const ACTION_COLOR: Record<ActionType, string> = {
   whatsapp: "#25D366",
-  call:     "#0066FF",
-  email:    "#F5A524",
+  call:     "var(--accent)",
+  email:    "var(--warning)",
 };
 const TONE_BADGE: Record<ToneType, "success"|"warning"|"danger"> = {
   gentle: "success",
@@ -143,10 +143,10 @@ export default function DunningPage() {
         {!loading && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
             {[
-              { label: "Active Rules",       value: activeRules.toString(),  color: "#0066FF" },
-              { label: "Messages Sent",      value: totalSent.toString(),    color: "#F5A524" },
-              { label: "Payments Triggered", value: totalPaid.toString(),    color: "#10D98A" },
-              { label: "Recovery Rate",      value: totalSent > 0 ? `${recoveryPct}%` : "—", color: "#10D98A" },
+              { label: "Active Rules",       value: activeRules.toString(),  color: "var(--accent)" },
+              { label: "Messages Sent",      value: totalSent.toString(),    color: "var(--warning)" },
+              { label: "Payments Triggered", value: totalPaid.toString(),    color: "var(--positive)" },
+              { label: "Recovery Rate",      value: totalSent > 0 ? `${recoveryPct}%` : "—", color: "var(--positive)" },
             ].map(k => (
               <div key={k.label} className="card-metric p-5">
                 <p className="section-label mb-3">{k.label}</p>
@@ -187,17 +187,17 @@ export default function DunningPage() {
                   ].join(" ")}>
                     <div className="shrink-0 w-12 h-12 rounded-xl flex flex-col items-center justify-center border z-10 relative"
                       style={{
-                        background:   rule.enabled ? `${ACTION_COLOR[rule.action as ActionType]}15` : "#F2F2EF",
-                        borderColor:  rule.enabled ? `${ACTION_COLOR[rule.action as ActionType]}40` : "#E5E5E1",
+                        background:   rule.enabled ? `color-mix(in srgb, ${ACTION_COLOR[rule.action as ActionType]} 8%, transparent)` : "var(--surface-2)",
+                        borderColor:  rule.enabled ? `color-mix(in srgb, ${ACTION_COLOR[rule.action as ActionType]} 25%, transparent)` : "var(--line-hairline)",
                       }}>
-                      <p className="text-xs font-black" style={{ color: rule.enabled ? ACTION_COLOR[rule.action as ActionType] : "#8A8A86" }}>
+                      <p className="text-xs font-black" style={{ color: rule.enabled ? ACTION_COLOR[rule.action as ActionType] : "var(--ink-3)" }}>
                         D+{rule.trigger_day}
                       </p>
                       <p className="text-2xs text-muted">days</p>
                     </div>
 
                     <div className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center"
-                      style={{ background: `${ACTION_COLOR[rule.action as ActionType]}20`, color: ACTION_COLOR[rule.action as ActionType] }}>
+                      style={{ background: `color-mix(in srgb, ${ACTION_COLOR[rule.action as ActionType]} 13%, transparent)`, color: ACTION_COLOR[rule.action as ActionType] }}>
                       {ACTION_ICON[rule.action as ActionType]}
                     </div>
 

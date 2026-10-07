@@ -160,7 +160,7 @@ export default function IndustryPage() {
             <div className="flex items-center gap-2 mb-1">
               <h1 className="text-lg font-black text-primary">{config.label}</h1>
               <span className="text-xs font-bold px-2.5 py-0.5 rounded-full border"
-                style={{ color: config.color, background: `${config.color}18`, borderColor: `${config.color}30` }}>
+                style={{ color: config.color, background: `color-mix(in srgb, ${config.color} 9%, transparent)`, borderColor: `color-mix(in srgb, ${config.color} 19%, transparent)` }}>
                 Active
               </span>
             </div>

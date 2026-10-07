@@ -112,14 +112,14 @@ function PreparedCardView({
   const when = formatTimestamp(card.timestamp);
 
   return (
-    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 18 }}>
+    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "var(--surface)", border: "1px solid rgb(var(--tk-ink) / 0.10)", borderRadius: 8, padding: 18 }}>
       <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--accent)", marginBottom: 8 }}>
         {card.trigger.replace(/_/g, " ")}{when ? `, ${when}` : ""}
       </div>
-      <div style={{ fontSize: 14.5, color: "#191917", marginBottom: 10, lineHeight: 1.5 }}>{card.summary}</div>
-      {card.detail ? <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: 6 }}>{card.detail}</div> : null}
-      <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: 14 }}>Source: {SOURCE_LABEL[card.source] || "Starlane"}</div>
-      {primaryIsApprove && card.approve_does && <div style={{ fontSize: 12, color: "#63635F", marginBottom: 12 }}>{card.approve_does}</div>}
+      <div style={{ fontSize: 14.5, color: "var(--ink)", marginBottom: 10, lineHeight: 1.5 }}>{card.summary}</div>
+      {card.detail ? <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginBottom: 6 }}>{card.detail}</div> : null}
+      <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginBottom: 14 }}>Source: {SOURCE_LABEL[card.source] || "Starlane"}</div>
+      {primaryIsApprove && card.approve_does && <div style={{ fontSize: 12, color: "var(--ink-2)", marginBottom: 12 }}>{card.approve_does}</div>}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <button
           type="button"
@@ -137,7 +137,7 @@ function PreparedCardView({
           </button>
         )}
         {secondaryEnabled && (
-          <button type="button" className="hover-dim" onClick={onReject} disabled={busy} style={{ padding: "8px 10px", border: "none", background: "none", color: "#63635F", fontSize: 12.5, marginLeft: "auto", cursor: "pointer" }}>
+          <button type="button" className="hover-dim" onClick={onReject} disabled={busy} style={{ padding: "8px 10px", border: "none", background: "none", color: "var(--ink-2)", fontSize: 12.5, marginLeft: "auto", cursor: "pointer" }}>
             {card.secondary}
           </button>
         )}
@@ -216,11 +216,11 @@ export default function PreparedPage() {
         right={
           /* Control › Approvals lists every decision waiting on the owner;
              this page only shows the prepared subset. */
-          <Link href="/control/approvals" className="hover-dim" style={{ fontSize: 12.5, color: "#63635F" }}>All approvals</Link>
+          <Link href="/control/approvals" className="hover-dim" style={{ fontSize: 12.5, color: "var(--ink-2)" }}>All approvals</Link>
         }
       />
 
-      <div role="tablist" aria-label="Prepared" className="flex items-baseline overflow-x-auto" style={{ gap: 26, borderBottom: "1px solid rgba(25,25,23,0.08)" }}>
+      <div role="tablist" aria-label="Prepared" className="flex items-baseline overflow-x-auto" style={{ gap: 26, borderBottom: "1px solid rgb(var(--tk-ink) / 0.08)" }}>
         {TABS.map((t) => {
           const on = t.key === tab;
           return (
@@ -231,9 +231,9 @@ export default function PreparedPage() {
               aria-selected={on}
               onClick={() => setTab(t.key)}
               className={on ? "" : "hover-dim"}
-              style={{ fontSize: 13.5, color: on ? "#191917" : "#63635F", paddingBottom: 8, marginBottom: -1, whiteSpace: "nowrap", background: "none", borderBottom: `2px solid ${on ? "var(--accent)" : "transparent"}` }}
+              style={{ fontSize: 13.5, color: on ? "var(--ink)" : "var(--ink-2)", paddingBottom: 8, marginBottom: -1, whiteSpace: "nowrap", background: "none", borderBottom: `2px solid ${on ? "var(--accent)" : "transparent"}` }}
             >
-              {t.label} <span style={{ color: on ? "#63635F" : "#B9B8B2", fontSize: 12 }}>{data ? counts[t.key] : ""}</span>
+              {t.label} <span style={{ color: on ? "var(--ink-2)" : "#B9B8B2", fontSize: 12 }}>{data ? counts[t.key] : ""}</span>
             </button>
           );
         })}

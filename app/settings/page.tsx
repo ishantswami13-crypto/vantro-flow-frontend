@@ -49,7 +49,7 @@ const voiceStyleOptions = [
   { value: "regional_hindi",  label: "Regional Hinglish — local dialect, city-specific" },
 ];
 const TONE_COLORS: Record<string, string> = {
-  gentle: "#10D98A", firm: "#F5A524", urgent: "#F5424D",
+  gentle: "var(--positive)", firm: "var(--warning)", urgent: "var(--critical)",
 };
 const TONE_LABELS: Record<string, string> = {
   gentle: "🤝 Gentle", firm: "📢 Firm", urgent: "🚨 Urgent",
@@ -266,8 +266,8 @@ function SettingsPageInner() {
     <DashboardLayout pageTitle="Settings">
       <div className="space-y-4">
         <div>
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>Settings</h1>
-          <p style={{ fontSize: 13.5, color: "#63635F", marginTop: 4 }}>Manage your account, integrations, and automation.</p>
+          <h1 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, color: "var(--ink)" }}>Settings</h1>
+          <p style={{ fontSize: 13.5, color: "var(--ink-2)", marginTop: 4 }}>Manage your account, integrations, and automation.</p>
         </div>
 
         {saved && <Alert variant="success" title="Saved">Your changes have been saved successfully.</Alert>}
@@ -278,11 +278,11 @@ function SettingsPageInner() {
           <nav className="lg:w-52 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0 shrink-0">
             {TABS.map(({ key, label, icon: Icon }) => (
               <button key={key} onClick={() => setTab(key)}
-                className={["flex items-center gap-2.5 px-3 py-2 rounded-[7px] text-[13px] whitespace-nowrap transition-all", tab === key ? "bg-[rgba(25,25,23,0.06)] text-primary" : "text-secondary hover:text-primary hover:bg-[rgba(25,25,23,0.04)]"].join(" ")}>
+                className={["flex items-center gap-2.5 px-3 py-2 rounded-[7px] text-[13px] whitespace-nowrap transition-all", tab === key ? "bg-[rgb(var(--tk-ink) / 0.06)] text-primary" : "text-secondary hover:text-primary hover:bg-[rgb(var(--tk-ink) / 0.04)]"].join(" ")}>
                 <Icon size={15} className="shrink-0" />
                 <span className="flex-1 text-left">{label}</span>
-                {key === "voice" && voiceActive && <span className="text-[11px]" style={{ color: "#477054" }}>On</span>}
-                {key === "automation" && autoEnabled && <span className="text-[11px]" style={{ color: "#477054" }}>On</span>}
+                {key === "voice" && voiceActive && <span className="text-[11px]" style={{ color: "var(--positive)" }}>On</span>}
+                {key === "automation" && autoEnabled && <span className="text-[11px]" style={{ color: "var(--positive)" }}>On</span>}
               </button>
             ))}
           </nav>
@@ -337,13 +337,13 @@ function SettingsPageInner() {
                   <div>
                     <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Business Address</label>
                     <textarea value={business.business_address} onChange={e => setBusiness(b => ({ ...b, business_address: e.target.value }))} placeholder="Shop No. 12, Gandhi Nagar, Delhi - 110031" rows={2}
-                      className="w-full bg-white border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
+                      className="w-full bg-surface border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">City</label>
                       <select value={business.city} onChange={e => setBusiness(b => ({ ...b, city: e.target.value }))}
-                        className="w-full bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
+                        className="w-full bg-surface border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
                         <option value="">Select city</option>
                         {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
@@ -356,7 +356,7 @@ function SettingsPageInner() {
                       <div>
                         <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Invoice Prefix</label>
                         <input value={business.invoice_prefix} onChange={e => setBusiness(b => ({ ...b, invoice_prefix: e.target.value.toUpperCase() }))} placeholder="INV" maxLength={6}
-                          className="w-full bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors font-mono" />
+                          className="w-full bg-surface border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors font-mono" />
                         <p className="text-2xs text-muted mt-1">Bills will be INV-2025-0001</p>
                       </div>
                       <Input label="UPI ID (for invoices)" type="text" placeholder="yourname@upi" value={business.upi_id} onChange={e => setBusiness(b => ({ ...b, upi_id: e.target.value }))} />
@@ -390,7 +390,7 @@ function SettingsPageInner() {
                       <Input label="Your First Name" type="text" placeholder="e.g. Rajesh" value={voice.owner_name} onChange={e => setVoice(v => ({ ...v, owner_name: e.target.value }))} />
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-medium text-secondary uppercase tracking-wider">Business City</label>
-                        <select value={voice.city} onChange={e => setVoice(v => ({ ...v, city: e.target.value }))} className="bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
+                        <select value={voice.city} onChange={e => setVoice(v => ({ ...v, city: e.target.value }))} className="bg-surface border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
                           <option value="">Select city</option>
                           {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
@@ -418,7 +418,7 @@ function SettingsPageInner() {
                         <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1">Message {i + 1} {i === 0 ? "(required)" : "(optional)"}</label>
                         <textarea value={s} onChange={e => setSamples(prev => prev.map((v, j) => j === i ? e.target.value : v))} rows={2}
                           placeholder={i === 0 ? 'e.g. Ramesh bhai, aapka ₹45,000 pending hai. Aaj possible hai kya?' : 'Paste another message...'}
-                          className="w-full bg-white border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
+                          className="w-full bg-surface border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
                       </div>
                     ))}
                     <button onClick={handleExtractVoice} disabled={extracting || !samples[0].trim()}
@@ -440,7 +440,7 @@ function SettingsPageInner() {
                   <div className="max-w-lg">
                     <textarea value={voice.ai_persona} onChange={e => setVoice(v => ({ ...v, ai_persona: e.target.value }))}
                       placeholder="e.g. I talk in casual Hinglish. I use 'bhai' often. I keep messages short and to the point."
-                      rows={4} className="w-full bg-white border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
+                      rows={4} className="w-full bg-surface border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
                   </div>
                 </Card>
                 <form onSubmit={handleVoiceSave} className="flex items-center gap-3">
@@ -473,12 +473,12 @@ function SettingsPageInner() {
 
                 {/* AutoPilot Hero */}
                 <div className="relative overflow-hidden rounded-2xl p-6"
-                  style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)" }}>
+                  style={{ background: "var(--surface)", border: "1px solid rgb(var(--tk-ink) / 0.10)" }}>
                   <div className="absolute -top-8 -right-8 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
                   <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-cta/5 rounded-full blur-3xl pointer-events-none" />
                   <div className="relative flex items-start gap-4">
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-xl"
-                      style={{ background: "#191917", color: "#F7F7F4" }}>
+                      style={{ background: "var(--ink)", color: "var(--bg)" }}>
                       ⚡
                     </div>
                     <div>
@@ -614,13 +614,13 @@ function SettingsPageInner() {
                     <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
                     <div className="space-y-4">
                       {[
-                        { icon: "📄", label: "Invoice Created", desc: "Customer gets WhatsApp: Invoice raised, pay by [date]", color: "#0066FF", always: true },
-                        { icon: "🔔", label: "Your Dunning Rules", desc: "Reminders go out at Day 3, 7, 15... with payment link", color: "#F5A524", always: false },
-                        { icon: "💰", label: "Customer Pays", desc: "Invoice auto-closed → Thank you WhatsApp → Push notification", color: "#10D98A", always: true },
-                        { icon: "📊", label: "Daily Briefing (8 AM)", desc: "You get a WhatsApp summary of outstanding collections", color: "#9B6DFF", always: true },
+                        { icon: "📄", label: "Invoice Created", desc: "Customer gets WhatsApp: Invoice raised, pay by [date]", color: "var(--accent)", always: true },
+                        { icon: "🔔", label: "Your Dunning Rules", desc: "Reminders go out at Day 3, 7, 15... with payment link", color: "var(--warning)", always: false },
+                        { icon: "💰", label: "Customer Pays", desc: "Invoice auto-closed → Thank you WhatsApp → Push notification", color: "var(--positive)", always: true },
+                        { icon: "📊", label: "Daily Briefing (8 AM)", desc: "You get a WhatsApp summary of outstanding collections", color: "var(--info)", always: true },
                       ].map(({ icon, label, desc, color, always }) => (
                         <div key={label} className="relative flex gap-4 pl-10">
-                          <div className="absolute left-0 w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
+                          <div className="absolute left-0 w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ background: `color-mix(in srgb, ${color} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 19%, transparent)` }}>
                             {icon}
                           </div>
                           <div className="flex-1 pb-2">
@@ -651,7 +651,7 @@ function SettingsPageInner() {
 
                   {/* Add rule form */}
                   {showAddRule && (
-                    <div className="mb-4 p-4 bg-white border border-border-input rounded-md space-y-4">
+                    <div className="mb-4 p-4 bg-surface border border-border-input rounded-md space-y-4">
                       <p className="text-xs font-semibold text-primary">New Reminder Rule</p>
                       <div className="grid grid-cols-3 gap-3">
                         <div>
@@ -666,7 +666,7 @@ function SettingsPageInner() {
                             {(["gentle", "firm", "urgent"] as const).map(t => (
                               <button key={t} type="button" onClick={() => setNewRule(r => ({ ...r, tone: t }))}
                                 className="flex-1 py-2 rounded-lg text-2xs font-bold border transition-all"
-                                style={newRule.tone === t ? { background: `${TONE_COLORS[t]}20`, borderColor: `${TONE_COLORS[t]}60`, color: TONE_COLORS[t] } : { background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--secondary)" }}>
+                                style={newRule.tone === t ? { background: `color-mix(in srgb, ${TONE_COLORS[t]} 13%, transparent)`, borderColor: `color-mix(in srgb, ${TONE_COLORS[t]} 38%, transparent)`, color: TONE_COLORS[t] } : { background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--secondary)" }}>
                                 {t}
                               </button>
                             ))}
@@ -722,7 +722,7 @@ function SettingsPageInner() {
                             <div className="w-12 h-px bg-border" />
                             <div className="flex flex-col items-center">
                               <div className="w-8 h-8 rounded-full flex items-center justify-center text-2xs font-black border-2"
-                                style={{ background: rule.enabled ? `${TONE_COLORS[rule.tone]}20` : "var(--surface-2)", borderColor: rule.enabled ? TONE_COLORS[rule.tone] : "var(--border)", color: rule.enabled ? TONE_COLORS[rule.tone] : "var(--muted)" }}>
+                                style={{ background: rule.enabled ? `color-mix(in srgb, ${TONE_COLORS[rule.tone]} 13%, transparent)` : "var(--surface-2)", borderColor: rule.enabled ? TONE_COLORS[rule.tone] : "var(--border)", color: rule.enabled ? TONE_COLORS[rule.tone] : "var(--muted)" }}>
                                 {rule.trigger_day}
                               </div>
                               <span className="text-2xs text-muted mt-0.5">{rule.action === "whatsapp" ? "📱" : "📞"}</span>
@@ -739,13 +739,13 @@ function SettingsPageInner() {
                       {rules.map(rule => (
                         <div key={rule.id} className={["flex items-center gap-4 p-4 rounded-xl border transition-all", rule.enabled ? "bg-surface border-border" : "bg-surface-2/50 border-border/50 opacity-60"].join(" ")}>
                           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black border"
-                            style={{ background: `${TONE_COLORS[rule.tone]}15`, borderColor: `${TONE_COLORS[rule.tone]}30`, color: TONE_COLORS[rule.tone] }}>
+                            style={{ background: `color-mix(in srgb, ${TONE_COLORS[rule.tone]} 8%, transparent)`, borderColor: `color-mix(in srgb, ${TONE_COLORS[rule.tone]} 19%, transparent)`, color: TONE_COLORS[rule.tone] }}>
                             {rule.trigger_day}d
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-xs font-bold text-primary">Day {rule.trigger_day} overdue</span>
-                              <span className="text-2xs font-bold px-2 py-0.5 rounded-full border" style={{ background: `${TONE_COLORS[rule.tone]}15`, borderColor: `${TONE_COLORS[rule.tone]}30`, color: TONE_COLORS[rule.tone] }}>
+                              <span className="text-2xs font-bold px-2 py-0.5 rounded-full border" style={{ background: `color-mix(in srgb, ${TONE_COLORS[rule.tone]} 8%, transparent)`, borderColor: `color-mix(in srgb, ${TONE_COLORS[rule.tone]} 19%, transparent)`, color: TONE_COLORS[rule.tone] }}>
                                 {TONE_LABELS[rule.tone]}
                               </span>
                               <span className="text-2xs text-muted">{rule.action === "whatsapp" ? "📱 WhatsApp" : "📞 Call"} with payment link</span>
@@ -816,7 +816,7 @@ export default function SettingsPage() {
 function DeliveryBadge({ line }: { line?: DeliveryLine }) {
   const state = !line ? "unknown" : line.active ? "on" : "off";
   const styles = {
-    on: { background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" },
+    on: { background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "var(--positive)" },
     off: { background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.3)", color: "#B7791F" },
     unknown: { background: "rgba(128,128,128,0.08)", border: "1px solid rgba(128,128,128,0.2)", color: "#8A8A85" },
   }[state];

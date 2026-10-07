@@ -21,14 +21,14 @@ export default function AgentRunDetail() {
   return (
     <DashboardLayout pageTitle="Agent run">
       <div className="max-w-xl mx-auto mt-16 text-center px-4 fade-once">
-        <FiUsers size={28} className="mx-auto mb-4" style={{ color: "#8A8A86" }} />
-        <h1 className="mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 22, color: "#191917" }}>No run data</h1>
+        <FiUsers size={28} className="mx-auto mb-4" style={{ color: "var(--ink-3)" }} />
+        <h1 className="mb-3" style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, color: "var(--ink)" }}>No run data</h1>
         <p className="v32-body">
           {id && runId ? `No run "${runId}" exists for agent "${id}". ` : ""}
           Starlane doesn&apos;t track agent runs yet. Once agents can actually run, this page will show its
           progress step by step, the proposed action with its evidence, and where it stands.
         </p>
-        <Link href="/agents" style={{ color: "#191917", fontSize: 13, fontWeight: 500, display: "inline-block", marginTop: 16 }}>
+        <Link href="/agents" style={{ color: "var(--ink)", fontSize: 13, fontWeight: 500, display: "inline-block", marginTop: 16 }}>
           ← Back to Agents
         </Link>
       </div>

@@ -30,7 +30,7 @@ export default function PaymentCelebration() {
 
   // Generate confetti particles once on mount
   useEffect(() => {
-    const colors = ["#10D98A", "#4F6EF7", "#FF6B35", "#F5A524", "#ffffff"];
+    const colors = ["var(--positive)", "var(--accent)", "var(--warning)", "var(--ink-2)", "var(--ink)"];
     setParticles(
       Array.from({ length: 24 }, (_, i) => ({
         x: Math.random() * 100,
@@ -166,7 +166,7 @@ export default function PaymentCelebration() {
             }}
             className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold transition-all active:scale-95"
             style={{
-              background: "linear-gradient(135deg, #10D98A, #059669)",
+              background: "linear-gradient(135deg, var(--positive), #059669)",
               boxShadow:  "0 4px 16px rgba(16,217,138,0.35)",
             }}
           >

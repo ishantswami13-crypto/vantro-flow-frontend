@@ -293,7 +293,7 @@ export default function InventoryPage() {
           <button
             onClick={() => { setShowAdd(true); setForm(emptyForm); setFormError(""); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors"
-            style={{ background: "#fff", color: "#000" }}
+            style={{ background: "var(--surface)", color: "#000" }}
           >
             <FiPlus size={13} /> Add Product
           </button>
@@ -309,16 +309,16 @@ export default function InventoryPage() {
               </div>
             ))
           ) : [
-            { label: "Total Products",   value: summary.total_products.toString(),    icon: <FiPackage size={15}/>,      color: "#0066FF" },
-            { label: "Stock Value",      value: fmtVal(summary.total_value),          icon: <FiTrendingUp size={15}/>,   color: "#10D98A" },
-            { label: "Low Stock",        value: summary.low_stock_count.toString(),   icon: <FiAlertTriangle size={15}/>,color: "#F5A524" },
-            { label: "Out of Stock",     value: summary.out_of_stock_count.toString(),icon: <FiBox size={15}/>,          color: "#F5424D" },
+            { label: "Total Products",   value: summary.total_products.toString(),    icon: <FiPackage size={15}/>,      color: "var(--accent)" },
+            { label: "Stock Value",      value: fmtVal(summary.total_value),          icon: <FiTrendingUp size={15}/>,   color: "var(--positive)" },
+            { label: "Low Stock",        value: summary.low_stock_count.toString(),   icon: <FiAlertTriangle size={15}/>,color: "var(--warning)" },
+            { label: "Out of Stock",     value: summary.out_of_stock_count.toString(),icon: <FiBox size={15}/>,          color: "var(--critical)" },
           ].map(k => (
             <div key={k.label} className="card-metric p-5">
               <div className="flex items-center justify-between mb-3">
                 <p className="section-label">{k.label}</p>
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                  style={{ background: `${k.color}18`, border: `1px solid ${k.color}30` }}>
+                  style={{ background: `color-mix(in srgb, ${k.color} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${k.color} 19%, transparent)` }}>
                   <span style={{ color: k.color }}>{k.icon}</span>
                 </div>
               </div>
@@ -550,7 +550,7 @@ export default function InventoryPage() {
                 <p className="text-xs text-muted mb-4">Add your first product to start tracking stock</p>
                 <button onClick={() => { setShowAdd(true); setForm(emptyForm); setFormError(""); }}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
-                  style={{ background: "#fff", color: "#000" }}>
+                  style={{ background: "var(--surface)", color: "#000" }}>
                   <FiPlus size={12} /> Add Product
                 </button>
               </div>

@@ -358,7 +358,7 @@ function AIMonitor({ userId }: { userId: string }) {
   };
 
   const scoreColor = (s: number) =>
-    s >= 70 ? "#10D98A" : s >= 40 ? "#F5A524" : "#F5424D";
+    s >= 70 ? "var(--positive)" : s >= 40 ? "var(--warning)" : "var(--critical)";
 
   const alertVariant: Record<string, string> = {
     danger:  "bg-danger-dim border-danger/20 text-danger",
@@ -659,28 +659,28 @@ export default function LedgerPage() {
       label: "Net Balance",
       value: fmt(Math.abs(summary.balance)),
       sub: summary.balance >= 0 ? "Net positive" : "Net negative",
-      color: summary.balance >= 0 ? "#10D98A" : "#F5424D",
+      color: summary.balance >= 0 ? "var(--positive)" : "var(--critical)",
       icon: FiTrendingUp,
     },
     {
       label: "Total Received",
       value: fmt(summary.totalIn),
       sub: `This month: ${fmt(summary.monthIn)}`,
-      color: "#10D98A",
+      color: "var(--positive)",
       icon: FiArrowDown,
     },
     {
       label: "Total Paid Out",
       value: fmt(summary.totalOut),
       sub: `This month: ${fmt(summary.monthOut)}`,
-      color: "#F5424D",
+      color: "var(--critical)",
       icon: FiArrowUp,
     },
     {
       label: "This Month Net",
       value: fmt(Math.abs(summary.monthBalance)),
       sub: summary.monthBalance >= 0 ? "Surplus this month" : "Deficit this month",
-      color: summary.monthBalance >= 0 ? "#10D98A" : "#F5424D",
+      color: summary.monthBalance >= 0 ? "var(--positive)" : "var(--critical)",
       icon: FiActivity,
     },
   ];
@@ -810,7 +810,7 @@ export default function LedgerPage() {
               <div className="flex items-start justify-between mb-3">
                 <p className="section-label">{label}</p>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
+                  style={{ background: `color-mix(in srgb, ${color} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 19%, transparent)` }}>
                   <Icon size={15} style={{ color }} />
                 </div>
               </div>

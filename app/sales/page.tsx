@@ -818,7 +818,7 @@ export default function SalesPage() {
                 className="flex items-center justify-center disabled:opacity-30 transition-transform active:scale-95"
                 style={{
                   width: 80, height: 80, borderRadius: "50%",
-                  background: "#ffffff",
+                  background: "var(--surface)",
                   boxShadow: "0 0 0 5px rgba(255,255,255,0.25), 0 8px 32px rgba(0,0,0,0.5)",
                 }}>
                 <FiCamera size={32} className="text-black" />
@@ -835,7 +835,7 @@ export default function SalesPage() {
         {/* ══════════ PAGE HEADER ══════════ */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Sales</h1>
+            <h1 className="text-[26px] leading-[1.15]" style={{ color: "var(--ink)", fontWeight: 500, letterSpacing: "-0.01em" }}>Sales</h1>
             <p className="text-xs text-muted mt-1">What customers owe you</p>
           </div>
           <div className="flex items-center gap-2">
@@ -996,7 +996,7 @@ export default function SalesPage() {
                         </div>
                       )}
                       {s.gst_type && s.gst_amount && (
-                        <p className="text-xs mt-0.5" style={{ color: "#F5A524" }}>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--warning)" }}>
                           {s.gst_type}{s.gst_rate ? ` @${s.gst_rate}%` : ""}: {fmtINR(s.gst_amount)}
                         </p>
                       )}
@@ -1125,7 +1125,7 @@ export default function SalesPage() {
                   <div className="rounded-xl border border-border overflow-x-auto">
                     <table className="w-full" style={{ minWidth: 420 }}>
                       <thead>
-                        <tr style={{ background: "#FAFAF8", borderBottom: "1px solid #E5E5E1" }}>
+                        <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--line-hairline)" }}>
                           <th className="text-left px-3 py-2 text-2xs font-semibold text-muted uppercase tracking-wide">Description</th>
                           <th className="text-center px-2 py-2 text-2xs font-semibold text-muted uppercase tracking-wide">HSN/SAC</th>
                           <th className="text-center px-2 py-2 text-2xs font-semibold text-muted uppercase tracking-wide">Qty</th>
@@ -1135,7 +1135,7 @@ export default function SalesPage() {
                       </thead>
                       <tbody>
                         {scannedItems.map((item, i) => (
-                          <tr key={i} style={{ borderTop: i > 0 ? "1px solid #EDEDE9" : "none" }}>
+                          <tr key={i} style={{ borderTop: i > 0 ? "1px solid var(--surface-3)" : "none" }}>
                             <td className="px-3 py-2.5" style={{ maxWidth: 200 }}>
                               <p className="text-xs text-primary font-medium leading-snug">{item.description}</p>
                             </td>
@@ -1156,17 +1156,17 @@ export default function SalesPage() {
                       {form.total_amount && (
                         <tfoot>
                           {scannedGst && (
-                            <tr style={{ borderTop: "1px solid #E5E5E1" }}>
+                            <tr style={{ borderTop: "1px solid var(--line-hairline)" }}>
                               <td colSpan={3} className="px-3 py-2 text-xs text-muted text-right">
                                 {scannedGst.type}{scannedGst.rate ? ` @ ${scannedGst.rate}%` : ""}
                               </td>
                               <td />
-                              <td className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "#F5A524" }}>
+                              <td className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "var(--warning)" }}>
                                 +{fmtINR(scannedGst.amount)}
                               </td>
                             </tr>
                           )}
-                          <tr style={{ borderTop: "1px solid #D8D8D3", background: "#FAFAF8" }}>
+                          <tr style={{ borderTop: "1px solid var(--line-strong)", background: "var(--surface-2)" }}>
                             <td colSpan={4} className="px-3 py-2 text-xs font-semibold text-muted text-right">Grand Total</td>
                             <td className="px-3 py-2 text-right text-sm font-bold text-success">
                               {fmtINR(parseFloat(form.total_amount))}
@@ -1208,7 +1208,7 @@ export default function SalesPage() {
                       <div>
                         <label className="text-xs text-muted mb-1 block">Seller GSTIN (Yours)</label>
                         <div className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm font-mono tracking-wide"
-                          style={{ color: myGstin ? "#686868" : "#B5B5B0" }}>
+                          style={{ color: myGstin ? "var(--ink-2)" : "var(--ink-3)" }}>
                           {myGstin || <span className="text-xs not-italic" style={{ fontFamily: "inherit", letterSpacing: 0 }}>Set in Settings</span>}
                         </div>
                       </div>

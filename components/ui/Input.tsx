@@ -30,7 +30,7 @@ export function Input({ label, error, hint, prefix, icon, className = "", id, ..
         <input
           id={inputId}
           className={[
-            "w-full bg-white border rounded-md text-sm text-primary placeholder-muted",
+            "w-full bg-surface border rounded-md text-sm text-primary placeholder-muted",
             "transition-colors duration-150 focus:outline-none focus:border-accent",
             error ? "border-danger" : "border-border",
             prefix ? "pl-8" : icon ? "pl-9" : "pl-3",
@@ -66,7 +66,7 @@ export function Select({ label, error, hint, options, className = "", id, ...pro
       <select
         id={selectId}
         className={[
-          "w-full bg-white border rounded-md text-sm text-primary",
+          "w-full bg-surface border rounded-md text-sm text-primary",
           "transition-colors duration-150 focus:outline-none focus:border-accent",
           "px-3 py-2.5 appearance-none",
           error ? "border-danger" : "border-border",

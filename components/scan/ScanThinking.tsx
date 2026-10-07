@@ -31,7 +31,7 @@ export function ScanThinking() {
         if (i > current) return null;
         const done = i < current;
         return (
-          <div key={s} className="rise-in" style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: done ? "#8A8A86" : "#43433F" }}>
+          <div key={s} className="rise-in" style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: done ? "var(--ink-3)" : "var(--body)" }}>
             <span style={{ width: 16, display: "inline-flex", justifyContent: "center" }}>
               {done ? <IconCheck size={13} /> : <ThinkingDots />}
             </span>

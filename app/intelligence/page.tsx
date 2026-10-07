@@ -49,26 +49,26 @@ function SignalRow({ signal, onOpen }: { signal: IntelligenceSignal; onOpen: () 
       type="button"
       onClick={onOpen}
       className="w-full text-left group flex items-start gap-4 py-6"
-      style={{ borderBottom: "1px solid #E5E5E1" }}
-      onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "#FAFAF8")}
+      style={{ borderBottom: "1px solid var(--line-hairline)" }}
+      onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "var(--surface-2)")}
       onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
     >
       <span
         aria-hidden="true"
         className="mt-1.5 rounded-full shrink-0"
-        style={{ width: 6, height: 6, background: isExternal ? "#191917" : "#D8D8D3" }}
+        style={{ width: 6, height: 6, background: isExternal ? "var(--ink)" : "var(--line-strong)" }}
       />
       <div className="min-w-0 flex-1">
-        <p className="text-[12px]" style={{ color: "#8A8A86" }}>{metaParts.join(" · ")}</p>
-        <p className="text-[15px] font-medium mt-1" style={{ color: "#191917" }}>{signal.event_title || "External event"}</p>
-        <p className="text-[13px] mt-1 leading-[1.5] max-w-[640px] line-clamp-2" style={{ color: "#686868" }}>{humanReason(signal)}</p>
-        <p className="text-[12px] mt-2" style={{ color: "#8A8A86" }}>
+        <p className="text-[12px]" style={{ color: "var(--ink-3)" }}>{metaParts.join(" · ")}</p>
+        <p className="text-[15px] font-medium mt-1" style={{ color: "var(--ink)" }}>{signal.event_title || "External event"}</p>
+        <p className="text-[13px] mt-1 leading-[1.5] max-w-[640px] line-clamp-2" style={{ color: "var(--ink-2)" }}>{humanReason(signal)}</p>
+        <p className="text-[12px] mt-2" style={{ color: "var(--ink-3)" }}>
           Updated {formatDateTime(signal.last_updated_at || signal.first_detected_at)}
           {confidence !== "UNKNOWN" && ` · ${confidence.charAt(0)}${confidence.slice(1).toLowerCase()} confidence`}
           {` · ${statusLabel(signal.status)}`}
         </p>
       </div>
-      <FiChevronRight className="shrink-0 mt-1.5 transition-colors" size={16} style={{ color: "#B5B5B0" }} />
+      <FiChevronRight className="shrink-0 mt-1.5 transition-colors" size={16} style={{ color: "var(--ink-3)" }} />
     </button>
   );
 }
@@ -114,17 +114,17 @@ export default function IntelligencePage() {
   return (
     <DashboardLayout pageTitle="Intelligence">
       <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
-        <h1 className="text-[28px] lg:text-[32px] leading-[1.15] mb-2" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>
+        <h1 className="text-[28px] lg:text-[32px] leading-[1.15] mb-2" style={{ color: "var(--ink)", fontWeight: 500, letterSpacing: "-0.01em" }}>
           Intelligence
         </h1>
-        <p className="text-[14px] max-w-[700px] mb-9" style={{ color: "#686868" }}>
+        <p className="text-[14px] max-w-[700px] mb-9" style={{ color: "var(--ink-2)" }}>
           Changes, risks and opportunities Starlane has detected across your organization and the external environment.
         </p>
 
         {isLoading && (
           <div>
             {[0, 1, 2].map(i => (
-              <div key={i} className="py-6" style={{ borderBottom: "1px solid #E5E5E1" }}>
+              <div key={i} className="py-6" style={{ borderBottom: "1px solid var(--line-hairline)" }}>
                 <div className="skeleton h-3 w-32 mb-3" />
                 <div className="skeleton h-4 w-72 mb-2" />
                 <div className="skeleton h-3 w-full max-w-[500px]" />
@@ -146,13 +146,13 @@ export default function IntelligencePage() {
             <span
               aria-hidden="true"
               className="absolute inset-0 flex items-center justify-center select-none pointer-events-none"
-              style={{ fontSize: "clamp(56px, 16vw, 140px)", fontWeight: 600, color: "#191917", opacity: 0.03, letterSpacing: "-0.04em", whiteSpace: "nowrap" }}
+              style={{ fontSize: "clamp(56px, 16vw, 140px)", fontWeight: 600, color: "var(--ink)", opacity: 0.03, letterSpacing: "-0.04em", whiteSpace: "nowrap" }}
             >
               Starlane
             </span>
             <div className="relative">
-              <p className="text-[15px] font-medium" style={{ color: "#191917" }}>No material changes detected</p>
-              <p className="text-[13px] mt-1.5 max-w-[440px] mx-auto" style={{ color: "#8A8A86" }}>
+              <p className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>No material changes detected</p>
+              <p className="text-[13px] mt-1.5 max-w-[440px] mx-auto" style={{ color: "var(--ink-3)" }}>
                 Starlane hasn't identified a material change from the evidence currently available.
               </p>
             </div>

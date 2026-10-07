@@ -19,7 +19,7 @@ const BANKS = [
 
 const BANK_COLORS: Record<string, string> = {
   "HDFC Bank": "#004C8F", "SBI": "#22409A", "ICICI Bank": "#F58220",
-  "Axis Bank": "#800000", "Kotak Mahindra Bank": "#E21F26", "Other": "#0066FF",
+  "Axis Bank": "#800000", "Kotak Mahindra Bank": "#E21F26", "Other": "var(--accent)",
 };
 
 type BankAccount = {
@@ -337,7 +337,7 @@ export default function BankPage() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Bank Monitor</h2>
+            <h2 className="text-[26px] leading-[1.15]" style={{ color: "var(--ink)", fontWeight: 500, letterSpacing: "-0.01em" }}>Bank Monitor</h2>
             <p className="text-sm text-muted mt-1">Connect accounts · import statements · auto-match payments</p>
           </div>
           <div className="flex gap-2">
@@ -372,7 +372,7 @@ export default function BankPage() {
                 <div key={acct.id} className="card p-4 relative group">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-black shrink-0"
-                      style={{ background: BANK_COLORS[acct.bank_name] || "#0066FF" }}>
+                      style={{ background: BANK_COLORS[acct.bank_name] || "var(--accent)" }}>
                       {acct.bank_name.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">

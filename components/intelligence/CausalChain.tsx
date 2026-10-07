@@ -17,23 +17,23 @@ function Step({ index, title, detail, cites, last = false, tone }: {
 }) {
   return (
     <li className="relative pl-9" style={{ paddingBottom: last ? 0 : 20 }}>
-      {!last && <span aria-hidden="true" className="absolute left-[11px] top-7 bottom-0" style={{ width: 1, background: "#E5E4DF" }} />}
+      {!last && <span aria-hidden="true" className="absolute left-[11px] top-7 bottom-0" style={{ width: 1, background: "var(--line-hairline)" }} />}
       <span
         aria-hidden="true"
         className="absolute left-0 top-0 inline-flex items-center justify-center w-[23px] h-[23px] rounded-full text-[11px] font-semibold"
         style={{
-          background: tone === "danger" ? "rgba(166,79,75,0.10)" : "#F3F2EE",
-          color: tone === "danger" ? "#A64F4B" : "#63635F",
+          background: tone === "danger" ? "rgb(var(--tk-critical) / 0.10)" : "var(--surface-2)",
+          color: tone === "danger" ? "var(--critical)" : "var(--ink-2)",
           fontVariantNumeric: "tabular-nums",
         }}
       >
         {index}
       </span>
-      <p className="text-[14px] leading-[1.55]" style={{ color: "#191917" }}>
+      <p className="text-[14px] leading-[1.55]" style={{ color: "var(--ink)" }}>
         {title}
         {cites}
       </p>
-      {detail && <p className="text-[12.5px] mt-0.5 leading-snug" style={{ color: "#8A8A86" }}>{detail}</p>}
+      {detail && <p className="text-[12.5px] mt-0.5 leading-snug" style={{ color: "var(--ink-3)" }}>{detail}</p>}
     </li>
   );
 }
@@ -64,7 +64,7 @@ export function CausalChain({ impact, component, citations, onCite }: {
       />
       <Step
         index={3}
-        title={<>They supply {component.component.name} <span className="font-mono text-[12px]" style={{ color: "#8A8A86" }}>{component.component.sku}</span>.</>}
+        title={<>They supply {component.component.name} <span className="font-mono text-[12px]" style={{ color: "var(--ink-3)" }}>{component.component.sku}</span>.</>}
         detail={component.alternateSource ? `Alternate source on record: ${component.alternateSource.name}` : "No alternate source on record."}
         cites={<><Cite n={c.inventory} onCite={onCite} /><Cite n={c.alternate} onCite={onCite} /></>}
       />

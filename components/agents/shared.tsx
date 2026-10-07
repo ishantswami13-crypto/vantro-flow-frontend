@@ -14,7 +14,7 @@ export const PERMISSION_LABEL: Record<string, string> = {
 };
 
 export function agentStatus(a: AgentInfo): { label: string; color: string } {
-  if (a.status === "ACTIVE") return { label: "Active", color: "#477054" };
-  if (a.status === "STOPPED") return { label: "Stopped", color: "#A64F4B" };
-  return { label: "Idle · not run yet", color: "#8A8A86" };
+  if (a.status === "ACTIVE") return { label: "Active", color: "var(--positive)" };
+  if (a.status === "STOPPED") return { label: "Stopped", color: "var(--critical)" };
+  return { label: "Idle · not run yet", color: "var(--ink-3)" };
 }

@@ -138,7 +138,7 @@ export default function BillingPage() {
           name: "Starlane",
           description: `${planId.charAt(0).toUpperCase() + planId.slice(1)} Plan — ${billing}`,
           prefill: { email: user?.email || "", contact: user?.phone || "", name: user?.business_name || "" },
-          theme: { color: "#0066FF" },
+          theme: { color: "var(--accent)" },
           handler: async (response: any) => {
             try {
               await api.billing.verify({
@@ -270,7 +270,7 @@ export default function BillingPage() {
             /* White card for Growth, dark for others */
             if (isHighlight) {
               return (
-                <div key={plan.id} className="relative rounded-2xl bg-white p-7 flex flex-col shadow-2xl md:-mt-3 md:mb-3">
+                <div key={plan.id} className="relative rounded-2xl bg-surface p-7 flex flex-col shadow-2xl md:-mt-3 md:mb-3">
                   {plan.badge && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                       <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-2xs font-black tracking-widest uppercase text-white bg-black shadow-lg">

@@ -18,18 +18,18 @@ import { agentStatus, PERMISSION_LABEL } from "@/components/agents/shared";
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--ink-2)", marginBottom: 6 }}>{label}</div>
       {children}
     </div>
   );
 }
 
 function List({ items }: { items: string[] }) {
-  if (!items.length) return <div style={{ fontSize: 13, color: "#8A8A86" }}>None recorded.</div>;
+  if (!items.length) return <div style={{ fontSize: 13, color: "var(--ink-3)" }}>None recorded.</div>;
   return (
     <div>
       {items.map((x) => (
-        <div key={x} style={{ fontSize: 13, color: "#43433F", padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>{x}</div>
+        <div key={x} style={{ fontSize: 13, color: "var(--body)", padding: "7px 0", borderBottom: "1px solid var(--line)" }}>{x}</div>
       ))}
     </div>
   );
@@ -37,9 +37,9 @@ function List({ items }: { items: string[] }) {
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between" style={{ gap: 12, padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>
-      <span style={{ fontSize: 12.5, color: "#63635F" }}>{label}</span>
-      <span style={{ fontSize: 12.5, color: "#191917", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", textAlign: "right" }}>{value}</span>
+    <div className="flex items-baseline justify-between" style={{ gap: 12, padding: "7px 0", borderBottom: "1px solid var(--line)" }}>
+      <span style={{ fontSize: 12.5, color: "var(--ink-2)" }}>{label}</span>
+      <span style={{ fontSize: 12.5, color: "var(--ink)", fontFamily: "var(--font-sans)", textAlign: "right" }}>{value}</span>
     </div>
   );
 }
@@ -53,7 +53,7 @@ export default function AgentDetail() {
 
   return (
     <DashboardLayout pageTitle="Agent">
-      <Link href="/agents" className="hover-dim flex items-center" style={{ gap: 6, fontSize: 12.5, color: "#63635F" }}>
+      <Link href="/agents" className="hover-dim flex items-center" style={{ gap: 6, fontSize: 12.5, color: "var(--ink-2)" }}>
         <FiChevronLeft size={13} /> Agents
       </Link>
 
@@ -71,8 +71,8 @@ export default function AgentDetail() {
               <div className="flex items-center" style={{ gap: 12 }}>
                 <Lettermark letter={a.name} size={44} />
                 <div>
-                  <h1 style={{ margin: "0 0 2px", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, letterSpacing: "-0.01em", color: "#191917" }}>{a.name}</h1>
-                  <div className="flex items-center flex-wrap" style={{ gap: 6, fontSize: 12.5, color: "#63635F" }}>
+                  <h1 style={{ margin: "0 0 2px", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, letterSpacing: "-0.01em", color: "var(--ink)" }}>{a.name}</h1>
+                  <div className="flex items-center flex-wrap" style={{ gap: 6, fontSize: 12.5, color: "var(--ink-2)" }}>
                     {a.model} <Sep /> <StatusDot label={st.label} color={st.color} />
                   </div>
                 </div>
@@ -91,10 +91,10 @@ export default function AgentDetail() {
                 {tab === "overview" ? (
                   <>
                     <Section label="Objective">
-                      <div style={{ fontSize: 13.5, color: "#43433F", lineHeight: 1.6 }}>{a.purpose}</div>
+                      <div style={{ fontSize: 13.5, color: "var(--body)", lineHeight: 1.6 }}>{a.purpose}</div>
                     </Section>
                     <Section label="Current state">
-                      <div style={{ fontSize: 13.5, color: "#43433F", lineHeight: 1.6 }}>
+                      <div style={{ fontSize: 13.5, color: "var(--body)", lineHeight: 1.6 }}>
                         {a.stoppedReason ? `Stopped: ${a.stoppedReason}` : a.performance || (a.runs ? `${a.runs} run${a.runs === 1 ? "" : "s"} so far.` : "It has not run on your data yet.")}
                       </div>
                     </Section>
@@ -115,14 +115,14 @@ export default function AgentDetail() {
               </div>
               <div className="flex flex-col" style={{ flex: 1, maxWidth: 300, minWidth: 0, gap: 20 }}>
                 <div>
-                  <div style={{ fontSize: 10.5, letterSpacing: 0, color: "#8A8A86", marginBottom: 6 }}>Activity</div>
+                  <div style={{ fontSize: 10.5, letterSpacing: 0, color: "var(--ink-3)", marginBottom: 6 }}>Activity</div>
                   <Fact label="Runs" value={String(a.runs)} />
                   <Fact label="Last run" value={a.lastRunAt ? ago(a.lastRunAt) : "Never"} />
                   {a.budget && <Fact label="Budget" value={a.budget} />}
                 </div>
                 <div>
-                  <div style={{ fontSize: 10.5, letterSpacing: 0, color: "#8A8A86", marginBottom: 6 }}>Approval</div>
-                  <div style={{ fontSize: 12.5, color: "#43433F", lineHeight: 1.6 }}>Nothing leaves Starlane without a person approving it. Approvals wait on Control.</div>
+                  <div style={{ fontSize: 10.5, letterSpacing: 0, color: "var(--ink-3)", marginBottom: 6 }}>Approval</div>
+                  <div style={{ fontSize: 12.5, color: "var(--body)", lineHeight: 1.6 }}>Nothing leaves Starlane without a person approving it. Approvals wait on Control.</div>
                 </div>
               </div>
             </div>

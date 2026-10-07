@@ -45,7 +45,7 @@ export function ScanComposer({ value, onChange, onSubmit, submitting, placeholde
       <div className="flex items-center justify-between" style={{ padding: "4px 10px 10px 10px" }}>
         <div>{leading}</div>
         <button type="submit" disabled={submitting || !value.trim()} aria-label="Ask" className="scan-round scan-send">
-          {submitting ? <ThinkingDots color="#F7F7F4" /> : <IconArrowUp size={16} />}
+          {submitting ? <ThinkingDots color="var(--bg)" /> : <IconArrowUp size={16} />}
         </button>
       </div>
     </form>

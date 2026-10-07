@@ -51,9 +51,9 @@ function formatDate(iso: string | null): string {
 
 function OverviewRow({ label, value, tone, mono = true }: { label: string; value: string; tone?: "warn"; mono?: boolean }) {
   return (
-    <div className="flex items-baseline justify-between" style={{ gap: 16, padding: "8px 0", borderBottom: "1px solid #EBEAE6" }}>
-      <span style={{ fontSize: 12.5, color: "#63635F" }}>{label}</span>
-      <span style={{ fontSize: 13, color: tone === "warn" ? "#A64F4B" : "#191917", fontFamily: mono ? "'Plus Jakarta Sans', system-ui, sans-serif" : undefined, textAlign: "right", maxWidth: 380 }}>{value}</span>
+    <div className="flex items-baseline justify-between" style={{ gap: 16, padding: "8px 0", borderBottom: "1px solid var(--line)" }}>
+      <span style={{ fontSize: 12.5, color: "var(--ink-2)" }}>{label}</span>
+      <span style={{ fontSize: 13, color: tone === "warn" ? "var(--critical)" : "var(--ink)", fontFamily: mono ? "var(--font-sans)" : undefined, textAlign: "right", maxWidth: 380 }}>{value}</span>
     </div>
   );
 }
@@ -61,14 +61,14 @@ function OverviewRow({ label, value, tone, mono = true }: { label: string; value
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 11, letterSpacing: 0, color: "#63635F", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--ink-2)", marginBottom: 8 }}>{label}</div>
       {children}
     </div>
   );
 }
 
 function Quiet({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 12.5, color: "#8A8A86", lineHeight: 1.6, paddingTop: 4 }}>{children}</div>;
+  return <div style={{ fontSize: 12.5, color: "var(--ink-3)", lineHeight: 1.6, paddingTop: 4 }}>{children}</div>;
 }
 
 export default function SourcesTallyPage() {
@@ -94,28 +94,28 @@ export default function SourcesTallyPage() {
   const tally = connections.find((c) => c.source_type === "TALLY");
   const h = bridge?.state.health;
   const status = h && h !== "not_connected" && h !== "unavailable"
-    ? (h === "healthy" || h === "syncing" ? { label: h === "syncing" ? "Syncing" : "Healthy", color: "#477054" }
-      : h === "error" ? { label: "Needs attention", color: "#A64F4B" }
-        : h === "delayed" || h === "stale" || h === "connected" ? { label: h === "connected" ? "Paired, not synced yet" : "Sync delayed", color: "#9B742B" }
-          : { label: "Not connected", color: "rgba(25,25,23,0.25)" })
-    : !tally ? { label: "Not connected", color: "rgba(25,25,23,0.25)" }
-    : tally.status === "CONNECTED" ? { label: "Healthy", color: "#477054" }
-      : tally.status === "ERROR" ? { label: "Needs attention", color: "#A64F4B" }
-        : { label: "Not connected", color: "rgba(25,25,23,0.25)" };
+    ? (h === "healthy" || h === "syncing" ? { label: h === "syncing" ? "Syncing" : "Healthy", color: "var(--positive)" }
+      : h === "error" ? { label: "Needs attention", color: "var(--critical)" }
+        : h === "delayed" || h === "stale" || h === "connected" ? { label: h === "connected" ? "Paired, not synced yet" : "Sync delayed", color: "var(--warning)" }
+          : { label: "Not connected", color: "rgb(var(--tk-ink) / 0.25)" })
+    : !tally ? { label: "Not connected", color: "rgb(var(--tk-ink) / 0.25)" }
+    : tally.status === "CONNECTED" ? { label: "Healthy", color: "var(--positive)" }
+      : tally.status === "ERROR" ? { label: "Needs attention", color: "var(--critical)" }
+        : { label: "Not connected", color: "rgb(var(--tk-ink) / 0.25)" };
 
   return (
     <DashboardLayout pageTitle="Sources">
-      <Link href="/sources" className="hover-dim flex items-center" style={{ gap: 6, fontSize: 12.5, color: "#63635F" }}>
+      <Link href="/sources" className="hover-dim flex items-center" style={{ gap: 6, fontSize: 12.5, color: "var(--ink-2)" }}>
         <FiChevronLeft size={13} /> Sources
       </Link>
 
       <div className="fade-once flex items-start justify-between flex-wrap" style={{ gap: 12 }}>
         <div>
           <div className="flex items-center" style={{ gap: 10, marginBottom: 4 }}>
-            <IconSources size={18} style={{ color: "#43433F" }} />
-            <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 22, color: "#191917" }}>Tally</h1>
+            <IconSources size={18} style={{ color: "var(--body)" }} />
+            <h1 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, color: "var(--ink)" }}>Tally</h1>
           </div>
-          <div className="flex items-center" style={{ gap: 6, fontSize: 12.5, color: "#63635F" }}>
+          <div className="flex items-center" style={{ gap: 6, fontSize: 12.5, color: "var(--ink-2)" }}>
             Accounting / ERP <Sep /> <StatusDot label={loading ? "Checking…" : status.label} color={status.color} />
           </div>
         </div>

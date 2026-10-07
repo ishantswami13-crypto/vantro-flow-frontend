@@ -125,7 +125,7 @@ export default function KhataPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Customer Khata</h1>
+          <h1 className="text-[26px] leading-[1.15]" style={{ color: "var(--ink)", fontWeight: 500, letterSpacing: "-0.01em" }}>Customer Khata</h1>
           <p className="text-xs text-muted mt-1">Udhaar aur bhugtan ka hisab</p>
         </div>
         <div className="flex gap-2">
@@ -343,7 +343,7 @@ export default function KhataPage() {
                 <div className="grid grid-cols-4 gap-2">
                   {["cash", "upi", "bank", "cheque"].map(m => (
                     <button key={m} onClick={() => setForm(f => ({ ...f, payment_mode: m }))}
-                      className={`py-2 rounded-xl text-xs font-semibold capitalize transition-colors ${form.payment_mode === m ? "bg-white text-black" : "bg-surface-2 text-muted hover:text-primary"}`}>
+                      className={`py-2 rounded-xl text-xs font-semibold capitalize transition-colors ${form.payment_mode === m ? "bg-surface text-black" : "bg-surface-2 text-muted hover:text-primary"}`}>
                       {m === "upi" ? "UPI" : m.charAt(0).toUpperCase() + m.slice(1)}
                     </button>
                   ))}

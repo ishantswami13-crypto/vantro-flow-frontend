@@ -53,7 +53,7 @@ function DecisionRow({ d, onOpen }: { d: DecisionListItem; onOpen: () => void })
           <ConfidencePill band={d.confidence?.band} score={d.confidence?.score} />
         </div>
       </div>
-      <FiChevronRight className="shrink-0 mt-2" size={16} style={{ color: "#B5B5B0" }} />
+      <FiChevronRight className="shrink-0 mt-2" size={16} style={{ color: "var(--ink-3)" }} />
     </button>
   );
 }
@@ -134,7 +134,7 @@ export default function DecisionsPage() {
         {today.isLoading && <div className="skeleton h-24 w-full rounded-xl mb-8" />}
         {today.isError && <div className="mb-8"><ErrorState title="Couldn't load today's summary" message={(today.error as Error).message} onRetry={() => today.refetch()} /></div>}
         {t && (
-          <section className="rounded-2xl px-5 py-5 mb-10" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+          <section className="rounded-2xl px-5 py-5 mb-10" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               <Stat label="Need your decision" value={t.command.open + t.command.awaitingApproval} sub={t.command.awaitingApproval ? `${t.command.awaitingApproval} waiting for approval` : "options analysed"} />
               <Stat label="Deadline this week" value={t.command.deadlinesThisWeek} tone={t.command.deadlinesThisWeek ? "warn" : undefined} sub="before the window closes" />

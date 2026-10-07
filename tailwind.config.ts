@@ -9,62 +9,52 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ---- Starlane V32 design tokens (see STARLANE_FRONTEND_HANDOFF.md §3) ----
-        bg:            "#F7F7F4",
-        "sidebar-bg":  "#141412",
-        surface:       "#FFFFFF",
-        "surface-1":   "#FFFFFF",
-        // §17.1: two near-identical hexes (#F3F2EE / #F3F2EF) appear in source for
-        // surface-2 — chose #F3F2EE (used by the table-header spec in §12, the more
-        // frequently cited value) as the single canonical token.
-        "surface-2":   "#F3F2EE",
-        "surface-3":   "#EDEDE9",
-        "text-primary":   "#191917",
-        "text-secondary": "#63635F",
-        "text-tertiary":  "#8A8A86",
-        "text-body":      "#43433F",
-        border:        "#EBEAE6", // border-divider — most common separator
-        "border-2":    "#D7D6D0", // border-strong
-        "border-hairline": "#E5E4DF",
-        "border-row-subtle": "rgba(25,25,23,0.06)",
-        "border-default":    "rgba(25,25,23,0.10)",
-        "border-input":      "rgba(25,25,23,0.12)",
-        "border-button":     "rgba(25,25,23,0.14)",
-        "border-emphasis":   "rgba(25,25,23,0.16)",
-        // The signed-in person's accent (lib/identity.ts sets --accent-rgb);
-        // DEFAULT_ACCENT indigo until it loads. See USER_ACCENTS below.
-        accent:      "rgba(var(--accent-rgb, 105, 109, 134), <alpha-value>)",
-        "accent-hover": "#191917",
-        "accent-dim":   "rgba(var(--accent-rgb, 105, 109, 134), 0.10)",
-        // V32 has no orange CTA: primary actions are ink on paper.
-        cta:         "#191917",
-        "cta-hover": "#2A2A2E",
-        "cta-dim":   "rgba(25,25,23,0.06)",
-        primary:   "#191917",
-        secondary: "#63635F",
-        muted:     "#8A8A86",
-        // §17.1 reconciliation: handoff flags positive #477054 vs #1FB870, and
-        // critical #A64F4B vs #E8462B, as two-hex inconsistencies to resolve to one
-        // value each. Chosen: #477054 (positive) and #A64F4B (critical) — these are
-        // the primary semantic values used across the most pages (Discover, Sources,
-        // Control, Agents / Bridge, Discover, ScanResult respectively); the "-alt"
-        // hexes were narrower, single-page usages (Watch/Missions "On track" tag;
-        // Watch triggered rows + Simulate negative sim_card) and are kept below as
-        // named alt tokens rather than silently dropped, in case a future page needs
-        // to match that specific historical usage intentionally.
-        success:   "#477054",
-        "success-alt": "#1FB870",
-        warning:   "#9B742B",
-        danger:    "#A64F4B",
-        "danger-alt":  "#E8462B",
-        info:      "#566C82",
-        "success-dim": "rgba(71,112,84,0.12)",
-        "warning-dim": "rgba(155,116,43,0.12)",
-        "danger-dim":  "rgba(166,79,75,0.12)",
+        // Every colour reads a CSS variable from app/tokens.css, so the whole
+        // app follows the theme (dark by default, light on request).
+        bg:            "rgb(var(--tk-bg) / <alpha-value>)",
+        "sidebar-bg":  "rgb(var(--tk-sidebar) / <alpha-value>)",
+        surface:       "rgb(var(--tk-surface) / <alpha-value>)",
+        "surface-1":   "rgb(var(--tk-surface) / <alpha-value>)",
+        "surface-2":   "rgb(var(--tk-surface-2) / <alpha-value>)",
+        "surface-3":   "rgb(var(--tk-surface-3) / <alpha-value>)",
+        elevated:      "rgb(var(--tk-elevated) / <alpha-value>)",
+        "text-primary":   "rgb(var(--tk-ink) / <alpha-value>)",
+        "text-secondary": "rgb(var(--tk-ink-2) / <alpha-value>)",
+        "text-tertiary":  "rgb(var(--tk-ink-3) / <alpha-value>)",
+        "text-body":      "rgb(var(--tk-body) / <alpha-value>)",
+        ink:           "rgb(var(--tk-ink) / <alpha-value>)",
+        body:          "rgb(var(--tk-body) / <alpha-value>)",
+        border:        "rgb(var(--tk-line) / <alpha-value>)",
+        "border-2":    "rgb(var(--tk-line-strong) / <alpha-value>)",
+        "border-hairline": "rgb(var(--tk-line-hairline) / <alpha-value>)",
+        "border-row-subtle": "var(--line-row)",
+        "border-default":    "var(--line-card)",
+        "border-input":      "var(--line-input)",
+        "border-button":     "var(--line-button)",
+        "border-emphasis":   "var(--line-emphasis)",
+        accent:        "rgba(var(--accent-rgb), <alpha-value>)",
+        "accent-hover": "rgb(var(--tk-ink) / <alpha-value>)",
+        "accent-dim":   "rgba(var(--accent-rgb), 0.12)",
+        // The primary action is the inverse of the page.
+        cta:         "rgb(var(--tk-ink) / <alpha-value>)",
+        "cta-hover": "var(--inverse-hover)",
+        "cta-dim":   "var(--hover)",
+        primary:   "rgb(var(--tk-ink) / <alpha-value>)",
+        secondary: "rgb(var(--tk-ink-2) / <alpha-value>)",
+        muted:     "rgb(var(--tk-ink-3) / <alpha-value>)",
+        // One status language: positive, warning (attention), danger (critical), info.
+        success:       "rgb(var(--tk-positive) / <alpha-value>)",
+        "success-alt": "rgb(var(--tk-positive) / <alpha-value>)",
+        warning:       "rgb(var(--tk-warning) / <alpha-value>)",
+        danger:        "rgb(var(--tk-critical) / <alpha-value>)",
+        "danger-alt":  "rgb(var(--tk-critical) / <alpha-value>)",
+        info:          "rgb(var(--tk-info) / <alpha-value>)",
+        "success-dim": "rgb(var(--tk-positive) / 0.12)",
+        "warning-dim": "rgb(var(--tk-warning) / 0.12)",
+        "danger-dim":  "rgb(var(--tk-critical) / 0.12)",
         "sidebar-user-label": "#B9B8B2",
         "sidebar-active-text": "#F5F4F0",
-        // USER_ACCENTS — 10 curated per-user identity colors (handoff §3).
-        // "indigo" doubles as DEFAULT_ACCENT / `accent` above.
+        // USER_ACCENTS (lib/identity.ts) for swatches in the identity picker.
         "accent-sage":           "#66765F",
         "accent-slate-teal":     "#557476",
         "accent-stone-blue":     "#647384",
@@ -77,9 +67,11 @@ const config: Config = {
         "accent-deep-sand":      "#847661",
       },
       fontFamily: {
-        sans: ["Plus Jakarta Sans", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
-        mono: ["IBM Plex Mono", "Menlo", "monospace"],
-        serif: ["Fraunces", "Georgia", "serif"],
+        sans: ["var(--font-sans)"],
+        // No monospace face: figures use the sans with tabular numbers.
+        mono: ["var(--font-sans)"],
+        serif: ["var(--font-display)"],
+        display: ["var(--font-display)"],
       },
       borderRadius: {
         // Starlane V32 radius scale (handoff §3) — Tailwind's default `sm/DEFAULT/md/...`
@@ -101,15 +93,17 @@ const config: Config = {
         "5xl": ["3rem",     { lineHeight: "1",        letterSpacing: "-0.04em" }],
       },
       boxShadow: {
-        "card":        "0 1px 3px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3)",
-        "card-hover":  "0 2px 8px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.4)",
-        "inner-top":   "inset 0 1px 0 rgba(255,255,255,0.06)",
-        "button":      "0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
-        "button-accent":"0 1px 3px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08)",
-        // V32 (handoff §3 Shadows)
-        "v32-lift":    "0 6px 18px rgba(25,25,23,0.07)",
-        "v32-drawer":  "0 8px 32px rgba(0,0,0,0.08)",
-        "v32-palette": "0 6px 24px rgba(0,0,0,0.10)",
+        "card":        "var(--shadow-sm)",
+        "card-hover":  "var(--shadow-md)",
+        "inner-top":   "var(--highlight)",
+        "button":      "var(--shadow-sm)",
+        "button-accent":"var(--shadow-sm)",
+        "v32-lift":    "var(--shadow-md)",
+        "v32-drawer":  "var(--shadow-lg)",
+        "v32-palette": "var(--shadow-lg)",
+        sm: "var(--shadow-sm)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
       },
       keyframes: {
         "fade-in": {
@@ -164,6 +158,20 @@ const config: Config = {
         "150": "150ms",
         "200": "200ms",
         "300": "300ms",
+        instant: "100ms",
+        fast: "160ms",
+        base: "220ms",
+        slow: "320ms",
+      },
+      transitionTimingFunction: {
+        DEFAULT: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        out: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      },
+      zIndex: {
+        sticky: "10", sidebar: "30", overlay: "40", drawer: "50", modal: "60", palette: "70", toast: "80", tooltip: "90",
+      },
+      maxWidth: {
+        content: "1180px",
       },
     },
   },

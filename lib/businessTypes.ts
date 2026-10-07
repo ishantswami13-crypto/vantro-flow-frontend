@@ -280,7 +280,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     key: "manufacturing",
     label: "Manufacturing",
     emoji: "🏭",
-    color: "#3B82F6",
+    color: "var(--accent)",
     description: "Manufacturers, fabricators, processing units",
     hiddenRoutes: ["/network"],
     terms: {

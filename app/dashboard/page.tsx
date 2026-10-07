@@ -210,7 +210,7 @@ export default function DashboardPage() {
           DashboardLayout's own padding so the canvas reaches the shell
           edges; max content width 1280px per institutional-density spacing,
           not a centered narrow column. */}
-      <div className="-m-4 lg:-m-5 min-h-[calc(100vh-3rem)]" style={{ background: "#F7F7F4" }}>
+      <div className="-m-4 lg:-m-5 min-h-[calc(100vh-3rem)]" style={{ background: "var(--bg)" }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-8 space-y-12">
           {/* ── Page header — left-aligned, normal weight. No centered
               50px serif hero; the greeting is the subtitle, not the title. ── */}
@@ -223,7 +223,7 @@ export default function DashboardPage() {
               destination: the actual AI Founder chat. Suggestions sit below
               as plain text, not chip buttons. ── */}
           <div>
-            <form onSubmit={submitQuery} className="flex items-center gap-2 bg-white border border-gray-200 rounded-[10px] px-3 h-12">
+            <form onSubmit={submitQuery} className="flex items-center gap-2 bg-surface border border-gray-200 rounded-[10px] px-3 h-12">
               <input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
@@ -369,7 +369,7 @@ export default function DashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {liveCustomers.map((c) => (
-                    <tr key={c.id} className="hover:bg-white transition-colors">
+                    <tr key={c.id} className="hover:bg-surface transition-colors">
                       <td className="py-3.5">
                         <p className="font-medium text-gray-900 text-[13px]">{c.name}</p>
                         <p className="text-xs text-gray-400">{c.contact}</p>

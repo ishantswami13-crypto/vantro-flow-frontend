@@ -231,51 +231,51 @@ export default function TodayPage() {
       ) : (
         <>
           {/* ── NET MONEY (V32 sim_card style: white card, mono figure) ─────── */}
-          <div className="fade-once mb-5" style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 20 }}>
-            <p style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 4 }}>
+          <div className="fade-once mb-5" style={{ background: "var(--surface)", border: "1px solid rgb(var(--tk-ink) / 0.10)", borderRadius: 8, padding: 20 }}>
+            <p style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "var(--ink-2)", marginBottom: 4 }}>
               Net money {isProfit ? "in" : "out"} {isToday ? "today" : "on this day"}
             </p>
-            <p style={{ fontSize: 12, color: "#8A8A86", marginBottom: 10 }}>
+            <p style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 10 }}>
               Sales booked and payments received, minus expenses and purchases. This is not profit: it has no cost of goods.
             </p>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 34, color: isProfit ? "#477054" : "#A64F4B", marginBottom: 18, lineHeight: 1 }}>
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: 34, color: isProfit ? "var(--positive)" : "var(--critical)", marginBottom: 18, lineHeight: 1 }}>
               {isProfit ? "+" : ""}{fmtINR(net)}
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderTop: "1px solid #EBEAE6" }}>
+            <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderTop: "1px solid var(--line)" }}>
               {[
-                { label: "Money in", value: `+${fmtINR(income, true)}`, color: "#477054" },
-                { label: "Money out", value: `-${fmtINR(expenses, true)}`, color: "#A64F4B" },
-                { label: "Orders", value: String(s?.order_count || 0), color: "#191917" },
-                { label: "Invoices paid", value: String(s?.invoices_collected || 0), color: "#191917" },
+                { label: "Money in", value: `+${fmtINR(income, true)}`, color: "var(--positive)" },
+                { label: "Money out", value: `-${fmtINR(expenses, true)}`, color: "var(--critical)" },
+                { label: "Orders", value: String(s?.order_count || 0), color: "var(--ink)" },
+                { label: "Invoices paid", value: String(s?.invoices_collected || 0), color: "var(--ink)" },
               ].map(({ label, value, color }) => (
                 <div key={label} style={{ padding: "12px 0 0" }}>
-                  <p style={{ fontSize: 12, color: "#63635F", marginBottom: 4 }}>{label}</p>
-                  <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 15, color }}>{value}</p>
+                  <p style={{ fontSize: 12, color: "var(--ink-2)", marginBottom: 4 }}>{label}</p>
+                  <p style={{ fontFamily: "var(--font-sans)", fontSize: 15, color }}>{value}</p>
                 </div>
               ))}
             </div>
           </div>
 
           {/* ── QUICK STATS ───────────────────────────────────────────────── */}
-          <div className="flex items-center flex-wrap mb-5" style={{ gap: 10, fontSize: 13, color: "#43433F" }}>
+          <div className="flex items-center flex-wrap mb-5" style={{ gap: 10, fontSize: 13, color: "var(--body)" }}>
             {[
-              { label: "delivered", value: s?.orders_by_status?.delivered || 0, color: "#477054" },
-              { label: "pending", value: (s?.orders_by_status?.new || 0) + (s?.orders_by_status?.confirmed || 0) + (s?.orders_by_status?.dispatched || 0), color: "#9B742B" },
+              { label: "delivered", value: s?.orders_by_status?.delivered || 0, color: "var(--positive)" },
+              { label: "pending", value: (s?.orders_by_status?.new || 0) + (s?.orders_by_status?.confirmed || 0) + (s?.orders_by_status?.dispatched || 0), color: "var(--warning)" },
               { label: "calls", value: s?.calls_made || 0, color: "var(--accent)" },
-              { label: "cancelled", value: s?.orders_by_status?.cancelled || 0, color: "#A64F4B" },
+              { label: "cancelled", value: s?.orders_by_status?.cancelled || 0, color: "var(--critical)" },
             ].map((stat, i) => (
               <span key={stat.label} className="flex items-center" style={{ gap: 6 }}>
-                {i > 0 && <span aria-hidden style={{ color: "#D7D6D0", marginRight: 4 }}>·</span>}
-                <span style={{ fontFamily: "'IBM Plex Mono', Menlo, monospace", color: "#191917" }}>{stat.value}</span> {stat.label}
+                {i > 0 && <span aria-hidden style={{ color: "var(--line-strong)", marginRight: 4 }}>·</span>}
+                <span style={{ fontFamily: "var(--font-sans)", color: "var(--ink)" }}>{stat.value}</span> {stat.label}
               </span>
             ))}
           </div>
 
           {/* ── TABS ──────────────────────────────────────────────────────── */}
-          <nav aria-label="Today" className="flex items-center mb-4" style={{ gap: 22, borderBottom: "1px solid #EBEAE6" }}>
+          <nav aria-label="Today" className="flex items-center mb-4" style={{ gap: 22, borderBottom: "1px solid var(--line)" }}>
             {(["overview","sales","expenses"] as const).map(t => (
               <button key={t} onClick={() => setTab(t)} className="hover-dim"
-                style={{ padding: "8px 2px", marginBottom: -1, fontSize: 13, fontWeight: tab === t ? 500 : 400, color: tab === t ? "#191917" : "#63635F", borderBottom: `2px solid ${tab === t ? "var(--accent)" : "transparent"}` }}>
+                style={{ padding: "8px 2px", marginBottom: -1, fontSize: 13, fontWeight: tab === t ? 500 : 400, color: tab === t ? "var(--ink)" : "var(--ink-2)", borderBottom: `2px solid ${tab === t ? "var(--accent)" : "transparent"}` }}>
                 {t==="sales" ? `Sales (${(summary?.orders||[]).length})`
                  : t==="expenses" ? `Expenses (${(summary?.expenses||[]).length})`
                  : "Overview"}
@@ -290,14 +290,14 @@ export default function TodayPage() {
                 <p className="text-2xs font-bold text-muted uppercase tracking-wider mb-3">Money in, by source</p>
                 <div className="space-y-3">
                   {[
-                    { icon: FiShoppingBag, label:"Orders booked",       color:"#0066FF", value: s?.income?.orders   || 0 },
-                    { icon: FiFileText,    label:"Invoice payments received",   color:"#10D98A", value: s?.income?.invoices || 0 },
+                    { icon: FiShoppingBag, label:"Orders booked",       color:"var(--accent)", value: s?.income?.orders   || 0 },
+                    { icon: FiFileText,    label:"Invoice payments received",   color:"var(--positive)", value: s?.income?.invoices || 0 },
                     { icon: FiDollarSign,  label:"Sales Recorded",       color:"#7C5CFC", value: s?.sales_total || 0 },
                   ].filter((r) => r.label !== "Sales Recorded" || r.value > 0).map(({ icon: Icon, label, color, value }) => (
                     <div key={label} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                          style={{ background: `${color}18`, border:`1px solid ${color}25` }}>
+                          style={{ background: `color-mix(in srgb, ${color} 9%, transparent)`, border:`1px solid color-mix(in srgb, ${color} 15%, transparent)` }}>
                           <Icon size={13} style={{ color }} />
                         </div>
                         <span className="text-sm text-secondary">{label}</span>

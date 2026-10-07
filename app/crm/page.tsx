@@ -150,10 +150,10 @@ export default function CRMPage() {
         {!loading && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
             {[
-              { label: "Total Prospects", value: counts.total.toString(),  color: "#0066FF" },
-              { label: "On Trial",        value: counts.trial.toString(),   color: "#F5A524" },
-              { label: "Customers",       value: counts.customer.toString(),color: "#10D98A" },
-              { label: "Pipeline Value",  value: counts.pipeline > 0 ? (counts.pipeline >= 100000 ? `₹${(counts.pipeline/100000).toFixed(1)}L` : `₹${counts.pipeline.toLocaleString("en-IN")}`) : "—", color: "#9B6DFF" },
+              { label: "Total Prospects", value: counts.total.toString(),  color: "var(--accent)" },
+              { label: "On Trial",        value: counts.trial.toString(),   color: "var(--warning)" },
+              { label: "Customers",       value: counts.customer.toString(),color: "var(--positive)" },
+              { label: "Pipeline Value",  value: counts.pipeline > 0 ? (counts.pipeline >= 100000 ? `₹${(counts.pipeline/100000).toFixed(1)}L` : `₹${counts.pipeline.toLocaleString("en-IN")}`) : "—", color: "var(--info)" },
             ].map(k => (
               <div key={k.label} className="card-metric p-5">
                 <p className="section-label mb-3">{k.label}</p>

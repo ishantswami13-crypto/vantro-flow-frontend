@@ -25,7 +25,7 @@ const REPORTS = [
     name: "Outstanding Receivables",
     desc: "Full list of all unpaid invoices with customer details, days overdue, and AI collection score",
     icon: <FiDollarSign size={18}/>,
-    color: "#F5424D",
+    color: "var(--critical)",
     formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "Today 9:00 AM",
     pages: 4,
@@ -35,7 +35,7 @@ const REPORTS = [
     name: "Collection Performance",
     desc: "Monthly recovery rates, call logs, WhatsApp delivery, payment trends over time",
     icon: <FiTrendingUp size={18}/>,
-    color: "#10D98A",
+    color: "var(--positive)",
     formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "Yesterday",
     pages: 6,
@@ -45,7 +45,7 @@ const REPORTS = [
     name: "Customer Statement",
     desc: "Individual customer account statement — all invoices, payments, and outstanding balance",
     icon: <FiUsers size={18}/>,
-    color: "#0066FF",
+    color: "var(--accent)",
     formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "12 May 2025",
     pages: 2,
@@ -55,7 +55,7 @@ const REPORTS = [
     name: "Cash Flow Forecast Report",
     desc: "30/60/90-day cash projection with optimistic, expected, and pessimistic scenarios",
     icon: <FiCalendar size={18}/>,
-    color: "#F5A524",
+    color: "var(--warning)",
     formats: ["Excel", "PDF"],
     lastGenerated: "14 May 2025",
     pages: 3,
@@ -65,7 +65,7 @@ const REPORTS = [
     name: "Call Activity Log",
     desc: "All collection calls — duration, outcome, promises made, follow-up status",
     icon: <FiPhone size={18}/>,
-    color: "#9B6DFF",
+    color: "var(--info)",
     formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "13 May 2025",
     pages: 5,
@@ -75,7 +75,7 @@ const REPORTS = [
     name: "GST Summary Report",
     desc: "GSTIN-wise breakdown of all sales and outstanding — ready for CA and filing",
     icon: <FiFileText size={18}/>,
-    color: "#0066FF",
+    color: "var(--accent)",
     formats: ["Excel", "CSV", "PDF"],
     lastGenerated: "1 May 2025",
     pages: 2,
@@ -187,7 +187,7 @@ export default function ReportsPage() {
             <div key={report.id} className="card-premium p-5 hover:border-border-2 transition-all">
               <div className="flex items-start gap-4 mb-4">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: `${report.color}18`, border: `1px solid ${report.color}30` }}>
+                  style={{ background: `color-mix(in srgb, ${report.color} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${report.color} 19%, transparent)` }}>
                   <span style={{ color: report.color }}>{report.icon}</span>
                 </div>
                 <div className="flex-1 min-w-0">

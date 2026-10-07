@@ -188,7 +188,7 @@ export default function ImportPage() {
 
         {/* RESULT: the first finding */}
         {result && (
-          <section className="rounded-2xl p-6 mb-10" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+          <section className="rounded-2xl p-6 mb-10" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
             <SectionLabel>{result.import.alreadyImported ? "This file was already imported" : "What Starlane found"}</SectionLabel>
             <div className="space-y-2">
               {result.firstLook.lines.map((l, i) => (
@@ -239,7 +239,7 @@ export default function ImportPage() {
 
         {/* STEP 1: choose a file */}
         {!result && (
-          <section className="rounded-2xl p-6 mb-8" style={{ background: "#FFFFFF", border: `1px dashed ${C.line}` }}>
+          <section className="rounded-2xl p-6 mb-8" style={{ background: "var(--surface)", border: `1px dashed ${C.line}` }}>
             <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,.txt" className="hidden" onChange={(e) => onFile(e.target.files?.[0] || null)} />
             <div className="flex flex-wrap items-center gap-4">
               <FiUploadCloud size={22} style={{ color: C.accent }} />
@@ -272,7 +272,7 @@ export default function ImportPage() {
                   const isDate = DATE_FIELDS.includes(f) && !!chosen;
                   const d = chosen ? preview.proposal.dateOrders[chosen] : undefined;
                   return (
-                    <div key={f} className="flex flex-wrap items-center gap-3 px-4 py-3" style={{ borderTop: i ? `1px solid ${C.line}` : undefined, background: i % 2 ? C.wash : "#FFFFFF" }}>
+                    <div key={f} className="flex flex-wrap items-center gap-3 px-4 py-3" style={{ borderTop: i ? `1px solid ${C.line}` : undefined, background: i % 2 ? C.wash : "var(--surface)" }}>
                       <span className="w-[160px] text-[13px]" style={{ color: C.ink, fontWeight: 500 }}>
                         {FIELD_LABEL[f]}{REQUIRED.includes(f) && <span style={{ color: C.bad }}> *</span>}
                       </span>
@@ -280,7 +280,7 @@ export default function ImportPage() {
                         value={chosen}
                         onChange={(e) => setField(f, e.target.value)}
                         className="text-[13px] rounded-lg px-2 py-1.5 min-w-[200px]"
-                        style={{ border: `1px solid ${C.line}`, color: C.body, background: "#FFFFFF" }}
+                        style={{ border: `1px solid ${C.line}`, color: C.body, background: "var(--surface)" }}
                         aria-label={FIELD_LABEL[f]}
                       >
                         <option value="">Not in this file</option>
@@ -363,7 +363,7 @@ export default function ImportPage() {
             {preview.profile && (
               <section className="mb-10">
                 <SectionLabel>What this file gives Starlane</SectionLabel>
-                <div className="rounded-2xl px-5 py-5" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+                <div className="rounded-2xl px-5 py-5" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
                   <ProfileSummary p={preview.profile} />
                 </div>
                 <div className="mt-6">

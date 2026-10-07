@@ -1,5 +1,6 @@
 "use client";
 
+import "../atlas.css";
 import { useState, Suspense, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";

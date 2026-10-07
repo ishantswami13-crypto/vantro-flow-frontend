@@ -13,7 +13,7 @@ import { errorText, useLoad } from "./shared";
 export function TodaySummary() {
   const { data, error, loading, reload } = useLoad(() => osApi.today());
   return (
-    <section className="rounded-[8px] mb-6" style={{ background: "#FFFFFF", border: `1px solid ${C.line}`, padding: "18px 20px" }} aria-label="What needs you today">
+    <section className="rounded-[8px] mb-6" style={{ background: "var(--surface)", border: `1px solid ${C.line}`, padding: "18px 20px" }} aria-label="What needs you today">
       <div className="flex items-center justify-between gap-3 mb-2">
         <p className="text-[11px] uppercase tracking-[0.08em]" style={{ color: C.faint, fontWeight: 500 }}>Today</p>
         {data && <Pill tone={data.pilotMode === "SHADOW" ? "accent" : "good"}>{data.pilotMode === "SHADOW" ? "Shadow mode: nothing changes outside Starlane" : "Live"}</Pill>}

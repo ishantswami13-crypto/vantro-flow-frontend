@@ -36,11 +36,11 @@ export function CustomerDrawerView({ name, phone, onOpenInvoice }: CustomerDrawe
     HEALTHY: "Healthy",
   };
   const HEALTH_LABEL_COLOR: Record<string, string> = {
-    DORMANT: "#8B8FA3",
-    AT_RISK: "#F5424D",
-    WATCH: "#F5A524",
-    GROWING: "#10D98A",
-    HEALTHY: "#3B82F6",
+    DORMANT: "var(--ink-3)",
+    AT_RISK: "var(--critical)",
+    WATCH: "var(--warning)",
+    GROWING: "var(--positive)",
+    HEALTHY: "var(--accent)",
   };
 
   return (
@@ -54,8 +54,8 @@ export function CustomerDrawerView({ name, phone, onOpenInvoice }: CustomerDrawe
                 className="text-[10px] font-semibold rounded-full px-2 py-0.5"
                 style={{
                   color: HEALTH_LABEL_COLOR[revenue.health.label],
-                  background: `${HEALTH_LABEL_COLOR[revenue.health.label]}18`,
-                  border: `1px solid ${HEALTH_LABEL_COLOR[revenue.health.label]}40`,
+                  background: `color-mix(in srgb, ${HEALTH_LABEL_COLOR[revenue.health.label]} 9%, transparent)`,
+                  border: `1px solid color-mix(in srgb, ${HEALTH_LABEL_COLOR[revenue.health.label]} 25%, transparent)`,
                 }}
                 title={revenue.health.evidence.join(" ")}
               >

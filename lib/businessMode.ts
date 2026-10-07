@@ -20,7 +20,7 @@ export const BUSINESS_CONFIGS: Record<BusinessMode, BusinessConfig> = {
     tagline: "Chase receivables. Get paid faster.",
     primaryMetric: "Outstanding Receivables",
     dashboardTitle: "Collections Dashboard",
-    color: "#0066FF",
+    color: "var(--accent)",
     sidebarSections: ["core", "intelligence", "network", "ops", "account"],
   },
   retailer: {
@@ -29,7 +29,7 @@ export const BUSINESS_CONFIGS: Record<BusinessMode, BusinessConfig> = {
     tagline: "Track inventory. Manage supplier payments.",
     primaryMetric: "Today's Sales",
     dashboardTitle: "Retail Dashboard",
-    color: "#10D98A",
+    color: "var(--positive)",
     sidebarSections: ["retail", "intelligence", "network", "ops", "account"],
   },
   d2c: {
@@ -38,7 +38,7 @@ export const BUSINESS_CONFIGS: Record<BusinessMode, BusinessConfig> = {
     tagline: "Grow orders. Know your CAC and LTV.",
     primaryMetric: "GMV This Month",
     dashboardTitle: "Brand Dashboard",
-    color: "#9B6DFF",
+    color: "var(--info)",
     sidebarSections: ["d2c", "intelligence", "network", "ops", "account"],
   },
   service: {
@@ -47,7 +47,7 @@ export const BUSINESS_CONFIGS: Record<BusinessMode, BusinessConfig> = {
     tagline: "Bill projects. Collect retainers on time.",
     primaryMetric: "Pending Invoices",
     dashboardTitle: "Projects Dashboard",
-    color: "#F5A524",
+    color: "var(--warning)",
     sidebarSections: ["service", "intelligence", "network", "ops", "account"],
   },
   startup: {
@@ -56,7 +56,7 @@ export const BUSINESS_CONFIGS: Record<BusinessMode, BusinessConfig> = {
     tagline: "Track burn. Extend runway.",
     primaryMetric: "Cash Runway",
     dashboardTitle: "Startup Dashboard",
-    color: "#F5424D",
+    color: "var(--critical)",
     sidebarSections: ["startup", "intelligence", "network", "ops", "account"],
   },
 };

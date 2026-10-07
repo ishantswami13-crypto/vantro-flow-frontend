@@ -100,7 +100,7 @@ export default function AttendancePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Staff Attendance</h1>
+          <h1 className="text-[26px] leading-[1.15]" style={{ color: "var(--ink)", fontWeight: 500, letterSpacing: "-0.01em" }}>Staff Attendance</h1>
           <p className="text-xs text-muted mt-1">Haazri aur salary calculator</p>
         </div>
         <div className="flex items-center gap-2">
