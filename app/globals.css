@@ -324,7 +324,7 @@
    SKELETON LOADER
    ============================================================ */
 .skeleton {
-  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+  background: linear-gradient(90deg, var(--skeleton-a) 25%, var(--skeleton-b) 50%, var(--skeleton-a) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
   border-radius: 6px;
@@ -1048,7 +1048,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: rgb(var(--accent-rgb
 }
 .sb-menu-item:hover, .sb-menu-item:focus-visible { background: rgba(255,255,255,0.06); color: #F5F4F0; outline: none; }
 
-.topbar {
+.app-topbar {
   position: sticky; top: 0; z-index: var(--z-sticky);
   display: flex; align-items: center; gap: 10px; height: var(--topbar-h); padding: 0 16px 0 20px; flex-shrink: 0;
   background: rgb(var(--tk-bg) / 0.82); backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px);

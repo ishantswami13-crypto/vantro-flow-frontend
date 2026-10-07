@@ -42,7 +42,7 @@ export default function TopBar({ pageTitle, onMenu, onSearch }: { pageTitle?: st
   }, []);
 
   return (
-    <header className="topbar">
+    <header className="app-topbar">
       <button type="button" onClick={onMenu} className="icon-btn md:hidden" aria-label="Open menu" style={{ marginLeft: -8 }}>
         <IconMenu size={17} />
       </button>
