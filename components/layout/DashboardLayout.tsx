@@ -1,8 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
-import { FiInfo } from "react-icons/fi";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "./Sidebar";
-import Header from "./Header";
+import TopBar from "./TopBar";
+import { CommandPalette, type SearchableRoute } from "./CommandPalette";
+import { Modal } from "@/components/ui/Modal";
+import { V32_NAV_ITEMS, V32_WORKSPACE_NAV_ITEMS, MORE_NAV_ITEMS, OTHER_PAGES } from "@/lib/navigation";
+import { IconInfo } from "@/components/v32/icons";
 import InstallPrompt from "@/components/ui/InstallPrompt";
 import PaymentCelebration from "@/components/PaymentCelebration";
 import { usePathname } from "next/navigation";
@@ -71,8 +74,29 @@ async function subscribeToPush() {
   }
 }
 
+const SEARCHABLE: SearchableRoute[] = [
+  ...V32_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const, context: "Surface" })),
+  ...V32_WORKSPACE_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const, context: "Workspace" })),
+  ...MORE_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
+  { href: "/intelligence", label: "Intelligence", type: "Page" as const },
+  ...OTHER_PAGES.map(n => ({ href: n.href, label: n.label, type: "Page" as const, context: "Older page" })),
+];
+
+const SHORTCUTS = [
+  { keys: "Ctrl K", desc: "Search or jump to a page" },
+  { keys: "Ctrl \\", desc: "Collapse or expand the sidebar" },
+  { keys: "↑ ↓", desc: "Move through results" },
+  { keys: "Enter", desc: "Open the selected result" },
+  { keys: "Esc", desc: "Close a dialog or panel" },
+];
+
+const COLLAPSE_KEY = "starlane_sidebar_collapsed";
+
 export default function DashboardLayout({ children, pageTitle }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [showNotifBanner, setShowNotifBanner] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
   const pathname = usePathname();
@@ -80,6 +104,32 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
   useApplyIdentity();
 
   useEffect(() => { setIsDemo(isDemoMode()); }, []);
+
+  // The rail starts collapsed on narrow windows (the desktop app's 960px
+  // minimum) unless the person chose otherwise.
+  useEffect(() => {
+    let saved: string | null = null;
+    try { saved = window.localStorage.getItem(COLLAPSE_KEY); } catch { /* per-browser nicety */ }
+    setCollapsed(saved === null ? window.innerWidth < 1100 : saved === "1");
+  }, []);
+
+  const toggleCollapsed = useCallback(() => {
+    setCollapsed(c => {
+      try { window.localStorage.setItem(COLLAPSE_KEY, c ? "0" : "1"); } catch { /* per-browser nicety */ }
+      return !c;
+    });
+  }, []);
+
+  // Ctrl/Cmd+K opens search anywhere; Ctrl/Cmd+\ folds the rail.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.key.toLowerCase() === "k") { e.preventDefault(); setPaletteOpen(true); }
+      else if (e.key === "\\") { e.preventDefault(); toggleCollapsed(); }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [toggleCollapsed]);
 
   // Cards with .hover-lift carry a soft light that follows the cursor; this
   // one listener feeds it the pointer position. Fine pointers only.
@@ -162,28 +212,30 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        collapsed={collapsed}
+        onToggleCollapsed={toggleCollapsed}
+        onSearch={() => { setSidebarOpen(false); setPaletteOpen(true); }}
+        onShortcuts={() => setShortcutsOpen(true)}
+      />
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Header onMenuToggle={() => setSidebarOpen(true)} pageTitle={pageTitle} />
+        <TopBar pageTitle={pageTitle} onMenu={() => setSidebarOpen(true)} onSearch={() => setPaletteOpen(true)} />
 
-        {/* Demo mode notice — a quiet horizontal disclosure strip, not an
-            all-caps terminal-style alert. Truthful, low-key, sentence case. */}
+        {/* Demo notice: a quiet strip, sentence case, never alarming. */}
         {isDemo && (
-          <div className="flex items-center justify-between gap-3 px-4 py-1.5 shrink-0" style={{ background: "#F7F7F4", borderBottom: "1px solid #EBEAE6" }}>
-            <span className="text-xs flex items-center gap-1.5" style={{ color: "#8A8A86" }}>
-              <FiInfo size={11} />
-              Simulated demonstration — sample data, not your business
+          <div className="flex items-center justify-between gap-3 px-5 shrink-0" style={{ height: 34, background: "var(--surface-2)", borderBottom: "1px solid var(--line)" }}>
+            <span className="text-xs flex items-center gap-1.5" style={{ color: "var(--ink-2)" }}>
+              <IconInfo size={13} />
+              Sample data for a demonstration, not your business
             </span>
             <div className="flex items-center gap-3 shrink-0">
-              <Link href="/signup"
-                onClick={() => exitDemoMode()}
-                className="text-xs font-medium transition-colors"
-                style={{ color: "#686868" }}>
-                Sign up to save real data →
+              <Link href="/signup" onClick={() => exitDemoMode()} className="text-xs font-medium" style={{ color: "var(--ink)" }}>
+                Sign up to use your own data
               </Link>
-              <button onClick={() => { exitDemoMode(); window.location.href = "/login"; }}
-                className="text-xs transition-colors" style={{ color: "#8A8A86" }}>
+              <button onClick={() => { exitDemoMode(); window.location.href = "/login"; }} className="text-xs" style={{ color: "var(--ink-2)" }}>
                 Exit
               </button>
             </div>
@@ -192,32 +244,32 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
 
         {/* Push notification permission banner */}
         {showNotifBanner && !isDemo && (
-          <div className="px-4 py-2 flex items-center justify-between gap-3 shrink-0" style={{ background: "#FFFFFF", borderBottom: "1px solid #EBEAE6", fontSize: 12.5 }}>
-            <span style={{ color: "#43433F" }}>
-              Get a notification the moment a payment lands.
-            </span>
-            <div className="flex gap-2 shrink-0">
-              <button
-                onClick={handleEnableNotifications}
-                className="btn-primary-v32 px-3 py-1 text-xs"
-              >
-                Enable
-              </button>
-              <button
-                onClick={() => setShowNotifBanner(false)}
-                className="hover-dim px-2 py-1 text-xs"
-                style={{ color: "#63635F" }}
-              >
-                Later
-              </button>
+          <div className="px-5 flex items-center justify-between gap-3 shrink-0" style={{ height: 40, background: "var(--surface)", borderBottom: "1px solid var(--line)", fontSize: 12.5 }}>
+            <span style={{ color: "var(--body)" }}>Get a notification the moment a payment lands.</span>
+            <div className="flex gap-1 shrink-0">
+              <button onClick={handleEnableNotifications} className="ui-btn ui-btn-primary ui-btn-sm">Enable</button>
+              <button onClick={() => setShowNotifBanner(false)} className="ui-btn ui-btn-ghost ui-btn-sm">Later</button>
             </div>
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto v32-main">
+        <main id="main" className="app-main v32-main">
           <div key={pathname} className="v32-wrap page-in">{children}</div>
         </main>
       </div>
+
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} routes={SEARCHABLE} />
+
+      <Modal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} title="Keyboard shortcuts" footer={<button className="ui-btn ui-btn-secondary" onClick={() => setShortcutsOpen(false)}>Close</button>}>
+        <div className="flex flex-col" style={{ gap: 10 }}>
+          {SHORTCUTS.map(k => (
+            <div key={k.keys} className="flex items-center justify-between" style={{ fontSize: 13 }}>
+              <span style={{ color: "var(--ink-2)" }}>{k.desc}</span>
+              <kbd className="kbd">{k.keys}</kbd>
+            </div>
+          ))}
+        </div>
+      </Modal>
 
       <InstallPrompt />
       {!isDemo && <PaymentCelebration />}

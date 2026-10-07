@@ -6,6 +6,8 @@ import { api, type IntelligenceSignal } from "@/lib/api";
 import { getRecents, timeAgo, type RecentEntry } from "@/lib/recents";
 import { IconSearch, IconClock, IconPlus, IconScan, IconWatch, IconMissions, IconSimulate } from "@/components/v32/icons";
 import { Chevron } from "@/components/v32/ui";
+import { IconSun } from "@/components/v32/icons";
+import { toggleTheme } from "@/lib/theme";
 
 export interface SearchableRoute {
   href: string;
@@ -23,10 +25,9 @@ interface CommandPaletteProps {
 type Row = { key: string; href: string; title: string; context?: string; icon: React.ReactNode; shortcut?: string };
 type Group = { label: string; rows: Row[] };
 
-const ICON = { size: 16, style: { color: "#63635F" } };
+const ICON = { size: 16, style: { color: "var(--ink-2)" } };
 
-// Version 32 command palette (handoff §11): 660px, groups with uppercase
-// labels, 46px rows, the selected row tinted with the user's accent.
+// The command palette (Ctrl/Cmd+K): 660px, grouped results, 40px rows.
 // Real content only: pages that exist, this browser's recent pages, live
 // intelligence signals and the create actions the product really has.
 export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
@@ -63,13 +64,14 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
     if (signalRows.length) out.push({ label: "Signals", rows: signalRows });
     const pageRows = routes.filter(r => hit(r.label)).slice(0, q ? 8 : 6)
       .map(r => ({ key: `p:${r.href}`, href: r.href, title: r.label, context: r.context, icon: <span style={{ width: 16, display: "inline-block" }} /> }));
-    if (pageRows.length) out.push({ label: "Work", rows: pageRows });
+    if (pageRows.length) out.push({ label: "Pages", rows: pageRows });
     const actions: Row[] = [
       { key: "a:ask", href: "/scan", title: "Ask Starlane", context: "Open Scan", icon: <IconScan {...ICON} />, shortcut: "↵" },
       { key: "a:watch", href: "/watch?new=1", title: "New Watch", icon: <IconPlus {...ICON} /> },
       { key: "a:mission", href: "/missions/new", title: "New Mission", icon: <IconMissions {...ICON} /> },
       { key: "a:sim", href: "/simulate", title: "Simulate", context: "Run a new scenario", icon: <IconSimulate {...ICON} /> },
       { key: "a:watchlist", href: "/watch", title: "Watch", context: "What Starlane is watching", icon: <IconWatch {...ICON} /> },
+      { key: "a:theme", href: "#theme", title: "Switch theme", context: "Dark or light", icon: <IconSun {...ICON} /> },
     ].filter(a => hit(a.title));
     if (actions.length) out.push({ label: "Actions", rows: actions });
     return out;
@@ -81,6 +83,7 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
 
   function go(href: string) {
     onClose();
+    if (href === "#theme") { toggleTheme(); return; }
     router.push(href);
   }
 
@@ -114,41 +117,41 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
 
   let index = -1;
   return (
-    <div className="fixed inset-0 z-[200]" onClick={onClose}>
-      <div className="fixed inset-0 lens-backdrop" style={{ background: "rgba(20,20,18,0.16)" }} />
+    <div className="fixed inset-0" style={{ zIndex: 70 }} onClick={onClose}>
+      <div className="fixed inset-0 lens-backdrop" style={{ background: "rgba(0,0,0,0.5)" }} />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Search Starlane"
         className="fixed pop-in flex flex-col overflow-hidden"
         style={{
-          top: 90, left: "50%", transform: "translateX(-50%)", width: "min(660px, calc(100vw - 32px))", maxHeight: "70vh",
-          background: "#FFFFFF", border: "1px solid #E5E4DF", borderRadius: 10, boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
+          top: "12vh", left: "50%", transform: "translateX(-50%)", width: "min(660px, calc(100vw - 32px))", maxHeight: "70vh",
+          background: "var(--elevated)", border: "1px solid var(--line)", borderRadius: 12, boxShadow: "var(--shadow-lg)",
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 shrink-0" style={{ padding: "14px 16px", borderBottom: "1px solid #EBEAE6" }}>
-          <IconSearch size={15} style={{ color: "#8A8A86" }} />
+        <div className="flex items-center gap-3 shrink-0" style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+          <IconSearch size={15} style={{ color: "var(--ink-3)" }} />
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search Starlane or run a command…"
             className="flex-1 bg-transparent outline-none"
-            style={{ color: "#191917", fontSize: 14.5, boxShadow: "none" }}
+            style={{ color: "var(--ink)", fontSize: 14.5, boxShadow: "none" }}
             role="combobox"
             aria-expanded="true"
             aria-controls="command-palette-results"
             aria-activedescendant={flat[activeIndex] ? `command-palette-row-${activeIndex}` : undefined}
           />
-          <kbd style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>Esc</kbd>
+          <kbd className="kbd">Esc</kbd>
         </div>
         <div ref={listRef} id="command-palette-results" role="listbox" className="overflow-y-auto" style={{ padding: "4px 8px 8px" }}>
           {flat.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#8A8A86", padding: "28px 0", textAlign: "center" }}>No results</p>
+            <p style={{ fontSize: 13, color: "var(--ink-3)", padding: "28px 0", textAlign: "center" }}>No results</p>
           ) : groups.map(g => (
             <div key={g.label}>
-              <div style={{ padding: "10px 14px 4px 14px", fontSize: 10.5, letterSpacing: 0, color: "#8A8A86" }}>{g.label}</div>
+              <div style={{ padding: "10px 12px 4px", fontSize: 11.5, color: "var(--ink-3)" }}>{g.label}</div>
               {g.rows.map(r => {
                 index += 1;
                 const i = index;
@@ -162,15 +165,15 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
                     aria-selected={selected}
                     onClick={() => go(r.href)}
                     onMouseEnter={() => setActiveIndex(i)}
-                    className="row-hover w-full flex items-center text-left"
-                    style={{ height: 46, gap: 12, padding: "0 14px", borderRadius: 7, background: selected ? "rgba(var(--accent-rgb), 0.08)" : "transparent" }}
+                    className="w-full flex items-center text-left"
+                    style={{ height: 40, gap: 12, padding: "0 12px", borderRadius: 8, background: selected ? "rgb(var(--tk-ink) / 0.07)" : "transparent" }}
                   >
                     {r.icon}
-                    <span className="shrink-0" style={{ fontSize: 13.5, color: "#191917" }}>{r.title}</span>
-                    {r.context && <span className="truncate flex-1" style={{ fontSize: 12, color: "#8A8A86" }}>{r.context}</span>}
+                    <span className="shrink-0" style={{ fontSize: 13.5, color: "var(--ink)" }}>{r.title}</span>
+                    {r.context && <span className="truncate flex-1" style={{ fontSize: 12, color: "var(--ink-3)" }}>{r.context}</span>}
                     {!r.context && <span className="flex-1" />}
                     {r.shortcut
-                      ? <kbd style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>{r.shortcut}</kbd>
+                      ? <kbd className="kbd">{r.shortcut}</kbd>
                       : <Chevron size={13} />}
                   </button>
                 );
