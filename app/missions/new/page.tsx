@@ -81,7 +81,7 @@ export default function NewMissionPage() {
         />
         {input ? (
           <div className="grid min-[1000px]:grid-cols-[minmax(0,520px)_minmax(0,1fr)]" style={{ gap: "32px 64px", alignItems: "start", marginTop: 16 }}>
-            <section className="min-w-0">
+            <section className="min-w-0 mis-form-col">
               <SectionTitle>What to collect</SectionTitle>
               <div style={{ borderTop: "1px solid var(--line)", paddingTop: 16 }}>
                 <form className="grid" style={{ gap: 18 }} onSubmit={(e) => { e.preventDefault(); void create(true); }}>
@@ -138,9 +138,9 @@ export default function NewMissionPage() {
               </div>
             </section>
 
-            <section className="min-w-0 flex flex-col" style={{ gap: 32 }}>
+            <section className="min-w-0 flex flex-col mis-brief" style={{ gap: 28 }} aria-label="What this mission will do">
               <div>
-                <SectionTitle>Objective</SectionTitle>
+                <SectionTitle className="section-label-lead">Objective</SectionTitle>
                 <div style={{ borderTop: "1px solid var(--line)", paddingTop: 14 }}>
                   {previewError && !preview ? (
                     <>
@@ -151,7 +151,7 @@ export default function NewMissionPage() {
                     <div role="status" aria-busy="true" aria-label="Working out the objective" className="grid" style={{ gap: 8 }}><div className="skeleton" style={{ height: 11, width: "80%" }} /><div className="skeleton" style={{ height: 11, width: "55%" }} /></div>
                   ) : (
                     <>
-                      <p className="prose-measure" style={{ margin: 0, fontSize: 14, color: "var(--ink)" }}>{d.objective}</p>
+                      <p className="prose-measure" style={{ margin: 0, fontSize: 16, lineHeight: 1.5, color: "var(--ink)" }}>{d.objective}</p>
                       {d.excluded.length ? (
                         <div style={{ marginTop: 16 }}>
                           <div className="meta" style={{ marginBottom: 4 }}>Left out</div>
@@ -173,7 +173,7 @@ export default function NewMissionPage() {
                   <div style={{ borderTop: "1px solid var(--line)", paddingTop: 14 }}>
                     <div className="grid grid-cols-2" style={{ gap: 20, maxWidth: 480 }}>
                       <Figure value={inrWhole(sim.estimate.expected.value)} label={`Expected within ${sim.horizonDays} days`} />
-                      <Figure value={<span style={{ fontSize: 15 }}>{inrWhole(sim.estimate.range.low)} – {inrWhole(sim.estimate.range.high)}</span>} label="Likely range" />
+                      <Figure value={<span style={{ fontSize: 15, color: "var(--ink-2)" }}>{inrWhole(sim.estimate.range.low)}<span style={{ fontFamily: "var(--font-sans)", color: "var(--ink-3)" }}> to </span>{inrWhole(sim.estimate.range.high)}</span>} label="Likely range" />
                     </div>
                     {sim.target ? (
                       <div className="flex items-baseline flex-wrap" style={{ gap: "4px 10px", marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--line)" }}>

@@ -42,6 +42,19 @@ export function missionCount(all: Mission[], k: MissionFilter): number {
   return all.filter((m) => f.states.includes(m.state)).length;
 }
 
+const NEEDS_PERSON = new Set<MissionState>(["WAITING_FOR_APPROVAL", "WAITING_FOR_INFORMATION", "BLOCKED"]);
+
+/** The "what is happening now" line: the state's verb, then the backend's reason. */
+const NOW_PREFIX: Partial<Record<MissionState, string>> = {
+  BLOCKED: "Blocked",
+  WAITING_FOR_APPROVAL: "Waiting on you",
+  WAITING_FOR_INFORMATION: "Needs information",
+  RUNNING: "Now",
+  VERIFYING: "Checking",
+  PLANNING: "Next",
+  FAILED: "Failed",
+};
+
 // decision_action_runs statuses that count as a finished step (060_decision_core.sql).
 const STEP_DONE = new Set(["SUCCEEDED", "SHADOWED", "PREPARED"]);
 
@@ -55,7 +68,11 @@ export function MissionsList({ all, filter, loading, error, agentNames, onRetry,
   onRetry?: () => void; onOpenWorkflows?: () => void;
 }) {
   const f = FILTERS.find((x) => x.key === filter)!;
-  const list = all.filter((m) => f.states.includes(m.state));
+  // What needs a person comes first; otherwise the backend's order is kept.
+  const list = all.filter((m) => f.states.includes(m.state))
+    .map((m, i) => ({ m, i }))
+    .sort((x, y) => (NEEDS_PERSON.has(y.m.state) ? 1 : 0) - (NEEDS_PERSON.has(x.m.state) ? 1 : 0) || x.i - y.i)
+    .map((x) => x.m);
 
   if (loading) return <MissionsSkeleton />;
   if (error) {
@@ -97,9 +114,11 @@ function progressOf(m: Mission): { text: string; ratio: number | null; tone: "cr
   if (m.source === "DECISION" && m.steps.length) {
     const total = m.steps.length;
     const done = m.steps.filter((s) => STEP_DONE.has((s.status || "").toUpperCase())).length;
-    const failed = m.steps.some((s) => (s.status || "").toUpperCase() === "FAILED");
+    const failedAt = m.steps.findIndex((s) => (s.status || "").toUpperCase() === "FAILED");
     const tools = missionTools(m);
-    return { text: `${done} of ${total} steps`, ratio: done / total, tone: failed ? "critical" : null, title: tools.length ? `Tools: ${tools.join(", ")}` : undefined };
+    const title = tools.length ? `Tools: ${tools.join(", ")}` : undefined;
+    if (failedAt >= 0) return { text: `Step ${failedAt + 1} of ${total} failed`, ratio: done / total, tone: "critical", title };
+    return { text: `${done} of ${total} steps done`, ratio: done / total, tone: null, title };
   }
   const waiting = m.counts?.awaitingApproval;
   if (m.source === "WORKFLOW" && waiting != null) return { text: waiting ? `${waiting} waiting for you` : "Nothing waiting", ratio: null, tone: null };
@@ -116,26 +135,33 @@ function MissionRow({ m, agentNames, onOpenWorkflows }: { m: Mission; agentNames
     : null;
   const p = progressOf(m);
   const reason = m.stateReason || m.objective;
+  const prefix = m.stateReason ? NOW_PREFIX[m.state] : undefined;
+  const attn = NEEDS_PERSON.has(m.state);
 
   const inner = (
     <>
       <div className="min-w-0" role="cell">
         <div className="wk-title md:truncate">{cleanTitle(m.title)}</div>
-        {reason && <div className="wk-sub line-clamp-2 md:truncate">{humanDates(reason)}</div>}
-        <div className="wk-meta" style={{ marginTop: 3 }}>{meta.join(" · ")}</div>
+        {reason && (
+          <div className={`wk-sub line-clamp-2${attn ? " mis-now-attn" : ""}`} title={humanDates(reason)}>
+            {prefix && <span className={m.state === "BLOCKED" || m.state === "FAILED" ? "mis-now mis-now-critical" : "mis-now"}>{prefix}</span>}
+            {humanDates(reason)}
+          </div>
+        )}
+        <div className="wk-meta" style={{ marginTop: 4 }}>{meta.join(" · ")}</div>
       </div>
       <div className="wk-cells md:contents">
         <div role="cell"><StatusChip tone={missionTone(m.state)}>{MISSION_STATE_LABEL[m.state]}</StatusChip></div>
         <div role="cell" className="min-w-0" title={p?.title}>
           {p ? (
             <>
-              <div className="tabular-nums" style={{ fontSize: 12.5, color: p.tone ? "var(--critical)" : "var(--ink-2)" }}>{p.text}</div>
+              <div className="num-quiet" style={{ fontSize: 12.5, color: p.tone ? "var(--critical)" : "var(--ink)" }}>{p.text}</div>
               {p.ratio != null && <div className="hidden md:block" style={{ marginTop: 5, maxWidth: 96 }}><Meter ratio={p.ratio} tone={p.tone ? "critical" : "ink"} label={p.text} /></div>}
             </>
           ) : <span className="hidden md:inline" style={{ fontSize: 12, color: "var(--ink-3)" }}>—</span>}
         </div>
         <div role="cell" className="min-w-0">
-          <div style={{ fontSize: 12.5, color: outcomeColor(outcome) }}>{OUTCOME_SHORT[outcome]}</div>
+          <div style={{ fontSize: 12.5, color: outcome === "PENDING" ? "var(--ink-3)" : outcomeColor(outcome) }}>{OUTCOME_SHORT[outcome]}</div>
           {outcomeExtra && <div className="tabular-nums hidden md:block" style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{outcomeExtra}</div>}
         </div>
         <div role="cell" className="ml-auto md:ml-0 md:text-right" style={{ fontSize: 12, color: "var(--ink-3)" }}>
@@ -149,8 +175,8 @@ function MissionRow({ m, agentNames, onOpenWorkflows }: { m: Mission; agentNames
   );
   const style: React.CSSProperties = { gridTemplateColumns: COLS };
   return m.source === "WORKFLOW"
-    ? <button type="button" role="row" onClick={onOpenWorkflows} className="wk-row" style={style} aria-label={`${cleanTitle(m.title)}: open in Workflows`}>{inner}</button>
-    : <Link href={m.href} role="row" className="wk-row" style={style}>{inner}</Link>;
+    ? <button type="button" role="row" onClick={onOpenWorkflows} className={`wk-row mis-row${attn ? " wk-attn" : ""}`} style={style} aria-label={`${cleanTitle(m.title)}: open in Workflows`}>{inner}</button>
+    : <Link href={m.href} role="row" className={`wk-row mis-row${attn ? " wk-attn" : ""}`} style={style}>{inner}</Link>;
 }
 
 function MissionsSkeleton() {

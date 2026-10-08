@@ -112,6 +112,13 @@ function MissionBody({ m, agentNames, busy, note, actError, onAct, onCancel, onD
   const actions = m.actions || [];
   const awaiting = actions.filter((a) => a.canDecide).length;
   const agent = m.assigned ? agentLabel(m.assigned.agent, agentNames) : null;
+  const invoices = p?.byInvoice?.length || m.targetInvoices?.length || 0;
+  // One sentence for "what is happening now", from the mission's own fields.
+  const nowLine = m.status === "active"
+    ? `Running. ${agent || "Starlane"} is tracking payments on ${invoices} invoice${invoices === 1 ? "" : "s"} against the target${p?.daysLeft != null ? `, with ${p.daysLeft} day${p.daysLeft === 1 ? "" : "s"} left` : ""}.`
+    : m.status === "paused" ? "Paused. Nothing is tracked or proposed until you resume it."
+    : m.status === "draft" ? "A draft. Nothing is tracked until you start it."
+    : null;
 
   // One primary at most: Start / Resume. Pause is secondary, Cancel is quiet.
   const header = (
@@ -156,7 +163,7 @@ function MissionBody({ m, agentNames, busy, note, actError, onAct, onCancel, onD
           <div style={{ marginTop: 16 }}>
             <Meter ratio={p.ratio} tone={m.status === "failed" ? "critical" : m.status === "active" || m.status === "completed" ? "positive" : "ink"} label={`${Math.round(p.ratio * 100)}% of target collected`} />
             <div className="flex justify-between flex-wrap" style={{ gap: 8, marginTop: 8, fontSize: 12, color: "var(--ink-3)" }}>
-              <span className="num">{Math.round(p.ratio * 100)}% of target</span>
+              <span><span className="num" style={{ color: "var(--ink)" }}>{Math.round(p.ratio * 100)}%</span>{" "}of target collected</span>
               {p.evidence?.summary && <span>{p.evidence.summary}</span>}
             </div>
           </div>
@@ -167,7 +174,8 @@ function MissionBody({ m, agentNames, busy, note, actError, onAct, onCancel, onD
         <div className="flex flex-col min-w-0" style={{ gap: 32 }}>
           {(open || m.status === "draft") && (
             <section>
-              <SectionTitle>Waiting on</SectionTitle>
+              <SectionTitle className="section-label-lead">Now</SectionTitle>
+              {nowLine && <p className="mis-nowline">{nowLine}</p>}
               <div style={{ borderTop: "1px solid var(--line)" }}>
                 {m.status === "draft" ? (
                   <WaitRow attention text="You: start the mission. Starting it freezes a baseline from your books and proposes one reminder per customer for your approval." />
@@ -308,6 +316,8 @@ function Timeline({ m, agent }: { m: Mission; agent: string | null }) {
   if (m.status === "active" && m.endsAt && Date.parse(m.endsAt) > Date.now()) items.push({ at: m.endsAt, text: "Deadline: outcome checked against your books", by: "Starlane", result: "Scheduled", future: true });
 
   if (!items.length) return <p className="wk-empty" style={{ borderTop: "1px solid var(--line)" }}>No events recorded yet.</p>;
+  let latest = -1;
+  items.forEach((it, i) => { if (!it.future) latest = i; });
   return (
     <div role="table" aria-label="Execution timeline">
       <div role="row" className="hidden md:grid" style={{ gridTemplateColumns: TL_COLS, columnGap: 16, padding: "0 0 8px", borderBottom: "1px solid var(--line)", fontSize: 11, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-3)" }}>
@@ -319,15 +329,16 @@ function Timeline({ m, agent }: { m: Mission; agent: string | null }) {
       <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
         {items.map((it, i) => (
           <li key={`${it.at}-${i}`} role="row" className="mis-tl-row md:grid" style={{ gridTemplateColumns: TL_COLS, columnGap: 16, padding: "10px 0", borderBottom: "1px solid var(--line)", alignItems: "baseline" }}>
-            <span role="cell" className="num" style={{ fontSize: 12, color: "var(--ink-3)" }} title={formatDateTime(it.at)}>
+            <span role="cell" className="num-quiet" style={{ fontSize: 12.5, color: i === latest ? "var(--ink-2)" : "var(--ink-3)" }} title={formatDateTime(it.at)}>
               {it.future ? formatDate(it.at) : formatDateTime(it.at)}
             </span>
-            <span role="cell" className="min-w-0 block" style={{ fontSize: 13, color: it.future ? "var(--ink-2)" : "var(--ink)", lineHeight: 1.5 }}>
+            <span role="cell" className="min-w-0 block" style={{ fontSize: 13, color: it.future ? "var(--ink-2)" : "var(--ink)", fontWeight: i === latest ? 500 : 400, lineHeight: 1.5 }}>
               {it.text}
+              {i === latest && <span className="mis-latest">Latest</span>}
               {it.note && <span style={{ display: "block", fontSize: 12, color: "var(--ink-3)" }}>{it.note}</span>}
             </span>
             <span role="cell" className="mis-tl-by" style={{ fontSize: 12.5, color: "var(--ink-2)" }}>{it.by || "—"}</span>
-            <span role="cell" className="mis-tl-result" style={{ fontSize: 12.5, color: it.future ? "var(--ink-3)" : "var(--ink-2)" }}>{it.result || "—"}</span>
+            <span role="cell" className="mis-tl-result" style={{ fontSize: 12.5, color: it.future ? "var(--ink-3)" : i === latest ? "var(--ink)" : "var(--ink-2)" }}>{it.result || "—"}</span>
           </li>
         ))}
       </ol>
