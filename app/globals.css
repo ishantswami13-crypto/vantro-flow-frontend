@@ -916,10 +916,14 @@ button:disabled { cursor: default; }
   font-size: 12px; color: var(--ink-3); cursor: pointer; text-decoration: none; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 .scan-tool:hover { background: var(--hover); color: var(--ink); }
-.scan-dock {
-  position: sticky; bottom: 0; z-index: var(--z-sticky); padding: 24px 0 16px;
-  background-image: linear-gradient(to bottom, rgb(var(--tk-bg) / 0), var(--bg) 32%);
+.scan-dock { position: sticky; bottom: 0; z-index: var(--z-sticky); padding: 24px 0 16px; isolation: isolate; }
+/* The dock's backdrop is the page itself (paper grain included in light),
+   faded in from the top with a mask so it never reads as a separate strip. */
+.scan-dock::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; background-color: var(--bg);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 32%); mask-image: linear-gradient(to bottom, transparent, black 32%);
 }
+:root[data-theme="light"] .scan-dock::before { background-image: var(--paper-grain); }
 .scan-hist-row {
   position: relative; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 4px 0;
   border-bottom: 1px solid var(--line); text-decoration: none; transition: background var(--dur-fast) var(--ease);
