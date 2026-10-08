@@ -7,7 +7,7 @@
 import React from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import type { EvidenceSet, EvidenceItem } from "../../packages/contracts/src/features";
-import { inrWhole, formatDateTime, formatCount } from "@/lib/format";
+import { inrWhole, formatDate, formatDateTime, formatCount } from "@/lib/format";
 import css from "@/components/intelligence/evidence.module.css";
 
 const KIND: Record<string, string> = { fact: "Fact", calculated: "Calculated", assumption: "Assumption", estimate: "Estimate", model: "Model" };
@@ -17,6 +17,8 @@ export function showValue(v: unknown, unit?: string): string {
   if (v === null || v === undefined || v === "") return "—";
   if (typeof v === "number") return unit === "INR" ? inrWhole(v) : formatCount(v);
   if (Array.isArray(v)) return v.join(", ");
+  // ISO dates read the way people read dates.
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}(T[\d:.]+(Z|[+-]\d{2}:?\d{2})?)?$/.test(v)) return formatDate(v);
   return String(v);
 }
 
@@ -62,7 +64,7 @@ export function EvidenceSetDrawer({ title, record, evidence, onClose, children }
     >
       <Section label="Source">
         <Row label="System" value={(evidence?.sources || []).map((s) => SOURCE[s] || s).join(", ") || "—"} />
-        {when && <Row label="Computed" value={when} mono />}
+        {when && <Row label="Computed" value={when} />}
         {evidence?.method && <Row label="Method" value={evidence.method} />}
       </Section>
       {facts.length > 0 && (
@@ -77,7 +79,7 @@ export function EvidenceSetDrawer({ title, record, evidence, onClose, children }
           <p className={css.prose} style={{ paddingTop: 8 }}>{evidence.summary}</p>
         </Section>
       )}
-      {children}
+      {children && <div className={css.after}>{children}</div>}
     </Drawer>
   );
 }

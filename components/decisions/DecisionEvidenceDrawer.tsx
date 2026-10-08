@@ -63,7 +63,7 @@ export function DecisionEvidenceDrawer({ d, onClose }: { d: Decision; onClose: (
                     {(src?.table || ref || e.observedAt) && (
                       <div className={css.src}>
                         {src?.table && <span className={css.kind}>{TABLE_LABEL[src.table] || src.table}</span>}
-                        {ref && <span title={src?.id || src?.invoiceId}>{ref}</span>}
+                        {ref && <span className={css.ref} title={src?.id || src?.invoiceId}>{ref}</span>}
                         {e.observedAt && <span title={formatDateTime(e.observedAt)}>observed {formatRelative(e.observedAt)}</span>}
                       </div>
                     )}
@@ -98,7 +98,7 @@ export function DecisionEvidenceDrawer({ d, onClose }: { d: Decision; onClose: (
           <ul className={css.items}>
             {(d.analysis?.method as string[]).map((m, i) => <li key={i} className={css.item}><p className={css.detail} style={{ margin: 0 }}>{m}</p></li>)}
             {d.modelVersions && (
-              <li className={css.item}><div className={css.src} style={{ marginTop: 0 }}>{Object.values(d.modelVersions).map((v) => <span key={String(v)}>{String(v)}</span>)}</div></li>
+              <li className={css.item}><div className={css.src} style={{ marginTop: 0 }}>{Object.values(d.modelVersions).map((v) => <span key={String(v)} className={css.ref}>{String(v)}</span>)}</div></li>
             )}
           </ul>
         </div>
