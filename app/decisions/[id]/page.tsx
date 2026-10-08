@@ -8,14 +8,16 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import FeedbackBar from "@/components/decisions/FeedbackBar";
 import { ErrorState } from "@/components/ui/ErrorState";
 import Button from "@/components/ui/Button";
-import { C, ConfidencePill, Notice, Pill, RangeBar, SectionLabel, Skeleton } from "@/components/decisions/ui";
-import { IconCheck, IconChevronDown, IconX } from "@/components/v32/icons";
-import { PageBody, RetryLine, amount, cleanTitle, humaneError } from "@/components/os/prepared/kit";
+import { Notice, Pill, RangeBar, SectionLabel, Skeleton } from "@/components/decisions/ui";
+import { DecisionEvidenceDrawer } from "@/components/decisions/DecisionEvidenceDrawer";
+import { IconChevronDown, IconX } from "@/components/v32/icons";
+import { PageBody, RetryLine, amount, cleanTitle, humaneError, prettyDates } from "@/components/os/prepared/kit";
 import { formatDate, formatDateTime } from "@/lib/format";
 import {
-  decisionsApi, pct, relTime, daysUntil, STATUS_LABEL, EVIDENCE_LABEL,
+  decisionsApi, pct, relTime, daysUntil, STATUS_LABEL, EVIDENCE_LABEL, BAND_LABEL,
   DecisionApiError, type Decision, type DecisionDetail, type DecisionOption, type Interval, type SimulateResponse,
 } from "@/lib/decisions";
+import m from "./memo.module.css";
 
 // ── helpers ───────────────────────────────────────────────────────────────
 
@@ -52,118 +54,107 @@ function stepsOf(o?: DecisionOption | null): string[] {
 
 // ── sections ──────────────────────────────────────────────────────────────
 
-function OptionCard({ o, d, max, recommended, selected, canChoose, onChoose, busy }: {
-  o: DecisionOption; d: Decision; max: number; recommended: boolean; selected: boolean; canChoose: boolean; onChoose: () => void; busy: boolean;
+function reversibilityWord(r?: string): string | null {
+  if (!r) return null;
+  if (r === "IRREVERSIBLE") return "Cannot be undone";
+  if (r === "REVERSIBLE") return "Reversible";
+  return r.charAt(0) + r.slice(1).replace(/_/g, " ").toLowerCase();
+}
+
+/** The second outcome column, by decision kind: only when the engine returned it. */
+function secondMetric(d: Decision): { label: string; get: (o: DecisionOption) => number | null | undefined } | null {
+  if (d.options.some((o) => o.futures.probFullRecovery90 != null)) return { label: "Paid in 90d", get: (o) => o.futures.probFullRecovery90 };
+  if (d.options.some((o) => o.futures.stockoutProbability != null)) return { label: "Stockout chance", get: (o) => o.futures.stockoutProbability };
+  return null;
+}
+
+/** Options as one comparison table. Every option, "Do nothing" included,
+ *  gets the same row; the recommended one is named, not boxed. */
+function OptionsTable({ d, max, recKey, canChoose, choosing, busy, onChoose }: {
+  d: Decision; max: number; recKey?: string; canChoose: boolean; choosing: string | null; busy: boolean; onChoose: (key: string) => void;
 }) {
-  const h = headline(o, d.kind);
+  const second = secondMetric(d);
+  const h0 = headline(d.options[0], d.kind);
   return (
-    <div
-      className="rounded-xl p-5"
-      style={{ background: "var(--surface)", border: `1px solid ${selected ? C.accent : recommended ? "rgba(var(--accent-rgb), 0.35)" : "var(--line-card)"}`, opacity: o.valid ? 1 : 0.7 }}
-    >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-[15px]" style={{ color: C.ink, fontWeight: 500 }}>{o.label}</p>
-            {recommended && <Pill tone="accent">Recommended</Pill>}
-            {o.isDoNothing && <Pill>Baseline</Pill>}
-            {selected && <Pill tone="good"><IconCheck size={11} /> Chosen</Pill>}
-            {!o.valid && <Pill tone="bad">Not allowed</Pill>}
-          </div>
-          {o.summary && <p className="text-[13px] mt-1 max-w-[620px]" style={{ color: C.muted }}>{o.summary}</p>}
-        </div>
-        {canChoose && o.valid && (
-          <Button size="sm" variant="secondary" loading={busy} onClick={onChoose}>
-            Choose
-          </Button>
-        )}
+    <div className={m.table} role="table" aria-label="Options">
+      <div className={m.thead} role="row">
+        <span role="columnheader">Option</span>
+        <span role="columnheader">{h0.label}</span>
+        <span role="columnheader" className={m.r}>Expected</span>
+        <span role="columnheader" className={m.r} title="Share of simulated futures in which this option is best">Best in</span>
+        <span role="columnheader" className={m.r}>{second?.label || ""}</span>
+        <span role="columnheader" />
       </div>
-
-      {!o.valid && o.invalidReason && <p className="text-[12px] mt-3" style={{ color: C.bad }}>{o.invalidReason}</p>}
-
-      <div className="mt-4">
-        <p className="text-[12px] mb-2" style={{ color: C.faint }}>{h.label} · 80% range</p>
-        <RangeBar interval={h.interval} max={max} currency={d.currency} highlight={recommended} />
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 text-[12px]">
-        <div>
-          <p style={{ color: C.faint }}>Best in</p>
-          <p className="tabular-nums" style={{ color: C.ink }}>{pct(o.futures.bestShare)} of futures</p>
-        </div>
-        {o.futures.probFullRecovery90 != null && (
-          <div>
-            <p style={{ color: C.faint }}>Fully paid in 90 days</p>
-            <p className="tabular-nums" style={{ color: C.ink }}>{pct(o.futures.probFullRecovery90)}</p>
+      {d.options.map((o) => {
+        const h = headline(o, d.kind);
+        const rec = recKey === o.key;
+        const chosen = d.selectedOption === o.key;
+        const extra = [
+          !o.isDoNothing ? reversibilityWord(o.reversibility) : null,
+          !o.isDoNothing ? o.executableAs : null,
+          o.futures.creditLossAvoided && o.futures.creditLossAvoided.mean > 0 ? `Loss avoided on new credit ${amount(o.futures.creditLossAvoided.mean, d.currency)}` : null,
+          o.futures.marginLost && o.futures.marginLost.mean > 0 ? `Margin at risk ${amount(o.futures.marginLost.mean, d.currency)}` : null,
+          o.futures.robustness != null ? `Within 2% of the best in ${pct(o.futures.robustness)} of futures` : null,
+        ].filter(Boolean);
+        const sv = second?.get(o);
+        return (
+          <div key={o.key} className={`${m.trow} ${o.valid ? "" : m.dim}`} role="row">
+            <div className="min-w-0" role="cell">
+              <div className={m.optName}>
+                {o.label}
+                {rec && <span className={`${m.optTag} ${m.optTagOn}`}>Recommended</span>}
+                {chosen && <span className={`${m.optTag} ${m.optTagOn}`}>Chosen</span>}
+                {o.isDoNothing && <span className={m.optTag}>Baseline</span>}
+              </div>
+              {o.summary && <div className={m.optSub}>{o.summary}</div>}
+              {extra.length > 0 && <div className={m.optMeta}>{extra.join(" · ")}</div>}
+              {!o.isDoNothing && o.blastRadius?.summary && <div className={m.optMeta}>Touches {o.blastRadius.summary.charAt(0).toLowerCase() + o.blastRadius.summary.slice(1)}</div>}
+              {!o.isDoNothing && o.approval?.reason && <div className={m.optMeta}>{o.approval.reason}</div>}
+              {!o.valid && o.invalidReason && <div className={`${m.optMeta} ${m.invalid}`}>Not allowed: {o.invalidReason}</div>}
+            </div>
+            <div role="cell" style={{ paddingTop: 7 }}><RangeBar interval={h.interval} max={max} currency={d.currency} highlight={rec} compact /></div>
+            <div role="cell" className={m.cellNum}><span className={m.cellLabel}>Expected</span>{h.interval ? amount(h.interval.mean, d.currency) : "—"}</div>
+            <div role="cell" className={m.cellNum}><span className={m.cellLabel}>Best in</span>{pct(o.futures.bestShare)}</div>
+            <div role="cell" className={m.cellNum}>{second && <span className={m.cellLabel}>{second.label}</span>}{second ? (sv != null ? pct(sv) : "—") : ""}</div>
+            <div role="cell" className={m.r}>
+              {canChoose && o.valid && !chosen && (
+                <Button size="sm" variant="ghost" loading={busy && choosing === o.key} disabled={busy} onClick={() => onChoose(o.key)}>Choose</Button>
+              )}
+            </div>
           </div>
-        )}
-        {o.futures.stockoutProbability != null && (
-          <div>
-            <p style={{ color: C.faint }}>Stockout chance</p>
-            <p className="tabular-nums" style={{ color: C.ink }}>{pct(o.futures.stockoutProbability)}</p>
-          </div>
-        )}
-        {o.futures.creditLossAvoided && o.futures.creditLossAvoided.mean > 0 && (
-          <div>
-            <p style={{ color: C.faint }}>Loss avoided on new credit</p>
-            <p className="tabular-nums" style={{ color: C.ink }}>{amount(o.futures.creditLossAvoided.mean, d.currency)}</p>
-          </div>
-        )}
-        {o.futures.marginLost && o.futures.marginLost.mean > 0 && (
-          <div>
-            <p style={{ color: C.faint }}>Margin at risk</p>
-            <p className="tabular-nums" style={{ color: C.ink }}>{amount(o.futures.marginLost.mean, d.currency)}</p>
-          </div>
-        )}
-        {o.futures.robustness != null && (
-          <div>
-            <p style={{ color: C.faint }}>Within 2% of the best</p>
-            <p className="tabular-nums" style={{ color: C.ink }}>{pct(o.futures.robustness)} of futures</p>
-          </div>
-        )}
-      </div>
-
-      {!o.isDoNothing && (
-        <div className="flex flex-wrap gap-2 mt-4">
-          {o.reversibility && <Pill tone={o.reversibility === "IRREVERSIBLE" ? "warn" : "neutral"}>{o.reversibility === "IRREVERSIBLE" ? "Cannot be undone" : o.reversibility === "REVERSIBLE" ? "Reversible" : o.reversibility.charAt(0) + o.reversibility.slice(1).replace(/_/g, " ").toLowerCase()}</Pill>}
-          {o.executableAs && <Pill>{o.executableAs}</Pill>}
-        </div>
-      )}
-      {!o.isDoNothing && o.blastRadius?.summary && <p className="text-[12px] mt-2" style={{ color: C.muted }}>Touches: {o.blastRadius.summary}</p>}
-      {!o.isDoNothing && o.approval?.reason && <p className="text-[12px] mt-1" style={{ color: C.faint }}>{o.approval.reason}</p>}
+        );
+      })}
     </div>
   );
 }
 
 function StressTable({ d }: { d: Decision }) {
   const stress = (d.analysis?.stress as unknown as { key: string; label: string; changes: string; recommended: string; options: { key: string; value: Interval }[] }[] | null) || null;
-  if (!Array.isArray(stress) || !stress.length) return null;
+  if (!Array.isArray(stress) || !stress.length) return <p className={m.prose} style={{ color: "var(--ink-3)", fontSize: 12.5 }}>No stress cases were run for this decision.</p>;
   const label = (k: string) => d.options.find((o) => o.key === k)?.label || k;
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-[13px]">
-        <thead>
-          <tr style={{ color: C.faint, fontSize: 12 }}>
-            <th className="text-left font-normal py-2 pr-4">If the customer…</th>
-            <th className="text-left font-normal py-2 pr-4">Best choice</th>
-            <th className="text-right font-normal py-2">Its expected value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {stress.map((s) => {
-            const best = s.options.find((o) => o.key === s.recommended);
-            const same = s.recommended === d.recommendation?.key;
-            return (
-              <tr key={s.key} style={{ borderTop: `1px solid ${C.line}` }}>
-                <td className="py-3 pr-4" style={{ color: C.body }} title={s.changes}>{s.label}</td>
-                <td className="py-3 pr-4" style={{ color: same ? C.ink : C.warn, fontWeight: same ? 400 : 500 }}>{label(s.recommended)}</td>
-                <td className="py-3 text-right tabular-nums" style={{ color: C.ink }}>{amount(best?.value?.mean, d.currency)}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <table className={m.mini}>
+      <thead>
+        <tr>
+          <th>If the customer…</th>
+          <th>Best choice</th>
+          <th style={{ textAlign: "right" }}>Expected</th>
+        </tr>
+      </thead>
+      <tbody>
+        {stress.map((s) => {
+          const best = s.options.find((o) => o.key === s.recommended);
+          const same = s.recommended === d.recommendation?.key;
+          return (
+            <tr key={s.key}>
+              <td title={s.changes}>{s.label}</td>
+              <td style={{ color: same ? "var(--ink)" : "var(--warning)" }}>{label(s.recommended)}{same ? "" : " (changes)"}</td>
+              <td className={m.num}>{amount(best?.value?.mean, d.currency)}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }
 
@@ -171,32 +162,32 @@ function WhatIf({ d }: { d: Decision }) {
   const [speed, setSpeed] = useState(1);
   const [result, setResult] = useState<SimulateResponse | null>(null);
   const sim = useMutation({ mutationFn: () => decisionsApi.simulate(d.id, { paymentSpeed: speed }), onSuccess: setResult });
-  if (d.kind !== "RECEIVABLE_RISK") return null;
+  if (d.kind !== "RECEIVABLE_RISK") return <p className={m.prose} style={{ color: "var(--ink-3)", fontSize: 12.5 }}>A what-if is available for receivable decisions.</p>;
   const max = Math.max(...d.options.map((o) => o.futures.cash60?.p90 || 0), 1);
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-4">
-        <label className="text-[13px]" style={{ color: C.body }} htmlFor="speed">
-          Customer pays at <span className="tabular-nums" style={{ fontWeight: 500 }}>{speed.toFixed(2)}×</span> their usual speed
-        </label>
-        <input id="speed" type="range" min={0.5} max={1.5} step={0.05} value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className="w-48 max-w-full" style={{ accentColor: "var(--accent)" }} />
+      <label htmlFor="speed" style={{ display: "block", fontSize: 12.5, color: "var(--ink-2)" }}>
+        Customer pays at <span className="num" style={{ color: "var(--ink)" }}>{speed.toFixed(2)}×</span> their usual speed
+      </label>
+      <div className="flex flex-wrap items-center" style={{ gap: 12, marginTop: 8 }}>
+        <input id="speed" type="range" min={0.5} max={1.5} step={0.05} value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className="flex-1" style={{ minWidth: 140, maxWidth: 240, accentColor: "var(--ink)" }} />
         <Button size="sm" variant="secondary" loading={sim.isPending} onClick={() => sim.mutate()}>Simulate</Button>
       </div>
-      {sim.isError && <div className="mt-3"><RetryLine error={errorText(sim.error).title} onRetry={() => sim.mutate()} /></div>}
+      {sim.isError && <div style={{ marginTop: 12 }}><RetryLine error={errorText(sim.error).title} onRetry={() => sim.mutate()} /></div>}
       {result && (
-        <div className="mt-4 space-y-3">
-          <p className="text-[13px]" style={{ color: result.recommendation.changed ? C.warn : C.body }}>
-            {result.recommendation.changed
-              ? `At this speed the best choice becomes: ${result.recommendation.label}.`
-              : `The recommendation holds: ${result.recommendation.label}.`}{" "}
-            <span style={{ color: C.faint }}>Not saved; the decision itself is unchanged.</span>
+        <div style={{ marginTop: 14 }}>
+          <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: result.recommendation.changed ? "var(--warning)" : "var(--body)" }}>
+            {result.recommendation.changed ? `At this speed the best choice becomes ${result.recommendation.label}.` : `The recommendation holds: ${result.recommendation.label}.`}{" "}
+            <span style={{ color: "var(--ink-3)" }}>Not saved.</span>
           </p>
-          {result.options.map((o) => (
-            <div key={o.key} className="grid sm:grid-cols-[220px_1fr] gap-2 items-center">
-              <p className="text-[12px]" style={{ color: C.body }}>{o.label}</p>
-              <RangeBar interval={o.futures.cash60 || null} max={max} currency={d.currency} highlight={o.key === result.recommendation.key} />
-            </div>
-          ))}
+          <div style={{ marginTop: 10 }}>
+            {result.options.map((o) => (
+              <div key={o.key} className="grid items-center" style={{ gridTemplateColumns: "120px minmax(0,1fr)", gap: 12, padding: "6px 0" }}>
+                <span style={{ fontSize: 12, color: "var(--ink-2)" }}>{o.label}</span>
+                <RangeBar interval={o.futures.cash60 || null} max={max} currency={d.currency} highlight={o.key === result.recommendation.key} compact />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -213,23 +204,26 @@ function SimilarDecisions({ id }: { id: string }) {
   const q = useQuery({ queryKey: ["decision-similar", id], queryFn: () => decisionsApi.similar(id) });
   if (q.isLoading) return null;
   return (
-    <section className="mt-10">
-      <SectionLabel>Similar decisions before</SectionLabel>
+    <section aria-labelledby="sec-similar">
+      <SectionLabel id="sec-similar">Similar decisions before</SectionLabel>
       {q.error ? (
         <RetryLine error="Couldn't load earlier decisions just now." onRetry={() => q.refetch()} />
       ) : !q.data?.similar.length ? (
-        <p className="text-[13px]" style={{ color: C.muted }}>{q.data?.note || "No earlier decision is close enough to compare."}</p>
+        <p className={m.prose} style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{q.data?.note || "No earlier decision is close enough to compare."}</p>
       ) : (
-        <ul>
+        <ul className={m.rows}>
           {q.data.similar.map((s) => (
-            <li key={s.id} className="py-3" style={{ borderTop: `1px solid ${C.line}` }}>
-              <Link href={`/decisions/${s.id}`} className="text-[13.5px] hover-dim" style={{ color: C.ink, fontWeight: 500 }}>{cleanTitle(s.title)}</Link>
-              <p className="text-[12.5px] mt-0.5" style={{ color: C.body }}>
-                {s.chosen ? `Chose "${s.chosen}"` : "Nothing chosen"} · {OUTCOME_WORDS[s.outcome.status] || s.outcome.status.replace(/_/g, " ").toLowerCase()}
+            <li key={s.id}>
+              <div className="flex items-baseline justify-between flex-wrap" style={{ gap: 12 }}>
+                <Link href={`/decisions/${s.id}`} className="hover-dim" style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>{cleanTitle(s.title)}</Link>
+                <span className="num" style={{ fontSize: 11.5, color: "var(--ink-3)" }} title="How alike the two decisions are">{Math.round(s.similarity * 100)}% alike</span>
+              </div>
+              <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "var(--body)" }}>
+                {s.chosen ? `Chose “${s.chosen}”` : "Nothing chosen"} · {OUTCOME_WORDS[s.outcome.status] || s.outcome.status.replace(/_/g, " ").toLowerCase()}
                 {s.decidedAt ? ` · ${formatDate(s.decidedAt)}` : ""}
               </p>
-              <p className="text-[11.5px] mt-0.5" style={{ color: C.faint }}>
-                {Math.round(s.similarity * 100)}% alike: {[s.why.sameCustomer ? "same customer" : null, s.why.sharedSigns.length ? `${s.why.sharedSigns.length} shared warning sign${s.why.sharedSigns.length === 1 ? "" : "s"}` : null, s.why.sizeSimilarity >= 0.5 ? "similar size" : null].filter(Boolean).join(", ") || "same kind of decision"}
+              <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "var(--ink-3)" }}>
+                {[s.why.sameCustomer ? "Same customer" : null, s.why.sharedSigns.length ? `${s.why.sharedSigns.length} shared warning sign${s.why.sharedSigns.length === 1 ? "" : "s"}` : null, s.why.sizeSimilarity >= 0.5 ? "similar size" : null].filter(Boolean).join(", ") || "Same kind of decision"}
                 {s.outcome.detail ? `. ${s.outcome.detail}` : ""}
               </p>
             </li>
@@ -244,66 +238,67 @@ function Verification({ detail, onVerify, busy }: { detail: DecisionDetail; onVe
   const c = detail.contract;
   if (!c || !c.activated_at) return null;
   const v = c.verification;
+  const cur = detail.decision.currency;
   return (
-    <section className="mt-10">
-      <SectionLabel>What actually happened</SectionLabel>
-      <div className="rounded-xl p-5" style={{ background: "var(--surface)", border: "1px solid var(--line-card)" }}>
-        <div className="flex flex-wrap items-center gap-2">
-          <Pill tone={c.status === "MET" || c.status === "ON_TRACK" ? "good" : c.status === "NOT_MET" || c.status === "OFF_TRACK" || c.status === "ABORTED" ? "bad" : "neutral"}>
-            {c.status.charAt(0) + c.status.slice(1).replace(/_/g, " ").toLowerCase()}
-          </Pill>
-          <span className="text-[12px]" style={{ color: C.faint }}>{c.mode === "SHADOW" ? "Shadow contract" : "Live contract"} · started {formatDate(c.activated_at)}{v ? ` · checked ${relTime(v.checkedAt)}` : ""}</span>
-          <Button size="xs" variant="ghost" loading={busy} onClick={onVerify} className="ml-auto">Check now</Button>
-        </div>
-        <p className="text-[13px] mt-3" style={{ color: C.body }}>{v?.reason || "Not checked yet. The first comparison with the forecast happens when its horizon has passed."}</p>
-        {v && (
-          <>
-            <div className="overflow-x-auto mt-4">
-              <table className="w-full text-[12px]">
-                <thead>
-                  <tr style={{ color: C.faint }}>
-                    <th className="text-left font-normal py-1.5 pr-3">Forecast</th>
-                    <th className="text-right font-normal py-1.5 pr-3">Expected (80% range)</th>
-                    <th className="text-right font-normal py-1.5 pr-3">Actual</th>
-                    <th className="text-right font-normal py-1.5">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {v.predictions.map((p, i) => (
-                    <tr key={i} style={{ borderTop: `1px solid ${C.line}` }}>
-                      <td className="py-2 pr-3" style={{ color: C.body }}>{p.target.split(":")[1] === "do_nothing" ? "If nothing was done" : "Chosen option"}, {p.horizonDays} days</td>
-                      <td className="py-2 pr-3 text-right tabular-nums">{amount(p.expected, detail.decision.currency)}{p.range ? ` (${amount(p.range[0], detail.decision.currency)}–${amount(p.range[1], detail.decision.currency)})` : ""}</td>
-                      <td className="py-2 pr-3 text-right tabular-nums" style={{ color: C.ink }}>{p.actual == null ? "Not known yet" : amount(p.actual, detail.decision.currency)}</td>
-                      <td className="py-2 text-right" style={{ color: p.insideRange === false ? C.bad : C.faint }}>
-                        {p.status === "RESOLVED" ? (p.insideRange ? "Inside range" : p.insideRange === false ? "Outside range" : "Scored") : p.status === "COUNTERFACTUAL" ? "Can't be observed" : "Waiting"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="text-[12px] mt-3" style={{ color: C.faint }}>{v.attributionNote}</p>
-          </>
-        )}
-        {c.regret && <p className="text-[12px] mt-2" style={{ color: C.faint }}>Regret at decision time: {amount(c.regret.exAnte, detail.decision.currency)} (best then: {detail.decision.options.find((o) => o.key === c.regret?.bestAtDecisionTime)?.label || c.regret.bestAtDecisionTime}).</p>}
+    <section aria-labelledby="sec-verify">
+      <div className="flex items-baseline justify-between" style={{ gap: 12 }}>
+        <SectionLabel id="sec-verify">What actually happened</SectionLabel>
+        <Button size="xs" variant="ghost" loading={busy} onClick={onVerify}>Check now</Button>
       </div>
+      <div className="flex flex-wrap items-center" style={{ gap: "4px 12px", fontSize: 12, color: "var(--ink-3)" }}>
+        <Pill tone={c.status === "MET" || c.status === "ON_TRACK" ? "good" : c.status === "NOT_MET" || c.status === "OFF_TRACK" || c.status === "ABORTED" ? "bad" : "neutral"}>
+          {c.status.charAt(0) + c.status.slice(1).replace(/_/g, " ").toLowerCase()}
+        </Pill>
+        <span>{c.mode === "SHADOW" ? "Shadow contract" : "Live contract"} · started {formatDate(c.activated_at)}{v ? ` · checked ${relTime(v.checkedAt)}` : ""}</span>
+      </div>
+      <p className={m.prose} style={{ marginTop: 8 }}>{v?.reason || "Not checked yet. The first comparison with the forecast happens when its horizon has passed."}</p>
+      {v && (
+        <>
+          <div className="overflow-x-auto" style={{ marginTop: 12 }}>
+            <table className={m.mini}>
+              <thead>
+                <tr>
+                  <th>Forecast</th>
+                  <th style={{ textAlign: "right" }}>Expected (80% range)</th>
+                  <th style={{ textAlign: "right" }}>Actual</th>
+                  <th style={{ textAlign: "right" }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {v.predictions.map((p, i) => (
+                  <tr key={i}>
+                    <td>{p.target.split(":")[1] === "do_nothing" ? "If nothing was done" : "Chosen option"}, {p.horizonDays} days</td>
+                    <td className={m.num}>{amount(p.expected, cur)}{p.range ? ` (${amount(p.range[0], cur)}–${amount(p.range[1], cur)})` : ""}</td>
+                    <td className={m.num}>{p.actual == null ? "—" : amount(p.actual, cur)}</td>
+                    <td style={{ textAlign: "right", color: p.insideRange === false ? "var(--critical)" : "var(--ink-3)" }}>
+                      {p.status === "RESOLVED" ? (p.insideRange ? "Inside range" : p.insideRange === false ? "Outside range" : "Scored") : p.status === "COUNTERFACTUAL" ? "Can't be observed" : "Waiting"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className={m.tfoot}>{v.attributionNote}</p>
+        </>
+      )}
+      {c.regret && <p className={m.tfoot}>Regret at decision time: {amount(c.regret.exAnte, cur)} (best then: {detail.decision.options.find((o) => o.key === c.regret?.bestAtDecisionTime)?.label || c.regret.bestAtDecisionTime}).</p>}
     </section>
   );
 }
 
 function BackLink() {
   return (
-    <Link href="/decisions" className="inline-flex items-center gap-1.5 text-[13px] hover-dim" style={{ color: C.muted, alignSelf: "flex-start" }}>
+    <Link href="/decisions" className="inline-flex items-center hover-dim" style={{ gap: 4, fontSize: 12.5, color: "var(--ink-2)", alignSelf: "flex-start" }}>
       <span aria-hidden="true" style={{ display: "inline-flex", transform: "rotate(90deg)" }}><IconChevronDown size={13} /></span> Decisions
     </Link>
   );
 }
 
-function Fig({ label, value, tone, muted }: { label: string; value: React.ReactNode; tone?: string; muted?: boolean }) {
+function Fact({ label, value, kind = "num", tone, title }: { label: string; value: React.ReactNode; kind?: "num" | "word" | "none"; tone?: string; title?: string }) {
   return (
-    <div className="min-w-0">
-      <div style={{ fontFamily: muted ? "var(--font-sans)" : "var(--font-display)", fontSize: muted ? 14 : 24, lineHeight: muted ? "34px" : 1.4, color: muted ? C.faint : tone || C.ink, fontVariantNumeric: "tabular-nums" }}>{value}</div>
-      <div style={{ fontSize: 12.5, color: C.muted, marginTop: 4 }}>{label}</div>
+    <div className={m.fact} title={title}>
+      <div className={kind === "num" ? m.factValue : kind === "word" ? m.factWord : m.factNone} style={tone ? { color: tone } : undefined}>{value}</div>
+      <div className={m.factLabel}>{label}</div>
     </div>
   );
 }
@@ -378,259 +373,261 @@ export default function DecisionDetailPage() {
   const cod = (d.window?.costOfDelayPerWeek as unknown as { valueLost?: number } | null) || null;
   const steps = stepsOf(chosen);
   const allInternal = steps.every((s) => s !== "CONTACT_CUSTOMER");
-  const byKind = d.evidence.reduce<Record<string, typeof d.evidence>>((acc, e) => { (acc[e.kind] ||= []).push(e); return acc; }, {});
   const flips = (d.analysis?.sensitivity?.results || []).filter((r) => r.flips);
   const stake = d.materiality?.expectedUncollected90 ?? d.materiality?.workingCapitalTiedUp ?? d.materiality?.revenueExposure ?? null;
-  const card: React.CSSProperties = { background: "var(--surface)", border: "1px solid var(--line-card)", borderRadius: 12 };
+
+  const statusTone = d.status === "NEEDS_INFORMATION" ? "warn" : ["REJECTED", "EXPIRED", "SUPERSEDED", "RESOLVED", "OPEN"].includes(d.status) ? "neutral" : "good";
+  const recH = recOption ? headline(recOption, d.kind) : null;
+  const canHandle = !!rec && canChoose && !rec.informationFirst && !!recOption && recOption.valid !== false;
+  const showNext = !canChoose || d.status === "SELECTED";
 
   return (
     <DashboardLayout pageTitle="Decision">
-      <PageBody gap={0}>
-        <div style={{ maxWidth: 920 }}>
+      <article className={`${m.memo} page-in`}>
         <BackLink />
 
-        {/* Header */}
-        <div className="flex flex-wrap items-center gap-2 text-[12px] mt-5 mb-3" style={{ color: C.faint }}>
-          <Pill tone={d.status === "NEEDS_INFORMATION" ? "warn" : d.status === "OPEN" ? "accent" : ["REJECTED", "EXPIRED", "SUPERSEDED", "RESOLVED"].includes(d.status) ? "neutral" : "good"}>{STATUS_LABEL[d.status] || d.status}</Pill>
-          <span>Analysed {relTime(d.updatedAt)} from data as of {formatDate(d.asOf)}</span>
-          {detail.pilotMode === "SHADOW" && <Pill tone="accent">Shadow mode</Pill>}
+        {/* Metadata → title → why now */}
+        <div className={m.metaRow}>
+          <Pill tone={statusTone}>{STATUS_LABEL[d.status] || d.status}</Pill>
+          <span title={formatDateTime(d.updatedAt)}>Analysed {relTime(d.updatedAt)} from data as of {formatDate(d.asOf)}</span>
+          {detail.pilotMode === "SHADOW" && <span title="Nothing is executed; Starlane records what it would have done">Shadow mode</span>}
         </div>
-        <h1 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 30, lineHeight: 1.2, color: C.ink, maxWidth: 820 }}>{cleanTitle(d.title)}</h1>
-        {d.description && <p className="text-[14.5px] mt-3 max-w-[760px] leading-[1.6]" style={{ color: C.body }}>{d.description}</p>}
+        <h1 className={m.title}>{cleanTitle(d.title)}</h1>
+        {d.description && <p className={m.lede}>{d.description}</p>}
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 mt-7" style={{ ...card, gap: 20, padding: "18px 20px" }}>
-          <Fig label="At stake if ignored" value={stake != null ? amount(stake, d.currency) : "Not known yet"} muted={stake == null} />
-          <Fig
-            label={days != null ? (days <= 0 ? "Decide now" : `Decide by, ${days} day${days === 1 ? "" : "s"} left`) : "Decide by"}
+        <div className={m.facts}>
+          <Fact label="At stake if ignored" value={stake != null ? amount(stake, d.currency) : "Not estimated"} kind={stake != null ? "num" : "none"} />
+          <Fact
+            label={days != null ? (days <= 0 ? "Decide now" : `Decide by · ${days} day${days === 1 ? "" : "s"} left`) : "Decide by"}
             value={days != null ? formatDate(d.deadline || d.window?.latestSafeAt) : "No deadline"}
-            tone={days != null && days <= 2 ? C.bad : days != null && days <= 7 ? C.warn : undefined}
-            muted={days == null}
+            kind={days != null ? "num" : "none"}
+            tone={days != null && days <= 2 ? "var(--critical)" : undefined}
           />
-          <Fig label="Cost of waiting a week" value={cod?.valueLost != null ? amount(cod.valueLost, d.currency) : "Not known yet"} muted={cod?.valueLost == null} />
-          <div className="min-w-0">
-            <div style={{ height: 34, display: "flex", alignItems: "center" }}><ConfidencePill band={d.confidence?.band} score={d.confidence?.score} /></div>
-            <div style={{ fontSize: 12.5, color: C.muted, marginTop: 4 }}>Confidence</div>
-          </div>
+          <Fact label="Cost of waiting a week" value={cod?.valueLost != null ? amount(cod.valueLost, d.currency) : "Not estimated"} kind={cod?.valueLost != null ? "num" : "none"} />
+          <Fact
+            label="Confidence"
+            value={d.confidence?.band ? BAND_LABEL[d.confidence.band] || d.confidence.band : "Not assessed"}
+            kind={d.confidence?.band ? "word" : "none"}
+            title={d.confidence?.score != null ? `Confidence score ${Math.round(d.confidence.score * 100)} of 100` : undefined}
+          />
         </div>
-        {d.window?.basis && <p className="text-[12px] mt-3 max-w-[760px] leading-[1.55]" style={{ color: C.faint }}>{d.window.basis}</p>}
+        {d.window?.basis && <p className={m.note}>{d.window.basis}</p>}
 
         {/* Messages */}
-        <div className="mt-6 space-y-3">
-          {flash && <Notice tone="good" title={flash} />}
-          {actionError && <Notice tone="bad" title={actionError.title}>{actionError.detail}</Notice>}
-          {d.contradictions.length > 0 && (
-            <Notice tone="warn" title={`${d.contradictions.length} thing${d.contradictions.length === 1 ? "" : "s"} in your data disagree`}>
-              {d.contradictions.slice(0, 3).map((c, i) => <p key={i}>{c.detail || c.label || c.type}{c.toResolve ? ` To resolve: ${c.toResolve}` : ""}</p>)}
-            </Notice>
-          )}
-          {d.collisions && d.collisions.length > 0 && (
-            <Notice title="Linked decisions">
-              {d.collisions.map((c, i) => <p key={i}><Link className="underline" href={`/decisions/${c.with}`}>{c.withTitle}</Link>: {c.detail}</p>)}
-            </Notice>
-          )}
-        </div>
-
-
-        {/* Why now + do nothing */}
-        <section className="grid md:grid-cols-2 gap-8 mt-10">
-          <div>
-            <SectionLabel>Why now</SectionLabel>
-            <ul className="space-y-2">
-              {(d.triggers || []).map((t) => (
-                <li key={t.code} className="text-[14px] leading-[1.55] flex gap-2.5" style={{ color: C.body }}>
-                  <span aria-hidden="true" style={{ color: C.faint }}>–</span>
-                  {t.label}
-                </li>
-              ))}
-            </ul>
+        {(flash || actionError || d.contradictions.length > 0 || (d.collisions && d.collisions.length > 0)) && (
+          <div className="flex flex-col" style={{ gap: 12, marginTop: 24 }} aria-live="polite">
+            {flash && <Notice tone="good" title={flash} />}
+            {actionError && <Notice tone="bad" title={actionError.title}>{actionError.detail}</Notice>}
+            {d.contradictions.length > 0 && (
+              <Notice tone="warn" title={`${d.contradictions.length} thing${d.contradictions.length === 1 ? "" : "s"} in your data disagree`}>
+                {d.contradictions.slice(0, 3).map((c, i) => <p key={i} style={{ margin: 0 }}>{c.detail || c.label || c.type}{c.toResolve ? ` To resolve: ${c.toResolve}` : ""}</p>)}
+              </Notice>
+            )}
+            {d.collisions && d.collisions.length > 0 && (
+              <Notice title="Linked decisions">
+                {d.collisions.map((c, i) => <p key={i} style={{ margin: 0 }}><Link className="underline" style={{ textUnderlineOffset: 3 }} href={`/decisions/${c.with}`}>{c.withTitle}</Link>: {c.detail}</p>)}
+              </Notice>
+            )}
           </div>
-          <div>
-            <SectionLabel>If you do nothing</SectionLabel>
-            <p className="text-[14px] leading-[1.55]" style={{ color: C.body }}>{d.whatIfIgnored}</p>
-          </div>
-        </section>
+        )}
 
         {/* Recommendation */}
         {rec && (
-          <section className="mt-10 rounded-xl p-5 sm:p-6" style={{ background: "rgba(var(--accent-rgb), 0.06)", border: "1px solid rgba(var(--accent-rgb), 0.22)" }}>
-            <SectionLabel>{rec.informationFirst ? "Find out first" : "Starlane suggests"}</SectionLabel>
-            <p style={{ margin: 0, fontFamily: "var(--font-display)", fontSize: 22, color: C.ink }}>{rec.label}</p>
-            {rec.why && <p className="text-[14px] mt-2 leading-[1.55] max-w-[760px]" style={{ color: C.body }}>{rec.why}</p>}
-            {flips.length > 0 ? (
-              <div className="mt-3">
-                <p className="text-[12px]" style={{ color: C.faint }}>This would change if:</p>
-                <ul className="mt-1 space-y-1">
-                  {flips.map((f) => (
-                    <li key={f.assumption} className="text-[13px]" style={{ color: C.body }}>
-                      {f.label}: {f.switches.map((s) => `${d.options.find((o) => o.key === s.to)?.label || s.to} wins between ${s.between[0]} and ${s.between[1]}`).join("; ")}
-                    </li>
-                  ))}
-                </ul>
+          <section aria-labelledby="sec-rec">
+            <div className={m.rec}>
+              <SectionLabel id="sec-rec">{rec.informationFirst ? "Find out first" : "Recommendation"}</SectionLabel>
+              <p className={m.recLabel}>{rec.label}</p>
+              {rec.why && <p className={m.recWhy}>{rec.why}</p>}
+              <div className={m.recFacts}>
+                {d.confidence?.band && <span>Confidence <b>{BAND_LABEL[d.confidence.band] || d.confidence.band}</b></span>}
+                {recOption?.futures.bestShare != null && <span>Best in <b className="num">{pct(recOption.futures.bestShare)}</b> of futures</span>}
+                {recH?.interval && <span>{recH.label} <b className="num">{amount(recH.interval.mean, d.currency)}</b> expected</span>}
+                {recOption && !recOption.isDoNothing && recOption.reversibility && <span>{reversibilityWord(recOption.reversibility)}</span>}
               </div>
-            ) : (
-              <p className="text-[12px] mt-3" style={{ color: C.faint }}>No single assumption, moved across its full range, changes this recommendation.</p>
-            )}
-            {rec.whyNot && rec.whyNot.length > 0 && (
-              <details className="mt-3">
-                <summary className="text-[12px] cursor-pointer" style={{ color: C.muted }}>Why not the others</summary>
-                <ul className="mt-2 space-y-1">
-                  {rec.whyNot.map((w) => (
-                    <li key={w.key} className="text-[12px]" style={{ color: C.body }}>
-                      <span style={{ fontWeight: 500 }}>{d.options.find((o) => o.key === w.key)?.label || w.key}:</span> {w.reason}
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            )}
-            {canChoose && !rec.informationFirst && recOption && recOption.valid !== false && (
-              <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(var(--accent-rgb), 0.22)" }}>
-                <p className="text-[13px] max-w-[760px]" style={{ color: C.body }}>
-                  <span style={{ fontWeight: 500 }}>Handle it</span> approves &ldquo;{rec.label}&rdquo; and starts a mission.{" "}
+              <p className={m.actionNote} style={{ marginTop: 8 }}>
+                {flips.length > 0
+                  ? <>Would change if {flips.map((f) => `${f.label.charAt(0).toLowerCase() + f.label.slice(1)} (${f.switches.map((sw) => `${d.options.find((o) => o.key === sw.to)?.label || sw.to} wins between ${sw.between[0]} and ${sw.between[1]}`).join("; ")})`).join("; ")}.</>
+                  : "No single assumption, moved across its full range, changes this recommendation."}
+              </p>
+              {rec.whyNot && rec.whyNot.length > 0 && (
+                <details className={m.fold} style={{ marginTop: 8 }}>
+                  <summary>Why not the others</summary>
+                  <ul className={m.list} style={{ marginTop: 6 }}>
+                    {rec.whyNot.map((w) => (
+                      <li key={w.key} style={{ fontSize: 12.5 }}>
+                        <span style={{ color: "var(--ink)" }}>{d.options.find((o) => o.key === w.key)?.label || w.key}:</span> {w.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+
+              <div className={m.actions}>
+                {canHandle && (
+                  <Button variant={d.status === "SELECTED" ? "secondary" : "primary"} loading={handle.isPending} onClick={() => handle.mutate()}>Handle it</Button>
+                )}
+                {d.kind === "RECEIVABLE_RISK" && <a href="#sec-sim" className="ui-btn ui-btn-secondary">Simulate</a>}
+                {d.evidence.length > 0 && <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setShowEvidence(true)}>View evidence <span className="num" style={{ color: "var(--ink-3)", fontSize: 12 }}>{d.evidence.length}</span></button>}
+              </div>
+              {canHandle && recOption && (
+                <p className={m.actionNote}>
+                  Handle it approves this option and starts a mission.{" "}
                   {recOption.isDoNothing
                     ? "Nothing is changed; Starlane checks what happens."
                     : detail.pilotMode === "SHADOW"
-                      ? "Your account is in shadow mode, so Starlane records exactly what it would do and changes nothing outside Starlane."
-                      : "Your account is live: approved internal steps are carried out and checked. Customer messages stay drafts for you to send."}
-                  {" "}If you reject it, nothing happens and the decision stays open.
+                      ? "Your account is in shadow mode: Starlane records what it would do and changes nothing outside Starlane."
+                      : "Your account is live: approved internal steps are carried out and checked; customer messages stay drafts for you to send."}
+                  {" "}Rejecting leaves the decision open. <Link href="/missions" className="hover-dim" style={{ color: "var(--ink-2)", textDecoration: "underline", textUnderlineOffset: 3 }}>Missions</Link>
                 </p>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <Button variant={d.status === "SELECTED" ? "secondary" : "primary"} loading={handle.isPending} onClick={() => handle.mutate()}>Handle it</Button>
-                  <Link href="/missions" className="text-[12.5px] self-center hover-dim" style={{ color: C.muted }}>See missions</Link>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </section>
         )}
 
-        {/* Options */}
-        <section className="mt-10">
-          <SectionLabel>Options and their likely futures</SectionLabel>
-          {canChoose && (
-            <input
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Optional note for the record (why you chose this)"
-              aria-label="Note for the record"
-              className="ui-input mb-4"
-              style={{ maxWidth: 520 }}
-              maxLength={1000}
-            />
-          )}
-          <div className="space-y-4">
-            {d.options.map((o) => (
-              <OptionCard
-                key={o.key}
-                o={o}
-                d={d}
-                max={max}
-                recommended={rec?.key === o.key}
-                selected={d.selectedOption === o.key}
-                canChoose={canChoose && !select.isPending}
-                busy={select.isPending && choosing === o.key}
-                onChoose={() => { setChoosing(o.key); select.mutate(o.key); }}
-              />
-            ))}
-          </div>
-          <p className="text-[12px] mt-3" style={{ color: C.faint }}>
-            Ranges are the middle 80% of simulated futures built from this customer&apos;s own payment history. The marker is the expected value.
-          </p>
-        </section>
-
-        {/* Next step */}
-        {!canChoose || d.status === "SELECTED" ? (
-          <section className="mt-10 p-5" style={card}>
-            <SectionLabel>Next step</SectionLabel>
+        {/* Next step, once a choice exists */}
+        {showNext && (
+          <section aria-labelledby="sec-next">
+            <SectionLabel id="sec-next">Next step</SectionLabel>
             {d.status === "SELECTED" && chosen && (
               <>
-                <p className="text-[14px]" style={{ color: C.body }}>
-                  You chose <span style={{ fontWeight: 500 }}>{chosen.label}</span>.{" "}
-                  {chosen.isDoNothing ? "Nothing will be changed; Starlane will still check what happens." : `Approving allows: ${steps.map((s) => INTENT_WORDS[s] || s).join(", then ")}.`}
+                <p className={m.prose}>
+                  You chose <span style={{ color: "var(--ink)", fontWeight: 500 }}>{chosen.label}</span>.{" "}
+                  {chosen.isDoNothing ? "Nothing will be changed; Starlane will still check what happens." : `Approving allows: ${steps.map((st) => INTENT_WORDS[st] || st).join(", then ")}.`}
                 </p>
-                <div className="flex flex-wrap gap-2 mt-4">
+                <div className={m.actions} style={{ marginTop: 12 }}>
                   {chosen.isDoNothing ? (
-                    <Button size="sm" loading={execute.isPending} onClick={() => execute.mutate(false)}>Start watching the outcome</Button>
+                    <Button loading={execute.isPending} onClick={() => execute.mutate(false)}>Start watching the outcome</Button>
                   ) : (
-                    <Button size="sm" loading={approve.isPending} onClick={() => approve.mutate()}>Approve</Button>
+                    <Button loading={approve.isPending} onClick={() => approve.mutate()}>Approve</Button>
                   )}
-                  <Button size="sm" variant="ghost" loading={reject.isPending} icon={<IconX size={13} />} onClick={() => reject.mutate()}>Reject</Button>
+                  <Button variant="ghost" loading={reject.isPending} icon={<IconX size={13} />} onClick={() => reject.mutate()}>Reject</Button>
                 </div>
               </>
             )}
             {d.status === "APPROVED" && chosen && (
               <>
-                <p className="text-[14px]" style={{ color: C.body }}>
-                  Approved: {steps.map((s) => INTENT_WORDS[s] || s).join(", then ")}.{" "}
+                <p className={m.prose}>
+                  Approved: {steps.map((st) => INTENT_WORDS[st] || st).join(", then ")}.{" "}
                   {detail.pilotMode === "SHADOW"
                     ? "Your account is in shadow mode, so running it records exactly what would happen without changing anything."
                     : "Your account is live: approved internal steps will be carried out and checked."}
                   {!detail.externalSendEnabled && steps.includes("CONTACT_CUSTOMER") ? " Customer messages are prepared as drafts for you to send; nothing is sent automatically." : ""}
                 </p>
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <Button size="sm" loading={execute.isPending && execute.variables === false} onClick={() => execute.mutate(false)}>
+                <div className={m.actions} style={{ marginTop: 12 }}>
+                  <Button loading={execute.isPending && execute.variables === false} onClick={() => execute.mutate(false)}>
                     {detail.pilotMode === "SHADOW" ? "Run in shadow mode" : "Run"}
                   </Button>
                   {detail.pilotMode === "SHADOW" && allInternal && (
-                    <Button size="sm" variant="secondary" loading={execute.isPending && execute.variables === true} onClick={() => execute.mutate(true)}>
+                    <Button variant="secondary" loading={execute.isPending && execute.variables === true} onClick={() => execute.mutate(true)}>
                       Do it for real (internal only)
                     </Button>
                   )}
-                  <Button size="sm" variant="ghost" loading={reject.isPending} onClick={() => reject.mutate()}>Cancel</Button>
+                  <Button variant="ghost" loading={reject.isPending} onClick={() => reject.mutate()}>Cancel</Button>
                 </div>
               </>
             )}
             {["SHADOWED", "EXECUTED", "VERIFIED", "EXECUTING"].includes(d.status) && detail.runs.length > 0 && (
-              <div className="space-y-3">
+              <ul className={m.rows}>
                 {detail.runs.map((r) => (
-                  <div key={r.id} className="text-[13px]" style={{ color: C.body }}>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Pill tone={r.status === "SUCCEEDED" || r.status === "PREPARED" ? "good" : r.status === "SHADOWED" ? "accent" : r.status === "FAILED" || r.status === "BLOCKED" ? "bad" : "neutral"}>{r.status.charAt(0) + r.status.slice(1).toLowerCase()}</Pill>
-                      <span>{INTENT_WORDS[r.intent_type] || r.intent_type}</span>
-                      <span className="text-[12px]" style={{ color: C.faint }}>via {r.adapter}</span>
+                  <li key={r.id}>
+                    <div className="flex flex-wrap items-center" style={{ gap: "4px 12px", fontSize: 13 }}>
+                      <span style={{ color: "var(--ink)" }}>{INTENT_WORDS[r.intent_type] || r.intent_type}</span>
+                      <Pill tone={r.status === "SUCCEEDED" || r.status === "PREPARED" ? "good" : r.status === "FAILED" || r.status === "BLOCKED" ? "bad" : "neutral"}>{r.status.charAt(0) + r.status.slice(1).toLowerCase()}</Pill>
+                      <span className="num" style={{ fontSize: 11.5, color: "var(--ink-3)" }}>via {r.adapter}</span>
                     </div>
-                    {r.status === "SHADOWED" && r.would_have && <p className="text-[12px] mt-1" style={{ color: C.faint }}>Would have written: {String((r.would_have as { write?: string }).write || "")}</p>}
-                    {r.postcondition?.note && <p className="text-[12px] mt-1" style={{ color: C.faint }}>{r.postcondition.note}</p>}
-                    {r.error && <p className="text-[12px] mt-1" style={{ color: C.bad }}>This step didn&apos;t complete. Nothing was left half-done.</p>}
-                  </div>
+                    {r.status === "SHADOWED" && r.would_have && <p className={m.tfoot} style={{ marginTop: 2 }}>Would have written: {String((r.would_have as { write?: string }).write || "")}</p>}
+                    {r.postcondition?.note && <p className={m.tfoot} style={{ marginTop: 2 }}>{r.postcondition.note}</p>}
+                    {r.error && <p className={m.tfoot} style={{ marginTop: 2, color: "var(--critical)" }}>This step didn&apos;t complete. Nothing was left half-done.</p>}
+                  </li>
                 ))}
-                {steps.includes("CONTACT_CUSTOMER") && ["EXECUTED"].includes(d.status) && (
-                  <p className="text-[12px]" style={{ color: C.muted }}>The reminder is waiting in <Link className="underline" href="/control/approvals">Control › Approvals</Link>.</p>
-                )}
-              </div>
+              </ul>
+            )}
+            {steps.includes("CONTACT_CUSTOMER") && d.status === "EXECUTED" && (
+              <p className={m.tfoot}>The reminder is waiting in <Link className="underline" style={{ textUnderlineOffset: 3 }} href="/control/approvals">Control › Approvals</Link>.</p>
             )}
             {["REJECTED", "RESOLVED", "EXPIRED", "SUPERSEDED"].includes(d.status) && (
-              <p className="text-[14px]" style={{ color: C.body }}>{d.resolutionReason || STATUS_LABEL[d.status]}</p>
+              <p className={m.prose}>{d.resolutionReason || STATUS_LABEL[d.status]}</p>
             )}
           </section>
-        ) : null}
+        )}
 
-        <Verification detail={detail} onVerify={() => verify.mutate()} busy={verify.isPending} />
-
-        {/* Stress + what-if */}
-        <section className="mt-10 grid lg:grid-cols-2 gap-10">
+        {/* Why now / if you do nothing */}
+        <section className={m.two}>
           <div>
-            <SectionLabel>Under pressure</SectionLabel>
-            <StressTable d={d} />
+            <SectionLabel>Why now</SectionLabel>
+            <ul className={m.list}>
+              {(d.triggers || []).map((t) => <li key={t.code}>{t.label}</li>)}
+            </ul>
           </div>
           <div>
-            <SectionLabel>Try a what-if</SectionLabel>
-            <WhatIf d={d} />
+            <SectionLabel>If you do nothing</SectionLabel>
+            <p className={m.prose}>{d.whatIfIgnored}</p>
           </div>
         </section>
 
-        <SimilarDecisions id={d.id} />
+        {/* Options */}
+        <section aria-labelledby="sec-options">
+          <div className="flex items-end justify-between flex-wrap" style={{ gap: 12 }}>
+            <SectionLabel id="sec-options">Options</SectionLabel>
+          </div>
+          <OptionsTable
+            d={d}
+            max={max}
+            recKey={rec?.key}
+            canChoose={canChoose}
+            choosing={choosing}
+            busy={select.isPending}
+            onChoose={(key) => { setChoosing(key); select.mutate(key); }}
+          />
+          <p className={m.tfoot}>Ranges show the middle 80% of simulated futures from this customer&apos;s own payment history; the mark is the expected value.</p>
+          {canChoose && (
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Note for the record (optional): why you chose this"
+              aria-label="Note for the record"
+              className="ui-input"
+              style={{ maxWidth: 420, marginTop: 12, fontSize: 12.5 }}
+              maxLength={1000}
+            />
+          )}
+        </section>
+
+        {/* Evidence */}
+        <section aria-labelledby="sec-evidence">
+          <div className="flex items-baseline justify-between" style={{ gap: 12 }}>
+            <SectionLabel id="sec-evidence">Evidence</SectionLabel>
+            {d.evidence.length > 0 && <button type="button" className={m.textLink} onClick={() => setShowEvidence(true)}>View all {d.evidence.length} with sources</button>}
+          </div>
+          {d.evidence.length === 0 ? (
+            <p className={m.prose} style={{ fontSize: 12.5, color: "var(--ink-3)" }}>No evidence was recorded for this decision.</p>
+          ) : (
+            <table className={m.mini}>
+              <tbody>
+                {d.evidence.slice(0, 5).map((e, i) => (
+                  <tr key={i}>
+                    <td className={m.evKind}>{EVIDENCE_LABEL[e.kind] || e.kind}</td>
+                    <td><span style={{ color: "var(--ink)" }}>{e.label}</span><span style={{ color: "var(--ink-2)" }}> · {prettyDates(e.detail)}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {d.evidence.length > 5 && <p className={m.tfoot}>{d.evidence.length - 5} more in the evidence drawer.</p>}
+        </section>
 
         {/* Unknowns */}
         {d.unknowns.length > 0 && (
-          <section className="mt-10">
-            <SectionLabel>What Starlane doesn&apos;t know</SectionLabel>
-            <ul>
+          <section aria-labelledby="sec-unknowns">
+            <SectionLabel id="sec-unknowns">What Starlane doesn&apos;t know</SectionLabel>
+            <ul className={m.rows}>
               {d.unknowns.map((u) => (
-                <li key={u.key} className="py-3 flex flex-wrap items-start gap-3" style={{ borderTop: `1px solid ${C.line}` }}>
+                <li key={u.key} className="flex flex-wrap items-start" style={{ gap: 12 }}>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px]" style={{ color: C.body }}>{u.label}</p>
-                    <p className="text-[12px] mt-0.5" style={{ color: C.faint }}>
+                    <p style={{ margin: 0, fontSize: 13, color: "var(--ink)" }}>{u.label}</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 12, lineHeight: 1.5, color: "var(--ink-3)" }}>
                       {u.changesRecommendation
-                        ? `Knowing this could be worth about ${amount(u.valueOfInformation ?? null, d.currency)} and might change the choice.`
+                        ? `Worth about ${amount(u.valueOfInformation ?? null, d.currency)} to know; it might change the choice.`
                         : u.valueOfInformation != null ? "Knowing this would not change the recommendation." : "Its effect can't be estimated yet."}
                       {u.acquisition?.how ? ` ${u.acquisition.how}.` : ""}
                     </p>
@@ -644,92 +641,76 @@ export default function DecisionDetailPage() {
               ))}
             </ul>
             {d.informationRequests && d.informationRequests.length > 0 && (
-              <p className="text-[12px] mt-2" style={{ color: C.faint }}>Requested: {d.informationRequests.map((r) => r.label).join("; ")} (see Tasks).</p>
+              <p className={m.tfoot}>Requested: {d.informationRequests.map((r) => r.label).join("; ")} (see Tasks).</p>
             )}
           </section>
         )}
 
-        {/* Evidence */}
-        <section className="mt-10">
-          <div className="flex items-center justify-between">
-            <SectionLabel>Evidence</SectionLabel>
-            <button type="button" className="text-[12px] hover-dim" style={{ color: C.muted }} onClick={() => setShowEvidence((v) => !v)}>
-              {showEvidence ? "Hide" : `Show all ${d.evidence.length}`}
-            </button>
+        {/* Simulation */}
+        <section aria-labelledby="sec-sim-label" id="sec-sim" style={{ scrollMarginTop: 64 }}>
+          <SectionLabel id="sec-sim-label">Simulation</SectionLabel>
+          <div className={m.two}>
+            <div>
+              <p style={{ margin: "0 0 6px", fontSize: 12.5, color: "var(--ink-2)" }}>Under pressure</p>
+              <StressTable d={d} />
+            </div>
+            <div>
+              <p style={{ margin: "0 0 6px", fontSize: 12.5, color: "var(--ink-2)" }}>Try a what-if</p>
+              <WhatIf d={d} />
+            </div>
           </div>
-          <div className="space-y-4">
-            {Object.entries(byKind).map(([kind, items]) => (
-              <div key={kind}>
-                <p className="text-[12px] mb-1" style={{ color: C.faint }}>{EVIDENCE_LABEL[kind] || kind}</p>
-                <ul>
-                  {(showEvidence ? items : items.slice(0, 3)).map((e, i) => (
-                    <li key={i} className="text-[13px] py-1.5" style={{ color: C.body }}>
-                      <span style={{ fontWeight: 500 }}>{e.label}</span>: {e.detail}
-                      {e.calculation && <span className="block text-[12px]" style={{ color: C.faint }}>How: {e.calculation}</span>}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          {d.assumptions.length > 0 && (
-            <details className="mt-4">
-              <summary className="text-[12px] cursor-pointer" style={{ color: C.muted }}>Assumptions ({d.assumptions.length})</summary>
-              <ul className="mt-2 space-y-1">
-                {d.assumptions.map((a, i) => <li key={i} className="text-[12px]" style={{ color: C.body }}>{a.label}</li>)}
-              </ul>
-            </details>
-          )}
-          {Array.isArray(d.analysis?.method) && (
-            <details className="mt-2">
-              <summary className="text-[12px] cursor-pointer" style={{ color: C.muted }}>Method</summary>
-              <ul className="mt-2 space-y-1">
-                {(d.analysis?.method as string[]).map((m, i) => <li key={i} className="text-[12px]" style={{ color: C.body }}>{m}</li>)}
-                {d.modelVersions && <li className="text-[12px]" style={{ color: C.faint }}>Versions: {Object.values(d.modelVersions).join(", ")}</li>}
-              </ul>
-            </details>
-          )}
         </section>
 
+        <Verification detail={detail} onVerify={() => verify.mutate()} busy={verify.isPending} />
+
+        <SimilarDecisions id={d.id} />
+
         {/* Observations */}
-        <section className="mt-10">
-          <SectionLabel>Your observations</SectionLabel>
-          {detail.observations.map((o) => (
-            <p key={o.id} className="text-[13px] py-1.5" style={{ color: C.body }}>{o.text} <span className="text-[12px]" style={{ color: C.faint }}>· {relTime(o.at)}</span></p>
-          ))}
-          <div className="flex flex-wrap gap-2 mt-2">
+        <section aria-labelledby="sec-obs">
+          <SectionLabel id="sec-obs">Your observations</SectionLabel>
+          {detail.observations.length > 0 && (
+            <ul className={m.rows} style={{ marginBottom: 10 }}>
+              {detail.observations.map((o) => (
+                <li key={o.id} style={{ fontSize: 13, color: "var(--body)" }}>{o.text} <span style={{ fontSize: 11.5, color: "var(--ink-3)" }} title={formatDateTime(o.at)}>· {relTime(o.at)}</span></li>
+              ))}
+            </ul>
+          )}
+          <div className="flex flex-wrap" style={{ gap: 8 }}>
             <input
               value={obs}
               onChange={(e) => setObs(e.target.value)}
               placeholder="Something Starlane can't see, e.g. “They said payment is coming after Diwali”"
               aria-label="Your observation"
               className="ui-input flex-1 min-w-[220px]"
-              style={{ width: "auto" }}
+              style={{ width: "auto", fontSize: 12.5 }}
               maxLength={2000}
             />
-            <Button size="sm" variant="secondary" disabled={!obs.trim()} loading={observe.isPending} onClick={() => observe.mutate()}>Add</Button>
+            <Button variant="secondary" disabled={!obs.trim()} loading={observe.isPending} onClick={() => observe.mutate()}>Add observation</Button>
           </div>
-          <p className="text-[12px] mt-1.5" style={{ color: C.faint }}>Recorded as evidence with your name. It never changes the numbers or permissions on its own.</p>
+          <p className={m.tfoot}>Recorded as evidence with your name. It never changes the numbers or permissions on its own.</p>
         </section>
 
         <FeedbackBar decisionId={d.id} />
 
         {/* History */}
-        <section className="mt-10 mb-6">
-          <details>
-            <summary className="text-[12px] cursor-pointer" style={{ color: C.muted }}>History ({detail.events.length} events)</summary>
-            <ol className="mt-3 space-y-1.5">
-              {detail.events.map((e) => (
-                <li key={e.id} className="text-[12px] flex gap-3" style={{ color: C.body }}>
-                  <span className="tabular-nums shrink-0" style={{ color: C.faint }}>{formatDateTime(e.at)}</span>
-                  <span>{e.type.replace(/_/g, " ").toLowerCase()} · {e.actor.type === "agent" ? `Starlane (${e.actor.agentVersion || e.actor.id})` : "You"}</span>
-                </li>
-              ))}
-            </ol>
+        <section style={{ marginBottom: 24 }}>
+          <details className={m.fold}>
+            <summary>History · {detail.events.length} event{detail.events.length === 1 ? "" : "s"}</summary>
+            <table className={m.mini} style={{ marginTop: 8 }}>
+              <tbody>
+                {detail.events.map((e) => (
+                  <tr key={e.id}>
+                    <td className="num" style={{ width: 150, color: "var(--ink-3)", fontSize: 11.5, whiteSpace: "nowrap" }}>{formatDateTime(e.at)}</td>
+                    <td>{e.type.charAt(0) + e.type.slice(1).replace(/_/g, " ").toLowerCase()}</td>
+                    <td style={{ textAlign: "right", color: "var(--ink-3)" }}>{e.actor.type === "agent" ? `Starlane (${e.actor.agentVersion || e.actor.id})` : "You"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </details>
         </section>
-        </div>
-      </PageBody>
+      </article>
+      {showEvidence && <DecisionEvidenceDrawer d={d} onClose={() => setShowEvidence(false)} />}
     </DashboardLayout>
   );
 }
