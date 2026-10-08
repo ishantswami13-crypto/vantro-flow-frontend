@@ -14,7 +14,7 @@ import { pct, daysUntil, decisionsApi, STATUS_LABEL } from "@/lib/decisions";
 import { formatDate } from "@/lib/format";
 import { SkeletonRows } from "@/components/v32/ui";
 import { useLoad, stakeOf } from "./shared";
-import { ItemCard, RetryLine, SectionHead, amount, cleanTitle, humaneError, sentence } from "./prepared/kit";
+import { ItemCard, Quote, RetryLine, RowLink, RowList, SectionHead, amount, cleanTitle, humaneError, sentence } from "./prepared/kit";
 
 /** Reports how many items a section is showing once it has loaded (null while loading or on error). */
 type OnCount = (n: number | null) => void;
@@ -33,9 +33,9 @@ export function AutomationProposals({ onCount }: { onCount?: OnCount }) {
       <SectionHead title="Automations Starlane proposes" count={loading || error ? null : list.length} hint="Nothing runs until you choose. Shadow records what it would do without contacting anyone." />
       {loading && <SkeletonRows rows={2} />}
       {error ? <RetryLine error={error} onRetry={reload} /> : null}
-      <div className="flex flex-col" style={{ gap: 12 }}>
+      <RowList>
         {list.map((w) => <ProposalCard key={w.id} w={w} onChange={reload} />)}
-      </div>
+      </RowList>
     </section>
   );
 }
@@ -57,20 +57,21 @@ function ProposalCard({ w, onChange }: { w: Workflow; onChange: () => void }) {
   ];
   return (
     <ItemCard
-      chip={d ? <Pill tone="accent" title="How well this fits your history">Fit {Math.round(d.score * 100)} of 100</Pill> : undefined}
+      category="Automation"
+      meta={d ? <span title="How well this fits your history">Fit <span className="num">{Math.round(d.score * 100)}</span> of 100</span> : undefined}
       title={w.name}
       why={w.objective}
       stake={s ? amount(s.amountTriggered) : undefined}
       stakeNote={s ? `covered in ${s.lookbackDays} days of replays` : undefined}
+      action={<button type="button" className="ui-btn ui-btn-secondary ui-btn-sm" disabled={busy} onClick={() => act(() => osApi.deploy(w.id, "SHADOW"))}>Deploy in shadow</button>}
       actions={
         <>
-          <button type="button" className="ui-btn ui-btn-primary" disabled={busy} onClick={() => act(() => osApi.deploy(w.id, "SHADOW"))}>Deploy in shadow</button>
-          <button type="button" className="ui-btn ui-btn-ghost" disabled={busy} onClick={() => act(() => osApi.deploy(w.id, "WITH_APPROVAL"))}>Deploy with my approval</button>
-          <button type="button" className="ui-btn ui-btn-ghost" disabled={busy} onClick={() => act(() => osApi.transition(w.id, "reject"))} style={{ marginLeft: "auto" }}>Reject</button>
+          <RowLink disabled={busy} onClick={() => act(() => osApi.deploy(w.id, "WITH_APPROVAL"))}>Deploy with my approval</RowLink>
+          <RowLink disabled={busy} onClick={() => act(() => osApi.transition(w.id, "reject"))}>Reject</RowLink>
         </>
       }
     >
-      <dl className="grid" style={{ gridTemplateColumns: "88px minmax(0,1fr)", rowGap: 4, columnGap: 12, margin: 0, fontSize: 12.5 }}>
+      <dl className="grid" style={{ gridTemplateColumns: "76px minmax(0,1fr)", rowGap: 3, columnGap: 12, margin: 0, fontSize: 12.5, lineHeight: 1.5 }}>
         {rows.map(([k, v], i) => (
           <React.Fragment key={`${k}-${i}`}>
             <dt style={{ color: "var(--ink-3)" }}>{k}</dt>
@@ -85,13 +86,15 @@ function ProposalCard({ w, onChange }: { w: Workflow; onChange: () => void }) {
         )}
       </dl>
       {w.steps.length > 0 && (
-        <div className="flex flex-wrap" style={{ gap: 6, marginTop: 12 }}>
-          {w.steps.map((st) => (
-            <Pill key={st.key} tone={st.capability === "EXECUTABLE" ? "good" : st.capability === "BLOCKED" ? "bad" : "warn"} title={st.note || st.capability}>
-              {st.label.length > 38 ? `${st.label.slice(0, 36)}…` : st.label} · {sentence(st.capability).toLowerCase()}
-            </Pill>
+        <ol style={{ margin: "10px 0 0", padding: 0, listStyle: "none", display: "flex", flexWrap: "wrap", gap: "4px 18px" }}>
+          {w.steps.map((st, i) => (
+            <li key={st.key} title={st.note || st.capability} style={{ fontSize: 12, color: "var(--ink-2)" }}>
+              <span className="num" style={{ color: "var(--ink-3)", marginRight: 6 }}>{i + 1}</span>
+              {st.label}
+              <span style={{ marginLeft: 6, color: st.capability === "BLOCKED" ? "var(--critical)" : "var(--ink-3)" }}>{sentence(st.capability).toLowerCase()}</span>
+            </li>
           ))}
-        </div>
+        </ol>
       )}
       {err ? <div style={{ marginTop: 12 }}><RetryLine error={humaneError(err, "That didn't go through. Try again in a moment.")} /></div> : null}
     </ItemCard>
@@ -109,7 +112,7 @@ export function ReminderApprovals({ onCount }: { onCount?: OnCount }) {
       <SectionHead title="Reminders" count={loading || error ? null : list.length} hint="Drafted by the overdue follow-up workflow from ledger facts only. Starlane does not send them." />
       {loading && <SkeletonRows rows={2} />}
       {error ? <RetryLine error={error} onRetry={reload} /> : null}
-      <div className="flex flex-col" style={{ gap: 12 }}>
+      <RowList>
         {list.map((i) => <ReminderCard key={i.id} item={i} onDone={(x) => { setDone((d) => [...d, x]); }} onStale={reload} />)}
         {done.map((i) => (
           <ItemCard
@@ -121,7 +124,7 @@ export function ReminderApprovals({ onCount }: { onCount?: OnCount }) {
             why={i.verifyAfter ? `Starlane checks the ledger for a payment on ${formatDate(i.verifyAfter)}.` : undefined}
           />
         ))}
-      </div>
+      </RowList>
       {done.length > 0 && <p style={{ margin: "10px 0 0", fontSize: 12.5 }}><Link href="/memory" className="hover-dim" style={{ color: "var(--ink-2)", textDecoration: "underline", textUnderlineOffset: 3 }}>Outcomes appear in Memory once checked</Link></p>}
     </section>
   );
@@ -152,23 +155,16 @@ function ReminderCard({ item, onDone, onStale }: { item: WorkflowItem; onDone: (
   ].filter(Boolean).join(" ");
   return (
     <ItemCard
-      chip={<Pill>{sentence(item.draft.tone)}</Pill>}
-      meta={item.expiresAt ? `Expires ${formatDate(item.expiresAt)}` : undefined}
+      meta={[`${sentence(item.draft.tone)} tone`, item.expiresAt ? `Expires ${formatDate(item.expiresAt)}` : null].filter(Boolean).join(" · ")}
       title={`Reminder to ${item.target}`}
       why={why || undefined}
       stake={amount(item.amount, item.currency)}
       stakeNote="overdue"
-      actions={
-        <>
-          <button type="button" className="ui-btn ui-btn-primary" disabled={busy} onClick={() => decide(true)}>{busy ? "Working…" : "Approve"}</button>
-          <button type="button" className="ui-btn ui-btn-ghost" disabled={busy} onClick={() => decide(false)}>Reject</button>
-        </>
-      }
+      action={<button type="button" className="ui-btn ui-btn-secondary ui-btn-sm" disabled={busy} onClick={() => decide(true)}>{busy ? "Working…" : "Approve"}</button>}
+      actions={<RowLink disabled={busy} onClick={() => decide(false)}>Reject</RowLink>}
     >
-      <blockquote style={{ margin: 0, padding: "10px 14px", borderRadius: 8, background: "var(--surface-2)", border: "1px solid var(--line)", color: "var(--body)", fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-        {item.draft.text}
-      </blockquote>
-      <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--ink-3)" }}>
+      <Quote>{item.draft.text}</Quote>
+      <p style={{ margin: "8px 0 0", fontSize: 11.5, color: "var(--ink-3)" }}>
         Drafted by {item.agent.agent}, {item.agent.model} · Checks: {item.policy.map((p) => `${sentence(p.key).toLowerCase()} ${p.verdict.toLowerCase().replace(/_/g, " ")}`).join(", ")}
       </p>
       {err && <div style={{ marginTop: 10 }}><RetryLine error={err} /></div>}
@@ -196,12 +192,12 @@ export function DecisionsNeedingYou({ onCount }: { onCount?: OnCount }) {
       <SectionHead
         title="Decisions"
         count={loading || error ? null : waiting.length}
-        hint="Each one shows why now, what is at stake, what Starlane doesn't know, and every option against doing nothing."
-        right={<Link href="/decisions" className="ui-btn ui-btn-ghost ui-btn-sm">All decisions</Link>}
+        
+        right={<Link href="/decisions" className="hover-dim" style={{ fontSize: 12.5, color: "var(--ink-2)" }}>All decisions</Link>}
       />
       {loading && <SkeletonRows rows={2} />}
       {error ? <RetryLine error={error} onRetry={reload} fallback="Starlane couldn't load your decisions just now. Try again in a moment." /> : null}
-      <div className="flex flex-col" style={{ gap: 12 }}>
+      <RowList>
         {waiting.map((d) => {
           const left = daysUntil(d.deadline);
           const stake = stakeOf(d.materiality as Record<string, unknown> | null);
@@ -209,22 +205,23 @@ export function DecisionsNeedingYou({ onCount }: { onCount?: OnCount }) {
           return (
             <ItemCard
               key={d.id}
-              chip={<Pill tone={d.status === "NEEDS_INFORMATION" ? "warn" : d.status === "APPROVED" ? "good" : "accent"}>{STATUS_LABEL[d.status] || sentence(d.status)}</Pill>}
-              meta={w ? <span style={{ color: left != null && left <= 2 ? "var(--critical)" : left != null && left <= 7 ? "var(--warning)" : undefined }}>{w}</span> : undefined}
-              title={cleanTitle(d.title)}
+              attention={left != null && left <= 3}
+              chip={<Pill tone={d.status === "NEEDS_INFORMATION" ? "warn" : d.status === "APPROVED" ? "good" : "neutral"}>{STATUS_LABEL[d.status] || sentence(d.status)}</Pill>}
+              meta={w ? <span style={{ color: left != null && left <= 2 ? "var(--critical)" : undefined }}>{w}</span> : undefined}
+              title={<Link href={`/decisions/${d.id}`} className="hover-dim">{cleanTitle(d.title)}</Link>}
               why={
                 <>
                   {d.whyNow && d.whyNow[0] ? <span>{d.whyNow[0]}.</span> : null}
-                  {d.recommendation ? <span style={{ display: "block", color: "var(--ink-2)", marginTop: 2 }}>Starlane suggests: {d.recommendation.informationFirst ? "find out first" : d.recommendation.label}</span> : null}
+                  {d.recommendation ? <span style={{ display: "block", color: "var(--ink-3)", fontSize: 12.5 }}>Recommended: <span style={{ color: "var(--ink-2)" }}>{d.recommendation.informationFirst ? "find out first" : d.recommendation.label}</span></span> : null}
                 </>
               }
-              stake={stake ? amount(stake, d.currency) : <span style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--ink-3)" }}>Not known yet</span>}
-              stakeNote={stake ? "at stake if ignored" : "amount not estimated"}
-              actions={<Link href={`/decisions/${d.id}`} className={`ui-btn ${d.status === "SELECTED" || d.status === "APPROVED" ? "ui-btn-primary" : "ui-btn-secondary"}`}>{d.status === "SELECTED" ? "Review and approve" : d.status === "APPROVED" ? "Review and run" : "Review options"}</Link>}
+              stake={stake ? amount(stake, d.currency) : <span>Not estimated</span>}
+              stakeNote={stake ? "at stake if ignored" : undefined}
+              action={<Link href={`/decisions/${d.id}`} className="ui-btn ui-btn-secondary ui-btn-sm">{d.status === "SELECTED" ? "Approve" : d.status === "APPROVED" ? "Run" : "Decide"}</Link>}
             />
           );
         })}
-      </div>
+      </RowList>
     </section>
   );
 }
