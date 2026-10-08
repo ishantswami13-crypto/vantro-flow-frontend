@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -13,6 +14,8 @@ import { StatusChip, toneForStatus, type StatusTone } from "@/components/ui/Badg
 import { EvidenceSetDrawer } from "@/components/v32/EvidenceSetDrawer";
 import { listThreads, type ScanThread } from "@/lib/scanStore";
 import { personFirstName, businessName, plain, SectionHead, QuietLine, QuietError, OFFLINE_LINE } from "@/components/os/bridge/kit";
+import css from "@/components/os/bridge/bridge.module.css";
+import { decisionsApi, daysUntil, STATUS_LABEL, BAND_LABEL, type DecisionListItem } from "@/lib/decisions";
 import type { BridgeView, WatchEvent, FeatureAction, Mission } from "../../packages/contracts/src/features";
 import { LIFECYCLE_LABEL } from "../../packages/contracts/src/features";
 
@@ -57,6 +60,9 @@ function eventMetric(e: WatchEvent): string | null {
   return null;
 }
 
+/** Decisions still in play: the pipeline's live states. */
+const LIVE_DECISION = new Set(["OPEN", "NEEDS_INFORMATION", "SELECTED", "APPROVED"]);
+
 function actionHref(a: FeatureAction) {
   return a.missionId ? `/missions/${a.missionId}` : "/prepared";
 }
@@ -92,7 +98,10 @@ export default function BridgePage() {
 
   const latest = useMemo(() => data?.attention.watch.latest || [], [data]);
   const decisions = data?.attention.topDecisions || [];
-  const prepared = (data?.prepared || []).filter((h) => h.count > 0 && h.first);
+  // Decisions forming: the real decision pipeline (GET /api/decisions), shared
+  // with the Decisions page through the same query key. Only live decisions.
+  const pipeline = useQuery({ queryKey: ["decisions", "active"], queryFn: () => decisionsApi.list("active"), staleTime: 15_000, enabled: !!data?.hasData });
+  const forming = (pipeline.data?.decisions || []).filter((d) => LIVE_DECISION.has(d.status));
   const running = (data?.missions || []).filter((m) => m.status === "active");
   const urgentCount = data?.attention.watch.urgent || 0;
   const decisionCount = data?.attention.decisions || 0;
@@ -139,8 +148,6 @@ export default function BridgePage() {
 
         {data && data.hasData && (
           <>
-            <Strip data={data} />
-
             {data.partial && (
               <p className="meta" style={{ margin: "12px 0 0" }}>
                 Part of your data couldn&apos;t be read this time, so some sections may be incomplete.{" "}
@@ -148,8 +155,19 @@ export default function BridgePage() {
               </p>
             )}
 
-            <section aria-labelledby="needs-h">
-              <SectionHead id="needs-h" title="What needs you" meta={decisionCount ? formatCount(decisionCount) : undefined} href={decisionCount > decisions.length ? "/prepared" : undefined} linkLabel="All decisions" />
+            {/* ATTENTION: the one section the page leads with. */}
+            <section aria-labelledby="needs-h" className={`lead-band ${css.lead}`}>
+              <div className={css.leadHead}>
+                <h2 id="needs-h" className={`section-label section-label-lead ${css.leadTitle}`}>
+                  What needs you
+                  {decisionCount > 0 && <span className={css.leadCount}>{formatCount(decisionCount)}</span>}
+                </h2>
+                {decisionCount > decisions.slice(0, 4).length && (
+                  <Link href="/prepared" className="hover-dim inline-flex items-center shrink-0" style={{ gap: 4, fontSize: 12.5, color: "var(--ink-2)" }}>
+                    All {formatCount(decisionCount)} in Prepared<Chevron size={12} />
+                  </Link>
+                )}
+              </div>
               <NeedsYou decisions={decisions} topEvent={topEvent} watching={watchTotal} onOpenEvent={setOpen} />
             </section>
 
@@ -166,14 +184,18 @@ export default function BridgePage() {
 
             <div className="rf-cols-2">
               <section aria-labelledby="forming-h" className="min-w-0">
-                <SectionHead id="forming-h" title="Decisions forming" href={prepared.length ? "/prepared" : undefined} linkLabel="Prepared" />
-                {data.prepared === null ? (
-                  <QuietLine>Not known yet. Starlane couldn&apos;t read what is coming due.</QuietLine>
-                ) : prepared.length === 0 ? (
-                  <QuietLine>Nothing is coming due in the next 30 days.</QuietLine>
+                <SectionHead id="forming-h" title="Decisions forming" meta={forming.length ? formatCount(forming.length) : undefined} href={forming.length ? "/decisions" : undefined} linkLabel="All decisions" />
+                {pipeline.isPending ? (
+                  <div role="status" aria-busy="true" aria-label="Loading decisions">
+                    {[0, 1].map((i) => <div key={i} className="skeleton" style={{ height: 14, margin: "18px 0", maxWidth: 360 }} />)}
+                  </div>
+                ) : pipeline.isError ? (
+                  <QuietLine>Not known right now. Starlane couldn&apos;t read the decision pipeline.</QuietLine>
+                ) : forming.length === 0 ? (
+                  <QuietLine>No decision is forming. Starlane looks for new ones in your ledger after each sync.</QuietLine>
                 ) : (
                   <ul className="rf-list">
-                    {prepared.map((h) => <FormingRow key={h.horizon} h={h} />)}
+                    {forming.slice(0, 3).map((d) => <FormingRow key={d.id} d={d} />)}
                   </ul>
                 )}
               </section>
@@ -184,7 +206,7 @@ export default function BridgePage() {
                   <QuietLine>No mission is running. Start one from an overdue invoice on Watch.</QuietLine>
                 ) : (
                   <ul className="rf-list">
-                    {running.slice(0, 4).map((m) => <MissionRow key={m.id} m={m} />)}
+                    {running.slice(0, 3).map((m) => <MissionRow key={m.id} m={m} />)}
                   </ul>
                 )}
               </section>
@@ -249,55 +271,24 @@ function HeaderMeta({ data }: { data: BridgeView }) {
   );
 }
 
-/** Headline figures straight from `state`, as one compact strip. Unknown stays "Not known yet". */
-function Strip({ data }: { data: BridgeView }) {
-  const s = data.state;
-  const over90 = s?.ageing.find((b) => b.id === "90_plus") || null;
-  const urgent = data.attention.watch.urgent;
-  const cells: { label: string; value: string; sub?: string; tone?: string }[] = [
-    { label: "Owed to you", value: s ? inrWhole(s.openReceivables) : "Not known yet", sub: s ? plural(s.openInvoiceCount, "open invoice") : undefined },
-    { label: "Overdue", value: s ? inrWhole(s.overdueReceivables) : "Not known yet", sub: s ? `${plural(s.overdueInvoiceCount, "invoice")} past due` : undefined },
-    { label: "Over 90 days", value: over90 ? inrWhole(over90.amount) : s ? inrWhole(0) : "Not known yet", sub: over90 ? plural(over90.count, "invoice") : undefined },
-    { label: "Urgent on Watch", value: formatCount(urgent), sub: urgent ? "High or critical" : "Nothing urgent", tone: urgent ? "var(--critical)" : undefined },
-  ];
-  return (
-    <dl className="rf-strip">
-      {cells.map((c) => (
-        <div key={c.label}>
-          <dt>{c.label}</dt>
-          <dd>
-            <span className="rf-strip-v" style={c.tone ? { color: c.tone } : undefined}>{c.value}</span>
-            {c.sub && <span className="rf-strip-s">{c.sub}</span>}
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
 function BridgeSkeleton() {
+  const rows = (n: number, h: number) => Array.from({ length: n }).map((_, i) => (
+    <div key={i} className="flex items-center" style={{ gap: 16, height: h, borderTop: "1px solid var(--line)" }}>
+      <div className="skeleton h-3 w-20" />
+      <div className="skeleton h-3 flex-1 max-w-[420px]" />
+      <div className="skeleton h-3 w-16 ml-auto" />
+    </div>
+  ));
   return (
     <div role="status" aria-busy="true" aria-label="Loading" className="page-stack">
-      <div className="rf-strip">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="flex flex-col" style={{ gap: 8 }}>
-            <div className="skeleton h-3 w-20" />
-            <div className="skeleton h-4 w-28" />
-          </div>
-        ))}
+      <div className={`lead-band ${css.lead}`}>
+        <div className="skeleton h-3 w-28" style={{ marginBottom: 14 }} />
+        {rows(3, 60)}
       </div>
-      {[3, 4].map((rows, k) => (
-        <div key={k}>
-          <div className="skeleton h-3 w-24" style={{ marginBottom: 12 }} />
-          {Array.from({ length: rows }).map((_, i) => (
-            <div key={i} className="flex items-center" style={{ gap: 16, height: 52, borderTop: "1px solid var(--line)" }}>
-              <div className="skeleton h-3 w-20" />
-              <div className="skeleton h-3 flex-1 max-w-[420px]" />
-              <div className="skeleton h-3 w-16 ml-auto" />
-            </div>
-          ))}
-        </div>
-      ))}
+      <div>
+        <div className="skeleton h-3 w-24" style={{ marginBottom: 12 }} />
+        {rows(4, 52)}
+      </div>
     </div>
   );
 }
@@ -317,9 +308,12 @@ function NoBooks() {
   );
 }
 
-/** Human attention: each row carries its category, one line of context,
- *  its state, when it was raised and the action. Only the first row gets
- *  the page's one primary button. */
+
+/** Human attention. Each row carries its category, the title, one line of
+ *  context, where it stands (and its risk when high), when it was raised and
+ *  one action. Only the first row gets the page's one primary button. The
+ *  backend sends no amount, deadline or confidence for these actions, so
+ *  none is shown; the ₹ figure lives in the context line the server wrote. */
 function NeedsYou({ decisions, topEvent, watching, onOpenEvent }: { decisions: FeatureAction[]; topEvent: WatchEvent | null; watching: number; onOpenEvent: (e: WatchEvent) => void }) {
   const rows = decisions.slice(0, 4);
 
@@ -332,21 +326,23 @@ function NeedsYou({ decisions, topEvent, watching, onOpenEvent }: { decisions: F
   }
 
   if (rows.length === 0 && topEvent) {
+    const label = topEvent.severity === "critical" ? "Critical" : "Urgent";
     return (
       <ul className="rf-list">
         <li>
-          <div className="rf-row rf-needs rf-first">
-            <span className="rf-kind rf-desk">{KIND_LABEL[topEvent.kind] || "Watch"}</span>
+          <div className={`rf-row ${css.needs} ${css.first}`}>
+            <span className={`rf-desk ${css.needsCat}`}>{KIND_LABEL[topEvent.kind] || "Watch"}</span>
             <div className="min-w-0">
-              <div className="rf-title" style={{ fontWeight: 500 }}>{plain(topEvent.title)}</div>
-              {topEvent.detail && <div className="rf-sub">{plain(topEvent.detail)}</div>}
+              <span className={css.needsTitle}>{plain(topEvent.title)}</span>
+              {topEvent.detail && <span className={css.needsContext}>{plain(topEvent.detail)}</span>}
               <div className="rf-mob">
-                <StatusChip tone="critical">{topEvent.severity === "critical" ? "Critical" : "Urgent"}</StatusChip>
-                <span className="num">{formatClock(topEvent.firstSeenAt)}</span>
+                <span>{KIND_LABEL[topEvent.kind] || "Watch"}</span>
+                <StatusChip tone="critical">{label}</StatusChip>
+                <span className="num-quiet">{formatClock(topEvent.firstSeenAt)}</span>
               </div>
             </div>
-            <span className="rf-desk"><StatusChip tone="critical">{topEvent.severity === "critical" ? "Critical" : "Urgent"}</StatusChip></span>
-            <span className="rf-time rf-desk">{formatClock(topEvent.firstSeenAt)}</span>
+            <span className={`rf-desk ${css.stateCell}`}><StatusChip tone="critical">{label}</StatusChip></span>
+            <span className="rf-time rf-desk" style={{ alignSelf: "start", paddingTop: 3 }} title={formatDateTime(topEvent.firstSeenAt)}>{formatClock(topEvent.firstSeenAt)}</span>
             <span className="rf-actions">
               <button type="button" onClick={() => onOpenEvent(topEvent)} className="ui-btn ui-btn-primary ui-btn-sm">View evidence</button>
             </span>
@@ -361,30 +357,29 @@ function NeedsYou({ decisions, topEvent, watching, onOpenEvent }: { decisions: F
       {rows.map((a, i) => {
         const tone = LIFECYCLE_TONE[a.lifecycle] || "neutral";
         const state = LIFECYCLE_LABEL[a.lifecycle] || "Waiting on you";
+        const risk = a.riskLevel === "high" ? "High risk" : a.riskLevel === "medium" ? "Medium risk" : null;
         return (
           <li key={a.id}>
-            <div className={`rf-row rf-needs ${i === 0 ? "rf-first" : ""}`}>
-              <span className="rf-kind rf-desk">{typeLabel(a.type)}</span>
+            <div className={`rf-row ${css.needs} ${i === 0 ? css.first : ""}`}>
+              <span className={`rf-desk ${css.needsCat}`}>{typeLabel(a.type)}</span>
               <div className="min-w-0">
-                <Link href={actionHref(a)} className="rf-title hover-dim" style={{ fontWeight: i === 0 ? 500 : 400 }}>{plain(a.title)}</Link>
-                {a.description && <div className="rf-sub">{plain(a.description)}</div>}
+                <Link href={actionHref(a)} className={`hover-dim ${css.needsTitle}`}>{plain(a.title)}</Link>
+                {a.description && <span className={css.needsContext}>{plain(a.description)}</span>}
                 <div className="rf-mob">
                   <span>{typeLabel(a.type)}</span>
                   <StatusChip tone={tone}>{state}</StatusChip>
-                  {a.riskLevel === "high" && <StatusChip tone="critical">High risk</StatusChip>}
+                  {risk && <span className={a.riskLevel === "high" ? css.riskHigh : undefined}>{risk}</span>}
                 </div>
               </div>
-              <span className="rf-desk">
-                <span className="flex flex-col" style={{ gap: 2 }}>
-                  <StatusChip tone={tone}>{state}</StatusChip>
-                  {a.riskLevel === "high" && <StatusChip tone="critical">High risk</StatusChip>}
-                </span>
+              <span className={`rf-desk ${css.stateCell}`}>
+                <StatusChip tone={tone}>{state}</StatusChip>
+                {risk && <span className={`${css.riskNote} ${a.riskLevel === "high" ? css.riskHigh : ""}`} style={{ paddingLeft: 12 }}>{risk}</span>}
               </span>
-              <span className="rf-time rf-desk" title={formatDateTime(a.createdAt)}>{formatClock(a.createdAt)}</span>
+              <span className="rf-time rf-desk" style={{ alignSelf: "start", paddingTop: 3 }} title={formatDateTime(a.createdAt)}>{formatClock(a.createdAt)}</span>
               <span className="rf-actions">
                 {i === 0
                   ? <Link href={actionHref(a)} className="ui-btn ui-btn-primary ui-btn-sm">Handle it</Link>
-                  : <Link href={actionHref(a)} className="ui-btn ui-btn-ghost ui-btn-sm">Review</Link>}
+                  : <Link href={actionHref(a)} className="ui-btn ui-btn-ghost ui-btn-sm" style={{ color: "var(--ink)" }}>Review</Link>}
               </span>
             </div>
           </li>
@@ -411,7 +406,7 @@ function ChangeRow({ e, onOpen }: { e: WatchEvent; onOpen: () => void }) {
           <span className="rf-mob">
             <span>{KIND_LABEL[e.kind] || "Watch"}</span>
             {status && <StatusChip tone={status.tone}>{status.label}</StatusChip>}
-            <span className="num">{formatClock(e.firstSeenAt)}</span>
+            <span className="num-quiet">{formatClock(e.firstSeenAt)}</span>
           </span>
         </span>
         <span className="rf-desk">{status ? <StatusChip tone={status.tone}>{status.label}</StatusChip> : null}</span>
@@ -423,16 +418,61 @@ function ChangeRow({ e, onOpen }: { e: WatchEvent; onOpen: () => void }) {
   );
 }
 
-function FormingRow({ h }: { h: NonNullable<BridgeView["prepared"]>[number] }) {
-  const f = h.first!;
+/** "Decide today" / "Decide within 3 days" / "Decide by 24 Oct", from the
+ *  decision's own deadline or its latest safe date. */
+function deadlineOf(d: DecisionListItem): { text: string; now: boolean } | null {
+  const date = d.deadline || d.window?.latestSafeAt || null;
+  const days = daysUntil(date);
+  if (days == null) return null;
+  if (days < 0) return { text: `Window closed ${plural(-days, "day")} ago`, now: true };
+  if (days === 0) return { text: "Decide today", now: true };
+  if (days <= 7) return { text: `Decide within ${plural(days, "day")}`, now: days <= 3 };
+  return { text: `Decide by ${formatDate(date)}`, now: false };
+}
+
+/** What a decision puts at stake, in the backend's own materiality terms. */
+function stakeOf(d: DecisionListItem): { value: string; note: string } | null {
+  const m = d.materiality || {};
+  const pick: [number | undefined, string][] = [
+    [m.expectedUncollected90, "at stake in 90 days"],
+    [m.workingCapitalTiedUp, "working capital tied up"],
+    [m.revenueExposure, "revenue exposed"],
+  ];
+  const hit = pick.find(([v]) => typeof v === "number" && Number.isFinite(v));
+  if (!hit || hit[0] == null) return null;
+  const cur = d.currency || "INR";
+  return { value: cur === "INR" ? inrWhole(hit[0]) : `${cur} ${formatCount(Math.round(hit[0]))}`, note: hit[1] };
+}
+
+function FormingRow({ d }: { d: DecisionListItem }) {
+  const due = deadlineOf(d);
+  const stake = stakeOf(d);
+  const band = d.confidence?.band ? BAND_LABEL[d.confidence.band] || d.confidence.band : null;
   return (
     <li>
-      <Link href={f.route || "/prepared"} className="rf-row" style={{ gridTemplateColumns: "minmax(0, 1fr) auto 14px" }}>
-        <span className="rf-kind" style={{ gridColumn: "1 / -1" }}>{h.label}{h.count > 1 ? ` · ${plural(h.count, "item")}` : ""}</span>
-        <span className="rf-title min-w-0">{plain(f.title)}</span>
-        <span className="rf-fig">{f.amount != null ? inrWhole(f.amount) : ""}</span>
-        <span style={{ alignSelf: "center", gridRow: "span 2" }}><Chevron size={13} /></span>
-        {f.reason && <span className="rf-sub min-w-0" style={{ gridColumn: "1 / 3" }}>{plain(f.reason)}</span>}
+      <Link href={`/decisions/${d.id}`} className={`rf-row ${css.forming}`}>
+        <span className="min-w-0 block">
+          <span className={css.formingMeta}>
+            <span>{STATUS_LABEL[d.status] || d.status}</span>
+            {due && <span className={due.now ? css.formingDueNow : css.formingDue}>{due.text}</span>}
+            {band && <span>{band} confidence</span>}
+          </span>
+          <span className={css.formingTitle} style={{ marginTop: 2 }}>{plain(d.title)}</span>
+          {d.recommendation && (
+            <span className={css.formingRec}>
+              {d.recommendation.informationFirst ? "Recommended: find out first" : <>Recommended: <b>{plain(d.recommendation.label)}</b></>}
+            </span>
+          )}
+        </span>
+        <span className={css.stake}>
+          {stake ? (
+            <>
+              <span className={`${css.stakeValue} block`}>{stake.value}</span>
+              <span className={`${css.stakeNote} block`}>{stake.note}</span>
+            </>
+          ) : <span className={css.stakeNote}>Not estimated</span>}
+        </span>
+        <span className={css.chev}><Chevron size={13} /></span>
       </Link>
     </li>
   );
@@ -441,40 +481,63 @@ function FormingRow({ h }: { h: NonNullable<BridgeView["prepared"]>[number] }) {
 function MissionRow({ m }: { m: Mission }) {
   const p = m.progress;
   const ratio = p ? Math.max(0, Math.min(1, p.ratio)) : null;
+  const blockers = p ? (Array.isArray(p.blockers) ? p.blockers : []) : [];
+  const blockedCount = p ? (Array.isArray(p.blockers) ? p.blockers.length : p.blockers || 0) : 0;
+  const now = blockedCount > 0
+    ? (blockers[0]?.text ? `Blocked: ${plain(blockers[0].text)}` : `${plural(blockedCount, "blocker")} to clear`)
+    : plain(m.objective);
   return (
     <li>
-      <Link href={`/missions/${m.id}`} className="rf-row" style={{ gridTemplateColumns: "minmax(0, 1fr) auto 14px" }}>
+      <Link href={`/missions/${m.id}`} className={`rf-row ${css.mission}`}>
         <span className="min-w-0 block">
           <span className="rf-title block truncate">{plain(m.title)}</span>
-          {p ? (
-            <span className="flex items-center" style={{ gap: 10, marginTop: 4 }}>
-              <span className="rf-bar" style={{ width: 96 }} aria-hidden="true"><span style={{ width: `${(ratio || 0) * 100}%` }} /></span>
-              <span style={{ fontSize: 12, color: "var(--ink-3)" }}><span className="num" style={{ color: "var(--ink-2)" }}>{inrWhole(p.collected)}</span> of <span className="num">{inrWhole(p.targetAmount)}</span></span>
+          <span className={`${css.missionNow} ${blockedCount > 0 ? css.missionBlocked : ""} truncate`}>{now}</span>
+          {p && (
+            <span className={css.progress}>
+              <span className={css.progressBar} aria-hidden="true"><span style={{ width: `${(ratio || 0) * 100}%` }} /></span>
+              <span><span className={css.progressFig}>{inrWhole(p.collected)}</span> of <span className="num">{inrWhole(p.targetAmount)}</span></span>
             </span>
-          ) : (
-            <span className="rf-sub block truncate">{plain(m.objective)}</span>
           )}
         </span>
-        <span className="rf-time" style={{ alignSelf: "start", paddingTop: 2 }} title={m.endsAt ? formatDateTime(m.endsAt) : undefined}>
+        <span className="rf-time" style={{ paddingTop: 2 }} title={m.endsAt ? formatDateTime(m.endsAt) : undefined}>
           {p?.daysLeft != null ? `${plural(p.daysLeft, "day")} left` : m.endsAt ? `Ends ${formatDate(m.endsAt)}` : ""}
         </span>
-        <span style={{ alignSelf: "center" }}><Chevron size={13} /></span>
+        <span className={css.chev}><Chevron size={13} /></span>
       </Link>
     </li>
   );
 }
 
-const AGE_COLS = "minmax(0, 1fr) 32px 48px 92px";
+const AGE_COLS = "minmax(0, 1fr) 48px 44px 104px";
+const LATE_BANDS = new Set(["31_90", "90_plus"]);
 
-/** Business state: where the receivables sit, who owes the most and the
- *  sources behind every figure. */
+/** Business state: the headline figures straight from `state`, then where
+ *  the receivables sit, who owes the most and the sources behind every
+ *  figure. Unknown stays "Not known yet". */
 function BusinessState({ data }: { data: BridgeView }) {
   const s = data.state;
   const total = s ? s.ageing.reduce((sum, b) => sum + b.amount, 0) : 0;
+  const over90 = s?.ageing.find((b) => b.id === "90_plus") || null;
+  const cells: { label: string; value: string; sub?: string }[] = [
+    { label: "Owed to you", value: s ? inrWhole(s.openReceivables) : "Not known yet", sub: s ? plural(s.openInvoiceCount, "open invoice") : undefined },
+    { label: "Overdue", value: s ? inrWhole(s.overdueReceivables) : "Not known yet", sub: s ? `${plural(s.overdueInvoiceCount, "invoice")} past due` : undefined },
+    { label: "Over 90 days", value: over90 ? inrWhole(over90.amount) : s ? inrWhole(0) : "Not known yet", sub: over90 ? plural(over90.count, "invoice") : undefined },
+  ];
   return (
     <section aria-labelledby="state-h">
-      <SectionHead id="state-h" title="Business state" right={s ? <span className="meta">as of {formatClock(s.evidence.computedAt || data.generatedAt)}</span> : undefined} />
-      <div className="rf-cols-3" style={{ marginTop: 4 }}>
+      <SectionHead id="state-h" title="Business state" right={s ? <span className="meta">As of {formatClock(s.evidence.computedAt || data.generatedAt)}</span> : undefined} />
+      <dl className={css.strip}>
+        {cells.map((c) => (
+          <div key={c.label}>
+            <dt>{c.label}</dt>
+            <dd>
+              <span className={css.stripValue} style={c.value === "Not known yet" ? { fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 400, color: "var(--ink-3)" } : undefined}>{c.value}</span>
+              {c.sub && <span className={css.stripSub}>{c.sub}</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <div className="rf-cols-3">
         <div className="min-w-0">
           <div className="rf-head rf-head-keep" style={{ gridTemplateColumns: AGE_COLS }}>
             <span>By age</span><span /><span style={{ textAlign: "right" }}>Invoices</span><span style={{ textAlign: "right" }}>Amount</span>
@@ -484,9 +547,9 @@ function BusinessState({ data }: { data: BridgeView }) {
               {s.ageing.map((b) => (
                 <li key={b.id}>
                   <div className="rf-row" style={{ gridTemplateColumns: AGE_COLS, padding: "9px 0", alignItems: "center" }}>
-                    <span className="rf-sub truncate" style={{ color: "var(--body)" }}>{b.label}</span>
-                    <span className="rf-bar" aria-hidden="true">{total > 0 && <span style={{ width: `${(b.amount / total) * 100}%` }} />}</span>
-                    <span className="rf-time" style={{ color: "var(--ink-2)" }}>{formatCount(b.count)}</span>
+                    <span className="rf-sub truncate" style={{ color: "var(--ink)" }}>{b.label}</span>
+                    <span className={`${css.ageBar} ${LATE_BANDS.has(b.id) ? css.ageBarLate : ""}`} aria-hidden="true">{total > 0 && <span style={{ width: `${Math.max(2, (b.amount / total) * 100)}%` }} />}</span>
+                    <span className="rf-time num-quiet" style={{ color: "var(--ink-2)" }}>{formatCount(b.count)}</span>
                     <span className="rf-fig">{inrWhole(b.amount)}</span>
                   </div>
                 </li>
@@ -496,19 +559,19 @@ function BusinessState({ data }: { data: BridgeView }) {
         </div>
 
         <div className="min-w-0">
-          <div className="rf-head rf-head-keep" style={{ gridTemplateColumns: "minmax(0, 1fr) 64px 100px" }}>
+          <div className="rf-head rf-head-keep" style={{ gridTemplateColumns: "minmax(0, 1fr) 56px 104px" }}>
             <span>Most overdue</span><span style={{ textAlign: "right" }}>Oldest</span><span style={{ textAlign: "right" }}>Overdue</span>
           </div>
           {!s || s.topOverdue.length === 0 ? <QuietLine>No customer is overdue.</QuietLine> : (
             <ul className="rf-list">
               {s.topOverdue.slice(0, 5).map((c) => (
                 <li key={c.key}>
-                  <div className="rf-row" style={{ gridTemplateColumns: "minmax(0, 1fr) 64px 100px", padding: "9px 0" }}>
+                  <div className="rf-row" style={{ gridTemplateColumns: "minmax(0, 1fr) 56px 104px", padding: "9px 0" }}>
                     <span className="min-w-0">
-                      <span className="rf-sub block truncate" style={{ color: "var(--ink)" }}>{c.name}</span>
+                      <span className="rf-sub block truncate" style={{ color: "var(--ink)" }} title={c.name}>{c.name}</span>
                       <span className="rf-kind block">{plural(c.count, "invoice")}</span>
                     </span>
-                    <span className="rf-time" style={{ color: "var(--ink-2)" }}>{formatCount(c.oldestDays)}d</span>
+                    <span className="rf-time num-quiet" style={{ color: "var(--ink-2)" }}>{formatCount(c.oldestDays)}d</span>
                     <span className="rf-fig">{inrWhole(c.amount)}</span>
                   </div>
                 </li>
@@ -529,7 +592,7 @@ function BusinessState({ data }: { data: BridgeView }) {
                   <li key={src.id}>
                     <Link href="/sources" className="rf-row" style={{ gridTemplateColumns: "minmax(0, 1fr) auto", padding: "9px 0" }}>
                       <span className="min-w-0">
-                        <span className="rf-sub block truncate" style={{ color: "var(--ink)" }}>{src.name}</span>
+                        <span className="rf-sub block truncate" style={{ color: "var(--ink)" }} title={src.name}>{src.name}</span>
                         <StatusChip tone={toneForStatus(key)}>{healthText(key)}</StatusChip>
                       </span>
                       <span className="rf-time" title={src.lastSuccessAt ? formatDateTime(src.lastSuccessAt) : undefined}>
