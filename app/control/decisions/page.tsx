@@ -74,7 +74,7 @@ export default function DecisionControlsPage() {
   ] : [];
 
   return (
-    <DashboardLayout pageTitle="Control">
+    <DashboardLayout pageTitle="Decisions">
       <style>{`
         .sw-row { display: grid; align-items: center; gap: 8px 16px; padding: 12px 10px; border-bottom: 1px solid var(--line); min-height: 56px;
           grid-template-columns: minmax(0, 1fr) auto; }

@@ -107,7 +107,7 @@ function PolicyRows() {
           <span className="tabular-nums" style={{ fontSize: 12, color: "var(--ink-3)" }}>{p.level}</span>
           <div style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 500 }}>{p.name}</div>
           <div className="policy-desc" style={{ fontSize: 13, color: "var(--ink-2)" }}>{p.description}</div>
-          <div style={{ justifySelf: "end" }}>
+          <div className="policy-chip">
             <StatusChip tone={p.granted ? "positive" : "attention"}>{p.granted ? "Allowed" : "Your approval, every time"}</StatusChip>
           </div>
         </div>
@@ -273,10 +273,12 @@ function ControlPageInner() {
         .ctl-stats dd { margin: 0; color: var(--ink); font-variant-numeric: tabular-nums; }
         .policy-row { display: grid; align-items: center; gap: 6px 16px; padding: 12px 10px; border-bottom: 1px solid var(--line); min-height: 52px;
           grid-template-columns: 24px minmax(0, 1fr) auto; }
-        .policy-desc { grid-column: 2 / 4; }
+        .policy-desc { grid-column: 2 / 4; grid-row: 2; }
+        .policy-chip { grid-column: 3; grid-row: 1; justify-self: end; }
         @media (min-width: 760px) {
           .policy-row { grid-template-columns: 28px 120px minmax(0, 1fr) 210px; }
-          .policy-desc { grid-column: auto; }
+          .policy-desc { grid-column: auto; grid-row: auto; }
+          .policy-chip { grid-column: auto; grid-row: auto; }
         }
       `}</style>
       <ControlPage>

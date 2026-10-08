@@ -78,10 +78,15 @@ export default function AuditPage() {
         .au-desk { display: none; }
         .au-mobile { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
         @media (min-width: 900px) {
-          .au-grid { grid-template-columns: 136px minmax(0, 2fr) 150px 150px 150px 110px; }
+          .au-grid { grid-template-columns: 124px minmax(0, 1fr) 140px 150px 104px; }
           .au-head { display: grid; padding: 0 10px 8px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line); }
           .au-desk { display: block; }
           .au-mobile { display: none; }
+          .au-grid .au-src { display: none; }
+        }
+        @media (min-width: 1200px) {
+          .au-grid { grid-template-columns: 136px minmax(0, 2fr) 140px 150px 140px 104px; }
+          .au-grid .au-src { display: block; }
         }
         .seg { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
         .seg button { height: 28px; padding: 0 12px; font-size: 12.5px; border-radius: 6px; color: var(--ink-2); background: none; border: none; cursor: pointer; }
@@ -117,7 +122,7 @@ export default function AuditPage() {
             <div role="table" aria-label="Audit log">
               <div role="row" className="au-grid au-head">
                 <span role="columnheader">Time</span><span role="columnheader">Action</span><span role="columnheader">Actor</span>
-                <span role="columnheader">Object</span><span role="columnheader">Source</span><span role="columnheader">Result</span>
+                <span role="columnheader">Object</span><span role="columnheader" className="au-src">Source</span><span role="columnheader">Result</span>
               </div>
               {rows.map((e) => (
                 <div role="row" key={`${e.source}:${e.id}`} className="au-grid au-row row-hover">
@@ -129,7 +134,7 @@ export default function AuditPage() {
                   </span>
                   <span role="cell" className="au-desk truncate" style={{ color: e.actor ? "var(--body)" : "var(--ink-3)" }}>{e.actor || "—"}</span>
                   <span role="cell" className="au-desk truncate" style={{ color: "var(--body)" }}>{objectLabel(e)}</span>
-                  <span role="cell" className="au-desk truncate" style={{ color: "var(--ink-2)" }}>{e.source === "decision" ? (e.model || "Starlane") : "Ledger"}</span>
+                  <span role="cell" className="au-desk au-src truncate" style={{ color: "var(--ink-2)" }}>{e.source === "decision" ? (e.model || "Starlane") : "Ledger"}</span>
                   <span role="cell">{e.result ? <StatusChip tone={toneForStatus(e.result)}>{humanize(e.result)}</StatusChip> : <span className="au-desk" style={{ color: "var(--ink-3)" }}>—</span>}</span>
                 </div>
               ))}

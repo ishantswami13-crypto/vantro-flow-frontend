@@ -113,7 +113,8 @@ export default function ControlApprovalsPage() {
   return (
     <DashboardLayout pageTitle="Approvals">
       <style>{`
-        .ap-grid { display: grid; column-gap: 20px; align-items: center; grid-template-columns: minmax(0, 1fr) auto; }
+        .ap-grid { display: grid; column-gap: 20px; row-gap: 10px; align-items: center; grid-template-columns: minmax(0, 1fr); }
+        .ap-actions { flex-direction: row-reverse; justify-content: flex-end; margin-left: -2px; }
         .ap-head { display: none; }
         .ap-row { padding: 14px 10px; border-bottom: 1px solid var(--line); min-height: 64px; }
         .ap-desk { display: none; }
@@ -123,6 +124,7 @@ export default function ControlApprovalsPage() {
           .ap-head { display: grid; padding: 0 10px 8px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line); }
           .ap-desk { display: block; }
           .ap-mobile { display: none; }
+          .ap-actions { flex-direction: row; justify-content: flex-end; margin-left: 0; }
         }
         .ap-title { font-size: 13.5px; font-weight: 500; color: var(--ink); text-align: left; background: none; border: none; padding: 0; cursor: pointer; }
         .ap-title:hover { text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
@@ -174,9 +176,9 @@ export default function ControlApprovalsPage() {
                       {amt != null ? inrWhole(amt) : "—"}
                     </div>
                     <div className="ap-desk"><StatusChip tone={risk.tone}>{risk.label}</StatusChip></div>
-                    <div className="flex items-center justify-end" style={{ gap: 6 }}>
+                    <div className="ap-actions flex items-center" style={{ gap: 6 }}>
                       <Button variant="ghost" size="sm" onClick={() => { setDecisionFailed(false); setOpenId(a.id); }}>Review</Button>
-                      <Button variant="primary" size="sm" onClick={() => { setDecisionFailed(false); setConfirmId(a.id); }}>Approve</Button>
+                      <Button variant="secondary" size="sm" onClick={() => { setDecisionFailed(false); setConfirmId(a.id); }}>Approve</Button>
                     </div>
                   </div>
                 );
