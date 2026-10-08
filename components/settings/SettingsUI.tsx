@@ -131,6 +131,7 @@ export function SettingsStyles() {
       .set-switch[aria-checked="true"] { background: var(--positive); }
       .set-switch[aria-checked="true"]::after { transform: translateX(16px); }
       .set-switch:disabled { opacity: 0.5; cursor: default; }
+      .set-layout input[type="radio"] { accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; }
       .set-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
       .set-row:first-child { padding-top: 0; }
       .set-row:last-child { border-bottom: none; padding-bottom: 0; }

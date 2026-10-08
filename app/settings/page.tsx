@@ -137,19 +137,25 @@ function SettingsPageInner() {
       setBusiness(b => ({ ...b, business_name: user.business_name || "", gstin: user.gstin || "" }));
     }
     api.settings.get().then(({ settings: raw }) => {
-      const settings = raw as Record<string, string | boolean | undefined> & { automation_enabled?: boolean };
-      if (settings.industry)          { setBusiness(b => ({ ...b, industry: settings.industry })); setBusinessType(settings.industry); }
-      if (settings.business_address)  setBusiness(b => ({ ...b, business_address: settings.business_address }));
-      if (settings.city)              setBusiness(b => ({ ...b, city: settings.city }));
-      if (settings.upi_id)            setBusiness(b => ({ ...b, upi_id: settings.upi_id }));
-      if (settings.invoice_prefix)    setBusiness(b => ({ ...b, invoice_prefix: settings.invoice_prefix }));
-      if (settings.language)          setPrefs(p => ({ ...p, language: settings.language }));
-      if (settings.contact_time)      setPrefs(p => ({ ...p, contact_time: settings.contact_time }));
-      if (settings.owner_name)        setProfile(p => ({ ...p, full_name: settings.owner_name }));
-      if (settings.phone)             setProfile(p => ({ ...p, phone: p.phone || settings.phone }));
-      if (settings.owner_name || settings.ai_persona) {
-        setVoice({ owner_name: settings.owner_name || "", city: settings.city || "", voice_style: settings.voice_style || "casual_hinglish", ai_persona: settings.ai_persona || "" });
-        setVoiceActive(!!(settings.owner_name && settings.ai_persona));
+      const bag = (raw || {}) as unknown as Record<string, unknown>;
+      // Read a saved text value; anything that isn't a non-empty string is "not set".
+      const str = (k: string): string => (typeof bag[k] === "string" ? (bag[k] as string) : "");
+      const settings = { automation_enabled: raw?.automation_enabled };
+      const industry = str("industry"), address = str("business_address"), city = str("city"), upi = str("upi_id"), prefix = str("invoice_prefix");
+      const language = str("language"), contactTime = str("contact_time"), ownerName = str("owner_name"), phone = str("phone");
+      const voiceStyle = str("voice_style"), persona = str("ai_persona");
+      if (industry)    { setBusiness(b => ({ ...b, industry })); setBusinessType(industry); }
+      if (address)     setBusiness(b => ({ ...b, business_address: address }));
+      if (city)        setBusiness(b => ({ ...b, city }));
+      if (upi)         setBusiness(b => ({ ...b, upi_id: upi }));
+      if (prefix)      setBusiness(b => ({ ...b, invoice_prefix: prefix }));
+      if (language)    setPrefs(p => ({ ...p, language }));
+      if (contactTime) setPrefs(p => ({ ...p, contact_time: contactTime }));
+      if (ownerName)   setProfile(p => ({ ...p, full_name: ownerName }));
+      if (phone)       setProfile(p => ({ ...p, phone: p.phone || phone }));
+      if (ownerName || persona) {
+        setVoice({ owner_name: ownerName, city, voice_style: voiceStyle || "casual_hinglish", ai_persona: persona });
+        setVoiceActive(!!(ownerName && persona));
       }
       if (settings.automation_enabled !== undefined) setAutoEnabled(!!settings.automation_enabled);
       setLoaded(true);
@@ -590,11 +596,15 @@ function SettingsPageInner() {
                         const t = TONE[rule.tone] || { label: rule.tone, tone: "neutral" as StatusTone };
                         return (
                           <div key={rule.id} className="set-row" style={{ opacity: rule.enabled ? 1 : 0.6 }}>
-                            <span className="tabular-nums" style={{ width: 64, flexShrink: 0, fontSize: 13.5, color: "var(--ink)" }}>Day {rule.trigger_day}</span>
-                            <div className="flex-1 min-w-0 flex items-center flex-wrap" style={{ gap: 8 }}>
-                              <StatusChip tone={t.tone}>{t.label}</StatusChip>
-                              <span style={{ fontSize: 13, color: "var(--ink-2)" }}>{ACTION_LABEL[rule.action] || rule.action} with payment link</span>
-                              {rule.sent != null && <span className="tabular-nums" style={{ fontSize: 12, color: "var(--ink-3)" }}>· {formatCount(rule.sent)} sent</span>}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
+                                <span className="tabular-nums" style={{ fontSize: 13.5, color: "var(--ink)" }}>Day {rule.trigger_day}</span>
+                                <StatusChip tone={t.tone}>{t.label}</StatusChip>
+                              </div>
+                              <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 3 }}>
+                                {ACTION_LABEL[rule.action] || rule.action} with payment link
+                                {rule.sent != null && <span className="tabular-nums"> · {formatCount(rule.sent)} sent</span>}
+                              </div>
                             </div>
                             <Switch checked={rule.enabled} onChange={() => handleToggleRule(rule)} label={`Day ${rule.trigger_day} rule ${rule.enabled ? "on" : "off"}`} />
                             <button type="button" className="icon-btn" aria-label={`Delete the day ${rule.trigger_day} rule`} onClick={() => setDeleteRule(rule)}>
