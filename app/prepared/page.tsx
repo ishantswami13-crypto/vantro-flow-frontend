@@ -267,7 +267,7 @@ export default function PreparedPage() {
 
         {/* The queues that live with Prepared load once and stay mounted, so
             the tab counts are right before a tab is opened. */}
-        <div hidden={tab !== "needs_you"}><DecisionsNeedingYou onCount={setDecisionsN} /></div>
+        <div hidden={tab !== "needs_you"} className="empty:hidden"><DecisionsNeedingYou onCount={setDecisionsN} /></div>
 
         {data === null ? (
           <SkeletonRows rows={3} />
@@ -289,7 +289,7 @@ export default function PreparedPage() {
           </section>
         ) : null}
 
-        <div hidden={tab !== "needs_you"}><ReminderApprovals onCount={setRemindersN} /></div>
+        <div hidden={tab !== "needs_you"} className="empty:hidden"><ReminderApprovals onCount={setRemindersN} /></div>
         <div hidden={tab !== "for_you"}>
           <AutomationProposals onCount={setProposalsN} />
           <div style={{ marginTop: 24 }}><OutreachSummary context="prepared" /></div>

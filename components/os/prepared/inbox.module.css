@@ -5,31 +5,37 @@
 
 .row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 148px minmax(132px, auto);
+  grid-template-columns: minmax(0, 1fr) minmax(148px, max-content) minmax(132px, auto);
   column-gap: 24px;
   align-items: start;
-  padding: 14px 0;
+  padding: 16px 0;
   border-bottom: 1px solid var(--line);
+  position: relative;
 }
-.attention { box-shadow: inset 2px 0 0 var(--ink); padding-left: 14px; }
+/* Time-critical: a 2px ink rule in the gutter, so the row's text stays on
+   the same left edge as every other row. */
+.attention::before { content: ""; position: absolute; left: -14px; top: 15px; bottom: 15px; width: 2px; border-radius: 1px; background: var(--ink); }
 .quiet .title { color: var(--ink-2); }
 
 .meta {
   display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px;
-  font-size: 11.5px; line-height: 16px; color: var(--ink-3); margin-bottom: 3px;
+  font-size: 12px; line-height: 18px; color: var(--ink-3); margin-bottom: 3px;
 }
-.category { font-size: 10.5px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3); }
-.title { margin: 0; font-size: 14px; font-weight: 500; line-height: 1.45; color: var(--ink); }
+.category { font-size: 12px; font-weight: 500; color: var(--ink-2); }
+.deadline { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.deadlineNear { color: var(--ink); font-weight: 500; }
+.deadlineOver { color: var(--critical); font-weight: 500; }
+.title { margin: 0; font-size: 14.5px; font-weight: 500; line-height: 1.45; color: var(--ink); }
 .why { margin-top: 2px; font-size: 13px; line-height: 1.55; color: var(--ink-2); max-width: 68ch; }
 .body { margin-top: 10px; max-width: 72ch; }
 .tertiary { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 16px; margin-top: 8px; }
 
 .stake { text-align: right; padding-top: 1px; }
-.stakeValue { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 14px; letter-spacing: -0.01em; color: var(--ink); line-height: 20px; }
-.stakeNone { font-size: 12.5px; color: var(--ink-3); line-height: 20px; }
-.stakeNote { font-size: 11.5px; color: var(--ink-3); margin-top: 1px; }
+.stakeValue { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); line-height: 22px; white-space: nowrap; }
+.stakeNone { font-size: 12.5px; color: var(--ink-3); line-height: 22px; }
+.stakeNote { font-size: 12px; color: var(--ink-3); margin-top: 1px; }
 
-.action { display: flex; justify-content: flex-end; gap: 6px; padding-top: 1px; }
+.action { display: flex; justify-content: flex-end; gap: 6px; padding-top: 0; }
 
 /* A text-weight action: the tertiary verbs under a row. */
 .link {
@@ -50,13 +56,14 @@
   .row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 10px; }
   .stake { grid-column: 2; grid-row: 1; }
   .action { grid-column: 1 / -1; justify-content: flex-start; }
+  .attention::before { left: -10px; }
 }
 
 /* A whole-row link (the decision list): same grid, a quiet hover and the
    chevron shift. */
 .linkRow {
-  display: grid; grid-template-columns: minmax(0, 1fr) 148px 16px; column-gap: 24px; align-items: start;
-  padding: 14px 0; border-bottom: 1px solid var(--line);
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(148px, max-content) 16px; column-gap: 24px; align-items: start;
+  padding: 16px 0; border-bottom: 1px solid var(--line); position: relative;
   transition: background-color var(--dur-instant) var(--ease);
 }
 .linkRow:hover { background: var(--surface-2); }

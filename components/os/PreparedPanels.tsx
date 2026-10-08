@@ -14,7 +14,7 @@ import { pct, daysUntil, decisionsApi, STATUS_LABEL } from "@/lib/decisions";
 import { formatDate } from "@/lib/format";
 import { SkeletonRows } from "@/components/v32/ui";
 import { useLoad, stakeOf } from "./shared";
-import { ItemCard, Quote, RetryLine, RowLink, RowList, SectionHead, amount, cleanTitle, humaneError, sentence } from "./prepared/kit";
+import { Deadline, ItemCard, Quote, RetryLine, RowLink, RowList, SectionHead, amount, cleanTitle, humaneError, sentence } from "./prepared/kit";
 
 /** Reports how many items a section is showing once it has loaded (null while loading or on error). */
 type OnCount = (n: number | null) => void;
@@ -207,7 +207,7 @@ export function DecisionsNeedingYou({ onCount }: { onCount?: OnCount }) {
               key={d.id}
               attention={left != null && left <= 3}
               chip={<Pill tone={d.status === "NEEDS_INFORMATION" ? "warn" : d.status === "APPROVED" ? "good" : "neutral"}>{STATUS_LABEL[d.status] || sentence(d.status)}</Pill>}
-              meta={w ? <span style={{ color: left != null && left <= 2 ? "var(--critical)" : undefined }}>{w}</span> : undefined}
+              meta={w ? <Deadline days={left}>{w}</Deadline> : undefined}
               title={<Link href={`/decisions/${d.id}`} className="hover-dim">{cleanTitle(d.title)}</Link>}
               why={
                 <>

@@ -151,6 +151,13 @@ export function ItemCard({ category, meta, chip, title, why, stake, stakeNote, c
   );
 }
 
+/** A row's deadline: readable sans, ink when close, critical only once the
+ *  safe window has passed. */
+export function Deadline({ children, days }: { children: React.ReactNode; days: number | null }) {
+  const cls = days == null ? "" : days < 0 ? css.deadlineOver : days <= 3 ? css.deadlineNear : "";
+  return <span className={`${css.deadline} ${cls}`}>{children}</span>;
+}
+
 /** A quiet key/value line list, used for evidence facts. */
 export function FactList({ rows }: { rows: { label: string; value: React.ReactNode }[] }) {
   if (!rows.length) return null;
@@ -167,9 +174,9 @@ export function FactList({ rows }: { rows: { label: string; value: React.ReactNo
 }
 
 /** Empty state: one calm sentence with the fact, an optional action. No icon, no illustration. */
-export function EmptyNote({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
+export function EmptyNote({ children, action, flush }: { children: React.ReactNode; action?: React.ReactNode; /** Sits directly under a tab row, which already draws the top rule. */ flush?: boolean }) {
   return (
-    <div className="fade-once flex items-center flex-wrap" style={{ gap: 12, padding: "16px 0", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+    <div className="fade-once flex items-center flex-wrap" style={{ gap: 12, padding: "16px 0", borderTop: flush ? 0 : "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
       <p style={{ margin: 0, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55, flex: "1 1 320px", maxWidth: "68ch" }}>{children}</p>
       {action}
     </div>

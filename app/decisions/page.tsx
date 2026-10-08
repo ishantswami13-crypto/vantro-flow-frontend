@@ -8,7 +8,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { C, ConfidencePill, HealthStrip, Notice, Pill } from "@/components/decisions/ui";
 import { PageHeader, Subnav, Figure, SkeletonRows, Chevron } from "@/components/v32/ui";
 import { IconRefresh, IconUpload } from "@/components/v32/icons";
-import { EmptyNote, PageBody, RetryLine, SectionHead, amount, cleanTitle, humaneError } from "@/components/os/prepared/kit";
+import { Deadline, EmptyNote, PageBody, RetryLine, SectionHead, amount, cleanTitle, humaneError } from "@/components/os/prepared/kit";
 import css from "@/components/os/prepared/inbox.module.css";
 import { decisionsApi, relTime, daysUntil, STATUS_LABEL, type DecisionListItem, type DiscoverResponse } from "@/lib/decisions";
 import { formatDate, formatCount } from "@/lib/format";
@@ -35,7 +35,7 @@ function DecisionRow({ d }: { d: DecisionListItem }) {
       <div className="min-w-0">
         <div className={css.meta}>
           <Pill tone={!live ? "neutral" : d.status === "NEEDS_INFORMATION" ? "warn" : d.status === "OPEN" ? "neutral" : "good"}>{STATUS_LABEL[d.status] || d.status}</Pill>
-          {dl && <span style={{ color: dl.tone === "bad" ? C.bad : undefined }}>{dl.text}</span>}
+          {dl && <Deadline days={days}>{dl.text}</Deadline>}
           {d.collisions && d.collisions.length > 0 && <span>Linked to {d.collisions.length} other decision{d.collisions.length === 1 ? "" : "s"}</span>}
         </div>
         <p className={css.title}>{cleanTitle(d.title)}</p>
@@ -158,6 +158,7 @@ export default function DecisionsPage() {
               <p style={{ fontSize: 13, color: C.muted, padding: "16px 0", margin: 0 }}>Analysing your receivables…</p>
             ) : t && t.receivables.invoices === 0 ? (
               <EmptyNote
+                flush
                 action={
                   <div className="flex flex-wrap" style={{ gap: 8 }}>
                     <button type="button" className="ui-btn ui-btn-primary ui-btn-sm" onClick={() => router.push("/decisions/import")}><IconUpload size={13} /> Upload a file</button>
@@ -168,7 +169,7 @@ export default function DecisionsPage() {
                 No data to decide on yet. Upload the receivables file you already have, or connect Tally; Starlane only finds decisions in your own history.
               </EmptyNote>
             ) : (
-              <EmptyNote>
+              <EmptyNote flush>
                 {scope === "active"
                   ? "No decisions need you. Nothing material changed; smaller or disputed balances are being watched, not escalated."
                   : "No closed decisions yet. Decisions appear here once they are verified, rejected or resolved on their own."}
