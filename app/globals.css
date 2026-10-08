@@ -712,8 +712,8 @@ a:focus-visible, button:focus-visible, [role="button"]:focus-visible, [tabindex]
 button:disabled { cursor: default; }
 
 /* Scan greeting: 38px Fraunces on desktop (V32), smaller on phones. */
-.scan-greeting { font-size: 28px; }
-@media (min-width: 1024px) { .scan-greeting { font-size: 38px; } }
+.scan-greeting { font-size: 28px; letter-spacing: -0.01em; line-height: 1.15; }
+@media (min-width: 1024px) { .scan-greeting { font-size: 34px; } }
 
 /* Simulate: real <select>s and radios drawn with tokens. */
 .sim-pill, .sim-select { appearance: none; -webkit-appearance: none; cursor: pointer; background-image: none; }
@@ -831,70 +831,104 @@ button:disabled { cursor: default; }
 }
 
 /* Scan composer: one rounded box like a chat app, a plus menu on the left
-   and the send button on the right. */
+   and the send button on the right. Tokens only, so it reads the same in
+   dark and light. */
 .scan-composer {
   width: 100%; box-sizing: border-box; background: var(--surface);
-  border: 1px solid rgb(var(--tk-ink) / 0.12); border-radius: 26px;
-  box-shadow: 0 1px 2px rgb(var(--tk-ink) / 0.04), 0 12px 32px -18px rgb(var(--tk-ink) / 0.18);
+  border: 1px solid var(--line-input); border-radius: var(--radius-xl);
+  box-shadow: var(--highlight), var(--shadow-sm);
 }
 .scan-input {
   display: block; width: 100%; box-sizing: border-box; min-height: 56px; max-height: 200px;
-  padding: 18px 20px 6px 20px; border: none; outline: none; box-shadow: none; resize: none; background: none;
-  font-family: var(--font-sans); font-size: 15.5px; line-height: 1.5; color: var(--ink);
+  padding: 16px 18px 6px 18px; border: none; outline: none; box-shadow: none; resize: none; background: none;
+  font-family: var(--font-sans); font-size: 15px; line-height: 1.55; color: var(--ink);
+  -webkit-font-smoothing: antialiased; font-feature-settings: "ss01";
 }
-.scan-input::placeholder { color: var(--ink-3); }
+.scan-input::placeholder { color: var(--ink-3); font-family: var(--font-sans); }
+.scan-input:focus, .scan-input:focus-visible { outline: none; box-shadow: none; }
+.scan-composer-hint { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .scan-round {
-  width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  flex-shrink: 0; transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
 }
-.scan-plus { background: transparent; border: 1px solid rgb(var(--tk-ink) / 0.14); color: var(--body); }
-.scan-plus:hover, .scan-plus[aria-expanded="true"] { background: rgb(var(--tk-ink) / 0.05); border-color: rgb(var(--tk-ink) / 0.22); }
-.scan-send { background: var(--ink); border: none; color: var(--bg); }
+.scan-plus { background: transparent; border: 1px solid var(--line-button); color: var(--ink-2); }
+.scan-plus:hover, .scan-plus[aria-expanded="true"] { background: var(--hover); border-color: var(--line-emphasis); color: var(--ink); }
+.scan-send { background: var(--inverse); border: none; color: var(--on-inverse); }
 .scan-send:hover:not(:disabled) { background: var(--inverse-hover); }
-.scan-send:disabled { opacity: 0.25; cursor: default; }
+.scan-send:disabled { opacity: 0.22; cursor: default; }
 .scan-menu {
-  position: absolute; left: 0; top: calc(100% + 8px); z-index: 30; width: 260px; padding: 6px;
-  background: var(--surface); border: 1px solid var(--line-hairline); border-radius: 14px; box-shadow: 0 12px 32px -8px rgb(var(--tk-ink) / 0.18);
+  position: absolute; left: 0; top: calc(100% + 8px); z-index: var(--z-overlay); width: 268px; padding: 6px;
+  background: var(--elevated); border: 1px solid var(--line-card); border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
 }
 .scan-menu-item {
-  display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 10px; border-radius: 9px; background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 10px; border-radius: var(--radius-md); background: none; border: none; cursor: pointer;
 }
-.scan-menu-item:hover, .scan-menu-item:focus-visible { background: var(--surface-2); outline: none; }
+.scan-menu-item:hover, .scan-menu-item:focus-visible { background: var(--hover); outline: none; }
 .scan-menu-icon {
-  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
-  background: var(--surface-2); color: var(--body);
+  width: 30px; height: 30px; border-radius: var(--radius-md); flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--surface-2); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line-card);
 }
 .scan-chip {
-  padding: 7px 14px; border: 1px solid rgb(var(--tk-ink) / 0.10); border-radius: 999px; background: rgb(var(--tk-surface) / 0.7);
-  font-size: 12.5px; color: var(--body); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; min-height: 32px; padding: 0 12px; border: 1px solid var(--line-button); border-radius: var(--radius-md);
+  background: transparent; font-size: 12.5px; color: var(--body); cursor: pointer; text-decoration: none;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
-.scan-chip:hover { background: var(--surface); border-color: rgb(var(--tk-ink) / 0.18); color: var(--ink); }
+.scan-chip:hover { background: var(--hover); border-color: var(--line-emphasis); color: var(--ink); }
 
 /* Scan: workflow cards under the box, the conversation turns, and History. */
-.scan-flows { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.scan-flows { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 @media (min-width: 900px) { .scan-flows { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .scan-flow {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 14px; text-align: left;
-  background: rgb(var(--tk-surface) / 0.62); border: 1px solid rgb(var(--tk-ink) / 0.08); border-radius: 14px;
-  cursor: pointer; text-decoration: none; transition: background .18s ease, border-color .18s ease, translate .18s ease, box-shadow .18s ease;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 14px; text-align: left; min-height: 112px; box-sizing: border-box;
+  background: transparent; border: 1px solid var(--line-card); border-radius: var(--radius-lg);
+  cursor: pointer; text-decoration: none; transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
-.scan-flow:hover { background: var(--surface); border-color: rgb(var(--tk-ink) / 0.14); translate: 0 -1px; box-shadow: 0 10px 24px -18px rgb(var(--tk-ink) / 0.35); }
-.scan-flow:disabled { opacity: .5; cursor: default; translate: none; }
+.scan-flow:hover { background: var(--surface); border-color: var(--line-emphasis); }
+.scan-flow:disabled { opacity: .5; cursor: default; }
+@media (max-width: 480px) { .scan-flow { min-height: 0; gap: 10px; padding: 12px; } }
+
+/* Conversation: a page-width column with an outline rail on wide screens. */
+.scan-thread { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; align-items: start; }
+@media (min-width: 1280px) { .scan-thread { grid-template-columns: minmax(0, 760px) 240px; justify-content: space-between; } }
+.scan-rail { display: none; }
+@media (min-width: 1280px) { .scan-rail { display: block; position: sticky; top: 8px; } }
+.scan-rail-link {
+  display: flex; gap: 10px; padding: 6px 8px; margin: 0 -8px; border-radius: var(--radius-sm); font-size: 12.5px; line-height: 1.45;
+  color: var(--ink-2); text-decoration: none; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.scan-rail-link:hover { background: var(--hover); color: var(--ink); }
+.scan-turn { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 16px; }
 .scan-q {
-  align-self: flex-end; max-width: 82%; padding: 10px 15px; border-radius: 18px 18px 6px 18px;
-  background: var(--surface-3); color: var(--ink); font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
+  align-self: flex-end; max-width: min(82%, 600px); padding: 10px 14px; border-radius: 14px 14px 4px 14px;
+  background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line-card);
+  color: var(--ink); font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
 }
+.scan-answer { min-width: 0; }
+.scan-md > :last-child { margin-bottom: 0 !important; }
+.scan-answer-head { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 10px; }
+.scan-steps {
+  margin-top: 16px; padding: 12px 14px; border: 1px solid var(--line-card); border-radius: var(--radius-md); background: transparent;
+}
+.scan-steps li { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.5; color: var(--body); }
+.scan-steps li + li { margin-top: 6px; }
 .scan-tool {
-  display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 8px; border: none; background: none;
-  font-size: 12px; color: var(--ink-3); cursor: pointer; text-decoration: none; transition: background .15s ease, color .15s ease;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 9px; border-radius: var(--radius-sm); border: none; background: none;
+  font-size: 12px; color: var(--ink-3); cursor: pointer; text-decoration: none; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
-.scan-tool:hover { background: rgb(var(--tk-ink) / 0.05); color: var(--ink); }
-.scan-dock {
-  position: sticky; bottom: 0; padding: 22px 0 18px;
-  background-image: linear-gradient(to bottom, rgb(var(--tk-bg) / 0), var(--bg) 30%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22px); mask-image: linear-gradient(to bottom, transparent, #000 22px);
+.scan-tool:hover { background: var(--hover); color: var(--ink); }
+.scan-dock { position: sticky; bottom: 0; z-index: var(--z-sticky); padding: 24px 0 16px; isolation: isolate; }
+/* The dock's backdrop is the page itself (paper grain included in light),
+   faded in from the top with a mask so it never reads as a separate strip. */
+.scan-dock::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; background-color: var(--bg);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 32%); mask-image: linear-gradient(to bottom, transparent, black 32%);
 }
-.scan-hist-row { position: relative; display: flex; align-items: center; gap: 14px; padding: 12px 10px; margin: 0 -10px; border-radius: 12px; text-decoration: none; transition: background .15s ease; }
-.scan-hist-row:hover { background: rgb(var(--tk-surface) / 0.75); }
+:root[data-theme="light"] .scan-dock::before { background-image: var(--paper-grain); }
+.scan-hist-row {
+  position: relative; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 4px 0;
+  border-bottom: 1px solid var(--line); text-decoration: none; transition: background var(--dur-fast) var(--ease);
+}
+.scan-hist-row:hover, .scan-hist-row:focus-within { background: var(--surface-2); }
 .scan-hist-del { opacity: 0; }
 .scan-hist-row:hover .scan-hist-del, .scan-hist-del:focus-visible { opacity: 1; }
 @media (hover: none) { .scan-hist-del { opacity: 1; } }
@@ -902,23 +936,28 @@ button:disabled { cursor: default; }
 /* Page search: one shape on every page, under the title and tabs. */
 .page-search {
   display: flex; align-items: center; gap: 8px; width: 100%; max-width: 360px; box-sizing: border-box;
-  padding: 0 12px; height: 36px; border-radius: 10px; background: rgb(var(--tk-surface) / 0.7);
-  border: 1px solid rgb(var(--tk-ink) / 0.10); color: var(--ink-3); transition: border-color .15s ease, background .15s ease;
+  padding: 0 12px; height: 36px; border-radius: var(--radius-md); background: var(--surface);
+  border: 1px solid var(--line-input); color: var(--ink-3); transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
 }
-.page-search:focus-within { background: var(--surface); border-color: rgb(var(--tk-ink) / 0.22); }
-.page-search input { flex: 1; min-width: 0; border: none; outline: none; background: none; font-size: 13px; color: var(--ink); font-family: inherit; }
+.page-search:focus-within { border-color: rgba(var(--accent-rgb), 0.5); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12); }
+.page-search input { flex: 1; min-width: 0; border: none; outline: none; background: none; font-size: 13px; color: var(--ink); font-family: var(--font-sans); }
 .page-search input::placeholder { color: var(--ink-3); }
+.page-search input:focus, .page-search input:focus-visible { outline: none; box-shadow: none; }
 
 /* Library cards: prompts and workflows. */
-.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+@media (max-width: 480px) { .lib-grid { grid-template-columns: minmax(0, 1fr); } }
 .lib-card {
-  position: relative; display: flex; flex-direction: column; gap: 10px; padding: 16px; text-align: left; box-sizing: border-box;
-  background: rgb(var(--tk-surface) / 0.62); border: 1px solid rgb(var(--tk-ink) / 0.08); border-radius: 14px; cursor: pointer; text-decoration: none;
-  transition: background .18s ease, border-color .18s ease, translate .18s ease, box-shadow .18s ease;
+  position: relative; display: flex; flex-direction: column; gap: 12px; padding: 16px; text-align: left; box-sizing: border-box; min-height: 128px;
+  background: var(--surface); border: 1px solid var(--line-card); border-radius: var(--radius-lg); cursor: pointer; text-decoration: none;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
-.lib-card:hover, .lib-card:focus-visible { background: var(--surface); border-color: rgb(var(--tk-ink) / 0.14); translate: 0 -1px; box-shadow: 0 10px 24px -18px rgb(var(--tk-ink) / 0.35); outline: none; }
-.lib-tag { font-size: 11px; color: var(--ink-3); }
-.lib-star { position: absolute; top: 10px; right: 10px; }
+.lib-card:hover, .lib-card:focus-visible { background: var(--surface-2); border-color: var(--line-emphasis); }
+.lib-card:focus-visible { outline: 2px solid rgba(var(--accent-rgb), 0.7); outline-offset: 2px; }
+.lib-tag { font-size: 12px; color: var(--ink-3); }
+.lib-go { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); transition: color var(--dur-fast) var(--ease); }
+.lib-card:hover .lib-go, .lib-card:focus-visible .lib-go { color: var(--ink); }
+.lib-star { position: absolute; top: 8px; right: 8px; }
 
 /* Agents gallery: ready-agent cards in the Library card style. */
 .agent-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }

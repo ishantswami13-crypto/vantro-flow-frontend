@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button, EmptyLine, IconTile, PageHeader, SearchField, SectionTitle, Subnav } from "@/components/v32/ui";
+import { EmptyLine, IconTile, PageHeader, SearchField, SectionTitle, Subnav } from "@/components/v32/ui";
 import {
   IconAgents, IconArrowRight, IconBookmark, IconBookmarkFilled, IconDiscover, IconLibrary, IconLink, IconMemory,
-  IconMissions, IconPlus, IconPrepared, IconRupee, IconScan, IconSimulate, IconSparkle, IconUpload, IconWatch,
+  IconMissions, IconPlus, IconPrepared, IconScan, IconSimulate, IconSparkle, IconUpload, IconWatch,
 } from "@/components/v32/icons";
 import { listSavedPrompts, removeSavedPrompt, SAVED_PROMPTS_EVENT, type SavedPrompt } from "@/lib/promptStore";
 
@@ -44,10 +44,6 @@ const WORKFLOWS: Workflow[] = [
   { area: "Insight", title: "See what runs for you", does: "The agents working in this workspace.", get: "Last run and status of each", href: "/agents", icon: <IconAgents size={15} /> },
 ];
 
-const AREA_ICON: Record<string, React.ReactNode> = {
-  Collections: <IconRupee size={15} />, Cash: <IconSimulate size={15} />, Customers: <IconScan size={15} />, Sales: <IconSparkle size={15} />,
-};
-
 export default function LibraryPage() {
   const router = useRouter();
   const [tab, setTab] = useState<"prompts" | "workflows">("prompts");
@@ -71,12 +67,13 @@ export default function LibraryPage() {
 
   return (
     <DashboardLayout pageTitle="Library">
+      <div style={{ width: "100%", maxWidth: "var(--content-max)" }}>
       <PageHeader
         title="Library"
-        subtitle="Questions to ask and workflows to run"
-        right={<Button href="/scan"><IconPlus size={14} /> New conversation</Button>}
+        subtitle="Questions to ask Scan and workflows Starlane can run for you."
+        right={<Link href="/scan" className="ui-btn ui-btn-primary"><IconPlus size={14} /> New conversation</Link>}
       >
-        <div style={{ marginTop: 18 }}>
+        <div style={{ marginTop: 20 }}>
           <Subnav
             label="Library sections"
             active={tab}
@@ -96,6 +93,7 @@ export default function LibraryPage() {
         <div className="fade-once" style={{ display: "flex", flexDirection: "column", gap: 30, marginTop: 26 }}>
           <section>
             <SectionTitle>Saved by you</SectionTitle>
+            <p style={{ margin: "0 0 4px", fontSize: 12.5, color: "var(--ink-3)" }}>Kept in this browser on this device.</p>
             {savedShown.length === 0 ? (
               <EmptyLine
                 icon={<IconBookmark size={17} />}
@@ -105,7 +103,7 @@ export default function LibraryPage() {
             ) : (
               <div className="lib-grid" style={{ marginTop: 10 }}>
                 {savedShown.map((p, i) => (
-                  <PromptCard key={p.id} text={p.text} tag="Saved by you" icon={<IconScan size={15} />} delay={i} onAsk={() => ask(p.text)} onRemove={() => removeSavedPrompt(p.text)} />
+                  <PromptCard key={p.id} text={p.text} tag="Saved" delay={i} onAsk={() => ask(p.text)} onRemove={() => removeSavedPrompt(p.text)} />
                 ))}
               </div>
             )}
@@ -116,7 +114,7 @@ export default function LibraryPage() {
               <SectionTitle>Ready to ask</SectionTitle>
               <div className="lib-grid" style={{ marginTop: 10 }}>
                 {prompts.map((p, i) => (
-                  <PromptCard key={p.text} text={p.text} tag={p.area} icon={AREA_ICON[p.area]} delay={i} onAsk={() => ask(p.text)} />
+                  <PromptCard key={p.text} text={p.text} tag={p.area} delay={i} onAsk={() => ask(p.text)} />
                 ))}
               </div>
             </section>
@@ -134,37 +132,41 @@ export default function LibraryPage() {
             <section>
               <div className="lib-grid">
                 {workflows.map((w, i) => (
-                  <Link key={w.title} href={w.href} className="lib-card rise-in" style={{ animationDelay: `${i * 40}ms` }}>
+                  <Link key={w.title} href={w.href} className="lib-card rise-in" style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}>
                     <div className="flex items-center justify-between">
-                      <IconTile size={32}>{w.icon}</IconTile>
-                      <span style={{ color: "var(--ink-3)" }}><IconArrowRight size={14} /></span>
+                      <IconTile size={30}>{w.icon}</IconTile>
+                      <span className="lib-tag">{w.area}</span>
                     </div>
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, color: "var(--ink)" }}>{w.title}</div>
-                      <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 3, lineHeight: 1.5 }}>{w.does}</div>
+                      <div style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 4, lineHeight: 1.5 }}>{w.does}</div>
                     </div>
-                    <div className="lib-tag">{w.area} · You get: {w.get}</div>
+                    <div className="flex items-center justify-between" style={{ gap: 8, paddingTop: 10, borderTop: "1px solid var(--line)" }}>
+                      <span className="lib-tag" style={{ minWidth: 0 }}>You get: {w.get}</span>
+                      <span className="lib-go" aria-hidden="true"><IconArrowRight size={13} /></span>
+                    </div>
                   </Link>
                 ))}
               </div>
             </section>
           )}
-          {workflows.length === 0 && <EmptyLine icon={<IconLibrary size={17} />} title="No workflow matches" />}
+          {workflows.length === 0 && <EmptyLine icon={<IconLibrary size={17} />} title="No workflow matches" body="Try a shorter word, or ask Scan what you want done." />}
         </div>
       )}
+      </div>
     </DashboardLayout>
   );
 }
 
-function PromptCard({ text, tag, icon, delay, onAsk, onRemove }: { text: string; tag: string; icon: React.ReactNode; delay: number; onAsk: () => void; onRemove?: () => void }) {
+function PromptCard({ text, tag, delay, onAsk, onRemove }: { text: string; tag: string; delay: number; onAsk: () => void; onRemove?: () => void }) {
   return (
-    <div className="lib-card rise-in" style={{ animationDelay: `${delay * 40}ms` }} role="button" tabIndex={0} onClick={onAsk}
+    <div className="lib-card rise-in" style={{ animationDelay: `${Math.min(delay, 10) * 30}ms` }} role="button" tabIndex={0} onClick={onAsk}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onAsk(); } }} aria-label={`Ask: ${text}`}>
-      <IconTile size={32}>{icon}</IconTile>
-      <div style={{ fontSize: 14, color: "var(--ink)", lineHeight: 1.45 }}>{text}</div>
-      <div className="lib-tag">{tag}</div>
+      <div className="lib-tag" style={{ paddingRight: onRemove ? 28 : 0 }}>{tag}</div>
+      <div style={{ fontSize: 14.5, color: "var(--ink)", lineHeight: 1.45, flex: 1 }}>{text}</div>
+      <span className="lib-go"><IconScan size={13} /> Ask Scan <IconArrowRight size={12} /></span>
       {onRemove && (
-        <button type="button" className="scan-tool lib-star" aria-label={`Remove saved prompt: ${text}`} title="Remove"
+        <button type="button" className="scan-tool lib-star" aria-label={`Remove saved prompt: ${text}`} title="Remove from saved"
           onClick={e => { e.stopPropagation(); onRemove(); }}>
           <IconBookmarkFilled size={14} />
         </button>

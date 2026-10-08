@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { FiRefreshCw } from "react-icons/fi";
-import { Badge } from "@/components/ui/Badge";
+import { StatusChip } from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import { IconRefresh } from "@/components/v32/icons";
 import { formatDate } from "./format";
 import { api, type IntelligenceVerifyOutcomeResponse } from "@/lib/api";
 
-// Calls the real POST /api/intelligence/signals/:id/verify-outcome — never
-// a hardcoded "Awaiting observation" label. Before the first check, the
-// honest state is "not yet checked", not a guess at what the result will be.
+// Calls the real POST /api/intelligence/signals/:id/verify-outcome, never a
+// hardcoded "Awaiting observation" label. Before the first check, the honest
+// state is "not yet checked", not a guess at what the result will be.
 export function OutcomeVerification({ signalId }: { signalId: string }) {
   const [result, setResult] = useState<IntelligenceVerifyOutcomeResponse | null>(null);
   const mutation = useMutation({
@@ -19,60 +19,52 @@ export function OutcomeVerification({ signalId }: { signalId: string }) {
   });
 
   return (
-    <div className="card-premium p-4 mb-8">
-      <div className="flex items-center justify-between mb-2">
-        <p className="section-label">Outcome verification</p>
-        <Button
-          variant="ghost"
-          size="xs"
-          icon={<FiRefreshCw size={12} className={mutation.isPending ? "animate-spin" : ""} />}
-          loading={mutation.isPending}
-          onClick={() => mutation.mutate()}
-        >
+    <div style={{ padding: "16px 18px", marginBottom: 32, borderRadius: "var(--radius-lg)", background: "var(--surface)", border: "1px solid var(--line-card)" }}>
+      <div className="flex items-center justify-between" style={{ gap: 12, marginBottom: 8 }}>
+        <p style={{ margin: 0, fontSize: 14, color: "var(--ink)" }}>Did it work?</p>
+        <Button variant="ghost" size="sm" icon={<IconRefresh size={13} />} loading={mutation.isPending} onClick={() => mutation.mutate()}>
           Check now
         </Button>
       </div>
 
       {!result && !mutation.isPending && (
-        <p className="text-2xs text-muted">
-          Not yet checked. Checking compares each prediction's horizon against real, current inventory and order
-          data — nothing here is guessed.
+        <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-2)" }}>
+          Not checked yet. A check compares each prediction&rsquo;s horizon with real, current inventory and order data; nothing here is guessed.
         </p>
       )}
 
       {result && result.status === "VERIFIED" && (
-        <div className="space-y-2">
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {result.updatedActions.map((a) => (
-            <div key={a.actionId} className="flex items-center gap-2">
-              <Badge variant={a.outcome === "effective" ? "success" : "danger"}>
+            <div key={a.actionId} className="flex items-center" style={{ gap: 8 }}>
+              <StatusChip tone={a.outcome === "effective" ? "positive" : "critical"}>
                 {a.outcome === "effective" ? "Verified effective" : "Verified ineffective"}
-              </Badge>
-              <p className="text-2xs text-muted font-mono">action {a.actionId.slice(0, 8)}…</p>
+              </StatusChip>
+              <span className="tabular-nums" style={{ fontSize: 12, color: "var(--ink-3)" }}>Action {a.actionId.slice(0, 8)}</span>
             </div>
           ))}
-          <p className="text-2xs text-muted">
-            Resolved against real data: {result.resolvedPredictions.map((p) => `${p.target.replace(/_/g, " ")} @ ${p.horizonDays}d`).join(", ")}.
+          <p style={{ margin: 0, fontSize: 12.5, color: "var(--ink-2)" }}>
+            Resolved against real data: {result.resolvedPredictions.map((p) => `${p.target.replace(/_/g, " ")} at ${p.horizonDays} days`).join(", ")}.
           </p>
         </div>
       )}
 
       {result && result.status === "AWAITING_OBSERVATION" && (
-        <div className="space-y-2">
-          <Badge variant="muted">Awaiting observation</Badge>
-          <p className="text-2xs text-muted">
-            {result.awaitingPredictions.length} prediction{result.awaitingPredictions.length === 1 ? "" : "s"} still
-            awaiting {result.awaitingPredictions.length === 1 ? "its horizon" : "their horizons"} — next resolves{" "}
-            {formatDate(result.awaitingPredictions.sort((a, b) => a.horizonDays - b.horizonDays)[0]?.horizonDate)}.
-            Starlane also checks this automatically once a day.
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
+          <StatusChip tone="info">Waiting for the horizon</StatusChip>
+          <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-2)" }}>
+            {result.awaitingPredictions.length} prediction{result.awaitingPredictions.length === 1 ? " is" : "s are"} still waiting; the next resolves{" "}
+            {formatDate([...result.awaitingPredictions].sort((a, b) => a.horizonDays - b.horizonDays)[0]?.horizonDate)}.
+            Starlane also checks this once a day.
           </p>
         </div>
       )}
 
       {result && result.status === "NO_ACTION_TO_VERIFY" && (
-        <Badge variant="muted">No executed action to verify yet</Badge>
+        <StatusChip tone="unknown">No approved action to check yet</StatusChip>
       )}
 
-      {mutation.isError && <p className="text-2xs text-danger mt-2">Couldn't check — try again.</p>}
+      {mutation.isError && <p role="alert" style={{ margin: "8px 0 0", fontSize: 12.5, color: "var(--ink-2)" }}>Couldn&rsquo;t check just now. Try again in a moment.</p>}
     </div>
   );
 }

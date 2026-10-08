@@ -1,60 +1,60 @@
 "use client";
 
 import React, { useState } from "react";
-import { FiCheckCircle, FiPackage } from "react-icons/fi";
 import { useMutation } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/Badge";
+import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
-import { formatINR, formatDateTime } from "./format";
+import { IconBox, IconCheck } from "@/components/v32/icons";
+import { formatINR, formatDateTime, humanizeCode } from "./format";
+import { formatCount } from "@/lib/format";
 import { api, type IntelligenceAction, type ImpactComponent, type DemoExecutionResult } from "@/lib/api";
 
 type ExecState = "PROPOSED" | "APPROVING" | "EXECUTED" | "FAILED";
 
+const BOX: React.CSSProperties = { padding: "16px 18px", borderRadius: "var(--radius-lg)", background: "var(--surface)", border: "1px solid var(--line-card)" };
+const LABEL: React.CSSProperties = { fontSize: 12, color: "var(--ink-3)" };
+const VALUE: React.CSSProperties = { fontSize: 15, color: "var(--ink)", marginTop: 4, fontVariantNumeric: "tabular-nums" };
+
+function Fig({ label, value, tone }: { label: string; value: React.ReactNode; tone?: "critical" | "positive" }) {
+  return (
+    <div className="min-w-0">
+      <dt style={LABEL}>{label}</dt>
+      <dd style={{ ...VALUE, margin: "4px 0 0", color: tone ? `var(--${tone})` : "var(--ink)" }}>{value}</dd>
+    </div>
+  );
+}
+
 function ComparisonCard({ component, topAction }: { component: ImpactComponent; topAction: IntelligenceAction }) {
   const top = topAction.reason_json.rankedOptions[0];
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <div className="card-premium p-4 border-danger/25">
-        <p className="section-label text-danger">Without action</p>
-        <dl className="mt-2 space-y-2">
-          <div>
-            <dt className="text-2xs text-muted">Stockout</dt>
-            <dd className="text-sm font-bold text-primary">
-              {component.stockout.sufficientData
-                ? component.stockout.alreadyBelowSafetyStock ? "Already below safety stock" : `${component.stockout.daysUntilStockout} days`
-                : "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-2xs text-muted">Revenue exposed</dt>
-            <dd className="text-sm font-bold text-danger">{formatINR(component.revenueExposure.totalRevenueExposure)}</dd>
-          </div>
-          <div>
-            <dt className="text-2xs text-muted">Orders exposed</dt>
-            <dd className="text-sm font-bold text-primary">{component.affectedDemand.affectedOrderCount}</dd>
-          </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 8 }}>
+      <div style={BOX}>
+        <div style={{ fontSize: 13, color: "var(--ink-2)" }}>Without action</div>
+        <dl className="grid grid-cols-3 sm:grid-cols-1" style={{ gap: 12, margin: "12px 0 0" }}>
+          <Fig
+            label="Stockout"
+            value={component.stockout.sufficientData
+              ? component.stockout.alreadyBelowSafetyStock ? "Below safety stock now" : `${component.stockout.daysUntilStockout} days`
+              : "Not known yet"}
+          />
+          <Fig label="Revenue exposed" value={formatINR(component.revenueExposure.totalRevenueExposure)} tone="critical" />
+          <Fig label="Orders exposed" value={component.affectedDemand.affectedOrderCount} />
         </dl>
       </div>
-      <div className="card-premium p-4 border-success/25">
-        <p className="section-label text-success">With recommended action</p>
-        <dl className="mt-2 space-y-2">
-          <div>
-            <dt className="text-2xs text-muted">Revenue protected</dt>
-            <dd className="text-sm font-bold text-success">{formatINR(top.avoidedRevenueExposure)}</dd>
-          </div>
-          <div>
-            <dt className="text-2xs text-muted">Estimated cost</dt>
-            <dd className="text-sm font-bold text-primary">{formatINR(top.cost)}</dd>
-          </div>
-          <div>
-            <dt className="text-2xs text-muted">Benefit-to-cost ratio</dt>
-            <dd className="text-sm font-bold text-primary">{top.benefitToCostRatio}×</dd>
-          </div>
+      <div style={BOX}>
+        <div style={{ fontSize: 13, color: "var(--ink-2)" }}>With the recommended action</div>
+        <dl className="grid grid-cols-3 sm:grid-cols-1" style={{ gap: 12, margin: "12px 0 0" }}>
+          <Fig label="Revenue protected" value={formatINR(top.avoidedRevenueExposure)} tone="positive" />
+          <Fig label="Estimated cost" value={formatINR(top.cost)} />
+          <Fig label="Benefit to cost" value={`${top.benefitToCostRatio}×`} />
         </dl>
       </div>
     </div>
   );
 }
+
+const PRIORITY_TONE: Record<string, StatusTone> = { urgent: "critical", high: "attention" };
+const RISK_TONE: Record<string, StatusTone> = { high: "critical", medium: "attention", low: "positive" };
 
 function ActionCard({ action, rank, dominant, onApprove, execState, execResult }: {
   action: IntelligenceAction;
@@ -68,104 +68,88 @@ function ActionCard({ action, rank, dominant, onApprove, execState, execResult }
   const alreadyDone = action.status === "done" || execState === "EXECUTED";
   const product = action.parameters?.products?.[0];
   const orderLine = product
-    ? `Order ${product.quantity.toLocaleString("en-IN")} units of ${product.name} (${product.sku})`
+    ? `Order ${formatCount(product.quantity)} units of ${product.name} (${product.sku})`
     : null;
 
   return (
-    <div className={["card-premium p-5", dominant ? "border-accent/40" : ""].join(" ")}>
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="w-6 h-6 rounded-full bg-surface-2 border border-border flex items-center justify-center text-2xs font-bold text-secondary shrink-0">
+    <div style={{ ...BOX, padding: 20, borderColor: dominant ? "var(--line-emphasis)" : "var(--line-card)" }}>
+      <div className="flex items-start justify-between flex-wrap" style={{ gap: 8, marginBottom: 12 }}>
+        <div className="flex items-center flex-wrap" style={{ gap: 6 }}>
+          <span className="tabular-nums inline-flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: "50%", fontSize: 11, color: "var(--ink-2)", background: "var(--surface-2)", boxShadow: "inset 0 0 0 1px var(--line-card)" }}>
             {rank}
           </span>
-          <Badge variant={action.priority === "urgent" ? "danger" : action.priority === "high" ? "warning" : "default"}>{action.priority}</Badge>
-          {dominant && <Badge variant="accent">Recommended</Badge>}
+          <StatusChip tone={PRIORITY_TONE[action.priority] || "neutral"}>{humanizeCode(action.priority)} priority</StatusChip>
+          {dominant && <StatusChip tone="info">Recommended</StatusChip>}
         </div>
-        <Badge variant={action.risk_level === "high" ? "danger" : action.risk_level === "medium" ? "warning" : "success"} className="whitespace-nowrap shrink-0">{action.risk_level} risk</Badge>
+        <StatusChip tone={RISK_TONE[action.risk_level] || "neutral"}>{humanizeCode(action.risk_level)} risk</StatusChip>
       </div>
 
-      <p className="text-sm font-bold text-primary">{action.title}</p>
-      {/* The backend description repeats the figures shown just below, so
-          show the order itself instead when the frozen parameters carry it. */}
-      {orderLine ? (
-        <p className="text-2xs text-secondary mt-1 leading-relaxed">{orderLine}</p>
-      ) : (
-        <p className="text-2xs text-secondary mt-1 leading-relaxed">{action.description}</p>
-      )}
+      <p style={{ margin: 0, fontSize: 15, color: "var(--ink)" }}>{action.title}</p>
+      {/* The backend description repeats the figures shown below, so show the
+          order itself when the frozen parameters carry it. */}
+      <p style={{ margin: "4px 0 0", fontSize: 13, lineHeight: 1.55, color: "var(--ink-2)" }}>{orderLine || action.description}</p>
 
-      <div className="grid grid-cols-3 gap-3 mt-4">
-        <div>
-          <p className="text-2xs text-muted">Revenue protected</p>
-          <p className="text-sm font-bold text-success">{formatINR(top.avoidedRevenueExposure)}</p>
-        </div>
-        <div>
-          <p className="text-2xs text-muted">Estimated cost</p>
-          <p className="text-sm font-bold text-primary">{formatINR(top.cost)}</p>
-        </div>
-        <div>
-          <p className="text-2xs text-muted">Lead time</p>
-          <p className="text-sm font-bold text-primary">{top.leadTimeDays != null ? `${top.leadTimeDays}d` : "—"}</p>
-        </div>
-      </div>
+      <dl className="grid grid-cols-3" style={{ gap: 12, margin: "16px 0 0" }}>
+        <Fig label="Revenue protected" value={formatINR(top.avoidedRevenueExposure)} tone="positive" />
+        <Fig label="Estimated cost" value={formatINR(top.cost)} />
+        <Fig label="Lead time" value={top.leadTimeDays != null ? `${top.leadTimeDays} days` : "Not known yet"} />
+      </dl>
 
       {action.reason_json.rankedOptions.length > 1 && (
-        <details className="mt-3">
-          <summary className="text-2xs text-muted cursor-pointer hover:text-secondary">
-            {action.reason_json.rankedOptions.length - 1} other option(s) considered
+        <details style={{ marginTop: 14 }}>
+          <summary style={{ fontSize: 12.5, color: "var(--ink-3)", cursor: "pointer" }}>
+            {action.reason_json.rankedOptions.length - 1} other {action.reason_json.rankedOptions.length - 1 === 1 ? "option" : "options"} considered
           </summary>
-          <ul className="mt-2 space-y-1.5">
+          <ul style={{ listStyle: "none", margin: "8px 0 0", padding: 0 }}>
             {action.reason_json.rankedOptions.slice(1).map((opt, i) => (
-              <li key={i} className="text-2xs text-muted flex items-center justify-between border-t border-border pt-1.5">
+              <li key={i} className="flex items-center justify-between" style={{ gap: 12, padding: "8px 0", borderTop: "1px solid var(--line)", fontSize: 12.5, color: "var(--ink-2)" }}>
                 <span>{opt.label}</span>
-                <span className="font-mono">{opt.benefitToCostRatio}× · {formatINR(opt.cost)}</span>
+                <span className="tabular-nums" style={{ color: "var(--ink-3)" }}>{opt.benefitToCostRatio}× · {formatINR(opt.cost)}</span>
               </li>
             ))}
           </ul>
         </details>
       )}
 
-      <div className="mt-4 pt-4 border-t border-border">
+      <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
         {!alreadyDone && (
-          <div className="card-premium p-3 mb-3 bg-surface-2">
-            <p className="text-2xs font-semibold text-secondary">What will happen</p>
-            <p className="text-2xs text-muted mt-0.5">Create a draft purchase order: {action.title}.</p>
-            <p className="text-2xs text-muted mt-0.5">
-              Simulated execution — writes to Starlane's demo ERP adapter only, no live Odoo write occurs.
+          <div style={{ marginBottom: 12, padding: "10px 12px", borderRadius: "var(--radius-md)", background: "var(--surface-2)" }}>
+            <p style={{ margin: 0, fontSize: 12.5, color: "var(--ink)" }}>What will happen</p>
+            <p style={{ margin: "2px 0 0", fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-2)" }}>
+              A draft purchase order is created: {action.title}. This is a simulated run in Starlane&rsquo;s demo ERP adapter; nothing is written to a live system.
             </p>
           </div>
         )}
 
         {alreadyDone && execResult ? (
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <FiCheckCircle className="text-success" size={16} />
-              <p className="text-xs font-bold text-success">Simulated execution complete</p>
+            <div className="flex items-center" style={{ gap: 8, marginBottom: 10, color: "var(--positive)", fontSize: 13 }}>
+              <IconCheck size={15} /> Simulated run complete
             </div>
-            <dl className="text-2xs text-secondary space-y-1">
-              <div className="flex justify-between"><dt className="text-muted">Purchase order</dt><dd className="font-mono">#{execResult.purchaseOrder.id}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Status</dt><dd>Draft — Demo Adapter</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Supplier</dt><dd>{execResult.purchaseOrder.supplier_name}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Related action</dt><dd className="font-mono truncate ml-2">{execResult.purchaseOrder.related_ai_action_id.slice(0, 8)}…</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Timestamp</dt><dd>{formatDateTime(execResult.purchaseOrder.created_at)}</dd></div>
+            <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)]" style={{ gap: "6px 16px", margin: 0, fontSize: 12.5 }}>
+              <dt style={{ color: "var(--ink-3)" }}>Purchase order</dt><dd className="tabular-nums" style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>#{execResult.purchaseOrder.id}</dd>
+              <dt style={{ color: "var(--ink-3)" }}>Status</dt><dd style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>Draft, demo adapter</dd>
+              <dt style={{ color: "var(--ink-3)" }}>Supplier</dt><dd style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>{execResult.purchaseOrder.supplier_name}</dd>
+              <dt style={{ color: "var(--ink-3)" }}>Related action</dt><dd className="truncate tabular-nums" style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>{execResult.purchaseOrder.related_ai_action_id.slice(0, 8)}</dd>
+              <dt style={{ color: "var(--ink-3)" }}>Time</dt><dd style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>{formatDateTime(execResult.purchaseOrder.created_at)}</dd>
             </dl>
-            <p className="text-2xs text-muted mt-2 italic">{execResult.note}</p>
+            {execResult.note && <p style={{ margin: "10px 0 0", fontSize: 12, color: "var(--ink-3)" }}>{execResult.note}</p>}
           </div>
         ) : alreadyDone ? (
-          <Badge variant="success">Already executed</Badge>
+          <StatusChip tone="positive">Already run</StatusChip>
         ) : (
           <Button
             variant={dominant ? "primary" : "secondary"}
-            size="md"
             fullWidth
             loading={execState === "APPROVING"}
             disabled={execState === "APPROVING"}
-            icon={<FiPackage size={14} />}
+            icon={<IconBox size={14} />}
             onClick={onApprove}
           >
-            Approve &amp; execute
+            Approve and run
           </Button>
         )}
-        {execState === "FAILED" && <p className="text-2xs text-danger mt-2">Execution failed — check the backend log and try again.</p>}
+        {execState === "FAILED" && <p role="alert" style={{ margin: "8px 0 0", fontSize: 12.5, color: "var(--ink-2)" }}>That didn&rsquo;t go through. Nothing was created; try again.</p>}
       </div>
     </div>
   );
@@ -197,7 +181,7 @@ export function DecisionSection({ actions, component }: { actions: IntelligenceA
   return (
     <div>
       <ComparisonCard component={component} topAction={dominant} />
-      <div className="mt-4 space-y-3">
+      <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
         {actions.map((a, i) => (
           <ActionCard
             key={a.id}
