@@ -121,7 +121,7 @@ export default function ControlApprovalsPage() {
     <DashboardLayout pageTitle="Approvals">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
         <div className="fade-once">
-          <h1 style={{ margin: 0, fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 20, color: "var(--text-primary)" , letterSpacing: "-0.015em"}}>
+          <h1 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, color: "var(--text-primary)" , letterSpacing: "-0.01em"}}>
             Control
           </h1>
           <p className="text-[13.5px] mt-2 max-w-[640px]" style={{ color: "var(--text-secondary)" }}>

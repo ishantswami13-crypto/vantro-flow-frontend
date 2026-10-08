@@ -70,7 +70,7 @@ export default function NewMissionPage() {
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "32px 24px 48px", display: "grid", gap: 20 }}>
         <div>
           <Link href="/missions" style={{ fontSize: 13, color: GRAPHITE }}>‹ Missions</Link>
-          <h1 style={{ fontFamily: "var(--font-sans)", fontSize: 20, fontWeight: 600, color: "var(--text-primary)", margin: "8px 0 0" , letterSpacing: "-0.015em"}}>{d?.title || "New collections mission"}</h1>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 400, color: "var(--text-primary)", margin: "8px 0 0" , letterSpacing: "-0.01em"}}>{d?.title || "New collections mission"}</h1>
           <p className="v32-body" style={{ color: GRAPHITE, maxWidth: "66ch", marginTop: 8 }}>One objective with a deadline, measured against your books. Starting it proposes one reminder per customer for your approval — nothing is sent until you approve it.</p>
         </div>
         {input ? (

@@ -71,7 +71,7 @@ export default function AgentDetail() {
               <div className="flex items-center" style={{ gap: 12 }}>
                 <Lettermark letter={a.name} size={44} />
                 <div>
-                  <h1 style={{ margin: "0 0 2px", fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 20, letterSpacing: "-0.015em", color: "var(--text-primary)" }}>{a.name}</h1>
+                  <h1 style={{ margin: "0 0 2px", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, letterSpacing: "-0.01em", color: "var(--text-primary)" }}>{a.name}</h1>
                   <div className="flex items-center flex-wrap" style={{ gap: 6, fontSize: 12.5, color: "var(--text-secondary)" }}>
                     {a.model} <Sep /> <StatusDot label={st.label} color={st.color} />
                   </div>

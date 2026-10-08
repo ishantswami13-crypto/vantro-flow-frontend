@@ -169,7 +169,7 @@ function WatchPageInner() {
     <DashboardLayout pageTitle="Watch">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ margin: 0, fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 20, color: "var(--text-primary)" , letterSpacing: "-0.015em"}}>
+          <h1 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, color: "var(--text-primary)" , letterSpacing: "-0.01em"}}>
             Watch
           </h1>
           <Button primary small onClick={() => setShowModal(true)}><IconPlus size={13} />New watch</Button>
@@ -408,7 +408,7 @@ function NewWatchModal({
           boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
         }}
       >
-        <h2 style={{ margin: 0, fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 20, color: "var(--text-primary)" , letterSpacing: "-0.015em"}}>
+        <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, color: "var(--text-primary)" , letterSpacing: "-0.01em"}}>
           New watch
         </h2>
 

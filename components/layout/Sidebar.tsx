@@ -190,6 +190,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       <aside
         className={["sl-sidebar fixed top-0 left-0 z-30 h-full flex flex-col", "lg:translate-x-0 lg:static", open ? "translate-x-0" : "-translate-x-full"].join(" ")}
         aria-label="Starlane"
+        data-theme="dark"
       >
         {/* Wordmark and workspace */}
         <div className="flex items-center justify-between shrink-0" style={{ padding: "2px 6px 14px" }}>

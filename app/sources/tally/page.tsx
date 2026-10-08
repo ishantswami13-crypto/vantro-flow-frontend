@@ -113,7 +113,7 @@ export default function SourcesTallyPage() {
         <div>
           <div className="flex items-center" style={{ gap: 10, marginBottom: 4 }}>
             <IconSources size={18} style={{ color: "var(--text-body)" }} />
-            <h1 style={{ margin: 0, fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 20, color: "var(--text-primary)" , letterSpacing: "-0.015em"}}>Tally</h1>
+            <h1 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, color: "var(--text-primary)" , letterSpacing: "-0.01em"}}>Tally</h1>
           </div>
           <div className="flex items-center" style={{ gap: 6, fontSize: 12.5, color: "var(--text-secondary)" }}>
             Accounting / ERP <Sep /> <StatusDot label={loading ? "Checking…" : status.label} color={status.color} />

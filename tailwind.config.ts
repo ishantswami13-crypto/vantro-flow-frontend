@@ -71,11 +71,10 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
-        // "font-mono" was used for money and counts; those read better in the UI
-        // font with tabular figures. Real code uses "font-code".
-        mono: ["Inter", "system-ui", "sans-serif"],
+        // Figures that matter use IBM Plex Mono; "font-code" is the same face for code.
+        mono: ["IBM Plex Mono", "ui-monospace", "Consolas", "monospace"],
         code: ["IBM Plex Mono", "ui-monospace", "Consolas", "monospace"],
-        serif: ["Inter", "system-ui", "sans-serif"],
+        serif: ["Fraunces", "Georgia", "serif"],
         brand: ["Fraunces", "Georgia", "serif"],
       },
       borderRadius: {

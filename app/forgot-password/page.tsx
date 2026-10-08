@@ -129,7 +129,7 @@ export default function ForgotPasswordPage() {
 
         {/* Wordmark */}
         <div className="flex items-center justify-center mb-8">
-          <span style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 20, letterSpacing: "-0.015em", color: "var(--text-primary)" }}>
+          <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, letterSpacing: "-0.01em", color: "var(--text-primary)" }}>
             Starlane
           </span>
         </div>

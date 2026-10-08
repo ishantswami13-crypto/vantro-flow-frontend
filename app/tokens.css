@@ -2,59 +2,98 @@
    STARLANE DESIGN TOKENS — the only place colour, type, space,
    radius, shadow, motion and layering are defined.
 
-   Dark is the product default. Light is kept as a theme
-   (<html data-theme="light">) for pages that need it.
+   The workspace is warm white. The sidebar (and anything that opens
+   from it) is a dark scope: <aside data-theme="dark">. Black, white and
+   grey carry the interface; colour appears only where it means
+   something (status).
 
    Colour channels are written as "R G B" so Tailwind can apply
-   alpha: bg-elevated/60, text-primary/80, ring-accent/40.
+   alpha: bg-elevated/60, text-primary/80.
    ============================================================ */
 
 :root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Surfaces */
+  --c-bg-primary:   248 248 246;  /* workspace canvas, warm white */
+  --c-bg-secondary: 243 243 240;  /* table heads, quiet wells */
+  --c-bg-elevated:  255 255 255;  /* panels, only when needed */
+  --c-bg-raised:    255 255 255;  /* popovers, menus, inputs */
+  --c-bg-subtle:    25 25 23;     /* tint; use with alpha */
+  --c-bg-inverse:   23 23 21;     /* primary button */
+
+  /* Text */
+  --c-text-primary:    23 23 21;
+  --c-text-body:       58 58 54;
+  --c-text-secondary:  98 98 93;
+  --c-text-tertiary:   138 138 132;
+  --c-text-disabled:   184 183 177;
+  --c-text-on-inverse: 255 255 255;
+  --c-ink: 23 23 21;
+
+  /* Accent is ink: selection, focus and active state stay monochrome. */
+  --c-accent:       23 23 21;
+  --c-accent-hover: 58 58 54;
+
+  /* Status — scarce, muted, always paired with a label */
+  --c-success: 61 112 80;
+  --c-warning: 150 108 32;
+  --c-danger:  168 66 60;
+  --c-info:    82 104 128;
+  --c-neutral: 138 138 132;
+
+  --c-sidebar: 17 17 16;
+
+  --bg-hover:    rgb(var(--c-bg-subtle) / 0.035);
+  --bg-selected: rgb(var(--c-bg-subtle) / 0.06);
+  --bg-subtle:   rgb(var(--c-bg-subtle) / 0.025);
+  --bg-overlay:  rgb(17 17 16 / 0.24);
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.10);
+}
+
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Surfaces: depth comes from steps of graphite, never pure black. */
-  --c-bg-primary:   13 13 12;   /* page */
-  --c-bg-secondary: 17 17 16;   /* sidebar, top bar */
-  --c-bg-elevated:  22 22 21;   /* cards, panels, tables */
-  --c-bg-raised:    29 29 27;   /* popovers, menus, inputs */
-  --c-bg-subtle:    255 255 255;/* overlay tint; use with alpha */
-  --c-bg-inverse:   236 235 230;/* primary button, selected chip */
+  --c-bg-primary:   17 17 16;
+  --c-bg-secondary: 17 17 16;
+  --c-bg-elevated:  27 27 25;
+  --c-bg-raised:    30 30 28;
+  --c-bg-subtle:    255 255 255;
+  --c-bg-inverse:   236 235 230;
 
-  /* Text */
-  --c-text-primary:   236 235 230;
-  --c-text-body:      200 199 193;
-  --c-text-secondary: 160 159 153;
-  --c-text-tertiary:  116 115 110;
-  --c-text-disabled:  80 79 76;
-  --c-text-on-inverse: 13 13 12;
+  --c-text-primary:    238 237 232;
+  --c-text-body:       196 195 189;
+  --c-text-secondary:  150 149 143;
+  --c-text-tertiary:   112 111 106;
+  --c-text-disabled:   78 77 74;
+  --c-text-on-inverse: 17 17 16;
+  --c-ink: 238 237 232;
 
-  /* "Ink": the text colour as a tint, for hairlines and hovers that must
-     flip with the theme. rgb(var(--c-ink) / 0.06) is a hairline in both. */
-  --c-ink: 236 235 230;
+  --c-accent:       238 237 232;
+  --c-accent-hover: 255 255 255;
 
-  /* One product accent. Used for focus, selection, links and live state. */
-  --c-accent:       132 160 255;
-  --c-accent-hover: 156 179 255;
+  --c-success: 110 186 140;
+  --c-warning: 214 168 88;
+  --c-danger:  226 112 102;
+  --c-info:    130 170 200;
+  --c-neutral: 140 139 134;
 
-  /* Status: scarce, always paired with a label or icon. */
-  --c-success: 104 190 142;
-  --c-warning: 222 171 84;
-  --c-danger:  232 108 98;
-  --c-info:    120 172 206;
-  --c-neutral: 142 141 136;
+  --bg-hover:    rgb(var(--c-bg-subtle) / 0.045);
+  --bg-selected: rgb(var(--c-bg-subtle) / 0.075);
+  --bg-subtle:   rgb(var(--c-bg-subtle) / 0.03);
+  --bg-overlay:  rgb(0 0 0 / 0.55);
+  --shadow-float: 0 12px 32px rgb(0 0 0 / 0.45), 0 0 0 1px rgb(255 255 255 / 0.06);
+}
 
-  /* Named roles (full colours, for inline styles and CSS) */
+/* Named roles. Declared on every scope so they resolve against the scope's channels. */
+:root, [data-theme="light"], [data-theme="dark"] {
   --bg-primary:   rgb(var(--c-bg-primary));
   --bg-secondary: rgb(var(--c-bg-secondary));
   --bg-elevated:  rgb(var(--c-bg-elevated));
   --bg-raised:    rgb(var(--c-bg-raised));
-  --bg-hover:     rgb(var(--c-bg-subtle) / 0.045);
-  --bg-selected:  rgb(var(--c-bg-subtle) / 0.08);
-  --bg-subtle:    rgb(var(--c-bg-subtle) / 0.03);
   --bg-inverse:   rgb(var(--c-bg-inverse));
-  --bg-sidebar:   rgb(var(--c-bg-secondary));
-  --bg-overlay:   rgb(0 0 0 / 0.55);
+  --bg-sidebar:   rgb(var(--c-sidebar, 17 17 16));
 
   --text-primary:    rgb(var(--c-text-primary));
   --text-body:       rgb(var(--c-text-body));
@@ -63,96 +102,62 @@
   --text-disabled:   rgb(var(--c-text-disabled));
   --text-on-inverse: rgb(var(--c-text-on-inverse));
 
+  /* Three border weights, no others. */
   --border-subtle:  rgb(var(--c-ink) / 0.06);
-  --border-default: rgb(var(--c-ink) / 0.10);
-  --border-strong:  rgb(var(--c-ink) / 0.16);
+  --border-default: rgb(var(--c-ink) / 0.09);
+  --border-strong:  rgb(var(--c-ink) / 0.15);
 
   --accent-primary: rgb(var(--c-accent));
   --accent-hover:   rgb(var(--c-accent-hover));
-  --accent-muted:   rgb(var(--c-accent) / 0.14);
+  --accent-muted:   rgb(var(--c-accent) / 0.07);
 
   --status-success: rgb(var(--c-success));
   --status-warning: rgb(var(--c-warning));
   --status-danger:  rgb(var(--c-danger));
   --status-info:    rgb(var(--c-info));
   --status-neutral: rgb(var(--c-neutral));
-  --status-success-muted: rgb(var(--c-success) / 0.12);
-  --status-warning-muted: rgb(var(--c-warning) / 0.12);
-  --status-danger-muted:  rgb(var(--c-danger) / 0.12);
-  --status-info-muted:    rgb(var(--c-info) / 0.12);
+  --status-success-muted: rgb(var(--c-success) / 0.09);
+  --status-warning-muted: rgb(var(--c-warning) / 0.10);
+  --status-danger-muted:  rgb(var(--c-danger) / 0.08);
+  --status-info-muted:    rgb(var(--c-info) / 0.09);
 
-  /* Elevation: borders first; shadows only for floating layers. */
-  --shadow-float: 0 12px 32px rgb(0 0 0 / 0.45), 0 0 0 1px rgb(var(--c-ink) / 0.08);
-  --shadow-card:  none;
-}
-
-[data-theme="light"] {
-  color-scheme: light;
-
-  --c-bg-primary:   247 247 244;
-  --c-bg-secondary: 20 20 18;
-  --c-bg-elevated:  255 255 255;
-  --c-bg-raised:    255 255 255;
-  --c-bg-subtle:    25 25 23;
-  --c-bg-inverse:   25 25 23;
-
-  --c-text-primary:    25 25 23;
-  --c-text-body:       67 67 63;
-  --c-text-secondary:  99 99 95;
-  --c-text-tertiary:   138 138 134;
-  --c-text-disabled:   185 184 178;
-  --c-text-on-inverse: 255 255 255;
-  --c-ink: 25 25 23;
-
-  --c-accent:       64 92 196;
-  --c-accent-hover: 48 74 172;
-
-  --c-success: 71 112 84;
-  --c-warning: 155 116 43;
-  --c-danger:  166 79 75;
-  --c-info:    86 108 130;
-  --c-neutral: 138 138 134;
-
-  --bg-hover:    rgb(var(--c-bg-subtle) / 0.04);
-  --bg-selected: rgb(var(--c-bg-subtle) / 0.06);
-  --bg-subtle:   rgb(var(--c-bg-subtle) / 0.025);
-  --bg-overlay:  rgb(20 20 18 / 0.28);
-  --shadow-float: 0 12px 32px rgb(0 0 0 / 0.12), 0 0 0 1px rgb(var(--c-ink) / 0.08);
+  --shadow-card: none;
 }
 
 :root {
-  /* Type */
-  --font-sans: "Inter", "Inter var", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-brand: "Fraunces", Georgia, serif; /* the Starlane wordmark only */
+  /* Type: Inter for the interface, Fraunces for page titles only,
+     IBM Plex Mono for figures that matter. */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-brand: "Fraunces", Georgia, serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
 
-  --text-display: 28px;   /* rare: first-run, boardroom */
-  --text-page:    20px;   /* page title */
-  --text-section: 14px;   /* section title */
-  --text-card:    13.5px; /* card / row title */
+  --text-display: 28px;   /* first-run / composer states only */
+  --text-page:    22px;   /* page title (Fraunces 400) */
+  --text-section: 10.5px; /* uppercase section label */
+  --text-card:    13.5px; /* row / card title */
   --text-base:    13px;   /* body */
-  --text-small:   12px;   /* small body */
-  --text-label:   11.5px; /* labels, column heads */
-  --text-meta:    11px;   /* metadata, timestamps */
-  --text-kpi:     24px;   /* numeric KPI */
+  --text-small:   12px;
+  --text-label:   11px;   /* column heads, labels */
+  --text-meta:    11.5px; /* metadata, timestamps */
+  --text-kpi:     22px;   /* primary figure */
 
-  /* Space: 4-point scale */
+  /* Space: 4-point scale. Page header → 32 → section → 24 → section. */
   --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
   --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px;
 
-  /* Radius */
-  --radius-sm: 6px;   /* inputs, chips, buttons */
-  --radius-md: 10px;  /* cards, drawers */
-  --radius-lg: 14px;  /* floating panels only */
+  /* Radius: mostly 6–8px; pills only for true tags. */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
 
-  /* Motion: one easing, four speeds */
+  /* Motion: one easing, four speeds. */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --dur-instant: 100ms;
+  --dur-instant: 120ms;
   --dur-fast: 160ms;
-  --dur-standard: 220ms;
-  --dur-slow: 320ms;
+  --dur-standard: 200ms;
+  --dur-slow: 260ms;
 
-  /* Layers */
   --z-sticky: 10; --z-sidebar: 30; --z-drawer: 50; --z-popover: 60; --z-modal: 70; --z-toast: 80;
 }
 

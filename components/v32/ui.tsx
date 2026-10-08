@@ -29,11 +29,11 @@ export const V = {
   critical: "var(--status-danger)",
   neutralDot: "rgb(var(--c-ink) / 0.25)",
   accent: "var(--accent-primary)",
-  serif: "var(--font-sans)",
-  mono: "var(--font-sans)",
+  serif: "var(--font-display)",
+  mono: "var(--font-mono)",
 };
 
-/** Page title row: 20px semibold title, an optional one-line subtitle and a right slot. */
+/** Page title row: a quiet Fraunces title, an optional one-line subtitle and a right slot. */
 export function PageHeader({ title, subtitle, right, children }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
@@ -44,7 +44,7 @@ export function PageHeader({ title, subtitle, right, children }: {
     <div className="fade-once">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 600, fontSize: "var(--text-page)", letterSpacing: "-0.015em", color: V.ink }}>{title}</h1>
+          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: "var(--text-page)", lineHeight: 1.2, letterSpacing: "-0.01em", color: V.ink }}>{title}</h1>
           {subtitle && <div style={{ fontSize: 13, color: V.secondary, marginTop: 4 }}>{subtitle}</div>}
         </div>
         {right && <div className="flex items-center gap-4 shrink-0">{right}</div>}

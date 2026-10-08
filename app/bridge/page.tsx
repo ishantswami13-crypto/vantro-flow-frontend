@@ -4,282 +4,305 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { request } from "@/lib/api";
+import { request, getUser } from "@/lib/api";
 import { greeting, firstName } from "@/lib/greeting";
-import { V, Mono, Chevron, Label, ErrorBanner, SkeletonRows, EmptyLine, Rule, IconTile, Figure, ago, clockTime } from "@/components/v32/ui";
-import { IconScan, IconClock, IconFileCheck, IconCalendar, IconRupee, IconPromise, IconSync, IconWatch } from "@/components/v32/icons";
+import { SkeletonRows, Chevron } from "@/components/v32/ui";
 import { EvidenceSetDrawer } from "@/components/v32/EvidenceSetDrawer";
 import { ScanComposer } from "@/components/scan/ScanComposer";
-import { listThreads, type ScanThread } from "@/lib/scanStore";
-import { timeAgo } from "@/lib/recents";
-import type { BridgeView, WatchEvent, FeatureAction } from "../../packages/contracts/src/features";
+import { inr, count, ago, exact, shortDate } from "@/lib/format";
+import type { BridgeView, WatchEvent, FeatureAction, Mission } from "../../packages/contracts/src/features";
 import { LIFECYCLE_LABEL } from "../../packages/contracts/src/features";
 
-// The Bridge (Version 32 home): what changed, what needs you, what is
-// prepared and what is coming up — all from GET /api/client/bridge, the same
-// read the desktop and phone apps use. Nothing here is computed in the
-// browser beyond counting the rows the server sent.
+// The Bridge: the workspace an owner opens first. What needs them, what
+// changed, what Starlane is running and the state of the business, all from
+// GET /api/client/bridge (the same read the desktop and phone apps use).
+// Nothing is computed here beyond arranging what the server sent.
 
-const KIND_LABEL: Record<string, string> = {
+const KIND: Record<string, string> = {
   invoice_overdue: "Collections",
   promise_broken: "Payment promise",
-  sync_failed: "Sources",
-  sync_stale: "Sources",
+  sync_failed: "Source",
+  sync_stale: "Source",
   watch_triggered: "Watch",
 };
 
-function isUrgent(e: WatchEvent) {
-  return e.severity === "critical" || e.severity === "high";
-}
+const FRESH: Record<string, { tone: string; word: string }> = {
+  fresh: { tone: "success", word: "Live" },
+  delayed: { tone: "warning", word: "Delayed" },
+  stale: { tone: "danger", word: "Stale" },
+  none: { tone: "neutral", word: "No source yet" },
+};
 
-/** The one figure worth showing next to an event: a calculated value from its own evidence. */
-function eventMetric(e: WatchEvent): string | null {
+const urgent = (e: WatchEvent) => e.severity === "critical" || e.severity === "high";
+
+/** The one figure worth showing beside an event, from its own evidence. */
+function impact(e: WatchEvent): string | null {
   const f = e.evidence?.facts?.find((x) => x.kind === "calculated" && typeof x.value === "number");
   if (!f || typeof f.value !== "number") return null;
-  if (f.unit === "INR") return `₹${Math.round(f.value).toLocaleString("en-IN")}`;
-  if (/days?/i.test(f.label)) return `${f.value} days`;
-  return f.value.toLocaleString("en-IN");
+  if (!f.value) return null;
+  if (f.unit === "INR") return inr(f.value);
+  if (/days?/i.test(f.label)) return `${count(f.value)} days`;
+  return count(f.value);
 }
-
-const FRESHNESS: Record<string, { color: string; text: (at: string | null) => string }> = {
-  fresh: { color: V.positive, text: (at) => `Last synced ${ago(at) || "recently"}` },
-  delayed: { color: V.warning, text: (at) => `Sync delayed · ${ago(at) || "a while ago"}` },
-  stale: { color: V.critical, text: (at) => `Sync stale · ${ago(at) || "a while ago"}` },
-  none: { color: V.neutralDot, text: () => "No source syncing yet" },
-};
 
 export default function BridgePage() {
   const router = useRouter();
   const [data, setData] = useState<BridgeView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [workspace, setWorkspace] = useState("");
   const [scan, setScan] = useState("");
-  const [open, setOpen] = useState<WatchEvent | null>(null);
-  const [recent, setRecent] = useState<ScanThread[]>([]);
+  const [open, setOpen] = useState<{ title: string; record?: string; evidence: WatchEvent["evidence"] } | null>(null);
 
   useEffect(() => {
     setName(firstName());
-    setRecent(listThreads().slice(0, 3));
+    setWorkspace(getUser()?.business_name || "");
     request<BridgeView>("/api/client/bridge")
       .then(setData)
       .catch((e: Error) => setError(e.message || "The Bridge could not be loaded."));
   }, []);
 
   const latest = useMemo(() => data?.attention.watch.latest || [], [data]);
-  const urgent = latest.filter(isUrgent);
-  const other = latest.filter((e) => !isUrgent(e));
+  const needs = latest.filter(urgent);
+  const changed = latest.filter((e) => !urgent(e));
   const decisions = data?.attention.topDecisions || [];
+  const running = (data?.missions || []).filter((m) => m.status === "active");
   const prepared = (data?.prepared || []).filter((h) => h.count > 0 && h.first);
-  const upcoming = (data?.missions || []).filter((m) => m.status === "active" && m.endsAt);
-  const syncAt = data?.dataAsOf || data?.sources.find((s) => s.lastSuccessAt)?.lastSuccessAt || null;
-  const fresh = FRESHNESS[data?.freshness || "none"] || FRESHNESS.none;
-  const changes = latest.length;
+  const source = data?.sources.find((s) => s.lastSuccessAt) || data?.sources[0] || null;
+  const asOf = data?.dataAsOf || source?.lastSuccessAt || null;
+  const fresh = FRESH[data?.freshness || "none"] || FRESH.none;
+  const needCount = (data?.attention.watch.urgent || 0) + (data?.attention.decisions || 0);
+  const st = data?.state;
 
   return (
-    <DashboardLayout pageTitle="The Bridge">
-      <div className="fade-once">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+    <DashboardLayout pageTitle="Bridge">
+      <div className="sl-rise" style={{ maxWidth: 1180 }}>
+        {/* Header: who, how fresh, how healthy */}
+        <header className="flex items-end justify-between gap-6 flex-wrap">
           <div className="min-w-0">
-            <h1 style={{ margin: "0 0 4px", fontFamily: V.serif, fontWeight: 600, fontSize: 20, color: V.ink , letterSpacing: "-0.01em"}}>
-              {greeting()}{name ? `, ${name}` : ""}
-            </h1>
-            <div style={{ fontSize: 13, color: V.secondary }}>
+            <h1 className="sl-page-title">{greeting()}{name ? `, ${name}` : ""}</h1>
+            <p className="sl-page-sub">
               {!data ? " "
                 : !data.hasData ? "Connect a source and Starlane will tell you what changed."
-                : changes === 0 ? "Nothing new needs a look since the last sync."
-                : `${changes} meaningful change${changes === 1 ? "" : "s"} worth a look`}
+                : needCount === 0 ? "Nothing needs you right now. Starlane is watching your books."
+                : `${needCount} ${needCount === 1 ? "thing needs" : "things need"} you. ${latest.length} change${latest.length === 1 ? "" : "s"} since the last sync.`}
+            </p>
+          </div>
+          {data && (
+            <div className="flex items-center gap-4 sl-meta">
+              {workspace && <span>{workspace}</span>}
+              <Link href="/sources" className={`sl-status sl-status--${fresh.tone}`} title={asOf ? `Business data as of ${exact(asOf)}` : "No source has synced yet"}>
+                <span className="sl-dot" aria-hidden="true" />
+                {source?.name ? `${source.name} · ` : ""}{fresh.word}{asOf && data.freshness !== "none" ? ` · ${ago(asOf)}` : ""}
+              </Link>
             </div>
-          </div>
-          <div className="flex items-center flex-wrap" style={{ gap: 16 }}>
-            {data && (
-              <div style={{ fontSize: 12, color: data.freshness === "stale" ? V.critical : data.freshness === "delayed" ? V.warning : V.tertiary }}>
-                {fresh.text(syncAt)}
-              </div>
-            )}
-          </div>
-        </div>
+          )}
+        </header>
 
-        {/* Ask first, like Harvey's home: the Scan box under the greeting. */}
-        <div style={{ maxWidth: 720, marginTop: 20 }}>
+        <div style={{ maxWidth: 680, marginTop: 20 }}>
           <ScanComposer
             id="bridge-scan"
             value={scan}
             onChange={setScan}
             onSubmit={() => { if (scan.trim()) router.push(`/scan?q=${encodeURIComponent(scan.trim())}`); }}
             submitting={false}
-            placeholder="Ask Starlane about your business"
+            placeholder="Ask about your business"
           />
         </div>
 
-        {data && data.hasData && (
-          <>
-          <Rule style={{ marginTop: 22 }} />
-          <div className="grid grid-cols-3" style={{ gap: 24, paddingTop: 18, maxWidth: 560 }}>
-            {/* The server's count over every open event (the same rule Today and
-                the morning brief use), not just the four shown below. */}
-            <Figure value={data.attention.watch.urgent} label="Need attention" tone={data.attention.watch.urgent ? V.critical : undefined} />
-            <Figure value={data.attention.decisions} label="Waiting on your decision" />
-            <Figure value={prepared.reduce((n, h) => n + h.count, 0)} label="Prepared for you" />
+        {error && <p role="alert" className="sl-empty" style={{ color: "var(--status-danger)" }}>{error}</p>}
+
+        {/* One hairline strip of the figures that drive decisions */}
+        {data?.hasData && st && (
+          <div className="sl-strip" style={{ marginTop: 28 }}>
+            <StripCell href="/collections" label="Overdue receivables" value={inr(st.overdueReceivables, st.currency)} sub={`${count(st.overdueInvoiceCount)} of ${count(st.openInvoiceCount)} invoices`} danger={st.overdueReceivables > 0} />
+            <StripCell href="/collections" label="Open receivables" value={inr(st.openReceivables, st.currency)} sub={`${count(st.openInvoiceCount)} invoices`} />
+            <StripCell href="/prepared" label="Needs you" value={count(needCount)} sub={needCount ? "decisions and alerts" : "nothing waiting"} />
+            <StripCell href="/missions" label="Missions running" value={count(running.length)} sub={running.length ? "in progress" : "none active"} />
           </div>
-          </>
+        )}
+
+        {!data && !error && <div style={{ marginTop: 28 }}><SkeletonRows rows={4} height={44} /></div>}
+
+        {data && !data.hasData && (
+          <section className="sl-section">
+            <div className="sl-section-head"><span className="sl-label">Get started</span></div>
+            <p className="sl-empty"><strong>No books connected yet.</strong>Starlane reports from your own records only. Connect Tally or upload a receivables file and this fills in on the next sync.</p>
+            <div className="flex gap-2"><Link href="/sources" className="sl-btn sl-btn--primary">Connect a source</Link><Link href="/decisions/import" className="sl-btn">Upload a file</Link></div>
+          </section>
+        )}
+
+        {data?.hasData && (
+          <div className="grid lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]" style={{ columnGap: 48 }}>
+            <div className="min-w-0">
+              {/* What needs you */}
+              <section className="sl-section">
+                <SectionHead label="What needs you" count={needCount} href="/prepared" linkText="Prepared" />
+                {decisions.length === 0 && needs.length === 0 && (
+                  <p className="sl-empty">No decision is waiting on you. Starlane is monitoring {data.attention.watch.open || "your"} open item{data.attention.watch.open === 1 ? "" : "s"}.</p>
+                )}
+                {decisions.slice(0, 4).map((a) => <DecisionRow key={a.id} a={a} />)}
+                {needs.map((e) => <EventRow key={e.id} e={e} attention onOpen={() => setOpen({ title: e.title, record: e.detail || undefined, evidence: e.evidence })} />)}
+              </section>
+
+              {/* What changed */}
+              <section className="sl-section">
+                <SectionHead label="What changed" count={changed.length} href="/watch" linkText={data.attention.watch.open > latest.length ? `All ${data.attention.watch.open} on Watch` : "Watch"} />
+                {changed.length === 0 && <p className="sl-empty">Nothing else changed since the last sync.</p>}
+                {changed.map((e) => <EventRow key={e.id} e={e} onOpen={() => setOpen({ title: e.title, record: e.detail || undefined, evidence: e.evidence })} />)}
+              </section>
+            </div>
+
+            <div className="min-w-0">
+              {/* Missions running */}
+              <section className="sl-section">
+                <SectionHead label="Missions running" count={running.length} href="/missions" linkText="Missions" />
+                {running.length === 0 && <p className="sl-empty">No mission is running. Open a decision and choose Handle it.</p>}
+                {running.slice(0, 4).map((m) => <MissionRow key={m.id} m={m} />)}
+              </section>
+
+              {/* Business state: receivables by age */}
+              {st && (
+                <section className="sl-section">
+                  <SectionHead label="Receivables by age" action={<button type="button" className="sl-btn sl-btn--ghost" onClick={() => setOpen({ title: "Receivables by age", evidence: st.evidence })}>Evidence</button>} />
+                  <AgeingTable rows={st.ageing} currency={st.currency} />
+                  {st.topOverdue.length > 0 && (
+                    <div style={{ marginTop: 14 }}>
+                      <p className="sl-label" style={{ marginBottom: 4 }}>Largest overdue</p>
+                      {st.topOverdue.slice(0, 3).map((c) => (
+                        <Link key={c.key} href={`/scan?q=${encodeURIComponent(c.name)}`} className="sl-row" style={{ padding: "8px 8px" }}>
+                          <span className="flex-1 min-w-0 truncate" style={{ fontSize: 13, color: "var(--text-primary)" }}>{c.name}</span>
+                          <span className="sl-meta">{c.oldestDays}d</span>
+                          <span className="sl-num" style={{ fontSize: 12.5, color: "var(--text-primary)", minWidth: 84, textAlign: "right" }}>{inr(c.amount, st.currency)}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* Prepared */}
+              <section className="sl-section">
+                <SectionHead label="Prepared" href="/prepared" linkText="Open" />
+                {prepared.length === 0 && <p className="sl-empty">Nothing is due to be prepared.</p>}
+                {prepared.map((h) => (
+                  <Link key={h.horizon} href={h.first!.route || "/prepared"} className="sl-row">
+                    <div className="flex-1 min-w-0">
+                      <div className="sl-row-kind">{h.label}</div>
+                      <div className="sl-row-title truncate">{h.first!.title}</div>
+                      <div className="sl-row-sub truncate">{h.first!.reason}</div>
+                    </div>
+                    <span className="sl-meta">{h.count > 1 ? `${h.count} items` : "Ready"}</span>
+                    <Chevron size={13} />
+                  </Link>
+                ))}
+              </section>
+            </div>
+          </div>
         )}
       </div>
 
-      {error && <ErrorBanner>{error}</ErrorBanner>}
-
-      <div className="fade-once flex flex-col lg:flex-row" style={{ gap: 32 }}>
-        {/* What changed */}
-        <div className="min-w-0 flex flex-col" style={{ flex: 1.2, gap: 22 }}>
-          <div>
-            <div style={{ fontFamily: V.serif, fontSize: 14, color: V.ink, marginBottom: 6 , fontWeight: 600, letterSpacing: "-0.01em"}}>What changed</div>
-            {!data && !error && <SkeletonRows rows={3} height={84} />}
-            {data && !data.hasData && (
-              <EmptyLine
-                title="No books connected yet."
-                body="Starlane reports changes from your own records only. Connect Tally or upload a receivables file and this fills in on the next sync."
-                action={<div className="flex gap-2"><Link href="/sources" className="btn-secondary-v32" style={{ padding: "6px 12px", fontSize: 12, borderRadius: 6 }}>Connect a source</Link><Link href="/decisions/import" className="btn-secondary-v32" style={{ padding: "6px 12px", fontSize: 12, borderRadius: 6 }}>Upload a file</Link></div>}
-              />
-            )}
-            {data && data.hasData && latest.length === 0 && (
-              <EmptyLine title="Nothing changed that needs a look." body="Overdue bands, broken promises and sync problems appear here the moment Starlane sees them." />
-            )}
-            {urgent.length > 0 && <Label style={{ marginBottom: 2 }}>Needs attention</Label>}
-            {urgent.map((e, i) => <IntelRow key={e.id} e={e} i={i} onOpen={() => setOpen(e)} />)}
-            {other.length > 0 && <Label style={{ margin: "14px 0 2px" }}>Worth watching</Label>}
-            {other.map((e, i) => <IntelRow key={e.id} e={e} i={urgent.length + i} onOpen={() => setOpen(e)} />)}
-            {data && data.attention.watch.open > latest.length && (
-              <Link href="/watch" className="hover-dim inline-block" style={{ fontSize: 12.5, color: V.secondary, marginTop: 10 }}>
-                All {data.attention.watch.open} open items on Watch →
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* Needs you / Prepared / Upcoming */}
-        <div className="min-w-0 flex flex-col w-full lg:max-w-[320px]" style={{ flex: 1, gap: 24 }}>
-          <div>
-            <div style={{ fontFamily: V.serif, fontSize: 14, color: V.ink, marginBottom: 8 , fontWeight: 600, letterSpacing: "-0.01em"}}>Needs you</div>
-            {!data && !error && <SkeletonRows rows={2} height={46} />}
-            {data && decisions.length === 0 && <p style={{ fontSize: 12.5, color: V.secondary, padding: "4px 0" }}>No decision is waiting on you.</p>}
-            {decisions.slice(0, 4).map((a, i) => <NeedsYouRow key={a.id} a={a} i={i} emphasized={i === 0} />)}
-          </div>
-
-          <div>
-            <div style={{ fontFamily: V.serif, fontSize: 14, color: V.ink, marginBottom: 8 , fontWeight: 600, letterSpacing: "-0.01em"}}>Prepared for you</div>
-            {data && prepared.length === 0 && <p style={{ fontSize: 12.5, color: V.secondary, padding: "4px 0" }}>Nothing is due to be prepared.</p>}
-            {prepared.map((h) => (
-              <SideRow
-                key={h.horizon}
-                href={h.first!.route || "/prepared"}
-                icon={<IconFileCheck size={15} />}
-                title={h.first!.title}
-                context={h.first!.reason}
-                meta={h.count > 1 ? `${h.count} items` : "Ready"}
-              />
-            ))}
-          </div>
-
-          <div>
-            <div style={{ fontFamily: V.serif, fontSize: 14, color: V.ink, marginBottom: 8 , fontWeight: 600, letterSpacing: "-0.01em"}}>Upcoming</div>
-            {data && upcoming.length === 0 && <p style={{ fontSize: 12.5, color: V.secondary, padding: "4px 0" }}>No mission deadline coming up.</p>}
-            {upcoming.slice(0, 3).map((m) => (
-              <SideRow
-                key={m.id}
-                href={`/missions/${m.id}`}
-                icon={<IconCalendar size={15} />}
-                title={m.title}
-                context={m.objective}
-                meta={m.endsAt ? new Date(m.endsAt).toLocaleDateString("en-IN", { weekday: "short" }) : ""}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Recent work, the way Harvey's home ends: conversations on this device. */}
-      {recent.length > 0 && (
-        <div className="fade-once" style={{ marginTop: 8 }}>
-          <div className="flex items-baseline justify-between" style={{ marginBottom: 10 }}>
-            <div style={{ fontFamily: V.serif, fontSize: 14, color: V.ink , fontWeight: 600, letterSpacing: "-0.01em"}}>Pick up where you left off</div>
-            <Link href="/scan/history" style={{ fontSize: 12, color: V.secondary }}>All conversations</Link>
-          </div>
-          <div className="lib-grid">
-            {recent.map((t, i) => (
-              <Link key={t.id} href={`/scan/${t.id}`} className="lib-card rise-in" style={{ animationDelay: `${i * 40}ms`, gap: 8 }}>
-                <IconTile size={30}><IconScan size={14} /></IconTile>
-                <div className="truncate" style={{ fontSize: 13.5, color: V.ink }}>{t.title}</div>
-                <div className="lib-tag">{t.turns.length} {t.turns.length === 1 ? "question" : "questions"} · {timeAgo(t.updatedAt)}</div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
       {open && (
-        <EvidenceSetDrawer title={open.title} record={open.detail || undefined} evidence={open.evidence} onClose={() => setOpen(null)}>
-          <div className="flex gap-2">
-            <Link href="/watch" className="btn-secondary-v32" style={{ padding: "6px 12px", fontSize: 12, borderRadius: 6 }}>Open in Watch</Link>
-          </div>
+        <EvidenceSetDrawer title={open.title} record={open.record} evidence={open.evidence} onClose={() => setOpen(null)}>
+          <Link href="/watch" className="sl-btn">Open in Watch</Link>
         </EvidenceSetDrawer>
       )}
     </DashboardLayout>
   );
 }
 
-function KindIcon({ kind }: { kind: string }) {
-  if (kind === "invoice_overdue") return <IconRupee size={16} />;
-  if (kind === "promise_broken") return <IconPromise size={16} />;
-  if (kind === "sync_failed" || kind === "sync_stale") return <IconSync size={16} />;
-  return <IconWatch size={16} />;
+function SectionHead({ label, count: n, href, linkText, action }: { label: string; count?: number; href?: string; linkText?: string; action?: React.ReactNode }) {
+  return (
+    <div className="sl-section-head">
+      <span className="sl-label">{label}{n ? <span style={{ marginLeft: 6, color: "var(--text-secondary)" }}>{n}</span> : null}</span>
+      {action || (href && <Link href={href} className="sl-meta hover:text-[var(--text-primary)]">{linkText} →</Link>)}
+    </div>
+  );
 }
 
-function IntelRow({ e, i = 0, onOpen }: { e: WatchEvent; i?: number; onOpen: () => void }) {
-  const metric = eventMetric(e);
+function StripCell({ href, label, value, sub, danger }: { href: string; label: string; value: string; sub: string; danger?: boolean }) {
   return (
-    <button type="button" onClick={onOpen} className="rise-in row-hover w-full text-left flex items-start" style={{ gap: 14, padding: "12px 10px", margin: "0 -10px", width: "calc(100% + 20px)", borderBottom: `1px solid ${V.divider}`, borderRadius: 6, animationDelay: `${80 + i * 55}ms` }}>
-      <IconTile tone={isUrgent(e) ? "critical" : undefined}><KindIcon kind={e.kind} /></IconTile>
+    <Link href={href} className="sl-strip-cell block min-w-0">
+      <div className="sl-label">{label}</div>
+      <div className="sl-kpi sl-strip-value" style={{ marginTop: 6, color: danger ? "var(--status-danger)" : undefined }}>{value}</div>
+      <div className="sl-meta" style={{ marginTop: 2 }}>{sub}</div>
+    </Link>
+  );
+}
+
+function EventRow({ e, attention, onOpen }: { e: WatchEvent; attention?: boolean; onOpen: () => void }) {
+  const fig = impact(e);
+  return (
+    <button type="button" onClick={onOpen} className={`sl-row ${attention ? "sl-row--attention" : ""}`}>
       <div className="flex-1 min-w-0">
-        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: V.secondary, marginBottom: 2 }}>{KIND_LABEL[e.kind] || "Watch"}</div>
-        <div style={{ fontSize: 14.5, fontWeight: 600, color: V.ink, marginBottom: 2 }}>{e.title}</div>
-        {e.detail && <div style={{ fontSize: 13, color: V.body, marginBottom: 3 }}>{e.detail}</div>}
-        <div className="flex items-center" style={{ gap: 10 }}>
-          {metric && <Mono>{metric}</Mono>}
-          <span style={{ fontSize: 12, color: V.tertiary }}>{e.evidence?.facts?.length ? "From your books" : "Starlane"} · {clockTime(e.firstSeenAt)}</span>
-        </div>
+        <div className="sl-row-kind">{KIND[e.kind] || "Watch"}</div>
+        <div className="sl-row-title">{e.title}</div>
+        {e.detail && <div className="sl-row-sub">{e.detail}</div>}
       </div>
-      <Chevron />
+      <div className="shrink-0 text-right" style={{ minWidth: 96 }}>
+        {fig && <div className="sl-num" style={{ fontSize: 13, color: "var(--text-primary)" }}>{fig}</div>}
+        <div className="sl-meta" title={exact(e.firstSeenAt)}>{ago(e.firstSeenAt)}</div>
+      </div>
+      <Chevron size={13} />
     </button>
   );
 }
 
-function NeedsYouRow({ a, i = 0, emphasized }: { a: FeatureAction; i?: number; emphasized: boolean }) {
+function DecisionRow({ a }: { a: FeatureAction }) {
   return (
-    <Link
-      href={a.missionId ? `/missions/${a.missionId}` : "/prepared"}
-      className="rise-in row-hover flex items-center"
-      style={{ gap: 10, padding: "9px 10px", borderRadius: 7, border: `1px solid ${emphasized ? V.emphasis : "transparent"}`, animationDelay: `${160 + i * 55}ms` }}
-    >
-      <span className="shrink-0 flex items-center justify-center" style={{ width: 15, height: 15, color: V.secondary }}><IconClock size={15} /></span>
+    <Link href={a.missionId ? `/missions/${a.missionId}` : "/prepared"} className="sl-row sl-row--attention">
       <div className="flex-1 min-w-0">
-        <div style={{ fontSize: 13, color: V.ink }}>{a.title}</div>
-        <div className="truncate" style={{ fontSize: 11.5, color: V.secondary }}>{a.description || LIFECYCLE_LABEL[a.lifecycle]}</div>
+        <div className="sl-row-kind">Decision{a.riskLevel === "high" ? " · High risk" : ""}</div>
+        <div className="sl-row-title">{a.title}</div>
+        <div className="sl-row-sub truncate">{a.description || LIFECYCLE_LABEL[a.lifecycle]}</div>
       </div>
-      <span className="shrink-0" style={{ fontSize: 11, color: V.tertiary }}>{clockTime(a.createdAt)}</span>
+      <div className="shrink-0 text-right" style={{ minWidth: 96 }}>
+        <div style={{ fontSize: 12.5, color: "var(--text-primary)", fontWeight: 500 }}>{a.requiresApproval ? "Approve" : "Review"}</div>
+        <div className="sl-meta" title={exact(a.createdAt)}>{ago(a.createdAt)}</div>
+      </div>
       <Chevron size={13} />
     </Link>
   );
 }
 
-function SideRow({ href, icon, title, context, meta }: { href: string; icon: React.ReactNode; title: string; context?: string | null; meta?: string }) {
+function MissionRow({ m }: { m: Mission }) {
+  const p = m.progress;
+  const pct = p ? Math.max(0, Math.min(1, p.ratio || 0)) : 0;
   return (
-    <Link href={href} className="row-hover flex items-center" style={{ gap: 10, padding: "9px 10px", borderRadius: 7 }}>
-      <span className="shrink-0 flex items-center justify-center" style={{ width: 15, height: 15, color: V.secondary }}>{icon}</span>
+    <Link href={`/missions/${m.id}`} className="sl-row" style={{ alignItems: "flex-start" }}>
       <div className="flex-1 min-w-0">
-        <div style={{ fontSize: 13, color: V.ink }}>{title}</div>
-        {context && <div className="truncate" style={{ fontSize: 11.5, color: V.secondary }}>{context}</div>}
+        <div className="sl-row-title truncate">{m.title}</div>
+        <div className="sl-row-sub truncate">{p ? `${inr(p.collected)} of ${inr(p.targetAmount)}` : m.objective}</div>
+        {p && (
+          <div aria-hidden="true" style={{ marginTop: 7, height: 2, background: "var(--border-default)", borderRadius: 1 }}>
+            <div style={{ width: `${pct * 100}%`, height: 2, background: "var(--text-primary)", borderRadius: 1, transition: "width var(--dur-slow) var(--ease)" }} />
+          </div>
+        )}
       </div>
-      {meta && <span className="shrink-0" style={{ fontSize: 11, color: V.tertiary }}>{meta}</span>}
-      <Chevron size={13} />
+      <span className="sl-meta shrink-0">{m.endsAt ? `ends ${shortDate(m.endsAt)}` : ""}</span>
     </Link>
+  );
+}
+
+function AgeingTable({ rows: all, currency }: { rows: Array<{ id: string; label: string; amount: number; count: number }>; currency: string }) {
+  let rows = all;
+  const total = rows.reduce((s, r) => s + (r.amount || 0), 0);
+  if (!rows.length || total === 0) return <p className="sl-empty">No open receivables.</p>;
+  // Only the bands that hold money; empty bands are noise here.
+  rows = rows.filter((r) => r.amount > 0 || r.count > 0);
+  return (
+    <table className="sl-table" style={{ marginTop: 2 }}>
+      <thead><tr><th>Age</th><th className="num">Invoices</th><th className="num">Amount</th><th className="num" style={{ width: 52 }}>Share</th></tr></thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr key={r.id}>
+            <td className={r.amount ? "strong" : ""}>{r.label}</td>
+            <td className="num">{count(r.count)}</td>
+            <td className={`num ${r.amount ? "strong" : ""}`}>{inr(r.amount, currency)}</td>
+            <td className="num" style={{ color: "var(--text-tertiary)" }}>{total ? Math.round((r.amount / total) * 100) : 0}%</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

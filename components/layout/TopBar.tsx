@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { FiMenu } from "react-icons/fi";
 import { request, isLoggedIn } from "@/lib/api";
 import { isDemoMode } from "@/lib/demo";
@@ -57,6 +58,8 @@ const FRESH: Record<string, { tone: string; word: string }> = {
 export default function TopBar({ onMenuToggle, pageTitle }: { onMenuToggle: () => void; pageTitle?: string }) {
   const [pulse, setPulse] = useState<Pulse | null>(null);
   const [mac, setMac] = useState(false);
+  // The Bridge states freshness in its own header; do not say it twice.
+  const onBridge = usePathname() === "/bridge";
 
   useEffect(() => {
     setMac(/Mac|iPhone|iPad/.test(navigator.platform));
@@ -81,7 +84,7 @@ export default function TopBar({ onMenuToggle, pageTitle }: { onMenuToggle: () =
       </button>
 
       <div className="flex items-center gap-1.5 shrink-0">
-        {f && (
+        {f && !onBridge && (
           <Link
             href="/sources"
             className={`sl-chip sl-chip--${f.tone}`}
