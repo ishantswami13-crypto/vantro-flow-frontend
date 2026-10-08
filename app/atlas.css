@@ -776,3 +776,25 @@
 .atlas-page.auth-page .so-divider::before, .atlas-page.auth-page .so-divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.12) }
 .atlas-page.auth-page .app-handoff { display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); margin-bottom: 18px; backdrop-filter: blur(10px) }
 .atlas-page.auth-page .app-handoff p { font-size: 14px; color: rgba(255,255,255,.75); line-height: 1.5; margin: 0 }
+
+/* ── Sign-in and sign-up, aligned with the app (Oct 2026 redesign) ──
+   The same dark canvas, Fraunces title and inverse primary button as the
+   product, sentence-case labels, no glow. Overrides only: layout is above. */
+.atlas-page.auth-page { background: #0D0D0C; }
+.atlas-page.auth-page::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(60% 45% at 50% 0%, rgba(237,236,232,.045), transparent 70%);
+}
+.atlas-page.auth-page .topbar { border-bottom-color: rgba(255,255,255,.06); }
+.atlas-page.auth-page .brand-wm { font-family: var(--font-display); font-weight: 400; font-size: 19px; letter-spacing: -.01em; text-transform: none; }
+.atlas-page.auth-page .auth-head h1, .atlas-page .step-head h2 { font-family: var(--font-display); font-weight: 400; letter-spacing: -.02em; }
+.atlas-page.auth-page .auth-head p { color: #9E9D97; }
+.atlas-page.auth-page .field label { font-family: var(--font-sans); font-size: 12.5px; letter-spacing: 0; text-transform: none; color: #9E9D97; }
+.atlas-page.auth-page .field input, .atlas-page.auth-page .field select { background: #141413; border-color: rgba(237,236,232,.12); font-size: 14px; padding: 11px 14px; border-radius: 8px; }
+.atlas-page.auth-page .field input:focus, .atlas-page.auth-page .field select:focus { border-color: rgba(164,168,196,.6); box-shadow: 0 0 0 3px rgba(164,168,196,.16); background: #141413; }
+.atlas-page.auth-page .btn-login, .atlas-page.auth-page .btn-main { background: #EDECE8; color: #0D0D0C; font-weight: 500; font-size: 14px; padding: 12px 20px; border-radius: 8px; }
+.atlas-page.auth-page .btn-login:hover, .atlas-page.auth-page .btn-main:hover { opacity: 1; background: #DAD9D4; transform: none; }
+.atlas-page.auth-page .page-foot { font-family: var(--font-sans); font-size: 12px; letter-spacing: 0; text-transform: none; color: #7C7B75; border-top-color: rgba(255,255,255,.06); }
+.atlas-page.auth-page .so-soon { font-family: var(--font-sans); font-style: normal; font-size: 11px; letter-spacing: 0; text-transform: none; }
+.atlas-page.auth-page .so-divider { font-family: var(--font-sans); font-size: 12px; letter-spacing: 0; text-transform: none; color: #7C7B75; }
+.atlas-page.auth-page .so-btn { border-radius: 8px; }

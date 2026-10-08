@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { FiArrowLeft } from "react-icons/fi";
+import { IconChevronDown } from "@/components/v32/icons";
+import { PageBody, amount, humaneError } from "@/components/os/prepared/kit";
+import { PageHeader } from "@/components/v32/ui";
+import { formatDate } from "@/lib/format";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ErrorState } from "@/components/ui/ErrorState";
 import Button from "@/components/ui/Button";
 import { C, Notice, Pill, SectionLabel, Skeleton, Stat } from "@/components/decisions/ui";
-import { decisionsApi, money, pct, shortDate } from "@/lib/decisions";
+import { decisionsApi, pct } from "@/lib/decisions";
 
 // The proof screen: is Starlane actually right? Everything here is measured
 // against what happened in this business's own data. Where there isn't
@@ -20,20 +23,19 @@ export default function DecisionProofPage() {
 
   return (
     <DashboardLayout pageTitle="Track record">
-      <div className="max-w-[1000px] mx-auto px-2 sm:px-6 lg:px-8 py-8">
-        <Link href="/decisions" className="inline-flex items-center gap-1.5 text-[13px] hover-dim mb-6" style={{ color: C.muted }}>
-          <FiArrowLeft size={13} /> Decisions
+      <PageBody gap={0}>
+        <div style={{ maxWidth: 1000 }}>
+        <Link href="/decisions" className="inline-flex items-center gap-1.5 text-[13px] hover-dim mb-5" style={{ color: C.muted }}>
+          <span aria-hidden="true" style={{ display: "inline-flex", transform: "rotate(90deg)" }}><IconChevronDown size={13} /></span> Decisions
         </Link>
-        <h1 className="text-[30px] lg:text-[34px]" style={{ color: C.ink }}>Track record</h1>
-        <p className="text-[14px] max-w-[720px] mt-2 mb-8" style={{ color: C.muted }}>
-          How Starlane&apos;s forecasts and recommendations compare with what really happened in your business. Nothing here is a benchmark from elsewhere.
-        </p>
+        <PageHeader title="Track record" subtitle="How Starlane's forecasts and recommendations compare with what really happened in your business." />
+        <div className="mb-8" />
 
         {tr.isLoading && <Skeleton rows={2} />}
-        {tr.isError && <ErrorState title="Couldn't load the track record" message={(tr.error as Error).message} onRetry={() => tr.refetch()} />}
+        {tr.isError && <ErrorState title="Couldn't load the track record" message={humaneError(tr.error)} onRetry={() => tr.refetch()} />}
         {r && (
           <>
-            <section className="grid grid-cols-2 lg:grid-cols-4 gap-6 rounded-2xl p-5" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
+            <section className="grid grid-cols-2 lg:grid-cols-4 gap-6 rounded-xl p-5" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
               <Stat label="Decisions carried through" value={r.contracts} sub={Object.entries(r.byStatus).map(([k, v]) => `${v} ${k.replace(/_/g, " ").toLowerCase()}`).join(", ") || "none yet"} />
               <Stat label="Followed the suggestion" value={r.followedRecommendation ? pct(r.followedRecommendation.share) : "—"} sub={r.followedRecommendation ? `${r.followedRecommendation.count} of ${r.contracts}` : "no decisions yet"} />
               <Stat
@@ -44,7 +46,7 @@ export default function DecisionProofPage() {
               />
               <Stat
                 label="Estimated extra cash collected"
-                value={Object.keys(r.valueLedger.estimatedUpliftByCurrency).length ? Object.entries(r.valueLedger.estimatedUpliftByCurrency).map(([c, v]) => money(v, c)).join(" + ") : "—"}
+                value={Object.keys(r.valueLedger.estimatedUpliftByCurrency).length ? Object.entries(r.valueLedger.estimatedUpliftByCurrency).map(([c, v]) => amount(v, c)).join(" + ") : "Not known yet"}
                 sub={r.valueLedger.entries.length ? `${r.valueLedger.entries.length} live decision(s)` : "needs live, verified decisions"}
               />
             </section>
@@ -70,9 +72,9 @@ export default function DecisionProofPage() {
                     {r.valueLedger.entries.map((e) => (
                       <tr key={e.decisionId} style={{ borderTop: `1px solid ${C.line}` }}>
                         <td className="py-2 pr-3"><Link className="hover-dim" href={`/decisions/${e.decisionId}`} style={{ color: C.body }}>{e.title}</Link></td>
-                        <td className="py-2 pr-3 text-right tabular-nums">{money(e.collected, e.currency)}</td>
-                        <td className="py-2 pr-3 text-right tabular-nums" style={{ color: C.muted }}>{money(e.doNothingExpected, e.currency)}</td>
-                        <td className="py-2 text-right tabular-nums" style={{ color: e.estimatedUplift >= 0 ? C.good : C.bad }}>{money(e.estimatedUplift, e.currency)}</td>
+                        <td className="py-2 pr-3 text-right tabular-nums">{amount(e.collected, e.currency)}</td>
+                        <td className="py-2 pr-3 text-right tabular-nums" style={{ color: C.muted }}>{amount(e.doNothingExpected, e.currency)}</td>
+                        <td className="py-2 text-right tabular-nums" style={{ color: e.estimatedUplift >= 0 ? C.good : C.bad }}>{amount(e.estimatedUplift, e.currency)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -106,7 +108,7 @@ export default function DecisionProofPage() {
                   {r.recent.map((x) => (
                     <li key={x.decisionId} className="py-2 text-[13px]" style={{ borderTop: `1px solid ${C.line}` }}>
                       <Link className="hover-dim" href={`/decisions/${x.decisionId}`} style={{ color: C.body }}>{x.title}</Link>
-                      <span className="text-[12px] ml-2" style={{ color: C.faint }}>{x.mode === "SHADOW" ? "shadow" : "live"} · {x.status.replace(/_/g, " ").toLowerCase()} · {shortDate(x.activatedAt)}</span>
+                      <span className="text-[12px] ml-2" style={{ color: C.faint }}>{x.mode === "SHADOW" ? "shadow" : "live"} · {x.status.replace(/_/g, " ").toLowerCase()} · {formatDate(x.activatedAt)}</span>
                       {x.reason && <p className="text-[12px]" style={{ color: C.faint }}>{x.reason}</p>}
                     </li>
                   ))}
@@ -116,7 +118,7 @@ export default function DecisionProofPage() {
           </>
         )}
 
-        <section className="mt-12 rounded-2xl p-5" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
+        <section className="mt-12 rounded-xl p-5" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <SectionLabel>Replay your history</SectionLabel>
@@ -126,7 +128,7 @@ export default function DecisionProofPage() {
             </div>
             <Button size="sm" variant="secondary" loading={bt.isPending} onClick={() => bt.mutate()}>Run replay</Button>
           </div>
-          {bt.isError && <div className="mt-4"><Notice tone="bad" title="Replay failed">{(bt.error as Error).message}</Notice></div>}
+          {bt.isError && <div className="mt-4"><Notice tone="bad" title="The replay didn't run">{humaneError(bt.error, "Try again in a moment.")}</Notice></div>}
           {bt.data?.status === "INSUFFICIENT_HISTORY" && <div className="mt-4"><Notice title="Not enough history yet">{bt.data.detail}</Notice></div>}
           {s && bt.data?.method && (
             <div className="mt-5">
@@ -158,15 +160,16 @@ export default function DecisionProofPage() {
               </table>
               <p className="text-[12px] mt-3" style={{ color: C.faint }}>
                 Simple rule: {s.simpleRule.rule}. Median warning before the 90-day line: {s.engine.medianWarningDaysBeforeBadDebt == null ? "—" : `${s.engine.medianWarningDaysBeforeBadDebt} days`}.
-                Do-nothing forecast: {s.doNothingForecast.intervals} scored, {pct(s.doNothingForecast.coverage)} inside the 80% range, average error {money(s.doNothingForecast.meanAbsoluteError)}. {s.doNothingForecast.biasNote}
+                Do-nothing forecast: {s.doNothingForecast.intervals} scored, {pct(s.doNothingForecast.coverage)} inside the 80% range, average error {amount(s.doNothingForecast.meanAbsoluteError)}. {s.doNothingForecast.biasNote}
               </p>
               <p className="text-[12px] mt-2" style={{ color: C.faint }}>
-                {bt.data.method.leakageGuard}. Cut-off dates: {bt.data.method.cutoffs.map(shortDate).join(", ")}. A material loss means: {bt.data.method.materialEvent}.
+                {bt.data.method.leakageGuard}. Cut-off dates: {bt.data.method.cutoffs.map((c) => formatDate(c)).join(", ")}. A material loss means: {bt.data.method.materialEvent}.
               </p>
             </div>
           )}
         </section>
-      </div>
+        </div>
+      </PageBody>
     </DashboardLayout>
   );
 }

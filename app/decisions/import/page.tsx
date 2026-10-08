@@ -8,12 +8,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FiUploadCloud, FiCheck, FiAlertTriangle, FiChevronRight, FiDownload } from "react-icons/fi";
+import { IconUpload, IconCheck, IconAlert, IconArrowRight, IconChevronDown } from "@/components/v32/icons";
+import { PageBody, amount, humaneError } from "@/components/os/prepared/kit";
+import { PageHeader } from "@/components/v32/ui";
+import { formatDate } from "@/lib/format";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { C, Notice, Pill, SectionLabel, Stat } from "@/components/decisions/ui";
 import {
-  decisionsApi, money, shortDate,
+  decisionsApi,
   type ImportCommit, type ImportOptions, type ImportPreview, type LedgerField, type LedgerProfile,
 } from "@/lib/decisions";
 
@@ -60,12 +63,12 @@ function ProfileSummary({ p }: { p: LedgerProfile }) {
       <Stat
         label="History"
         value={p.period.historyDays ? `${p.period.historyDays} days` : "—"}
-        sub={p.period.from ? `${shortDate(p.period.from)} to ${shortDate(p.period.to)}` : undefined}
+        sub={p.period.from ? `${formatDate(p.period.from)} to ${formatDate(p.period.to)}` : undefined}
       />
       <Stat
         label="Overdue now"
-        value={currencies.length ? currencies.map(([c, v]) => money(v.overdue, c)).join(" + ") : money(0)}
-        sub={currencies.length ? `of ${currencies.map(([c, v]) => money(v.open, c)).join(" + ")} unpaid` : undefined}
+        value={currencies.length ? currencies.map(([c, v]) => amount(v.overdue, c)).join(" + ") : "Not known yet"}
+        sub={currencies.length ? `of ${currencies.map(([c, v]) => amount(v.open, c)).join(" + ")} unpaid` : undefined}
         tone={p.counts.overdue ? "warn" : undefined}
       />
     </div>
@@ -114,7 +117,7 @@ export default function ImportPage() {
         setConfirmed({});
       }
     } catch (e) {
-      setError((e as Error).message);
+      setError(humaneError(e, "Starlane couldn't read this file just now. Try again in a moment."));
     } finally {
       setBusy(null);
     }
@@ -168,7 +171,7 @@ export default function ImportPage() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       const body = (e as { body?: { errors?: string[] } }).body;
-      setError([(e as Error).message, ...(body?.errors || [])].join(" "));
+      setError([humaneError(e, "The import didn't go through. Nothing was saved. Try again in a moment."), ...(body?.errors || [])].join(" "));
     } finally {
       setBusy(null);
     }
@@ -176,19 +179,22 @@ export default function ImportPage() {
 
   return (
     <DashboardLayout pageTitle="Bring your data">
-      <div className="max-w-[980px] mx-auto px-2 sm:px-6 lg:px-10 py-8">
-        <Link href="/decisions" className="text-[13px] hover-dim" style={{ color: C.muted }}>← Decisions</Link>
-        <h1 className="text-[30px] lg:text-[34px] mt-3" style={{ color: C.ink }}>Bring your receivables</h1>
-        <p className="text-[14px] max-w-[680px] mt-2 mb-8" style={{ color: C.muted }}>
-          Upload the file you already have: a sales register, an outstanding report or a Tally export, as CSV or Excel.
-          You check what each column means before anything is saved. Starlane then works out what needs a decision, from your data only.
-        </p>
+      <PageBody gap={0}>
+        <div style={{ maxWidth: 980 }}>
+        <Link href="/decisions" className="inline-flex items-center gap-1.5 text-[13px] hover-dim mb-5" style={{ color: C.muted }}>
+          <span aria-hidden="true" style={{ display: "inline-flex", transform: "rotate(90deg)" }}><IconChevronDown size={13} /></span> Decisions
+        </Link>
+        <PageHeader
+          title="Bring your receivables"
+          subtitle="Upload the sales register, outstanding report or Tally export you already have. You check each column before anything is saved."
+        />
+        <div className="mb-8" />
 
         {error && <div className="mb-6"><Notice tone="bad" title="That didn't work">{error}</Notice></div>}
 
         {/* RESULT: the first finding */}
         {result && (
-          <section className="rounded-2xl p-6 mb-10" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
+          <section className="rounded-xl p-6 mb-10" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
             <SectionLabel>{result.import.alreadyImported ? "This file was already imported" : "What Starlane found"}</SectionLabel>
             <div className="space-y-2">
               {result.firstLook.lines.map((l, i) => (
@@ -212,7 +218,7 @@ export default function ImportPage() {
                       {d.whyNow && d.whyNow.length > 0 && <span className="block text-[13px] mt-0.5" style={{ color: C.muted }}>{d.whyNow[0]}</span>}
                     </span>
                     <span className="text-[13px] shrink-0" style={{ color: C.accent }}>See why</span>
-                    <FiChevronRight size={15} style={{ color: C.faint }} />
+                    <span style={{ color: C.faint, display: "inline-flex" }}><IconArrowRight size={15} /></span>
                   </button>
                 ))}
               </div>
@@ -239,10 +245,10 @@ export default function ImportPage() {
 
         {/* STEP 1: choose a file */}
         {!result && (
-          <section className="rounded-2xl p-6 mb-8" style={{ background: "var(--surface)", border: `1px dashed ${C.line}` }}>
+          <section className="rounded-xl p-6 mb-8" style={{ background: "var(--surface)", border: `1px dashed ${C.line}` }}>
             <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,.txt" className="hidden" onChange={(e) => onFile(e.target.files?.[0] || null)} />
             <div className="flex flex-wrap items-center gap-4">
-              <FiUploadCloud size={22} style={{ color: C.accent }} />
+              <span style={{ color: C.ink, display: "inline-flex" }}><IconUpload size={22} /></span>
               <div className="flex-1 min-w-[220px]">
                 <p className="text-[15px]" style={{ color: C.ink, fontWeight: 500 }}>{file ? file.name : "Choose a CSV or Excel file"}</p>
                 <p className="text-[12px] mt-0.5" style={{ color: C.faint }}>
@@ -251,7 +257,7 @@ export default function ImportPage() {
               </div>
               <Button size="sm" variant={file ? "secondary" : "primary"} loading={busy === "preview"} onClick={() => fileRef.current?.click()}>{file ? "Choose another" : "Choose file"}</Button>
               <button type="button" onClick={downloadTemplate} className="text-[13px] inline-flex items-center gap-1.5 hover-dim" style={{ color: C.muted }}>
-                <FiDownload size={13} /> Template
+                <span style={{ display: "inline-flex", transform: "rotate(180deg)" }}><IconUpload size={13} /></span> Template
               </button>
             </div>
           </section>
@@ -338,7 +344,7 @@ export default function ImportPage() {
             </section>
 
             {questions.length > 0 && (
-              <section className="mb-10 rounded-2xl p-5" style={{ background: "#FBF7EF", border: "1px solid #EFDDC2" }}>
+              <section className="mb-10 rounded-xl p-5" style={{ background: "rgb(var(--tk-warning) / 0.07)", border: "1px solid rgb(var(--tk-warning) / 0.24)" }}>
                 <SectionLabel>Please confirm</SectionLabel>
                 <ul className="space-y-3">
                   {questions.map((q) => (
@@ -363,7 +369,7 @@ export default function ImportPage() {
             {preview.profile && (
               <section className="mb-10">
                 <SectionLabel>What this file gives Starlane</SectionLabel>
-                <div className="rounded-2xl px-5 py-5" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
+                <div className="rounded-xl px-5 py-5" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
                   <ProfileSummary p={preview.profile} />
                 </div>
                 <div className="mt-6">
@@ -372,7 +378,7 @@ export default function ImportPage() {
                 {preview.profile.rejectedByReason.length > 0 && (
                   <div className="mt-6">
                     <p className="text-[13px] mb-2" style={{ color: C.ink, fontWeight: 500 }}>
-                      <FiAlertTriangle className="inline mr-1.5 -mt-0.5" size={13} style={{ color: C.warn }} />
+                      <span className="inline-flex mr-1.5 align-[-2px]" style={{ color: C.warn }}><IconAlert size={13} /></span>
                       {preview.profile.counts.rowsRejected} row{preview.profile.counts.rowsRejected === 1 ? "" : "s"} will be skipped
                     </p>
                     <ul className="space-y-1">
@@ -399,13 +405,14 @@ export default function ImportPage() {
             )}
 
             <div className="flex flex-wrap items-center gap-4 mb-16">
-              <Button loading={busy === "commit"} disabled={!canCommit} icon={<FiCheck size={14} />} onClick={commit}>Import and analyse</Button>
+              <Button loading={busy === "commit"} disabled={!canCommit} icon={<IconCheck size={14} />} onClick={commit}>Import and analyse</Button>
               {!allConfirmed && <span className="text-[13px]" style={{ color: C.muted }}>Confirm the questions above first.</span>}
               {busy === "preview" && <span className="text-[13px]" style={{ color: C.faint }}>Re-reading the file…</span>}
             </div>
           </>
         )}
-      </div>
+        </div>
+      </PageBody>
     </DashboardLayout>
   );
 }

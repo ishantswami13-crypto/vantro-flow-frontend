@@ -8,7 +8,7 @@ import { V32_NAV_ITEMS, V32_WORKSPACE_NAV_ITEMS, MORE_NAV_ITEMS, OTHER_PAGES } f
 import { IconInfo } from "@/components/v32/icons";
 import InstallPrompt from "@/components/ui/InstallPrompt";
 import PaymentCelebration from "@/components/PaymentCelebration";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { isDemoMode, exitDemoMode } from "@/lib/demo";
 import { hydrateUserContext } from "@/lib/featureGating";
 import { api, authenticatedFetch, authHeaders, isLoggedIn } from "@/lib/api";
@@ -84,6 +84,7 @@ const SEARCHABLE: SearchableRoute[] = [
 
 const SHORTCUTS = [
   { keys: "Ctrl K", desc: "Search or jump to a page" },
+  { keys: "Ctrl 1–7", desc: "Go to Bridge, Scan, Watch, Simulate, Prepared, Missions, Memory" },
   { keys: "Ctrl \\", desc: "Collapse or expand the sidebar" },
   { keys: "↑ ↓", desc: "Move through results" },
   { keys: "Enter", desc: "Open the selected result" },
@@ -100,6 +101,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
   const [showNotifBanner, setShowNotifBanner] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   // Keeps the user's colour identity (--id-* CSS variables) on :root.
   useApplyIdentity();
 
@@ -125,11 +127,12 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
     function onKeyDown(e: KeyboardEvent) {
       if (!(e.metaKey || e.ctrlKey)) return;
       if (e.key.toLowerCase() === "k") { e.preventDefault(); setPaletteOpen(true); }
+      else if (/^[1-7]$/.test(e.key) && !e.shiftKey && !e.altKey) { e.preventDefault(); router.push(V32_NAV_ITEMS[Number(e.key) - 1].href); }
       else if (e.key === "\\") { e.preventDefault(); toggleCollapsed(); }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [toggleCollapsed]);
+  }, [toggleCollapsed, router]);
 
   // Cards with .hover-lift carry a soft light that follows the cursor; this
   // one listener feeds it the pointer position. Fine pointers only.

@@ -270,7 +270,7 @@ export default function BillingPage() {
             /* White card for Growth, dark for others */
             if (isHighlight) {
               return (
-                <div key={plan.id} className="relative rounded-2xl bg-surface p-7 flex flex-col shadow-2xl md:-mt-3 md:mb-3">
+                <div key={plan.id} className="relative rounded-2xl bg-[#F5F4F0] p-7 flex flex-col shadow-2xl md:-mt-3 md:mb-3">
                   {plan.badge && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                       <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-2xs font-black tracking-widest uppercase text-white bg-black shadow-lg">
