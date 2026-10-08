@@ -1270,3 +1270,7 @@ a.rf-row:hover, button.rf-row:hover, .rf-row.rf-hover:hover { background: var(--
   .rf-avail { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) 172px; }
   .rf-avail .rf-actions { justify-content: flex-end; }
 }
+
+/* Sub-table headings that also act as titles stay visible on phones. */
+.rf-head.rf-head-keep { display: grid; }
+.rf-head-keep + .rf-list { border-top: none; }

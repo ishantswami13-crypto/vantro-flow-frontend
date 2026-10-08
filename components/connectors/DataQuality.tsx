@@ -56,6 +56,7 @@ export function DataQuality() {
       <style>{`
         .dq-block { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 40px; padding: 18px 0; border-top: 1px solid var(--line); }
         .dq-block:first-of-type { border-top: none; padding-top: 4px; }
+        .dq-last > li:last-child { border-bottom: none !important; padding-bottom: 0; }
         .dq-flush > li:first-child { padding-top: 0; }
         .dq-flush > li:last-child { border-bottom: none !important; padding-bottom: 0; }
         .dq-block ul { list-style: none; margin: 0; padding: 0; }
@@ -81,7 +82,7 @@ export function DataQuality() {
           ))}
         </div>
         {d.missing.length > 0 && (
-          <ul style={{ marginTop: 14, borderTop: "1px solid var(--line)" }}>
+          <ul className="dq-last" style={{ marginTop: 14, borderTop: "1px solid var(--line)" }}>
             {d.missing.map((m) => <Line key={m}><StatusChip tone="attention">Missing</StatusChip> <span style={{ marginLeft: 6 }}>{m}</span></Line>)}
           </ul>
         )}
@@ -109,7 +110,7 @@ export function DataQuality() {
             {d.crossSource.disagreements.length ? ` ${d.crossSource.disagreements.length} disagreed with the file.` : " The two copies agreed."}
           </p>
           {d.crossSource.disagreements.length > 0 && (
-            <ul style={{ borderTop: "1px solid var(--line)" }}>
+            <ul className="dq-last" style={{ borderTop: "1px solid var(--line)" }}>
               {d.crossSource.disagreements.slice(0, 10).map((x) => (
                 <Line key={`${x.customer}|${x.bill}`}>
                   <span style={{ color: "var(--ink)" }}>{x.customer}</span>, bill <span className="num">{x.bill}</span>: {x.detail}

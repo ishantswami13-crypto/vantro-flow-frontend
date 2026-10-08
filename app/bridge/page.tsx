@@ -464,7 +464,7 @@ function MissionRow({ m }: { m: Mission }) {
   );
 }
 
-const AGE_COLS = "minmax(0, 1fr) 44px 52px 96px";
+const AGE_COLS = "minmax(0, 1fr) 32px 48px 92px";
 
 /** Business state: where the receivables sit, who owes the most and the
  *  sources behind every figure. */
@@ -476,7 +476,7 @@ function BusinessState({ data }: { data: BridgeView }) {
       <SectionHead id="state-h" title="Business state" right={s ? <span className="meta">as of {formatClock(s.evidence.computedAt || data.generatedAt)}</span> : undefined} />
       <div className="rf-cols-3" style={{ marginTop: 4 }}>
         <div className="min-w-0">
-          <div className="rf-head" style={{ gridTemplateColumns: AGE_COLS }}>
+          <div className="rf-head rf-head-keep" style={{ gridTemplateColumns: AGE_COLS }}>
             <span>By age</span><span /><span style={{ textAlign: "right" }}>Invoices</span><span style={{ textAlign: "right" }}>Amount</span>
           </div>
           {!s || s.ageing.length === 0 ? <QuietLine>Not known yet.</QuietLine> : (
@@ -496,14 +496,14 @@ function BusinessState({ data }: { data: BridgeView }) {
         </div>
 
         <div className="min-w-0">
-          <div className="rf-head" style={{ gridTemplateColumns: "minmax(0, 1fr) 72px 104px" }}>
+          <div className="rf-head rf-head-keep" style={{ gridTemplateColumns: "minmax(0, 1fr) 64px 100px" }}>
             <span>Most overdue</span><span style={{ textAlign: "right" }}>Oldest</span><span style={{ textAlign: "right" }}>Overdue</span>
           </div>
           {!s || s.topOverdue.length === 0 ? <QuietLine>No customer is overdue.</QuietLine> : (
             <ul className="rf-list">
               {s.topOverdue.slice(0, 5).map((c) => (
                 <li key={c.key}>
-                  <div className="rf-row" style={{ gridTemplateColumns: "minmax(0, 1fr) 72px 104px", padding: "9px 0" }}>
+                  <div className="rf-row" style={{ gridTemplateColumns: "minmax(0, 1fr) 64px 100px", padding: "9px 0" }}>
                     <span className="min-w-0">
                       <span className="rf-sub block truncate" style={{ color: "var(--ink)" }}>{c.name}</span>
                       <span className="rf-kind block">{plural(c.count, "invoice")}</span>
@@ -518,7 +518,7 @@ function BusinessState({ data }: { data: BridgeView }) {
         </div>
 
         <div className="min-w-0">
-          <div className="rf-head" style={{ gridTemplateColumns: "minmax(0, 1fr) auto" }}>
+          <div className="rf-head rf-head-keep" style={{ gridTemplateColumns: "minmax(0, 1fr) auto" }}>
             <span>Sources</span><span style={{ textAlign: "right" }}>Last synced</span>
           </div>
           {data.sources.length === 0 ? <QuietLine>No source connected yet.</QuietLine> : (
