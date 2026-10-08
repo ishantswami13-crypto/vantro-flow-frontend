@@ -1091,3 +1091,105 @@ input[type="checkbox"], input[type="radio"] { accent-color: rgb(var(--accent-rgb
 .kbd { font-family: inherit; font-size: 10.5px; color: var(--ink-3); border: 1px solid var(--line-button); border-radius: 4px; padding: 1px 5px; line-height: 1.4; }
 
 .app-main { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+
+/* ============================================================
+   REFINEMENT (Oct 2026): quiet, precise, consistent.
+   These rules come last on purpose: they settle motion, type, controls,
+   tables and the sidebar for every page in one place.
+   ============================================================ */
+
+/* Workspace: plain warm white, no texture. */
+:root { --paper-grain: none; }
+
+/* Type: figures that must align use IBM Plex Mono. */
+.num, [data-numeric], td.v32-numeric { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+body { font-size: 13.5px; line-height: 1.5; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.prose-measure { max-width: 68ch; line-height: 1.6; color: var(--body); }
+
+/* Section label: very small, muted, wide tracking. */
+.section-label {
+  margin: 0 0 10px; font-family: var(--font-sans); font-size: 11px; font-weight: 500; line-height: 16px;
+  letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3);
+}
+.meta { font-size: 12px; color: var(--ink-3); }
+
+/* Rhythm: header 32px, sections 24px apart, rows 10–14px. */
+.page-stack > * + * { margin-top: 24px; }
+.page-stack > :first-child + * { margin-top: 32px; }
+
+/* Motion: one subtle page entrance, no staggers, no blur, no theatrics. */
+@keyframes slEnter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.page-in, .page-enter, .page-fade, .fade-once { animation: slEnter 180ms var(--ease) backwards; }
+.card-in, .rise-in, .stagger-children > *, .fade-in, .fade-in-scale { animation: none !important; }
+.figure-in { animation: none; }
+.rule-draw { animation: none; }
+@keyframes drawerIn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+@keyframes slModal { from { opacity: 0; transform: scale(0.985); } to { opacity: 1; transform: none; } }
+.pop-in { animation: slModal 160ms var(--ease) both; }
+.hover-lift:hover { transform: none !important; box-shadow: none !important; }
+@media (prefers-reduced-motion: reduce) { .page-in, .page-enter, .page-fade, .fade-once, .pop-in { animation: none; } }
+
+/* Controls: compact, one height family, a quiet press. */
+.ui-btn { height: 30px; padding: 0 12px; font-size: 13px; border-radius: var(--radius-sm); transition: background-color var(--dur-instant) var(--ease), border-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease), transform var(--dur-instant) var(--ease); }
+.ui-btn-sm { height: 26px; padding: 0 9px; font-size: 12px; }
+.ui-btn-lg { height: 34px; padding: 0 14px; font-size: 13px; }
+.ui-btn:active, .btn-primary-v32:active, .btn-secondary-v32:active, .icon-btn:active { transform: scale(0.98); }
+.ui-btn-secondary { background: var(--surface); }
+:root[data-theme="dark"] .ui-btn-secondary { background: transparent; }
+.ui-input { height: 32px; }
+
+/* Status: a dot and a word, not a coloured pill. */
+.chip {
+  height: auto; padding: 0; gap: 6px; border-radius: 0; background: transparent !important; box-shadow: none !important;
+  font-size: 12px; font-weight: 400; color: var(--ink-2);
+}
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: rgb(var(--tk-ink) / 0.28); }
+.chip-positive::before { background: var(--positive); }
+.chip-attention::before { background: var(--warning); }
+.chip-critical { color: var(--critical); }
+.chip-critical::before { background: var(--critical); }
+.chip-info::before { background: var(--info); }
+.chip-unknown { color: var(--ink-3); }
+.chip-unknown::before { background: transparent; box-shadow: inset 0 0 0 1px var(--line-strong); }
+
+/* Panels and cards: hairline, no shadow, 8px. */
+.ui-panel { border-color: var(--line); border-radius: var(--radius-md); box-shadow: none; }
+
+/* Tables: muted 11px headers, hairline rows, a barely-there hover. */
+.v32-table thead th, table.sl-table thead th {
+  background: transparent;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.02em; text-transform: none; color: var(--ink-3);
+  padding-top: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
+}
+.v32-table tbody tr, table.sl-table tbody tr { transition: background-color var(--dur-instant) var(--ease); }
+.v32-table tbody tr:hover, table.sl-table tbody tr:hover { background: var(--surface-2); }
+.row-chevron { transition: transform var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease); }
+a:hover .row-chevron, button:hover .row-chevron, tr:hover .row-chevron { transform: translateX(2px); color: var(--ink); }
+
+/* Human attention: a slight left rule, not a loud box. */
+.needs-you { box-shadow: inset 2px 0 0 var(--ink); }
+
+/* Drawers: white, thin left border, soft shadow, short slide. */
+.v32-drawer-panel, .lens-drawer { border-left: 1px solid var(--line); box-shadow: var(--shadow-lg); }
+
+/* Focus: a thin high-contrast ring. */
+:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 2px; }
+.ui-input:focus, .page-search:focus-within { border-color: var(--line-emphasis); box-shadow: 0 0 0 3px rgb(var(--tk-ink) / 0.06); }
+
+/* Top bar: quieter, no blur. */
+.app-topbar { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: var(--line-hairline); height: 44px; }
+.crumbs { font-size: 12.5px; }
+
+/* Sidebar: tighter rhythm, subtler inactive, quiet active fill. */
+.sb { background: rgb(var(--tk-sidebar)); border-right: none; }
+.sb-row { height: 30px; gap: 10px; padding: 0 8px; font-size: 13px; color: #8E8D87; }
+.sb-row svg { width: 16px; height: 16px; flex-shrink: 0; color: #74736E; transition: color var(--dur-instant) var(--ease); }
+.sb-row:hover { background: rgba(255,255,255,0.045); color: #E6E5E0; }
+.sb-row:hover svg { color: #C9C8C2; }
+.sb-row-active, .sb-row-active:hover { background: rgba(255,255,255,0.075); color: #F7F6F2; font-weight: 500; }
+.sb-row-active svg { color: #F7F6F2; }
+.sb-row-quiet { height: 28px; font-size: 12.5px; color: #7E7D77; }
+.sb-label { padding: 0 8px 4px; font-size: 10.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #5F5E59; }
+.sb-search { height: 30px; background: rgba(255,255,255,0.035); border-color: rgba(255,255,255,0.06); }
+.sb-divider { background: rgba(255,255,255,0.05); }
+.sb-menu { background: #171716; border-color: rgba(255,255,255,0.07); }

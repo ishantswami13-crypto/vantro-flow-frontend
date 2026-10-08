@@ -68,8 +68,8 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
-        // No monospace face: figures use the sans with tabular numbers.
-        mono: ["var(--font-sans)"],
+        // IBM Plex Mono for figures, ids and evidence that must align.
+        mono: ["var(--font-mono)"],
         serif: ["var(--font-display)"],
         display: ["var(--font-display)"],
       },

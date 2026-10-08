@@ -1,14 +1,13 @@
 /* ============================================================
    STARLANE DESIGN TOKENS: the one source of truth.
 
-   Dark is the default theme. <html data-theme="light"> switches to the
-   paper palette. Every colour is an RGB triplet (--tk-*) so Tailwind can
+   The workspace is warm white by default and the sidebar is always
+   black. <html data-theme="dark"> switches the workspace to dark. Every colour is an RGB triplet (--tk-*) so Tailwind can
    apply alpha (bg-surface/60), plus a ready-to-use alias (--ink, --line…)
    for inline styles and plain CSS. tailwind.config.ts, globals.css and
    components/v32/ui.tsx all read from here; nothing else defines colour.
    ============================================================ */
 
-:root,
 :root[data-theme="dark"] {
   color-scheme: dark;
 
@@ -51,40 +50,42 @@
   --skeleton-b: rgb(var(--tk-ink) / 0.09);
 }
 
+:root,
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --tk-sidebar:   20 20 18;
-  --tk-bg:        247 247 244;
-  --tk-surface:   255 255 255;
-  --tk-surface-2: 243 242 238;
-  --tk-surface-3: 237 237 233;
+  --tk-sidebar:   14 14 13;
+  --tk-bg:        250 250 248;  /* warm white workspace */
+  --tk-surface:   255 255 255;  /* panels, only where needed */
+  --tk-surface-2: 245 244 241;  /* row hover, table head, insets */
+  --tk-surface-3: 238 237 233;
   --tk-elevated:  255 255 255;
 
-  --tk-ink:       25 25 23;
-  --tk-body:      67 67 63;
-  --tk-ink-2:     99 99 95;
-  --tk-ink-3:     118 118 113;
+  --tk-ink:       22 22 20;
+  --tk-body:      62 62 58;
+  --tk-ink-2:     96 96 91;
+  --tk-ink-3:     117 117 111;   /* meta: AA on the workspace */
 
-  --tk-line:          235 234 230;
-  --tk-line-hairline: 229 228 223;
-  --tk-line-strong:   215 214 208;
+  --tk-line:          233 232 228;
+  --tk-line-hairline: 239 238 234;
+  --tk-line-strong:   214 213 207;
 
-  --tk-positive: 71 112 84;
-  --tk-warning:  140 104 36;
-  --tk-critical: 166 79 75;
-  --tk-info:     86 108 130;
+  --tk-positive: 52 110 74;
+  --tk-warning:  140 98 26;
+  --tk-critical: 170 64 58;
+  --tk-info:     74 98 124;
 
   --accent-rgb: var(--id-accent-rgb, 105, 109, 134);
   --accent:     rgb(var(--accent-rgb));
 
-  --shadow-sm:  0 1px 2px rgba(25,25,23,0.06);
-  --shadow-md:  0 6px 18px rgba(25,25,23,0.07);
-  --shadow-lg:  0 8px 32px rgba(0,0,0,0.10);
+  /* Shadows only for floating layers (drawers, palette, menus) */
+  --shadow-sm:  0 1px 2px rgba(22,22,20,0.05);
+  --shadow-md:  0 0 0 1px rgba(22,22,20,0.06), 0 8px 24px rgba(22,22,20,0.08);
+  --shadow-lg:  0 0 0 1px rgba(22,22,20,0.06), 0 16px 48px rgba(22,22,20,0.12);
   --highlight:  none;
 
-  --skeleton-a: #EFEEEA;
-  --skeleton-b: #F7F6F3;
+  --skeleton-a: rgb(22 22 20 / 0.045);
+  --skeleton-b: rgb(22 22 20 / 0.07);
 }
 
 :root {
@@ -127,6 +128,7 @@
   /* Typography (fonts are loaded once in app/layout.tsx via next/font) */
   --font-sans:    var(--font-geist, 'Geist'), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: var(--font-fraunces, 'Fraunces'), Georgia, 'Times New Roman', serif;
+  --font-mono:    var(--font-plex-mono, 'IBM Plex Mono'), ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --text-2xs: 11px;
   --text-xs:  12px;
   --text-sm:  13px;
@@ -144,15 +146,15 @@
   --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
   --radius-full: 999px;
 
-  /* Motion: 100 / 160 / 220 / 320 ms, one easing */
-  --dur-instant: 100ms;
-  --dur-fast:    160ms;
-  --dur-base:    220ms;
-  --dur-slow:    320ms;
+  /* Motion: almost invisible. 120 hover, 170 small changes, 210 drawers. */
+  --dur-instant: 120ms;
+  --dur-fast:    170ms;
+  --dur-base:    210ms;
+  --dur-slow:    260ms;
   --ease:        cubic-bezier(0.2, 0.8, 0.2, 1);
 
   /* Layering */

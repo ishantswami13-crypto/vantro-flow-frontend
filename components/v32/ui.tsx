@@ -34,10 +34,11 @@ export const V = {
   neutralDot: "rgb(var(--tk-ink) / 0.25)",
   accent: "var(--accent)",
   serif: "var(--font-display)",
-  mono: "var(--font-sans)",
+  mono: "var(--font-mono)",
 };
 
-/** Page title row: Fraunces 26px, an optional one-line subtitle and a right slot. */
+/** Page title row: an editorial Fraunces 22px title, one quiet line of
+ *  subtitle, and a right slot for the page's one primary action. */
 export function PageHeader({ title, subtitle, right, children }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
@@ -48,10 +49,10 @@ export function PageHeader({ title, subtitle, right, children }: {
     <div className="fade-once">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 26, color: V.ink }}>{title}</h1>
-          {subtitle && <div style={{ fontSize: 13.5, color: V.secondary, marginTop: 4 }}>{subtitle}</div>}
+          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 22, lineHeight: 1.25, letterSpacing: "-0.01em", color: V.ink }}>{title}</h1>
+          {subtitle && <div style={{ fontSize: 13, lineHeight: 1.5, color: V.secondary, marginTop: 4, maxWidth: 640 }}>{subtitle}</div>}
         </div>
-        {right && <div className="flex items-center gap-4 shrink-0">{right}</div>}
+        {right && <div className="flex items-center gap-2 shrink-0">{right}</div>}
       </div>
       {children}
     </div>
@@ -97,7 +98,7 @@ export function Subnav({ items, active, onChange, label = "Secondary" }: {
   );
 }
 
-/** Uppercase section label (10.5–11px, letter-spacing 1px). */
+/** Small muted metadata label (12px). For section headings use SectionTitle. */
 export function Label({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
     <div className={className} style={{ fontSize: 12, color: V.tertiary, ...style }}>
@@ -106,9 +107,11 @@ export function Label({ children, className = "", style }: { children: React.Rea
   );
 }
 
-/** Quiet serif section heading ("What changed", "Needs you"). */
-export function SectionTitle({ children, size = 16, className = "" }: { children: React.ReactNode; size?: number; className?: string }) {
-  return <h2 className={className} style={{ fontFamily: V.serif, fontWeight: 400, fontSize: size, color: V.ink, margin: "0 0 6px", letterSpacing: "-0.1px" }}>{children}</h2>;
+/** Section label ("WHAT NEEDS YOU", "WHAT CHANGED"): very small, muted,
+ *  wide tracking, so it never competes with the content under it. `size` is
+ *  kept for older callers and ignored. */
+export function SectionTitle({ children, className = "" }: { children: React.ReactNode; size?: number; className?: string }) {
+  return <h2 className={`section-label ${className}`}>{children}</h2>;
 }
 
 export function Dot({ color, size = 6, className = "" }: { color: string; size?: number; className?: string }) {
@@ -143,17 +146,18 @@ export function Sep() {
 }
 
 export function Mono({ children, size = 12.5, color = V.ink, className = "" }: { children: React.ReactNode; size?: number; color?: string; className?: string }) {
-  return <span className={`figure-in ${className}`} style={{ fontFamily: V.mono, fontSize: size, color, fontVariantNumeric: "tabular-nums" }}>{children}</span>;
+  return <span className={className} style={{ fontFamily: V.mono, fontSize: size, color, fontVariantNumeric: "tabular-nums" }}>{children}</span>;
 }
 
 export function Chevron({ size = 14 }: { size?: number }) {
   return <span aria-hidden="true" className="row-chevron shrink-0 inline-flex" style={{ color: V.tertiary }}><ChevronGlyph size={size} /></span>;
 }
 
-/** White card: 1px rgb(var(--tk-ink) / 0.10) border, 8px radius, no shadow. */
+/** White panel: hairline border, 8px radius, no shadow. Use only for
+ *  self-contained content; prefer rows and section rules otherwise. */
 export function Card({ children, className = "", style, lift = false }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; lift?: boolean }) {
   return (
-    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "var(--surface)", border: `1px solid ${V.card}`, borderRadius: 8, ...style }}>
+    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "var(--surface)", border: `1px solid ${V.divider}`, borderRadius: 8, ...style }}>
       {children}
     </div>
   );
@@ -173,7 +177,7 @@ export function Button({ children, onClick, primary, disabled, type = "button", 
 }) {
   const cls = `${disabled ? "" : primary ? "btn-primary-v32" : "btn-secondary-v32"} inline-flex items-center justify-center gap-1.5 whitespace-nowrap ${className}`;
   const style: React.CSSProperties = {
-    padding: small ? "6px 12px" : "9px 14px", borderRadius: 6, fontSize: small ? 12 : 13, fontWeight: 400,
+    height: small ? 26 : 30, padding: small ? "0 10px" : "0 12px", borderRadius: 6, fontSize: small ? 12 : 13, fontWeight: 500,
     background: primary ? "var(--ink)" : "transparent", color: primary ? "var(--bg)" : V.body,
     border: `1px solid ${primary ? "var(--ink)" : V.button}`, opacity: disabled ? 0.4 : 1, cursor: disabled ? "default" : "pointer",
   };
@@ -181,10 +185,10 @@ export function Button({ children, onClick, primary, disabled, type = "button", 
   return <button type={type} onClick={onClick} disabled={disabled} className={cls} style={style} title={title}>{children}</button>;
 }
 
-/** Table header row (§12): surface-2, 11px uppercase, letter-spacing 0.5px. */
+/** Table header row: quiet 11px/500 muted labels over a hairline. */
 export function TableHead({ columns, template, className = "" }: { columns: React.ReactNode[]; template: string; className?: string }) {
   return (
-    <div className={`hidden md:grid ${className}`} style={{ gridTemplateColumns: template, padding: "10px 14px", background: V.surface2, fontSize: 11, letterSpacing: 0, color: V.secondary }}>
+    <div className={`hidden md:grid ${className}`} style={{ gridTemplateColumns: template, padding: "8px 14px", borderBottom: `1px solid ${V.divider}`, fontSize: 11, fontWeight: 500, letterSpacing: "0.02em", color: V.tertiary }}>
       {columns.map((c, i) => <span key={i} style={{ textAlign: i === columns.length - 1 ? "right" : undefined }}>{c}</span>)}
     </div>
   );
@@ -194,7 +198,7 @@ export function TableHead({ columns, template, className = "" }: { columns: Reac
 export function RailSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <Label style={{ fontSize: 10.5, marginBottom: 8 }}>{label}</Label>
+      <div className="section-label" style={{ marginBottom: 8 }}>{label}</div>
       <div>{children}</div>
     </div>
   );
@@ -292,12 +296,12 @@ export function IconTile({ children, tone, size = 34 }: { children: React.ReactN
   );
 }
 
-/** A large serif figure over a short label, for a page's two or three headline counts. */
+/** A headline figure in IBM Plex Mono over a short label: precise, not loud. */
 export function Figure({ value, label, tone }: { value: React.ReactNode; label: React.ReactNode; tone?: string }) {
   return (
     <div className="min-w-0">
-      <div className="figure-in" style={{ fontFamily: V.serif, fontSize: 30, lineHeight: 1.05, color: tone || V.ink, fontVariantNumeric: "tabular-nums" }}>{value}</div>
-      <div style={{ fontSize: 12.5, color: V.secondary, marginTop: 4 }}>{label}</div>
+      <div className="num" style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 400, letterSpacing: "-0.02em", color: tone || V.ink }}>{value}</div>
+      <div style={{ fontSize: 12, color: V.tertiary, marginTop: 4 }}>{label}</div>
     </div>
   );
 }

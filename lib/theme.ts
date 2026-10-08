@@ -1,4 +1,5 @@
-// Theme preference: dark by default (app/tokens.css), light on request.
+// Theme preference: warm-white workspace by default (app/tokens.css), dark on
+// request. The sidebar is black in both.
 // Kept in this browser only; app/layout.tsx applies it before first paint.
 
 export type Theme = "dark" | "light";
@@ -6,8 +7,8 @@ const KEY = "starlane_theme";
 export const THEME_EVENT = "starlane-theme-change";
 
 export function getTheme(): Theme {
-  if (typeof document === "undefined") return "dark";
-  return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+  if (typeof document === "undefined") return "light";
+  return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
 }
 
 export function setTheme(theme: Theme) {
