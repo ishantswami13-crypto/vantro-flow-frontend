@@ -138,14 +138,21 @@ function SimulatePageInner() {
                 stale={!!result && (ranFor?.invoice?.id !== selectedInvoiceId || ranFor?.mode !== mode)}
               />
               <div className={lab.main}>
-                <SectionTitle>Comparison · next 30 days</SectionTitle>
+                <SectionTitle className="section-label-lead">Comparison · next 30 days</SectionTitle>
                 {runError ? (
                   <RetryLine error={humaneError(runError, "Starlane couldn't run this simulation just now. Try again in a moment.")} onRetry={runSimulation} />
                 ) : null}
                 {result && ranFor ? <ScenarioResult result={result} invoice={ranFor.invoice} mode={ranFor.mode} /> : !runError && (
-                  <p className={lab.placeholder} aria-busy={running || undefined}>
-                    {running ? "Working it out from your ledger…" : "Run the simulation to compare your overdue total and cash outlook today with the same figures if this invoice goes the way you picked."}
-                  </p>
+                  <div aria-busy={running || undefined}>
+                    <p className={lab.placeholder}>
+                      {running ? "Working it out from your ledger…" : "Simulate to compare your overdue total and cash outlook as things are with the same figures if this invoice goes the way you picked."}
+                    </p>
+                    <div className={lab.placeholderRows} aria-hidden="true">
+                      <div><span>Overdue in 30 days</span></div>
+                      <div><span>Change in overdue</span></div>
+                      <div><span>Cash vs. outlook</span></div>
+                    </div>
+                  </div>
                 )}
               </div>
               <aside className={lab.side} aria-label="Uncertainty">
@@ -224,8 +231,20 @@ function ScenarioResult({ result, invoice, mode }: { result: SimulateScenarioRes
   const cur = invoice?.currency || "INR";
   const name = invoice?.customer_name || "this customer";
   const cases = b.cases || null;
-  const dash = <span className={lab.empty} title="Not computed for this case">—</span>;
+  const dash = <span className={lab.empty} title="The reference the other columns are measured against">—</span>;
   const tone = (v: number, goodWhenNegative = false) => (v === 0 ? "" : (v < 0) === goodWhenNegative ? lab.good : lab.bad);
+  // The bounded cases as overdue totals, and their difference from today and
+  // from the baseline outlook: arithmetic on the figures the engine returned.
+  const caseOverdue = (c: { cashImpact: number }) => Math.abs(c.cashImpact);
+  const caseChange = (c: { cashImpact: number }) => (b.totalOverdue != null ? caseOverdue(c) - b.totalOverdue : null);
+  const caseCash = (c: { cashImpact: number }) => (cases ? c.cashImpact - cases.baseline.cashImpact : null);
+  // Past ₹100 crore the full figures no longer fit five columns; the whole
+  // table then switches to the short form together, with the full figure on hover.
+  const biggest = Math.max(Math.abs(b.totalOverdue || 0), Math.abs(p.projectedTotalOverdue), cases ? Math.abs(cases.stress.cashImpact) : 0);
+  const compact = cur === "INR" && biggest >= 1e9;
+  const fig = (v: number) => (compact ? <span title={amount(v, cur)}>{inrShort(v)}</span> : amount(v, cur));
+  const signed = (v: number) => (compact ? <span title={signedAmount(v, cur)}>{v > 0 ? "+" : v < 0 ? "−" : ""}{inrShort(Math.abs(v))}</span> : signedAmount(v, cur));
+  const cell = (v: number | null) => (v == null ? <span className={lab.empty}>—</span> : signed(v));
 
   const reasons: string[] = [
     p.narrative,
@@ -242,38 +261,48 @@ function ScenarioResult({ result, invoice, mode }: { result: SimulateScenarioRes
       <p className={lab.context}>
         If <b>{name}</b>{/s$/i.test(name) ? "’" : "’s"} {invoice ? <b className="num">{amount(invoice.invoice_amount, cur)}</b> : null} invoice {mode === "earlier" ? "is collected" : "stays unpaid"}, against your own bounded cases.
       </p>
+      <div className={lab.headline}>
+        <div>
+          <div className={lab.hlLabel}>Overdue in 30 days</div>
+          <div className={lab.hlValue}>{amount(p.projectedTotalOverdue, cur)}</div>
+        </div>
+        <div>
+          <div className={`${lab.hlDelta} ${tone(result.delta.delta, true)}`}>{signedAmount(result.delta.delta, cur)}</div>
+          {b.totalOverdue != null && <div className={lab.hlNote}>against <b>{amount(b.totalOverdue, cur)}</b> as things are</div>}
+        </div>
+      </div>
       <div className="overflow-x-auto">
         <table className={lab.table}>
           <thead>
             <tr>
               <th scope="col"><span className="sr-only">Measure</span></th>
-              <th scope="col">As things are</th>
-              <th scope="col" className={lab.focus}>This what-if</th>
-              {cases && <th scope="col">Best case</th>}
-              {cases && <th scope="col">Stress</th>}
+              <th scope="col">As things are<span className={lab.sub}>Today</span></th>
+              <th scope="col" className={lab.focus}>This what-if<span className={lab.sub}>{mode === "earlier" ? "Collected" : "Stays unpaid"}</span></th>
+              {cases && <th scope="col">Best case<span className={lab.sub}>Reasonable</span></th>}
+              {cases && <th scope="col">Stress<span className={lab.sub}>Worst bounded</span></th>}
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th scope="row" style={{ fontWeight: 400, textAlign: "left", padding: "11px 0", fontSize: 12.5, color: "var(--body)", borderBottom: "1px solid var(--line)", letterSpacing: 0 }}>Overdue in 30 days</th>
-              <td>{b.totalOverdue != null ? amount(b.totalOverdue, cur) : dash}</td>
-              <td className={lab.focus}>{amount(p.projectedTotalOverdue, cur)}</td>
-              {cases && <td>{amount(Math.abs(cases.bestReasonable.cashImpact), cur)}</td>}
-              {cases && <td>{amount(Math.abs(cases.stress.cashImpact), cur)}</td>}
+              <th scope="row">Overdue in 30 days</th>
+              <td>{b.totalOverdue != null ? fig(b.totalOverdue) : <span className={lab.empty}>—</span>}</td>
+              <td className={lab.focus}>{fig(p.projectedTotalOverdue)}</td>
+              {cases && <td>{fig(caseOverdue(cases.bestReasonable))}</td>}
+              {cases && <td>{fig(caseOverdue(cases.stress))}</td>}
             </tr>
             <tr>
-              <th scope="row" style={{ fontWeight: 400, textAlign: "left", padding: "11px 0", fontSize: 12.5, color: "var(--body)", borderBottom: "1px solid var(--line)", letterSpacing: 0 }}>Change in overdue</th>
+              <th scope="row">Change in overdue</th>
               <td>{dash}</td>
-              <td className={`${lab.focus} ${tone(result.delta.delta, true)}`}>{signedAmount(result.delta.delta, cur)}</td>
-              {cases && <td>{dash}</td>}
-              {cases && <td>{dash}</td>}
+              <td className={`${lab.focus} ${tone(result.delta.delta, true)}`}>{signed(result.delta.delta)}</td>
+              {cases && <td>{cell(caseChange(cases.bestReasonable))}</td>}
+              {cases && <td>{cell(caseChange(cases.stress))}</td>}
             </tr>
             <tr>
-              <th scope="row" style={{ fontWeight: 400, textAlign: "left", padding: "11px 0", fontSize: 12.5, color: "var(--body)", borderBottom: "1px solid var(--line)", letterSpacing: 0 }}>Cash vs. outlook</th>
+              <th scope="row">Cash vs. outlook</th>
               <td>{dash}</td>
-              <td className={`${lab.focus} ${tone(p.cashImpactDelta)}`}>{signedAmount(p.cashImpactDelta, cur)}</td>
-              {cases && <td>{dash}</td>}
-              {cases && <td>{dash}</td>}
+              <td className={`${lab.focus} ${tone(p.cashImpactDelta)}`}>{signed(p.cashImpactDelta)}</td>
+              {cases && <td>{cell(caseCash(cases.bestReasonable))}</td>}
+              {cases && <td>{cell(caseCash(cases.stress))}</td>}
             </tr>
           </tbody>
         </table>
@@ -305,7 +334,8 @@ function Uncertainty({ result, invoice }: { result: SimulateScenarioResponse; in
         <SectionTitle>Uncertainty</SectionTitle>
         {lo != null && hi != null ? (
           <>
-            <p className={lab.small}>Overdue in 30 days, best reasonable to stress.</p>
+            <p className={lab.small}>Overdue in 30 days, from the best reasonable case to stress.</p>
+            <div className={lab.range}><span>{amount(lo, cur)}</span> – <span>{amount(hi, cur)}</span></div>
             <div className={lab.band} role="img" aria-label={`Range ${amount(lo, cur)} to ${amount(hi, cur)}; as things are ${amount(b.totalOverdue, cur)}; this what-if ${amount(p.projectedTotalOverdue, cur)}`}>
               <div className={lab.bandTrack} />
               <div className={lab.bandRange} style={{ left: x(lo), width: `calc(${x(hi)} - ${x(lo)})` }} />
@@ -314,15 +344,15 @@ function Uncertainty({ result, invoice }: { result: SimulateScenarioResponse; in
             </div>
             <div className={lab.bandScale}><span>{inrShort(0)}</span><span>{inrShort(max)}</span></div>
             <div className={lab.legend}>
-              <span>Range <b>{amount(lo, cur)}</b> to <b>{amount(hi, cur)}</b></span>
-              {b.totalOverdue != null && <span>Grey mark: as things are</span>}
-              <span>Black mark: this what-if</span>
+              <span><i aria-hidden="true" className={`${lab.key} ${lab.keyRange}`} />Best reasonable to stress</span>
+              <span><i aria-hidden="true" className={`${lab.key} ${lab.keyOn}`} />This what-if</span>
+              {b.totalOverdue != null && <span><i aria-hidden="true" className={lab.key} />As things are</span>}
             </div>
           </>
         ) : (
           <p className={lab.small}>No bounded cases were returned for this scenario.</p>
         )}
-        {result.simulated.uncertainty == null && <p className={lab.small} style={{ marginTop: 8, color: "var(--ink-3)" }}>No probability band was computed for this what-if; it is a single path.</p>}
+        {result.simulated.uncertainty == null && <p className={lab.small} style={{ marginTop: 12, color: "var(--ink-3)" }}>No probability band was computed for this what-if; it is a single path.</p>}
       </div>
 
       {assumptions.length > 0 && (

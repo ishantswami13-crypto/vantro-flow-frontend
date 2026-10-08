@@ -37,7 +37,7 @@ export function SalesWhatIf() {
   const stale = !!ranFor && (ranFor.change !== change || ranFor.days !== days);
   const row = (label: string, base: React.ReactNode, scen: React.ReactNode, delta: React.ReactNode, deltaCls = "") => (
     <tr>
-      <th scope="row" style={{ fontWeight: 400, textAlign: "left", padding: "11px 0", fontSize: 12.5, color: "var(--body)", borderBottom: "1px solid var(--line)", letterSpacing: 0 }}>{label}</th>
+      <th scope="row">{label}</th>
       <td>{base}</td>
       <td className={lab.focus}>{scen}</td>
       <td className={deltaCls}>{delta}</td>
@@ -65,10 +65,16 @@ export function SalesWhatIf() {
       </section>
 
       <div className={lab.main}>
-        <SectionTitle>Comparison{res && res.status === "PROJECTED" ? ` · next ${res.horizonDays} days` : ""}</SectionTitle>
+        <SectionTitle className="section-label-lead">Comparison{res && res.status === "PROJECTED" ? ` · next ${res.horizonDays} days` : ""}</SectionTitle>
         {err ? <RetryLine error={humaneError(err, "Starlane couldn't run this what-if just now. Try again in a moment.")} onRetry={run} /> : null}
         {!res && !err && (
-          <p className={lab.placeholder}>{busy ? "Working it out from your invoices…" : "Simulate to see how a change in sales reaches your cash, using your average monthly sales and your customers' real payment timing."}</p>
+          <div aria-busy={busy || undefined}>
+            <p className={lab.placeholder}>{busy ? "Working it out from your invoices…" : "Simulate to see how a change in sales reaches your cash, using your average monthly sales and your customers' real payment timing."}</p>
+            <div className={lab.placeholderRows} aria-hidden="true">
+              <div><span>Cash from new sales</span></div>
+              <div><span>Sales a month</span></div>
+            </div>
+          </div>
         )}
         {res && res.status === "INSUFFICIENT_EVIDENCE" && (
           <p className={lab.placeholder}>Not enough history to project this yet. {res.reason || "Starlane needs more paid invoices before it can say how a change in sales reaches your cash."}</p>
@@ -76,14 +82,24 @@ export function SalesWhatIf() {
         {res && res.status === "PROJECTED" && cash && (
           <section aria-label="Result" className="fade-once">
             <p className={lab.context}>Sales <b>{res.changePct > 0 ? "up" : "down"} <span className="num">{Math.abs(res.changePct)}%</span></b> over the next <b className="num">{res.horizonDays}</b> days.</p>
+            <div className={lab.headline}>
+              <div>
+                <div className={lab.hlLabel}>Cash from new sales in {res.horizonDays} days</div>
+                <div className={lab.hlValue}>{amount(cash.scenario)}</div>
+              </div>
+              <div>
+                <div className={`${lab.hlDelta} ${cash.delta < 0 ? lab.bad : cash.delta > 0 ? lab.good : ""}`}>{signedAmount(cash.delta)}</div>
+                <div className={lab.hlNote}>against <b>{amount(cash.baseline)}</b> as things are</div>
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className={lab.table}>
                 <thead>
                   <tr>
                     <th scope="col"><span className="sr-only">Measure</span></th>
-                    <th scope="col">As things are</th>
-                    <th scope="col" className={lab.focus}>With the change</th>
-                    <th scope="col">Difference</th>
+                    <th scope="col">As things are<span className={lab.sub}>Today</span></th>
+                    <th scope="col" className={lab.focus}>With the change<span className={lab.sub}>Sales {res.changePct > 0 ? "+" : "−"}{Math.abs(res.changePct)}%</span></th>
+                    <th scope="col">Difference<span className={lab.sub}>Change</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -92,7 +108,7 @@ export function SalesWhatIf() {
                 </tbody>
               </table>
             </div>
-            {res.summary && <p className={lab.foot} style={{ fontSize: 13, color: "var(--body)", marginTop: 16 }}>{res.summary}</p>}
+            {res.summary && <ul className={lab.why}><li>{res.summary}</li></ul>}
           </section>
         )}
       </div>
