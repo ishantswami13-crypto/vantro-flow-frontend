@@ -7,7 +7,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { FiChevronRight } from "react-icons/fi";
 import { IconSearch, IconSparkle } from "./icons";
 import { formatRelative, formatClock } from "@/lib/format";
 
@@ -148,7 +147,7 @@ export function Mono({ children, size = 12.5, color = V.ink, className = "" }: {
 }
 
 export function Chevron({ size = 14 }: { size?: number }) {
-  return <FiChevronRight aria-hidden="true" size={size} strokeWidth={1.6} className="row-chevron shrink-0" style={{ color: V.tertiary }} />;
+  return <span aria-hidden="true" className="row-chevron shrink-0 inline-flex" style={{ color: V.tertiary }}><ChevronGlyph size={size} /></span>;
 }
 
 /** White card: 1px rgb(var(--tk-ink) / 0.10) border, 8px radius, no shadow. */
@@ -269,7 +268,7 @@ export function SkeletonRows({ rows = 3, height = 52 }: { rows?: number; height?
 
 export function ErrorBanner({ children }: { children: React.ReactNode }) {
   return (
-    <div role="alert" style={{ fontSize: 12.5, color: V.critical, background: "#A64F4B0d", border: "1px solid rgb(var(--tk-critical) / 0.2)", borderRadius: 6, padding: "8px 12px" }}>
+    <div role="alert" style={{ fontSize: 12.5, color: V.critical, background: "rgb(var(--tk-critical) / 0.06)", border: "1px solid rgb(var(--tk-critical) / 0.22)", borderRadius: 6, padding: "8px 12px" }}>
       {children}
     </div>
   );
@@ -311,5 +310,13 @@ export function SearchField({ value, onChange, placeholder, id }: { value: strin
       <span className="sr-only">{placeholder}</span>
       <input id={id} type="search" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} autoComplete="off" />
     </label>
+  );
+}
+
+function ChevronGlyph({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="9,6 15,12 9,18" />
+    </svg>
   );
 }

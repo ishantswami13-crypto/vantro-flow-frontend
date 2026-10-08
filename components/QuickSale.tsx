@@ -231,7 +231,7 @@ export default function QuickSale({ onClose, onSaved }: QuickSaleProps) {
           {/* Save button */}
           <button onClick={saveSale}
             disabled={saving || items.length === 0 || saved}
-            className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${saved ? "bg-success/20 text-success border border-success/30" : "bg-surface text-black shadow-sm hover:bg-surface/90 disabled:opacity-40"}`}>
+            className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${saved ? "bg-success/20 text-success border border-success/30" : "bg-[var(--inverse)] text-[var(--on-inverse)] shadow-sm hover:opacity-90 disabled:opacity-40"}`}>
             {saved ? (
               <><FiCheck size={15} /> Sale saved! ✓</>
             ) : saving ? (

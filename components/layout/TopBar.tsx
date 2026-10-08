@@ -5,7 +5,16 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { V32_NAV_ITEMS, V32_WORKSPACE_NAV_ITEMS, MORE_NAV_ITEMS, OTHER_PAGES, activeHref } from "@/lib/navigation";
 import { getTheme, toggleTheme, THEME_EVENT, type Theme } from "@/lib/theme";
-import { IconMenu, IconSearch, IconScan, IconSun, IconMoon } from "@/components/v32/icons";
+import { IconMenu, IconSearch, IconScan, IconSun, IconMoon, IconBell } from "@/components/v32/icons";
+import { loadPulse, type Pulse } from "@/lib/pulse";
+import { formatRelative, formatDateTime } from "@/lib/format";
+
+const FRESH: Record<string, { tone: string; word: string }> = {
+  fresh: { tone: "positive", word: "Up to date" },
+  delayed: { tone: "attention", word: "Delayed" },
+  stale: { tone: "critical", word: "Stale" },
+  none: { tone: "unknown", word: "No source yet" },
+};
 
 const GROUPS: { label: string; items: { href: string; label: string; also?: string[] }[] }[] = [
   { label: "Surfaces", items: V32_NAV_ITEMS },
@@ -33,6 +42,14 @@ export default function TopBar({ pageTitle, onMenu, onSearch }: { pageTitle?: st
   const pathname = usePathname();
   const crumbs = crumbsFor(pathname, pageTitle);
   const [theme, setThemeState] = useState<Theme>("dark");
+  const [pulse, setPulse] = useState<Pulse | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    loadPulse().then(p => { if (live) setPulse(p); });
+    return () => { live = false; };
+  }, [pathname]);
+  const fresh = pulse ? FRESH[pulse.freshness] || FRESH.none : null;
 
   useEffect(() => {
     setThemeState(getTheme());
@@ -42,7 +59,7 @@ export default function TopBar({ pageTitle, onMenu, onSearch }: { pageTitle?: st
   }, []);
 
   return (
-    <header className="topbar">
+    <header className="app-topbar">
       <button type="button" onClick={onMenu} className="icon-btn md:hidden" aria-label="Open menu" style={{ marginLeft: -8 }}>
         <IconMenu size={17} />
       </button>
@@ -62,6 +79,26 @@ export default function TopBar({ pageTitle, onMenu, onSearch }: { pageTitle?: st
         <button type="button" onClick={onSearch} className="icon-btn md:hidden" aria-label="Search">
           <IconSearch size={15} />
         </button>
+        {fresh && (
+          <Link
+            href="/sources"
+            className={`chip chip-${fresh.tone} hidden md:inline-flex`}
+            style={{ marginRight: 4 }}
+            title={pulse?.dataAsOf ? `Business data as of ${formatDateTime(pulse.dataAsOf)}` : "No source has synced yet"}
+          >
+            {pulse?.source ? `${pulse.source} · ` : ""}{fresh.word}{pulse?.dataAsOf && pulse.freshness !== "none" ? ` · ${formatRelative(pulse.dataAsOf)}` : ""}
+          </Link>
+        )}
+        {pulse && (
+          <Link href="/prepared" className="icon-btn relative" aria-label={pulse.needs ? `${pulse.needs} need you` : "Nothing needs you"} title={pulse.needs ? `${pulse.needs} need you` : "Nothing needs you"}>
+            <IconBell size={15} />
+            {pulse.needs > 0 && (
+              <span className="absolute tabular-nums" style={{ top: 2, right: 1, minWidth: 15, height: 15, padding: "0 4px", borderRadius: 99, background: "var(--critical)", color: "var(--bg)", fontSize: 10, fontWeight: 600, lineHeight: "15px", textAlign: "center" }}>
+                {pulse.needs > 9 ? "9+" : pulse.needs}
+              </span>
+            )}
+          </Link>
+        )}
         {!pathname.startsWith("/scan") && (
           <Link href="/scan" className="ui-btn ui-btn-ghost ui-btn-sm hidden sm:inline-flex" style={{ gap: 6 }}>
             <IconScan size={14} /> Ask Starlane

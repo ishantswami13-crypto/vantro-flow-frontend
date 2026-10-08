@@ -1,17 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FiArrowLeft, FiCheck, FiX } from "react-icons/fi";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import FeedbackBar from "@/components/decisions/FeedbackBar";
 import { ErrorState } from "@/components/ui/ErrorState";
 import Button from "@/components/ui/Button";
 import { C, ConfidencePill, Notice, Pill, RangeBar, SectionLabel, Skeleton } from "@/components/decisions/ui";
+import { IconCheck, IconChevronDown, IconX } from "@/components/v32/icons";
+import { PageBody, RetryLine, amount, cleanTitle, humaneError } from "@/components/os/prepared/kit";
+import { formatDate, formatDateTime } from "@/lib/format";
 import {
-  decisionsApi, money, pct, shortDate, relTime, daysUntil, STATUS_LABEL, EVIDENCE_LABEL,
+  decisionsApi, pct, relTime, daysUntil, STATUS_LABEL, EVIDENCE_LABEL,
   DecisionApiError, type Decision, type DecisionDetail, type DecisionOption, type Interval, type SimulateResponse,
 } from "@/lib/decisions";
 
@@ -28,10 +30,9 @@ function errorText(err: unknown): { title: string; detail?: string } {
     const b = err.body as { blockedBy?: { reason: string }[]; checks?: { check: string; ok: boolean; detail?: string }[]; compensated?: { intent: string }[] };
     if (err.status === 423) return { title: "Stopped by a kill switch", detail: (b.blockedBy || []).map((x) => x.reason).join(" ") };
     if (err.status === 409 && b.checks) return { title: err.message, detail: b.checks.filter((c) => !c.ok).map((c) => c.detail || c.check).join(" · ") };
-    if (err.status === 502) return { title: `Action failed: ${err.message}`, detail: b.compensated?.length ? `Undone: ${b.compensated.map((c) => c.intent.replace(/_/g, " ").toLowerCase()).join(", ")}. Nothing is left half-done.` : undefined };
-    return { title: err.message };
+    if (err.status === 502) return { title: "The action didn't complete", detail: b.compensated?.length ? `Undone: ${b.compensated.map((c) => c.intent.replace(/_/g, " ").toLowerCase()).join(", ")}. Nothing is left half-done.` : "Nothing was changed. Try again in a moment." };
   }
-  return { title: err instanceof Error ? err.message : "Something went wrong" };
+  return { title: humaneError(err, "That didn't go through. Try again in a moment.") };
 }
 
 const INTENT_WORDS: Record<string, string> = {
@@ -57,8 +58,8 @@ function OptionCard({ o, d, max, recommended, selected, canChoose, onChoose, bus
   const h = headline(o, d.kind);
   return (
     <div
-      className="rounded-2xl p-5"
-      style={{ background: "var(--surface)", border: `1px solid ${selected ? C.accent : recommended ? "#CFD0E8" : C.line}`, boxShadow: recommended ? "0 1px 0 rgba(92,95,158,0.06)" : undefined, opacity: o.valid ? 1 : 0.7 }}
+      className="rounded-xl p-5"
+      style={{ background: "var(--surface)", border: `1px solid ${selected ? C.accent : recommended ? "rgba(var(--accent-rgb), 0.35)" : "var(--line-card)"}`, opacity: o.valid ? 1 : 0.7 }}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
@@ -66,13 +67,13 @@ function OptionCard({ o, d, max, recommended, selected, canChoose, onChoose, bus
             <p className="text-[15px]" style={{ color: C.ink, fontWeight: 500 }}>{o.label}</p>
             {recommended && <Pill tone="accent">Recommended</Pill>}
             {o.isDoNothing && <Pill>Baseline</Pill>}
-            {selected && <Pill tone="good"><FiCheck size={11} /> Chosen</Pill>}
+            {selected && <Pill tone="good"><IconCheck size={11} /> Chosen</Pill>}
             {!o.valid && <Pill tone="bad">Not allowed</Pill>}
           </div>
           {o.summary && <p className="text-[13px] mt-1 max-w-[620px]" style={{ color: C.muted }}>{o.summary}</p>}
         </div>
         {canChoose && o.valid && (
-          <Button size="sm" variant={recommended ? "primary" : "secondary"} loading={busy} onClick={onChoose}>
+          <Button size="sm" variant="secondary" loading={busy} onClick={onChoose}>
             Choose
           </Button>
         )}
@@ -105,13 +106,13 @@ function OptionCard({ o, d, max, recommended, selected, canChoose, onChoose, bus
         {o.futures.creditLossAvoided && o.futures.creditLossAvoided.mean > 0 && (
           <div>
             <p style={{ color: C.faint }}>Loss avoided on new credit</p>
-            <p className="tabular-nums" style={{ color: C.ink }}>{money(o.futures.creditLossAvoided.mean, d.currency)}</p>
+            <p className="tabular-nums" style={{ color: C.ink }}>{amount(o.futures.creditLossAvoided.mean, d.currency)}</p>
           </div>
         )}
         {o.futures.marginLost && o.futures.marginLost.mean > 0 && (
           <div>
             <p style={{ color: C.faint }}>Margin at risk</p>
-            <p className="tabular-nums" style={{ color: C.ink }}>{money(o.futures.marginLost.mean, d.currency)}</p>
+            <p className="tabular-nums" style={{ color: C.ink }}>{amount(o.futures.marginLost.mean, d.currency)}</p>
           </div>
         )}
         {o.futures.robustness != null && (
@@ -124,7 +125,7 @@ function OptionCard({ o, d, max, recommended, selected, canChoose, onChoose, bus
 
       {!o.isDoNothing && (
         <div className="flex flex-wrap gap-2 mt-4">
-          {o.reversibility && <Pill tone={o.reversibility === "IRREVERSIBLE" ? "warn" : "neutral"}>{o.reversibility === "IRREVERSIBLE" ? "Cannot be undone" : o.reversibility === "REVERSIBLE" ? "Reversible" : o.reversibility.replace(/_/g, " ").toLowerCase()}</Pill>}
+          {o.reversibility && <Pill tone={o.reversibility === "IRREVERSIBLE" ? "warn" : "neutral"}>{o.reversibility === "IRREVERSIBLE" ? "Cannot be undone" : o.reversibility === "REVERSIBLE" ? "Reversible" : o.reversibility.charAt(0) + o.reversibility.slice(1).replace(/_/g, " ").toLowerCase()}</Pill>}
           {o.executableAs && <Pill>{o.executableAs}</Pill>}
         </div>
       )}
@@ -142,7 +143,7 @@ function StressTable({ d }: { d: Decision }) {
     <div className="overflow-x-auto">
       <table className="w-full text-[13px]">
         <thead>
-          <tr style={{ color: C.faint }}>
+          <tr style={{ color: C.faint, fontSize: 12 }}>
             <th className="text-left font-normal py-2 pr-4">If the customer…</th>
             <th className="text-left font-normal py-2 pr-4">Best choice</th>
             <th className="text-right font-normal py-2">Its expected value</th>
@@ -154,9 +155,9 @@ function StressTable({ d }: { d: Decision }) {
             const same = s.recommended === d.recommendation?.key;
             return (
               <tr key={s.key} style={{ borderTop: `1px solid ${C.line}` }}>
-                <td className="py-2.5 pr-4" style={{ color: C.body }} title={s.changes}>{s.label}</td>
-                <td className="py-2.5 pr-4" style={{ color: same ? C.ink : C.warn, fontWeight: same ? 400 : 500 }}>{label(s.recommended)}</td>
-                <td className="py-2.5 text-right tabular-nums" style={{ color: C.ink }}>{money(best?.value?.mean, d.currency)}</td>
+                <td className="py-3 pr-4" style={{ color: C.body }} title={s.changes}>{s.label}</td>
+                <td className="py-3 pr-4" style={{ color: same ? C.ink : C.warn, fontWeight: same ? 400 : 500 }}>{label(s.recommended)}</td>
+                <td className="py-3 text-right tabular-nums" style={{ color: C.ink }}>{amount(best?.value?.mean, d.currency)}</td>
               </tr>
             );
           })}
@@ -178,10 +179,10 @@ function WhatIf({ d }: { d: Decision }) {
         <label className="text-[13px]" style={{ color: C.body }} htmlFor="speed">
           Customer pays at <span className="tabular-nums" style={{ fontWeight: 500 }}>{speed.toFixed(2)}×</span> their usual speed
         </label>
-        <input id="speed" type="range" min={0.5} max={1.5} step={0.05} value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className="w-48" />
+        <input id="speed" type="range" min={0.5} max={1.5} step={0.05} value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className="w-48 max-w-full" style={{ accentColor: "var(--accent)" }} />
         <Button size="sm" variant="secondary" loading={sim.isPending} onClick={() => sim.mutate()}>Simulate</Button>
       </div>
-      {sim.isError && <p className="text-[12px] mt-2" style={{ color: C.bad }}>{errorText(sim.error).title}</p>}
+      {sim.isError && <div className="mt-3"><RetryLine error={errorText(sim.error).title} onRetry={() => sim.mutate()} /></div>}
       {result && (
         <div className="mt-4 space-y-3">
           <p className="text-[13px]" style={{ color: result.recommendation.changed ? C.warn : C.body }}>
@@ -215,17 +216,17 @@ function SimilarDecisions({ id }: { id: string }) {
     <section className="mt-10">
       <SectionLabel>Similar decisions before</SectionLabel>
       {q.error ? (
-        <p className="text-[13px]" style={{ color: C.muted }}>Could not load earlier decisions just now.</p>
+        <RetryLine error="Couldn't load earlier decisions just now." onRetry={() => q.refetch()} />
       ) : !q.data?.similar.length ? (
         <p className="text-[13px]" style={{ color: C.muted }}>{q.data?.note || "No earlier decision is close enough to compare."}</p>
       ) : (
         <ul>
           {q.data.similar.map((s) => (
             <li key={s.id} className="py-3" style={{ borderTop: `1px solid ${C.line}` }}>
-              <Link href={`/decisions/${s.id}`} className="text-[13.5px] hover-dim" style={{ color: C.ink, fontWeight: 500 }}>{s.title}</Link>
+              <Link href={`/decisions/${s.id}`} className="text-[13.5px] hover-dim" style={{ color: C.ink, fontWeight: 500 }}>{cleanTitle(s.title)}</Link>
               <p className="text-[12.5px] mt-0.5" style={{ color: C.body }}>
                 {s.chosen ? `Chose "${s.chosen}"` : "Nothing chosen"} · {OUTCOME_WORDS[s.outcome.status] || s.outcome.status.replace(/_/g, " ").toLowerCase()}
-                {s.decidedAt ? ` · ${shortDate(s.decidedAt)}` : ""}
+                {s.decidedAt ? ` · ${formatDate(s.decidedAt)}` : ""}
               </p>
               <p className="text-[11.5px] mt-0.5" style={{ color: C.faint }}>
                 {Math.round(s.similarity * 100)}% alike: {[s.why.sameCustomer ? "same customer" : null, s.why.sharedSigns.length ? `${s.why.sharedSigns.length} shared warning sign${s.why.sharedSigns.length === 1 ? "" : "s"}` : null, s.why.sizeSimilarity >= 0.5 ? "similar size" : null].filter(Boolean).join(", ") || "same kind of decision"}
@@ -246,12 +247,12 @@ function Verification({ detail, onVerify, busy }: { detail: DecisionDetail; onVe
   return (
     <section className="mt-10">
       <SectionLabel>What actually happened</SectionLabel>
-      <div className="rounded-2xl p-5" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
+      <div className="rounded-xl p-5" style={{ background: "var(--surface)", border: "1px solid var(--line-card)" }}>
         <div className="flex flex-wrap items-center gap-2">
           <Pill tone={c.status === "MET" || c.status === "ON_TRACK" ? "good" : c.status === "NOT_MET" || c.status === "OFF_TRACK" || c.status === "ABORTED" ? "bad" : "neutral"}>
-            {c.status.replace(/_/g, " ").toLowerCase()}
+            {c.status.charAt(0) + c.status.slice(1).replace(/_/g, " ").toLowerCase()}
           </Pill>
-          <span className="text-[12px]" style={{ color: C.faint }}>{c.mode === "SHADOW" ? "Shadow contract" : "Live contract"} · started {shortDate(c.activated_at)}{v ? ` · checked ${relTime(v.checkedAt)}` : ""}</span>
+          <span className="text-[12px]" style={{ color: C.faint }}>{c.mode === "SHADOW" ? "Shadow contract" : "Live contract"} · started {formatDate(c.activated_at)}{v ? ` · checked ${relTime(v.checkedAt)}` : ""}</span>
           <Button size="xs" variant="ghost" loading={busy} onClick={onVerify} className="ml-auto">Check now</Button>
         </div>
         <p className="text-[13px] mt-3" style={{ color: C.body }}>{v?.reason || "Not checked yet. The first comparison with the forecast happens when its horizon has passed."}</p>
@@ -271,8 +272,8 @@ function Verification({ detail, onVerify, busy }: { detail: DecisionDetail; onVe
                   {v.predictions.map((p, i) => (
                     <tr key={i} style={{ borderTop: `1px solid ${C.line}` }}>
                       <td className="py-2 pr-3" style={{ color: C.body }}>{p.target.split(":")[1] === "do_nothing" ? "If nothing was done" : "Chosen option"}, {p.horizonDays} days</td>
-                      <td className="py-2 pr-3 text-right tabular-nums">{money(p.expected, detail.decision.currency)}{p.range ? ` (${money(p.range[0], detail.decision.currency)}–${money(p.range[1], detail.decision.currency)})` : ""}</td>
-                      <td className="py-2 pr-3 text-right tabular-nums" style={{ color: C.ink }}>{p.actual == null ? "—" : money(p.actual, detail.decision.currency)}</td>
+                      <td className="py-2 pr-3 text-right tabular-nums">{amount(p.expected, detail.decision.currency)}{p.range ? ` (${amount(p.range[0], detail.decision.currency)}–${amount(p.range[1], detail.decision.currency)})` : ""}</td>
+                      <td className="py-2 pr-3 text-right tabular-nums" style={{ color: C.ink }}>{p.actual == null ? "Not known yet" : amount(p.actual, detail.decision.currency)}</td>
                       <td className="py-2 text-right" style={{ color: p.insideRange === false ? C.bad : C.faint }}>
                         {p.status === "RESOLVED" ? (p.insideRange ? "Inside range" : p.insideRange === false ? "Outside range" : "Scored") : p.status === "COUNTERFACTUAL" ? "Can't be observed" : "Waiting"}
                       </td>
@@ -284,9 +285,26 @@ function Verification({ detail, onVerify, busy }: { detail: DecisionDetail; onVe
             <p className="text-[12px] mt-3" style={{ color: C.faint }}>{v.attributionNote}</p>
           </>
         )}
-        {c.regret && <p className="text-[12px] mt-2" style={{ color: C.faint }}>Regret at decision time: {money(c.regret.exAnte, detail.decision.currency)} (best then: {detail.decision.options.find((o) => o.key === c.regret?.bestAtDecisionTime)?.label || c.regret.bestAtDecisionTime}).</p>}
+        {c.regret && <p className="text-[12px] mt-2" style={{ color: C.faint }}>Regret at decision time: {amount(c.regret.exAnte, detail.decision.currency)} (best then: {detail.decision.options.find((o) => o.key === c.regret?.bestAtDecisionTime)?.label || c.regret.bestAtDecisionTime}).</p>}
       </div>
     </section>
+  );
+}
+
+function BackLink() {
+  return (
+    <Link href="/decisions" className="inline-flex items-center gap-1.5 text-[13px] hover-dim" style={{ color: C.muted, alignSelf: "flex-start" }}>
+      <span aria-hidden="true" style={{ display: "inline-flex", transform: "rotate(90deg)" }}><IconChevronDown size={13} /></span> Decisions
+    </Link>
+  );
+}
+
+function Fig({ label, value, tone, muted }: { label: string; value: React.ReactNode; tone?: string; muted?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <div style={{ fontFamily: muted ? "var(--font-sans)" : "var(--font-display)", fontSize: muted ? 14 : 24, lineHeight: muted ? "34px" : 1.4, color: muted ? C.faint : tone || C.ink, fontVariantNumeric: "tabular-nums" }}>{value}</div>
+      <div style={{ fontSize: 12.5, color: C.muted, marginTop: 4 }}>{label}</div>
+    </div>
   );
 }
 
@@ -339,14 +357,15 @@ export default function DecisionDetailPage() {
     return Math.max(1, ...d.options.map((o) => headline(o, d.kind).interval?.p90 || 0));
   }, [d]);
 
-  if (q.isLoading) return <DashboardLayout pageTitle="Decision"><div className="max-w-[1000px] mx-auto px-2 sm:px-6 py-8"><Skeleton rows={4} /></div></DashboardLayout>;
+  if (q.isLoading) return <DashboardLayout pageTitle="Decision"><PageBody><BackLink /><Skeleton rows={4} /></PageBody></DashboardLayout>;
   if (q.isError || !detail || !d) {
     const notFound = q.error instanceof DecisionApiError && q.error.status === 404;
     return (
       <DashboardLayout pageTitle="Decision">
-        <div className="max-w-[1000px] mx-auto px-2 sm:px-6 py-8">
-          <ErrorState title={notFound ? "Decision not found" : "Couldn't load this decision"} message={notFound ? "It may belong to another account or have been removed." : (q.error as Error)?.message} onRetry={notFound ? undefined : () => q.refetch()} />
-        </div>
+        <PageBody>
+          <BackLink />
+          <ErrorState title={notFound ? "Decision not found" : "Couldn't load this decision"} message={notFound ? "It may belong to another account or have been removed." : humaneError(q.error)} onRetry={notFound ? undefined : () => q.refetch()} />
+        </PageBody>
       </DashboardLayout>
     );
   }
@@ -361,45 +380,39 @@ export default function DecisionDetailPage() {
   const allInternal = steps.every((s) => s !== "CONTACT_CUSTOMER");
   const byKind = d.evidence.reduce<Record<string, typeof d.evidence>>((acc, e) => { (acc[e.kind] ||= []).push(e); return acc; }, {});
   const flips = (d.analysis?.sensitivity?.results || []).filter((r) => r.flips);
+  const stake = d.materiality?.expectedUncollected90 ?? d.materiality?.workingCapitalTiedUp ?? d.materiality?.revenueExposure ?? null;
+  const card: React.CSSProperties = { background: "var(--surface)", border: "1px solid var(--line-card)", borderRadius: 12 };
 
   return (
     <DashboardLayout pageTitle="Decision">
-      <div className="max-w-[1000px] mx-auto px-2 sm:px-6 lg:px-8 py-8">
-        <Link href="/decisions" className="inline-flex items-center gap-1.5 text-[13px] hover-dim mb-6" style={{ color: C.muted }}>
-          <FiArrowLeft size={13} /> Decisions
-        </Link>
+      <PageBody gap={0}>
+        <div style={{ maxWidth: 920 }}>
+        <BackLink />
 
         {/* Header */}
-        <div className="flex flex-wrap items-center gap-2 text-[12px] mb-2" style={{ color: C.faint }}>
-          <span>{STATUS_LABEL[d.status] || d.status}</span>
-          <span>·</span>
-          <span>Analysed {relTime(d.updatedAt)} from data as of {shortDate(d.asOf)}</span>
+        <div className="flex flex-wrap items-center gap-2 text-[12px] mt-5 mb-3" style={{ color: C.faint }}>
+          <Pill tone={d.status === "NEEDS_INFORMATION" ? "warn" : d.status === "OPEN" ? "accent" : ["REJECTED", "EXPIRED", "SUPERSEDED", "RESOLVED"].includes(d.status) ? "neutral" : "good"}>{STATUS_LABEL[d.status] || d.status}</Pill>
+          <span>Analysed {relTime(d.updatedAt)} from data as of {formatDate(d.asOf)}</span>
           {detail.pilotMode === "SHADOW" && <Pill tone="accent">Shadow mode</Pill>}
         </div>
-        <h1 className="text-[28px] lg:text-[34px] max-w-[820px]" style={{ color: C.ink }}>{d.title}</h1>
-        {d.description && <p className="text-[15px] mt-3 max-w-[760px] leading-[1.55]" style={{ color: C.body }}>{d.description}</p>}
+        <h1 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 30, lineHeight: 1.2, color: C.ink, maxWidth: 820 }}>{cleanTitle(d.title)}</h1>
+        {d.description && <p className="text-[14.5px] mt-3 max-w-[760px] leading-[1.6]" style={{ color: C.body }}>{d.description}</p>}
 
-        <div className="flex flex-wrap gap-x-8 gap-y-3 mt-6">
-          {days != null && (
-            <div>
-              <p className="text-[12px]" style={{ color: C.faint }}>Decide by</p>
-              <p className="text-[15px]" style={{ color: days <= 2 ? C.bad : days <= 7 ? C.warn : C.ink, fontWeight: 500 }}>
-                {shortDate(d.deadline || d.window?.latestSafeAt)} {days <= 0 ? "(now)" : `(${days} day${days === 1 ? "" : "s"})`}
-              </p>
-            </div>
-          )}
-          {cod?.valueLost != null && (
-            <div>
-              <p className="text-[12px]" style={{ color: C.faint }}>Cost of waiting a week</p>
-              <p className="text-[15px] tabular-nums" style={{ color: C.ink, fontWeight: 500 }}>{money(cod.valueLost, d.currency)} expected</p>
-            </div>
-          )}
-          <div>
-            <p className="text-[12px]" style={{ color: C.faint }}>Confidence</p>
-            <div className="mt-1"><ConfidencePill band={d.confidence?.band} score={d.confidence?.score} /></div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 mt-7" style={{ ...card, gap: 20, padding: "18px 20px" }}>
+          <Fig label="At stake if ignored" value={stake != null ? amount(stake, d.currency) : "Not known yet"} muted={stake == null} />
+          <Fig
+            label={days != null ? (days <= 0 ? "Decide now" : `Decide by, ${days} day${days === 1 ? "" : "s"} left`) : "Decide by"}
+            value={days != null ? formatDate(d.deadline || d.window?.latestSafeAt) : "No deadline"}
+            tone={days != null && days <= 2 ? C.bad : days != null && days <= 7 ? C.warn : undefined}
+            muted={days == null}
+          />
+          <Fig label="Cost of waiting a week" value={cod?.valueLost != null ? amount(cod.valueLost, d.currency) : "Not known yet"} muted={cod?.valueLost == null} />
+          <div className="min-w-0">
+            <div style={{ height: 34, display: "flex", alignItems: "center" }}><ConfidencePill band={d.confidence?.band} score={d.confidence?.score} /></div>
+            <div style={{ fontSize: 12.5, color: C.muted, marginTop: 4 }}>Confidence</div>
           </div>
         </div>
-        {d.window?.basis && <p className="text-[12px] mt-3 max-w-[760px]" style={{ color: C.faint }}>{d.window.basis}</p>}
+        {d.window?.basis && <p className="text-[12px] mt-3 max-w-[760px] leading-[1.55]" style={{ color: C.faint }}>{d.window.basis}</p>}
 
         {/* Messages */}
         <div className="mt-6 space-y-3">
@@ -417,7 +430,6 @@ export default function DecisionDetailPage() {
           )}
         </div>
 
-        <FeedbackBar decisionId={d.id} />
 
         {/* Why now + do nothing */}
         <section className="grid md:grid-cols-2 gap-8 mt-10">
@@ -425,8 +437,8 @@ export default function DecisionDetailPage() {
             <SectionLabel>Why now</SectionLabel>
             <ul className="space-y-2">
               {(d.triggers || []).map((t) => (
-                <li key={t.code} className="text-[14px] leading-[1.5] flex gap-2" style={{ color: C.body }}>
-                  <span aria-hidden="true" className="mt-[9px] w-1 h-1 rounded-full shrink-0" style={{ background: C.accent }} />
+                <li key={t.code} className="text-[14px] leading-[1.55] flex gap-2.5" style={{ color: C.body }}>
+                  <span aria-hidden="true" style={{ color: C.faint }}>–</span>
                   {t.label}
                 </li>
               ))}
@@ -440,9 +452,9 @@ export default function DecisionDetailPage() {
 
         {/* Recommendation */}
         {rec && (
-          <section className="mt-10 rounded-2xl p-5" style={{ background: "#F7F7FB", border: "1px solid #E2E3F1" }}>
+          <section className="mt-10 rounded-xl p-5 sm:p-6" style={{ background: "rgba(var(--accent-rgb), 0.06)", border: "1px solid rgba(var(--accent-rgb), 0.22)" }}>
             <SectionLabel>{rec.informationFirst ? "Find out first" : "Starlane suggests"}</SectionLabel>
-            <p className="text-[18px]" style={{ color: C.ink, fontWeight: 500 }}>{rec.label}</p>
+            <p style={{ margin: 0, fontFamily: "var(--font-display)", fontSize: 22, color: C.ink }}>{rec.label}</p>
             {rec.why && <p className="text-[14px] mt-2 leading-[1.55] max-w-[760px]" style={{ color: C.body }}>{rec.why}</p>}
             {flips.length > 0 ? (
               <div className="mt-3">
@@ -471,7 +483,7 @@ export default function DecisionDetailPage() {
               </details>
             )}
             {canChoose && !rec.informationFirst && recOption && recOption.valid !== false && (
-              <div className="mt-5 pt-4" style={{ borderTop: "1px solid #E2E3F1" }}>
+              <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(var(--accent-rgb), 0.22)" }}>
                 <p className="text-[13px] max-w-[760px]" style={{ color: C.body }}>
                   <span style={{ fontWeight: 500 }}>Handle it</span> approves &ldquo;{rec.label}&rdquo; and starts a mission.{" "}
                   {recOption.isDoNothing
@@ -482,7 +494,7 @@ export default function DecisionDetailPage() {
                   {" "}If you reject it, nothing happens and the decision stays open.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-3">
-                  <Button size="sm" loading={handle.isPending} onClick={() => handle.mutate()}>Handle it</Button>
+                  <Button variant={d.status === "SELECTED" ? "secondary" : "primary"} loading={handle.isPending} onClick={() => handle.mutate()}>Handle it</Button>
                   <Link href="/missions" className="text-[12.5px] self-center hover-dim" style={{ color: C.muted }}>See missions</Link>
                 </div>
               </div>
@@ -498,8 +510,9 @@ export default function DecisionDetailPage() {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Optional note for the record (why you chose this)"
-              className="w-full max-w-[520px] mb-4 rounded-lg px-3 py-2 text-[13px]"
-              style={{ border: `1px solid ${C.line}`, background: "var(--surface)" }}
+              aria-label="Note for the record"
+              className="ui-input mb-4"
+              style={{ maxWidth: 520 }}
               maxLength={1000}
             />
           )}
@@ -525,7 +538,7 @@ export default function DecisionDetailPage() {
 
         {/* Next step */}
         {!canChoose || d.status === "SELECTED" ? (
-          <section className="mt-10 rounded-2xl p-5" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
+          <section className="mt-10 p-5" style={card}>
             <SectionLabel>Next step</SectionLabel>
             {d.status === "SELECTED" && chosen && (
               <>
@@ -539,7 +552,7 @@ export default function DecisionDetailPage() {
                   ) : (
                     <Button size="sm" loading={approve.isPending} onClick={() => approve.mutate()}>Approve</Button>
                   )}
-                  <Button size="sm" variant="ghost" loading={reject.isPending} icon={<FiX size={13} />} onClick={() => reject.mutate()}>Reject</Button>
+                  <Button size="sm" variant="ghost" loading={reject.isPending} icon={<IconX size={13} />} onClick={() => reject.mutate()}>Reject</Button>
                 </div>
               </>
             )}
@@ -570,13 +583,13 @@ export default function DecisionDetailPage() {
                 {detail.runs.map((r) => (
                   <div key={r.id} className="text-[13px]" style={{ color: C.body }}>
                     <div className="flex flex-wrap items-center gap-2">
-                      <Pill tone={r.status === "SUCCEEDED" || r.status === "PREPARED" ? "good" : r.status === "SHADOWED" ? "accent" : r.status === "FAILED" || r.status === "BLOCKED" ? "bad" : "neutral"}>{r.status.toLowerCase()}</Pill>
+                      <Pill tone={r.status === "SUCCEEDED" || r.status === "PREPARED" ? "good" : r.status === "SHADOWED" ? "accent" : r.status === "FAILED" || r.status === "BLOCKED" ? "bad" : "neutral"}>{r.status.charAt(0) + r.status.slice(1).toLowerCase()}</Pill>
                       <span>{INTENT_WORDS[r.intent_type] || r.intent_type}</span>
                       <span className="text-[12px]" style={{ color: C.faint }}>via {r.adapter}</span>
                     </div>
                     {r.status === "SHADOWED" && r.would_have && <p className="text-[12px] mt-1" style={{ color: C.faint }}>Would have written: {String((r.would_have as { write?: string }).write || "")}</p>}
                     {r.postcondition?.note && <p className="text-[12px] mt-1" style={{ color: C.faint }}>{r.postcondition.note}</p>}
-                    {r.error && <p className="text-[12px] mt-1" style={{ color: C.bad }}>{r.error}</p>}
+                    {r.error && <p className="text-[12px] mt-1" style={{ color: C.bad }}>This step didn&apos;t complete. Nothing was left half-done.</p>}
                   </div>
                 ))}
                 {steps.includes("CONTACT_CUSTOMER") && ["EXECUTED"].includes(d.status) && (
@@ -617,7 +630,7 @@ export default function DecisionDetailPage() {
                     <p className="text-[13px]" style={{ color: C.body }}>{u.label}</p>
                     <p className="text-[12px] mt-0.5" style={{ color: C.faint }}>
                       {u.changesRecommendation
-                        ? `Knowing this could be worth about ${money(u.valueOfInformation ?? null, d.currency)} and might change the choice.`
+                        ? `Knowing this could be worth about ${amount(u.valueOfInformation ?? null, d.currency)} and might change the choice.`
                         : u.valueOfInformation != null ? "Knowing this would not change the recommendation." : "Its effect can't be estimated yet."}
                       {u.acquisition?.how ? ` ${u.acquisition.how}.` : ""}
                     </p>
@@ -689,14 +702,17 @@ export default function DecisionDetailPage() {
               value={obs}
               onChange={(e) => setObs(e.target.value)}
               placeholder="Something Starlane can't see, e.g. “They said payment is coming after Diwali”"
-              className="flex-1 min-w-[240px] rounded-lg px-3 py-2 text-[13px]"
-              style={{ border: `1px solid ${C.line}`, background: "var(--surface)" }}
+              aria-label="Your observation"
+              className="ui-input flex-1 min-w-[220px]"
+              style={{ width: "auto" }}
               maxLength={2000}
             />
             <Button size="sm" variant="secondary" disabled={!obs.trim()} loading={observe.isPending} onClick={() => observe.mutate()}>Add</Button>
           </div>
           <p className="text-[12px] mt-1.5" style={{ color: C.faint }}>Recorded as evidence with your name. It never changes the numbers or permissions on its own.</p>
         </section>
+
+        <FeedbackBar decisionId={d.id} />
 
         {/* History */}
         <section className="mt-10 mb-6">
@@ -705,14 +721,15 @@ export default function DecisionDetailPage() {
             <ol className="mt-3 space-y-1.5">
               {detail.events.map((e) => (
                 <li key={e.id} className="text-[12px] flex gap-3" style={{ color: C.body }}>
-                  <span className="tabular-nums shrink-0" style={{ color: C.faint }}>{new Date(e.at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                  <span className="tabular-nums shrink-0" style={{ color: C.faint }}>{formatDateTime(e.at)}</span>
                   <span>{e.type.replace(/_/g, " ").toLowerCase()} · {e.actor.type === "agent" ? `Starlane (${e.actor.agentVersion || e.actor.id})` : "You"}</span>
                 </li>
               ))}
             </ol>
           </details>
         </section>
-      </div>
+        </div>
+      </PageBody>
     </DashboardLayout>
   );
 }

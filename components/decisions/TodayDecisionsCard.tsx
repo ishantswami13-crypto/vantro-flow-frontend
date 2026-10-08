@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { FiChevronRight } from "react-icons/fi";
 import { isDemoMode } from "@/lib/demo";
-import { decisionsApi, money, daysUntil } from "@/lib/decisions";
-import { C, Pill } from "@/components/decisions/ui";
+import { decisionsApi, daysUntil } from "@/lib/decisions";
+import { inrWhole, formatCount } from "@/lib/format";
+import { StatusChip } from "@/components/ui/Badge";
+import { Chevron } from "@/components/v32/ui";
 import { stakeOf } from "@/components/os/shared";
+import { QuietError, plain } from "@/components/os/bridge/kit";
 
 // The one thing on Today that asks for judgement: decisions with a window.
 // Shows nothing in demo mode and says so plainly when the summary can't load.
@@ -14,39 +16,44 @@ export default function TodayDecisionsCard() {
   const demo = typeof window !== "undefined" && isDemoMode();
   const q = useQuery({ queryKey: ["decisions-today"], queryFn: decisionsApi.today, staleTime: 30_000, enabled: !demo });
   if (demo) return null;
-  if (q.isLoading) return <div className="skeleton h-20 w-full rounded-2xl mb-5" />;
+  if (q.isLoading) return <div className="skeleton h-20 w-full mb-5" style={{ borderRadius: 12 }} />;
   if (q.isError) {
-    return (
-      <p className="text-[12px] mb-5" style={{ color: C.faint }}>
-        Decisions couldn&apos;t be loaded right now. <Link className="underline" href="/decisions">Open Decisions</Link>
-      </p>
-    );
+    return <div className="mb-5"><QuietError message="Couldn't load your decisions right now." onRetry={() => q.refetch()} compact /></div>;
   }
   const t = q.data!;
   const top = t.top[0];
   const waiting = t.command.open + t.command.needsInformation + t.command.awaitingApproval + t.command.readyToRun;
+  const meta = top ? (() => {
+    const d = daysUntil(top.deadline);
+    const stake = stakeOf(top.materiality as Record<string, unknown> | null);
+    const money = stake != null ? (top.currency && top.currency !== "INR" ? `${top.currency} ${formatCount(Math.round(stake))}` : inrWhole(stake)) : null;
+    return [
+      d == null ? null : d <= 0 ? "Decide today" : `Decide within ${d} day${d === 1 ? "" : "s"}`,
+      money ? `${money} at stake if ignored` : null,
+      top.recommendation ? `Suggests ${top.recommendation.label.toLowerCase()}` : null,
+    ].filter(Boolean).join(" · ");
+  })() : "";
+
   return (
-    <Link href={top ? `/decisions/${top.id}` : t.receivables.invoices ? "/decisions" : "/decisions/import"} className="hover-lift block rounded-[8px] px-5 py-4 mb-5" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
-      <div className="flex items-center gap-2 text-[12px]" style={{ color: C.faint }}>
-        <span>{waiting ? `${waiting} decision${waiting === 1 ? " needs" : "s need"} you` : "No decisions waiting"}</span>
-        {t.pilotMode === "SHADOW" && <Pill tone="accent">Shadow mode</Pill>}
-        <FiChevronRight className="ml-auto" size={14} />
+    <Link
+      href={top ? `/decisions/${top.id}` : t.receivables.invoices ? "/decisions" : "/decisions/import"}
+      className="row-hover block mb-5"
+      style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 12, padding: "16px 20px" }}
+    >
+      <div className="flex items-center" style={{ gap: 8, fontSize: 12.5, color: "var(--ink-3)" }}>
+        <span className="tabular-nums">{waiting ? `${formatCount(waiting)} decision${waiting === 1 ? " needs" : "s need"} you` : "No decisions waiting"}</span>
+        {t.pilotMode === "SHADOW" && <StatusChip tone="info">Shadow mode</StatusChip>}
+        <span className="ml-auto inline-flex"><Chevron size={14} /></span>
       </div>
       {top ? (
         <>
-          <p className="text-[15px] mt-1.5" style={{ color: C.ink, fontWeight: 500 }}>{top.title}</p>
-          <p className="text-[12px] mt-1" style={{ color: C.muted }}>
-            {(() => {
-              const d = daysUntil(top.deadline);
-              const stake = stakeOf(top.materiality as Record<string, unknown> | null);
-              return [d == null ? null : d <= 0 ? "Decide today" : `Decide within ${d} day${d === 1 ? "" : "s"}`, stake != null ? `${money(stake, top.currency)} at stake if ignored` : null, top.recommendation ? `suggests ${top.recommendation.label.toLowerCase()}` : null].filter(Boolean).join(" · ");
-            })()}
-          </p>
+          <p style={{ margin: "6px 0 0", fontSize: 15, color: "var(--ink)", fontWeight: 500 }}>{plain(top.title)}</p>
+          {meta && <p className="tabular-nums" style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--ink-2)" }}>{meta}</p>}
         </>
       ) : (
-        <p className="text-[13px] mt-1.5" style={{ color: C.muted }}>
+        <p style={{ margin: "6px 0 0", fontSize: 13.5, color: "var(--ink-2)" }}>
           {t.command.underWatch
-            ? `${t.command.underWatch} decision${t.command.underWatch === 1 ? " is" : "s are"} being checked against what actually happens.`
+            ? `${formatCount(t.command.underWatch)} decision${t.command.underWatch === 1 ? " is" : "s are"} being checked against what actually happens.`
             : t.receivables.invoices ? "No material decision currently requires attention." : "Upload your receivables file so Starlane can find decisions in your own data."}
         </p>
       )}
