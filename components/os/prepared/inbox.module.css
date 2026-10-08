@@ -54,7 +54,8 @@
 
 @media (max-width: 767px) {
   .row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 10px; }
-  .stake { grid-column: 2; grid-row: 1; }
+  .stake { grid-column: 2; grid-row: 1; max-width: 140px; }
+  .stakeValue { white-space: normal; overflow-wrap: anywhere; font-size: 14px; }
   .action { grid-column: 1 / -1; justify-content: flex-start; }
   .attention::before { left: -10px; }
 }
@@ -78,6 +79,7 @@
 
 @media (max-width: 767px) {
   .linkRow { grid-template-columns: minmax(0, 1fr) auto; }
+  .linkRow .stake { max-width: 140px; }
   .linkRow .chev { display: none; }
   .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .strip > * { padding: 12px 12px 12px 0; }

@@ -186,7 +186,7 @@ function ReplayCard({ w }: { w: Workflow }) {
           <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--ink-3)", lineHeight: 1.55 }}>
             {sim.replays} weekly replays over {sim.lookbackDays} days. Future data: {sim.leakage}.
           </p>
-          {sim.cannotSay && <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--warning)", lineHeight: 1.55 }}>{sim.cannotSay}</p>}
+          {sim.cannotSay && <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.55 }}><span style={{ color: "var(--ink)", fontWeight: 500 }}>Limit:</span> {sim.cannotSay}</p>}
           {sim.sample.length > 0 && (
             <div style={{ marginTop: 12 }}>
               <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" aria-expanded={open} onClick={() => setOpen((v) => !v)} style={{ paddingLeft: 0, marginLeft: -2 }}>
