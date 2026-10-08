@@ -24,12 +24,13 @@ export interface FigureItem {
   tone?: string;
 }
 
-/** Two to four headline numbers on one hairline-divided row. */
-export function FigureRow({ items }: { items: FigureItem[] }) {
+/** Two to four headline numbers on one hairline-divided row. `lead` marks
+ *  the one figure the page is anchored on; it sits a step larger. */
+export function FigureRow({ items, lead }: { items: FigureItem[]; lead?: number }) {
   return (
     <div className={s.figures} style={{ ["--n" as string]: items.length } as React.CSSProperties}>
       {items.map((f, i) => (
-        <div key={i} className={s.figureCell}>
+        <div key={i} className={`${s.figureCell} ${i === lead ? s.figureLead : ""}`}>
           <Figure value={f.value} label={f.label} tone={f.tone} />
           {f.note && <div className={s.figureNote}>{f.note}</div>}
         </div>

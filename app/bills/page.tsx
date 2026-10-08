@@ -173,7 +173,7 @@ export default function BillsPage() {
         : <span className={s.muted}>No due date</span>,
     },
     { key: "amount", header: "Amount", width: "130px", widthSm: "auto", align: "right", render: b => <span className={s.amount}>{inrWhole(Number(b.total))}</span> },
-    { key: "status", header: "Status", width: "84px", hide: "sm", render: b => <StatusChip tone={b.status === "paid" ? "positive" : "attention"}>{b.status === "paid" ? "Paid" : "Unpaid"}</StatusChip> },
+    { key: "status", header: "Status", width: "84px", hide: "sm", render: b => <StatusChip tone={b.status === "paid" ? "positive" : "attention"} className="chip-quiet">{b.status === "paid" ? "Paid" : "Unpaid"}</StatusChip> },
     { key: "actions", header: <span className="sr-only">Actions</span>, width: "40px", align: "right", render: b => <RowMenu label={`Actions for ${b.bill_number}`} items={menuFor(b)} /> },
   ];
 
@@ -212,7 +212,7 @@ export default function BillsPage() {
 
         {bills.length > 0 && !error && (
           <>
-            <FigureRow items={[
+            <FigureRow lead={0} items={[
               { label: "Unpaid", value: inrWhole(totalUnpaid), note: `${formatCount(unpaid.length)} invoice${unpaid.length === 1 ? "" : "s"}` },
               { label: "Collected", value: inrWhole(totalPaid), note: `${formatCount(paid.length)} paid` },
               { label: "Invoices raised", value: formatCount(bills.length), note: "All time" },

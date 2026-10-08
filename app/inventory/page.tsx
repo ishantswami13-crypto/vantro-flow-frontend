@@ -253,11 +253,11 @@ export default function InventoryPage() {
         </div>
       ),
     },
-    { key: "stock", header: "In stock", width: "120px", widthSm: "auto", align: "right", render: p => <span className={s.amount} style={p.current_stock === 0 ? { color: "var(--critical)" } : undefined}>{formatCount(p.current_stock)} <span className={s.muted} style={{ fontFamily: "var(--font-sans)", fontSize: 12 }}>{p.unit}</span></span> },
+    { key: "stock", header: "In stock", width: "120px", widthSm: "auto", align: "right", render: p => <span className={s.amount}>{formatCount(p.current_stock)} <span className={s.muted} style={{ fontFamily: "var(--font-sans)", fontSize: 12 }}>{p.unit}</span></span> },
     { key: "reorder", header: "Reorder at", width: "100px", align: "right", hide: "md", render: p => <span>{formatCount(p.low_stock_alert)}</span> },
     { key: "price", header: "Unit price", width: "110px", align: "right", hide: "md", render: p => <span>{inrWhole(p.unit_price)}</span> },
     { key: "value", header: "Value", width: "120px", align: "right", hide: "sm", render: p => <span className={s.amount}>{inrWhole(p.current_stock * p.unit_price)}</span> },
-    { key: "status", header: "Status", width: "104px", hide: "sm", render: p => { const st = stockStatus(p); return <StatusChip tone={st.tone}>{st.label}</StatusChip>; } },
+    { key: "status", header: "Status", width: "104px", hide: "sm", render: p => { const st = stockStatus(p); return <StatusChip tone={st.tone} className="chip-quiet">{st.label}</StatusChip>; } },
   ];
 
   const insightCols: Column<Insight>[] = [
@@ -296,7 +296,7 @@ export default function InventoryPage() {
         </div>
       ),
     },
-    { key: "dir", header: "Direction", width: "100px", hide: "sm", render: m => { const isIn = (m.movement_type || m.type || "").toLowerCase() === "in"; return <StatusChip tone={isIn ? "positive" : "neutral"}>{isIn ? "Stock in" : "Stock out"}</StatusChip>; } },
+    { key: "dir", header: "Direction", width: "100px", hide: "sm", render: m => { const isIn = (m.movement_type || m.type || "").toLowerCase() === "in"; return <StatusChip tone={isIn ? "positive" : "neutral"} className="chip-quiet">{isIn ? "Stock in" : "Stock out"}</StatusChip>; } },
     { key: "when", header: "When", width: "110px", hide: "md", render: m => <span>{formatRelative(m.moved_at || m.created_at) || "—"}</span> },
     {
       key: "qty", header: "Quantity", width: "110px", widthSm: "auto", align: "right",
@@ -344,10 +344,10 @@ export default function InventoryPage() {
         {!loading && !error && (
           <>
             {(tab === "products" || tab === "details") && products.length > 0 && (
-              <FigureRow items={[
+              <FigureRow lead={1} items={[
                 { label: "Products", value: formatCount(summary.total_products), note: "Tracked items" },
                 { label: "Stock value", value: inrWhole(summary.total_value), note: "At unit price" },
-                { label: "Running low", value: formatCount(summary.low_stock_count), note: "At or below reorder level", tone: summary.low_stock_count > 0 ? "var(--warning)" : undefined },
+                { label: "Running low", value: formatCount(summary.low_stock_count), note: "At or below reorder level" },
                 { label: "Out of stock", value: formatCount(summary.out_of_stock_count), note: summary.out_of_stock_count ? "Can't be sold today" : "None", tone: summary.out_of_stock_count > 0 ? "var(--critical)" : undefined },
               ]} />
             )}
