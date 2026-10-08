@@ -3,149 +3,153 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { api, type Connector, type ConnectorHealth } from "@/lib/api";
-import { FiUploadCloud } from "react-icons/fi";
-import { PageHeader, Subnav, StatusDot, Chevron, EmptyLine, ErrorBanner, SkeletonRows } from "@/components/v32/ui";
-import { IconSources } from "@/components/v32/icons";
-import { BridgeHealthPanel } from "@/components/os/BridgePanels";
+import { api, type Connector } from "@/lib/api";
+import { PageHeader, Subnav, Chevron, EmptyLine, SkeletonRows, IconTile, Sep } from "@/components/v32/ui";
+import { IconSources, IconUpload, IconWatch, IconLink, IconPlus, IconSync } from "@/components/v32/icons";
+import { StatusChip, type StatusTone } from "@/components/ui/Badge";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Modal } from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
+import { DataQuality } from "@/components/connectors/DataQuality";
+import { healthOf, isConnected, categoryLabel, CAPABILITY_TEXT, OFFLINE } from "@/components/connectors/health";
+import { formatDateTime, formatRelative, formatCount } from "@/lib/format";
 
-// Sources — every system Starlane can connect to, and its live state.
+// Sources: every system Starlane can connect to, and its live state.
 //
 // Driven entirely by GET /api/connectors (backend lib/connectors): the
 // manifest says what a connector is and what access Starlane receives; the
 // state is derived only from rows a real sync or import wrote. Connectors
 // that are not built say so and offer no connect action.
 //
-// Tabs: Connected / Available are real. Sync Activity is the last real sync
-// per source (no fabricated feed). Data Quality shows what Starlane understood
-// from the connections; Reconciliation has no computation behind it yet and
-// says exactly that.
+// Tabs: Connected and Available are real. Sync activity is the latest real
+// sync attempt per source (no fabricated feed). Data quality shows what
+// Starlane understood from the connections; Reconciliation has no
+// computation behind it yet and says exactly that.
 
 type TabKey = "connected" | "available" | "sync" | "quality" | "reconciliation";
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "connected", label: "Connected" },
-  { key: "available", label: "Available" },
-  { key: "sync", label: "Sync Activity" },
-  { key: "quality", label: "Data Quality" },
-  { key: "reconciliation", label: "Reconciliation" },
-];
 
-const INK = "var(--ink)", SOFT = "var(--ink-2)", FAINT = "var(--ink-3)", LINE = "var(--line)", WARN = "var(--critical)";
-
-function timeAgo(iso: string | null): string {
-  if (!iso) return "";
-  const ms = Date.now() - new Date(iso).getTime();
-  if (ms < 0 || Number.isNaN(ms)) return "";
-  const min = Math.floor(ms / 60000);
-  if (min < 1) return "just now";
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.floor(hr / 24);
-  return `${day}d ago`;
+function SourceIcon({ c, tone }: { c: Connector; tone?: "critical" | "warning" }) {
+  const icon = c.authType === "file_import" ? <IconUpload size={15} />
+    : c.authType === "public_feed" ? <IconWatch size={15} />
+    : c.authType === "oauth" ? <IconLink size={15} />
+    : <IconSources size={15} />;
+  return <IconTile size={32} tone={tone}>{icon}</IconTile>;
 }
-
-// V32 status_dot per connector health.
-const STATUS: Record<ConnectorHealth, { label: string; color: string }> = {
-  healthy: { label: "Healthy", color: "var(--positive)" },
-  syncing: { label: "Syncing", color: "var(--positive)" },
-  connected: { label: "Paired, not synced yet", color: "var(--warning)" },
-  delayed: { label: "Sync delayed", color: "var(--warning)" },
-  stale: { label: "Sync overdue", color: "var(--warning)" },
-  error: { label: "Needs attention", color: "var(--critical)" },
-  disconnected: { label: "Disconnected", color: "rgb(var(--tk-ink) / 0.25)" },
-  pairing: { label: "Waiting for pairing", color: "rgb(var(--tk-ink) / 0.25)" },
-  revoked: { label: "Device revoked", color: "rgb(var(--tk-ink) / 0.25)" },
-  not_connected: { label: "Not connected", color: "rgb(var(--tk-ink) / 0.25)" },
-  unavailable: { label: "Not available yet", color: "rgb(var(--tk-ink) / 0.25)" },
-};
 
 function noteFor(c: Connector): string {
   if (c.state.health === "error" && c.state.lastError) return c.state.lastError;
   if (c.state.health === "stale" && !c.state.lastSyncAt) return "Paired, but nothing has synced yet";
-  if (c.authType === "file_import" && c.state.lastImport?.filename) return `Last import · ${c.state.lastImport.filename}`;
+  if (c.authType === "file_import" && c.state.lastImport?.filename) return `Last import: ${c.state.lastImport.filename}`;
   const active = c.state.devices.filter((x) => x.status === "ACTIVE");
-  if (active.length) return active.map((x) => `${x.name}${x.lastSeenAt ? `, seen ${timeAgo(x.lastSeenAt)}` : ""}`).join(" · ");
+  if (active.length) return active.map((x) => `${x.name}${x.lastSeenAt ? `, seen ${formatRelative(x.lastSeenAt)}` : ""}`).join(" · ");
   if (c.availability !== "available") return c.unavailableReason || c.summary;
   return c.summary;
 }
 
-// What the connection lets Starlane do, from the backend's capability label.
-const CAPABILITY_TEXT: Record<string, string> = {
-  READ_ONLY: "Read only: Starlane reads from it and never writes back",
-  WRITE_CAPABLE: "Starlane can write to it",
-  EXECUTION_REQUIRES_APPROVAL: "Starlane can act through it, only after you approve each action",
-};
+const GRID = "src-grid";
 
-const isConnected = (c: Connector) => ["healthy", "syncing", "connected", "delayed", "stale", "error"].includes(c.state.health);
-
-const COLS = "grid-cols-[16px_1fr_auto] md:grid-cols-[16px_160px_130px_110px_1fr_auto]";
-
-function TableHeader() {
+function TableHeader({ last = "" }: { last?: string }) {
   return (
-    <div className={`hidden md:grid ${COLS} items-center`} style={{ gap: 14, padding: "8px 12px", fontSize: 11, letterSpacing: 0, color: FAINT }}>
-      <span /><span>Source</span><span>Status</span><span>Last sync</span><span>Note</span><span />
+    <div className={`${GRID} src-head`} aria-hidden="true">
+      <span /><span>Source</span><span>Health</span><span>Last sync</span><span>Note</span><span style={{ textAlign: "right" }}>{last}</span>
     </div>
   );
 }
 
 function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
-  const st = STATUS[c.state.health] || { label: c.state.health.replace(/_/g, " "), color: "rgb(var(--tk-ink) / 0.25)" };
+  const st = healthOf(c);
   const href = c.authType === "local_bridge" ? "/sources/tally" : undefined;
   const cap = isConnected(c) && c.state.capabilityLabel ? CAPABILITY_TEXT[c.state.capabilityLabel] : undefined;
-  const body = (
-    <>
-      <span aria-hidden className="flex items-center justify-center" style={{ width: 16, height: 16, color: SOFT }}>
-        {c.authType === "file_import" ? <FiUploadCloud size={14} /> : <IconSources size={15} />}
-      </span>
+  const note = noteFor(c);
+  const errorTone = c.state.health === "error";
+  const name = href ? (
+    <Link href={href} className="src-name hover-dim">{c.name}</Link>
+  ) : <span className="src-name">{c.name}</span>;
+  return (
+    <div className={`${GRID} src-row row-hover`} style={{ opacity: c.availability === "available" ? 1 : 0.72 }}>
+      <SourceIcon c={c} tone={errorTone ? "critical" : undefined} />
       <div className="min-w-0">
-        <div style={{ fontSize: 14, fontWeight: 600, color: INK }}>{c.name}</div>
-        <div style={{ fontSize: 12, color: FAINT }}>{c.category.replace(/_/g, " ").replace(/^./, (x) => x.toUpperCase())}</div>
-        <div className="md:hidden" style={{ marginTop: 4 }}><StatusDot label={st.label} color={st.color} /></div>
+        {name}
+        <div className="src-meta">
+          {categoryLabel(c)}
+          {cap && <><Sep /> {cap}</>}
+        </div>
+        <div className="src-mobile">
+          <StatusChip tone={st.tone}>{st.label}</StatusChip>
+          {c.state.lastSyncAt && <span title={formatDateTime(c.state.lastSyncAt)}>{formatRelative(c.state.lastSyncAt)}</span>}
+        </div>
       </div>
-      <div className="hidden md:block"><StatusDot label={st.label} color={st.color} /></div>
-      <div className="hidden md:block" style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--body)" }}>{timeAgo(c.state.lastSyncAt) || "—"}</div>
-      <div className="hidden md:block min-w-0 truncate" style={{ fontSize: 12, color: SOFT }} title={cap ? `${noteFor(c)}. ${cap}` : noteFor(c)}>{noteFor(c)}</div>
-      <div className="flex items-center justify-end" style={{ gap: 12 }} onClick={(e) => e.stopPropagation()}>
+      <div className="src-desk"><StatusChip tone={st.tone}>{st.label}</StatusChip></div>
+      <div className="src-desk tabular-nums" style={{ fontSize: 13, color: "var(--body)" }} title={c.state.lastSyncAt ? formatDateTime(c.state.lastSyncAt) : undefined}>
+        {c.state.lastSyncAt ? formatRelative(c.state.lastSyncAt) : <span style={{ color: "var(--ink-3)" }}>Never</span>}
+      </div>
+      <div className="src-desk min-w-0 truncate" style={{ fontSize: 12.5, color: errorTone ? "var(--critical)" : "var(--ink-2)" }} title={note}>{note}</div>
+      <div className="src-actions">
         {action}
         {href && <Chevron />}
       </div>
-    </>
+    </div>
   );
-  const cls = `row-hover grid ${COLS} items-center`;
-  const style: React.CSSProperties = { gap: 14, padding: "14px 12px", minHeight: 58, boxSizing: "border-box", borderBottom: `1px solid ${LINE}`, opacity: c.availability === "available" ? 1 : 0.6 };
-  if (href) return <Link href={href} className={cls} style={style}>{body}</Link>;
-  return <div className={cls} style={style}>{body}</div>;
 }
 
-function Quiet({ children, onClick, href, disabled }: { children: React.ReactNode; onClick?: () => void; href?: string; disabled?: boolean }) {
-  const style = { color: "var(--body)", fontSize: 12.5, background: "none", border: "none", cursor: disabled ? "default" : "pointer", whiteSpace: "nowrap" } as const;
-  if (href) return <Link href={href} className="hover-dim" style={{ ...style, textDecoration: "none" }}>{children}</Link>;
-  return <button type="button" onClick={onClick} disabled={disabled} className="hover-dim" style={style}>{children}</button>;
+function Group({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <section style={{ marginTop: 28 }}>
+      <div className="flex items-baseline flex-wrap" style={{ gap: 8, marginBottom: 6 }}>
+        <h2 style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>{title}</h2>
+        {hint && <span style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{hint}</span>}
+      </div>
+      {children}
+    </section>
+  );
 }
 
-function Empty({ title, body, children }: { title: string; body: string; children?: React.ReactNode }) {
-  return <EmptyLine title={title} body={body} action={children} />;
+// Sync activity: the latest real attempt per source, newest first.
+type SyncEntry = { c: Connector; at: string | null; label: string; tone: StatusTone; detail: string };
+function syncEntryFor(c: Connector): SyncEntry | null {
+  const a = c.state.lastAttempt;
+  if (a) {
+    const tone: StatusTone = a.status === "succeeded" ? "positive" : a.status === "failed" ? "critical" : "info";
+    const label = a.status === "succeeded" ? "Succeeded" : a.status === "failed" ? "Failed" : "Running";
+    return { c, at: a.finishedAt || a.startedAt, label, tone, detail: a.error || (a.status === "running" ? "In progress" : "Vouchers received") };
+  }
+  const imp = c.state.lastImport;
+  if (imp) {
+    const ok = /complete|success|done/i.test(imp.status);
+    const failed = /fail|error/i.test(imp.status);
+    return {
+      c, at: imp.completedAt, label: ok ? "Imported" : failed ? "Failed" : "In progress", tone: ok ? "positive" : failed ? "critical" : "info",
+      detail: `${imp.filename || "File"}: ${formatCount(imp.rowsAccepted)} rows accepted${imp.rowsRejected ? `, ${formatCount(imp.rowsRejected)} rejected` : ""}`,
+    };
+  }
+  if (c.state.lastSyncAt || c.state.lastError) {
+    const st = healthOf(c);
+    return { c, at: c.state.lastSyncAt, label: c.state.lastError ? "Failed" : "Synced", tone: c.state.lastError ? "critical" : st.tone === "positive" ? "positive" : st.tone, detail: c.state.lastError || c.summary };
+  }
+  return null;
 }
 
 export default function SourcesPage() {
   const [tab, setTab] = useState<TabKey>("connected");
   const [connectors, setConnectors] = useState<Connector[] | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [confirmRevoke, setConfirmRevoke] = useState<{ id: string; name: string } | null>(null);
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [revokeFailed, setRevokeFailed] = useState(false);
 
   const load = useCallback(async () => {
-    setLoadError(null);
+    setLoadFailed(false);
     try { setConnectors((await api.connectors.list()).connectors); }
-    catch (e) { setLoadError(e instanceof Error ? e.message : "Could not load sources."); }
+    catch { setLoadFailed(true); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  const revoke = async (deviceId: string, name: string) => {
-    if (!window.confirm(`Revoke "${name}"? That computer will stop syncing until it is paired again.`)) return;
-    setRevoking(deviceId);
-    try { await api.connectors.revokeTallyDevice(deviceId); await load(); }
-    catch (e) { setLoadError(e instanceof Error ? e.message : "Could not revoke the device."); }
+  const revoke = async () => {
+    if (!confirmRevoke) return;
+    const { id } = confirmRevoke;
+    setRevoking(id); setRevokeFailed(false);
+    try { await api.connectors.revokeTallyDevice(id); setConfirmRevoke(null); await load(); }
+    catch { setRevokeFailed(true); }
     finally { setRevoking(null); }
   };
 
@@ -153,109 +157,231 @@ export default function SourcesPage() {
   const world = (connectors || []).filter((c) => c.authType === "public_feed");
   const connected = company.filter(isConnected);
   const available = company.filter((c) => !isConnected(c));
+  const buildable = available.filter((c) => c.availability === "available");
+  const notBuilt = available.filter((c) => c.availability !== "available");
 
   const actionFor = (c: Connector) => {
     if (c.availability !== "available") return null;
     if (c.authType === "local_bridge") {
       const active = c.state.devices.filter((d) => d.status === "ACTIVE");
       return (
-        <div style={{ display: "flex", gap: 14 }}>
+        <>
           {active.map((d) => (
-            <Quiet key={d.id} onClick={() => revoke(d.id, d.name)} disabled={revoking === d.id}>{revoking === d.id ? "Revoking…" : active.length > 1 ? `Revoke ${d.name}` : "Revoke device"}</Quiet>
+            <Button key={d.id} variant="ghost" size="sm" onClick={() => { setRevokeFailed(false); setConfirmRevoke({ id: d.id, name: d.name }); }}>
+              {active.length > 1 ? `Revoke ${d.name}` : "Revoke device"}
+            </Button>
           ))}
-          <Quiet href="/sources/connect">{active.length ? "Pair another computer" : "Connect"}</Quiet>
-        </div>
+          {!active.length && <Link href="/sources/connect" className="ui-btn ui-btn-secondary ui-btn-sm">Connect</Link>}
+        </>
       );
     }
-    if (c.authType === "file_import") return <Quiet href="/collections?import=1"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><FiUploadCloud size={13} /> Upload</span></Quiet>;
+    if (c.authType === "file_import") {
+      return <Link href="/collections?import=1" className="ui-btn ui-btn-ghost ui-btn-sm"><IconUpload size={13} /> Upload</Link>;
+    }
     return null;
   };
 
-  const syncEntries = [...connected, ...world].filter((c) => c.state.lastSyncAt || c.state.health !== "not_connected");
+  const syncEntries = [...connected, ...world].map(syncEntryFor).filter((x): x is SyncEntry => !!x)
+    .sort((a, b) => (b.at ? new Date(b.at).getTime() : 0) - (a.at ? new Date(a.at).getTime() : 0));
 
   const lastSync = [...connected, ...world].map((c) => c.state.lastSyncAt).filter(Boolean).sort().pop() || null;
-  const allHealthy = connected.length > 0 && connected.every((c) => c.state.health === "healthy");
+  const needsLook = connected.filter((c) => healthOf(c).tone !== "positive" && healthOf(c).tone !== "info").length
+    + world.filter((c) => c.state.health === "error").length;
+
+  const tabs = [
+    { key: "connected", label: "Connected", count: connectors ? connected.length + world.length : null },
+    { key: "available", label: "Available", count: connectors ? buildable.length : null },
+    { key: "sync", label: "Sync activity" },
+    { key: "quality", label: "Data quality" },
+    { key: "reconciliation", label: "Reconciliation" },
+  ];
 
   return (
     <DashboardLayout pageTitle="Sources">
-      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <style>{`
+        .src-wrap { max-width: 1180px; display: flex; flex-direction: column; gap: 20px; }
+        .src-grid { display: grid; align-items: center; column-gap: 16px; grid-template-columns: 32px minmax(0, 1fr) auto; }
+        .src-head { display: none; }
+        .src-row { padding: 12px 10px; min-height: 60px; border-bottom: 1px solid var(--line); border-radius: 0; }
+        .src-name { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+        .src-meta { font-size: 12px; color: var(--ink-3); margin-top: 2px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .src-desk { display: none; }
+        .src-mobile { display: flex; gap: 10px; align-items: center; margin-top: 8px; font-size: 12px; color: var(--ink-3); }
+        .src-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+        @media (min-width: 900px) {
+          .src-grid { grid-template-columns: 32px minmax(170px, 1fr) 150px 110px minmax(0, 1.5fr) 190px; }
+          .src-head { display: grid; padding: 0 10px 8px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line); }
+          .src-desk { display: block; }
+          .src-mobile { display: none; }
+        }
+        .sync-grid { display: grid; column-gap: 16px; align-items: center; grid-template-columns: minmax(0, 1fr) auto; }
+        .sync-head { display: none; }
+        .sync-row { padding: 12px 10px; border-bottom: 1px solid var(--line); min-height: 52px; }
+        .sync-desk { display: none; }
+        @media (min-width: 900px) {
+          .sync-grid { grid-template-columns: minmax(160px, 1fr) 120px 150px minmax(0, 2fr); }
+          .sync-head { display: grid; padding: 0 10px 8px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line); }
+          .sync-desk { display: block; }
+          .sync-mobile { display: none; }
+        }
+        .avail-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+        @media (min-width: 760px) { .avail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+      `}</style>
+      <div className="src-wrap">
         <PageHeader
           title="Sources"
-          subtitle="Where Starlane gets its data"
-          right={connectors ? (
-            <span style={{ fontSize: 12, color: connected.length && !allHealthy ? "var(--warning)" : FAINT }}>
-              {!connected.length ? "Nothing connected yet" : `${allHealthy ? "All current" : "Needs a look"}${lastSync ? ` · Last sync ${timeAgo(lastSync)}` : ""}`}
-            </span>
-          ) : undefined}
+          subtitle={
+            connectors && connected.length ? (
+              <span className="inline-flex items-center flex-wrap" style={{ gap: 6 }}>
+                {connected.length} connected
+                {lastSync && <><Sep /> last sync {formatRelative(lastSync)}</>}
+                {needsLook > 0 && <><Sep /> <span style={{ color: "var(--warning)" }}>{needsLook} need{needsLook === 1 ? "s" : ""} a look</span></>}
+              </span>
+            ) : "Where Starlane gets its data. Every connection is read only and can be revoked."
+          }
+          right={<Link href="/sources/connect" className="ui-btn ui-btn-primary"><IconPlus size={14} /> Connect a source</Link>}
         />
 
-        {loadError && (
-          <ErrorBanner>
-            {loadError} <button type="button" onClick={load} className="hover-dim" style={{ background: "none", border: "none", color: INK, textDecoration: "underline", cursor: "pointer" }}>Retry</button>
-          </ErrorBanner>
-        )}
+        <Subnav items={tabs} active={tab} onChange={(k) => setTab(k as TabKey)} label="Sources" />
 
-        <Subnav items={TABS} active={tab} onChange={(k) => setTab(k as TabKey)} />
-
-        <div className="fade-once">
-          {connectors === null && !loadError && (
-            <div>
-              <SkeletonRows rows={3} height={58} />
-            </div>
+        <div className="fade-once" role="tabpanel">
+          {loadFailed && tab !== "quality" && tab !== "reconciliation" && (
+            <ErrorState title="Couldn't load your sources" message={OFFLINE} onRetry={load} />
           )}
 
+          {connectors === null && !loadFailed && tab !== "quality" && tab !== "reconciliation" && <SkeletonRows rows={4} height={60} />}
+
           {connectors && tab === "connected" && (
-            connected.length || world.length ? (
-              <div>
-                {connected.length > 0 && <TableHeader />}
-                {connected.map((c) => <Row key={c.id} c={c} action={actionFor(c)} />)}
-                {!connected.length && (
-                  <Empty title="No company system is connected yet." body="Connect Tally or upload an export to give Starlane your real receivables, payables and stock.">
-                    <div style={{ display: "flex", gap: 18 }}>
-                      <Quiet href="/sources/connect">Connect Tally</Quiet><Quiet onClick={() => setTab("available")}>See all sources</Quiet>
+            <>
+              {connected.length > 0 ? (
+                <div>
+                  <TableHeader />
+                  {connected.map((c) => <Row key={c.id} c={c} action={actionFor(c)} />)}
+                </div>
+              ) : (
+                <EmptyLine
+                  icon={<IconSources size={17} />}
+                  title="No company system is connected yet"
+                  body="Connect Tally or upload an export so Starlane works from your real receivables, payables and stock."
+                  action={
+                    <div className="flex flex-wrap" style={{ gap: 8 }}>
+                      <Link href="/sources/connect" className="ui-btn ui-btn-secondary ui-btn-sm">Connect Tally</Link>
+                      <Button variant="ghost" size="sm" onClick={() => setTab("available")}>See all sources</Button>
                     </div>
-                  </Empty>
-                )}
-                {world.length > 0 && (
-                  <>
-                    <p style={{ fontSize: 11, letterSpacing: 0, color: FAINT, margin: "24px 12px 4px" }}>External signals</p>
-                    {world.map((c) => <Row key={c.id} c={c} />)}
-                  </>
-                )}
-              </div>
-            ) : <Empty title="Nothing connected yet" body="Connect a source to begin." />
+                  }
+                />
+              )}
+              {world.length > 0 && (
+                <Group title="External signals" hint="Public feeds. Nothing about your company is sent to them.">
+                  <div>{world.map((c) => <Row key={c.id} c={c} />)}</div>
+                </Group>
+              )}
+            </>
           )}
 
           {connectors && tab === "available" && (
-            <div>
-              <TableHeader />
-              {available.filter((c) => c.availability === "available").map((c) => (
-                <div key={c.id}>
-                  <Row c={c} action={actionFor(c)} />
-                  {c.access.length > 0 && (
-                    <ul style={{ margin: "8px 0 10px 42px", padding: 0, listStyle: "none", display: "grid", gap: 4 }}>
-                      {c.access.map((a) => <li key={a} style={{ fontSize: 12, color: SOFT }}>· {a}</li>)}
-                    </ul>
-                  )}
+            <>
+              {buildable.length > 0 ? (
+                <div className="avail-grid">
+                  {buildable.map((c) => (
+                    <div key={c.id} className="ui-panel" style={{ padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div className="flex items-start" style={{ gap: 12 }}>
+                        <SourceIcon c={c} />
+                        <div className="min-w-0 flex-1">
+                          <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{c.name}</div>
+                          <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 2, lineHeight: 1.5 }}>{c.summary}</div>
+                        </div>
+                      </div>
+                      {c.access.length > 0 && (
+                        <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6 }}>
+                          {c.access.map((a) => (
+                            <li key={a} className="flex" style={{ gap: 8, fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.5 }}>
+                              <span aria-hidden="true" style={{ width: 4, height: 4, borderRadius: 2, background: "var(--ink-3)", marginTop: 8, flexShrink: 0 }} />{a}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <div className="flex" style={{ gap: 8, marginTop: "auto" }}>
+                        {c.authType === "local_bridge"
+                          ? <Link href="/sources/connect" className="ui-btn ui-btn-secondary ui-btn-sm">Connect {c.name}</Link>
+                          : c.authType === "file_import"
+                            ? <Link href="/collections?import=1" className="ui-btn ui-btn-secondary ui-btn-sm"><IconUpload size={13} /> Upload a file</Link>
+                            : null}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-              <p style={{ fontSize: 11, letterSpacing: 0, color: FAINT, margin: "24px 12px 4px" }}>Not built yet</p>
-              {available.filter((c) => c.availability !== "available").map((c) => <Row key={c.id} c={c} action={actionFor(c)} />)}
-            </div>
+              ) : (
+                <EmptyLine title="Everything available is connected" body="New connectors appear here as they are built." />
+              )}
+              {notBuilt.length > 0 && (
+                <Group title="Not built yet" hint="A CSV export from any of these works today.">
+                  <div>
+                    {notBuilt.map((c) => (
+                      <div key={c.id} className="src-grid src-row" style={{ gridTemplateColumns: "32px minmax(0, 1fr) auto" }}>
+                        <SourceIcon c={c} />
+                        <div className="min-w-0">
+                          <div className="src-name" style={{ color: "var(--ink-2)" }}>{c.name}</div>
+                          <div className="src-meta">{c.unavailableReason || categoryLabel(c)}</div>
+                        </div>
+                        <StatusChip tone="unknown">Not available yet</StatusChip>
+                      </div>
+                    ))}
+                  </div>
+                </Group>
+              )}
+            </>
           )}
 
           {connectors && tab === "sync" && (
             syncEntries.length ? (
-              <div><TableHeader />{syncEntries.map((c) => <Row key={c.id} c={c} />)}</div>
-            ) : <Empty title="No sync activity yet" body="The last sync of each connected source appears here. Nothing has synced yet." />
+              <div>
+                <div className="sync-grid sync-head" aria-hidden="true"><span>Source</span><span>Result</span><span>When</span><span>Detail</span></div>
+                {syncEntries.map((e) => (
+                  <div key={e.c.id} className="sync-grid sync-row row-hover">
+                    <div className="min-w-0">
+                      <div className="src-name">{e.c.name}</div>
+                      <div className="sync-mobile" style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 3 }}>
+                        {e.at ? formatDateTime(e.at) : "Time not recorded"} · {e.detail}
+                      </div>
+                    </div>
+                    <div><StatusChip tone={e.tone}>{e.label}</StatusChip></div>
+                    <div className="sync-desk tabular-nums" style={{ fontSize: 13, color: "var(--body)" }}>{e.at ? formatDateTime(e.at) : "—"}</div>
+                    <div className="sync-desk truncate" style={{ fontSize: 12.5, color: e.tone === "critical" ? "var(--critical)" : "var(--ink-2)" }} title={e.detail}>{e.detail}</div>
+                  </div>
+                ))}
+                <p style={{ fontSize: 12, color: "var(--ink-3)", margin: "12px 10px 0" }}>The latest attempt for each source. Older runs are not kept here.</p>
+              </div>
+            ) : (
+              <EmptyLine icon={<IconSync size={17} />} title="No sync activity yet" body="Once a source syncs, its latest attempt and result appear here." />
+            )
           )}
 
-          {/* What Starlane understood from each connection, likely duplicate
-              customers and how it reads the data (GET /api/os/bridge). */}
-          {tab === "quality" && <BridgeHealthPanel />}
-          {tab === "reconciliation" && <Empty title="Reconciliation isn’t running yet." body="Planned: receivables, payables and sales totals compared against Tally before those numbers are used elsewhere. Nothing is compared today." />}
+          {tab === "quality" && <DataQuality />}
+
+          {tab === "reconciliation" && (
+            <EmptyLine
+              title="Reconciliation isn't running yet"
+              body="Planned: receivables, payables and sales totals compared against Tally before those numbers are used anywhere else. Nothing is compared today, so no match or mismatch is shown."
+            />
+          )}
         </div>
       </div>
+
+      <Modal
+        open={!!confirmRevoke}
+        onClose={() => setConfirmRevoke(null)}
+        title={`Revoke ${confirmRevoke?.name ?? "this device"}?`}
+        description="That computer stops syncing straight away. You can pair it again at any time with a new code."
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirmRevoke(null)}>Cancel</Button>
+            <Button variant="danger" loading={!!revoking} onClick={revoke}>Revoke device</Button>
+          </>
+        }
+      >
+        {revokeFailed && <p role="alert" style={{ margin: 0, fontSize: 13, color: "var(--critical)" }}>The device was not revoked. {OFFLINE}</p>}
+      </Modal>
     </DashboardLayout>
   );
 }
