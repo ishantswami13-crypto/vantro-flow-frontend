@@ -61,7 +61,7 @@ function classifyIntent(text: string): ReplyLog {
 const RISK: Record<string, { label: string; tone: StatusTone }> = {
   HIGH_RISK: { label: "High risk", tone: "critical" },
   MEDIUM: { label: "Medium risk", tone: "attention" },
-  LOW: { label: "Low risk", tone: "positive" },
+  LOW: { label: "Low risk", tone: "neutral" },
 };
 
 type Bucket = "all" | "today" | "d1_7" | "d8_30" | "d31_60" | "d60";
@@ -75,6 +75,8 @@ const BUCKETS: { key: Bucket; label: string; test: (d: number) => boolean }[] = 
 ];
 
 type SortKey = "outstanding" | "daysOverdue";
+
+const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 
 function lateText(d: number): string {
   if (d <= 0) return "Due today";
@@ -509,13 +511,13 @@ export default function CollectionsPage() {
     {
       key: "late", header: <SortHeader label="Late by" active={sortKey === "daysOverdue"} dir={sortDir} onClick={() => toggleSort("daysOverdue")} />,
       width: "112px", align: "right", hide: "sm",
-      render: c => <span style={{ color: c.daysOverdue > 60 ? "var(--critical)" : "var(--body)" }}>{lateText(c.daysOverdue)}</span>,
+      render: c => <span style={{ color: c.daysOverdue > 60 ? "var(--ink)" : "var(--body)" }}>{lateText(c.daysOverdue)}</span>,
     },
     {
-      key: "risk", header: "Risk", width: "118px", hide: "md",
+      key: "risk", header: "Risk", width: "118px", hide: "sm",
       render: c => {
         const r = scoreMap[c.name] && RISK[scoreMap[c.name].tier];
-        return r ? <StatusChip tone={r.tone} title={`Risk score ${scoreMap[c.name].score} of 100`}>{r.label}</StatusChip> : <StatusChip tone="unknown">Not scored</StatusChip>;
+        return r ? <StatusChip tone={r.tone} title={`Risk score ${scoreMap[c.name].score} of 100`}>{r.label}</StatusChip> : <span className={s.muted}>Not scored</span>;
       },
     },
     {
@@ -523,7 +525,7 @@ export default function CollectionsPage() {
       render: c => {
         const rState = reminderState[c.invoiceId || ""];
         if (rState === "sent") return <span style={{ color: "var(--positive)" }}>Just now</span>;
-        return c.lastReminderSent ? <span>{formatRelative(c.lastReminderSent)}</span> : <span className={s.muted}>Never</span>;
+        return c.lastReminderSent ? <span>{cap(formatRelative(c.lastReminderSent))}</span> : <span className={s.muted}>Never</span>;
       },
     },
     {
@@ -567,7 +569,7 @@ export default function CollectionsPage() {
           right={
             <>
               <Button variant="ghost" icon={<IconUpload size={14} />} onClick={() => setShowImport(true)}>Import</Button>
-              {overdueCount > 0 && <Button variant="secondary" onClick={() => setBulkConfirm(true)}>Remind all overdue</Button>}
+              {overdueCount > 0 && <Button variant="ghost" onClick={() => setBulkConfirm(true)}>Remind all overdue</Button>}
               <Button variant="primary" onClick={openAdd}>Add invoice</Button>
             </>
           }
@@ -611,7 +613,7 @@ export default function CollectionsPage() {
             <FigureRow items={[
               { label: "Outstanding", value: inrWhole(figures.total), note: `${formatCount(tableData.length)} unpaid invoice${tableData.length === 1 ? "" : "s"}` },
               { label: "Overdue", value: inrWhole(figures.overdue), note: `${formatCount(figures.overdueCount)} past due date` },
-              { label: "Over 60 days late", value: inrWhole(figures.over60), note: figures.over60Count ? `${formatCount(figures.over60Count)} to chase first` : "None", tone: figures.over60 > 0 ? "var(--critical)" : undefined },
+              { label: "Over 60 days late", value: inrWhole(figures.over60), note: figures.over60Count ? `${formatCount(figures.over60Count)} to chase first` : "None" },
               { label: "Due today", value: inrWhole(figures.dueToday), note: `${formatCount(figures.dueTodayCount)} invoice${figures.dueTodayCount === 1 ? "" : "s"}` },
             ]} />
 
