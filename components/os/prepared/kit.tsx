@@ -7,6 +7,7 @@ import React from "react";
 import { DecisionApiError, money } from "@/lib/decisions";
 import { inrWhole, formatDate } from "@/lib/format";
 import { IconAlert } from "@/components/v32/icons";
+import css from "./inbox.module.css";
 
 export const OFFLINE_LINE = "Couldn't reach Starlane. Check your connection and try again.";
 
@@ -72,27 +73,45 @@ export function PageBody({ children, gap = 24 }: { children: React.ReactNode; ga
   return <div className="flex flex-col w-full" style={{ maxWidth: 1180, gap }}>{children}</div>;
 }
 
-/** A section heading inside a page: serif title, optional count and one line of help. */
+/** A section heading inside a page: a small muted label, an optional
+ *  count and one quiet line of help. */
 export function SectionHead({ title, count, hint, right }: { title: React.ReactNode; count?: number | null; hint?: React.ReactNode; right?: React.ReactNode }) {
   return (
-    <div className="flex items-end justify-between flex-wrap" style={{ gap: 12, marginBottom: 12 }}>
+    <div className="flex items-end justify-between flex-wrap" style={{ gap: 12, marginBottom: 8 }}>
       <div className="min-w-0">
-        <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 18, color: "var(--ink)", letterSpacing: "-0.1px" }}>
+        <h2 className="section-label" style={{ margin: 0 }}>
           {title}
-          {count != null && <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--ink-3)", marginLeft: 8, fontVariantNumeric: "tabular-nums" }}>{count}</span>}
+          {count != null && <span className="num" style={{ marginLeft: 8, letterSpacing: 0, color: "var(--ink-3)" }}>{count}</span>}
         </h2>
-        {hint && <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--ink-2)", lineHeight: 1.5, maxWidth: 720 }}>{hint}</p>}
+        {hint && <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--ink-3)", lineHeight: 1.5, maxWidth: 720 }}>{hint}</p>}
       </div>
       {right}
     </div>
   );
 }
 
+/** Rows for an inbox list: hairline above the first row. */
+export function RowList({ children, label }: { children: React.ReactNode; label?: string }) {
+  return <div className={css.list} aria-label={label}>{children}</div>;
+}
+
+/** A text-weight action for the quiet verbs under a row. */
+export function RowLink({ children, onClick, disabled, title, expanded }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; title?: string; expanded?: boolean }) {
+  return <button type="button" className={css.link} onClick={onClick} disabled={disabled} title={title} aria-expanded={expanded}>{children}</button>;
+}
+
+/** A quoted draft (a reminder's text): a hairline rule, not a box. */
+export function Quote({ children }: { children: React.ReactNode }) {
+  return <blockquote className={css.quote}>{children}</blockquote>;
+}
+
 /**
- * One item that needs a person: what it is, why now, the money at stake
- * and one primary action. Secondary actions stay quiet.
+ * One item that needs a person, as an inbox row: a tiny category and
+ * metadata, a strong title, one line of context, the money at stake on
+ * the right and one small action. Quieter verbs sit under the text.
  */
-export function ItemCard({ meta, chip, title, why, stake, stakeNote, children, actions, quiet }: {
+export function ItemCard({ category, meta, chip, title, why, stake, stakeNote, children, action, actions, quiet, attention }: {
+  category?: React.ReactNode;
   meta?: React.ReactNode;
   chip?: React.ReactNode;
   title: React.ReactNode;
@@ -100,31 +119,34 @@ export function ItemCard({ meta, chip, title, why, stake, stakeNote, children, a
   stake?: React.ReactNode;
   stakeNote?: React.ReactNode;
   children?: React.ReactNode;
+  /** The row's one action, right-aligned. */
+  action?: React.ReactNode;
+  /** Quiet text verbs under the row's text. */
   actions?: React.ReactNode;
   quiet?: boolean;
+  /** Time-critical: a thin ink rule on the left. */
+  attention?: boolean;
 }) {
   return (
-    <article className="card-in" style={{ background: "var(--surface)", border: "1px solid var(--line-card)", borderRadius: 12, padding: "18px 20px", opacity: quiet ? 0.86 : 1 }}>
-      <div className="flex flex-col sm:flex-row sm:items-start" style={{ gap: 16 }}>
-        <div className="min-w-0 flex-1">
-          {(meta || chip) && (
-            <div className="flex items-center flex-wrap" style={{ gap: 8, marginBottom: 6, fontSize: 12, color: "var(--ink-3)" }}>
-              {chip}
-              {meta && <span>{meta}</span>}
-            </div>
-          )}
-          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 500, color: "var(--ink)", lineHeight: 1.45 }}>{title}</h3>
-          {why && <div style={{ fontSize: 13, color: "var(--body)", lineHeight: 1.6, marginTop: 6, maxWidth: 760 }}>{why}</div>}
-        </div>
-        {stake != null && (
-          <div className="sm:text-right shrink-0" style={{ minWidth: 0 }}>
-            <div className="figure-in" style={{ fontFamily: "var(--font-display)", fontSize: 24, lineHeight: 1.1, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{stake}</div>
-            {stakeNote && <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 4 }}>{stakeNote}</div>}
+    <article className={`${css.row} ${attention ? css.attention : ""} ${quiet ? css.quiet : ""}`}>
+      <div className="min-w-0">
+        {(category || meta || chip) && (
+          <div className={css.meta}>
+            {category && <span className={css.category}>{category}</span>}
+            {chip}
+            {meta && <span>{meta}</span>}
           </div>
         )}
+        <h3 className={css.title}>{title}</h3>
+        {why && <div className={css.why}>{why}</div>}
+        {children && <div className={css.body}>{children}</div>}
+        {actions && <div className={css.tertiary}>{actions}</div>}
       </div>
-      {children && <div style={{ marginTop: 14 }}>{children}</div>}
-      {actions && <div className="flex items-center flex-wrap" style={{ gap: 8, marginTop: 16 }}>{actions}</div>}
+      <div className={css.stake}>
+        {stake != null && (typeof stake === "string" ? <div className={css.stakeValue}>{stake}</div> : <div className={css.stakeNone}>{stake}</div>)}
+        {stake != null && stakeNote && <div className={css.stakeNote}>{stakeNote}</div>}
+      </div>
+      <div className={css.action}>{action}</div>
     </article>
   );
 }
@@ -136,10 +158,20 @@ export function FactList({ rows }: { rows: { label: string; value: React.ReactNo
     <dl className="grid" style={{ gridTemplateColumns: "minmax(0,1fr) auto", columnGap: 16, margin: 0, fontSize: 12.5 }}>
       {rows.map((r) => (
         <React.Fragment key={r.label}>
-          <dt style={{ color: "var(--ink-2)", padding: "6px 0", borderTop: "1px solid var(--line)" }}>{r.label}</dt>
-          <dd style={{ margin: 0, color: "var(--ink)", padding: "6px 0", borderTop: "1px solid var(--line)", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{r.value}</dd>
+          <dt style={{ color: "var(--ink-3)", padding: "6px 0", borderTop: "1px solid var(--line)" }}>{r.label}</dt>
+          <dd className="num" style={{ margin: 0, color: "var(--ink)", padding: "6px 0", borderTop: "1px solid var(--line)", textAlign: "right", fontSize: 12.5 }}>{r.value}</dd>
         </React.Fragment>
       ))}
     </dl>
+  );
+}
+
+/** Empty state: one calm sentence with the fact, an optional action. No icon, no illustration. */
+export function EmptyNote({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="fade-once flex items-center flex-wrap" style={{ gap: 12, padding: "16px 0", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+      <p style={{ margin: 0, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55, flex: "1 1 320px", maxWidth: "68ch" }}>{children}</p>
+      {action}
+    </div>
   );
 }

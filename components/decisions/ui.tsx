@@ -30,13 +30,9 @@ function rangeMoney(v: number, currency?: string) {
   return !currency || currency === "INR" ? inrWhole(v) : `${currency} ${Math.round(v).toLocaleString("en-IN")}`;
 }
 
-/** Quiet section label in sentence case. */
-export function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="mb-3" style={{ margin: "0 0 12px", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 17, color: C.ink, letterSpacing: "-0.1px" }}>
-      {children}
-    </h2>
-  );
+/** Section label: very small, muted, wide-tracked caps (the shared .section-label). */
+export function SectionLabel({ children, id }: { children: React.ReactNode; id?: string }) {
+  return <h2 id={id} className="section-label">{children}</h2>;
 }
 
 type Tone = "neutral" | "good" | "warn" | "bad" | "accent";
@@ -74,9 +70,11 @@ export function ConfidencePill({ band, score }: { band?: string | null; score?: 
 export function Stat({ label, value, sub, tone }: { label: string; value: React.ReactNode; sub?: React.ReactNode; tone?: "bad" | "warn" | "good" }) {
   return (
     <div className="min-w-0">
-      <p className="text-[12px]" style={{ color: C.muted }}>{label}</p>
-      <p className="text-[24px] leading-tight mt-1 tabular-nums" style={{ color: tone ? C[tone] : C.ink, fontWeight: 400, fontFamily: "var(--font-display)" }}>{value}</p>
-      {sub && <p className="text-[12px] mt-1" style={{ color: C.faint }}>{sub}</p>}
+      {typeof value === "string" && !/\d/.test(value)
+        ? <p style={{ margin: 0, fontSize: 14, lineHeight: "22px", color: C.faint }}>{value}</p>
+        : <p className="num" style={{ margin: 0, fontSize: 18, lineHeight: "22px", color: tone ? C[tone] : C.ink }}>{value}</p>}
+      <p style={{ margin: "4px 0 0", fontSize: 12, color: C.muted }}>{label}</p>
+      {sub && <p style={{ margin: "1px 0 0", fontSize: 11.5, color: C.faint }}>{sub}</p>}
     </div>
   );
 }
@@ -85,24 +83,29 @@ export function Stat({ label, value, sub, tone }: { label: string; value: React.
  * A p10–p90 range with the expected value marked, on a shared scale so
  * several options can be compared at a glance.
  */
-export function RangeBar({ interval, max, currency, highlight }: { interval?: Interval | null; max: number; currency?: string; highlight?: boolean }) {
-  if (!interval || !(max > 0)) return <span className="text-[12px]" style={{ color: C.faint }}>No forecast</span>;
+export function RangeBar({ interval, max, currency, highlight, compact }: { interval?: Interval | null; max: number; currency?: string; highlight?: boolean; compact?: boolean }) {
+  if (!interval || !(max > 0)) return <span style={{ fontSize: 12, color: C.faint }}>No forecast</span>;
   const x = (v: number) => `${Math.max(0, Math.min(100, (v / max) * 100))}%`;
   const width = Math.max(1.5, ((interval.p90 - interval.p10) / max) * 100);
   return (
-    <div className="w-full">
-      <div className="relative h-[6px] rounded-full" style={{ background: "rgb(var(--tk-ink) / 0.06)" }}>
-        <div
-          className="absolute top-0 h-full rounded-full"
-          style={{ left: x(interval.p10), width: `${width}%`, background: highlight ? "rgba(var(--accent-rgb), 0.75)" : "rgb(var(--tk-ink) / 0.22)" }}
-        />
-        <div className="absolute" style={{ left: x(interval.mean), top: -3, width: 2, height: 14, background: C.ink, borderRadius: 1 }} />
+    <div className="w-full" title={`80% range ${rangeMoney(interval.p10, currency)} to ${rangeMoney(interval.p90, currency)}, expected ${rangeMoney(interval.mean, currency)}`}>
+      <div className="relative" style={{ height: 4, borderRadius: 2, background: "rgb(var(--tk-ink) / 0.05)" }}>
+        <div className="absolute top-0 h-full" style={{ left: x(interval.p10), width: `${width}%`, borderRadius: 2, background: highlight ? "rgb(var(--tk-ink) / 0.42)" : "rgb(var(--tk-ink) / 0.16)" }} />
+        <div className="absolute" style={{ left: x(interval.mean), top: -3, width: 1.5, height: 10, background: C.ink }} />
       </div>
-      <div className="flex justify-between text-[11px] mt-1 tabular-nums" style={{ color: C.faint }}>
-        <span>{rangeMoney(interval.p10, currency)}</span>
-        <span style={{ color: C.ink, fontWeight: 500 }}>{rangeMoney(interval.mean, currency)} expected</span>
-        <span>{rangeMoney(interval.p90, currency)}</span>
-      </div>
+      {!compact && (
+        <div className="flex justify-between num" style={{ fontSize: 11, marginTop: 4, color: C.faint }}>
+          <span>{rangeMoney(interval.p10, currency)}</span>
+          <span style={{ color: C.ink }}>{rangeMoney(interval.mean, currency)} expected</span>
+          <span>{rangeMoney(interval.p90, currency)}</span>
+        </div>
+      )}
+      {compact && (
+        <div className="flex justify-between num" style={{ fontSize: 10.5, marginTop: 3, color: C.faint }}>
+          <span>{rangeMoney(interval.p10, currency)}</span>
+          <span>{rangeMoney(interval.p90, currency)}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -151,10 +154,11 @@ export function Skeleton({ rows = 3 }: { rows?: number }) {
 
 export function Notice({ tone = "neutral", title, children }: { tone?: Tone; title: string; children?: React.ReactNode }) {
   const t = TONE[tone];
+  const rule = tone === "neutral" || tone === "accent" ? "var(--line-strong)" : t.fg;
   return (
-    <div className="rounded-lg px-4 py-3" style={{ background: t.bg, border: `1px solid ${t.bd}` }} role={tone === "bad" ? "alert" : undefined}>
-      <p className="text-[13px]" style={{ color: t.fg, fontWeight: 500 }}>{title}</p>
-      {children && <div className="text-[12px] mt-1 leading-[1.55]" style={{ color: C.body }}>{children}</div>}
+    <div style={{ padding: "2px 0 2px 12px", borderLeft: `2px solid ${rule}` }} role={tone === "bad" ? "alert" : tone === "good" ? "status" : undefined}>
+      <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: tone === "neutral" || tone === "accent" ? C.ink : t.fg, fontWeight: 500 }}>{title}</p>
+      {children && <div style={{ fontSize: 12.5, marginTop: 2, lineHeight: 1.55, color: C.body }}>{children}</div>}
     </div>
   );
 }

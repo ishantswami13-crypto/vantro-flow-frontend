@@ -7,11 +7,10 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { AutomationProposals, ReminderApprovals, DecisionsNeedingYou } from "@/components/os/PreparedPanels";
 import { OutreachSummary } from "@/components/outreach/OutreachPanels";
 import { api, getUser, type PreparedCard, type PreparedResponse } from "@/lib/api";
-import { PageHeader, Subnav, EmptyLine, SkeletonRows } from "@/components/v32/ui";
-import { IconPrepared, IconChevronDown } from "@/components/v32/icons";
-import { Pill } from "@/components/decisions/ui";
+import { PageHeader, Subnav, SkeletonRows } from "@/components/v32/ui";
+import { IconChevronDown } from "@/components/v32/icons";
 import { formatDate, formatRelative } from "@/lib/format";
-import { FactList, ItemCard, PageBody, RetryLine, SectionHead, amount, cleanTitle, humaneError, prettyDates, sentence } from "@/components/os/prepared/kit";
+import { EmptyNote, FactList, ItemCard, PageBody, RetryLine, RowLink, RowList, SectionHead, amount, cleanTitle, humaneError, prettyDates, sentence } from "@/components/os/prepared/kit";
 
 // Prepared — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16, Priority 6.
 //
@@ -43,27 +42,12 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "dismissed", label: "Dismissed" },
 ];
 
-const EMPTY_COPY: Record<TabKey, { title: string; body: string }> = {
-  needs_you: {
-    title: "Nothing is waiting on you",
-    body: "Decisions, prepared actions and reminders that need your approval appear here. Starlane only raises one when something material changed and there is still time to act.",
-  },
-  for_you: {
-    title: "Nothing flagged for you right now",
-    body: "Triggered watches, detected opportunities and forecast risk for your business appear here.",
-  },
-  upcoming: {
-    title: "Nothing scheduled to be prepared",
-    body: "Work Starlane prepares ahead of a known date will appear here.",
-  },
-  completed: {
-    title: "No completed items yet",
-    body: "Actions you approve appear here.",
-  },
-  dismissed: {
-    title: "Nothing dismissed",
-    body: "Actions you reject appear here.",
-  },
+const EMPTY_COPY: Record<TabKey, string> = {
+  needs_you: "Nothing is waiting on you. Decisions, prepared actions and reminders appear here when something material changes and there is still time to act.",
+  for_you: "Nothing is flagged for you. Triggered watches, opportunities and forecast risk appear here.",
+  upcoming: "Nothing is scheduled. Work prepared ahead of a known date will appear here.",
+  completed: "No completed items yet. Actions you approve appear here.",
+  dismissed: "Nothing dismissed. Actions you reject appear here.",
 };
 
 // Only ai_actions-backed cards have a real decide pathway (PATCH
@@ -77,6 +61,13 @@ const SOURCE_LABEL: Record<string, string> = {
   watches: "From a watch",
   predictions: "From the cash forecast",
   opportunityPropagation: "From an opportunity",
+};
+
+// Where a card without its own decide pathway opens.
+const OPEN_LABEL: Record<string, string> = {
+  watches: "Watch",
+  predictions: "forecast",
+  opportunityPropagation: "opportunity",
 };
 
 const TRIGGER_LABEL: Record<string, string> = {
@@ -107,7 +98,8 @@ const num = (v: unknown): number | null => (typeof v === "number" && Number.isFi
 function readableDetail(detail: string | null): string | null {
   if (!detail) return null;
   const m = detail.match(/^Point estimate (-?[\d.]+), range \[(-?[\d.]+), (-?[\d.]+)\]\.?$/);
-  if (m) return `Expected ${amount(Number(m[1]))}, with a range from ${amount(Number(m[2]))} to ${amount(Number(m[3]))}.`;
+  const money = (v: number) => (v < 0 ? `−${amount(-v)}` : amount(v));
+  if (m) return `Expected ${money(Number(m[1]))}, with a range from ${money(Number(m[2]))} to ${money(Number(m[3]))}.`;
   return prettyDates(detail);
 }
 
@@ -142,44 +134,46 @@ function PreparedCardView({ card, busy, onApprove, onReject, onOpen }: {
   const when = formatRelative(card.timestamp);
   const label = TRIGGER_LABEL[card.trigger] || sentence(card.trigger);
 
+  const urgent = isPending && card.priority === "high";
   return (
     <ItemCard
       quiet={!isPending}
-      chip={<Pill tone={card.priority === "high" && isPending ? "warn" : "neutral"}>{label}</Pill>}
+      attention={urgent}
+      category={label}
       meta={[SOURCE_LABEL[card.source] || "Starlane", when].filter(Boolean).join(" · ")}
       title={cleanTitle(card.summary)}
       why={readableDetail(card.detail)}
       stake={owed != null ? amount(owed) : undefined}
       stakeNote={owed != null ? (overdue != null && overdue > 0 ? `${overdue} days overdue` : "open on the invoice") : undefined}
-      actions={
-        <>
-          {canDecide ? (
-            <button type="button" className="ui-btn ui-btn-primary" onClick={onApprove} disabled={busy} title={card.approve_does}>{busy ? "Approving…" : "Approve"}</button>
-          ) : (
-            <button type="button" className={`ui-btn ${isPending ? "ui-btn-secondary" : "ui-btn-ghost"}`} onClick={onOpen}>Review</button>
-          )}
-          {canDecide && <button type="button" className="ui-btn ui-btn-ghost" onClick={onOpen}>Review</button>}
-          {rows.length > 0 && (
-            <button type="button" className="ui-btn ui-btn-ghost" aria-expanded={showEvidence} onClick={() => setShowEvidence((v) => !v)}>
-              <span style={{ display: "inline-flex", transform: showEvidence ? "rotate(180deg)" : undefined, transition: "transform 160ms" }}><IconChevronDown size={13} /></span>
-              Evidence
-            </button>
-          )}
-          {canDecide && (
-            <button type="button" className="ui-btn ui-btn-ghost" onClick={onReject} disabled={busy} style={{ marginLeft: "auto" }}>{card.secondary || "Reject"}</button>
-          )}
-        </>
+      action={
+        canDecide ? (
+          <button type="button" className="ui-btn ui-btn-secondary ui-btn-sm" onClick={onApprove} disabled={busy} title={card.approve_does}>{busy ? "Approving…" : "Approve"}</button>
+        ) : (
+          <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" onClick={onOpen}>{card.source === "ai_actions" ? "Open in Approvals" : `Open ${OPEN_LABEL[card.source] || "source"}`}</button>
+        )
       }
+      actions={canDecide || rows.length > 0 ? (
+        <>
+          {canDecide && <RowLink onClick={onOpen}>Open in Approvals</RowLink>}
+          {rows.length > 0 && (
+            <RowLink expanded={showEvidence} onClick={() => setShowEvidence((v) => !v)}>
+              <span style={{ display: "inline-flex", transform: showEvidence ? "rotate(180deg)" : undefined, transition: "transform 160ms var(--ease)" }}><IconChevronDown size={13} /></span>
+              {showEvidence ? "Hide evidence" : "View evidence"}
+            </RowLink>
+          )}
+          {canDecide && <RowLink onClick={onReject} disabled={busy}>{card.secondary || "Reject"}</RowLink>}
+        </>
+      ) : undefined}
     >
       {(canDecide && card.approve_does) || showEvidence ? (
         <>
           {canDecide && card.approve_does && (
-            <p style={{ margin: 0, fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.55, maxWidth: 760 }}>
-              {/^approv/i.test(card.approve_does) ? null : <span style={{ color: "var(--ink-3)" }}>If you approve: </span>}{card.approve_does}
+            <p style={{ margin: 0, fontSize: 12, color: "var(--ink-3)", lineHeight: 1.55 }}>
+              {/^approv/i.test(card.approve_does) ? null : <span>If you approve: </span>}{card.approve_does}
             </p>
           )}
           {showEvidence && (
-            <div style={{ marginTop: canDecide && card.approve_does ? 12 : 0, maxWidth: 520 }}>
+            <div style={{ marginTop: canDecide && card.approve_does ? 10 : 0, maxWidth: 480 }}>
               <FactList rows={rows} />
             </div>
           )}
@@ -279,8 +273,8 @@ export default function PreparedPage() {
           <SkeletonRows rows={3} />
         ) : cards.length > 0 ? (
           <section aria-label={tab === "needs_you" ? "Prepared actions" : TABS.find((t) => t.key === tab)?.label}>
-            {tab === "needs_you" && <SectionHead title="Prepared actions" count={cards.length} hint="Each records your decision through the same approval queue as Control." />}
-            <div className="flex flex-col" style={{ gap: 12 }}>
+            {tab === "needs_you" && <SectionHead title="Prepared actions" count={cards.length} hint="Each decision is recorded in the same approval queue as Control." />}
+            <RowList>
               {cards.map((card) => (
                 <PreparedCardView
                   key={card.id}
@@ -291,7 +285,7 @@ export default function PreparedPage() {
                   onOpen={() => router.push(targetPathForCard(card))}
                 />
               ))}
-            </div>
+            </RowList>
           </section>
         ) : null}
 
@@ -301,7 +295,7 @@ export default function PreparedPage() {
           <div style={{ marginTop: 24 }}><OutreachSummary context="prepared" /></div>
         </div>
 
-        {showEmpty && !error && <EmptyLine icon={<IconPrepared size={17} />} title={EMPTY_COPY[tab].title} body={EMPTY_COPY[tab].body} />}
+        {showEmpty && !error && <EmptyNote>{EMPTY_COPY[tab]}</EmptyNote>}
       </PageBody>
     </DashboardLayout>
   );
