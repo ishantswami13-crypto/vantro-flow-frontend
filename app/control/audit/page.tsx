@@ -10,7 +10,8 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import Button from "@/components/ui/Button";
 import { ControlHeader, ControlPage } from "@/components/control/ControlSubnav";
 import { OFFLINE } from "@/components/connectors/health";
-import { formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatTime } from "@/lib/format";
+import { controlStyles as cs } from "@/components/control/Authority";
 import { api, type AuditEvent } from "@/lib/api";
 
 // Control > Audit log. A real, chronological, per-business trail from
@@ -64,6 +65,17 @@ export default function AuditPage() {
     });
   }, [all, query, source]);
 
+  // Rows arrive newest first; group them under one line per day.
+  const days = useMemo(() => {
+    const out: { day: string; rows: AuditEvent[] }[] = [];
+    for (const e of rows) {
+      const d = formatDate(e.created_at);
+      if (out.length && out[out.length - 1].day === d) out[out.length - 1].rows.push(e);
+      else out.push({ day: d, rows: [e] });
+    }
+    return out;
+  }, [rows]);
+
   const FILTERS: { key: SourceFilter; label: string }[] = [
     { key: "all", label: "All" }, { key: "decision", label: "Decisions" }, { key: "ledger", label: "Ledger" },
   ];
@@ -77,14 +89,14 @@ export default function AuditPage() {
         .au-desk { display: none; }
         .au-mobile { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
         @media (min-width: 900px) {
-          .au-grid { grid-template-columns: 132px minmax(0, 1fr) 140px 160px 104px; }
+          .au-grid { grid-template-columns: 84px minmax(0, 1fr) 140px 160px 104px; }
           .au-head { display: grid; }
           .au-desk { display: block; }
           .au-mobile { display: none; }
           .au-grid .au-src { display: none; }
         }
         @media (min-width: 1200px) {
-          .au-grid { grid-template-columns: 132px minmax(0, 2fr) 140px 160px 140px 104px; }
+          .au-grid { grid-template-columns: 84px minmax(0, 2fr) 150px 170px 150px 104px; }
           .au-grid .au-src { display: block; }
         }
         .seg { display: inline-flex; padding: 2px; border-radius: 8px; background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
@@ -127,18 +139,23 @@ export default function AuditPage() {
                 <span role="columnheader">Time</span><span role="columnheader">Action</span><span role="columnheader">Actor</span>
                 <span role="columnheader">Object</span><span role="columnheader" className="au-src">Source</span><span role="columnheader">Result</span>
               </div>
-              {rows.map((e) => (
-                <div role="row" key={`${e.source}:${e.id}`} className="au-grid au-row ops-row">
-                  <span role="cell" className="au-desk tabular-nums" style={{ color: "var(--ink-2)", fontSize: 12.5 }}>{formatDateTime(e.created_at)}</span>
-                  <span role="cell" className="min-w-0">
-                    <span style={{ color: "var(--ink)" }}>{humanize(e.action)}</span>
-                    {e.title && <span style={{ color: "var(--ink-2)" }}> · {e.title}</span>}
-                    <span className="au-mobile block">{formatDateTime(e.created_at)}{e.actor ? ` · ${e.actor}` : ""}</span>
-                  </span>
-                  <span role="cell" className="au-desk truncate" style={{ color: e.actor ? "var(--body)" : "var(--ink-3)" }}>{e.actor || "—"}</span>
-                  <span role="cell" className="au-desk truncate" style={{ color: "var(--body)" }}>{objectLabel(e)}</span>
-                  <span role="cell" className={`au-desk au-src truncate ${e.source === "decision" && e.model ? "num" : ""}`} style={{ color: "var(--ink-2)", fontSize: e.source === "decision" && e.model ? 12 : 13 }}>{e.source === "decision" ? (e.model || "Starlane") : "Ledger"}</span>
-                  <span role="cell">{e.result ? <StatusChip tone={toneForStatus(e.result)}>{humanize(e.result)}</StatusChip> : <span className="au-desk" style={{ color: "var(--ink-3)" }}>—</span>}</span>
+              {days.map((g) => (
+                <div key={g.day} role="rowgroup">
+                  <div role="row" className={cs.day}><span role="cell" style={{ fontWeight: 600, color: "var(--ink)" }}>{g.day}</span><span role="cell">{g.rows.length} event{g.rows.length === 1 ? "" : "s"}</span></div>
+                  {g.rows.map((e) => (
+                    <div role="row" key={`${e.source}:${e.id}`} className="au-grid au-row ops-row">
+                      <span role="cell" className="au-desk num-quiet" style={{ color: "var(--ink-2)", fontSize: 12.5 }} title={formatDateTime(e.created_at)}>{formatTime(e.created_at)}</span>
+                      <span role="cell" className="min-w-0">
+                        <span style={{ color: "var(--ink)", fontWeight: 500 }}>{humanize(e.action)}</span>
+                        {e.title && <span style={{ color: "var(--ink-2)" }}> · {e.title}</span>}
+                        <span className="au-mobile block">{formatTime(e.created_at)}{e.actor ? ` · ${e.actor}` : ""}</span>
+                      </span>
+                      <span role="cell" className="au-desk truncate" style={{ color: e.actor ? "var(--ink)" : "var(--ink-3)" }}>{e.actor || "—"}</span>
+                      <span role="cell" className="au-desk truncate" style={{ color: "var(--body)" }}>{objectLabel(e)}</span>
+                      <span role="cell" className={`au-desk au-src truncate ${e.source === "decision" && e.model ? "num" : ""}`} style={{ color: "var(--ink-2)", fontSize: e.source === "decision" && e.model ? 12 : 13 }}>{e.source === "decision" ? (e.model || "Starlane") : "Ledger"}</span>
+                      <span role="cell">{e.result ? <StatusChip tone={toneForStatus(e.result)}>{humanize(e.result)}</StatusChip> : <span className="au-desk" style={{ color: "var(--ink-3)" }}>—</span>}</span>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
