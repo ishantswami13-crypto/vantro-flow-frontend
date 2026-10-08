@@ -61,14 +61,14 @@
   --tk-surface-3: 238 237 233;
   --tk-elevated:  255 255 255;
 
-  --tk-ink:       22 22 20;
-  --tk-body:      62 62 58;
-  --tk-ink-2:     96 96 91;
-  --tk-ink-3:     117 117 111;   /* meta: AA on the workspace */
+  --tk-ink:       17 17 15;     /* primary: near-black */
+  --tk-body:      46 46 43;     /* long-form body */
+  --tk-ink-2:     82 82 77;     /* secondary: medium neutral */
+  --tk-ink-3:     118 117 111;  /* tertiary: meta, still AA on the workspace */
 
-  --tk-line:          233 232 228;
-  --tk-line-hairline: 239 238 234;
-  --tk-line-strong:   214 213 207;
+  --tk-line:          228 227 222;
+  --tk-line-hairline: 236 235 231;
+  --tk-line-strong:   206 205 199;
 
   --tk-positive: 52 110 74;
   --tk-warning:  140 98 26;
@@ -110,10 +110,10 @@
   --info:          rgb(var(--tk-info));
 
   /* Translucent ink lines: card edges, inputs, buttons, rows */
-  --line-row:      rgb(var(--tk-ink) / 0.06);
-  --line-card:     rgb(var(--tk-ink) / 0.10);
-  --line-input:    rgb(var(--tk-ink) / 0.12);
-  --line-button:   rgb(var(--tk-ink) / 0.14);
+  --line-row:      rgb(var(--tk-ink) / 0.07);
+  --line-card:     rgb(var(--tk-ink) / 0.11);
+  --line-input:    rgb(var(--tk-ink) / 0.16);
+  --line-button:   rgb(var(--tk-ink) / 0.17);
   --line-emphasis: rgb(var(--tk-ink) / 0.18);
   --hover:         rgb(var(--tk-ink) / 0.04);
   --pressed:       rgb(var(--tk-ink) / 0.07);

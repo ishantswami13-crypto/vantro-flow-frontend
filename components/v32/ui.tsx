@@ -49,8 +49,8 @@ export function PageHeader({ title, subtitle, right, children }: {
     <div className="fade-once">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 22, lineHeight: 1.25, letterSpacing: "-0.01em", color: V.ink }}>{title}</h1>
-          {subtitle && <div style={{ fontSize: 13, lineHeight: 1.5, color: V.secondary, marginTop: 4, maxWidth: 640 }}>{subtitle}</div>}
+          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 25, lineHeight: 1.2, letterSpacing: "-0.015em", color: V.ink }}>{title}</h1>
+          {subtitle && <div style={{ fontSize: 13.5, lineHeight: 1.5, color: V.secondary, marginTop: 6, maxWidth: 680 }}>{subtitle}</div>}
         </div>
         {right && <div className="flex items-center gap-2 shrink-0">{right}</div>}
       </div>
@@ -301,8 +301,8 @@ export function IconTile({ children, tone, size = 34 }: { children: React.ReactN
 export function Figure({ value, label, tone }: { value: React.ReactNode; label: React.ReactNode; tone?: string }) {
   return (
     <div className="min-w-0">
-      <div className="num" style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 400, letterSpacing: "-0.02em", color: tone || V.ink }}>{value}</div>
-      <div style={{ fontSize: 12, color: V.tertiary, marginTop: 4 }}>{label}</div>
+      <div className="num" style={{ fontSize: 21, lineHeight: 1.2, fontWeight: 500, letterSpacing: "-0.025em", color: tone || V.ink }}>{value}</div>
+      <div style={{ fontSize: 12, color: V.secondary, marginTop: 4 }}>{label}</div>
     </div>
   );
 }
