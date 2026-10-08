@@ -80,3 +80,10 @@ export function formatCount(n: number | null | undefined): string {
   if (n === null || n === undefined || !Number.isFinite(n)) return "—";
   return n.toLocaleString("en-IN");
 }
+
+/** Time of day only ("4:21 pm"), for rows already grouped by date. */
+export function formatTime(v: string | number | Date | null | undefined): string {
+  const d = toDate(v);
+  if (!d) return "";
+  return d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
+}
