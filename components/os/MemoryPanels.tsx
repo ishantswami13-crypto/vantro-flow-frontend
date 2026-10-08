@@ -43,12 +43,6 @@ const TEACH_KINDS = [
   { kind: "HYPOTHESIS", label: "A hunch to test" },
 ];
 
-function authorityLabel(k: KnowledgeItem): string {
-  if (k.authority === "engine") return "Measured by Starlane";
-  if (k.authority === "document") return "From a document";
-  return "Said by a person";
-}
-
 function confidenceText(c: KnowledgeItem["confidence"]): string | null {
   if (c == null || c === "") return null;
   if (typeof c === "number") return `${Math.round(c <= 1 ? c * 100 : c)}% confidence`;
@@ -57,6 +51,26 @@ function confidenceText(c: KnowledgeItem["confidence"]): string | null {
   if (s === "UNVERIFIED") return "Not verified";
   return null;
 }
+
+// The four provenances the owner must never confuse, in trust order. Each
+// says plainly how far Starlane leans on it.
+const PRIMARY: { kind: string; label: string; trust: string }[] = [
+  { kind: "LEARNED_PATTERN", label: "Learned", trust: "Measured from checked outcomes. Drives suggestions." },
+  { kind: "OBSERVED_FACT", label: "Observed", trust: "Read directly from your ledger." },
+  { kind: "SOURCE_CLAIM", label: "From documents", trust: "Stated in a document, not checked against the ledger." },
+  { kind: "HUMAN_OBSERVATION", label: "Human corrections", trust: "What people told Starlane. Context only, never a fact." },
+];
+const GROUP_LABEL: Record<string, string> = Object.fromEntries(PRIMARY.map((p) => [p.kind, p.label]));
+const GROUP_USE: Record<string, string> = {
+  LEARNED_PATTERN: "Drives suggestions",
+  OBSERVED_FACT: "Used as fact",
+  SOURCE_CLAIM: "Used with caution",
+  HUMAN_OBSERVATION: "Context only",
+  HYPOTHESIS: "Not acted on",
+  INFERENCE: "Not measured",
+  SEMANTIC_DEFINITION: "Shapes wording",
+  POLICY: "Always followed",
+};
 
 /** Everything Starlane knows, grouped by where it came from, with a filter. */
 export function MemoryKnowledge() {
@@ -71,6 +85,8 @@ export function MemoryKnowledge() {
       .sort((a, b) => (KIND_ORDER.indexOf(a[0]) + 99) % 99 - (KIND_ORDER.indexOf(b[0]) + 99) % 99);
   }, [data]);
   const total = groups.reduce((n, [, items]) => n + items.length, 0);
+  const countOf = (kind: string) => groups.find(([k]) => k === kind)?.[1].length || 0;
+  const others = groups.filter(([k]) => !PRIMARY.some((p) => p.kind === k));
   const shown = filter === "ALL" ? groups : groups.filter(([k]) => k === filter);
 
   const forget = async (k: KnowledgeItem) => {
@@ -80,86 +96,113 @@ export function MemoryKnowledge() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
-      <Section
-        title="What Starlane knows"
-        count={data ? total : null}
-        subtitle="Kept apart by where it came from. Only measured patterns drive suggestions; what people say is context."
-      >
-        <div style={{ paddingTop: 12 }}>
-          {loading && !data && <SkeletonRows rows={4} height={56} />}
-          {!loading && error != null && <InlineError onRetry={reload}>{humaneError(error)}</InlineError>}
-          {err && <div style={{ marginBottom: 12 }}><InlineError>{err}</InlineError></div>}
+      <section aria-label="What Starlane knows">
+        {loading && !data && <SkeletonRows rows={4} height={56} />}
+        {!loading && error != null && <InlineError onRetry={reload}>{humaneError(error)}</InlineError>}
+        {err && <div style={{ marginBottom: 12 }}><InlineError>{err}</InlineError></div>}
 
-          {data && total === 0 && (
-            <p className="wk-empty">Starlane doesn&apos;t know anything yet. Patterns appear once a workflow has run and its outcomes have been checked in your ledger; you can also tell Starlane something the data can&apos;t show, below.</p>
-          )}
+        {data && (
+          <div role="group" aria-label="Where Starlane's knowledge came from" className="mem-prov">
+            {PRIMARY.map((p) => {
+              const n = countOf(p.kind);
+              const on = filter === p.kind;
+              return (
+                <button key={p.kind} type="button" aria-pressed={on} disabled={n === 0} onClick={() => setFilter(on ? "ALL" : p.kind)} className="mem-prov-cell">
+                  <span className="mem-prov-n num">{formatCount(n)}</span>
+                  <span className="mem-prov-label">{p.label}</span>
+                  <span className="mem-prov-trust">{p.trust}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
-          {data && groups.length > 1 && (
-            <div role="tablist" aria-label="Filter by kind" className="flex flex-wrap" style={{ gap: "4px 18px", marginBottom: 4 }}>
-              <FilterChip on={filter === "ALL"} onClick={() => setFilter("ALL")} label="All" count={total} />
-              {groups.map(([kind, items]) => (
-                <FilterChip key={kind} on={filter === kind} onClick={() => setFilter(kind)} label={KIND_LABEL[kind] || kind} count={items.length} />
-              ))}
+        {data && total === 0 && (
+          <p className="wk-empty" style={{ marginTop: 12 }}>Starlane doesn&apos;t know anything yet. Patterns appear once a workflow has run and its outcomes have been checked in your ledger; you can also tell Starlane something the data can&apos;t show, below.</p>
+        )}
+
+        {data && total > 0 && (filter !== "ALL" || others.length > 0) && (
+          <div className="flex flex-wrap items-center" style={{ gap: "4px 18px", marginTop: 14 }}>
+            {filter !== "ALL" && <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" style={{ marginLeft: -10 }} onClick={() => setFilter("ALL")}>Show everything <span className="num-quiet" style={{ color: "var(--ink-3)" }}>{formatCount(total)}</span></button>}
+            {others.map(([kind, items]) => (
+              <FilterChip key={kind} on={filter === kind} onClick={() => setFilter(filter === kind ? "ALL" : kind)} label={KIND_LABEL[kind] || kind} count={items.length} />
+            ))}
+          </div>
+        )}
+
+        {shown.map(([kind, items]) => (
+          <div key={kind} className="mem-group">
+            <div className="mem-group-head">
+              <h3 className="mem-group-title">{GROUP_LABEL[kind] || KIND_LABEL[kind] || kind}<span className="wk-count">{items.length}</span></h3>
+              {GROUP_USE[kind] && <span className="mem-group-use">{GROUP_USE[kind]}</span>}
             </div>
-          )}
-
-          {shown.map(([kind, items]) => (
-            <div key={kind} style={{ marginTop: 24 }}>
-              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>
-                {KIND_LABEL[kind] || kind}
-                <span className="wk-count">{items.length}</span>
-              </h3>
-              {KIND_HELP[kind] && <p className="meta" style={{ margin: "2px 0 0" }}>{KIND_HELP[kind]}</p>}
-              <ul style={{ listStyle: "none", margin: "8px 0 0", padding: 0, borderTop: "1px solid var(--line)" }}>
-                {items.map((k) => <KnowledgeRow key={k.id} k={k} onForget={HUMAN_KINDS.has(k.kind) ? () => forget(k) : undefined} />)}
-              </ul>
+            {KIND_HELP[kind] && <p className="meta" style={{ margin: "2px 0 10px" }}>{KIND_HELP[kind]}</p>}
+            <div role="table" aria-label={GROUP_LABEL[kind] || KIND_LABEL[kind] || kind} className="wk-list wk-flat">
+              <div role="row" className="wk-head" style={{ gridTemplateColumns: K_COLS }}>
+                <span role="columnheader">Statement</span>
+                <span role="columnheader">Basis</span>
+                <span role="columnheader">About</span>
+                <span role="columnheader">{kind === "LEARNED_PATTERN" || kind === "OBSERVED_FACT" ? "Checked" : "Added"}</span>
+                <span role="columnheader" />
+              </div>
+              {items.map((k) => <KnowledgeRow key={k.id} k={k} onForget={HUMAN_KINDS.has(k.kind) ? () => forget(k) : undefined} />)}
             </div>
-          ))}
-        </div>
-      </Section>
+          </div>
+        ))}
+      </section>
 
       <TeachForm onSaved={reload} />
     </div>
   );
 }
 
+const K_COLS = "minmax(0,1fr) 180px 150px 96px 64px";
+
 function FilterChip({ on, onClick, label, count }: { on: boolean; onClick: () => void; label: string; count: number }) {
   return (
     <button
-      type="button" role="tab" aria-selected={on} onClick={onClick}
+      type="button" aria-pressed={on} onClick={onClick}
       className="hover-dim inline-flex items-center"
       style={{
         gap: 5, height: 28, padding: 0, fontSize: 12.5, cursor: "pointer", border: 0, background: "transparent",
-        color: on ? "var(--ink)" : "var(--ink-3)", fontWeight: on ? 500 : 400,
+        color: on ? "var(--ink)" : "var(--ink-2)", fontWeight: on ? 500 : 400,
         boxShadow: on ? "inset 0 -1px 0 var(--ink)" : "none",
       }}
     >
-      {label}<span className="num" style={{ fontSize: 11, color: "var(--ink-3)", fontWeight: 400 }}>{count}</span>
+      {label}<span className="num-quiet" style={{ fontSize: 11.5, color: "var(--ink-3)" }}>{count}</span>
     </button>
   );
 }
 
+function basisOf(k: KnowledgeItem): { main: string; sub: string | null } {
+  const conf = confidenceText(k.confidence);
+  if (k.authority === "engine") {
+    return { main: k.sample_count != null ? `${formatCount(k.sample_count)} ${k.sample_count === 1 ? "case" : "cases"}` : "Measured by Starlane", sub: conf };
+  }
+  if (k.authority === "document") return { main: k.source?.ref || "A document", sub: conf };
+  return { main: "Said by a person", sub: conf };
+}
+
 function KnowledgeRow({ k, onForget }: { k: KnowledgeItem; onForget?: () => void }) {
   const quarantined = k.status === "QUARANTINED";
-  const parts: string[] = [authorityLabel(k)];
-  if (k.sample_count != null) parts.push(`${formatCount(k.sample_count)} ${k.sample_count === 1 ? "case" : "cases"}`);
-  const conf = confidenceText(k.confidence);
-  if (conf) parts.push(conf);
-  if (k.scope?.name) parts.push(`About ${k.scope.name}`);
-  if (k.source?.type === "DOCUMENT" && k.source.ref) parts.push(k.source.ref);
-  parts.push(k.last_verified_at ? `Checked ${formatDate(k.last_verified_at)}` : `Added ${formatDate(k.created_at)}`);
-
+  const basis = basisOf(k);
+  const when = k.last_verified_at || k.created_at;
   return (
-    <li className="flex items-start justify-between" style={{ gap: 16, padding: "11px 0", borderBottom: "1px solid var(--line)" }}>
-      <div className="min-w-0">
-        <p className="prose-measure" style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: quarantined ? "var(--ink-3)" : "var(--ink)" }}>{k.statement}</p>
-        <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--ink-3)", lineHeight: 1.5 }}>{parts.join(" · ")}</p>
+    <div role="row" className="wk-row mem-k-row" style={{ gridTemplateColumns: K_COLS }}>
+      <div role="cell" className="min-w-0">
+        <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: quarantined ? "var(--ink-3)" : "var(--ink)", maxWidth: "68ch" }}>{k.statement}</p>
+        {quarantined && <div style={{ marginTop: 4 }}><StatusChip tone="critical" title="It reads like an instruction to Starlane, so it is not used.">Quarantined, not used</StatusChip></div>}
       </div>
-      <div className="flex items-center shrink-0" style={{ gap: 6 }}>
-        {quarantined && <StatusChip tone="critical" title="It reads like an instruction to Starlane, so it is not used.">Quarantined, not used</StatusChip>}
-        {onForget && <button type="button" onClick={onForget} className="ui-btn ui-btn-ghost ui-btn-sm" aria-label={`Forget: ${k.statement}`}>Forget</button>}
+      <div role="cell" className="min-w-0 mem-k-cell">
+        <div className={k.authority === "engine" && k.sample_count != null ? "num-quiet" : undefined} style={{ fontSize: 12.5, color: "var(--ink)" }}>{basis.main}</div>
+        {basis.sub && <div className="wk-meta">{basis.sub}</div>}
       </div>
-    </li>
+      <div role="cell" className="min-w-0 mem-k-cell truncate" style={{ fontSize: 12.5, color: k.scope?.name ? "var(--ink-2)" : "var(--ink-3)" }}>{k.scope?.name || "Whole business"}</div>
+      <div role="cell" className="mem-k-cell" style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{formatDate(when)}</div>
+      <div role="cell" className="mem-k-cell md:text-right">
+        {onForget && <button type="button" onClick={onForget} className="ui-btn ui-btn-ghost ui-btn-sm mem-forget" aria-label={`Forget: ${k.statement}`}>Forget</button>}
+      </div>
+    </div>
   );
 }
 
@@ -258,7 +301,7 @@ export function MemoryOutcomes() {
           )}
           {data?.outcomes.map((o) => (
             <div key={o.workflowId} style={{ padding: "12px 0 16px", borderBottom: "1px solid var(--line)" }}>
-              <div className="wk-title">{o.name}</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)" }}>{o.name}</div>
               {Object.entries(o.byMode).map(([mode, m]) => <OutcomeBlock key={mode} mode={mode} m={m} />)}
             </div>
           ))}

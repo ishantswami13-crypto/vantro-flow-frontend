@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type AuditEvent } from "@/lib/api";
@@ -8,7 +8,7 @@ import { MemoryKnowledge, MemoryOutcomes } from "@/components/os/MemoryPanels";
 import { PageHeader, Subnav, SkeletonRows } from "@/components/v32/ui";
 import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatTime } from "@/lib/format";
 import { OFFLINE_LINE } from "@/components/scan/humaneError";
 
 // Memory: what Starlane knows, whether its follow-ups worked, and how each
@@ -107,7 +107,23 @@ function kindOf(e: AuditEvent): string {
   return e.entity_type ? humanize(e.entity_type) : "Record";
 }
 
-const TL_COLS = "112px 84px minmax(0,1fr) 104px 150px 128px";
+const TL_COLS = "84px 84px minmax(0,1fr) 104px 150px 128px";
+
+// Rows are grouped under the day they happened, so the time column carries
+// only the time and the history reads in days, not in repeated dates.
+function dayKey(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "" : d.toDateString();
+}
+function dayLabel(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Date not recorded";
+  const today = new Date();
+  const yesterday = new Date(today.getTime() - 86400000);
+  if (d.toDateString() === today.toDateString()) return `Today, ${formatDate(iso)}`;
+  if (d.toDateString() === yesterday.toDateString()) return `Yesterday, ${formatDate(iso)}`;
+  return formatDate(iso);
+}
 
 /** The organisation's history, one dense row per recorded change: when, what
  *  kind of record, what happened, which record, who acted and what it led
@@ -124,20 +140,25 @@ function Timeline({ events, oldestFirst = false }: { events: AuditEvent[]; oldes
         <span role="columnheader">By</span>
         <span role="columnheader">Outcome</span>
       </div>
-      {events.map((e) => {
+      {events.map((e, i) => {
         const out = outcomeOf(e);
+        const day = dayKey(e.created_at);
+        const newDay = i === 0 || dayKey(events[i - 1].created_at) !== day;
         return (
-          <div key={e.id} role="row" className="wk-row mem-row" style={{ gridTemplateColumns: TL_COLS }}>
-            <time role="cell" dateTime={e.created_at} title={formatDateTime(e.created_at)} className="num" style={{ fontSize: 12, color: "var(--ink-3)" }}>{formatDateTime(e.created_at)}</time>
-            <span role="cell" className="mem-kind">{kindOf(e)}</span>
-            <span role="cell" className="min-w-0" style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.45 }}>
-              {e.title || humanize(e.action)}
-              {e.title && <span className="mem-action">{humanize(e.action)}</span>}
-            </span>
-            <span role="cell" className="num mem-record truncate" title={e.entity_id ? `${kindOf(e)} ${e.entity_id}` : undefined}>{e.entity_id ? String(e.entity_id).slice(0, 8) : "—"}</span>
-            <span role="cell" className="mem-by truncate" title={e.model ? `${e.actor || "Unknown"} · ${e.model}` : undefined}>{e.actor || "—"}</span>
-            <span role="cell" className="mem-out">{out ? <StatusChip tone={out.tone}>{out.outcome}</StatusChip> : <span style={{ color: "var(--ink-3)", fontSize: 12 }}>—</span>}</span>
-          </div>
+          <React.Fragment key={e.id}>
+            {newDay && <div role="row" className="mem-day"><span role="cell">{dayLabel(e.created_at)}</span></div>}
+            <div role="row" className="wk-row mem-row" style={{ gridTemplateColumns: TL_COLS }}>
+              <time role="cell" dateTime={e.created_at} title={formatDateTime(e.created_at)} className="num-quiet" style={{ fontSize: 12.5, color: "var(--ink-2)" }}>{formatTime(e.created_at)}</time>
+              <span role="cell" className="mem-kind">{kindOf(e)}</span>
+              <span role="cell" className="min-w-0" style={{ fontSize: 13.5, color: "var(--ink)", lineHeight: 1.45 }}>
+                {e.title || humanize(e.action)}
+                {e.title && <span className="mem-action">{humanize(e.action)}</span>}
+              </span>
+              <span role="cell" className="num mem-record truncate" title={e.entity_id ? `${kindOf(e)} ${e.entity_id}` : undefined}>{e.entity_id ? String(e.entity_id).slice(0, 8) : "—"}</span>
+              <span role="cell" className="mem-by truncate" title={e.model ? `${e.actor || "Unknown"} · ${e.model}` : undefined}>{e.actor || "—"}</span>
+              <span role="cell" className="mem-out">{out ? <StatusChip tone={out.tone}>{out.outcome}</StatusChip> : <span style={{ color: "var(--ink-3)", fontSize: 12 }}>—</span>}</span>
+            </div>
+          </React.Fragment>
         );
       })}
     </div>
