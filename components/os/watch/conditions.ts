@@ -29,6 +29,17 @@ export function conditionText(w: Watch): string {
   return `${m?.short || w.metric_key}${who} ${op} ${value}`;
 }
 
+/** The same condition split for a table: metric, who, operator and threshold. */
+export function thresholdParts(w: Watch): { metric: string; who: string | null; op: string; value: string; unit: string } {
+  const m = METRIC_OPTIONS.find((x) => x.value === w.metric_key);
+  const op = OPERATOR_OPTIONS.find((o) => o.value === w.condition_config?.operator)?.short || w.condition_config?.operator || "";
+  const t = w.condition_config?.threshold;
+  const days = m?.unit === "days";
+  const value = typeof t === "number" ? (days ? formatCount(t) : inrWhole(t)) : "—";
+  const who = w.metric_key === "customer_exposure_amount" && w.condition_config?.entity_name ? w.condition_config.entity_name : null;
+  return { metric: m?.short || w.metric_key, who, op: op ? op.charAt(0).toUpperCase() + op.slice(1) : "", value, unit: days && typeof t === "number" ? "days" : "" };
+}
+
 /** Where the condition stands at its latest check. Never green before a check. */
 export function watchStatus(w: Watch): { label: string; tone: StatusTone } {
   if (w.status === "paused") return { label: "Paused", tone: "neutral" };
