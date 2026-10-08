@@ -20,10 +20,14 @@ const RESOLUTION: Record<string, string> = {
 };
 const KIND: Record<string, string> = { fact: "Fact", calculated: "Calculated", assumption: "Assumption", estimate: "Estimate", model: "Model" };
 
+/** A fact's value. A watch evaluation stores `{ value, detail }`, so an
+ *  object with a numeric `value` reads as that number. */
 function factValue(f: EvidenceItem): string {
-  const v = f.value;
+  const raw = f.value as unknown;
+  const v = raw && typeof raw === "object" && typeof (raw as { value?: unknown }).value === "number" ? (raw as { value: number }).value : raw;
   if (v === null || v === undefined || v === "") return "—";
   if (typeof v === "number") return f.unit === "INR" ? inrWhole(v) : formatCount(v);
+  if (typeof v === "object") return "—";
   const s = String(v);
   if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return formatDateTime(s);
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return formatDate(s);
@@ -48,7 +52,9 @@ function statusOf(e: WatchEvent): { tone: StatusTone; label: string } | null {
   return null;
 }
 
-export default function WatchEvents() {
+/** `onActive` receives the open and acknowledged events each time they load,
+ *  so the conditions table can show the value a triggered watch found. */
+export default function WatchEvents({ onActive }: { onActive?: (events: WatchEvent[]) => void } = {}) {
   const notify = useToast();
   const [state, setState] = useState<"active" | "closed">("active");
   const [data, setData] = useState<WatchList | null>(null);
@@ -57,8 +63,8 @@ export default function WatchEvents() {
   const load = useCallback(() => {
     setData(null);
     setFailed(false);
-    request<WatchList>(`/api/client/watch?state=${state}`).then((d) => setData(d)).catch(() => setFailed(true));
-  }, [state]);
+    request<WatchList>(`/api/client/watch?state=${state}`).then((d) => { setData(d); if (state === "active") onActive?.(d.events); }).catch(() => setFailed(true));
+  }, [state, onActive]);
   useEffect(() => { load(); }, [load]);
 
   async function move(e: WatchEvent, to: "acknowledged" | "dismissed") {

@@ -7,7 +7,7 @@ import { api, type Connector, type DataConnection } from "@/lib/api";
 import { PageHeader, SkeletonRows, Sep } from "@/components/v32/ui";
 import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 import { QuietError } from "@/components/os/bridge/kit";
-import { healthOf, OFFLINE } from "@/components/connectors/health";
+import { healthOf, objectsLabel, CAPABILITY_TEXT, OFFLINE } from "@/components/connectors/health";
 import { formatDateTime, formatRelative } from "@/lib/format";
 
 // Sources > Tally detail.
@@ -75,6 +75,9 @@ export default function SourcesTallyPage() {
   const lastOk = bridge ? bridge.state.lastSuccessAt ?? null : tally?.last_sync_at ?? null;
   const lastErr = bridge ? bridge.state.lastError : tally?.last_sync_error ?? null;
   const devices = (bridge?.state.devices || []).filter((d) => d.status === "ACTIVE");
+  const attempt = bridge?.state.lastAttempt || null;
+  const attemptText = attempt ? (attempt.status === "succeeded" ? "Succeeded" : attempt.status === "failed" ? "Failed" : "Running") : null;
+  const attemptTone: StatusTone = attempt?.status === "succeeded" ? "positive" : attempt?.status === "failed" ? "critical" : "info";
 
   return (
     <DashboardLayout pageTitle="TallyPrime">
@@ -109,7 +112,17 @@ export default function SourcesTallyPage() {
                     <Fact label="Last successful sync">
                       {lastOk ? <span>{formatRelative(lastOk)} <span style={{ color: "var(--ink-3)" }}>· {formatDateTime(lastOk)}</span></span> : <span style={{ color: "var(--ink-3)" }}>Never</span>}
                     </Fact>
+                    {attempt && attemptText && (
+                      <Fact label="Latest attempt">
+                        <span className="inline-flex items-center flex-wrap" style={{ gap: 8 }}>
+                          <StatusChip tone={attemptTone}>{attemptText}</StatusChip>
+                          <span style={{ color: "var(--ink-3)" }}>{formatDateTime(attempt.finishedAt || attempt.startedAt)}</span>
+                        </span>
+                      </Fact>
+                    )}
                     <Fact label="Connected since">{formatDateTime(tally.connected_at)}</Fact>
+                    {bridge && bridge.objects.length > 0 && <Fact label="Reads">{objectsLabel(bridge)}</Fact>}
+                    {bridge?.state.capabilityLabel && CAPABILITY_TEXT[bridge.state.capabilityLabel] && <Fact label="Access">{CAPABILITY_TEXT[bridge.state.capabilityLabel]}</Fact>}
                     {devices.length > 0 && (
                       <Fact label={devices.length === 1 ? "Paired computer" : "Paired computers"}>
                         {devices.map((d) => `${d.name}${d.lastSeenAt ? `, seen ${formatRelative(d.lastSeenAt)}` : ""}`).join(" · ")}

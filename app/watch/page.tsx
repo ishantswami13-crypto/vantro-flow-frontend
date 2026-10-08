@@ -4,14 +4,15 @@ import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, Watch } from "@/lib/api";
-import { formatDateTime, formatRelative, formatCount } from "@/lib/format";
+import { formatDateTime, formatRelative, formatCount, inrWhole } from "@/lib/format";
+import type { WatchEvent } from "../../packages/contracts/src/features";
 import { PageHeader, Subnav, SkeletonRows } from "@/components/v32/ui";
 import { IconPlus } from "@/components/v32/icons";
 import { StatusChip } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { QuietError, QuietLine } from "@/components/os/bridge/kit";
-import { conditionText, watchStatus } from "@/components/os/watch/conditions";
+import { thresholdParts, watchStatus, METRIC_OPTIONS } from "@/components/os/watch/conditions";
 import { NewWatchModal } from "@/components/os/watch/NewWatchModal";
 import WatchEvents from "@/components/features/WatchEvents";
 import { WatchBrief, ObjectivesPanel } from "@/components/os/WatchPanels";
@@ -43,6 +44,7 @@ function WatchPageInner() {
   const [showModal, setShowModal] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Watch | null>(null);
+  const [events, setEvents] = useState<WatchEvent[] | null>(null);
 
   // Prefill from the Lens drawer's "Watch" action: ?prefill_metric=...&prefill_entity=...
   const prefillMetric = searchParams.get("prefill_metric");
@@ -150,7 +152,7 @@ function WatchPageInner() {
                       : "No active watches. Resume a paused watch or create a new one."}
                   </QuietLine>
                 ) : (
-                  <ConditionsTable rows={filtered} busyId={busyId}
+                  <ConditionsTable rows={filtered} events={events} busyId={busyId}
                     onCheck={(w) => run(w, "check this watch", () => api.watches.evaluate(w.id), "Checked just now")}
                     onToggle={(w) => run(w, w.status === "paused" ? "resume this watch" : "pause this watch",
                       () => api.watches.update(w.id, { status: w.status === "paused" ? "active" : "paused" }),
@@ -163,7 +165,7 @@ function WatchPageInner() {
           )}
         </section>
 
-        <WatchEvents />
+        <WatchEvents onActive={setEvents} />
 
         <div className="rf-cols-2" style={{ alignItems: "start" }}>
           <WatchBrief />
@@ -199,39 +201,66 @@ function WatchPageInner() {
   );
 }
 
-const COLS = "minmax(0, 0.8fr) minmax(0, 1.4fr) 160px 92px 92px 172px";
+/** The value a triggered watch found, from its open "Condition met" event
+ *  on Watch (evidence fact "Value found", stored as a number or as the
+ *  evaluation's `{ value, detail }`). Nothing else is a current value, so a
+ *  watch without an open event shows none. */
+function valueFound(w: Watch, events: WatchEvent[] | null): number | null {
+  const e = (events || []).find((x) => x.kind === "watch_triggered" && x.entity?.type === "watch" && String(x.entity.id) === String(w.id));
+  const raw = e?.evidence?.facts?.find((f) => /value found/i.test(f.label))?.value as unknown;
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+  if (raw && typeof raw === "object" && typeof (raw as { value?: unknown }).value === "number") return (raw as { value: number }).value;
+  return null;
+}
 
-function ConditionsTable({ rows, busyId, onCheck, onToggle, onDelete }: {
-  rows: Watch[]; busyId: string | null;
+/** A metric value as a mono figure, with "days" kept in the sans. */
+function MetricFigure({ w, n }: { w: Watch; n: number }) {
+  const days = METRIC_OPTIONS.find((m) => m.value === w.metric_key)?.unit === "days";
+  return <><span className="num">{days ? formatCount(n) : inrWhole(n)}</span>{days && <span className="rf-watch-unit"> days</span>}</>;
+}
+
+function ConditionsTable({ rows, events, busyId, onCheck, onToggle, onDelete }: {
+  rows: Watch[]; events: WatchEvent[] | null; busyId: string | null;
   onCheck: (w: Watch) => void; onToggle: (w: Watch) => void; onDelete: (w: Watch) => void;
 }) {
   return (
     <div role="table" aria-label="Watch conditions">
-      <div role="row" className="rf-head" style={{ gridTemplateColumns: COLS }}>
+      <div role="row" className="rf-head rf-watch-head">
         <span role="columnheader">Watching</span>
-        <span role="columnheader">Condition</span>
+        <span role="columnheader" style={{ textAlign: "right" }}>Threshold</span>
+        <span role="columnheader" style={{ textAlign: "right" }} title="The value Starlane found when the condition was last met">Value when met</span>
         <span role="columnheader">Status</span>
-        <span role="columnheader" style={{ textAlign: "right" }}>Last triggered</span>
-        <span role="columnheader" style={{ textAlign: "right" }}>Last checked</span>
+        <span role="columnheader" style={{ textAlign: "right" }}>Last met</span>
         <span role="columnheader"><span className="sr-only">Actions</span></span>
       </div>
       <div role="rowgroup" className="rf-list rf-watch">
         {rows.map((w) => {
           const s = watchStatus(w);
           const busy = busyId === w.id;
+          const t = thresholdParts(w);
+          const found = valueFound(w, events);
           return (
-            <div key={w.id} role="row" className="rf-row rf-hover" style={{ alignItems: "center", opacity: busy ? 0.6 : 1, borderBottom: "1px solid var(--line)" }}>
-              <span role="cell" className="rf-title min-w-0" style={{ fontWeight: 500 }}>{w.name}</span>
-              <span role="cell" className="rf-sub min-w-0">{conditionText(w)}</span>
-              <span role="cell" className="flex items-center flex-wrap" style={{ gap: 10 }}>
+            <div key={w.id} role="row" className="rf-row rf-hover" style={{ opacity: busy ? 0.6 : 1, borderBottom: "1px solid var(--line)" }}>
+              <span role="cell" className="min-w-0">
+                <span className="rf-title line-clamp-2" style={{ fontWeight: 500, overflowWrap: "anywhere" }} title={w.name}>{w.name}</span>
+                <span className="rf-kind block truncate" title={t.who || undefined}>{t.metric}{t.who ? ` · ${t.who}` : ""}</span>
+                <span className="rf-mob">
+                  <span>{t.op} <span className="num" style={{ color: "var(--ink-2)" }}>{t.value}</span>{t.unit && ` ${t.unit}`}</span>
+                  {found != null && <span style={{ color: "var(--ink)" }}>Found <MetricFigure w={w} n={found} /></span>}
+                </span>
+              </span>
+              <span role="cell" className="rf-desk rf-watch-threshold">
+                <span className="rf-watch-op">{t.op}</span> <span className="num">{t.value}</span>{t.unit && <span className="rf-watch-unit"> {t.unit}</span>}
+              </span>
+              <span role="cell" className="rf-desk rf-watch-value">
+                {found != null ? <MetricFigure w={w} n={found} /> : <span className="rf-watch-none">—</span>}
+              </span>
+              <span role="cell" className="flex flex-wrap rf-watch-status">
                 <StatusChip tone={s.tone}>{s.label}</StatusChip>
-                <span className="rf-mob" style={{ marginTop: 0 }}>Checked {w.last_evaluated_at ? formatRelative(w.last_evaluated_at) : "never"}</span>
+                {w.last_evaluated_at && <span className="rf-watch-checked" title={formatDateTime(w.last_evaluated_at)}>Checked {formatRelative(w.last_evaluated_at)}</span>}
               </span>
-              <span role="cell" className="rf-time rf-desk" title={w.last_triggered_at ? formatDateTime(w.last_triggered_at) : undefined}>
+              <span role="cell" className="rf-time rf-desk" style={{ color: w.last_triggered_at ? "var(--ink-2)" : undefined }} title={w.last_triggered_at ? formatDateTime(w.last_triggered_at) : undefined}>
                 {w.last_triggered_at ? formatRelative(w.last_triggered_at) : "Never"}
-              </span>
-              <span role="cell" className="rf-time rf-desk" title={w.last_evaluated_at ? formatDateTime(w.last_evaluated_at) : undefined}>
-                {w.last_evaluated_at ? formatRelative(w.last_evaluated_at) : "Never"}
               </span>
               <span role="cell" className="rf-actions rf-reveal" style={{ gap: 0 }}>
                 <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" disabled={busy || w.status === "paused"} onClick={() => onCheck(w)}>Check now</button>

@@ -11,7 +11,7 @@ import { Modal } from "@/components/ui/Modal";
 import { QuietError, QuietLine, SectionHead } from "@/components/os/bridge/kit";
 import Button from "@/components/ui/Button";
 import { DataQuality } from "@/components/connectors/DataQuality";
-import { healthOf, isConnected, categoryLabel, CAPABILITY_TEXT, OFFLINE } from "@/components/connectors/health";
+import { healthOf, isConnected, categoryLabel, objectsLabel, CAPABILITY_TEXT, OFFLINE } from "@/components/connectors/health";
 import { formatDateTime, formatRelative, formatCount } from "@/lib/format";
 
 // Sources: every system Starlane can connect to, and its live state.
@@ -31,7 +31,11 @@ type TabKey = "connected" | "available" | "sync" | "quality" | "reconciliation";
 function noteFor(c: Connector): string {
   if (c.state.health === "error" && c.state.lastError) return c.state.lastError;
   if (c.state.health === "stale" && !c.state.lastSyncAt) return "Paired, but nothing has synced yet";
-  if (c.authType === "file_import" && c.state.lastImport?.filename) return `Last import: ${c.state.lastImport.filename}`;
+  if (c.authType === "file_import" && c.state.lastImport) {
+    const imp = c.state.lastImport;
+    const rows = `${formatCount(imp.rowsAccepted)} rows${imp.rowsRejected ? `, ${formatCount(imp.rowsRejected)} rejected` : ""}`;
+    return imp.filename ? `${imp.filename} · ${rows}` : `Last import: ${rows}`;
+  }
   const active = c.state.devices.filter((x) => x.status === "ACTIVE");
   if (active.length) return active.map((x) => `${x.name}${x.lastSeenAt ? `, seen ${formatRelative(x.lastSeenAt)}` : ""}`).join(" · ");
   if (c.availability !== "available") return c.unavailableReason || c.summary;
@@ -39,14 +43,19 @@ function noteFor(c: Connector): string {
 }
 
 const SYNC_COLS = "minmax(0, 1fr) 128px 148px minmax(0, 2fr)";
-const SRC_COLS = "minmax(0, 1.1fr) 150px 96px minmax(0, 1.5fr) 156px";
 
-function TableHeader({ last = "" }: { last?: string }) {
+function TableHeader() {
   return (
-    <div className="rf-head" style={{ gridTemplateColumns: SRC_COLS }} aria-hidden="true">
-      <span>Source</span><span>Status</span><span style={{ textAlign: "right" }}>Last sync</span><span>Note</span><span style={{ textAlign: "right" }}>{last}</span>
+    <div className="rf-head rf-src-head" aria-hidden="true">
+      <span>Source</span><span>Health</span><span style={{ textAlign: "right" }}>Last sync</span><span>Reads</span><span>Detail</span><span />
     </div>
   );
+}
+
+/** How old a sync is, for the eye: fresh syncs in ink, old ones recede. */
+function syncAge(at: string | null): "fresh" | "old" | "none" {
+  if (!at) return "none";
+  return Date.now() - new Date(at).getTime() > 3 * 24 * 3600_000 ? "old" : "fresh";
 }
 
 function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
@@ -55,24 +64,28 @@ function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
   const cap = isConnected(c) && c.state.capabilityLabel ? CAPABILITY_TEXT[c.state.capabilityLabel] : undefined;
   const note = noteFor(c);
   const errorTone = c.state.health === "error";
+  const reads = c.objects.length ? objectsLabel(c) : null;
+  const age = syncAge(c.state.lastSyncAt);
   return (
     <li>
-      <div className="rf-row rf-hover rf-src" style={{ alignItems: "center", opacity: c.availability === "available" ? 1 : 0.72 }}>
+      <div className="rf-row rf-hover rf-src" data-health={st.tone}>
         <div className="min-w-0">
-          {href ? <Link href={href} className="rf-title hover-dim" style={{ fontWeight: 500 }}>{c.name}</Link> : <span className="rf-title" style={{ fontWeight: 500 }}>{c.name}</span>}
+          {href ? <Link href={href} className="rf-title hover-dim line-clamp-2" style={{ fontWeight: 500 }} title={c.name}>{c.name}</Link> : <span className="rf-title line-clamp-2" style={{ fontWeight: 500 }} title={c.name}>{c.name}</span>}
           <div className="rf-kind flex items-center flex-wrap" style={{ gap: 6 }}>
             {categoryLabel(c)}
             {cap && <><Sep /> {cap}</>}
           </div>
           <div className="rf-mob">
             <StatusChip tone={st.tone}>{st.label}</StatusChip>
-            {c.state.lastSyncAt && <span title={formatDateTime(c.state.lastSyncAt)}>{formatRelative(c.state.lastSyncAt)}</span>}
+            <span title={c.state.lastSyncAt ? formatDateTime(c.state.lastSyncAt) : undefined}>{c.state.lastSyncAt ? `Synced ${formatRelative(c.state.lastSyncAt)}` : "Never synced"}</span>
+            {note && <span className="min-w-0" style={{ flexBasis: "100%", color: errorTone ? "var(--critical)" : "var(--ink-2)", overflowWrap: "anywhere" }}>{note}</span>}
           </div>
         </div>
         <div className="rf-desk"><StatusChip tone={st.tone}>{st.label}</StatusChip></div>
-        <div className="rf-desk rf-time" style={{ color: "var(--body)" }} title={c.state.lastSyncAt ? formatDateTime(c.state.lastSyncAt) : undefined}>
-          {c.state.lastSyncAt ? formatRelative(c.state.lastSyncAt) : <span style={{ color: "var(--ink-3)" }}>Never</span>}
+        <div className="rf-desk rf-src-sync" data-age={age} title={c.state.lastSyncAt ? formatDateTime(c.state.lastSyncAt) : undefined}>
+          {c.state.lastSyncAt ? formatRelative(c.state.lastSyncAt) : "Never"}
         </div>
+        <div className="rf-desk rf-sub min-w-0 truncate" title={reads || undefined}>{reads || <span style={{ color: "var(--ink-3)" }}>—</span>}</div>
         <div className="rf-desk rf-sub min-w-0 truncate" style={{ color: errorTone ? "var(--critical)" : undefined }} title={note}>{note}</div>
         <div className="rf-actions">
           {action}
@@ -91,6 +104,11 @@ function Group({ title, hint, children }: { title: string; hint?: string; childr
       {children}
     </section>
   );
+}
+
+/** The unavailable reason without the "Not built yet." its group title already says. */
+function notBuiltNote(c: Connector): string {
+  return (c.unavailableReason || "").replace(/^not built yet\.?\s*/i, "").trim();
 }
 
 // Sync activity: the latest real attempt per source, newest first.
@@ -122,7 +140,7 @@ export default function SourcesPage() {
   const [tab, setTab] = useState<TabKey>("connected");
   const [connectors, setConnectors] = useState<Connector[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
-  const [confirmRevoke, setConfirmRevoke] = useState<{ id: string; name: string } | null>(null);
+  const [confirmRevoke, setConfirmRevoke] = useState<{ id: string; name: string; choices?: { id: string; name: string }[] } | null>(null);
   const [revoking, setRevoking] = useState<string | null>(null);
   const [revokeFailed, setRevokeFailed] = useState(false);
 
@@ -162,11 +180,14 @@ export default function SourcesPage() {
       const active = c.state.devices.filter((d) => d.status === "ACTIVE");
       return (
         <>
-          {active.map((d) => (
-            <Button key={d.id} variant="ghost" size="sm" onClick={() => { setRevokeFailed(false); setConfirmRevoke({ id: d.id, name: d.name }); }}>
-              {active.length > 1 ? `Revoke ${d.name}` : "Revoke device"}
+          {active.length === 1 && (
+            <Button variant="ghost" size="sm" onClick={() => { setRevokeFailed(false); setConfirmRevoke({ id: active[0].id, name: active[0].name }); }}>Revoke device</Button>
+          )}
+          {active.length > 1 && (
+            <Button variant="ghost" size="sm" onClick={() => { setRevokeFailed(false); setConfirmRevoke({ id: active[0].id, name: active[0].name, choices: active.map((d) => ({ id: d.id, name: d.name })) }); }}>
+              Revoke a device
             </Button>
-          ))}
+          )}
           {!active.length && <Link href="/sources/connect" className="ui-btn ui-btn-secondary ui-btn-sm">Connect</Link>}
         </>
       );
@@ -200,7 +221,8 @@ export default function SourcesPage() {
           subtitle={
             connectors && connected.length ? (
               <span className="inline-flex items-center flex-wrap" style={{ gap: 6 }}>
-                {formatCount(connected.length)} connected
+                {formatCount(connected.length)} {connected.length === 1 ? "company system" : "company systems"}
+                {world.length > 0 && <><Sep /> {formatCount(world.length)} external {world.length === 1 ? "feed" : "feeds"}</>}
                 {lastSync && <><Sep /> <span title={formatDateTime(lastSync)}>last sync {formatRelative(lastSync)}</span></>}
                 {needsLook > 0 && <><Sep /> <StatusChip tone="attention">{formatCount(needsLook)} need{needsLook === 1 ? "s" : ""} a look</StatusChip></>}
               </span>
@@ -281,7 +303,7 @@ export default function SourcesPage() {
                           <div className="rf-row" style={{ gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "center" }}>
                             <div className="min-w-0">
                               <div className="rf-title" style={{ color: "var(--ink-2)" }}>{c.name}</div>
-                              <div className="rf-kind">{c.unavailableReason || categoryLabel(c)}</div>
+                              {notBuiltNote(c) && <div className="rf-kind">{notBuiltNote(c)}</div>}
                             </div>
                             <span className="rf-kind">{categoryLabel(c)}</span>
                           </div>
@@ -333,7 +355,7 @@ export default function SourcesPage() {
       <Modal
         open={!!confirmRevoke}
         onClose={() => setConfirmRevoke(null)}
-        title={`Revoke ${confirmRevoke?.name ?? "this device"}?`}
+        title={confirmRevoke?.choices ? "Revoke a paired computer?" : `Revoke ${confirmRevoke?.name ?? "this device"}?`}
         description="That computer stops syncing straight away. You can pair it again at any time with a new code."
         footer={
           <>
@@ -342,6 +364,17 @@ export default function SourcesPage() {
           </>
         }
       >
+        {confirmRevoke?.choices && (
+          <fieldset style={{ margin: "0 0 12px", padding: 0, border: 0 }}>
+            <legend className="sr-only">Computer to revoke</legend>
+            {confirmRevoke.choices.map((d) => (
+              <label key={d.id} className="flex items-center" style={{ gap: 10, padding: "9px 0", borderBottom: "1px solid var(--line)", fontSize: 13.5, color: "var(--ink)", cursor: "pointer" }}>
+                <input type="radio" name="revoke-device" checked={confirmRevoke.id === d.id} onChange={() => setConfirmRevoke({ ...confirmRevoke, id: d.id, name: d.name })} />
+                {d.name}
+              </label>
+            ))}
+          </fieldset>
+        )}
         {revokeFailed && <p role="alert" style={{ margin: 0, fontSize: 13, color: "var(--critical)" }}>The device was not revoked. {OFFLINE}</p>}
       </Modal>
     </DashboardLayout>
