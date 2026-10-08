@@ -6,12 +6,11 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, Watch } from "@/lib/api";
 import { formatDateTime, formatRelative, formatCount } from "@/lib/format";
 import { PageHeader, Subnav, SkeletonRows } from "@/components/v32/ui";
-import { IconPlus, IconWatch } from "@/components/v32/icons";
+import { IconPlus } from "@/components/v32/icons";
 import { StatusChip } from "@/components/ui/Badge";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
-import { QuietError } from "@/components/os/bridge/kit";
+import { QuietError, QuietLine } from "@/components/os/bridge/kit";
 import { conditionText, watchStatus } from "@/components/os/watch/conditions";
 import { NewWatchModal } from "@/components/os/watch/NewWatchModal";
 import WatchEvents from "@/components/features/WatchEvents";
@@ -114,26 +113,24 @@ function WatchPageInner() {
 
   return (
     <DashboardLayout pageTitle="Watch">
-      <div className="w-full flex flex-col" style={{ maxWidth: 1180, gap: 40 }}>
-        <div className="flex flex-col" style={{ gap: 20 }}>
-          {/* One primary action: in the header once there are watches, in the empty state before. */}
-          <PageHeader title="Watch" subtitle={subtitle} right={hasAny ? newWatchButton : undefined} />
+      <div className="w-full page-stack" style={{ maxWidth: 1180 }}>
+        {/* One primary action: in the header once there are watches, in the empty state before. */}
+        <PageHeader title="Watch" subtitle={subtitle} right={hasAny ? newWatchButton : undefined} />
 
+        <section aria-label="Watch conditions">
           {failed && !watches ? (
             <QuietError onRetry={load} />
           ) : loading && !watches ? (
-            <SkeletonRows rows={4} height={52} />
+            <SkeletonRows rows={4} height={46} />
           ) : !hasAny ? (
-            <div style={{ border: "1px solid var(--line)", borderRadius: 12, background: "var(--surface)" }}>
-              <EmptyState
-                icon={<IconWatch size={18} />}
-                title="Nothing is being watched yet"
-                message="Pick a figure, such as overdue receivables or one customer's exposure, and a threshold. Starlane checks it against your live data and raises it when it's met."
-                action={newWatchButton}
-              />
+            <div style={{ borderTop: "1px solid var(--line)", paddingTop: 16 }}>
+              <p className="prose-measure" style={{ margin: 0, fontSize: 13.5 }}>
+                Nothing is being watched yet. Pick a figure, such as overdue receivables or one customer&apos;s exposure, and a threshold; Starlane checks it against your live data and raises it when it&apos;s met.
+              </p>
+              <div style={{ marginTop: 14 }}>{newWatchButton}</div>
             </div>
           ) : (
-            <div className="flex flex-col" style={{ gap: 12 }}>
+            <>
               <Subnav
                 label="Watch conditions"
                 active={tab}
@@ -145,28 +142,30 @@ function WatchPageInner() {
                   { key: "all", label: "All", count: counts.all },
                 ]}
               />
-              {filtered.length === 0 ? (
-                <EmptyState
-                  icon={<IconWatch size={18} />}
-                  title={tab === "changed" ? "Nothing has triggered" : tab === "paused" ? "No paused watches" : "No active watches"}
-                  message={tab === "changed" ? "Watches that have been met at least once appear here." : tab === "paused" ? "A paused watch is not checked until you resume it." : "Resume a paused watch or create a new one."}
-                />
-              ) : (
-                <ConditionsTable rows={filtered} busyId={busyId}
-                  onCheck={(w) => run(w, "check this watch", () => api.watches.evaluate(w.id), "Checked just now")}
-                  onToggle={(w) => run(w, w.status === "paused" ? "resume this watch" : "pause this watch",
-                    () => api.watches.update(w.id, { status: w.status === "paused" ? "active" : "paused" }),
-                    w.status === "paused" ? "Watch resumed" : "Watch paused")}
-                  onDelete={(w) => setConfirmDelete(w)}
-                />
-              )}
-            </div>
+              <div style={{ marginTop: 12 }}>
+                {filtered.length === 0 ? (
+                  <QuietLine>
+                    {tab === "changed" ? "Nothing has triggered yet. A watch appears here once it has been met."
+                      : tab === "paused" ? "No paused watches. A paused watch is not checked until you resume it."
+                      : "No active watches. Resume a paused watch or create a new one."}
+                  </QuietLine>
+                ) : (
+                  <ConditionsTable rows={filtered} busyId={busyId}
+                    onCheck={(w) => run(w, "check this watch", () => api.watches.evaluate(w.id), "Checked just now")}
+                    onToggle={(w) => run(w, w.status === "paused" ? "resume this watch" : "pause this watch",
+                      () => api.watches.update(w.id, { status: w.status === "paused" ? "active" : "paused" }),
+                      w.status === "paused" ? "Watch resumed" : "Watch paused")}
+                    onDelete={(w) => setConfirmDelete(w)}
+                  />
+                )}
+              </div>
+            </>
           )}
-        </div>
+        </section>
 
         <WatchEvents />
 
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]" style={{ gap: 40 }}>
+        <div className="rf-cols-2" style={{ alignItems: "start" }}>
           <WatchBrief />
           <ObjectivesPanel />
         </div>
@@ -200,56 +199,49 @@ function WatchPageInner() {
   );
 }
 
-const GRID = "lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.6fr)_150px_96px_196px]";
+const COLS = "minmax(0, 0.8fr) minmax(0, 1.4fr) 160px 92px 92px 172px";
 
 function ConditionsTable({ rows, busyId, onCheck, onToggle, onDelete }: {
   rows: Watch[]; busyId: string | null;
   onCheck: (w: Watch) => void; onToggle: (w: Watch) => void; onDelete: (w: Watch) => void;
 }) {
   return (
-    <div role="table" aria-label="Watch conditions" style={{ border: "1px solid var(--line)", borderRadius: 12, background: "var(--surface)", overflow: "hidden" }}>
-      <div role="row" className={`hidden lg:grid ${GRID}`} style={{ gap: 16, padding: "10px 18px", fontSize: 12, color: "var(--ink-3)", borderBottom: "1px solid var(--line)" }}>
+    <div role="table" aria-label="Watch conditions">
+      <div role="row" className="rf-head" style={{ gridTemplateColumns: COLS }}>
         <span role="columnheader">Watching</span>
         <span role="columnheader">Condition</span>
         <span role="columnheader">Status</span>
+        <span role="columnheader" style={{ textAlign: "right" }}>Last triggered</span>
         <span role="columnheader" style={{ textAlign: "right" }}>Last checked</span>
         <span role="columnheader"><span className="sr-only">Actions</span></span>
       </div>
-      <style>{`
-        @media (hover: hover) and (min-width: 1024px) {
-          .wl-actions { opacity: 0; transition: opacity 120ms ease; }
-          .group:hover .wl-actions, .group:focus-within .wl-actions { opacity: 1; }
-        }
-      `}</style>
-      {rows.map((w, i) => {
-        const s = watchStatus(w);
-        const busy = busyId === w.id;
-        return (
-          <div
-            key={w.id}
-            role="row"
-            className={`group row-hover grid grid-cols-1 ${GRID} lg:items-center`}
-            style={{ gap: "6px 16px", padding: "12px 18px", minHeight: 52, borderTop: i ? "1px solid var(--line)" : undefined, opacity: busy ? 0.6 : 1 }}
-          >
-            <span role="cell" className="lg:truncate" style={{ fontSize: 14, color: "var(--ink)", fontWeight: 500 }}>{w.name}</span>
-            <span role="cell" className="tabular-nums" style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.45 }}>{conditionText(w)}</span>
-            <span role="cell" className="flex items-center flex-wrap" style={{ gap: 10 }}>
-              <StatusChip tone={s.tone}>{s.label}</StatusChip>
-              <span className="lg:hidden tabular-nums" style={{ fontSize: 12.5, color: "var(--ink-3)" }}>
-                Checked {w.last_evaluated_at ? formatRelative(w.last_evaluated_at) : "never"}
+      <div role="rowgroup" className="rf-list rf-watch">
+        {rows.map((w) => {
+          const s = watchStatus(w);
+          const busy = busyId === w.id;
+          return (
+            <div key={w.id} role="row" className="rf-row rf-hover" style={{ alignItems: "center", opacity: busy ? 0.6 : 1, borderBottom: "1px solid var(--line)" }}>
+              <span role="cell" className="rf-title min-w-0" style={{ fontWeight: 500 }}>{w.name}</span>
+              <span role="cell" className="rf-sub min-w-0">{conditionText(w)}</span>
+              <span role="cell" className="flex items-center flex-wrap" style={{ gap: 10 }}>
+                <StatusChip tone={s.tone}>{s.label}</StatusChip>
+                <span className="rf-mob" style={{ marginTop: 0 }}>Checked {w.last_evaluated_at ? formatRelative(w.last_evaluated_at) : "never"}</span>
               </span>
-            </span>
-            <span role="cell" className="hidden lg:block tabular-nums text-right" style={{ fontSize: 12.5, color: "var(--ink-3)" }} title={w.last_evaluated_at ? formatDateTime(w.last_evaluated_at) : undefined}>
-              {w.last_evaluated_at ? formatRelative(w.last_evaluated_at) : "Never"}
-            </span>
-            <span role="cell" className="wl-actions flex items-center lg:justify-end" style={{ gap: 2, marginLeft: -10 }}>
-              <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" disabled={busy || w.status === "paused"} onClick={() => onCheck(w)}>Check now</button>
-              <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" disabled={busy} onClick={() => onToggle(w)}>{w.status === "paused" ? "Resume" : "Pause"}</button>
-              <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" style={{ color: "var(--critical)" }} disabled={busy} onClick={() => onDelete(w)} aria-label={`Delete ${w.name}`}>Delete</button>
-            </span>
-          </div>
-        );
-      })}
+              <span role="cell" className="rf-time rf-desk" title={w.last_triggered_at ? formatDateTime(w.last_triggered_at) : undefined}>
+                {w.last_triggered_at ? formatRelative(w.last_triggered_at) : "Never"}
+              </span>
+              <span role="cell" className="rf-time rf-desk" title={w.last_evaluated_at ? formatDateTime(w.last_evaluated_at) : undefined}>
+                {w.last_evaluated_at ? formatRelative(w.last_evaluated_at) : "Never"}
+              </span>
+              <span role="cell" className="rf-actions rf-reveal" style={{ gap: 0 }}>
+                <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" disabled={busy || w.status === "paused"} onClick={() => onCheck(w)}>Check now</button>
+                <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" disabled={busy} onClick={() => onToggle(w)}>{w.status === "paused" ? "Resume" : "Pause"}</button>
+                <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" style={{ color: "var(--critical)" }} disabled={busy} onClick={() => onDelete(w)} aria-label={`Delete ${w.name}`}>Delete</button>
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
