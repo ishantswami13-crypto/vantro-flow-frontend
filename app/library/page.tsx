@@ -88,7 +88,7 @@ export default function LibraryPage() {
         subtitle="Questions to ask Scan and workflows Starlane can run for you."
         right={<>
           <div className="lib-search"><SearchField id="library-search" value={query} onChange={setQuery} placeholder={tab === "prompts" ? "Search prompts" : "Search workflows"} /></div>
-          <Link href="/scan" className="ui-btn ui-btn-primary"><IconPlus size={14} /> New conversation</Link>
+          <Link href="/scan" className="ui-btn ui-btn-primary lib-new"><IconPlus size={14} /> New conversation</Link>
         </>}
       >
         <div style={{ marginTop: 20 }}>
