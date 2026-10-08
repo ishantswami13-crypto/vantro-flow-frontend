@@ -26,9 +26,15 @@ export function healthOf(c: Connector | null | undefined): { label: string; tone
 export const isConnected = (c: Connector) =>
   ["healthy", "syncing", "connected", "delayed", "stale", "error"].includes(c.state.health);
 
-/** "Accounting", "External signals" from the backend's snake_case category. */
+const ACRONYM: Record<string, string> = { crm: "CRM", erp: "ERP", gst: "GST", pos: "POS" };
+
+/** "Accounting", "External signals", "CRM" from the backend's snake_case category. */
 export const categoryLabel = (c: Connector) =>
-  c.category.replace(/_/g, " ").replace(/^./, (x) => x.toUpperCase());
+  ACRONYM[c.category] || c.category.replace(/_/g, " ").replace(/^./, (x) => x.toUpperCase());
+
+/** "Sales vouchers, Stock items" from the manifest's object keys. */
+export const objectsLabel = (c: Connector) =>
+  c.objects.map((o) => o.replace(/_/g, " ")).join(", ").replace(/^./, (x) => x.toUpperCase());
 
 /** What the connection lets Starlane do, from the backend's capability label. */
 export const CAPABILITY_TEXT: Record<string, string> = {
