@@ -153,9 +153,9 @@ export default function CustomersPage() {
         </div>
       ),
     },
-    { key: "given", header: "Billed", width: "120px", align: "right", hide: "md", render: c => <span>{inrWhole(Number(c.total_debit || 0))}</span> },
-    { key: "paid", header: "Paid", width: "120px", align: "right", hide: "md", render: c => <span>{inrWhole(Number(c.total_credit || 0))}</span> },
-    { key: "balance", header: "Balance", width: "130px", widthSm: "auto", align: "right", render: balanceCell },
+    { key: "given", header: "Billed", width: "128px", align: "right", hide: "md", render: c => <span>{inrWhole(Number(c.total_debit || 0))}</span> },
+    { key: "paid", header: "Paid", width: "128px", align: "right", hide: "md", render: c => <span>{inrWhole(Number(c.total_credit || 0))}</span> },
+    { key: "balance", header: "Balance", width: "136px", widthSm: "auto", align: "right", render: balanceCell },
     {
       key: "risk", header: "Risk", width: "120px", hide: "sm",
       render: c => {

@@ -26,6 +26,8 @@
 .figures :global(.num) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* The page's anchor figure: one step larger than the rest, never a wall. */
 .figureLead :global(.num) { font-size: 27px !important; line-height: 1.15 !important; letter-spacing: -0.03em !important; }
+/* Crore-scale values keep their lead weight without being cut off. */
+.figureLeadLong :global(.num) { font-size: 23px !important; line-height: 1.2 !important; letter-spacing: -0.03em !important; }
 @media (max-width: 1099px) {
   .figureCell { padding: 2px 18px; }
 }
@@ -33,7 +35,7 @@
   .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 20px; }
   .figureCell, .figureCell:first-child { padding: 0 12px 0 0; border-left: none; }
   .figures :global(.num) { font-size: 18px !important; }
-  .figureLead :global(.num) { font-size: 22px !important; }
+  .figureLead :global(.num), .figureLeadLong :global(.num) { font-size: 20px !important; }
 }
 
 /* Toolbar under the tabs: search on the left, quiet controls on the right. */

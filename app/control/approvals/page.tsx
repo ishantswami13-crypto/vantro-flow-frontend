@@ -178,7 +178,7 @@ export default function ControlApprovalsPage() {
                 return (
                   <div key={a.id} role="listitem" className={`ap-grid ap-row ops-row ${a.priority === "urgent" ? "ap-urgent" : ""}`} onClick={(e) => { if ((e.target as HTMLElement).closest("button, a")) return; setDecisionFailed(false); setOpenId(a.id); }}>
                     <div className="min-w-0">
-                      <button type="button" className="ap-title truncate block max-w-full" onClick={() => { setDecisionFailed(false); setOpenId(a.id); }}>{clean(a.title)}</button>
+                      <button type="button" className="ap-title truncate block max-w-full" title={clean(a.title)} onClick={() => { setDecisionFailed(false); setOpenId(a.id); }}>{clean(a.title)}</button>
                       {a.description && <div className="truncate" style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 2 }}>{clean(a.description)}</div>}
                       <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 4 }}><Meta a={a} priority /></div>
                       <div className="ap-mobile">

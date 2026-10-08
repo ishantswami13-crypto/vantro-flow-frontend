@@ -88,6 +88,7 @@ export default function AuditPage() {
         .au-row { padding: 9px 0; min-height: 40px; font-size: 13px; }
         .au-desk { display: none; }
         .au-mobile { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
+        .au-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
         @media (min-width: 900px) {
           .au-grid { grid-template-columns: 84px minmax(0, 1fr) 140px 160px 104px; }
           .au-head { display: grid; }
@@ -146,8 +147,10 @@ export default function AuditPage() {
                     <div role="row" key={`${e.source}:${e.id}`} className="au-grid au-row ops-row">
                       <span role="cell" className="au-desk num-quiet" style={{ color: "var(--ink-2)", fontSize: 12.5 }} title={formatDateTime(e.created_at)}>{formatTime(e.created_at)}</span>
                       <span role="cell" className="min-w-0">
-                        <span style={{ color: "var(--ink)", fontWeight: 500 }}>{humanize(e.action)}</span>
-                        {e.title && <span style={{ color: "var(--ink-2)" }}> · {e.title}</span>}
+                        <span className="au-text" title={e.title ? `${humanize(e.action)} · ${e.title}` : undefined}>
+                          <span style={{ color: "var(--ink)", fontWeight: 500 }}>{humanize(e.action)}</span>
+                          {e.title && <span style={{ color: "var(--ink-2)" }}> · {e.title}</span>}
+                        </span>
                         <span className="au-mobile block">{formatTime(e.created_at)}{e.actor ? ` · ${e.actor}` : ""}</span>
                       </span>
                       <span role="cell" className="au-desk truncate" style={{ color: e.actor ? "var(--ink)" : "var(--ink-3)" }}>{e.actor || "—"}</span>

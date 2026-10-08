@@ -69,6 +69,8 @@ export default function DecisionControlsPage() {
     if (!c) return null;
     const on = row.scope === "TENANT" ? tenantStopped : row.scope === "AGENT" ? agentStopped : stopped(row.scope, row.key);
     const rec = c.controls.find((x) => x.scope === row.scope && x.scope_key === row.key);
+    // With everything stopped, a switch that is still on cannot run either.
+    const held = !on && row.scope !== "TENANT" && (tenantStopped || c.globalStop);
     const busy = set.isPending && set.variables?.scope === row.scope && set.variables?.scopeKey === row.key;
     const meta = [row.detail, rec ? `Last changed ${formatRelative(rec.set_at)}` : null].filter(Boolean).join(" · ");
     return (
@@ -77,7 +79,7 @@ export default function DecisionControlsPage() {
           <div style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: row.scope === "TENANT" ? 500 : 400 }}>{row.label}</div>
           {meta && <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2, lineHeight: 1.5 }} title={rec ? formatDateTime(rec.set_at) : undefined}>{meta}</div>}
         </div>
-        <div className="hidden md:block">{on ? <StatusChip tone="critical">Stopped</StatusChip> : <StatusChip tone="positive" className="chip-quiet">Running</StatusChip>}</div>
+        <div className="hidden md:block">{on ? <StatusChip tone="critical">Stopped</StatusChip> : held ? <StatusChip tone="unknown" title="Everything is stopped, so this cannot run either">Held</StatusChip> : <StatusChip tone="positive" className="chip-quiet">Running</StatusChip>}</div>
         <div className="flex items-center justify-end" style={{ gap: 8 }}>
           <span className="md:hidden">{on && <StatusChip tone="critical">Stopped</StatusChip>}</span>
           <Button

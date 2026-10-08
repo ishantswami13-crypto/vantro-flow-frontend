@@ -84,10 +84,14 @@ export default function ForecastPage() {
   const [kpis, setKpis]         = useState({ cashStart: 0, burnRate: 0, avgCollections: 0, runwayDays: 0 });
   const [topImpact, setTopImpact] = useState<Impact[]>([]);
   const [noData, setNoData]     = useState(false);
-  const [openingCash, setOpeningCash] = useState(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("vantro_opening_cash") || "";
-    return "";
-  });
+  // Read after mount: reading storage during render made the server and
+  // client disagree about the header button once cash had been saved.
+  const [openingCash, setOpeningCash] = useState("");
+  const [cashReady, setCashReady] = useState(false);
+  useEffect(() => {
+    try { setOpeningCash(localStorage.getItem("vantro_opening_cash") || ""); } catch { /* storage blocked */ }
+    setCashReady(true);
+  }, []);
   const [cashInput, setCashInput] = useState("");
   const [showCashInput, setShowCashInput] = useState(false);
 
@@ -162,7 +166,7 @@ export default function ForecastPage() {
     }
   }, [openingCash]);
 
-  useEffect(() => { if (mode === "classic") loadForecast(range); }, [range, loadForecast, mode]);
+  useEffect(() => { if (mode === "classic" && cashReady) loadForecast(range); }, [range, loadForecast, mode, cashReady]);
 
   const loadForecastV2 = useCallback(async (horizon: 7 | 14 | 30) => {
     const user = getUser();
@@ -199,7 +203,7 @@ export default function ForecastPage() {
 
   const saveCash = () => {
     const val = cashInput.trim();
-    localStorage.setItem("vantro_opening_cash", val);
+    try { localStorage.setItem("vantro_opening_cash", val); } catch { /* storage blocked: still used for this visit */ }
     setOpeningCash(val);
     setShowCashInput(false);
     setCashInput("");

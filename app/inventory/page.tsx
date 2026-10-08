@@ -253,10 +253,10 @@ export default function InventoryPage() {
         </div>
       ),
     },
-    { key: "stock", header: "In stock", width: "120px", widthSm: "auto", align: "right", render: p => <span className={s.amount}>{formatCount(p.current_stock)} <span className={s.muted} style={{ fontFamily: "var(--font-sans)", fontSize: 12 }}>{p.unit}</span></span> },
+    { key: "stock", header: "In stock", width: "132px", widthSm: "auto", align: "right", render: p => <span className={s.amount}>{formatCount(p.current_stock)} <span className={s.muted} style={{ fontFamily: "var(--font-sans)", fontSize: 12 }}>{p.unit}</span></span> },
     { key: "reorder", header: "Reorder at", width: "100px", align: "right", hide: "md", render: p => <span>{formatCount(p.low_stock_alert)}</span> },
     { key: "price", header: "Unit price", width: "110px", align: "right", hide: "md", render: p => <span>{inrWhole(p.unit_price)}</span> },
-    { key: "value", header: "Value", width: "120px", align: "right", hide: "sm", render: p => <span className={s.amount}>{inrWhole(p.current_stock * p.unit_price)}</span> },
+    { key: "value", header: "Value", width: "140px", align: "right", hide: "sm", render: p => <span className={s.amount}>{inrWhole(p.current_stock * p.unit_price)}</span> },
     { key: "status", header: "Status", width: "104px", hide: "sm", render: p => { const st = stockStatus(p); return <StatusChip tone={st.tone} className="chip-quiet">{st.label}</StatusChip>; } },
   ];
 

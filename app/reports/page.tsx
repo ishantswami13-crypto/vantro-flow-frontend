@@ -99,8 +99,13 @@ export default function ReportsPage() {
         <div className={s.panel} role="table" aria-label="Reports">
           <style>{`
             .rp-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 16px; align-items: center; }
-            .rp-formats { display: grid; grid-template-columns: repeat(3, 64px); justify-items: end; margin-right: -8px; }
-            @media (min-width: 768px) { .rp-row { grid-template-columns: minmax(0, 1fr) auto; } }
+            .rp-formats { display: flex; gap: 4px; margin-left: -10px; }
+            .rp-none { display: none; }
+            @media (min-width: 768px) {
+              .rp-row { grid-template-columns: minmax(0, 1fr) auto; }
+              .rp-formats { display: grid; grid-template-columns: repeat(3, 64px); justify-items: end; gap: 0; margin: 0 -8px 0 0; }
+              .rp-none { display: inline; }
+            }
           `}</style>
           <div role="row" className={`${s.head} rp-row`}>
             <span role="columnheader">Report</span>
@@ -114,7 +119,7 @@ export default function ReportsPage() {
               </div>
               <div role="cell" className="rp-formats" aria-label={`Download ${r.name}`}>
                 {FORMATS.map(fmt => {
-                  if (!r.formats.includes(fmt)) return <span key={fmt} aria-hidden="true" style={{ fontSize: 12.5, color: "var(--ink-3)", paddingRight: 10 }}>—</span>;
+                  if (!r.formats.includes(fmt)) return <span key={fmt} aria-hidden="true" className="rp-none" style={{ fontSize: 12.5, color: "var(--ink-3)", paddingRight: 10 }}>—</span>;
                   const key = `${r.id}-${fmt.toLowerCase()}`;
                   return (
                     <Button key={fmt} variant="ghost" size="sm" loading={downloading === key} disabled={!!downloading && downloading !== key}

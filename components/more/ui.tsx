@@ -30,7 +30,7 @@ export function FigureRow({ items, lead }: { items: FigureItem[]; lead?: number 
   return (
     <div className={s.figures} style={{ ["--n" as string]: items.length } as React.CSSProperties}>
       {items.map((f, i) => (
-        <div key={i} className={`${s.figureCell} ${i === lead ? s.figureLead : ""}`}>
+        <div key={i} className={`${s.figureCell} ${i === lead ? (typeof f.value === "string" && f.value.length > 12 ? s.figureLeadLong : s.figureLead) : ""}`}>
           <Figure value={f.value} label={f.label} tone={f.tone} />
           {f.note && <div className={s.figureNote}>{f.note}</div>}
         </div>

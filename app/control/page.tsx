@@ -156,7 +156,7 @@ function OverviewTab() {
             <Link href="/sources" className="ui-btn ui-btn-ghost ui-btn-sm" style={{ marginRight: -10 }}>Open Sources</Link>
           </div>
           <div className={c.colFigure}>
-            <Figure value={formatCount(connectedN)} label={failingN ? `Connected, ${formatCount(failingN)} failing` : `Connected system${connectedN === 1 ? "" : "s"}`} tone={failingN ? "var(--critical)" : undefined} />
+            <Figure value={formatCount(connectedN)} label={failingN ? `Connected, ${formatCount(failingN)} failing` : `Connected system${connectedN === 1 ? "" : "s"}`} />
           </div>
           <ConnectionRows connections={conns} />
         </section>
