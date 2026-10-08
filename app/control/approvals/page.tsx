@@ -3,8 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyLine, SkeletonRows, Sep } from "@/components/v32/ui";
-import { IconCheck } from "@/components/v32/icons";
+import { SkeletonRows, Sep } from "@/components/v32/ui";
 import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Modal } from "@/components/ui/Modal";
@@ -48,10 +47,12 @@ const riskOf = (a: RankedAction) => (a.risk_level && RISK[a.risk_level]) || { la
 
 const PRIORITY: Record<RankedAction["priority"], string> = { urgent: "Urgent", high: "High priority", medium: "Medium priority", low: "Low priority" };
 
-function Meta({ a }: { a: RankedAction }) {
+function Meta({ a, priority }: { a: RankedAction; priority?: boolean }) {
   const who = actorLabel(a);
+  const flagged = priority && (a.priority === "urgent" || a.priority === "high");
   return (
     <span className="inline-flex items-center flex-wrap" style={{ gap: 6 }}>
+      {flagged && <><StatusChip tone={a.priority === "urgent" ? "critical" : "attention"}>{PRIORITY[a.priority]}</StatusChip><Sep /></>}
       {who && <>{who}<Sep /></>}
       {humanize(a.action_type)}
       <Sep />
@@ -116,12 +117,12 @@ export default function ControlApprovalsPage() {
         .ap-grid { display: grid; column-gap: 20px; row-gap: 10px; align-items: center; grid-template-columns: minmax(0, 1fr); }
         .ap-actions { flex-direction: row-reverse; justify-content: flex-end; margin-left: -2px; }
         .ap-head { display: none; }
-        .ap-row { padding: 14px 10px; border-bottom: 1px solid var(--line); min-height: 64px; }
+        .ap-row { padding: 12px 0; min-height: 60px; }
         .ap-desk { display: none; }
         .ap-mobile { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
         @media (min-width: 900px) {
-          .ap-grid { grid-template-columns: minmax(0, 1fr) 130px 120px 172px; }
-          .ap-head { display: grid; padding: 0 10px 8px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line); }
+          .ap-grid { grid-template-columns: minmax(0, 1fr) 120px 120px 168px; }
+          .ap-head { display: grid; }
           .ap-desk { display: block; }
           .ap-mobile { display: none; }
           .ap-actions { flex-direction: row; justify-content: flex-end; margin-left: 0; }
@@ -143,36 +144,33 @@ export default function ControlApprovalsPage() {
           {actions === null && !loadFailed && <SkeletonRows rows={4} height={64} />}
 
           {actions !== null && actions.length === 0 && (
-            <EmptyLine
-              icon={<IconCheck size={17} />}
-              title="Nothing is waiting for your approval"
-              body={<>New decisions Starlane raises wait on <Link className="underline" href="/prepared">Prepared</Link> until they need your sign-off here.</>}
-            />
+            <p className="ops-list" style={{ margin: 0, padding: "12px 0", fontSize: 13, lineHeight: 1.55, color: "var(--ink-2)", borderBottom: "1px solid var(--line)" }}>
+              Nothing is waiting for your approval. New decisions wait on{" "}
+              <Link href="/prepared" style={{ color: "var(--ink)", textDecoration: "underline", textDecorationColor: "var(--line-strong)", textUnderlineOffset: 3 }}>Prepared</Link>{" "}
+              until they need your sign-off here.
+            </p>
           )}
 
           {actions !== null && actions.length > 0 && (
             <div role="list" aria-label="Waiting for approval">
-              <div className="ap-grid ap-head" aria-hidden="true">
+              <div className="ap-grid ap-head ops-head" aria-hidden="true">
                 <span>Action</span><span style={{ textAlign: "right" }}>Amount</span><span>Risk</span><span />
               </div>
               {actions.map((a) => {
                 const amt = amountOf(a);
                 const risk = riskOf(a);
                 return (
-                  <div key={a.id} role="listitem" className="ap-grid ap-row row-hover">
+                  <div key={a.id} role="listitem" className="ap-grid ap-row ops-row">
                     <div className="min-w-0">
-                      <div className="flex items-center" style={{ gap: 8 }}>
-                        {(a.priority === "urgent" || a.priority === "high") && <StatusChip tone={a.priority === "urgent" ? "critical" : "attention"}>{PRIORITY[a.priority]}</StatusChip>}
-                        <button type="button" className="ap-title truncate" onClick={() => { setDecisionFailed(false); setOpenId(a.id); }}>{clean(a.title)}</button>
-                      </div>
-                      {a.description && <div className="truncate" style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 3 }}>{clean(a.description)}</div>}
-                      <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 3 }}><Meta a={a} /></div>
+                      <button type="button" className="ap-title truncate block max-w-full" onClick={() => { setDecisionFailed(false); setOpenId(a.id); }}>{clean(a.title)}</button>
+                      {a.description && <div className="truncate" style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 2 }}>{clean(a.description)}</div>}
+                      <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 4 }}><Meta a={a} priority /></div>
                       <div className="ap-mobile">
-                        {amt != null && <span className="tabular-nums" style={{ fontSize: 13, color: "var(--ink)" }}>{inrWhole(amt)}</span>}
+                        {amt != null && <span className="num" style={{ fontSize: 13, color: "var(--ink)" }}>{inrWhole(amt)}</span>}
                         <StatusChip tone={risk.tone}>{risk.label}</StatusChip>
                       </div>
                     </div>
-                    <div className="ap-desk tabular-nums" style={{ textAlign: "right", fontSize: 14, color: amt != null ? "var(--ink)" : "var(--ink-3)" }}>
+                    <div className="ap-desk num" style={{ textAlign: "right", fontSize: 13, color: amt != null ? "var(--ink)" : "var(--ink-3)" }}>
                       {amt != null ? inrWhole(amt) : "—"}
                     </div>
                     <div className="ap-desk"><StatusChip tone={risk.tone}>{risk.label}</StatusChip></div>
@@ -207,7 +205,7 @@ export default function ControlApprovalsPage() {
             {opened.description && <p style={{ margin: 0, fontSize: 13.5, color: "var(--body)", lineHeight: 1.6 }}>{clean(opened.description)}</p>}
             <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "120px minmax(0, 1fr)", rowGap: 10, columnGap: 12, fontSize: 13 }}>
               <dt style={{ color: "var(--ink-3)" }}>Amount</dt>
-              <dd className="tabular-nums" style={{ margin: 0, color: "var(--ink)" }}>{amountOf(opened) != null ? inrWhole(amountOf(opened)) : "Not recorded"}</dd>
+              <dd className="num" style={{ margin: 0, color: "var(--ink)" }}>{amountOf(opened) != null ? inrWhole(amountOf(opened)) : "Not recorded"}</dd>
               <dt style={{ color: "var(--ink-3)" }}>Risk</dt>
               <dd style={{ margin: 0 }}><StatusChip tone={riskOf(opened).tone}>{riskOf(opened).label}</StatusChip></dd>
               <dt style={{ color: "var(--ink-3)" }}>For</dt>
@@ -219,8 +217,8 @@ export default function ControlApprovalsPage() {
             </dl>
             {opened.recommended_message && (
               <div>
-                <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 6 }}>Message that would be prepared</div>
-                <p style={{ margin: 0, padding: "12px 14px", borderRadius: 8, background: "var(--surface-2)", border: "1px solid var(--line)", fontSize: 13, color: "var(--body)", lineHeight: 1.6 }}>
+                <div className="section-label" style={{ marginBottom: 8 }}>Message that would be prepared</div>
+                <p style={{ margin: 0, padding: "2px 0 2px 12px", boxShadow: "inset 2px 0 0 var(--line-strong)", fontSize: 13, color: "var(--body)", lineHeight: 1.6 }}>
                   {opened.recommended_message}
                 </p>
               </div>
@@ -244,7 +242,7 @@ export default function ControlApprovalsPage() {
         {confirming && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55 }}>
             <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
-              {amountOf(confirming) != null && <span className="tabular-nums" style={{ fontSize: 15, color: "var(--ink)" }}>{inrWhole(amountOf(confirming))}</span>}
+              {amountOf(confirming) != null && <span className="num" style={{ fontSize: 15, color: "var(--ink)" }}>{inrWhole(amountOf(confirming))}</span>}
               <StatusChip tone={riskOf(confirming).tone}>{riskOf(confirming).label}</StatusChip>
             </div>
             <p style={{ margin: 0 }}>Approving records your decision and adds it to the audit log. Nothing is sent to a customer from this screen.</p>
