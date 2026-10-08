@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, authHeaders, getUser, type CustomerPortfolioResponse } from "@/lib/api";
 import { inrWhole, formatDate, formatCount } from "@/lib/format";
@@ -36,7 +37,7 @@ type Score = { score: number; tier: string; overdue_amount: number; health_label
 const TIER: Record<string, { label: string; tone: StatusTone }> = {
   HIGH_RISK: { label: "High risk", tone: "critical" },
   MEDIUM: { label: "Medium risk", tone: "attention" },
-  LOW: { label: "Low risk", tone: "positive" },
+  LOW: { label: "Low risk", tone: "neutral" },
 };
 
 const HEALTH: Record<string, { label: string; tone: StatusTone }> = {
@@ -237,10 +238,12 @@ export default function CustomersPage() {
                           </div>
                           <div className={s.sub} style={{ color: "var(--ink-2)" }}><span>{plain(c.healthEvidence[0] || c.evidence[0])}</span></div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <div className={s.amount}>{c.attentionScore}</div>
-                          <div style={{ fontSize: 11.5, color: "var(--ink-3)" }}>attention</div>
-                        </div>
+                        {(() => {
+                          const match = customers.find(x => x.customer_name === c.customerName);
+                          return match
+                            ? <Button variant="ghost" size="sm" onClick={() => setLensCustomer(match)}>Review</Button>
+                            : <Link href={`/khata?customer=${encodeURIComponent(c.customerName)}`} className="ui-btn ui-btn-ghost ui-btn-sm">Open khata</Link>;
+                        })()}
                       </div>
                     );
                   })}

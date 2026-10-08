@@ -249,7 +249,7 @@ export default function InventoryPage() {
       render: p => (
         <div className="min-w-0">
           <div className={s.name} title={p.name}>{p.name}</div>
-          <div className={s.sub}><span>{[p.sku, p.category].filter(Boolean).join(" · ") || "No SKU"}</span></div>
+          <div className={s.sub}><span>{[p.sku, p.category].filter(Boolean).join(" · ") || "No SKU"}</span>{p.current_stock <= p.low_stock_alert && <span className={s.smOnly}><StatusChip tone={stockStatus(p).tone}>{stockStatus(p).label}</StatusChip></span>}</div>
         </div>
       ),
     },
@@ -327,9 +327,9 @@ export default function InventoryPage() {
         >
           <div style={{ marginTop: 18 }}>
             <Subnav label="Inventory sections" active={tab} onChange={k => setTab(k as Tab)} items={[
-              { key: "products", label: "Products", count: loading ? null : products.length },
+              { key: "products", label: "Products", count: loading || error ? null : products.length },
               { key: "details", label: "Stock details" },
-              { key: "movements", label: "Movements", count: loading ? null : movements.length },
+              { key: "movements", label: "Movements", count: loading || error ? null : movements.length },
               { key: "suppliers", label: "Suppliers" },
             ]} />
           </div>

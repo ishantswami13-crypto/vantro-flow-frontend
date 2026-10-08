@@ -101,11 +101,12 @@ export default function ReportsPage() {
                 <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{r.name}</div>
                 <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 3, lineHeight: 1.5 }}>{r.desc}</div>
               </div>
-              <div className="flex items-center" style={{ gap: 6 }} role="group" aria-label={`Download ${r.name}`}>
+              <div className="flex items-center" style={{ gap: 2 }} role="group" aria-label={`Download ${r.name}`}>
+                <span style={{ fontSize: 12, color: "var(--ink-3)", marginRight: 6 }}>Download</span>
                 {r.formats.map(fmt => {
                   const key = `${r.id}-${fmt.toLowerCase()}`;
                   return (
-                    <Button key={fmt} variant="secondary" size="sm" loading={downloading === key} disabled={!!downloading && downloading !== key}
+                    <Button key={fmt} variant="ghost" size="sm" loading={downloading === key} disabled={!!downloading && downloading !== key}
                       onClick={() => handleDownload(r.id, fmt.toLowerCase())} aria-label={`${r.name} as ${fmt}`}>
                       {fmt}
                     </Button>

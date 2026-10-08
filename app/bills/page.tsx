@@ -161,7 +161,7 @@ export default function BillsPage() {
       render: b => (
         <div className="min-w-0">
           <button type="button" className={`${s.name} ${s.nameBtn}`} onClick={() => setOpen(b)} title={b.customer_name}>{b.customer_name}</button>
-          <div className={s.sub}><span>{b.bill_number}</span><span className={s.smOnly}>· {formatDate(b.bill_date)}</span></div>
+          <div className={s.sub}><span>{b.bill_number}</span><span className={s.smOnly}>· {formatDate(b.bill_date)}</span>{b.status === "paid" && <span className={s.smOnly}><StatusChip tone="positive">Paid</StatusChip></span>}</div>
         </div>
       ),
     },
