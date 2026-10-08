@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { PageHeader, Subnav, SkeletonRows, EmptyLine } from "@/components/v32/ui";
+import { PageHeader, Subnav, SkeletonRows } from "@/components/v32/ui";
 import { IconCopy, IconX } from "@/components/v32/icons";
 import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -101,13 +101,13 @@ export default function AccessReviewPage() {
         .access-review-grid[data-open="1"]{grid-template-columns:minmax(0,1fr) minmax(0,460px)}
         .access-review-grid > *{min-width:0}
         @media (max-width:1100px){.access-review-grid[data-open="1"]{grid-template-columns:minmax(0,1fr)}}
-        .acc-row{display:grid;align-items:center;gap:4px 16px;padding:12px 10px;border-bottom:1px solid var(--line);min-height:56px;cursor:pointer;grid-template-columns:minmax(0,1fr) auto}
-        .acc-row[aria-current="true"]{background:var(--selected, rgb(var(--tk-ink) / 0.06))}
-        .acc-date{display:none}
-        @media (min-width:760px){.acc-row{grid-template-columns:minmax(0,1fr) 130px 120px}.acc-date{display:block}}
+        .acc-row{display:grid;align-items:center;gap:4px 16px;padding:10px 0;min-height:52px;cursor:pointer;grid-template-columns:minmax(0,1fr) auto}
+        .acc-row[aria-current="true"],.acc-row[aria-current="true"]:hover{background:rgb(var(--tk-ink) / 0.05);box-shadow:-10px 0 0 rgb(var(--tk-ink) / 0.05),10px 0 0 rgb(var(--tk-ink) / 0.05)}
+        .acc-date,.acc-head{display:none}
+        @media (min-width:760px){.acc-row{grid-template-columns:minmax(0,1fr) 180px 120px}.acc-date{display:block}.acc-head{display:grid;min-height:0;padding:0 0 8px;cursor:default}}
         .acc-dl{display:grid;grid-template-columns:130px minmax(0,1fr);gap:8px 12px;margin:0;font-size:13px}
         @media (max-width:480px){.acc-dl{grid-template-columns:minmax(0,1fr);gap:2px}}`}</style>
-      <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
+      <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>
         <PageHeader title="Access review" subtitle="Applications to the private rollout. Fixed rules assess compatibility at submission; the decision is yours." />
 
         <Subnav label="Filter by status" items={tabs} active={filter || "all"} onChange={(k) => { setFilter((k === "all" ? "" : k) as Status | ""); setSelected(null); }} />
@@ -119,11 +119,12 @@ export default function AccessReviewPage() {
           <div className="access-review-grid" data-open={selected ? "1" : "0"} style={{ minWidth: 0 }}>
             <div>
               {rows === null && <SkeletonRows rows={4} height={56} />}
-              {rows && rows.length === 0 && <EmptyLine title="No applications here" body="Applications with this status appear here." />}
+              {rows && rows.length === 0 && <p className="ops-list" style={{ margin: 0, padding: "12px 0", fontSize: 13, color: "var(--ink-2)", borderBottom: "1px solid var(--line)" }}>No applications with this status.</p>}
               {rows && rows.length > 0 && (
                 <div role="list">
+                  <div className="acc-row acc-head ops-head" aria-hidden="true"><span>Company</span><span>Assessment</span><span style={{ textAlign: "right" }}>Submitted</span></div>
                   {rows.map((r) => (
-                    <div key={r.id} role="listitem" className="acc-row row-hover" aria-current={selected?.id === r.id ? "true" : undefined} onClick={() => open(r.id)}>
+                    <div key={r.id} role="listitem" className="acc-row ops-row" aria-current={selected?.id === r.id ? "true" : undefined} onClick={() => open(r.id)}>
                       <div className="min-w-0">
                         <button type="button" onClick={(e) => { e.stopPropagation(); open(r.id); }} className="truncate" style={{ display: "block", maxWidth: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", font: "inherit", fontSize: 13.5, color: INK, fontWeight: 500 }}>{r.company}</button>
                         <div className="truncate" style={{ color: FAINT, fontSize: 12.5, marginTop: 2 }}>{r.name} · {r.role} · {r.company_size} · {r.country}</div>
@@ -140,10 +141,11 @@ export default function AccessReviewPage() {
             </div>
 
             {selected && (
-              <section aria-label={`Application from ${selected.company}`} className="ui-panel" style={{ padding: 20, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 18, overflowWrap: "anywhere" }}>
+              <section aria-label={`Application from ${selected.company}`} className="ui-panel" style={{ padding: "18px 20px", display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 18, overflowWrap: "anywhere" }}>
                 <div className="flex items-start justify-between" style={{ gap: 12 }}>
                   <div className="min-w-0">
-                    <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 20, color: INK }}>{selected.company}</h2>
+                    <div className="section-label" style={{ marginBottom: 4 }}>Application</div>
+                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 500, color: INK }}>{selected.company}</h2>
                     <p style={{ margin: "4px 0 0", fontSize: 12.5, color: SOFT, lineHeight: 1.55 }}>{selected.name} · {selected.role} · <a href={`mailto:${selected.email}`} style={{ color: SOFT }}>{selected.email}</a>{selected.website ? <> · <a href={selected.website} target="_blank" rel="noopener noreferrer" style={{ color: SOFT }}>{selected.website.replace(/^https?:\/\//, "")}</a></> : null}</p>
                   </div>
                   <button type="button" onClick={() => setSelected(null)} aria-label="Close" className="icon-btn"><IconX size={15} /></button>
@@ -157,11 +159,11 @@ export default function AccessReviewPage() {
                 </dl>
 
                 <div>
-                  <p style={{ margin: "0 0 4px", fontSize: 12, color: FAINT }}>Problem</p>
-                  <p style={{ margin: 0, fontSize: 13.5, color: INK, lineHeight: 1.6 }}>{selected.problem}</p>
-                  <p style={{ margin: "14px 0 4px", fontSize: 12, color: FAINT }}>Desired outcome in 60 days</p>
-                  <p style={{ margin: 0, fontSize: 13.5, color: INK, lineHeight: 1.6 }}>{selected.desired_outcome}</p>
-                  {selected.notes && <><p style={{ margin: "14px 0 4px", fontSize: 12, color: FAINT }}>Notes</p><p style={{ margin: 0, fontSize: 13.5, color: INK, lineHeight: 1.6 }}>{selected.notes}</p></>}
+                  <p className="section-label" style={{ margin: "0 0 4px" }}>Problem</p>
+                  <p style={{ margin: 0, fontSize: 13.5, color: "var(--body)", lineHeight: 1.6 }}>{selected.problem}</p>
+                  <p className="section-label" style={{ margin: "16px 0 4px" }}>Desired outcome in 60 days</p>
+                  <p style={{ margin: 0, fontSize: 13.5, color: "var(--body)", lineHeight: 1.6 }}>{selected.desired_outcome}</p>
+                  {selected.notes && <><p className="section-label" style={{ margin: "16px 0 4px" }}>Notes</p><p style={{ margin: 0, fontSize: 13.5, color: "var(--body)", lineHeight: 1.6 }}>{selected.notes}</p></>}
                 </div>
 
                 <div style={{ borderTop: `1px solid ${LINE}`, paddingTop: 16 }}>
@@ -170,7 +172,7 @@ export default function AccessReviewPage() {
                     {selected.eligibility.label !== TIER[selected.eligibility.tier].label && <span style={{ fontSize: 13, color: INK }}>{selected.eligibility.label}</span>}
                   </div>
                   <ul style={{ margin: "8px 0 0", padding: 0, listStyle: "none", display: "grid", gap: 4, fontSize: 12.5, color: SOFT, lineHeight: 1.55 }}>{selected.eligibility.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
-                  <p style={{ margin: "6px 0 0", fontSize: 12, color: FAINT }}>Rules {selected.eligibility.rules_version}</p>
+                  <p style={{ margin: "6px 0 0", fontSize: 12, color: FAINT }}>Rules <span className="num" style={{ fontSize: 11.5 }}>{selected.eligibility.rules_version}</span></p>
                 </div>
 
                 <div style={{ borderTop: `1px solid ${LINE}`, paddingTop: 16, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 10 }}>
@@ -188,10 +190,10 @@ export default function AccessReviewPage() {
                     )}
                   </div>
                   {issued && (
-                    <div role="status" style={{ border: "1px solid rgb(var(--tk-positive) / 0.3)", background: "rgb(var(--tk-positive) / 0.06)", borderRadius: 8, padding: 12, fontSize: 12.5 }}>
+                    <div role="status" style={{ padding: "2px 0 2px 12px", boxShadow: "inset 2px 0 0 var(--positive)", fontSize: 12.5 }}>
                       <p style={{ margin: "0 0 8px", color: INK, lineHeight: 1.5 }}>{issued.emailed ? "Emailed to the applicant. " : "Email is not configured, so send this link yourself. "}It is shown only once; issuing a new one revokes it.</p>
                       <div className="flex" style={{ gap: 8 }}>
-                        <code style={{ flex: 1, minWidth: 0, overflowX: "auto", whiteSpace: "nowrap", fontFamily: "var(--font-sans)", background: "var(--surface)", border: `1px solid ${LINE}`, borderRadius: 6, padding: "6px 8px", color: INK }}>{issued.url}</code>
+                        <code style={{ flex: 1, minWidth: 0, overflowX: "auto", whiteSpace: "nowrap", fontFamily: "var(--font-mono)", fontSize: 12, background: "var(--surface-2)", border: `1px solid ${LINE}`, borderRadius: 6, padding: "5px 8px", color: INK }}>{issued.url}</code>
                         <Button variant="secondary" size="sm" icon={<IconCopy size={13} />} onClick={() => { navigator.clipboard?.writeText(issued.url); notify("Link copied", "positive"); }}>Copy</Button>
                       </div>
                     </div>
@@ -199,7 +201,7 @@ export default function AccessReviewPage() {
                 </div>
 
                 <div style={{ borderTop: `1px solid ${LINE}`, paddingTop: 16 }}>
-                  <p style={{ margin: "0 0 8px", fontSize: 12, color: FAINT }}>History</p>
+                  <p className="section-label" style={{ margin: "0 0 8px" }}>History</p>
                   <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6, fontSize: 12.5 }}>
                     {selected.events.map((ev, i) => (
                       <li key={i} style={{ color: SOFT, lineHeight: 1.5 }}><span style={{ color: INK }}>{STATUS_LABEL[ev.to_status as Status] || ev.to_status}</span> · {ev.actor} · <span className="tabular-nums">{fmt(ev.created_at)}</span>{ev.note ? `: ${ev.note}` : ""}</li>

@@ -4,8 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyLine, SkeletonRows, SearchField } from "@/components/v32/ui";
-import { IconAudit } from "@/components/v32/icons";
+import { SkeletonRows, SearchField } from "@/components/v32/ui";
 import { StatusChip, toneForStatus } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
 import Button from "@/components/ui/Button";
@@ -28,10 +27,10 @@ const humanize = (s: string) => s.replace(/_/g, " ").toLowerCase().replace(/^./,
 
 function objectLabel(e: AuditEvent): React.ReactNode {
   if (e.source === "decision" && e.entity_id) {
-    return <Link className="hover-dim" style={{ color: "var(--ink)", textDecoration: "underline", textDecorationColor: "var(--line-strong)", textUnderlineOffset: 3 }} href={`/decisions/${e.entity_id}`}>Decision</Link>;
+    return <Link className="hover-dim" style={{ color: "var(--ink)" }} href={`/decisions/${e.entity_id}`} title="Open this decision">Decision <span className="num" style={{ fontSize: 11.5, color: "var(--ink-3)" }}>{e.entity_id.slice(0, 8)}</span></Link>;
   }
   if (!e.entity_type) return "—";
-  return <>{humanize(e.entity_type)}{e.entity_id ? <span style={{ color: "var(--ink-3)" }}> · {e.entity_id.slice(0, 8)}</span> : null}</>;
+  return <>{humanize(e.entity_type)}{e.entity_id ? <span className="num" style={{ fontSize: 11.5, color: "var(--ink-3)" }}> {e.entity_id.slice(0, 8)}</span> : null}</>;
 }
 
 export default function AuditPage() {
@@ -74,22 +73,23 @@ export default function AuditPage() {
       <style>{`
         .au-grid { display: grid; column-gap: 16px; align-items: baseline; grid-template-columns: minmax(0, 1fr) auto; }
         .au-head { display: none; }
-        .au-row { padding: 10px 10px; border-bottom: 1px solid var(--line); min-height: 46px; font-size: 13px; }
+        .au-row { padding: 9px 0; min-height: 40px; font-size: 13px; }
         .au-desk { display: none; }
         .au-mobile { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
         @media (min-width: 900px) {
-          .au-grid { grid-template-columns: 124px minmax(0, 1fr) 140px 150px 104px; }
-          .au-head { display: grid; padding: 0 10px 8px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line); }
+          .au-grid { grid-template-columns: 132px minmax(0, 1fr) 140px 160px 104px; }
+          .au-head { display: grid; }
           .au-desk { display: block; }
           .au-mobile { display: none; }
           .au-grid .au-src { display: none; }
         }
         @media (min-width: 1200px) {
-          .au-grid { grid-template-columns: 136px minmax(0, 2fr) 140px 150px 140px 104px; }
+          .au-grid { grid-template-columns: 132px minmax(0, 2fr) 140px 160px 140px 104px; }
           .au-grid .au-src { display: block; }
         }
-        .seg { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
-        .seg button { height: 28px; padding: 0 12px; font-size: 12.5px; border-radius: 6px; color: var(--ink-2); background: none; border: none; cursor: pointer; }
+        .seg { display: inline-flex; padding: 2px; border-radius: 8px; background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+        .seg button { height: 26px; padding: 0 10px; font-size: 12.5px; border-radius: 6px; color: var(--ink-2); background: none; border: none; cursor: pointer; transition: color var(--dur-instant) var(--ease); }
+        .seg button:hover { color: var(--ink); }
         .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line-card); }
       `}</style>
       <ControlPage>
@@ -112,20 +112,23 @@ export default function AuditPage() {
           {q.isError && <ErrorState title="Couldn't load the audit log" message={OFFLINE} onRetry={() => q.refetch()} />}
 
           {q.data && all.length === 0 && (
-            <EmptyLine icon={<IconAudit size={17} />} title="No audit events yet" body="Decision steps and financial changes appear here as they happen." />
+            <p className="ops-list" style={{ margin: 0, padding: "12px 0", fontSize: 13, color: "var(--ink-2)", borderBottom: "1px solid var(--line)" }}>No audit events yet. Decision steps and financial changes appear here as they happen.</p>
           )}
           {q.data && all.length > 0 && rows.length === 0 && (
-            <EmptyLine icon={<IconAudit size={17} />} title="No events match" body="Try a different word, or show all sources." action={<Button variant="ghost" size="sm" onClick={() => { setQuery(""); setSource("all"); }}>Clear filters</Button>} />
+            <div className="ops-list flex items-center justify-between flex-wrap" style={{ gap: 12, padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
+              <p style={{ margin: 0, fontSize: 13, color: "var(--ink-2)" }}>No events match. Try a different word, or show all sources.</p>
+              <Button variant="ghost" size="sm" onClick={() => { setQuery(""); setSource("all"); }}>Clear filters</Button>
+            </div>
           )}
 
           {rows.length > 0 && (
             <div role="table" aria-label="Audit log">
-              <div role="row" className="au-grid au-head">
+              <div role="row" className="au-grid au-head ops-head">
                 <span role="columnheader">Time</span><span role="columnheader">Action</span><span role="columnheader">Actor</span>
                 <span role="columnheader">Object</span><span role="columnheader" className="au-src">Source</span><span role="columnheader">Result</span>
               </div>
               {rows.map((e) => (
-                <div role="row" key={`${e.source}:${e.id}`} className="au-grid au-row row-hover">
+                <div role="row" key={`${e.source}:${e.id}`} className="au-grid au-row ops-row">
                   <span role="cell" className="au-desk tabular-nums" style={{ color: "var(--ink-2)", fontSize: 12.5 }}>{formatDateTime(e.created_at)}</span>
                   <span role="cell" className="min-w-0">
                     <span style={{ color: "var(--ink)" }}>{humanize(e.action)}</span>
@@ -134,7 +137,7 @@ export default function AuditPage() {
                   </span>
                   <span role="cell" className="au-desk truncate" style={{ color: e.actor ? "var(--body)" : "var(--ink-3)" }}>{e.actor || "—"}</span>
                   <span role="cell" className="au-desk truncate" style={{ color: "var(--body)" }}>{objectLabel(e)}</span>
-                  <span role="cell" className="au-desk au-src truncate" style={{ color: "var(--ink-2)" }}>{e.source === "decision" ? (e.model || "Starlane") : "Ledger"}</span>
+                  <span role="cell" className={`au-desk au-src truncate ${e.source === "decision" && e.model ? "num" : ""}`} style={{ color: "var(--ink-2)", fontSize: e.source === "decision" && e.model ? 12 : 13 }}>{e.source === "decision" ? (e.model || "Starlane") : "Ledger"}</span>
                   <span role="cell">{e.result ? <StatusChip tone={toneForStatus(e.result)}>{humanize(e.result)}</StatusChip> : <span className="au-desk" style={{ color: "var(--ink-3)" }}>—</span>}</span>
                 </div>
               ))}

@@ -94,15 +94,18 @@ export default function ReportsPage() {
           <span style={{ fontSize: 12, color: "var(--ink-3)" }}>Each report covers the {rangeLabel} and is built when you download it.</span>
         </div>
 
-        <div className={s.panel}>
-          {REPORTS.map((r, i) => (
-            <div key={r.id} className="flex items-center justify-between flex-wrap" style={{ gap: 12, padding: "16px 20px", borderTop: i ? "1px solid var(--line-row)" : "none" }}>
-              <div className="min-w-0" style={{ flex: "1 1 280px" }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{r.name}</div>
-                <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 3, lineHeight: 1.5 }}>{r.desc}</div>
+        <div className={s.panel} role="table" aria-label="Reports">
+          <div role="row" className={`${s.head} flex items-center justify-between`} style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-3)" }}>
+            <span role="columnheader">Report</span>
+            <span role="columnheader">Download as</span>
+          </div>
+          {REPORTS.map(r => (
+            <div key={r.id} role="row" className={`${s.attnRow} flex items-center justify-between flex-wrap`}>
+              <div role="cell" className="min-w-0" style={{ flex: "1 1 280px" }}>
+                <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>{r.name}</div>
+                <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 2, lineHeight: 1.5 }}>{r.desc}</div>
               </div>
-              <div className="flex items-center" style={{ gap: 2 }} role="group" aria-label={`Download ${r.name}`}>
-                <span style={{ fontSize: 12, color: "var(--ink-3)", marginRight: 6 }}>Download</span>
+              <div role="cell" className="flex items-center" style={{ gap: 2, marginRight: -8 }} aria-label={`Download ${r.name}`}>
                 {r.formats.map(fmt => {
                   const key = `${r.id}-${fmt.toLowerCase()}`;
                   return (

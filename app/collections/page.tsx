@@ -509,9 +509,11 @@ export default function CollectionsPage() {
       render: c => <span className={s.amount}>{inrWhole(c.outstanding)}</span>,
     },
     {
-      key: "late", header: <SortHeader label="Late by" active={sortKey === "daysOverdue"} dir={sortDir} onClick={() => toggleSort("daysOverdue")} />,
-      width: "112px", align: "right", hide: "sm",
-      render: c => <span style={{ color: c.daysOverdue > 60 ? "var(--ink)" : "var(--body)" }}>{lateText(c.daysOverdue)}</span>,
+      key: "late", header: <SortHeader label="Days late" active={sortKey === "daysOverdue"} dir={sortDir} onClick={() => toggleSort("daysOverdue")} />,
+      width: "96px", align: "right", hide: "sm",
+      render: c => c.daysOverdue <= 0
+        ? <span style={{ fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--ink-2)" }}>Due today</span>
+        : <span style={{ color: c.daysOverdue > 60 ? "var(--ink)" : "var(--body)" }}>{formatCount(c.daysOverdue)}</span>,
     },
     {
       key: "risk", header: "Risk", width: "118px", hide: "sm",
@@ -569,7 +571,7 @@ export default function CollectionsPage() {
           right={
             <>
               <Button variant="ghost" icon={<IconUpload size={14} />} onClick={() => setShowImport(true)}>Import</Button>
-              {overdueCount > 0 && <Button variant="ghost" onClick={() => setBulkConfirm(true)}>Remind all overdue</Button>}
+              {overdueCount > 0 && <Button variant="secondary" onClick={() => setBulkConfirm(true)}>Remind all overdue</Button>}
               <Button variant="primary" onClick={openAdd}>Add invoice</Button>
             </>
           }
@@ -587,7 +589,7 @@ export default function CollectionsPage() {
             <div className="flex" style={{ gap: 48 }} aria-hidden="true">
               {[0, 1, 2, 3].map(i => <div key={i}><div className="skeleton" style={{ height: 26, width: 120, marginBottom: 8 }} /><div className="skeleton" style={{ height: 10, width: 80 }} /></div>)}
             </div>
-            <div className={s.panel} style={{ padding: "4px 20px" }}><SkeletonRows rows={6} /></div>
+            <div className={s.panel}><SkeletonRows rows={6} height={50} /></div>
           </>
         )}
 

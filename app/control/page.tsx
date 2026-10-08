@@ -7,9 +7,8 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { StatusChip } from "@/components/ui/Badge";
-import { Figure, Lettermark, EmptyLine, SkeletonRows } from "@/components/v32/ui";
-import { IconUsers } from "@/components/v32/icons";
-import { ControlHeader, ControlPage, type ControlTab } from "@/components/control/ControlSubnav";
+import { Figure, Lettermark, SkeletonRows, Chevron } from "@/components/v32/ui";
+import { ControlHeader, ControlPage, ControlSection as Section, type ControlTab } from "@/components/control/ControlSubnav";
 import { OFFLINE } from "@/components/connectors/health";
 import { formatCount, formatDateTime, formatRelative } from "@/lib/format";
 import { api, type CortexHealthResponse, type DataConnection, type UserSettings } from "@/lib/api";
@@ -40,47 +39,35 @@ import { api, type CortexHealthResponse, type DataConnection, type UserSettings 
 // the subnav; old links to them fall back to Overview.
 const MIN_EVALUATED_FOR_RATE = 3;
 
-function Section({ title, hint, right, children }: { title: string; hint?: React.ReactNode; right?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <section>
-      <div className="flex items-end justify-between flex-wrap" style={{ gap: 12, marginBottom: 10 }}>
-        <div className="min-w-0">
-          <h2 style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{title}</h2>
-          {hint && <p style={{ margin: "3px 0 0", fontSize: 12.5, color: "var(--ink-3)", maxWidth: 640 }}>{hint}</p>}
-        </div>
-        {right}
-      </div>
-      {children}
-    </section>
-  );
-}
-
 const sourceName = (t: string) => ({ TALLY: "TallyPrime", FILE_IMPORT: "Spreadsheet or CSV" } as Record<string, string>)[t] || humanize(t);
 const humanize = (s: string) => s.replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase());
 
 function ConnectionSection({ connections }: { connections: DataConnection[] }) {
   if (connections.length === 0) {
     return (
-      <EmptyLine title="No sources connected yet" body="Connect a business system so Starlane reasons from real, current data."
-        action={<Link href="/sources/connect" className="ui-btn ui-btn-secondary ui-btn-sm">Connect a source</Link>} />
+      <div className="ops-list flex items-center justify-between flex-wrap" style={{ gap: 12, padding: "12px 0", borderBottom: "1px solid var(--line)" }}>
+        <p style={{ margin: 0, fontSize: 13, color: "var(--ink-2)" }}>No sources connected. Starlane reasons only from systems you connect.</p>
+        <Link href="/sources/connect" className="ui-btn ui-btn-secondary ui-btn-sm">Connect a source</Link>
+      </div>
     );
   }
   return (
-    <div style={{ borderTop: "1px solid var(--line)" }}>
+    <div className="ops-list">
       {connections.map((c) => {
         const ok = String(c.status).toUpperCase() === "CONNECTED";
         const err = String(c.status).toUpperCase() === "ERROR" || !!c.last_sync_error;
         return (
-          <Link key={c.id} href="/sources" className="row-hover flex items-center justify-between" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid var(--line)", minHeight: 52 }}>
+          <Link key={c.id} href="/sources" className="ops-row flex items-center justify-between" style={{ gap: 14, padding: "11px 0", minHeight: 46 }}>
             <div className="min-w-0">
               <div style={{ fontSize: 13.5, color: "var(--ink)" }}>{sourceName(c.source_type)}</div>
               {c.last_sync_error && <div className="truncate" style={{ fontSize: 12, color: "var(--critical)", marginTop: 2 }}>{c.last_sync_error}</div>}
             </div>
             <div className="flex items-center shrink-0" style={{ gap: 16 }}>
-              <span className="tabular-nums" style={{ fontSize: 12.5, color: "var(--ink-2)" }} title={c.last_sync_at ? formatDateTime(c.last_sync_at) : undefined}>
+              <span style={{ fontSize: 12.5, color: "var(--ink-3)" }} title={c.last_sync_at ? formatDateTime(c.last_sync_at) : undefined}>
                 {c.last_sync_at ? `Synced ${formatRelative(c.last_sync_at)}` : "Never synced"}
               </span>
-              <StatusChip tone={err ? "critical" : ok ? "positive" : "unknown"}>{err ? "Error" : ok ? "Connected" : "Not connected"}</StatusChip>
+              <span style={{ minWidth: 104 }}><StatusChip tone={err ? "critical" : ok ? "positive" : "unknown"}>{err ? "Error" : ok ? "Connected" : "Not connected"}</StatusChip></span>
+              <Chevron />
             </div>
           </Link>
         );
@@ -101,10 +88,10 @@ const POLICY_LEVELS: { level: string; name: string; description: string; granted
 
 function PolicyRows() {
   return (
-    <div style={{ borderTop: "1px solid var(--line)" }}>
+    <div className="ops-list">
       {POLICY_LEVELS.map((p) => (
-        <div key={p.level} className="policy-row">
-          <span className="tabular-nums" style={{ fontSize: 12, color: "var(--ink-3)" }}>{p.level}</span>
+        <div key={p.level} className="policy-row ops-row ops-static">
+          <span className="num" style={{ fontSize: 12, color: "var(--ink-3)" }}>{p.level}</span>
           <div style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 500 }}>{p.name}</div>
           <div className="policy-desc" style={{ fontSize: 13, color: "var(--ink-2)" }}>{p.description}</div>
           <div className="policy-chip">
@@ -146,10 +133,10 @@ function OverviewTab() {
   const enough = !!stats && stats.evaluated_actions >= MIN_EVALUATED_FOR_RATE && stats.effectiveness_rate !== null;
 
   return (
-    <div className="flex flex-col" style={{ gap: 36 }}>
-      <div className="ctl-figures">
+    <div className="flex flex-col" style={{ gap: 32 }}>
+      <div className="ops-figures">
         <Link href="/control/approvals" className="hover-dim" style={{ display: "block" }}>
-          <Figure value={pending == null ? "—" : formatCount(pending)} label="Waiting for your approval" tone={pending ? "var(--warning)" : undefined} />
+          <Figure value={pending == null ? "—" : formatCount(pending)} label="Waiting for your approval" />
         </Link>
         <Figure value={formatCount(connectedN)} label={`Connected source${connectedN === 1 ? "" : "s"}`} />
         <Figure value="1" label="User, the owner" />
@@ -160,7 +147,7 @@ function OverviewTab() {
         <PolicyRows />
       </Section>
 
-      <Section title="Connections" right={<Link href="/sources" className="ui-btn ui-btn-ghost ui-btn-sm">Open Sources</Link>}>
+      <Section title="Connections" right={<Link href="/sources" className="ui-btn ui-btn-ghost ui-btn-sm" style={{ marginRight: -9 }}>Open Sources</Link>}>
         <ConnectionSection connections={conns} />
       </Section>
 
@@ -204,7 +191,7 @@ function UsersTab() {
   return (
     <div className="flex flex-col" style={{ gap: 32 }}>
       <Section title="Owner">
-        <div className="flex items-center justify-between flex-wrap" style={{ gap: 14, padding: "14px 10px", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+        <div className="ops-list"><div className="ops-row ops-static flex items-center justify-between flex-wrap" style={{ gap: 14, padding: "12px 0" }}>
           <div className="flex items-center min-w-0" style={{ gap: 12 }}>
             <Lettermark letter={u?.owner_name || u?.business_name || u?.email || "O"} size={32} />
             <div className="min-w-0">
@@ -213,10 +200,12 @@ function UsersTab() {
             </div>
           </div>
           <StatusChip tone="info">Owner, full access</StatusChip>
-        </div>
+        </div></div>
       </Section>
       <Section title="Team">
-        <EmptyLine icon={<IconUsers size={17} />} title="No other users yet" body="Invited teammates will appear here with their own role and agent permissions. Inviting is not available yet." />
+        <p className="ops-list" style={{ margin: 0, padding: "12px 0", fontSize: 13, lineHeight: 1.55, color: "var(--ink-2)", borderBottom: "1px solid var(--line)" }}>
+          No other users yet. Invited teammates will appear here with their own role and agent permissions; inviting is not available yet.
+        </p>
       </Section>
     </div>
   );
@@ -263,20 +252,18 @@ function ControlPageInner() {
   return (
     <DashboardLayout pageTitle="Control">
       <style>{`
-        .ctl-figures { display: grid; gap: 24px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        @media (min-width: 900px) { .ctl-figures { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-        .ctl-two { display: grid; gap: 36px; grid-template-columns: minmax(0, 1fr); }
+        .ctl-two { display: grid; gap: 32px 48px; grid-template-columns: minmax(0, 1fr); }
         @media (min-width: 900px) { .ctl-two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         .ctl-stats { margin: 0; border-top: 1px solid var(--line); }
-        .ctl-stats > div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 10px; border-bottom: 1px solid var(--line); font-size: 13px; }
+        .ctl-stats > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
         .ctl-stats dt { color: var(--ink-2); }
-        .ctl-stats dd { margin: 0; color: var(--ink); font-variant-numeric: tabular-nums; }
-        .policy-row { display: grid; align-items: center; gap: 6px 16px; padding: 12px 10px; border-bottom: 1px solid var(--line); min-height: 52px;
+        .ctl-stats dd { margin: 0; color: var(--ink); font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+        .policy-row { display: grid; align-items: center; gap: 4px 16px; padding: 11px 0; min-height: 46px;
           grid-template-columns: 24px minmax(0, 1fr) auto; }
         .policy-desc { grid-column: 2 / 4; grid-row: 2; }
         .policy-chip { grid-column: 3; grid-row: 1; justify-self: end; }
         @media (min-width: 760px) {
-          .policy-row { grid-template-columns: 28px 120px minmax(0, 1fr) 210px; }
+          .policy-row { grid-template-columns: 32px 112px minmax(0, 1fr) 200px; }
           .policy-desc { grid-column: auto; grid-row: auto; }
           .policy-chip { grid-column: auto; grid-row: auto; }
         }

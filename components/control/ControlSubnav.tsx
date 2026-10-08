@@ -44,14 +44,32 @@ export function ControlHeader({ active, subtitle, right, counts }: {
   counts?: Partial<Record<ControlTab, number | null>>;
 }) {
   return (
-    <>
+    <div className="flex flex-col" style={{ gap: 18 }}>
       <PageHeader title="Control" subtitle={subtitle} right={right} />
       <ControlSubnav active={active} counts={counts} />
-    </>
+    </div>
   );
 }
 
-/** Content column for every Control board: left aligned, ~1180px. */
+/** Content column for every Control board: left aligned, ~1180px; 24px
+ *  between sections after the title block. */
 export function ControlPage({ children }: { children: React.ReactNode }) {
-  return <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>{children}</div>;
+  return <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>{children}</div>;
+}
+
+/** A Control section: a small tracked label, an optional one-line hint and
+ *  a right slot, then rows on the canvas. */
+export function ControlSection({ title, hint, right, children }: { title: string; hint?: React.ReactNode; right?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section>
+      <div className="flex items-end justify-between flex-wrap" style={{ gap: 12, marginBottom: 10 }}>
+        <div className="min-w-0">
+          <h2 className="section-label" style={{ margin: 0 }}>{title}</h2>
+          {hint && <p style={{ margin: "3px 0 0", fontSize: 12.5, lineHeight: 1.5, color: "var(--ink-2)", maxWidth: 640 }}>{hint}</p>}
+        </div>
+        {right}
+      </div>
+      {children}
+    </section>
+  );
 }

@@ -11,11 +11,8 @@ import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
-import { PageHeader, SkeletonRows, EmptyLine } from "@/components/v32/ui";
-import {
-  IconUser, IconBox, IconSparkle, IconSettings, IconWhatsApp, IconSync, IconInvoice,
-  IconLogout, IconTrash, IconPlus, IconSun, IconMoon,
-} from "@/components/v32/icons";
+import { PageHeader, SkeletonRows } from "@/components/v32/ui";
+import { IconSparkle, IconWhatsApp, IconLogout, IconTrash, IconPlus, IconSun, IconMoon } from "@/components/v32/icons";
 import { Panel, Group, Fields, Field, Prefixed, Segmented, Switch, SaveBar, SettingsStyles } from "@/components/settings/SettingsUI";
 import { api, getUser, clearAuth, type DunningRule, type DeliveryLine, type DeliveryStatus, authHeaders } from "@/lib/api";
 import { INDUSTRY_OPTIONS, setBusinessType } from "@/lib/businessTypes";
@@ -28,14 +25,14 @@ const NOT_SAVED = "Your changes weren't saved. Check your connection and try aga
 
 type Tab = "profile" | "business" | "preferences" | "voice" | "integrations" | "automation" | "billing";
 
-const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
-  { key: "profile",      label: "Profile",        icon: <IconUser size={15} /> },
-  { key: "business",     label: "Business",       icon: <IconBox size={15} /> },
-  { key: "preferences",  label: "Preferences",    icon: <IconSettings size={15} /> },
-  { key: "voice",        label: "Message voice",  icon: <IconSparkle size={15} /> },
-  { key: "integrations", label: "Delivery",       icon: <IconWhatsApp size={15} /> },
-  { key: "automation",   label: "Reminder rules", icon: <IconSync size={15} /> },
-  { key: "billing",      label: "Billing",        icon: <IconInvoice size={15} /> },
+const TABS: { key: Tab; label: string }[] = [
+  { key: "profile",      label: "Profile" },
+  { key: "business",     label: "Business" },
+  { key: "preferences",  label: "Preferences" },
+  { key: "voice",        label: "Message voice" },
+  { key: "integrations", label: "Delivery" },
+  { key: "automation",   label: "Reminder rules" },
+  { key: "billing",      label: "Billing" },
 ];
 // Older links (?tab=integrations, ?tab=automation, ?tab=voice) keep working.
 const TAB_KEYS = new Set<Tab>(TABS.map(t => t.key));
@@ -283,8 +280,8 @@ function SettingsPageInner() {
   // A section that edits saved values waits for them; a failed load says so
   // and disables saving rather than showing blanks that look real.
   const gate = (node: React.ReactNode) => {
-    if (loadFailed) return <div className="ui-panel"><ErrorState title="Couldn't load your settings" message={OFFLINE} onRetry={loadSettings} /></div>;
-    if (!loaded) return <div className="ui-panel" style={{ padding: "8px 22px" }}><SkeletonRows rows={4} height={56} /></div>;
+    if (loadFailed) return <ErrorState title="Couldn't load your settings" message={OFFLINE} onRetry={loadSettings} />;
+    if (!loaded) return <SkeletonRows rows={4} height={52} />;
     return node;
   };
   const bar = (label: string) => <SaveBar saving={saving} saved={saved} error={error} label={label} disabled={loadFailed} />;
@@ -292,14 +289,13 @@ function SettingsPageInner() {
   return (
     <DashboardLayout pageTitle="Settings">
       <SettingsStyles />
-      <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 24 }}>
+      <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 32 }}>
         <PageHeader title="Settings" subtitle="Your account, your business and how Starlane works for you." />
 
         <div className="set-layout">
           <nav aria-label="Settings sections" className="set-nav">
-            {TABS.map(({ key, label, icon }) => (
+            {TABS.map(({ key, label }) => (
               <button key={key} type="button" onClick={() => setTab(key)} aria-current={tab === key ? "page" : undefined}>
-                <span aria-hidden="true" style={{ display: "inline-flex", color: tab === key ? "var(--ink)" : "var(--ink-3)" }}>{icon}</span>
                 <span>{label}</span>
                 {key === "voice" && voiceActive && <span className="set-on">On</span>}
                 {key === "automation" && autoEnabled && <span className="set-on">On</span>}
@@ -307,15 +303,15 @@ function SettingsPageInner() {
             ))}
           </nav>
 
-          <div className="min-w-0 fade-once" key={tab} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div className="min-w-0 fade-once set-stack" key={tab}>
 
             {/* Profile */}
             {tab === "profile" && gate(
               <>
                 <form onSubmit={handleProfileSave}>
                   <Panel id="sec-profile" title="Profile" description="Your name and how Starlane reaches you." footer={bar("Save profile")}>
-                    <div className="flex items-center" style={{ gap: 14, marginBottom: 20 }}>
-                      <IdentityAvatar name={initials} size={44} initial />
+                    <div className="flex items-center" style={{ gap: 12, marginBottom: 20 }}>
+                      <IdentityAvatar name={initials} size={36} initial />
                       <div className="min-w-0">
                         <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{profile.full_name || "Your name"}</div>
                         <div className="truncate" style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{profile.email}</div>
@@ -346,13 +342,17 @@ function SettingsPageInner() {
                     </Group>
                   </Panel>
                 </form>
-                <div className="ui-panel flex items-center justify-between flex-wrap" style={{ gap: 12, padding: "16px 22px" }}>
-                  <div>
-                    <div style={{ fontSize: 13.5, color: "var(--ink)" }}>Sign out</div>
-                    <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 2 }}>Ends your session in this browser.</div>
+                <Panel id="sec-session" title="Session">
+                  <div className="set-list">
+                    <div className="set-row">
+                      <div className="flex-1 min-w-0">
+                        <div style={{ fontSize: 13.5, color: "var(--ink)" }}>Sign out</div>
+                        <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 2 }}>Ends your session in this browser.</div>
+                      </div>
+                      <Button variant="secondary" size="sm" onClick={handleLogout} icon={<IconLogout size={14} />}>Sign out</Button>
+                    </div>
                   </div>
-                  <Button variant="secondary" onClick={handleLogout} icon={<IconLogout size={14} />}>Sign out</Button>
-                </div>
+                </Panel>
               </>
             )}
 
@@ -400,18 +400,19 @@ function SettingsPageInner() {
             {tab === "preferences" && (
               <>
                 <Panel id="sec-appearance" title="Appearance" description="Applies straight away, on this device only.">
+                  <div className="set-list">
                   <div className="set-row">
                     <div className="flex-1 min-w-0">
                       <div style={{ fontSize: 13.5, color: "var(--ink)" }}>Theme</div>
-                      <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 2 }}>Dark is the default.</div>
+                      <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 2 }}>Light is the default.</div>
                     </div>
                     <Segmented<Theme>
                       label="Theme"
                       value={theme}
                       onChange={(t) => { setTheme(t); setThemeState(t); }}
                       options={[
-                        { value: "dark", label: <><IconMoon size={13} /> Dark</> },
                         { value: "light", label: <><IconSun size={13} /> Light</> },
+                        { value: "dark", label: <><IconMoon size={13} /> Dark</> },
                       ]}
                     />
                   </div>
@@ -421,6 +422,7 @@ function SettingsPageInner() {
                       <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 2 }}>Used sparingly: focus rings, selection and the active tab.</div>
                     </div>
                     <IdentityPicker dark={theme === "dark"} />
+                  </div>
                   </div>
                 </Panel>
 
@@ -458,7 +460,7 @@ function SettingsPageInner() {
                       extra={voiceActive ? <Button variant="ghost" onClick={clearVoice} icon={<IconTrash size={14} />}>Reset voice</Button> : undefined} />
                   }
                 >
-                  <div className="flex items-center" style={{ gap: 8, marginBottom: 18 }}>
+                  <div className="flex items-center" style={{ gap: 8, marginBottom: 20 }}>
                     <StatusChip tone={voiceActive ? "positive" : "unknown"}>{voiceActive ? "Voice on" : "Not set up"}</StatusChip>
                   </div>
                   <Group first title="About you">
@@ -475,13 +477,13 @@ function SettingsPageInner() {
                     </Fields>
                   </Group>
                   <Group title="Style">
-                    <div role="radiogroup" aria-label="Communication style" style={{ display: "grid", gap: 8 }}>
+                    <div role="radiogroup" aria-label="Communication style" className="set-list">
                       {voiceStyleOptions.map(opt => {
                         const on = voice.voice_style === opt.value;
                         return (
-                          <label key={opt.value} className="flex items-center" style={{ gap: 12, padding: "10px 12px", borderRadius: 8, cursor: "pointer", border: `1px solid ${on ? "rgba(var(--accent-rgb), 0.5)" : "var(--line)"}`, background: on ? "rgba(var(--accent-rgb), 0.06)" : "transparent" }}>
+                          <label key={opt.value} className="set-choice">
                             <input type="radio" name="voice_style" value={opt.value} checked={on} onChange={e => setVoice(v => ({ ...v, voice_style: e.target.value }))} />
-                            <span style={{ fontSize: 13, color: "var(--ink)" }}>{opt.label}</span>
+                            <span style={{ fontSize: 13, color: "var(--ink)", fontWeight: on ? 500 : 400, minWidth: 150 }}>{opt.label}</span>
                             <span style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{opt.hint}</span>
                           </label>
                         );
@@ -504,7 +506,7 @@ function SettingsPageInner() {
                       </div>
                       {extractFailed && <p role="alert" style={{ margin: 0, fontSize: 12.5, color: "var(--critical)" }}>Starlane couldn&apos;t read a style from those messages. Try again, or describe your style below.</p>}
                       {extractResult && (
-                        <div style={{ padding: "12px 14px", borderRadius: 8, background: "var(--surface-2)", border: "1px solid var(--line)" }}>
+                        <div className="set-note">
                           <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 4 }}>What Starlane picked up</div>
                           <p style={{ margin: 0, fontSize: 13, color: "var(--body)", lineHeight: 1.6 }}>{extractResult.style_description}</p>
                           {extractResult.sample_phrase && <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--ink-2)", fontStyle: "italic" }}>&ldquo;{extractResult.sample_phrase}&rdquo;</p>}
@@ -525,6 +527,7 @@ function SettingsPageInner() {
             {tab === "integrations" && (
               <>
                 <Panel id="sec-delivery" title="Delivery" description="What carries reminders and payment links, and whether each line actually works on this account today.">
+                  <div className="set-list">
                   {[
                     { key: "wa", title: "WhatsApp reminders", line: delivery?.whatsapp, hint: "Sent from Starlane's verified WhatsApp number" },
                     { key: "pay", title: "Payment links", line: delivery?.paymentLinks, hint: "UPI, card and netbanking through Razorpay" },
@@ -534,11 +537,12 @@ function SettingsPageInner() {
                     <div key={r.key} className="set-row">
                       <div className="flex-1 min-w-0">
                         <div style={{ fontSize: 13.5, color: "var(--ink)" }}>{r.title}</div>
-                        <div style={{ fontSize: 12.5, color: r.line && !r.line.active && r.line.reason ? "var(--warning)" : "var(--ink-3)", marginTop: 2 }}>{r.line?.reason || r.hint}</div>
+                        <div style={{ fontSize: 12.5, color: r.line && !r.line.active && r.line.reason ? "var(--ink-2)" : "var(--ink-3)", marginTop: 2 }}>{r.line?.reason || r.hint}</div>
                       </div>
                       <DeliveryChip line={r.line} />
                     </div>
                   ))}
+                  </div>
                 </Panel>
 
                 <Panel id="sec-test" title="Test WhatsApp delivery" description="Sends one test message to your registered number."
@@ -569,6 +573,7 @@ function SettingsPageInner() {
             {tab === "automation" && (
               <>
                 <Panel id="sec-auto" title="Collections reminders" description="Reminders go out once a day at 9 am IST, following the rules below.">
+                  <div className="set-list">
                   <div className="set-row">
                     <div className="flex-1 min-w-0">
                       <div style={{ fontSize: 13.5, color: "var(--ink)" }}>{autoEnabled ? "On" : "Paused"}</div>
@@ -581,24 +586,27 @@ function SettingsPageInner() {
                     </div>
                     <Switch checked={autoEnabled} onChange={handleToggleAutomation} disabled={autoToggling || !loaded} label="Collections reminders" />
                   </div>
+                  </div>
                 </Panel>
 
                 <Panel id="sec-rules" title="Reminder rules" description="When an invoice is this many days overdue, Starlane prepares this kind of reminder with a payment link.">
                   {rulesLoading && <SkeletonRows rows={3} height={52} />}
                   {!rulesLoading && rulesFailed && <ErrorState title="Couldn't load your rules" message={OFFLINE} onRetry={loadRules} />}
                   {!rulesLoading && !rulesFailed && rules.length === 0 && !showAddRule && (
-                    <EmptyLine icon={<IconSync size={17} />} title="No reminder rules yet" body="A common start: a gentle reminder at day 3, firm at day 7 and urgent at day 15."
-                      action={<Button variant="secondary" size="sm" icon={<IconPlus size={13} />} onClick={() => setShowAddRule(true)}>Add your first rule</Button>} />
+                    <div className="set-list"><div className="set-row">
+                      <p className="flex-1 min-w-0" style={{ margin: 0, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55 }}>No reminder rules yet. A common start: gentle at day 3, firm at day 7, urgent at day 15.</p>
+                      <Button variant="secondary" size="sm" icon={<IconPlus size={13} />} onClick={() => setShowAddRule(true)}>Add your first rule</Button>
+                    </div></div>
                   )}
                   {!rulesLoading && !rulesFailed && rules.length > 0 && (
-                    <div>
+                    <div className="set-list">
                       {rules.map(rule => {
                         const t = TONE[rule.tone] || { label: rule.tone, tone: "neutral" as StatusTone };
                         return (
                           <div key={rule.id} className="set-row" style={{ opacity: rule.enabled ? 1 : 0.6 }}>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
-                                <span className="tabular-nums" style={{ fontSize: 13.5, color: "var(--ink)" }}>Day {rule.trigger_day}</span>
+                                <span style={{ fontSize: 13.5, color: "var(--ink)" }}>Day <span className="num">{rule.trigger_day}</span></span>
                                 <StatusChip tone={t.tone}>{t.label}</StatusChip>
                               </div>
                               <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 3 }}>
@@ -617,20 +625,20 @@ function SettingsPageInner() {
                   )}
 
                   {showAddRule && (
-                    <div style={{ marginTop: rules.length ? 18 : 0, padding: 16, borderRadius: 10, background: "var(--surface-2)", border: "1px solid var(--line)" }}>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)", marginBottom: 12 }}>New rule</div>
+                    <div style={{ padding: "16px 0", borderBottom: "1px solid var(--line)", borderTop: rules.length ? "none" : "1px solid var(--line)" }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)", marginBottom: 12 }}>New rule</div>
                       <div className="flex flex-wrap items-end" style={{ gap: 16 }}>
                         <Field label="Days overdue" htmlFor="trigger_day">
                           <input id="trigger_day" className="ui-input tabular-nums" style={{ width: 96 }} type="number" min={1} max={90} value={newRule.trigger_day}
                             onChange={e => setNewRule(r => ({ ...r, trigger_day: Number(e.target.value) }))} />
                         </Field>
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                          <span style={{ fontSize: 12.5, color: "var(--ink-2)" }}>Tone</span>
+                          <span style={{ fontSize: 12, color: "var(--ink-2)" }}>Tone</span>
                           <Segmented label="Tone" value={newRule.tone} onChange={(v) => setNewRule(r => ({ ...r, tone: v }))}
                             options={[{ value: "gentle", label: "Gentle" }, { value: "firm", label: "Firm" }, { value: "urgent", label: "Urgent" }]} />
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                          <span style={{ fontSize: 12.5, color: "var(--ink-2)" }}>Channel</span>
+                          <span style={{ fontSize: 12, color: "var(--ink-2)" }}>Channel</span>
                           <Segmented label="Channel" value={newRule.action} onChange={(v) => setNewRule(r => ({ ...r, action: v }))}
                             options={[{ value: "whatsapp", label: "WhatsApp" }, { value: "call", label: "Call" }]} />
                         </div>
@@ -646,7 +654,7 @@ function SettingsPageInner() {
                   )}
 
                   {!showAddRule && !rulesLoading && !rulesFailed && rules.length > 0 && (
-                    <div style={{ marginTop: 16 }}>
+                    <div style={{ marginTop: 14 }}>
                       <Button variant="secondary" size="sm" icon={<IconPlus size={13} />} onClick={() => setShowAddRule(true)}>Add rule</Button>
                     </div>
                   )}
