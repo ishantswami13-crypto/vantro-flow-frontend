@@ -16,7 +16,7 @@ import { api, getUser } from "@/lib/api";
 import type { ForecastV2Response } from "@/lib/api";
 import { inrWhole, inrShort, formatDate, formatDateTime, formatCount } from "@/lib/format";
 import { PageHeader, Subnav } from "@/components/v32/ui";
-import { IconChart } from "@/components/v32/icons";
+import { IconChart, IconInfo } from "@/components/v32/icons";
 import Button from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -185,7 +185,8 @@ export default function ForecastPage() {
     return () => clearTimeout(t);
   }, [loading]);
 
-  const runwayKnown = kpis.runwayDays > 0;
+  // Without cash in hand the model starts from zero, so its runway means nothing.
+  const runwayKnown = !!openingCash && kpis.runwayDays > 0;
   const runwayNever = kpis.runwayDays >= NEVER;
   const isRunwayDanger = runwayKnown && !runwayNever && kpis.runwayDays < 15;
 
@@ -232,8 +233,8 @@ export default function ForecastPage() {
 
           {!loading && !openingCash && !noData && !loadError && (
             <div className={s.notice}>
+              <IconInfo size={15} />
               <span style={{ flex: 1, minWidth: 220 }}>Add the cash you have today. Without it the forecast starts from zero and the runway can&apos;t be worked out.</span>
-              <Button variant="secondary" size="sm" onClick={() => setShowCashInput(true)}>Set cash in hand</Button>
             </div>
           )}
 
@@ -260,7 +261,7 @@ export default function ForecastPage() {
                 { label: "Cash in hand", value: openingCash ? inrWhole(kpis.cashStart) : "Not set", note: openingCash ? "As you entered it" : "Set it to see your runway" },
                 { label: "Spending a day", value: inrWhole(kpis.burnRate), note: "From your purchases" },
                 { label: "Collections a day", value: inrWhole(kpis.avgCollections), note: "Average from history" },
-                { label: "Runway", value: runwayValue, note: runwayNever ? "Cash doesn't run out in any case" : "Pessimistic case", tone: isRunwayDanger ? "var(--critical)" : undefined },
+                { label: "Runway", value: runwayValue, note: !openingCash ? "Needs cash in hand" : runwayNever ? "Cash doesn't run out in any case" : "Pessimistic case", tone: isRunwayDanger ? "var(--critical)" : undefined },
               ]} />
 
               <Panel
@@ -285,9 +286,9 @@ export default function ForecastPage() {
                       <YAxis tickFormatter={inrShort} tick={AXIS} axisLine={false} tickLine={false} width={60} />
                       <Tooltip content={<ChartTooltip />} cursor={{ stroke: "var(--line-strong)", strokeWidth: 1 }} />
                       <ReferenceLine y={0} stroke="var(--line-strong)" />
-                      <Area type="monotone" dataKey="expected" name="Expected" stroke="var(--ink)" strokeWidth={1.75} fill="var(--ink)" fillOpacity={0.05} dot={false} activeDot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="optimistic" name="Optimistic" stroke="var(--positive)" strokeWidth={1.5} dot={false} activeDot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="pessimistic" name="Pessimistic" stroke="var(--critical)" strokeWidth={1.5} strokeDasharray="4 3" dot={false} activeDot={{ r: 3 }} />
+                      <Area type="monotone" dataKey="expected" name="Expected" stroke="var(--ink)" strokeWidth={1.75} fill="var(--ink)" fillOpacity={0.05} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
+                      <Line type="monotone" dataKey="optimistic" name="Optimistic" stroke="var(--positive)" strokeWidth={1.5} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
+                      <Line type="monotone" dataKey="pessimistic" name="Pessimistic" stroke="var(--critical)" strokeWidth={1.5} strokeDasharray="4 3" dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
@@ -355,10 +356,10 @@ export default function ForecastPage() {
                         <YAxis tickFormatter={inrShort} tick={AXIS} axisLine={false} tickLine={false} width={60} />
                         <Tooltip content={<ChartTooltip />} cursor={{ stroke: "var(--line-strong)", strokeWidth: 1 }} />
                         <ReferenceLine y={0} stroke="var(--line-strong)" />
-                        <Line type="monotone" dataKey="observed" name="Observed" stroke="var(--ink-3)" strokeWidth={1.5} dot={false} connectNulls />
-                        <Line type="monotone" dataKey="predicted" name="Predicted" stroke="var(--ink)" strokeWidth={1.75} dot={false} connectNulls />
-                        <Line type="monotone" dataKey="low" name="Low" stroke="var(--ink-2)" strokeDasharray="4 3" strokeWidth={1} dot={false} connectNulls />
-                        <Line type="monotone" dataKey="high" name="High" stroke="var(--ink-2)" strokeDasharray="4 3" strokeWidth={1} dot={false} connectNulls />
+                        <Line type="monotone" dataKey="observed" name="Observed" stroke="var(--ink-3)" strokeWidth={1.5} dot={false} connectNulls isAnimationActive={false} />
+                        <Line type="monotone" dataKey="predicted" name="Predicted" stroke="var(--ink)" strokeWidth={1.75} dot={false} connectNulls isAnimationActive={false} />
+                        <Line type="monotone" dataKey="low" name="Low" stroke="var(--ink-2)" strokeDasharray="4 3" strokeWidth={1} dot={false} connectNulls isAnimationActive={false} />
+                        <Line type="monotone" dataKey="high" name="High" stroke="var(--ink-2)" strokeDasharray="4 3" strokeWidth={1} dot={false} connectNulls isAnimationActive={false} />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
