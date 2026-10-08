@@ -10,11 +10,10 @@ import Button from "@/components/ui/Button";
 import { AnswerMarkdown } from "@/components/scan/AnswerMarkdown";
 import { ScanComposer, businessNameFromStorage } from "@/components/scan/ScanComposer";
 import { ScanThinking } from "@/components/scan/ScanThinking";
-import { ScanMark } from "@/components/scan/ScanMark";
 import { humaneError } from "@/components/scan/humaneError";
 import { isPromptSaved, removeSavedPrompt, savePrompt } from "@/lib/promptStore";
 import { api, getUser } from "@/lib/api";
-import { formatClock, formatRelative } from "@/lib/format";
+import { formatClock, formatDateTime, formatRelative } from "@/lib/format";
 import { appendTurn, getThread, messagesFor, type ScanThread, type ScanTurn } from "@/lib/scanStore";
 
 // A Scan conversation: every question and answer in order, with the box
@@ -67,20 +66,20 @@ export default function ScanThreadPage() {
   return (
     <DashboardLayout pageTitle={thread?.title || "Scan"}>
       <div style={{ width: "100%", maxWidth: "var(--content-max)", display: "flex", flexDirection: "column", minHeight: "calc(100vh - 150px)" }}>
-        <div className="flex items-start justify-between flex-wrap fade-once" style={{ gap: 12, paddingBottom: 20, marginBottom: 28, borderBottom: "1px solid var(--line)" }}>
+        <div className="flex items-start justify-between flex-wrap fade-once" style={{ gap: 12, paddingBottom: 20, marginBottom: 32, borderBottom: "1px solid var(--line)" }}>
           <div className="min-w-0" style={{ flex: "1 1 320px" }}>
             <h1 className="scan-thread-title" style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, lineHeight: 1.25, color: "var(--ink)", overflowWrap: "anywhere" }}>
               {thread ? thread.title : thread === null ? "Conversation not found" : " "}
             </h1>
             {thread && (
-              <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 6 }}>
-                {thread.turns.length} {thread.turns.length === 1 ? "question" : "questions"} · started {formatRelative(thread.createdAt)} · kept on this device
+              <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 6 }}>
+                <span className="num">{thread.turns.length}</span> {thread.turns.length === 1 ? "question" : "questions"} · started <span title={formatDateTime(thread.createdAt)}>{formatRelative(thread.createdAt)}</span> · kept on this device
               </div>
             )}
           </div>
           <div className="flex items-center shrink-0" style={{ gap: 8 }}>
-            <Link href="/scan/history" className="ui-btn ui-btn-ghost ui-btn-sm"><IconHistory size={14} /> History</Link>
-            <Link href="/scan" className="ui-btn ui-btn-secondary ui-btn-sm"><IconPlus size={14} /> New conversation</Link>
+            <Link href="/scan/history" className="ui-btn ui-btn-ghost"><IconHistory size={14} /> History</Link>
+            <Link href="/scan" className="ui-btn ui-btn-secondary"><IconPlus size={14} /> New conversation</Link>
           </div>
         </div>
 
@@ -98,11 +97,11 @@ export default function ScanThreadPage() {
         {thread && (
           <div className="scan-thread" style={{ flex: 1 }}>
             <div className="min-w-0" style={{ display: "flex", flexDirection: "column", minHeight: "100%" }}>
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 40 }}>
+              <div className="scan-turns" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
                 {thread.turns.map((t, i) => <Turn key={`${t.askedAt}-${i}`} turn={t} index={i} />)}
                 {pending && (
                   <div className="scan-turn fade-once">
-                    <div className="scan-q">{pending}</div>
+                    <h2 className="scan-q">{pending}</h2>
                     <ScanThinking />
                   </div>
                 )}
@@ -111,9 +110,9 @@ export default function ScanThreadPage() {
 
               <div className="scan-dock">
                 {error && (
-                  <div role="alert" className="fade-once flex items-center justify-between flex-wrap" style={{ gap: 12, marginBottom: 10, padding: "8px 10px 8px 14px", borderRadius: "var(--radius-md)", border: "1px solid rgb(var(--tk-critical) / 0.25)", background: "var(--surface)" }}>
-                    <span style={{ fontSize: 13, color: "var(--ink)" }}>{error}</span>
-                    <Button variant="secondary" size="sm" onClick={() => send(failed)}>Try again</Button>
+                  <div role="alert" className="fade-once flex items-center justify-between flex-wrap" style={{ gap: 12, marginBottom: 10, padding: "6px 0" }}>
+                    <span style={{ fontSize: 13, color: "var(--critical)" }}>{error}</span>
+                    <Button variant="secondary" size="sm" onClick={() => send(failed)}>Ask again</Button>
                   </div>
                 )}
                 <ScanComposer
@@ -129,19 +128,19 @@ export default function ScanThreadPage() {
             </div>
 
             <aside className="scan-rail" aria-label="About this conversation">
-              <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 8 }}>In this conversation</div>
+              <div className="section-label" style={{ marginBottom: 8 }}>In this conversation</div>
               <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
                 {thread.turns.map((t, i) => (
                   <li key={`${t.askedAt}-${i}`}>
                     <a href={`#turn-${i + 1}`} className="scan-rail-link">
-                      <span className="tabular-nums" style={{ color: "var(--ink-3)", minWidth: 14 }}>{i + 1}</span>
+                      <span className="num" style={{ color: "var(--ink-3)", minWidth: 14, fontSize: 11.5 }}>{i + 1}</span>
                       <span style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{t.question}</span>
                     </a>
                   </li>
                 ))}
               </ol>
               <div style={{ borderTop: "1px solid var(--line)", marginTop: 20, paddingTop: 16, fontSize: 12.5, lineHeight: 1.6, color: "var(--ink-2)" }}>
-                <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 6 }}>How answers are made</div>
+                <div className="section-label" style={{ marginBottom: 6 }}>How answers are made</div>
                 Starlane reads your open invoices and runs read-only lookups. It can draft a WhatsApp message for you to send, but never sends one or marks a payment.
               </div>
               <div style={{ marginTop: 14, fontSize: 12.5, lineHeight: 1.6, color: "var(--ink-3)" }}>
@@ -184,15 +183,14 @@ function Turn({ turn, index }: { turn: ScanTurn; index: number }) {
 
   return (
     <article id={`turn-${index + 1}`} className="scan-turn fade-once" aria-label={`Question ${index + 1}`}>
-      <div className="scan-q">{turn.question}</div>
+      <div className="scan-answer-head">
+        <span>Question <span className="num">{index + 1}</span></span>
+        <span aria-hidden="true" style={{ color: "var(--line-strong)" }}>·</span>
+        <span title={formatDateTime(turn.askedAt)}>{formatClock(turn.askedAt)}</span>
+      </div>
+      <h2 className="scan-q">{turn.question}</h2>
 
       <div className="scan-answer">
-        <div className="scan-answer-head">
-          <ScanMark />
-          <span style={{ color: "var(--ink)", fontWeight: 500 }}>Starlane</span>
-          <span style={{ color: "var(--ink-3)" }}>{formatClock(turn.askedAt)}</span>
-        </div>
-
         <AnswerMarkdown>{message}</AnswerMarkdown>
 
         {waLinks.length > 0 && (
@@ -204,21 +202,21 @@ function Turn({ turn, index }: { turn: ScanTurn; index: number }) {
                 </a>
               ))}
             </div>
-            <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--ink-3)" }}>Opens WhatsApp with the message written. You review it and send it yourself.</p>
+            <p className="meta" style={{ margin: "8px 0 0" }}>Opens WhatsApp with the message written. You review it and send it yourself.</p>
           </div>
         )}
 
         {did.length > 0 && (
           <div className="scan-steps">
-            <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 8 }}>What Starlane did for this answer</div>
-            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            <div className="section-label" style={{ marginBottom: 6 }}>What Starlane did</div>
+            <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
               {did.map((a, i) => (
                 <li key={i}>
-                  <span style={{ color: "var(--ink-3)", marginTop: 3, flexShrink: 0 }}><IconCheck size={13} /></span>
+                  <span className="num" style={{ color: "var(--ink-3)", fontSize: 11.5, minWidth: 14, flexShrink: 0 }}>{i + 1}</span>
                   <span>{a}</span>
                 </li>
               ))}
-            </ul>
+            </ol>
           </div>
         )}
 
@@ -229,7 +227,7 @@ function Turn({ turn, index }: { turn: ScanTurn; index: number }) {
           <button type="button" onClick={toggleSave} className="scan-tool" aria-pressed={saved} title={saved ? "Remove from your Library" : "Save this question to your Library"}>
             {saved ? <IconBookmarkFilled size={14} /> : <IconBookmark size={14} />} {saved ? "Saved to Library" : "Save prompt"}
           </button>
-          <span style={{ fontSize: 12, color: "var(--ink-3)", marginLeft: 8 }}>From your connected data</span>
+          <span className="meta" style={{ marginLeft: 8 }}>From your connected data</span>
         </div>
       </div>
     </article>

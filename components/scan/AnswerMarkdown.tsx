@@ -13,7 +13,12 @@ import remarkGfm from "remark-gfm";
 // instead of pushing the page sideways.
 type P = { children?: React.ReactNode; style?: React.CSSProperties };
 
-const body: React.CSSProperties = { fontSize: 15, lineHeight: 1.65, color: "var(--body)" };
+const isFigure = (c: React.ReactNode): boolean => {
+  const t = (Array.isArray(c) ? c.join("") : typeof c === "string" || typeof c === "number" ? String(c) : "").trim();
+  return /^[₹$€£+\-−]?\s?\d/.test(t);
+};
+
+const body: React.CSSProperties = { fontSize: 14.5, lineHeight: 1.65, color: "var(--body)" };
 
 const components = {
   p: ({ children }: P) => <p style={{ ...body, margin: "0 0 12px" }}>{children}</p>,
@@ -34,18 +39,20 @@ const components = {
   hr: () => <hr style={{ border: 0, borderTop: "1px solid var(--line)", margin: "16px 0" }} />,
   blockquote: ({ children }: P) => <blockquote style={{ margin: "0 0 12px", paddingLeft: 12, borderLeft: "2px solid var(--line-strong)", color: "var(--ink-2)" }}>{children}</blockquote>,
   table: ({ children }: P) => (
-    <div style={{ overflowX: "auto", margin: "4px 0 14px", border: "1px solid var(--line-card)", borderRadius: "var(--radius-md)", background: "var(--surface)" }}>
-      <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 13.5, fontVariantNumeric: "tabular-nums" }}>{children}</table>
+    <div style={{ overflowX: "auto", margin: "6px 0 16px" }}>
+      <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 13, fontVariantNumeric: "tabular-nums" }}>{children}</table>
     </div>
   ),
-  thead: ({ children }: P) => <thead style={{ background: "var(--surface-2)" }}>{children}</thead>,
+  thead: ({ children }: P) => <thead>{children}</thead>,
   tbody: ({ children }: P) => <tbody>{children}</tbody>,
-  tr: ({ children }: P) => <tr style={{ borderTop: "1px solid var(--line)" }}>{children}</tr>,
+  tr: ({ children }: P) => <tr style={{ borderBottom: "1px solid var(--line)" }}>{children}</tr>,
   th: ({ children, style }: P) => (
-    <th style={{ textAlign: "left", padding: "9px 14px", fontSize: 12, fontWeight: 400, color: "var(--ink-3)", whiteSpace: "nowrap", ...style }}>{children}</th>
+    <th style={{ textAlign: "left", padding: "7px 16px 7px 0", fontSize: 11, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-3)", whiteSpace: "nowrap", ...style }}>{children}</th>
   ),
+  // Figures in right-aligned GFM columns use the mono face so they align;
+  // words in the same column ("not yet due") stay in the text face.
   td: ({ children, style }: P) => (
-    <td style={{ textAlign: "left", padding: "10px 14px", color: "var(--ink)", whiteSpace: "nowrap", ...style }}>{children}</td>
+    <td style={{ textAlign: "left", padding: "9px 16px 9px 0", color: "var(--ink)", whiteSpace: "nowrap", ...(style?.textAlign === "right" && isFigure(children) ? { fontFamily: "var(--font-mono)", fontSize: 12.5 } : null), ...style }}>{children}</td>
   ),
 };
 

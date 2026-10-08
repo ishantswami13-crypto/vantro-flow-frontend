@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { IconTile } from "@/components/v32/ui";
+import { Chevron } from "@/components/v32/ui";
 import { IconPlus, IconUpload, IconLink, IconSparkle, IconRupee, IconMissions, IconSimulate, IconHistory, IconLibrary } from "@/components/v32/icons";
 import Button from "@/components/ui/Button";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -80,7 +80,7 @@ export default function ScanPage() {
           <h1 className="scan-greeting" style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, color: "var(--ink)", textAlign: "center" }}>
             {greeting()}{ownerName ? `, ${ownerName}` : ""}
           </h1>
-          <p style={{ margin: "10px 0 28px", fontSize: 14, color: "var(--ink-2)", textAlign: "center" }}>
+          <p style={{ margin: "8px 0 24px", fontSize: 13.5, color: "var(--ink-2)", textAlign: "center" }}>
             Ask about money owed, cash coming in or any customer.
           </p>
 
@@ -120,32 +120,33 @@ export default function ScanPage() {
           )}
 
           {error && !submitting && (
-            <div role="alert" className="fade-once flex items-center justify-between flex-wrap" style={{ alignSelf: "stretch", gap: 12, marginTop: 16, padding: "10px 12px 10px 14px", borderRadius: "var(--radius-md)", border: "1px solid rgb(var(--tk-critical) / 0.25)", background: "rgb(var(--tk-critical) / 0.06)" }}>
-              <span style={{ fontSize: 13, color: "var(--ink)" }}>{error}</span>
-              <Button variant="secondary" size="sm" onClick={() => submit(lastAsked || question)}>Try again</Button>
+            <div role="alert" className="fade-once flex items-center justify-between flex-wrap" style={{ alignSelf: "stretch", gap: 12, marginTop: 16, padding: "8px 0", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+              <span style={{ fontSize: 13, color: "var(--critical)" }}>{error}</span>
+              <Button variant="secondary" size="sm" onClick={() => submit(lastAsked || question)}>Ask again</Button>
             </div>
           )}
 
           {!showFindings && !submitting && (
-            <div className="scan-flows" style={{ marginTop: 22 }}>
-              {WORKFLOWS.map((w, i) => {
+            <nav aria-label="Start from" className="scan-flows">
+              {WORKFLOWS.map((w) => {
                 const body = (
                   <>
-                    <IconTile size={30}>{w.icon}</IconTile>
-                    <span className="flex flex-col min-w-0">
-                      <span style={{ fontSize: 13.5, color: "var(--ink)", lineHeight: 1.35 }}>{w.title}</span>
-                      <span style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 3, lineHeight: 1.4 }}>{w.hint}</span>
+                    <span className="scan-flow-icon" aria-hidden="true">{w.icon}</span>
+                    <span className="flex flex-col min-w-0" style={{ flex: 1 }}>
+                      <span style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.4 }}>{w.title}</span>
+                      <span style={{ fontSize: 12, color: "var(--ink-3)", lineHeight: 1.4 }}>{w.hint}</span>
                     </span>
+                    <Chevron size={13} />
                   </>
                 );
                 return "ask" in w
-                  ? <button key={w.title} type="button" disabled={submitting} onClick={() => submit(w.ask)} className="scan-flow rise-in" style={{ animationDelay: `${i * 50}ms` }}>{body}</button>
-                  : <Link key={w.title} href={w.href} className="scan-flow rise-in" style={{ animationDelay: `${i * 50}ms` }}>{body}</Link>;
+                  ? <button key={w.title} type="button" disabled={submitting} onClick={() => submit(w.ask)} className="scan-flow">{body}</button>
+                  : <Link key={w.title} href={w.href} className="scan-flow">{body}</Link>;
               })}
-            </div>
+            </nav>
           )}
 
-          <div className="flex items-center justify-center flex-wrap" style={{ gap: 4, marginTop: 20 }}>
+          <div className="flex items-center justify-center flex-wrap" style={{ gap: 4, marginTop: 16 }}>
             {hasHistory && (
               <Link href="/scan/history" className="scan-tool"><IconHistory size={14} /> Past conversations</Link>
             )}

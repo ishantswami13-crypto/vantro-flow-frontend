@@ -876,16 +876,17 @@ button:disabled { cursor: default; }
 .scan-chip:hover { background: var(--hover); border-color: var(--line-emphasis); color: var(--ink); }
 
 /* Scan: workflow cards under the box, the conversation turns, and History. */
-.scan-flows { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-@media (min-width: 900px) { .scan-flows { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.scan-flows { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 24px; margin-top: 28px; border-top: 1px solid var(--line); }
+@media (min-width: 720px) { .scan-flows { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .scan-flow {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 14px; text-align: left; min-height: 112px; box-sizing: border-box;
-  background: transparent; border: 1px solid var(--line-card); border-radius: var(--radius-lg);
-  cursor: pointer; text-decoration: none; transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+  display: flex; align-items: center; gap: 12px; padding: 10px 8px; margin: 0 -8px; text-align: left; box-sizing: border-box; min-height: 52px;
+  background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
+  cursor: pointer; text-decoration: none; transition: background-color var(--dur-instant) var(--ease);
 }
-.scan-flow:hover { background: var(--surface); border-color: var(--line-emphasis); }
+.scan-flow:hover { background: var(--surface-2); }
+.scan-flow:hover .row-chevron { transform: translateX(2px); color: var(--ink); }
 .scan-flow:disabled { opacity: .5; cursor: default; }
-@media (max-width: 480px) { .scan-flow { min-height: 0; gap: 10px; padding: 12px; } }
+.scan-flow-icon { display: inline-flex; color: var(--ink-3); flex-shrink: 0; }
 
 /* Conversation: a page-width column with an outline rail on wide screens. */
 .scan-thread { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; align-items: start; }
@@ -897,20 +898,20 @@ button:disabled { cursor: default; }
   color: var(--ink-2); text-decoration: none; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 .scan-rail-link:hover { background: var(--hover); color: var(--ink); }
-.scan-turn { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 16px; }
+/* A turn reads like a document: a small meta line, the question as a heading,
+   the answer as prose. No bubbles, no avatar. Turns are divided by hairlines. */
+.scan-turns > .scan-turn + .scan-turn { margin-top: 36px; padding-top: 32px; border-top: 1px solid var(--line); }
+.scan-turn { display: flex; flex-direction: column; gap: 0; scroll-margin-top: 16px; }
 .scan-q {
-  align-self: flex-end; max-width: min(82%, 600px); padding: 10px 14px; border-radius: 14px 14px 4px 14px;
-  background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line-card);
-  color: var(--ink); font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
+  margin: 0 0 14px; max-width: 68ch; color: var(--ink); font-family: var(--font-sans); font-size: 16px; font-weight: 500; line-height: 1.45;
+  letter-spacing: -0.005em; white-space: pre-wrap; overflow-wrap: anywhere;
 }
-.scan-answer { min-width: 0; }
+.scan-answer { min-width: 0; max-width: 72ch; }
 .scan-md > :last-child { margin-bottom: 0 !important; }
-.scan-answer-head { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 10px; }
-.scan-steps {
-  margin-top: 16px; padding: 12px 14px; border: 1px solid var(--line-card); border-radius: var(--radius-md); background: transparent;
-}
-.scan-steps li { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.5; color: var(--body); }
-.scan-steps li + li { margin-top: 6px; }
+.scan-answer-head { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); margin-bottom: 6px; }
+.scan-steps { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+.scan-steps li { display: flex; gap: 10px; align-items: baseline; font-size: 13px; line-height: 1.5; color: var(--body); }
+.scan-steps li + li { margin-top: 4px; }
 .scan-tool {
   display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 9px; border-radius: var(--radius-sm); border: none; background: none;
   font-size: 12px; color: var(--ink-3); cursor: pointer; text-decoration: none; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
@@ -925,8 +926,8 @@ button:disabled { cursor: default; }
 }
 :root[data-theme="light"] .scan-dock::before { background-image: var(--paper-grain); }
 .scan-hist-row {
-  position: relative; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 4px 0;
-  border-bottom: 1px solid var(--line); text-decoration: none; transition: background var(--dur-fast) var(--ease);
+  position: relative; display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 12px; margin: 0 -12px;
+  border-bottom: 1px solid var(--line); text-decoration: none; transition: background-color var(--dur-instant) var(--ease);
 }
 .scan-hist-row:hover, .scan-hist-row:focus-within { background: var(--surface-2); }
 .scan-hist-del { opacity: 0; }
@@ -944,7 +945,7 @@ button:disabled { cursor: default; }
 .page-search input::placeholder { color: var(--ink-3); }
 .page-search input:focus, .page-search input:focus-visible { outline: none; box-shadow: none; }
 
-/* Library cards: prompts and workflows. */
+/* Card grid still used by Bridge's recent conversations (not a Work page). */
 .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
 @media (max-width: 480px) { .lib-grid { grid-template-columns: minmax(0, 1fr); } }
 .lib-card {
@@ -955,23 +956,22 @@ button:disabled { cursor: default; }
 .lib-card:hover, .lib-card:focus-visible { background: var(--surface-2); border-color: var(--line-emphasis); }
 .lib-card:focus-visible { outline: 2px solid rgba(var(--accent-rgb), 0.7); outline-offset: 2px; }
 .lib-tag { font-size: 12px; color: var(--ink-3); }
-.lib-go { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); transition: color var(--dur-fast) var(--ease); }
-.lib-card:hover .lib-go, .lib-card:focus-visible .lib-go { color: var(--ink); }
-.lib-star { position: absolute; top: 8px; right: 8px; }
 
-/* Agents gallery: ready-agent cards in the Library card style. */
-.agent-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
-.agent-card { gap: 14px; padding: 20px; min-height: 212px; background: var(--surface); border-color: var(--line); border-radius: var(--radius-lg); }
-.agent-card:hover, .agent-card:focus-visible { background: var(--surface); border-color: var(--line-emphasis); box-shadow: none; }
-.agent-card:hover .row-chevron { transform: translateX(2px); color: var(--ink); }
-.agent-name { font-size: 15px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
-.agent-purpose { font-size: 13px; color: var(--ink-2); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.agent-purpose-full { -webkit-line-clamp: 4; }
-.agent-perm { font-size: 12px; color: var(--ink-2); padding: 3px 9px; border-radius: var(--radius-full); background: rgb(var(--tk-ink) / 0.05); }
-.agent-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--ink-3); }
-.agent-foot .row-chevron { transition: transform var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
-.agent-card-muted { cursor: default; background: transparent; min-height: 0; }
-.agent-card-muted:hover { background: transparent; translate: none; box-shadow: none; border-color: var(--line); }
+/* Library: prompts and workflows as rows. A prompt row is a quiet table
+   line whose question asks Scan; the "Ask Scan" cue darkens on hover. */
+.lib-row { display: grid; align-items: center; grid-template-columns: minmax(0, 1fr) auto !important; column-gap: 12px; padding-top: 10px; padding-bottom: 10px; }
+.lib-row:hover { background: var(--surface-2); }
+@media (min-width: 768px) { .lib-row { grid-template-columns: minmax(0, 1fr) 140px 150px !important; } }
+.lib-ask { display: block; min-width: 0; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; }
+.lib-ask::after { content: ""; position: absolute; inset: 0; }
+.lib-row { position: relative; }
+.lib-row .scan-tool { position: relative; z-index: 1; }
+.lib-go { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); transition: color var(--dur-instant) var(--ease); }
+.lib-go .lib-go-text { opacity: 0; transition: opacity var(--dur-instant) var(--ease); }
+.lib-row:hover .lib-go, .lib-row:focus-within .lib-go { color: var(--ink); }
+.lib-row:hover .lib-go-text, .lib-row:focus-within .lib-go-text { opacity: 1; }
+@media (hover: none) { .lib-go .lib-go-text { opacity: 1; } }
+.lib-row:hover .row-chevron { transform: translateX(2px); color: var(--ink); }
 
 /* ============================================================
    SHARED CONTROLS (tokens only)
@@ -1259,3 +1259,5 @@ a.wk-row:hover, button.wk-row:hover { background: var(--surface-2); }
   .mem-row > .mem-record, .mem-row > .mem-by { display: block; max-width: none; margin: 0; }
   .mem-row > .mem-out, .mem-row > :nth-child(3) { margin-top: 0; }
 }
+/* Scan answers: tables sit on the text edge; the last column ends flush. */
+.scan-md th:last-child, .scan-md td:last-child { padding-right: 0 !important; }
