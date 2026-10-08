@@ -89,10 +89,13 @@ export function LensDrawer({
       title={name}
       onClose={onClose}
       eyebrow={entityType}
-      leading={<span aria-hidden="true" className="shrink-0" style={{ width: 30, height: 30, borderRadius: "50%", background: accent }} />}
-      subtitle={statusLabel ? <span style={{ fontSize: 11, color: statusColor || accent }}>{statusLabel}</span> : undefined}
+      subtitle={statusLabel ? (
+        <span className="inline-flex items-center" style={{ gap: 6, fontSize: 12, color: "var(--ink-2)" }}>
+          <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: statusColor || accent }} />{statusLabel}
+        </span>
+      ) : undefined}
       actions={resolvedActions.map(a => (
-        <button key={a.label} type="button" onClick={a.onClick} className="btn-secondary-v32" style={{ padding: "6px 12px", fontSize: 12 }}>
+        <button key={a.label} type="button" onClick={a.onClick} className="ui-btn ui-btn-secondary ui-btn-sm">
           {a.label}
         </button>
       ))}
@@ -100,11 +103,11 @@ export function LensDrawer({
       <div>
         {sections.map(section => (
           <div key={section.label} style={{ marginBottom: 22 }}>
-            <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--ink-2)", marginBottom: 8 }}>{section.label}</div>
+            <div className="section-label" style={{ marginBottom: 6 }}>{section.label}</div>
             {section.rows.map(row => (
               <div key={row.label} className="flex items-baseline justify-between gap-3" style={{ padding: "7px 0", borderBottom: "1px solid var(--line)" }}>
                 <span style={{ fontSize: 12.5, color: "var(--ink-2)" }}>{row.label}</span>
-                <span className="text-right" style={{ fontSize: 13, color: "var(--ink)" }}>{row.value}</span>
+                <span className={`text-right ${typeof row.value === "string" && /^[−\-+₹\d.,%\s]+$/.test(row.value) ? "num" : ""}`} style={{ fontSize: 13, color: "var(--ink)" }}>{row.value}</span>
               </div>
             ))}
           </div>
