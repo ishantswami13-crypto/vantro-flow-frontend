@@ -23,7 +23,8 @@ export function Modal({ open, onClose, title, description, children, footer, wid
 
   useEffect(() => {
     if (!open) return;
-    ref.current?.querySelector<HTMLElement>("[data-autofocus], input, textarea, select, button")?.focus();
+    const root = ref.current;
+    (root?.querySelector<HTMLElement>("[data-autofocus]") || root?.querySelector<HTMLElement>("input, textarea, select") || root?.querySelector<HTMLElement>("button"))?.focus();
   }, [open, ref]);
 
   if (!open || typeof document === "undefined") return null;

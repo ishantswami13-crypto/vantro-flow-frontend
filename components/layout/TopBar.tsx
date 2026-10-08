@@ -79,7 +79,7 @@ export default function TopBar({ pageTitle, onMenu, onSearch }: { pageTitle?: st
         <button type="button" onClick={onSearch} className="icon-btn md:hidden" aria-label="Search">
           <IconSearch size={15} />
         </button>
-        {fresh && (
+        {fresh && !pathname.startsWith("/bridge") && (
           // The wrapper carries the responsive hide: .chip sets its own display
           // and would override a `hidden` utility on the same element.
           <span className="hidden md:inline-flex">

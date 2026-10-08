@@ -244,12 +244,13 @@ export function Lettermark({ letter, size = 30 }: { letter: string; color?: stri
 
 /** A quiet sentence for "nothing here yet": never an illustration, never a big icon. */
 /** Empty state: a quiet icon tile beside the title and one line of help. */
-export function EmptyLine({ title, body, action, icon }: { title?: React.ReactNode; body?: React.ReactNode; action?: React.ReactNode; icon?: React.ReactNode }) {
+/** A calm empty state: one plain sentence (and an optional next step), no
+ *  illustration. `icon` is kept for older callers and ignored. */
+export function EmptyLine({ title, body, action }: { title?: React.ReactNode; body?: React.ReactNode; action?: React.ReactNode; icon?: React.ReactNode }) {
   return (
-    <div className="fade-once flex items-start" style={{ padding: "18px 0", gap: 14 }}>
-      <IconTile size={38}>{icon || <IconSparkle size={17} />}</IconTile>
-      <div className="min-w-0" style={{ paddingTop: 1 }}>
-        {title && <div style={{ fontSize: 14, color: V.ink, marginBottom: 3 }}>{title}</div>}
+    <div className="fade-once" style={{ padding: "16px 0" }}>
+      <div className="min-w-0">
+        {title && <div style={{ fontSize: 13.5, color: V.ink, marginBottom: 2 }}>{title}</div>}
         {body && <div style={{ fontSize: 12.5, color: V.secondary, lineHeight: 1.6, maxWidth: 640 }}>{body}</div>}
         {action && <div className="mt-3">{action}</div>}
       </div>
