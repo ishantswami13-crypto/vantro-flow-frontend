@@ -16,7 +16,9 @@ const LABEL: React.CSSProperties = { fontSize: 12, color: "var(--ink-3)" };
 function Fig({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="min-w-0">
-      <dd className="num" style={{ margin: 0, fontSize: 16, lineHeight: 1.25, color: "var(--ink)" }}>{value}</dd>
+      {value === "Not known yet"
+        ? <dd style={{ margin: 0, fontSize: 14, lineHeight: "20px", color: "var(--ink-3)" }}>{value}</dd>
+        : <dd className="num" style={{ margin: 0, fontSize: 16, lineHeight: 1.25, color: "var(--ink)" }}>{value}</dd>}
       <dt style={{ ...LABEL, marginTop: 3 }}>{label}</dt>
     </div>
   );
@@ -58,6 +60,55 @@ function Comparison({ component, topAction }: { component: ImpactComponent; topA
 
 const PRIORITY_TONE: Record<string, StatusTone> = { urgent: "critical", high: "attention" };
 
+// Every status the backend writes (ai_actions, migration 045), in words.
+// Only `pending` can be approved: the backend refuses anything else.
+const ACTION_STATE: Record<IntelligenceAction["status"], { label: string; tone: StatusTone }> = {
+  pending: { label: "Waiting for your approval", tone: "attention" },
+  approved: { label: "Approved, not run yet", tone: "info" },
+  executing: { label: "Running now", tone: "info" },
+  done: { label: "Executed", tone: "positive" },
+  failed: { label: "Failed", tone: "critical" },
+  execution_unknown: { label: "Result unknown", tone: "unknown" },
+  rejected: { label: "Turned down", tone: "neutral" },
+  expired: { label: "Expired", tone: "neutral" },
+  cancelled: { label: "Cancelled", tone: "neutral" },
+  system_blocked: { label: "Blocked by policy", tone: "critical" },
+};
+
+/** What happened to an action that is no longer waiting: who approved it,
+ *  when it ran, and whether the outcome was verified. Real fields only. */
+function ActionRecord({ action }: { action: IntelligenceAction }) {
+  const st = ACTION_STATE[action.status] || { label: humanizeCode(action.status), tone: "neutral" as StatusTone };
+  const lines: { k: string; v: React.ReactNode }[] = [];
+  if (action.approved_at) lines.push({ k: "Approved", v: <>{formatDateTime(action.approved_at)}{action.approved_by ? <span style={{ color: "var(--ink-3)" }}> · by {action.approved_by === "you" ? "you" : "a person"}</span> : null}</> });
+  if (action.completed_at) lines.push({ k: "Ran", v: formatDateTime(action.completed_at) });
+  if (action.execution_attempts) lines.push({ k: "Attempts", v: <span className="num">{action.execution_attempts}</span> });
+  const outcome = action.outcome === "effective" ? { label: "Verified: it worked", tone: "positive" as StatusTone }
+    : action.outcome === "ineffective" ? { label: "Verified: it did not work", tone: "critical" as StatusTone }
+    : action.status === "done" ? { label: "Outcome not checked yet", tone: "unknown" as StatusTone } : null;
+  return (
+    <div className="int-record">
+      <div className="flex items-center flex-wrap" style={{ gap: "4px 14px" }}>
+        <StatusChip tone={st.tone}>{st.label}</StatusChip>
+        {outcome && <StatusChip tone={outcome.tone}>{outcome.label}</StatusChip>}
+        {action.outcome_at && <span className="meta">checked {formatDateTime(action.outcome_at)}</span>}
+      </div>
+      {lines.length > 0 && (
+        <dl className="int-record-facts">
+          {lines.map((l) => <React.Fragment key={l.k}><dt>{l.k}</dt><dd>{l.v}</dd></React.Fragment>)}
+        </dl>
+      )}
+      {action.outcome_notes && <p className="meta" style={{ margin: "6px 0 0" }}>{action.outcome_notes}</p>}
+      {action.last_execution_error && (action.status === "failed" || action.status === "execution_unknown") && (
+        <p className="int-record-error">{action.last_execution_error}</p>
+      )}
+      {action.status === "execution_unknown" && (
+        <p className="meta" style={{ margin: "6px 0 0", lineHeight: 1.55 }}>Starlane can&rsquo;t tell whether this ran. Check the target system before doing it again; it is never retried on its own.</p>
+      )}
+    </div>
+  );
+}
+
 function ActionRow({ action, rank, dominant, onApprove, execState, execResult }: {
   action: IntelligenceAction;
   rank: number;
@@ -68,6 +119,7 @@ function ActionRow({ action, rank, dominant, onApprove, execState, execResult }:
 }) {
   const top = action.reason_json.rankedOptions[0];
   const alreadyDone = action.status === "done" || execState === "EXECUTED";
+  const waiting = action.status === "pending" && execState !== "EXECUTED";
   const product = action.parameters?.products?.[0];
   const orderLine = product
     ? `Order ${formatCount(product.quantity)} units of ${product.name} (${product.sku})`
@@ -75,16 +127,19 @@ function ActionRow({ action, rank, dominant, onApprove, execState, execResult }:
   const meta = [dominant ? "Recommended" : null, `${humanizeCode(action.risk_level)} risk`].filter(Boolean).join(" · ");
 
   return (
-    <li className={`grid grid-cols-[24px_minmax(0,1fr)] ${dominant && !alreadyDone ? "wk-attn" : ""}`} style={{ gap: 8, padding: "18px 0", borderBottom: "1px solid var(--line)" }}>
+    <li className={`grid grid-cols-[24px_minmax(0,1fr)] ${dominant && waiting ? "wk-attn" : ""}`} style={{ gap: 8, padding: "18px 0", borderBottom: "1px solid var(--line)" }}>
       <span className="num" style={{ fontSize: 12.5, lineHeight: "20px", color: "var(--ink-3)" }}>{rank}</span>
       <div className="min-w-0">
         <div className="flex items-start justify-between flex-wrap" style={{ gap: 8 }}>
-          <p style={{ margin: 0, fontSize: 14, lineHeight: "20px", fontWeight: 500, color: "var(--ink)" }}>{action.title}</p>
-          <StatusChip tone={PRIORITY_TONE[action.priority] || "neutral"}>{humanizeCode(action.priority)}</StatusChip>
+          <p style={{ margin: 0, fontSize: 14.5, lineHeight: "20px", fontWeight: 500, color: waiting || alreadyDone ? "var(--ink)" : "var(--ink-2)" }}>{action.title}</p>
+          {waiting && <StatusChip tone={PRIORITY_TONE[action.priority] || "neutral"}>{humanizeCode(action.priority)} priority</StatusChip>}
         </div>
         {/* The backend description repeats the figures shown below, so show the
-            order itself when the frozen parameters carry it. */}
-        <p style={{ margin: "2px 0 0", fontSize: 13, lineHeight: 1.55, color: "var(--ink-2)" }}>{orderLine || action.description}</p>
+            order itself when the frozen parameters carry it; a description
+            that only repeats the title is left out. */}
+        {(orderLine || (action.description && action.description !== action.title)) && (
+          <p style={{ margin: "2px 0 0", fontSize: 13, lineHeight: 1.55, color: "var(--ink-2)" }}>{orderLine || action.description}</p>
+        )}
         <p className="meta" style={{ margin: "2px 0 0" }}>{meta}</p>
 
         <dl className="grid grid-cols-3" style={{ gap: 16, margin: "14px 0 0", maxWidth: 480 }}>
@@ -124,8 +179,8 @@ function ActionRow({ action, rank, dominant, onApprove, execState, execResult }:
               </dl>
               {execResult.note && <p className="meta" style={{ margin: "10px 0 0" }}>{execResult.note}</p>}
             </div>
-          ) : alreadyDone ? (
-            <StatusChip tone="positive">Already run</StatusChip>
+          ) : !waiting ? (
+            <ActionRecord action={action} />
           ) : (
             <div className="flex items-start flex-wrap" style={{ gap: 16 }}>
               <Button
