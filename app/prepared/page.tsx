@@ -98,7 +98,8 @@ const num = (v: unknown): number | null => (typeof v === "number" && Number.isFi
 function readableDetail(detail: string | null): string | null {
   if (!detail) return null;
   const m = detail.match(/^Point estimate (-?[\d.]+), range \[(-?[\d.]+), (-?[\d.]+)\]\.?$/);
-  if (m) return `Expected ${amount(Number(m[1]))}, with a range from ${amount(Number(m[2]))} to ${amount(Number(m[3]))}.`;
+  const money = (v: number) => (v < 0 ? `−${amount(-v)}` : amount(v));
+  if (m) return `Expected ${money(Number(m[1]))}, with a range from ${money(Number(m[2]))} to ${money(Number(m[3]))}.`;
   return prettyDates(detail);
 }
 

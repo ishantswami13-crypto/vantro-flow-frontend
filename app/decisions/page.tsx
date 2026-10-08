@@ -130,7 +130,7 @@ export default function DecisionsPage() {
             <div className={css.strip}>
               <Figure value={formatCount(t.command.open + t.command.awaitingApproval)} label={t.command.awaitingApproval ? `Need your decision, ${t.command.awaitingApproval} awaiting approval` : "Need your decision"} />
               <Figure value={formatCount(t.command.deadlinesThisWeek)} label="Deadlines this week" />
-              <Figure value={atStake.length ? atStake.map(([cur, v]) => amount(v, cur)).join(" + ") : "Not estimated"} label="Expected unpaid in 90 days if ignored" />
+              <Figure value={atStake.length ? atStake.map(([cur, v]) => amount(v, cur)).join(" + ") : <span style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: C.faint }}>Not estimated</span>} label="Expected unpaid in 90 days if ignored" />
               <Figure value={formatCount(t.command.underWatch)} label={t.command.offTrack ? `Being verified, ${t.command.offTrack} off track` : "Being verified against forecasts"} tone={t.command.offTrack ? "var(--critical)" : undefined} />
             </div>
             <div className={css.stripMeta}>

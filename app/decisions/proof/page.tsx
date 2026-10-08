@@ -6,10 +6,11 @@ import { IconChevronDown } from "@/components/v32/icons";
 import { PageBody, amount, humaneError } from "@/components/os/prepared/kit";
 import { PageHeader } from "@/components/v32/ui";
 import { formatDate } from "@/lib/format";
+import css from "@/components/os/prepared/inbox.module.css";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ErrorState } from "@/components/ui/ErrorState";
 import Button from "@/components/ui/Button";
-import { C, Notice, Pill, SectionLabel, Skeleton, Stat } from "@/components/decisions/ui";
+import { C, Notice, SectionLabel, Skeleton, Stat } from "@/components/decisions/ui";
 import { decisionsApi, pct } from "@/lib/decisions";
 
 // The proof screen: is Starlane actually right? Everything here is measured
@@ -35,7 +36,7 @@ export default function DecisionProofPage() {
         {tr.isError && <ErrorState title="Couldn't load the track record" message={humaneError(tr.error)} onRetry={() => tr.refetch()} />}
         {r && (
           <>
-            <section className="grid grid-cols-2 lg:grid-cols-4 gap-6 rounded-xl p-5" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
+            <section className={css.strip} aria-label="Summary">
               <Stat label="Decisions carried through" value={r.contracts} sub={Object.entries(r.byStatus).map(([k, v]) => `${v} ${k.replace(/_/g, " ").toLowerCase()}`).join(", ") || "none yet"} />
               <Stat label="Followed the suggestion" value={r.followedRecommendation ? pct(r.followedRecommendation.share) : "—"} sub={r.followedRecommendation ? `${r.followedRecommendation.count} of ${r.contracts}` : "no decisions yet"} />
               <Stat
@@ -59,7 +60,7 @@ export default function DecisionProofPage() {
             {r.valueLedger.entries.length > 0 && (
               <section className="mt-10">
                 <SectionLabel>Value ledger</SectionLabel>
-                <table className="w-full text-[13px]">
+                <table className="w-full text-[13px] sl-table">
                   <thead>
                     <tr style={{ color: C.faint }}>
                       <th className="text-left font-normal py-2 pr-3">Decision</th>
@@ -72,9 +73,9 @@ export default function DecisionProofPage() {
                     {r.valueLedger.entries.map((e) => (
                       <tr key={e.decisionId} style={{ borderTop: `1px solid ${C.line}` }}>
                         <td className="py-2 pr-3"><Link className="hover-dim" href={`/decisions/${e.decisionId}`} style={{ color: C.body }}>{e.title}</Link></td>
-                        <td className="py-2 pr-3 text-right tabular-nums">{amount(e.collected, e.currency)}</td>
-                        <td className="py-2 pr-3 text-right tabular-nums" style={{ color: C.muted }}>{amount(e.doNothingExpected, e.currency)}</td>
-                        <td className="py-2 text-right tabular-nums" style={{ color: e.estimatedUplift >= 0 ? C.good : C.bad }}>{amount(e.estimatedUplift, e.currency)}</td>
+                        <td className="py-2 pr-3 text-right num">{amount(e.collected, e.currency)}</td>
+                        <td className="py-2 pr-3 text-right num" style={{ color: C.muted }}>{amount(e.doNothingExpected, e.currency)}</td>
+                        <td className="py-2 text-right num" style={{ color: e.estimatedUplift >= 0 ? C.good : C.bad }}>{amount(e.estimatedUplift, e.currency)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -92,13 +93,13 @@ export default function DecisionProofPage() {
                   {r.autonomy.perAction.map((a) => (
                     <li key={a.action} className="py-2 text-[13px] flex flex-wrap gap-2 items-center" style={{ borderTop: `1px solid ${C.line}`, color: C.body }}>
                       <span style={{ fontWeight: 500 }}>{a.action.replace(/_/g, " ").toLowerCase()}</span>
-                      <Pill tone="accent">suggested {a.suggestedLevel}</Pill>
+                      <span style={{ color: C.muted }}>suggested {a.suggestedLevel.replace(/_/g, " ").toLowerCase()}</span>
                       <span style={{ color: C.faint }}>{a.basis}</span>
                     </li>
                   ))}
                 </ul>
               )}
-              <p className="text-[12px] mt-2" style={{ color: C.faint }}>Ceiling for this account: {r.autonomy.ceiling}. {r.autonomy.note}</p>
+              <p className="text-[12px] mt-2" style={{ color: C.faint }}>Ceiling for this account: {r.autonomy.ceiling.replace(/_/g, " ").toLowerCase()}. {r.autonomy.note}</p>
             </section>
 
             {r.recent.length > 0 && (
@@ -118,7 +119,7 @@ export default function DecisionProofPage() {
           </>
         )}
 
-        <section className="mt-12 rounded-xl p-5" style={{ background: "var(--surface)", border: `1px solid ${C.line}` }}>
+        <section className="mt-10 pt-6" style={{ borderTop: `1px solid ${C.line}` }}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <SectionLabel>Replay your history</SectionLabel>
@@ -126,14 +127,14 @@ export default function DecisionProofPage() {
                 Starlane goes back to past dates, sees only what was known then, raises the decisions it would have raised, and checks them against what happened in the following 60 days.
               </p>
             </div>
-            <Button size="sm" variant="secondary" loading={bt.isPending} onClick={() => bt.mutate()}>Run replay</Button>
+            <Button size="sm" variant="secondary" loading={bt.isPending} onClick={() => bt.mutate()}>Replay history</Button>
           </div>
           {bt.isError && <div className="mt-4"><Notice tone="bad" title="The replay didn't run">{humaneError(bt.error, "Try again in a moment.")}</Notice></div>}
           {bt.data?.status === "INSUFFICIENT_HISTORY" && <div className="mt-4"><Notice title="Not enough history yet">{bt.data.detail}</Notice></div>}
           {s && bt.data?.method && (
             <div className="mt-5">
               {s.sampleWarning && <div className="mb-4"><Notice tone="warn" title="Small sample">{s.sampleWarning}</Notice></div>}
-              <table className="w-full text-[13px]">
+              <table className="w-full text-[13px] sl-table">
                 <thead>
                   <tr style={{ color: C.faint }}>
                     <th className="text-left font-normal py-2 pr-3"></th>
@@ -152,8 +153,8 @@ export default function DecisionProofPage() {
                   ] as [string, string | number, string | number][]).map(([k, a, b]) => (
                     <tr key={k} style={{ borderTop: `1px solid ${C.line}` }}>
                       <td className="py-2 pr-3" style={{ color: C.body }}>{k}</td>
-                      <td className="py-2 pr-3 text-right tabular-nums" style={{ color: C.ink }}>{a}</td>
-                      <td className="py-2 text-right tabular-nums" style={{ color: C.muted }}>{b}</td>
+                      <td className="py-2 pr-3 text-right num" style={{ color: C.ink }}>{a}</td>
+                      <td className="py-2 text-right num" style={{ color: C.muted }}>{b}</td>
                     </tr>
                   ))}
                 </tbody>

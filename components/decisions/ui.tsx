@@ -70,7 +70,9 @@ export function ConfidencePill({ band, score }: { band?: string | null; score?: 
 export function Stat({ label, value, sub, tone }: { label: string; value: React.ReactNode; sub?: React.ReactNode; tone?: "bad" | "warn" | "good" }) {
   return (
     <div className="min-w-0">
-      <p className="num" style={{ margin: 0, fontSize: 18, lineHeight: 1.25, color: tone ? C[tone] : C.ink }}>{value}</p>
+      {typeof value === "string" && !/\d/.test(value)
+        ? <p style={{ margin: 0, fontSize: 14, lineHeight: "22px", color: C.faint }}>{value}</p>
+        : <p className="num" style={{ margin: 0, fontSize: 18, lineHeight: "22px", color: tone ? C[tone] : C.ink }}>{value}</p>}
       <p style={{ margin: "4px 0 0", fontSize: 12, color: C.muted }}>{label}</p>
       {sub && <p style={{ margin: "1px 0 0", fontSize: 11.5, color: C.faint }}>{sub}</p>}
     </div>
