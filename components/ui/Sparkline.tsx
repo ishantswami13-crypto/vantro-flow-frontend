@@ -7,22 +7,24 @@
 
 interface SparklineProps {
   values: number[];
-  color: string;
+  /** Stroke colour; defaults to the secondary ink so it stays quiet. */
+  color?: string;
   width?: number;
   height?: number;
 }
 
-export function Sparkline({ values, color, width = 64, height = 20 }: SparklineProps) {
+export function Sparkline({ values, color = "var(--ink-2)", width = 64, height = 20 }: SparklineProps) {
   if (!values || values.length < 2) return null;
 
   const max = Math.max(...values, 0);
   const min = Math.min(...values, 0);
   const range = max - min || 1;
+  const pad = 1.5;
 
   const points = values
     .map((v, i) => {
       const x = (i / (values.length - 1)) * width;
-      const y = height - ((v - min) / range) * height;
+      const y = pad + (height - pad * 2) - ((v - min) / range) * (height - pad * 2);
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(" ");
@@ -35,10 +37,10 @@ export function Sparkline({ values, color, width = 64, height = 20 }: SparklineP
         points={points}
         fill="none"
         stroke={color}
-        strokeWidth={1.5}
+        strokeWidth={1.25}
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity={allZero ? 0.25 : 0.85}
+        opacity={allZero ? 0.3 : 0.9}
       />
     </svg>
   );

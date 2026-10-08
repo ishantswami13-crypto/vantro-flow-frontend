@@ -1,126 +1,106 @@
 "use client";
-// v3 — one-click send-reminder, auto-poll, bulk remind, sent-state tracking
+
+// Collections: every unpaid invoice, oldest first, with the next step for
+// each one (remind, log a call, log a reply, mark paid). Reminders keep the
+// server's own gating: when WhatsApp is not set up for this workspace the
+// server says so and the message opens for the owner to send by hand.
+
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type Invoice, authHeaders } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
-import { Badge } from "@/components/ui/Badge";
 import { generateWhatsAppPaymentLink } from "@/lib/paymentLink";
-import {
-  FiSearch, FiMessageSquare, FiCheckSquare,
-  FiDownload, FiArrowUp, FiArrowDown, FiPhone,
-  FiUpload, FiX, FiCopy, FiMessageCircle, FiSend,
-  FiZap, FiPlus, FiEye, FiCalendar, FiAlertCircle,
-} from "react-icons/fi";
-import { useRouter } from "next/navigation";
+import { inrWhole, formatDate, formatRelative, formatCount } from "@/lib/format";
+import { PageHeader, Subnav, SearchField, SkeletonRows } from "@/components/v32/ui";
+import { IconInfo, IconRupee, IconUpload } from "@/components/v32/icons";
+import { StatusChip, type StatusTone } from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { useToast } from "@/components/ui/Toast";
+import { MorePage, FigureRow, GridTable, SortHeader, RowMenu, Field, OFFLINE_TEXT, moreStyles as s, type Column } from "@/components/more/ui";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 const CACHE_KEY = "vantro_collections_cache";
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-interface Customer {
+interface Row {
   id: number;
   name: string;
   contact: string;
-  industry: string;
   outstanding: number;
   daysOverdue: number;
-  score: number;
-  lastContact: string;
-  lastPayment: string;
-  status: "overdue" | "due" | "promised";
-  // reminder tracking
+  invoiceDate?: string;
+  dueDate?: string;
+  invoiceNumber?: string;
   invoiceId?: string;
   paymentLink?: string;
   lastReminderSent?: string;
   reminderCount?: number;
 }
 
-interface ReplyLog {
-  intent: "promised" | "uncertain" | "paid" | "no_response";
-  label: string;
-  color: string;
-  text: string;
-  date: string;
-}
+type Intent = "promised" | "uncertain" | "paid" | "no_response";
+interface ReplyLog { intent: Intent; label: string; text: string; date: string }
+interface PromiseRecord { date: string; amount: number; name: string }
 
-interface PromiseRecord {
-  date: string;
-  amount: number;
-  name: string;
-}
-
-function fmt(n: number) {
-  return n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${(n / 1000).toFixed(0)}K`;
-}
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
+const INTENT_TONE: Record<Intent, StatusTone> = { paid: "positive", promised: "attention", uncertain: "critical", no_response: "unknown" };
 
 function classifyIntent(text: string): ReplyLog {
   const t = text.toLowerCase();
-  if (!t.trim()) return { intent: "no_response", label: "⚫ No Reply", color: "var(--ink-2)", text, date: new Date().toISOString() };
+  const date = new Date().toISOString();
+  if (!t.trim()) return { intent: "no_response", label: "No reply", text, date };
   const paidKw = ["paid", "kar diya", "bhej diya", "done", "ho gaya", "send kar", "transferred", "upi kar", "payment kiya", "de diya", "diya"];
   const promisedKw = ["kal", "parso", "pakka", "promise", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "next week", "agli", "agle", "de dunga", "dunga", "sure", "zaroor", "confirm", "by", "tak", "shaam tak", "dopahar", "subah"];
-  const uncertainKw = ["dekhunga", "dekhta", "pata nahi", "maybe", "try", "mushkil", "problem", "baad mein", "later", "soch", "nahi pata", "abhi nahi", "thodi der", "wait"];
-  if (paidKw.some(k => t.includes(k))) return { intent: "paid", label: "🟢 Paid", color: "var(--positive)", text, date: new Date().toISOString() };
-  if (promisedKw.some(k => t.includes(k))) return { intent: "promised", label: "🟡 Promised", color: "var(--warning)", text, date: new Date().toISOString() };
-  if (uncertainKw.some(k => t.includes(k))) return { intent: "uncertain", label: "🔴 Uncertain", color: "var(--critical)", text, date: new Date().toISOString() };
-  return { intent: "uncertain", label: "🔴 Uncertain", color: "var(--critical)", text, date: new Date().toISOString() };
+  if (paidKw.some(k => t.includes(k))) return { intent: "paid", label: "Says paid", text, date };
+  if (promisedKw.some(k => t.includes(k))) return { intent: "promised", label: "Promised", text, date };
+  return { intent: "uncertain", label: "Uncertain", text, date };
 }
 
-type SortKey = "outstanding" | "daysOverdue" | "score";
-const SCORE_COLOR = (s: number) => s >= 70 ? "var(--positive)" : s >= 40 ? "var(--warning)" : "var(--critical)";
-const STATUS_VARIANT: Record<string, "danger" | "warning" | "default"> = {
-  overdue: "danger", promised: "warning", due: "default",
+const RISK: Record<string, { label: string; tone: StatusTone }> = {
+  HIGH_RISK: { label: "High risk", tone: "critical" },
+  MEDIUM: { label: "Medium risk", tone: "attention" },
+  LOW: { label: "Low risk", tone: "positive" },
 };
 
-/* ── Score Ring — SVG circular progress ──────────────────────────── */
-function ScoreRing({ score }: { score: number }) {
-  const color = SCORE_COLOR(score);
-  const r = 13;
-  const circ = 2 * Math.PI * r;
-  const filled = circ * (score / 100);
-  return (
-    <div className="relative w-9 h-9 flex items-center justify-center shrink-0">
-      <svg width="36" height="36" viewBox="0 0 36 36" style={{ transform: "rotate(-90deg)" }}>
-        <circle cx="18" cy="18" r={r} className="score-ring-track" strokeWidth="2.5" />
-        <circle cx="18" cy="18" r={r} className="score-ring-fill" strokeWidth="2.5"
-          stroke={color}
-          strokeDasharray={`${filled} ${circ - filled}`}
-          strokeDashoffset={0}
-        />
-      </svg>
-      <span className="absolute text-[9px] font-black leading-none" style={{ color }}>{score}</span>
-    </div>
-  );
+type Bucket = "all" | "today" | "d1_7" | "d8_30" | "d31_60" | "d60";
+const BUCKETS: { key: Bucket; label: string; test: (d: number) => boolean }[] = [
+  { key: "all", label: "All", test: () => true },
+  { key: "today", label: "Due today", test: d => d <= 0 },
+  { key: "d1_7", label: "1–7 days", test: d => d >= 1 && d <= 7 },
+  { key: "d8_30", label: "8–30 days", test: d => d >= 8 && d <= 30 },
+  { key: "d31_60", label: "31–60 days", test: d => d >= 31 && d <= 60 },
+  { key: "d60", label: "Over 60 days", test: d => d > 60 },
+];
+
+type SortKey = "outstanding" | "daysOverdue";
+
+function lateText(d: number): string {
+  if (d <= 0) return "Due today";
+  return `${formatCount(d)} day${d === 1 ? "" : "s"} late`;
 }
+
+const today = () => new Date().toISOString().split("T")[0];
+const emptyAdd = () => ({ customer_name: "", customer_phone: "", invoice_amount: "", invoice_date: today(), invoice_number: "", notes: "" });
 
 export default function CollectionsPage() {
   const router = useRouter();
+  const notify = useToast();
   const [search, setSearch]           = useState("");
   const [sortKey, setSortKey]         = useState<SortKey>("daysOverdue");
   const [sortDir, setSortDir]         = useState<"asc" | "desc">("desc");
-  const [filterStatus, setFilter]     = useState("all");
-  const [filterIndustry, setIndustry] = useState("all");
-  const [selected, setSelected]       = useState<number[]>([]);
-  const [liveData, setLiveData]       = useState<Customer[] | null>(null);
+  const [bucket, setBucket]           = useState<Bucket>("all");
+  const [liveData, setLiveData]       = useState<Row[] | null>(null);
+  const [loadError, setLoadError]     = useState(false);
   const [markingPaid, setMarkingPaid] = useState<number | null>(null);
   const [uploading, setUploading]     = useState(false);
-  const [uploadMsg, setUploadMsg]     = useState("");
   const fileRef                       = useRef<HTMLInputElement>(null);
-  const [logModal, setLogModal]       = useState<Customer | null>(null);
+  const [logModal, setLogModal]       = useState<Row | null>(null);
   const [callForm, setCallForm]       = useState({ did_pick_up: true, promised_date: "", notes: "" });
   const [loggingCall, setLoggingCall] = useState(false);
   const [importing, setImporting]     = useState(false);
-  const [importMsg, setImportMsg]     = useState("");
+  const [importMsg, setImportMsg]     = useState<{ ok: boolean; text: string } | null>(null);
   const [showImport, setShowImport]   = useState(false);
   // Deep link from Sources/onboarding: /collections?import=1 opens the importer.
   useEffect(() => {
@@ -130,7 +110,7 @@ export default function CollectionsPage() {
   const importFileRef = useRef<HTMLInputElement>(null);
 
   // Reply logger
-  const [replyModal, setReplyModal]   = useState<Customer | null>(null);
+  const [replyModal, setReplyModal]   = useState<Row | null>(null);
   const [replyText, setReplyText]     = useState("");
   const [replyLogs, setReplyLogs]     = useState<Record<number, ReplyLog>>({});
   const [savingReply, setSavingReply] = useState(false);
@@ -138,62 +118,40 @@ export default function CollectionsPage() {
   // Promise tracker
   const [promises, setPromises]       = useState<Record<number, PromiseRecord>>({});
 
-  // Payment celebration toast
-  const [paidToast, setPaidToast]     = useState<{name: string; amount: number} | null>(null);
-
   // One-click reminder state
-  // "loading" | "sent" | "manual" | null
-  const [reminderState, setReminderState] = useState<Record<string, "loading" | "sent" | "manual">>({});
+  const [reminderState, setReminderState] = useState<Record<string, "loading" | "sent">>({});
   const [manualModal, setManualModal] = useState<{ text: string; phone?: string } | null>(null);
 
   // Bulk remind
+  const [bulkConfirm, setBulkConfirm] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
-  const [bulkResult, setBulkResult]   = useState<string | null>(null);
 
   // Cortex customer risk scores
   const [scoreMap, setScoreMap] = useState<Record<string, { customer_id: string; score: number; tier: string; overdue_amount: number }>>({});
-  const [cacheAge, setCacheAge]         = useState<number | null>(null);
+  const [cacheAge, setCacheAge] = useState<number | null>(null);
 
-  // Add Invoice modal
+  // Add invoice
   const [showAddInvoice, setShowAddInvoice] = useState(false);
-  const [addForm, setAddForm] = useState({
-    customer_name: "", customer_phone: "", invoice_amount: "",
-    invoice_date: new Date().toISOString().split("T")[0],
-    invoice_number: "", notes: "",
-  });
+  const [addForm, setAddForm] = useState(emptyAdd);
   const [addSaving, setAddSaving] = useState(false);
   const [addError, setAddError]   = useState("");
   const [agingSummary, setAgingSummary] = useState<{
     total_outstanding: number;
     total_customers: number;
     most_overdue_days: number;
-    buckets: {
-      due_today: number;
-      overdue_1_7: number;
-      overdue_8_30: number;
-      overdue_31_60: number;
-      overdue_60_plus: number;
-    }
+    buckets: { due_today: number; overdue_1_7: number; overdue_8_30: number; overdue_31_60: number; overdue_60_plus: number };
   } | null>(null);
 
-  useEffect(() => {
-    if (!paidToast) return;
-    const t = setTimeout(() => setPaidToast(null), 3500);
-    return () => clearTimeout(t);
-  }, [paidToast]);
-
-  const mapInvoices = (invoices: Invoice[]): Customer[] =>
+  const mapInvoices = (invoices: Invoice[]): Row[] =>
     invoices.map((inv, i) => ({
       id: i + 1,
       name: inv.customer_name,
       contact: inv.customer_phone || "",
-      industry: "Business",
       outstanding: inv.invoice_amount,
       daysOverdue: inv.days_overdue,
-      score: Math.max(10, Math.min(99, 90 - inv.days_overdue)),
-      lastContact: inv.invoice_date,
-      lastPayment: inv.payment_date || "—",
-      status: (inv.days_overdue > 30 ? "overdue" : inv.days_overdue > 0 ? "due" : "promised") as Customer["status"],
+      invoiceDate: inv.invoice_date,
+      dueDate: inv.due_date,
+      invoiceNumber: inv.invoice_number,
       invoiceId: inv.id,
       paymentLink: inv.payment_link,
       lastReminderSent: inv.last_reminder_sent,
@@ -213,54 +171,60 @@ export default function CollectionsPage() {
       }
     } catch {}
 
-    // Fetch fresh data from API
     api.invoices.list(userId).then(d => {
       const pending = (d.invoices || []).filter((inv: Invoice) => inv.payment_status === "Pending");
       const mapped = mapInvoices(pending);
       setLiveData(mapped);
-      setCacheAge(null); // showing fresh data
-      // Write to cache
-      try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ data: mapped, ts: Date.now() }));
-      } catch {}
+      setLoadError(false);
+      setCacheAge(null);
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: mapped, ts: Date.now() })); } catch {}
     }).catch(() => {
-      // offline — already showing cache above, nothing to do
+      // Offline: the cache above (if any) stays on screen; otherwise say so.
+      setLoadError(true);
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const refreshSummary = useCallback((userId: string) => {
+    api.collections.summary(userId).then(d => {
+      if (d.success && d.summary) setAgingSummary(d.summary);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
     const user = getUser();
     if (!user?.id) return;
     loadInvoices(user.id);
-    api.collections.summary(user.id).then(d => {
-      if (d.success && d.summary) setAgingSummary(d.summary);
-    }).catch(() => {});
-    // Auto-poll every 30s — picks up Razorpay webhook-triggered status changes
+    refreshSummary(user.id);
+    // Auto-poll every 30s: picks up Razorpay webhook-triggered status changes
     const interval = setInterval(() => {
       loadInvoices(user.id);
-      api.collections.summary(user.id).then(d => {
-        if (d.success && d.summary) setAgingSummary(d.summary);
-      }).catch(() => {});
+      refreshSummary(user.id);
     }, 30_000);
 
-    // Fetch Cortex customer risk scores
     fetch(`${BASE}/api/customer-scores`, { headers: { ...authHeaders() }, credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (!d?.scores) return;
-        const map: Record<string, any> = {};
-        d.scores.forEach((s: any) => { map[s.customer_name] = s; });
+        const map: Record<string, { customer_id: string; score: number; tier: string; overdue_amount: number }> = {};
+        d.scores.forEach((sc: { customer_name: string; customer_id: string; score: number; tier: string; overdue_amount: number }) => { map[sc.customer_name] = sc; });
         setScoreMap(map);
       }).catch(() => {});
 
     return () => clearInterval(interval);
-  }, [loadInvoices]);
+  }, [loadInvoices, refreshSummary]);
+
+  const retry = () => {
+    const user = getUser();
+    if (!user?.id) return;
+    setLoadError(false);
+    loadInvoices(user.id);
+    refreshSummary(user.id);
+  };
 
   // One-click send reminder
-  const handleSendReminder = async (c: Customer) => {
+  const handleSendReminder = async (c: Row) => {
     if (!c.invoiceId) {
-      // Demo mode fallback
+      // No invoice id (cached demo row): open the message for the owner to send.
       const user = (() => { try { return JSON.parse(localStorage.getItem("vantro_user") || "{}"); } catch { return {}; } })();
       const text = generateWhatsAppPaymentLink({
         upiId: user.upi_id || "demo@upi",
@@ -276,75 +240,71 @@ export default function CollectionsPage() {
     }
 
     const key = c.invoiceId;
-    setReminderState(s => ({ ...s, [key]: "loading" }));
+    setReminderState(st => ({ ...st, [key]: "loading" }));
     try {
       const result = await api.collections.sendReminder(c.invoiceId);
       if (result.auto_sent) {
-        setReminderState(s => ({ ...s, [key]: "sent" }));
+        setReminderState(st => ({ ...st, [key]: "sent" }));
         posthog.capture("reminder_auto_sent", { provider: result.provider });
-        // Refresh to update last_reminder_sent timestamp
+        notify(`Reminder sent to ${c.name}`, "positive");
         const user = getUser();
         if (user?.id) loadInvoices(user.id);
-        // Reset button to normal after 4s
-        setTimeout(() => setReminderState(s => { const n = { ...s }; delete n[key]; return n; }), 4000);
+        setTimeout(() => setReminderState(st => { const n = { ...st }; delete n[key]; return n; }), 4000);
       } else {
-        // WhatsApp not configured — show manual modal
-        setReminderState(s => { const n = { ...s }; delete n[key]; return n; });
+        // WhatsApp not configured: the owner sends the prepared message by hand.
+        setReminderState(st => { const n = { ...st }; delete n[key]; return n; });
         setManualModal({ text: result.whatsapp_text, phone: result.phone || c.contact });
         posthog.capture("reminder_manual_fallback");
       }
     } catch {
-      setReminderState(s => { const n = { ...s }; delete n[key]; return n; });
+      setReminderState(st => { const n = { ...st }; delete n[key]; return n; });
+      notify("Couldn't send the reminder. Check your connection and try again.", "critical");
     }
   };
 
-  // Bulk remind all overdue
   const handleBulkRemind = async () => {
     setBulkLoading(true);
-    setBulkResult(null);
     try {
       const result = await api.collections.bulkRemind(1, "friendly");
-      setBulkResult(`✓ ${result.sent} of ${result.total} reminders sent`);
       posthog.capture("bulk_remind", { sent: result.sent, total: result.total });
+      notify(`${formatCount(result.sent)} of ${formatCount(result.total)} reminders sent`, "positive");
+      setBulkConfirm(false);
       const user = getUser();
       if (user?.id) loadInvoices(user.id);
-      setTimeout(() => setBulkResult(null), 5000);
     } catch {
-      setBulkResult("Failed — please try again");
-      setTimeout(() => setBulkResult(null), 3000);
+      notify("Couldn't send reminders. Check your connection and try again.", "critical");
     } finally {
       setBulkLoading(false);
     }
   };
 
-  const handleMarkPaid = async (c: Customer) => {
+  const handleMarkPaid = async (c: Row) => {
     if (!c.invoiceId) return;
     setMarkingPaid(c.id);
     try {
-      await api.invoices.markPaid(c.invoiceId, {
-        payment_date: new Date().toISOString().split("T")[0],
-        payment_method: "manual",
-      });
+      await api.invoices.markPaid(c.invoiceId, { payment_date: today(), payment_method: "manual" });
       posthog.capture("invoice_marked_paid");
-      setPaidToast({ name: c.name.split(" ")[0], amount: c.outstanding });
+      notify(<span><b style={{ fontWeight: 500 }}>{c.name}</b> paid {inrWhole(c.outstanding)}. Marked as received.</span>, "positive");
       const user = getUser();
-      if (user?.id) loadInvoices(user.id);
-    } catch { /* noop */ }
-    finally { setMarkingPaid(null); }
+      if (user?.id) { loadInvoices(user.id); refreshSummary(user.id); }
+    } catch {
+      notify("Couldn't mark this invoice as paid. Try again.", "critical");
+    } finally { setMarkingPaid(null); }
   };
 
   const handleUpload = async (file: File) => {
     const user = getUser();
     if (!user?.id) return;
-    setUploading(true); setUploadMsg("");
+    setUploading(true);
     try {
       const res = await api.invoices.upload(user.id, file);
       if (res.error) throw new Error(res.error);
-      setUploadMsg(`${res.count} invoices uploaded successfully`);
+      notify(`${formatCount(res.count)} invoices uploaded`, "positive");
       posthog.capture("csv_uploaded", { invoice_count: res.count });
+      setShowImport(false);
       loadInvoices(user.id);
-    } catch (err: unknown) {
-      setUploadMsg(err instanceof Error ? err.message : "Upload failed");
+    } catch {
+      notify("That CSV couldn't be read. Check the columns and try again.", "critical");
     } finally { setUploading(false); }
   };
 
@@ -382,18 +342,17 @@ export default function CollectionsPage() {
           }).catch(() => {});
         }
       }
+      notify("Call logged", "positive");
       setLogModal(null);
       setCallForm({ did_pick_up: true, promised_date: "", notes: "" });
-    } catch { /* noop */ }
-    finally { setLoggingCall(false); }
+    } catch {
+      notify("Couldn't save the call. Try again.", "critical");
+    } finally { setLoggingCall(false); }
   };
 
-  // Persists a classified reply the same way Log Call persists a phone call --
-  // via api.calls.log, so "Log Customer Reply" produces a durable record
-  // instead of a badge that only lives in this tab's React state and is gone
-  // on refresh. did_pick_up is true here: the customer did respond, just by
-  // text rather than picking up a call.
-  const persistReply = useCallback(async (customer: Customer, log: ReplyLog) => {
+  // Persists a classified reply the same way a call is logged (api.calls.log),
+  // so it survives a refresh. did_pick_up is true: the customer did respond.
+  const persistReply = useCallback(async (customer: Row, log: ReplyLog) => {
     const user = getUser();
     setReplyLogs(prev => ({ ...prev, [customer.id]: log }));
     posthog.capture("reply_logged", { intent: log.intent });
@@ -409,7 +368,7 @@ export default function CollectionsPage() {
           notes: log.text ? `[${log.label}] ${log.text}` : `[${log.label}]`,
           invoice_id: customer.invoiceId || null,
         });
-      } catch { /* noop -- badge already shown, retry isn't worth blocking on */ }
+      } catch { /* the chip is already shown; a retry isn't worth blocking on */ }
     }
     setReplyModal(null);
     setReplyText("");
@@ -418,17 +377,14 @@ export default function CollectionsPage() {
   const handleLogReply = useCallback(async () => {
     if (!replyModal || !replyText.trim()) return;
     setSavingReply(true);
-    try {
-      await persistReply(replyModal, classifyIntent(replyText));
-    } finally {
-      setSavingReply(false);
-    }
+    try { await persistReply(replyModal, classifyIntent(replyText)); }
+    finally { setSavingReply(false); }
   }, [replyModal, replyText, persistReply]);
 
-  const getPromiseNudgeMsg = (c: Customer) => {
+  const getPromiseNudgeMsg = (c: Row) => {
     const p = promises[c.id];
     if (!p) return "";
-    return `${c.name.split(" ")[0]} bhai, aapne ${p.date} ko payment ka promise kiya tha — ₹${p.amount.toLocaleString("en-IN")} abhi tak nahi aaya. Kya aaj settle kar sakte hain? 🙏`;
+    return `${c.name.split(" ")[0]} bhai, aapne ${formatDate(p.date)} ko payment ka promise kiya tha — ${inrWhole(p.amount)} abhi tak nahi aaya. Kya aaj settle kar sakte hain?`;
   };
   const isPromiseBroken = (id: number) => {
     const p = promises[id];
@@ -437,28 +393,28 @@ export default function CollectionsPage() {
 
   const handleImportFile = async (file: File) => {
     if (!file) return;
-    setImporting(true); setImportMsg("");
+    setImporting(true); setImportMsg(null);
     try {
       const form = new FormData();
       form.append("file", file);
       const r = await fetch(`${BASE}/api/import/excel`, { method: "POST", headers: { ...authHeaders() }, credentials: "include", body: form });
       const d = await r.json();
       if (d.success) {
-        setImportMsg(`${d.imported} invoices imported successfully!`);
-        setTimeout(() => { setShowImport(false); setImportMsg(""); const user = getUser(); if (user?.id) loadInvoices(user.id); }, 2000);
+        setImportMsg({ ok: true, text: `${formatCount(d.imported)} invoices imported.` });
+        setTimeout(() => { setShowImport(false); setImportMsg(null); const user = getUser(); if (user?.id) loadInvoices(user.id); }, 1600);
       } else {
-        setImportMsg(`${d.error || "Import failed"}${d.hint ? " — " + d.hint : ""}`);
+        setImportMsg({ ok: false, text: d.hint ? `That file couldn't be imported. ${d.hint}` : "That file couldn't be imported. Check that it has customer, amount and date columns." });
       }
-    } catch { setImportMsg("Upload failed. Please try again."); }
+    } catch { setImportMsg({ ok: false, text: OFFLINE_TEXT }); }
     finally { setImporting(false); }
   };
 
   const handleAddInvoice = async () => {
     const user = getUser();
     if (!user?.id) return;
-    if (!addForm.customer_name.trim()) { setAddError("Customer name is required"); return; }
+    if (!addForm.customer_name.trim()) { setAddError("Enter the customer's name."); return; }
     const amount = parseFloat(addForm.invoice_amount);
-    if (isNaN(amount) || amount <= 0) { setAddError("Enter a valid amount"); return; }
+    if (isNaN(amount) || amount <= 0) { setAddError("Enter an amount above zero."); return; }
     setAddSaving(true); setAddError("");
     try {
       await api.invoices.create({
@@ -470,726 +426,407 @@ export default function CollectionsPage() {
         notes: addForm.notes.trim() || undefined,
       });
       posthog.capture("invoice_added_manually");
+      notify(`Invoice for ${inrWhole(amount)} added`, "positive");
       setShowAddInvoice(false);
-      setAddForm({ customer_name: "", customer_phone: "", invoice_amount: "", invoice_date: new Date().toISOString().split("T")[0], invoice_number: "", notes: "" });
+      setAddForm(emptyAdd());
       loadInvoices(user.id);
-    } catch (err: unknown) {
-      setAddError(err instanceof Error ? err.message : "Failed to add invoice");
+    } catch {
+      setAddError("Couldn't save the invoice. Check your connection and try again.");
     } finally {
       setAddSaving(false);
     }
   };
 
   const tableData = useMemo(() => liveData ?? [], [liveData]);
-  const industries = useMemo(() => ["all", ...Array.from(new Set(tableData.map((c) => c.industry)))], [tableData]);
+  const counts = useMemo(() => {
+    const m = {} as Record<Bucket, number>;
+    BUCKETS.forEach(b => { m[b.key] = tableData.filter(c => b.test(c.daysOverdue)).length; });
+    return m;
+  }, [tableData]);
   const rows = useMemo(() => {
-    let r = tableData;
-    if (search) r = r.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.contact.includes(search));
-    if (filterStatus !== "all") r = r.filter(c => c.status === filterStatus);
-    if (filterIndustry !== "all") r = r.filter(c => c.industry === filterIndustry);
+    const test = BUCKETS.find(b => b.key === bucket)!.test;
+    const q = search.trim().toLowerCase();
+    let r = tableData.filter(c => test(c.daysOverdue));
+    if (q) r = r.filter(c => c.name.toLowerCase().includes(q) || c.contact.includes(q) || (c.invoiceNumber || "").toLowerCase().includes(q));
     return [...r].sort((a, b) => {
       const d = a[sortKey] - b[sortKey];
       return sortDir === "desc" ? -d : d;
     });
-  }, [search, sortKey, sortDir, filterStatus, filterIndustry, tableData]);
+  }, [search, sortKey, sortDir, bucket, tableData]);
 
   const toggleSort = (k: SortKey) => {
     if (k === sortKey) setSortDir(d => d === "desc" ? "asc" : "desc");
     else { setSortKey(k); setSortDir("desc"); }
   };
 
-  const SortBtn = ({ col, label }: { col: SortKey; label: string }) => (
-    <button onClick={() => toggleSort(col)} className="flex items-center gap-1 hover:text-primary transition-colors">
-      {label}
-      {sortKey === col ? (sortDir === "desc" ? <FiArrowDown size={10} className="text-accent" /> : <FiArrowUp size={10} className="text-accent" />) : null}
-    </button>
-  );
+  // Headline figures: the backend's aging summary when it has answered,
+  // otherwise the same sums from the invoices on screen.
+  const figures = useMemo(() => {
+    const sum = (f: (c: Row) => boolean) => tableData.filter(f).reduce((a, c) => a + c.outstanding, 0);
+    const overdueRows = tableData.filter(c => c.daysOverdue > 0);
+    const over60Rows = tableData.filter(c => c.daysOverdue > 60);
+    const b = agingSummary?.buckets;
+    return {
+      total: agingSummary ? agingSummary.total_outstanding : sum(() => true),
+      overdue: b ? b.overdue_1_7 + b.overdue_8_30 + b.overdue_31_60 + b.overdue_60_plus : sum(c => c.daysOverdue > 0),
+      overdueCount: overdueRows.length,
+      over60: b ? b.overdue_60_plus : sum(c => c.daysOverdue > 60),
+      over60Count: over60Rows.length,
+      dueToday: b ? b.due_today : sum(c => c.daysOverdue <= 0),
+      dueTodayCount: tableData.filter(c => c.daysOverdue <= 0).length,
+    };
+  }, [tableData, agingSummary]);
 
-  const totalSelected = selected.length;
-  const allSelected = totalSelected === rows.length && rows.length > 0;
+  const overdueCount = figures.overdueCount;
+
+  const columns: Column<Row>[] = [
+    {
+      key: "customer", header: "Customer", width: "minmax(0, 1.7fr)",
+      render: c => {
+        const reply = replyLogs[c.id];
+        const promise = promises[c.id];
+        const broken = isPromiseBroken(c.id);
+        return (
+          <div className="min-w-0">
+            <div className={s.name} title={c.name}>{c.name}</div>
+            <div className={s.sub}>
+              <span className={s.smOnly}>{lateText(c.daysOverdue)}</span>
+              <span className={s.mdUp}>{c.invoiceNumber || c.contact || (c.invoiceDate ? `Raised ${formatDate(c.invoiceDate)}` : "")}</span>
+              {reply && <StatusChip tone={INTENT_TONE[reply.intent]}>{reply.label}</StatusChip>}
+              {broken
+                ? <StatusChip tone="critical">Promise broken</StatusChip>
+                : promise && <StatusChip tone="attention">Promised {formatDate(promise.date)}</StatusChip>}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "amount", header: <SortHeader label="Outstanding" active={sortKey === "outstanding"} dir={sortDir} onClick={() => toggleSort("outstanding")} />,
+      width: "130px", widthSm: "auto", align: "right",
+      render: c => <span className={s.amount}>{inrWhole(c.outstanding)}</span>,
+    },
+    {
+      key: "late", header: <SortHeader label="Late by" active={sortKey === "daysOverdue"} dir={sortDir} onClick={() => toggleSort("daysOverdue")} />,
+      width: "112px", align: "right", hide: "sm",
+      render: c => <span style={{ color: c.daysOverdue > 60 ? "var(--critical)" : "var(--body)" }}>{lateText(c.daysOverdue)}</span>,
+    },
+    {
+      key: "risk", header: "Risk", width: "118px", hide: "md",
+      render: c => {
+        const r = scoreMap[c.name] && RISK[scoreMap[c.name].tier];
+        return r ? <StatusChip tone={r.tone} title={`Risk score ${scoreMap[c.name].score} of 100`}>{r.label}</StatusChip> : <StatusChip tone="unknown">Not scored</StatusChip>;
+      },
+    },
+    {
+      key: "reminded", header: "Last reminder", width: "112px", hide: "md",
+      render: c => {
+        const rState = reminderState[c.invoiceId || ""];
+        if (rState === "sent") return <span style={{ color: "var(--positive)" }}>Just now</span>;
+        return c.lastReminderSent ? <span>{formatRelative(c.lastReminderSent)}</span> : <span className={s.muted}>Never</span>;
+      },
+    },
+    {
+      key: "actions", header: <span className="sr-only">Actions</span>, width: "128px", widthSm: "36px", align: "right",
+      render: c => {
+        const rState = reminderState[c.invoiceId || ""];
+        const broken = isPromiseBroken(c.id);
+        const phone = c.contact.replace(/\D/g, "");
+        return (
+          <div className={s.actions}>
+            <span className={s.mdUp}>
+              <Button variant="ghost" size="sm" loading={rState === "loading"} disabled={rState === "sent"} onClick={() => handleSendReminder(c)}
+                title={c.lastReminderSent ? `Last reminded ${formatRelative(c.lastReminderSent)}` : "Send a payment reminder with a payment link"}>
+                {rState === "sent" ? "Sent" : "Remind"}
+              </Button>
+            </span>
+            <RowMenu label={`More actions for ${c.name}`} items={[
+              { label: rState === "sent" ? "Reminder sent" : "Send reminder", onSelect: () => handleSendReminder(c), phoneOnly: true, disabled: rState === "sent" || rState === "loading" },
+              { label: "Log a call", onSelect: () => { setLogModal(c); setCallForm({ did_pick_up: true, promised_date: "", notes: "" }); } },
+              { label: "Log their reply", onSelect: () => { setReplyModal(c); setReplyText(""); } },
+              ...(broken && phone ? [{ label: "Nudge about broken promise", href: `https://wa.me/91${phone}?text=${encodeURIComponent(getPromiseNudgeMsg(c))}`, external: true }] : []),
+              ...(phone ? [{ label: "Open WhatsApp chat", href: `https://wa.me/91${phone}`, external: true }] : []),
+              ...(c.invoiceId ? [{ label: "View invoice", onSelect: () => router.push(`/invoice/${c.invoiceId}`) }] : []),
+              ...(c.invoiceId ? [{ label: markingPaid === c.id ? "Marking as paid…" : "Mark as paid", onSelect: () => handleMarkPaid(c), disabled: markingPaid === c.id, separatorBefore: true }] : []),
+            ]} />
+          </div>
+        );
+      },
+    },
+  ];
+
+  const openAdd = () => { setShowAddInvoice(true); setAddError(""); };
+  const loading = liveData === null && !loadError;
 
   return (
     <DashboardLayout pageTitle="Collections">
-      <div className="space-y-4 page-enter">
+      <MorePage>
+        <PageHeader
+          title="Collections"
+          subtitle="Who owes you, how late they are, and the next step for each."
+          right={
+            <>
+              <Button variant="ghost" icon={<IconUpload size={14} />} onClick={() => setShowImport(true)}>Import</Button>
+              {overdueCount > 0 && <Button variant="secondary" onClick={() => setBulkConfirm(true)}>Remind all overdue</Button>}
+              <Button variant="primary" onClick={openAdd}>Add invoice</Button>
+            </>
+          }
+        />
 
-        {/* Payment celebration toast */}
-        {paidToast && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-fade-in">
-            <div className="flex items-center gap-3 px-5 py-3.5 bg-success rounded-2xl shadow-2xl text-white font-bold text-sm">
-              <span className="text-xl">🎉</span>
-              <div>
-                <p>{paidToast.name} ne payment kiya!</p>
-                <p className="text-xs font-normal opacity-90">₹{paidToast.amount.toLocaleString("en-IN")} received</p>
-              </div>
-              <button aria-label="Close" onClick={() => setPaidToast(null)} className="ml-2 opacity-70 hover:opacity-100"><FiX size={14} /></button>
-            </div>
-          </div>
-        )}
-
-        {/* ── Offline cache notice ── */}
         {cacheAge !== null && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-2xs text-warning"
-            style={{ background: "rgba(245,165,36,0.08)", border: "1px solid rgba(245,165,36,0.2)" }}>
-            <FiAlertCircle size={12} />
-            Offline — showing data from {cacheAge === 0 ? "just now" : `${cacheAge} min ago`}. Reconnect to refresh.
+          <div className={s.notice} role="status">
+            <IconInfo size={15} />
+            <span>You&apos;re offline. Showing invoices saved {cacheAge === 0 ? "just now" : `${cacheAge} min ago`}; they refresh when you reconnect.</span>
           </div>
         )}
 
-        {/* Log Reply Modal */}
-        {replyModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => { setReplyModal(null); setReplyText(""); }}>
-            <div className="bg-surface border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="font-bold text-primary text-sm">Log Customer Reply</p>
-                  <p className="text-2xs text-muted mt-0.5">{replyModal.name}</p>
-                </div>
-                <button aria-label="Close" onClick={() => { setReplyModal(null); setReplyText(""); }}><FiX size={16} className="text-muted hover:text-primary" /></button>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-medium text-secondary block mb-1.5">What did they say?</label>
-                  <textarea value={replyText} onChange={e => setReplyText(e.target.value)} autoFocus rows={3}
-                    placeholder={'e.g. "Kal pakka de dunga bhai"'}
-                    className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2 focus:outline-none focus:border-accent resize-none placeholder-muted/50" />
-                </div>
-                {replyText.trim() && (() => {
-                  const preview = classifyIntent(replyText);
-                  return (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ background: `color-mix(in srgb, ${preview.color} 6%, transparent)`, borderColor: `color-mix(in srgb, ${preview.color} 19%, transparent)` }}>
-                      <span className="text-sm">{preview.label.split(" ")[0]}</span>
-                      <div>
-                        <p className="text-xs font-bold" style={{ color: preview.color }}>{preview.label.slice(2)}</p>
-                        <p className="text-2xs text-muted">AI classified intent</p>
-                      </div>
-                    </div>
-                  );
-                })()}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => persistReply(replyModal, { intent: "no_response", label: "⚫ No Reply", color: "var(--ink-2)", text: "", date: new Date().toISOString() })}
-                    disabled={savingReply}
-                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-surface-2 border border-border text-secondary hover:text-primary transition-all disabled:opacity-50">
-                    ⚫ No Response
-                  </button>
-                  <button onClick={handleLogReply} disabled={!replyText.trim() || savingReply}
-                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-gray-900 text-white hover:bg-gray-800 transition-all disabled:opacity-50">
-                    {savingReply ? "Saving..." : "Save Reply"}
-                  </button>
-                </div>
-              </div>
+        {loading && (
+          <>
+            <div className="flex" style={{ gap: 48 }} aria-hidden="true">
+              {[0, 1, 2, 3].map(i => <div key={i}><div className="skeleton" style={{ height: 26, width: 120, marginBottom: 8 }} /><div className="skeleton" style={{ height: 10, width: 80 }} /></div>)}
             </div>
+            <div className={s.panel} style={{ padding: "4px 20px" }}><SkeletonRows rows={6} /></div>
+          </>
+        )}
+
+        {liveData === null && loadError && (
+          <div className={s.panel}>
+            <ErrorState title="Couldn't load your invoices" message={OFFLINE_TEXT} onRetry={retry} />
           </div>
         )}
 
-        {/* Log Call Modal */}
-        {logModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => setLogModal(null)}>
-            <div className="bg-surface border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <p className="font-bold text-primary text-sm">Log Call — {logModal.name}</p>
-                <button aria-label="Close" onClick={() => setLogModal(null)}><FiX size={16} className="text-muted hover:text-primary" /></button>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-xs font-medium text-secondary mb-2">Did they pick up?</p>
-                  <div className="flex gap-2">
-                    {[true, false].map(v => (
-                      <button key={String(v)} onClick={() => setCallForm(f => ({ ...f, did_pick_up: v }))}
-                        className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-all ${callForm.did_pick_up === v ? "bg-gray-900 text-white border-border" : "bg-surface-2 text-secondary border-border"}`}>
-                        {v ? "Yes ✓" : "No ✗"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                {callForm.did_pick_up && (
-                  <div>
-                    <label className="text-xs font-medium text-secondary block mb-1">Promised payment date</label>
-                    <input type="date" value={callForm.promised_date} onChange={e => setCallForm(f => ({ ...f, promised_date: e.target.value }))}
-                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2 focus:outline-none focus:border-accent" />
-                    <div className="flex gap-1.5 mt-1.5">
-                      {[
-                        { label: "Kal",      days: 1 },
-                        { label: "Parso",    days: 2 },
-                        { label: "Is hafte", days: 5 },
-                      ].map(({ label, days }) => {
-                        const d = new Date();
-                        d.setDate(d.getDate() + days);
-                        const val = d.toISOString().split("T")[0];
-                        return (
-                          <button key={label} type="button" onClick={() => setCallForm(f => ({ ...f, promised_date: val }))}
-                            className={`flex-1 py-1.5 rounded-lg text-2xs font-bold transition-all ${
-                              callForm.promised_date === val
-                                ? "bg-accent text-white"
-                                : "bg-surface-2 text-muted border border-border hover:text-primary"
-                            }`}>
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                <div>
-                  <label className="text-xs font-medium text-secondary block mb-1">Notes</label>
-                  <textarea value={callForm.notes} onChange={e => setCallForm(f => ({ ...f, notes: e.target.value }))} rows={3}
-                    placeholder="What did they say..."
-                    className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2 focus:outline-none focus:border-accent resize-none" />
-                </div>
-                <button onClick={handleLogCall} disabled={loggingCall}
-                  className="w-full py-2.5 rounded-lg text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 transition-all disabled:opacity-60">
-                  {loggingCall ? "Saving..." : "Save Call Log"}
-                </button>
-              </div>
-            </div>
+        {liveData !== null && tableData.length === 0 && (
+          <div className={s.panel}>
+            <EmptyState
+              icon={<IconRupee size={17} />}
+              title="No unpaid invoices"
+              message="Nobody owes you money right now. When they do, they show up here, most overdue first. Add an invoice or import your Tally outstanding report."
+              action={<div className="flex gap-2 justify-center flex-wrap"><Button variant="primary" onClick={openAdd}>Add invoice</Button><Button variant="secondary" onClick={() => setShowImport(true)}>Import</Button></div>}
+            />
           </div>
         )}
 
-        {/* Manual WhatsApp fallback modal */}
-        {manualModal && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="w-full max-w-md bg-surface-1 border border-border rounded-2xl p-6 space-y-4 shadow-2xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold text-primary">Send via WhatsApp</p>
-                  <p className="text-2xs text-muted mt-0.5">Tap the button to open WhatsApp with this message ready</p>
-                </div>
-                <button aria-label="Close" onClick={() => setManualModal(null)} className="text-muted hover:text-primary"><FiX size={16} /></button>
-              </div>
-              <div className="p-3 bg-[#128C7E]/10 border border-[#128C7E]/30 rounded-xl">
-                <p className="text-sm text-secondary leading-relaxed whitespace-pre-wrap">{manualModal.text}</p>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => navigator.clipboard.writeText(manualModal.text).then(() => setManualModal(null))}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-surface-2 border border-border text-secondary text-xs font-bold hover:text-primary transition-all">
-                  <FiCopy size={12} /> Copy
-                </button>
-                {manualModal.phone && (
-                  <a href={`https://wa.me/91${manualModal.phone}?text=${encodeURIComponent(manualModal.text)}`}
-                    target="_blank" rel="noopener noreferrer" onClick={() => setManualModal(null)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#25D366] text-white text-xs font-bold hover:opacity-90 transition-all">
-                    <FiMessageSquare size={12} /> Open WhatsApp
-                  </a>
-                )}
+        {tableData.length > 0 && (
+          <>
+            <FigureRow items={[
+              { label: "Outstanding", value: inrWhole(figures.total), note: `${formatCount(tableData.length)} unpaid invoice${tableData.length === 1 ? "" : "s"}` },
+              { label: "Overdue", value: inrWhole(figures.overdue), note: `${formatCount(figures.overdueCount)} past due date` },
+              { label: "Over 60 days late", value: inrWhole(figures.over60), note: figures.over60Count ? `${formatCount(figures.over60Count)} to chase first` : "None", tone: figures.over60 > 0 ? "var(--critical)" : undefined },
+              { label: "Due today", value: inrWhole(figures.dueToday), note: `${formatCount(figures.dueTodayCount)} invoice${figures.dueTodayCount === 1 ? "" : "s"}` },
+            ]} />
+
+            <div className={s.stack}>
+              <Subnav
+                label="Filter by how late"
+                active={bucket}
+                onChange={k => setBucket(k as Bucket)}
+                items={BUCKETS.map(b => ({ key: b.key, label: b.label, count: counts[b.key] }))}
+              />
+              <div className={s.toolbar} style={{ marginTop: 8 }}>
+                <SearchField id="collections-search" value={search} onChange={setSearch} placeholder="Search customer, phone or invoice" />
+                <span style={{ fontSize: 12, color: "var(--ink-3)" }}>
+                  {formatCount(rows.length)} shown · {sortKey === "daysOverdue" ? (sortDir === "desc" ? "most late first" : "least late first") : (sortDir === "desc" ? "largest first" : "smallest first")}
+                </span>
               </div>
             </div>
-          </div>
+
+            <div className={s.panel}>
+              {rows.length > 0 ? (
+                <GridTable label="Unpaid invoices" columns={columns} rows={rows} rowKey={c => c.invoiceId || `row-${c.id}`} />
+              ) : (
+                <EmptyState
+                  title="No invoices match"
+                  message={search ? `Nothing matches “${search}” in this view.` : "No invoices fall in this range."}
+                  action={<Button variant="secondary" size="sm" onClick={() => { setSearch(""); setBucket("all"); }}>Show all invoices</Button>}
+                />
+              )}
+            </div>
+          </>
         )}
+      </MorePage>
 
-        {/* ── Add Invoice Modal ── */}
-        {showAddInvoice && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowAddInvoice(false)}>
-            <div className="w-full max-w-md bg-surface-1 border border-border rounded-2xl shadow-2xl"
-              onClick={e => e.stopPropagation()}>
+      {/* Bulk remind confirmation */}
+      <Modal
+        open={bulkConfirm}
+        onClose={() => !bulkLoading && setBulkConfirm(false)}
+        title="Remind every overdue customer?"
+        description={`A friendly payment reminder goes to the ${formatCount(overdueCount)} customer${overdueCount === 1 ? "" : "s"} with an overdue invoice, using the reminder settings for this workspace.`}
+        footer={<>
+          <Button variant="ghost" onClick={() => setBulkConfirm(false)} disabled={bulkLoading}>Cancel</Button>
+          <Button variant="primary" loading={bulkLoading} onClick={handleBulkRemind}>Send {formatCount(overdueCount)} reminder{overdueCount === 1 ? "" : "s"}</Button>
+        </>}
+      />
 
-              {/* Modal header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-border/60">
-                <div>
-                  <p className="text-sm font-bold text-primary">Add Invoice</p>
-                  <p className="text-2xs text-muted mt-0.5">Add a single customer invoice manually</p>
-                </div>
-                <button aria-label="Close" onClick={() => setShowAddInvoice(false)} className="text-muted hover:text-primary transition-colors">
-                  <FiX size={16} />
-                </button>
+      {/* Log reply */}
+      <Modal
+        open={!!replyModal}
+        onClose={() => { setReplyModal(null); setReplyText(""); }}
+        title="Log their reply"
+        description={replyModal?.name}
+        footer={<>
+          <Button variant="ghost" disabled={savingReply}
+            onClick={() => replyModal && persistReply(replyModal, { intent: "no_response", label: "No reply", text: "", date: new Date().toISOString() })}>
+            They didn&apos;t reply
+          </Button>
+          <Button variant="primary" onClick={handleLogReply} disabled={!replyText.trim()} loading={savingReply}>Save reply</Button>
+        </>}
+      >
+        <div className={s.form}>
+          <Field label="What did they say?" htmlFor="reply-text">
+            <textarea id="reply-text" className="ui-input" rows={3} value={replyText} onChange={e => setReplyText(e.target.value)}
+              placeholder={'e.g. "Kal pakka de dunga bhai"'} />
+          </Field>
+          {replyText.trim() && (() => {
+            const preview = classifyIntent(replyText);
+            return (
+              <div className="flex items-center" style={{ gap: 8, fontSize: 12.5, color: "var(--ink-2)" }}>
+                Reads as <StatusChip tone={INTENT_TONE[preview.intent]}>{preview.label}</StatusChip>
+                <span style={{ color: "var(--ink-3)" }}>from keywords in the reply</span>
               </div>
-
-              {/* Form */}
-              <div className="px-6 py-5 space-y-4">
-                {/* Customer Name */}
-                <div>
-                  <label className="text-xs font-semibold text-secondary block mb-1.5">
-                    Customer Name <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    autoFocus
-                    value={addForm.customer_name}
-                    onChange={e => setAddForm(f => ({ ...f, customer_name: e.target.value }))}
-                    placeholder="e.g. Mehta Fabrics Pvt Ltd"
-                    className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors placeholder-muted/50"
-                  />
-                </div>
-
-                {/* Amount + Phone in a row */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-secondary block mb-1.5">
-                      Amount (₹) <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={addForm.invoice_amount}
-                      onChange={e => setAddForm(f => ({ ...f, invoice_amount: e.target.value }))}
-                      placeholder="e.g. 50000"
-                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors placeholder-muted/50"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-secondary block mb-1.5">Phone</label>
-                    <input
-                      type="tel"
-                      value={addForm.customer_phone}
-                      onChange={e => setAddForm(f => ({ ...f, customer_phone: e.target.value }))}
-                      placeholder="10-digit"
-                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors placeholder-muted/50"
-                    />
-                  </div>
-                </div>
-
-                {/* Invoice Date + Invoice Number */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-secondary block mb-1.5">
-                      Invoice Date <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={addForm.invoice_date}
-                      onChange={e => setAddForm(f => ({ ...f, invoice_date: e.target.value }))}
-                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-secondary block mb-1.5">Invoice #</label>
-                    <input
-                      type="text"
-                      value={addForm.invoice_number}
-                      onChange={e => setAddForm(f => ({ ...f, invoice_number: e.target.value }))}
-                      placeholder="e.g. INV-001"
-                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors placeholder-muted/50"
-                    />
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label className="text-xs font-semibold text-secondary block mb-1.5">Notes</label>
-                  <textarea
-                    value={addForm.notes}
-                    onChange={e => setAddForm(f => ({ ...f, notes: e.target.value }))}
-                    rows={2}
-                    placeholder="What goods or services? Any context..."
-                    className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none placeholder-muted/50"
-                  />
-                </div>
-
-                {/* Error */}
-                {addError && (
-                  <p className="text-xs text-danger bg-danger/10 border border-danger/20 px-3 py-2 rounded-lg">{addError}</p>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="flex gap-2 px-6 pb-5">
-                <button onClick={() => setShowAddInvoice(false)}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-surface-2 border border-border text-secondary hover:text-primary transition-all">
-                  Cancel
-                </button>
-                <button onClick={handleAddInvoice} disabled={addSaving}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-gray-900 text-white hover:bg-gray-800 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
-                  {addSaving
-                    ? <><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Saving...</>
-                    : <><FiPlus size={14} /> Add Invoice</>
-                  }
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Stats strip ──────────────────────────────────────── */}
-        {agingSummary && (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {[
-              { label: "Due Today", value: agingSummary.buckets.due_today, color: "var(--positive)", glow: "rgba(16,217,138,0.06)" },
-              { label: "1-7 Days", value: agingSummary.buckets.overdue_1_7, color: "var(--warning)", glow: "rgba(245,165,36,0.06)" },
-              { label: "8-30 Days", value: agingSummary.buckets.overdue_8_30, color: "var(--warning)", glow: "rgba(245,165,36,0.06)" },
-              { label: "31-60 Days", value: agingSummary.buckets.overdue_31_60, color: "var(--critical)", glow: "rgba(245,66,77,0.06)" },
-              { label: "60+ Days", value: agingSummary.buckets.overdue_60_plus, color: "var(--critical)", glow: "rgba(245,66,77,0.06)" }
-            ].map(b => (
-              <div key={b.label} className="rounded-xl border p-3" style={{ background: b.glow, borderColor: `color-mix(in srgb, ${b.color} 13%, transparent)` }}>
-                <p className="text-[10px] text-muted font-medium mb-1">{b.label}</p>
-                <p className="text-sm font-black" style={{ color: b.color }}>
-                  ₹{b.value >= 100000 ? `${(b.value / 100000).toFixed(1)}L` : b.value >= 1000 ? `${(b.value / 1000).toFixed(0)}K` : b.value}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-        {(() => {
-          const data = liveData ?? [];
-          const totalOut = data.reduce((s, c) => s + c.outstanding, 0);
-          const overdueCount = data.filter(c => c.daysOverdue > 0).length;
-          const criticalCount = data.filter(c => c.daysOverdue >= 60).length;
-          return (
-            // Open typographic metrics, thin dividers — not three bordered
-            // cards for three numbers. Only "Overdue" carries a semantic
-            // color (critical/danger); the rest read as plain fact.
-            <div className="flex items-stretch divide-x divide-border">
-              <div className="pr-5">
-                <p className="metric-value text-xl text-primary">
-                  ₹{totalOut >= 100000 ? `${(totalOut / 100000).toFixed(1)}L` : `${(totalOut / 1000).toFixed(0)}K`}
-                </p>
-                <p className="text-2xs text-muted mt-0.5">Total outstanding</p>
-              </div>
-              <div className="px-5">
-                <p className={["metric-value text-xl", overdueCount > 0 ? "text-danger" : "text-primary"].join(" ")}>{overdueCount}</p>
-                <p className="text-2xs text-muted mt-0.5">Overdue</p>
-              </div>
-              <div className="pl-5">
-                <p className="metric-value text-xl text-primary">{criticalCount}</p>
-                <p className="text-2xs text-muted mt-0.5">Critical (&gt;60d)</p>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* ── Header + Actions ─────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-black text-primary tracking-tight">Collections</h2>
-            <p className="text-xs text-muted mt-0.5">
-              {rows.length} customers · sorted by priority
-            </p>
-          </div>
-          <div className="flex gap-2 shrink-0 flex-wrap">
-            {liveData && liveData.some(c => c.daysOverdue > 0) && (
-              <div className="flex flex-col items-end gap-1">
-                <button onClick={handleBulkRemind} disabled={bulkLoading}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all disabled:opacity-60">
-                  {bulkLoading
-                    ? <span className="w-3 h-3 border border-black/30 border-t-black rounded-full animate-spin" />
-                    : <FiZap size={13} />}
-                  {bulkLoading ? "Sending..." : "Remind All"}
-                </button>
-                {bulkResult && (
-                  <span className={`text-2xs font-semibold ${bulkResult.startsWith("✓") ? "text-success" : "text-danger"}`}>
-                    {bulkResult}
-                  </span>
-                )}
-              </div>
-            )}
-            {totalSelected > 0 && (
-              <button className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-success/10 text-success border border-success/25 hover:bg-success hover:text-white transition-all">
-                <FiMessageSquare size={13} />
-                Message ({totalSelected})
-              </button>
-            )}
-            <button onClick={() => { setShowAddInvoice(true); setAddError(""); }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all">
-              <FiPlus size={13} /> Add Invoice
-            </button>
-            <button onClick={() => setShowImport(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-2 border border-border text-secondary text-xs font-semibold hover:text-primary hover:border-border transition-all">
-              <FiUpload size={13} /> Import
-            </button>
-            <div className="relative">
-              <input ref={fileRef} type="file" accept=".csv" className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }} />
-              <button onClick={() => fileRef.current?.click()} disabled={uploading}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-surface-2 border border-border text-secondary hover:text-primary transition-all disabled:opacity-60">
-                <FiUpload size={13} />
-                {uploading ? "Uploading..." : "CSV"}
-              </button>
-            </div>
-            <button className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-surface-2 text-secondary border border-border hover:text-primary transition-all">
-              <FiDownload size={13} /> Export
-            </button>
-          </div>
+            );
+          })()}
         </div>
+      </Modal>
 
-        {uploadMsg && (
-          <div className={`px-4 py-2.5 rounded-lg text-xs font-medium ${uploadMsg.startsWith("✓") ? "bg-success-dim text-success border border-success/20" : "bg-danger-dim text-danger border border-danger/20"}`}>
-            {uploadMsg}
-            {" "}<button onClick={() => setUploadMsg("")} className="underline ml-2">Dismiss</button>
+      {/* Log call */}
+      <Modal
+        open={!!logModal}
+        onClose={() => setLogModal(null)}
+        title="Log a call"
+        description={logModal ? `${logModal.name} · ${inrWhole(logModal.outstanding)} outstanding` : undefined}
+        footer={<>
+          <Button variant="ghost" onClick={() => setLogModal(null)}>Cancel</Button>
+          <Button variant="primary" loading={loggingCall} onClick={handleLogCall}>Save call</Button>
+        </>}
+      >
+        <div className={s.form}>
+          <div className={s.field}>
+            <span className={s.fieldLabel} id="pickup-label">Did they pick up?</span>
+            <div className={s.segmented} role="group" aria-labelledby="pickup-label" style={{ alignSelf: "flex-start" }}>
+              {[true, false].map(v => (
+                <button key={String(v)} type="button" aria-pressed={callForm.did_pick_up === v} onClick={() => setCallForm(f => ({ ...f, did_pick_up: v }))}>
+                  {v ? "Picked up" : "No answer"}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
-
-        {!liveData && (
-          <div className="bg-surface-2 border border-border rounded-lg px-4 py-3 text-xs text-secondary">
-            <span className="font-semibold text-primary">CSV format:</span> customer_name, invoice_amount, invoice_date, payment_status
-            {" "}—{" "}
-            <a href="data:text/csv;charset=utf-8,customer_name%2Cinvoice_amount%2Cinvoice_date%2Cpayment_status%0AMehta%20Fabrics%2C840000%2C2025-03-01%2CPending"
-              download="vantro-sample.csv" className="text-accent underline">Download sample</a>
-          </div>
-        )}
-
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1">
-            <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-            <input type="text" placeholder="Search customer or phone..." value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full bg-surface-1 border border-border rounded-lg text-sm text-primary placeholder-muted pl-9 pr-3 py-2.5 focus:outline-none focus:border-accent transition-colors" />
-          </div>
-          <div className="flex gap-2">
-            {[
-              { val: filterStatus,   set: setFilter,   opts: ["all", "overdue", "due", "promised"], prefix: "Status: " },
-              { val: filterIndustry, set: setIndustry, opts: industries,                             prefix: "Sector: " },
-            ].map(({ val, set, opts, prefix }, i) => (
-              <select key={i} value={val} onChange={e => set(e.target.value)}
-                className="bg-surface-1 border border-border rounded-lg text-xs text-secondary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors capitalize">
-                {opts.map(o => (
-                  <option key={o} value={o} className="bg-surface capitalize">
-                    {o === "all" ? prefix + "All" : o}
-                  </option>
-                ))}
-              </select>
-            ))}
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="card-premium overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm table-premium">
-              <thead>
-                <tr className="border-b border-border bg-surface-2/40">
-                  <th className="w-10 px-5 py-3">
-                    <input type="checkbox" className="accent-accent" checked={allSelected}
-                      onChange={() => setSelected(allSelected ? [] : rows.map(r => r.id))} />
-                  </th>
-                  <th className="text-left px-4 py-3 section-label">Customer</th>
-                  <th className="text-right px-4 py-3 section-label cursor-pointer"><SortBtn col="outstanding" label="Outstanding" /></th>
-                  <th className="text-right px-4 py-3 section-label hidden sm:table-cell cursor-pointer"><SortBtn col="daysOverdue" label="Days Overdue" /></th>
-                  <th className="px-4 py-3 section-label hidden md:table-cell cursor-pointer"><SortBtn col="score" label="AI Score" /></th>
-                  <th className="text-center px-4 py-3 section-label hidden lg:table-cell">Status</th>
-                  <th className="text-right px-4 py-3 section-label hidden xl:table-cell">Last Contact</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((c) => {
-                  const reply = replyLogs[c.id];
-                  const broken = isPromiseBroken(c.id);
-                  const nudgeMsg = broken ? getPromiseNudgeMsg(c) : "";
-                  const rKey = c.invoiceId || `demo-${c.id}`;
-                  const rState = reminderState[rKey];
-                  const isSent = rState === "sent";
-                  const isLoading = rState === "loading";
-
-                  return (
-                    <tr key={c.id}>
-                      <td className="px-5 py-3.5">
-                        <input type="checkbox" className="accent-accent"
-                          checked={selected.includes(c.id)}
-                          onChange={() => setSelected(s => s.includes(c.id) ? s.filter(x => x !== c.id) : [...s, c.id])} />
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-surface-2 border border-border flex items-center justify-center text-xs font-bold text-secondary shrink-0">
-                            {c.name.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-primary text-xs">{c.name}</p>
-                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                              <p className="text-2xs text-muted">{c.industry} · {c.contact}</p>
-                              {reply && (
-                                <span className="text-2xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: `color-mix(in srgb, ${reply.color} 13%, transparent)`, color: reply.color }}>
-                                  {reply.label}
-                                </span>
-                              )}
-                              {broken && (
-                                <span className="text-2xs font-bold px-1.5 py-0.5 rounded-full bg-danger/15 text-danger">⚠️ Promise Broken</span>
-                              )}
-                              {/* Sent reminder indicator */}
-                              {c.lastReminderSent && !isSent && (
-                                <span className="text-2xs text-muted">Sent {timeAgo(c.lastReminderSent)}</span>
-                              )}
-                              {isSent && (
-                                <span className="text-2xs font-bold text-success">✓ Reminder sent</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5 text-right">
-                        <span className="metric-value text-sm text-primary">{fmt(c.outstanding)}</span>
-                      </td>
-                      <td className="px-4 py-3.5 text-right hidden sm:table-cell">
-                        <Badge variant={c.daysOverdue > 45 ? "danger" : c.daysOverdue > 30 ? "warning" : "default"}>
-                          {c.daysOverdue}d
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3.5 hidden md:table-cell">
-                        <div className="flex flex-col items-center gap-1">
-                          <ScoreRing score={c.score} />
-                          {scoreMap[c.name] && (() => {
-                            const risk = scoreMap[c.name];
-                            const tierColor = risk.tier === "HIGH_RISK" ? "var(--critical)" : risk.tier === "MEDIUM" ? "var(--warning)" : "var(--positive)";
-                            const tierShort = risk.tier === "HIGH_RISK" ? "HIGH" : risk.tier === "MEDIUM" ? "MED" : "LOW";
-                            return (
-                              <span className="text-[9px] font-bold rounded px-1.5 py-0.5"
-                                style={{ color: tierColor, background: `color-mix(in srgb, ${tierColor} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${tierColor} 21%, transparent)` }}>
-                                {tierShort}
-                              </span>
-                            );
-                          })()}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5 text-center hidden lg:table-cell">
-                        <Badge variant={STATUS_VARIANT[c.status]}>{c.status}</Badge>
-                      </td>
-                      <td className="px-4 py-3.5 text-right text-xs text-muted hidden xl:table-cell">{c.lastContact}</td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-1 justify-end flex-wrap">
-                          {/* Promise broken → nudge */}
-                          {broken ? (
-                            <a href={`https://wa.me/91${c.contact}?text=${encodeURIComponent(nudgeMsg)}`}
-                              target="_blank" rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-2 py-1.5 text-2xs font-bold rounded-lg bg-danger/15 text-danger border border-danger/30 hover:bg-danger hover:text-white transition-all">
-                              ⚠️ Nudge
-                            </a>
-                          ) : (
-                            <a href={`https://wa.me/91${c.contact}`} target="_blank" rel="noopener noreferrer"
-                              title={c.contact ? `WhatsApp +91${c.contact}` : "No phone number"}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-2xs font-bold rounded-lg transition-all hover:scale-105 active:scale-95"
-                              style={{ background: "rgba(37,211,102,0.15)", color: "#25D366", border: "1px solid rgba(37,211,102,0.3)" }}>
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                              </svg>
-                              <span className="hidden sm:inline">Chat</span>
-                            </a>
-                          )}
-
-                          {/* ── View Invoice ── */}
-                          {c.invoiceId && (
-                            <button aria-label="Show"
-                              onClick={() => router.push(`/invoice/${c.invoiceId}`)}
-                              title="View & print invoice"
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-surface-3 hover:text-primary transition-all">
-                              <FiEye size={11} />
-                            </button>
-                          )}
-
-                          {/* Existing promise, set via Log Call below */}
-                          {promises[c.id] && (
-                            <span
-                              title={`Promise: ${promises[c.id].date}`}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-bold rounded-lg"
-                              style={{
-                                background: isPromiseBroken(c.id)
-                                  ? "rgba(245,66,77,0.15)"
-                                  : "rgba(245,165,36,0.12)",
-                                color: isPromiseBroken(c.id) ? "var(--critical)" : "var(--warning)",
-                                border: `1px solid ${isPromiseBroken(c.id) ? "rgba(245,66,77,0.3)" : "rgba(245,165,36,0.25)"}`,
-                              }}>
-                              {isPromiseBroken(c.id) ? "⚠️" : "🤝"} {promises[c.id].date.slice(5)}
-                            </span>
-                          )}
-
-                          {/* ── One-click send reminder ── */}
-                          <button onClick={() => handleSendReminder(c)} disabled={isLoading || isSent}
-                            title={isSent ? "Reminder sent!" : c.lastReminderSent ? `Last sent ${timeAgo(c.lastReminderSent)} — click to resend` : "Send payment reminder with link"}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-bold rounded-lg border transition-all disabled:opacity-60 ${
-                              isSent
-                                ? "bg-success text-white border-success"
-                                : "bg-accent/10 text-accent border-accent/30 hover:bg-accent hover:text-white hover:border-accent"
-                            }`}>
-                            {isLoading
-                              ? <span className="w-3 h-3 border border-accent border-t-transparent rounded-full animate-spin" />
-                              : isSent
-                              ? "✓ Sent"
-                              : <><FiSend size={10} /> <span className="hidden sm:inline">Remind</span></>
-                            }
-                          </button>
-
-                          <button onClick={() => handleMarkPaid(c)} disabled={markingPaid === c.id}
-                            title="Mark as Paid"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-success hover:text-white hover:border-success transition-all disabled:opacity-50">
-                            {markingPaid === c.id ? <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> : <FiCheckSquare size={11} />}
-                          </button>
-                          <button aria-label="Call" onClick={() => { setLogModal(c); setCallForm({ did_pick_up: true, promised_date: "", notes: "" }); }}
-                            title="Log Call"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-accent hover:text-white hover:border-accent transition-all">
-                            <FiPhone size={11} />
-                          </button>
-                          <button onClick={() => { setReplyModal(c); setReplyText(""); }}
-                            title="Log customer reply"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-2xs font-medium rounded-lg bg-surface-2 text-secondary border border-border hover:bg-surface-3 hover:text-primary transition-all">
-                            <FiMessageCircle size={11} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
+          {callForm.did_pick_up && (
+            <Field label="Promised payment date" htmlFor="promise-date">
+              <input id="promise-date" type="date" className="ui-input" value={callForm.promised_date} onChange={e => setCallForm(f => ({ ...f, promised_date: e.target.value }))} />
+              <div className={s.segmented} role="group" aria-label="Quick dates" style={{ alignSelf: "flex-start", marginTop: 2 }}>
+                {[{ label: "Kal", days: 1 }, { label: "Parso", days: 2 }, { label: "Is hafte", days: 5 }].map(({ label, days }) => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + days);
+                  const val = d.toISOString().split("T")[0];
+                  return <button key={label} type="button" aria-pressed={callForm.promised_date === val} onClick={() => setCallForm(f => ({ ...f, promised_date: val }))}>{label}</button>;
                 })}
-              </tbody>
-            </table>
-          </div>
-          {rows.length === 0 && (
-            <div className="py-16 text-center">
-              <FiSearch size={28} className="mx-auto mb-3 text-muted opacity-50" />
-              <p className="text-sm text-secondary">No customers match your filters.</p>
-              <button onClick={() => { setSearch(""); setFilter("all"); setIndustry("all"); }}
-                className="mt-3 text-xs text-accent hover:underline">Clear filters</button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Import modal with Tally guide */}
-      {showImport && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-surface-1 border border-border rounded-2xl p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-primary">Import Excel / CSV</p>
-              <button aria-label="Close" onClick={() => { setShowImport(false); setImportMsg(""); setShowTallyGuide(false); }} className="text-muted hover:text-primary">
-                <FiX size={16} />
-              </button>
-            </div>
-            <div onClick={() => importFileRef.current?.click()}
-              className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-accent/50 hover:bg-surface-2 transition-all">
-              {importing
-                ? <><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-2" /><p className="text-sm text-muted">Importing...</p></>
-                : <><FiUpload size={22} className="mx-auto mb-2 text-muted" /><p className="text-sm font-semibold text-primary mb-1">Drop Excel or CSV here</p><p className="text-xs text-muted">Columns: Customer Name, Amount, Date, Phone</p></>
-              }
-              <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
-                onChange={e => e.target.files?.[0] && handleImportFile(e.target.files[0])} />
-            </div>
-            <button onClick={() => setShowTallyGuide(v => !v)}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-surface-2 border border-border hover:border-accent/30 transition-all text-left">
-              <div className="flex items-center gap-2">
-                <span className="text-base">🏦</span>
-                <div>
-                  <p className="text-xs font-bold text-primary">Using Tally? Export in 3 steps</p>
-                  <p className="text-2xs text-muted">Tally Prime / ERP 9 → Outstanding Reports</p>
-                </div>
               </div>
-              <span className="text-muted text-xs">{showTallyGuide ? "▲" : "▼"}</span>
+            </Field>
+          )}
+          <Field label="Notes" htmlFor="call-notes">
+            <textarea id="call-notes" className="ui-input" rows={3} value={callForm.notes} onChange={e => setCallForm(f => ({ ...f, notes: e.target.value }))} placeholder="What did they say?" />
+          </Field>
+        </div>
+      </Modal>
+
+      {/* Manual WhatsApp: shown when automatic sending is not set up */}
+      <Modal
+        open={!!manualModal}
+        onClose={() => setManualModal(null)}
+        title="Send this reminder on WhatsApp"
+        description="Automatic sending isn't set up for this workspace, so the message is ready for you to send."
+        footer={<>
+          <Button variant={manualModal?.phone ? "secondary" : "primary"} onClick={() => manualModal && navigator.clipboard.writeText(manualModal.text).then(() => { notify("Message copied"); setManualModal(null); })}>Copy message</Button>
+          {manualModal?.phone && (
+            <a className="ui-btn ui-btn-primary" href={`https://wa.me/91${manualModal.phone}?text=${encodeURIComponent(manualModal.text)}`} target="_blank" rel="noopener noreferrer" onClick={() => setManualModal(null)}>
+              Open WhatsApp
+            </a>
+          )}
+        </>}
+      >
+        <div style={{ padding: "12px 14px", background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: "var(--radius-md)", fontSize: 13, color: "var(--body)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>
+          {manualModal?.text}
+        </div>
+      </Modal>
+
+      {/* Add invoice */}
+      <Modal
+        open={showAddInvoice}
+        onClose={() => setShowAddInvoice(false)}
+        title="Add invoice"
+        description="One invoice, entered by hand. It joins the list straight away."
+        width={480}
+        footer={<>
+          <Button variant="ghost" onClick={() => setShowAddInvoice(false)}>Cancel</Button>
+          <Button variant="primary" loading={addSaving} onClick={handleAddInvoice}>Add invoice</Button>
+        </>}
+      >
+        <div className={s.form}>
+          <Field label="Customer name" htmlFor="add-name" required>
+            <input id="add-name" className="ui-input" data-autofocus value={addForm.customer_name} onChange={e => setAddForm(f => ({ ...f, customer_name: e.target.value }))} placeholder="Mehta Fabrics Pvt Ltd" />
+          </Field>
+          <div className={s.formGrid}>
+            <Field label="Amount (₹)" htmlFor="add-amount" required>
+              <input id="add-amount" className="ui-input tabular" type="number" min="1" inputMode="decimal" value={addForm.invoice_amount} onChange={e => setAddForm(f => ({ ...f, invoice_amount: e.target.value }))} placeholder="50000" />
+            </Field>
+            <Field label="Phone" htmlFor="add-phone">
+              <input id="add-phone" className="ui-input" type="tel" value={addForm.customer_phone} onChange={e => setAddForm(f => ({ ...f, customer_phone: e.target.value }))} placeholder="10-digit mobile" />
+            </Field>
+            <Field label="Invoice date" htmlFor="add-date" required>
+              <input id="add-date" className="ui-input" type="date" value={addForm.invoice_date} onChange={e => setAddForm(f => ({ ...f, invoice_date: e.target.value }))} />
+            </Field>
+            <Field label="Invoice number" htmlFor="add-number">
+              <input id="add-number" className="ui-input" value={addForm.invoice_number} onChange={e => setAddForm(f => ({ ...f, invoice_number: e.target.value }))} placeholder="INV-001" />
+            </Field>
+          </div>
+          <Field label="Notes" htmlFor="add-notes">
+            <textarea id="add-notes" className="ui-input" rows={2} value={addForm.notes} onChange={e => setAddForm(f => ({ ...f, notes: e.target.value }))} placeholder="What was sold, any context" />
+          </Field>
+          {addError && <p className={s.formError} role="alert">{addError}</p>}
+        </div>
+      </Modal>
+
+      {/* Import */}
+      <Modal
+        open={showImport}
+        onClose={() => { setShowImport(false); setImportMsg(null); setShowTallyGuide(false); }}
+        title="Import invoices"
+        description="An Excel or CSV export from Tally or any sheet. Starlane reads the columns for you."
+        footer={<Button variant="ghost" onClick={() => { setShowImport(false); setImportMsg(null); setShowTallyGuide(false); }}>Close</Button>}
+      >
+        <div className={s.form}>
+          <button type="button" className={s.dropzone} onClick={() => importFileRef.current?.click()} disabled={importing}>
+            <IconUpload size={18} style={{ color: "var(--ink-2)" }} />
+            <span style={{ fontSize: 13.5, color: "var(--ink)" }}>{importing ? "Importing…" : "Choose an Excel or CSV file"}</span>
+            <span style={{ fontSize: 12, color: "var(--ink-3)" }}>Customer name, amount, date and phone columns</span>
+          </button>
+          <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleImportFile(f); e.target.value = ""; }} />
+          {importMsg && <p role="status" style={{ margin: 0, fontSize: 12.5, color: importMsg.ok ? "var(--positive)" : "var(--critical)" }}>{importMsg.text}</p>}
+
+          <div>
+            <button type="button" className={s.linkBtn} aria-expanded={showTallyGuide} onClick={() => setShowTallyGuide(v => !v)}>
+              Using Tally? Export in three steps
             </button>
             {showTallyGuide && (
-              <div className="p-4 bg-surface-2 border border-border rounded-xl space-y-3">
-                <p className="text-xs font-bold text-accent uppercase tracking-wider">Tally Export Guide</p>
-                {[
-                  { step: "1", icon: "📂", title: "Go to Reports", desc: "Gateway → Display → Statements of Accounts → Outstandings → Receivables" },
-                  { step: "2", icon: "📊", title: "Export to Excel", desc: "Set date range to current. Press Alt+E or click Export button. Choose Excel format." },
-                  { step: "3", icon: "⬆️", title: "Upload above", desc: "Drop that Excel file in the box above. Starlane auto-detects columns — no formatting needed." },
-                ].map(({ step, icon, title, desc }) => (
-                  <div key={step} className="flex gap-3">
-                    <div className="w-6 h-6 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0 mt-0.5">
-                      <span className="text-2xs font-black text-accent">{step}</span>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-primary">{icon} {title}</p>
-                      <p className="text-2xs text-muted mt-0.5 leading-relaxed">{desc}</p>
-                    </div>
-                  </div>
-                ))}
-                <div className="p-2.5 bg-warning/10 border border-warning/30 rounded-lg">
-                  <p className="text-2xs text-warning font-medium">💡 Tip: "Ledger Outstanding" report works best. Any format is accepted — Starlane reads it all.</p>
-                </div>
-              </div>
+              <ol className={s.steps} style={{ marginTop: 10 }}>
+                <li><b>Open the report.</b> Gateway, Display, Statements of Accounts, Outstandings, Receivables.</li>
+                <li><b>Export to Excel.</b> Set the date range to today, press Alt+E and choose Excel.</li>
+                <li><b>Upload it above.</b> The Ledger Outstanding report works best; any layout is accepted.</li>
+              </ol>
             )}
-            {importMsg && (
-              <p className={`text-sm text-center font-medium ${importMsg.includes("success") ? "text-success" : "text-danger"}`}>{importMsg}</p>
-            )}
-            <p className="text-2xs text-muted text-center">Works with Tally exports, Excel sheets, any CSV format</p>
+          </div>
+
+          <div style={{ fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.55 }}>
+            Or upload a plain CSV with <span style={{ color: "var(--ink)" }}>customer_name, invoice_amount, invoice_date, payment_status</span>.{" "}
+            <button type="button" className={s.linkBtn} onClick={() => fileRef.current?.click()} disabled={uploading}>{uploading ? "Uploading…" : "Upload CSV"}</button>
+            {" · "}
+            <a className={s.linkBtn} href="data:text/csv;charset=utf-8,customer_name%2Cinvoice_amount%2Cinvoice_date%2Cpayment_status%0AMehta%20Fabrics%2C840000%2C2025-03-01%2CPending" download="starlane-sample.csv">Sample file</a>
+            <input ref={fileRef} type="file" accept=".csv" className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }} />
           </div>
         </div>
-      )}
+      </Modal>
     </DashboardLayout>
   );
 }

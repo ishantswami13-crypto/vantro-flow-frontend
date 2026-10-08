@@ -8,15 +8,15 @@ interface CardProps {
   hover?:    boolean;
 }
 
-const PAD = { none: "", sm: "p-4", md: "p-5", lg: "p-6" };
+const PAD = { none: 0, sm: 16, md: 20, lg: 24 };
 
+// Surface panel with one hairline edge and no shadow (tokens only).
 export function Card({ children, className = "", padding = "md", hover = false }: CardProps) {
   return (
-    <div className={[
-      hover ? "card-premium group cursor-pointer" : "card-premium",
-      PAD[padding],
-      className,
-    ].join(" ")}>
+    <div
+      className={[hover ? "row-hover cursor-pointer" : "", className].join(" ")}
+      style={{ background: "var(--surface)", border: "1px solid var(--line-card)", borderRadius: "var(--radius-lg)", padding: PAD[padding] }}
+    >
       {children}
     </div>
   );
@@ -37,63 +37,41 @@ interface MetricCardProps {
   series?:    number[];
 }
 
-const ACCENT_COLOR: Record<string, string> = {
-  default: "var(--accent)",
-  success: "var(--positive)",
+// The figure stays in the primary ink; only a warning or danger accent tints
+// it, so a row of metrics never turns into a rainbow.
+const VALUE_COLOR: Record<string, string> = {
+  default: "var(--ink)",
+  success: "var(--ink)",
   warning: "var(--warning)",
   danger:  "var(--critical)",
-  gold:    "#F5A623",
-};
-
-const ACCENT_GLOW: Record<string, string> = {
-  default: "rgba(0,102,255,0.12)",
-  success: "rgba(16,217,138,0.12)",
-  warning: "rgba(245,165,36,0.12)",
-  danger:  "rgba(245,66,77,0.12)",
-  gold:    "rgba(245,166,35,0.10)",
+  gold:    "var(--ink)",
 };
 
 export function MetricCard({ label, value, sub, trend, trendValue, accent = "default", icon, pct, series }: MetricCardProps) {
-  const color = ACCENT_COLOR[accent];
-  const glow  = ACCENT_GLOW[accent];
-
+  const color = VALUE_COLOR[accent];
   return (
-    <div className="card-metric p-5">
-      <div className="flex items-start justify-between mb-3">
-        <p className="section-label">{label}</p>
-        {icon && (
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: glow, border: `1px solid color-mix(in srgb, ${color} 19%, transparent)` }}
-          >
-            <span style={{ color }}>{icon}</span>
-          </div>
-        )}
+    <div style={{ background: "var(--surface)", border: "1px solid var(--line-card)", borderRadius: "var(--radius-lg)", padding: 20, minWidth: 0 }}>
+      <div className="flex items-start justify-between" style={{ gap: 8, marginBottom: 10 }}>
+        <p style={{ margin: 0, fontSize: 12.5, color: "var(--ink-2)" }}>{label}</p>
+        {icon && <span aria-hidden="true" style={{ color: "var(--ink-3)", display: "inline-flex" }}>{icon}</span>}
       </div>
-      <p className="metric-lg mb-1" style={{ color }}>{value}</p>
+      <p className="figure-in" style={{ margin: "0 0 4px", fontFamily: "var(--font-display)", fontSize: 26, lineHeight: 1.1, color, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{value}</p>
       {(sub || trendValue || series) && (
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center justify-between" style={{ gap: 8, marginTop: 6 }}>
+          <div className="flex items-center min-w-0" style={{ gap: 8 }}>
             {trendValue && trend && (
-              <span className={[
-                "text-2xs font-bold font-mono shrink-0",
-                trend === "up"   ? "text-success" :
-                trend === "down" ? "text-danger"  : "text-secondary",
-              ].join(" ")}>
-                {trend === "up" ? "+" : trend === "down" ? "-" : ""}{trendValue}
+              <span className="shrink-0 tabular" style={{ fontSize: 12, color: trend === "up" ? "var(--positive)" : trend === "down" ? "var(--critical)" : "var(--ink-2)" }}>
+                {trend === "up" ? "+" : trend === "down" ? "−" : ""}{trendValue}
               </span>
             )}
-            {sub && <span className="text-2xs text-muted truncate">{sub}</span>}
+            {sub && <span className="truncate" style={{ fontSize: 12, color: "var(--ink-3)" }}>{sub}</span>}
           </div>
-          {series && <Sparkline values={series} color={color} />}
+          {series && <Sparkline values={series} />}
         </div>
       )}
       {pct !== undefined && (
-        <div className="progress-bar">
-          <div
-            className="progress-fill"
-            style={{ width: `${pct}%`, background: color, opacity: 0.65 }}
-          />
+        <div style={{ height: 4, borderRadius: 2, background: "var(--surface-2)", marginTop: 12, overflow: "hidden" }}>
+          <div style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: "100%", background: "var(--ink-2)", opacity: 0.6 }} />
         </div>
       )}
     </div>
