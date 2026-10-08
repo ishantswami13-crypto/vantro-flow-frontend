@@ -1360,7 +1360,7 @@ a.wk-row:hover, button.wk-row:hover { background: var(--surface-2); }
 /* Scan answers: tables sit on the text edge; the last column ends flush. */
 .scan-md th:last-child, .scan-md td:last-child { padding-right: 0 !important; }
 
-/* Intelligence: citations, sources rail and part tabs. */
+/* Intelligence: citations and the sources rail. */
 .int-cite {
   display: inline-flex; align-items: center; justify-content: center; vertical-align: 2px;
   min-width: 15px; height: 15px; margin-left: 2px; padding: 0 3px;
@@ -1372,9 +1372,6 @@ a.wk-row:hover, button.wk-row:hover { background: var(--surface-2); }
 .int-source { padding: 10px 0; border-bottom: 1px solid var(--line); transition: background-color var(--dur-instant) var(--ease); }
 .int-source:first-child { border-top: 1px solid var(--line); }
 .int-source[data-active] { background: var(--surface-2); box-shadow: -8px 0 0 var(--surface-2), 8px 0 0 var(--surface-2); }
-.int-parts { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
-.int-part { padding: 0 0 8px; margin-bottom: -1px; font-size: 13px; color: var(--ink-2); background: none; border: 0; border-bottom: 1px solid transparent; }
-.int-part[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
 
 /* ============================================================
    FINAL POLISH (Oct 2026): authority over faintness.
@@ -1419,3 +1416,153 @@ body { color: var(--ink); }
    stays neutral ink instead of repeating the colour. */
 .chip.chip-quiet { color: var(--ink-2); }
 .chip.chip-quiet.chip-critical { color: var(--ink); }
+/* REFINE: Work (final polish: Agents, Missions, Memory, Scan, Library, Intelligence)
+   Authority through type and composition: one anchor per page, row titles in
+   ink at 14px, values in near-black, metadata clearly tertiary. */
+.wk-head { color: var(--ink-2); }
+.wk-title { font-size: 14px; }
+.wk-meta { color: var(--ink-3); }
+.wk-lede { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--ink-2); max-width: 720px; }
+.wk-count { font-family: var(--font-sans); font-variant-numeric: tabular-nums; font-weight: 500; letter-spacing: 0; color: var(--ink-3); }
+
+/* A restrained figure strip: four facts on one hairline band, no cards. */
+.ag-strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; padding: 16px 0; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line); }
+@media (min-width: 768px) { .ag-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); } .ag-strip > * + * { padding-left: 24px; border-left: 1px solid var(--line); } }
+.ag-of { font-family: var(--font-sans); font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--ink-3); }
+
+/* Agents: workforce rows. Name leads, current work is the second voice. */
+.ag-row { align-items: start !important; padding-top: 14px; padding-bottom: 14px; }
+.ag-name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 14.5px; font-weight: 600; line-height: 1.4; color: var(--ink); letter-spacing: -0.005em; }
+.ag-cell { margin-top: 10px; }
+.ag-label { display: block; margin-bottom: 2px; font-size: 11px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-3); }
+.ag-work { font-size: 13px; line-height: 1.45; color: var(--ink); }
+.ag-work-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; }
+.ag-value { font-size: 13px; line-height: 1.45; color: var(--ink); }
+.ag-status { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-top: 10px; }
+.ag-status .row-chevron { margin-top: 2px; }
+@media (min-width: 768px) {
+  .ag-cell, .ag-status { margin-top: 0; }
+  .ag-row .wk-sub { margin-top: 3px; }
+}
+.ag-perm-head { padding: 10px 0 4px; font-size: 12px; font-weight: 500; color: var(--ink-2); }
+
+/* Missions: the row answers "what is happening now" before anything else. */
+.mis-row { align-items: start !important; padding-top: 14px; padding-bottom: 14px; }
+@media (min-width: 768px) { .mis-row > .wk-cells > * { padding-top: 1px; } }
+.mis-now { font-weight: 500; color: var(--ink); margin-right: 6px; }
+.mis-now::after { content: ":"; }
+.mis-now-critical { color: var(--critical); }
+.mis-now-attn { color: var(--ink); }
+.wk-list:not(.wk-flat) > .wk-row.wk-attn::before { left: 0; }
+.mis-row.wk-attn::before { top: 14px; bottom: 14px; }
+.mis-nowline { margin: 0 0 12px; font-size: 14.5px; line-height: 1.5; color: var(--ink); max-width: 68ch; }
+.mis-latest { display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-3); vertical-align: 1px; }
+/* New mission: the brief it will run is the page's anchor, on white between hairlines. */
+.mis-brief { background: var(--surface); border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line); padding: 20px 24px 24px; }
+:root[data-theme="dark"] .mis-brief { background: rgb(var(--tk-surface) / 0.6); }
+@media (max-width: 999px) { .mis-brief { margin: 0 -16px; padding: 20px 16px; } }
+@media (min-width: 1000px) { .mis-form-col { padding-top: 21px; } }
+
+/* Memory: provenance first. Four cells on one band, each a filter, so
+   learned, observed, documented and human knowledge never blur together. */
+.mem-prov { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line); }
+@media (min-width: 900px) { .mem-prov { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.mem-prov-cell {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; padding: 14px 16px 16px; text-align: left;
+  background: transparent; border: 0; border-top: 2px solid transparent; margin-top: -1px; cursor: pointer;
+  transition: background-color var(--dur-instant) var(--ease), border-color var(--dur-instant) var(--ease);
+}
+.mem-prov-cell:nth-child(odd) { padding-left: 0; }
+@media (min-width: 900px) { .mem-prov-cell:nth-child(odd) { padding-left: 16px; } .mem-prov-cell:first-child { padding-left: 0; } }
+@media (min-width: 900px) { .mem-prov-cell + .mem-prov-cell { border-left: 1px solid var(--line); } }
+.mem-prov-cell:hover:not(:disabled) { background: var(--surface-2); }
+.mem-prov-cell[aria-pressed="true"] { border-top-color: var(--ink); }
+.mem-prov-cell:disabled { cursor: default; }
+.mem-prov-cell:disabled .mem-prov-n, .mem-prov-cell:disabled .mem-prov-label { color: var(--ink-3); }
+.mem-prov-n { font-size: 21px; line-height: 1.2; letter-spacing: -0.025em; color: var(--ink); }
+.mem-prov-label { margin-top: 4px; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.mem-prov-trust { font-size: 12px; line-height: 1.45; color: var(--ink-2); }
+.mem-group { margin-top: 36px; }
+.mem-group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 2px; }
+.mem-group-title { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.005em; color: var(--ink); }
+.mem-group-use { font-size: 12px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+.mem-k-row { align-items: start !important; padding-top: 11px !important; padding-bottom: 11px !important; }
+.mem-k-cell { display: inline-block; margin: 6px 12px 0 0; vertical-align: top; }
+.mem-forget { margin-top: -4px; }
+@media (min-width: 768px) { .mem-k-cell { display: block; margin: 2px 0 0; } }
+.mem-day { padding: 18px 0 6px; border-bottom: 1px solid var(--line-strong); font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.wk-head + .mem-day { padding-top: 10px; }
+.mem-kind { color: var(--ink-2); }
+.mem-record { font-size: 12px; color: var(--ink-3); }
+
+/* Scan start: a focused column in the upper third, not a box floating in a
+   void. Greeting, one line of help, the composer, then disciplined starting
+   points and recent conversations on the same 680px alignment line. */
+.scan-stage { display: flex; flex-direction: column; align-items: center; box-sizing: border-box; padding: clamp(32px, 11vh, 112px) 0 32px; }
+.scan-stage-findings { padding: 24px 0 8px; }
+.scan-column { width: 680px; max-width: 100%; display: flex; flex-direction: column; align-items: center; }
+.scan-greeting { font-size: 30px; letter-spacing: -0.015em; }
+@media (min-width: 1024px) { .scan-greeting { font-size: 36px; } }
+.scan-lede { margin: 10px 0 28px; max-width: 520px; font-size: 14px; line-height: 1.55; color: var(--ink-2); text-align: center; }
+.scan-composer { box-shadow: var(--shadow-sm); }
+.scan-input { min-height: 64px; padding-top: 18px; font-size: 15.5px; }
+.scan-start-section { align-self: stretch; margin-top: 36px; }
+.scan-start-section .section-label { margin-bottom: 8px; }
+.scan-flows { width: auto; margin: 0 -8px; border-top: 1px solid var(--line-strong); column-gap: 16px; }
+.scan-flow { margin: 0; }
+.scan-flow { min-height: 56px; padding: 11px 8px; }
+.scan-flow-icon { color: var(--ink-2); }
+.scan-flow-title { font-size: 13.5px; font-weight: 500; line-height: 1.4; color: var(--ink); }
+.scan-flow-hint { font-size: 12.5px; line-height: 1.4; color: var(--ink-3); }
+.scan-recent { list-style: none; margin: 0 -8px; padding: 0; border-top: 1px solid var(--line-strong); }
+.scan-recent-row {
+  display: flex; align-items: center; gap: 16px; min-height: 44px; padding: 0 8px; border-bottom: 1px solid var(--line);
+  font-size: 13.5px; color: var(--ink); text-decoration: none; transition: background-color var(--dur-instant) var(--ease);
+}
+.scan-recent-row:hover { background: var(--surface-2); }
+.scan-recent-when { flex-shrink: 0; font-size: 12px; color: var(--ink-3); }
+
+/* Library: ready questions grouped by area on the left, what is yours
+   (saved prompts, recent conversations) in a rail, so a new workspace reads
+   as a deliberate starting point, not an empty canvas. */
+.lib-search .page-search { width: 240px; max-width: 100%; height: 32px; }
+.lib-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px 56px; align-items: start; }
+@media (min-width: 1100px) { .lib-layout { grid-template-columns: minmax(0, 1fr) 300px; } }
+.lib-area { display: flex; align-items: baseline; padding: 16px 12px 6px; border-bottom: 1px solid var(--line-strong); font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.lib-layout .wk-list > :first-child .lib-area { padding-top: 4px; }
+.lib-row { display: grid; align-items: center; grid-template-columns: minmax(0, 1fr) auto !important; }
+@media (min-width: 768px) { .lib-row { grid-template-columns: minmax(0, 1fr) auto !important; } }
+.lib-rail { display: flex; flex-direction: column; gap: 28px; }
+.lib-rail-empty { margin: 0; padding: 10px 0 0; border-top: 1px solid var(--line-strong); font-size: 12.5px; line-height: 1.55; color: var(--ink-2); }
+.lib-rail-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); }
+.lib-rail-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; line-height: 1.45; color: var(--ink); text-decoration: none; }
+.lib-rail-ask { flex: 1; min-width: 0; padding: 0; border: 0; background: none; text-align: left; font-size: 13px; line-height: 1.45; color: var(--ink); cursor: pointer; }
+.lib-rail-ask:hover, .lib-rail-link:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line-strong); }
+.lib-rail-row .scan-tool { min-height: 22px; margin: -1px -6px 0 0; padding: 0 6px; }
+.lib-rail-when { flex-shrink: 0; font-size: 12px; color: var(--ink-3); }
+.lib-rail-more { font-size: 12px; color: var(--ink-2); text-decoration: none; }
+.lib-rail-more:hover { color: var(--ink); }
+
+/* Intelligence: signal rows and the investigation document. */
+.int-row { align-items: start !important; padding-top: 13px; padding-bottom: 13px; }
+.int-cell-main { font-size: 13px; line-height: 1.45; color: var(--ink); }
+@media (min-width: 768px) { .int-row > .wk-cells > * { padding-top: 1px; } }
+.int-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 0; font-size: 12.5px; color: var(--ink-3); }
+.int-meta > .chip { margin-right: 2px; }
+.int-meta-sep { margin: 0 8px; color: var(--line-strong); }
+.int-answer { margin: 0; font-size: 17px; line-height: 1.5; color: var(--ink); letter-spacing: -0.005em; }
+.int-parts-table .wk-head { border-bottom-color: var(--line-strong); }
+.int-part-row { align-items: start !important; padding-top: 10px; padding-bottom: 10px; position: relative; }
+.int-part-row[aria-selected="true"] { background: var(--surface-2); }
+.int-part-row[aria-selected="true"]::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; background: var(--ink); }
+.int-part-cell { display: inline-block; margin: 6px 14px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }
+@media (min-width: 768px) { .int-part-cell { display: block; margin: 1px 0 0; } }
+.int-record { max-width: 560px; }
+.int-record-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 16px; margin: 10px 0 0; font-size: 12.5px; }
+.int-record-facts dt { color: var(--ink-3); }
+.int-record-facts dd { margin: 0; color: var(--ink); }
+.int-record-error { margin: 8px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--critical); }
+.int-contradiction { margin: 0; padding: 2px 0; font-size: 14px; line-height: 1.55; color: var(--ink); max-width: 68ch; }
+@media (min-width: 768px) { .mis-row .wk-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
+@media (max-width: 639px) { .lib-new { display: none !important; } .lib-search, .lib-search .page-search { width: calc(100vw - 32px); max-width: 100%; } }
+@media (max-width: 639px) { .lib-go .lib-go-text { display: none; } }
