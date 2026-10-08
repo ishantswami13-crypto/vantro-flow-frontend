@@ -10,6 +10,8 @@ import {
   IconMissions, IconPlus, IconPrepared, IconScan, IconSimulate, IconSparkle, IconUpload, IconWatch,
 } from "@/components/v32/icons";
 import { listSavedPrompts, removeSavedPrompt, SAVED_PROMPTS_EVENT, type SavedPrompt } from "@/lib/promptStore";
+import { listThreads, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
+import { formatRelative, formatDateTime } from "@/lib/format";
 
 // Library: ready questions to ask Scan, the ones the person saved, and the
 // workflows Starlane can run. Like Harvey's Library (Prompts, Workflows),
@@ -49,18 +51,31 @@ export default function LibraryPage() {
   const [tab, setTab] = useState<"prompts" | "workflows">("prompts");
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState<SavedPrompt[]>([]);
+  const [recent, setRecent] = useState<ScanThread[]>([]);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("tab") === "workflows") setTab("workflows");
     const load = () => setSaved(listSavedPrompts());
+    const loadRecent = () => setRecent(listThreads());
     load();
+    loadRecent();
     window.addEventListener(SAVED_PROMPTS_EVENT, load);
-    return () => window.removeEventListener(SAVED_PROMPTS_EVENT, load);
+    window.addEventListener(SCAN_THREADS_EVENT, loadRecent);
+    return () => { window.removeEventListener(SAVED_PROMPTS_EVENT, load); window.removeEventListener(SCAN_THREADS_EVENT, loadRecent); };
   }, []);
 
   const q = query.trim().toLowerCase();
   const prompts = useMemo(() => PROMPTS.filter(p => !q || p.text.toLowerCase().includes(q) || p.area.toLowerCase().includes(q)), [q]);
   const savedShown = useMemo(() => saved.filter(p => !q || p.text.toLowerCase().includes(q)), [saved, q]);
+  const recentShown = useMemo(() => recent.filter(t => !q || t.title.toLowerCase().includes(q)).slice(0, 5), [recent, q]);
+  const areas = useMemo(() => {
+    const out: { area: string; items: Prompt[] }[] = [];
+    for (const p of prompts) {
+      const g = out.find(x => x.area === p.area);
+      if (g) g.items.push(p); else out.push({ area: p.area, items: [p] });
+    }
+    return out;
+  }, [prompts]);
   const workflows = useMemo(() => WORKFLOWS.filter(w => !q || `${w.title} ${w.does} ${w.area}`.toLowerCase().includes(q)), [q]);
 
   const ask = (text: string) => router.push(`/scan?q=${encodeURIComponent(text)}`);
@@ -71,7 +86,10 @@ export default function LibraryPage() {
       <PageHeader
         title="Library"
         subtitle="Questions to ask Scan and workflows Starlane can run for you."
-        right={<Link href="/scan" className="ui-btn ui-btn-primary"><IconPlus size={14} /> New conversation</Link>}
+        right={<>
+          <div className="lib-search"><SearchField id="library-search" value={query} onChange={setQuery} placeholder={tab === "prompts" ? "Search prompts" : "Search workflows"} /></div>
+          <Link href="/scan" className="ui-btn ui-btn-primary"><IconPlus size={14} /> New conversation</Link>
+        </>}
       >
         <div style={{ marginTop: 20 }}>
           <Subnav
@@ -84,44 +102,70 @@ export default function LibraryPage() {
             ]}
           />
         </div>
-        <div style={{ marginTop: 16 }}>
-          <SearchField id="library-search" value={query} onChange={setQuery} placeholder={tab === "prompts" ? "Search prompts" : "Search workflows"} />
-        </div>
       </PageHeader>
 
       {tab === "prompts" && (
-        <div className="flex flex-col" style={{ gap: 32 }}>
-          <section>
-            <SectionTitle>Saved by you{savedShown.length ? <span className="wk-count">{savedShown.length}</span> : null}</SectionTitle>
-            {savedShown.length === 0 ? (
-              <p className="wk-empty" style={{ borderTop: "1px solid var(--line)" }}>
-                {q ? "No saved prompt matches." : "Nothing saved yet. Save a question from any Scan conversation with the bookmark under it; saved prompts stay in this browser."}
-              </p>
-            ) : (
+        <div className="lib-layout">
+          <section aria-labelledby="lib-ready" className="min-w-0">
+            <SectionTitle className="section-label-lead"><span id="lib-ready">Ready to ask</span><span className="wk-count">{prompts.length}</span></SectionTitle>
+            {prompts.length > 0 ? (
               <div className="wk-list" role="list">
-                <div className="wk-head lib-head" style={{ gridTemplateColumns: PROMPT_COLS }}><span>Question</span><span>Kept</span><span /></div>
-                {savedShown.map((p) => (
-                  <PromptRow key={p.id} text={p.text} tag="On this device" onAsk={() => ask(p.text)} onRemove={() => removeSavedPrompt(p.text)} />
+                {areas.map((g) => (
+                  <div key={g.area} role="presentation">
+                    <div className="lib-area" role="presentation">{g.area}<span className="wk-count">{g.items.length}</span></div>
+                    {g.items.map((p) => <PromptRow key={p.text} text={p.text} onAsk={() => ask(p.text)} />)}
+                  </div>
                 ))}
               </div>
+            ) : (
+              <p className="wk-empty" style={{ borderTop: "1px solid var(--line-strong)" }}>No prompt matches. <Link href={`/scan?q=${encodeURIComponent(query.trim())}`} style={{ color: "var(--ink)", textDecoration: "underline" }}>Ask &ldquo;{query.trim()}&rdquo; in Scan</Link></p>
             )}
           </section>
 
-          {prompts.length > 0 && (
+          <aside className="lib-rail" aria-label="Your prompts and conversations">
             <section>
-              <SectionTitle>Ready to ask<span className="wk-count">{prompts.length}</span></SectionTitle>
-              <div className="wk-list" role="list">
-                <div className="wk-head lib-head" style={{ gridTemplateColumns: PROMPT_COLS }}><span>Question</span><span>Area</span><span /></div>
-                {prompts.map((p) => (
-                  <PromptRow key={p.text} text={p.text} tag={p.area} onAsk={() => ask(p.text)} />
-                ))}
-              </div>
+              <SectionTitle>Saved by you{savedShown.length ? <span className="wk-count">{savedShown.length}</span> : null}</SectionTitle>
+              {savedShown.length === 0 ? (
+                <p className="lib-rail-empty">
+                  {q ? "No saved prompt matches." : "Nothing saved yet. Save a question from any Scan answer with Save prompt; it stays in this browser."}
+                </p>
+              ) : (
+                <ul className="lib-rail-list">
+                  {savedShown.map((p) => (
+                    <li key={p.id} className="lib-rail-row">
+                      <button type="button" className="lib-rail-ask" onClick={() => ask(p.text)} aria-label={`Ask: ${p.text}`}>{p.text}</button>
+                      <button type="button" className="scan-tool" aria-label={`Remove saved prompt: ${p.text}`} title="Remove from saved" onClick={() => removeSavedPrompt(p.text)}>
+                        <IconBookmarkFilled size={14} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </section>
-          )}
-
-          {q && prompts.length === 0 && savedShown.length === 0 && (
-            <p className="wk-empty">No prompt matches. <Link href={`/scan?q=${encodeURIComponent(query.trim())}`} style={{ color: "var(--ink)", textDecoration: "underline" }}>Ask &ldquo;{query.trim()}&rdquo; in Scan</Link></p>
-          )}
+            <section>
+              <div className="flex items-baseline justify-between">
+                <SectionTitle>Recent conversations{recentShown.length ? <span className="wk-count">{recent.length}</span> : null}</SectionTitle>
+                {recent.length > 0 && <Link href="/scan/history" className="lib-rail-more">History</Link>}
+              </div>
+              {recentShown.length === 0 ? (
+                <p className="lib-rail-empty">
+                  {q && recent.length ? "No conversation matches." : <>No conversations on this device yet. <Link href="/scan" className="underline" style={{ color: "var(--ink)" }}>Ask Scan a question</Link></>}
+                </p>
+              ) : (
+                <ul className="lib-rail-list">
+                  {recentShown.map((t) => (
+                    <li key={t.id}>
+                      <Link href={`/scan/${t.id}`} className="lib-rail-row lib-rail-link">
+                        <span className="line-clamp-2" style={{ flex: 1, minWidth: 0 }}>{t.title}</span>
+                        <span className="lib-rail-when" title={formatDateTime(t.updatedAt)}>{formatRelative(t.updatedAt)}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+            <p className="meta" style={{ margin: 0, lineHeight: 1.55 }}>Saved prompts and conversations are kept in this browser only.</p>
+          </aside>
         </div>
       )}
 
@@ -155,26 +199,17 @@ export default function LibraryPage() {
   );
 }
 
-const PROMPT_COLS = "minmax(0,1fr) 140px 150px";
 const FLOW_COLS = "minmax(0,0.9fr) minmax(0,1.3fr) minmax(0,1fr) 88px 20px";
 
-/** One question: ask it in Scan (the whole row), or take a saved one back. */
-function PromptRow({ text, tag, onAsk, onRemove }: { text: string; tag: string; onAsk: () => void; onRemove?: () => void }) {
+/** One ready question: the whole row asks it in Scan. */
+function PromptRow({ text, onAsk }: { text: string; onAsk: () => void }) {
   return (
-    <div role="listitem" className="wk-row lib-row" style={{ gridTemplateColumns: PROMPT_COLS }}>
+    <div role="listitem" className="wk-row lib-row">
       <button type="button" className="lib-ask" onClick={onAsk} aria-label={`Ask: ${text}`}>
         <span style={{ fontSize: 13.5, color: "var(--ink)", lineHeight: 1.45 }}>{text}</span>
       </button>
-      <span className="wk-meta hidden md:block">{tag}</span>
-      <span className="flex items-center justify-end" style={{ gap: 4 }}>
-        {onRemove && (
-          <button type="button" className="scan-tool" aria-label={`Remove saved prompt: ${text}`} title="Remove from saved" onClick={onRemove}>
-            <IconBookmarkFilled size={14} />
-          </button>
-        )}
-        <span className="lib-go" aria-hidden="true">
-          <span className="lib-go-text inline-flex items-center" style={{ gap: 6 }}><IconScan size={13} /> Ask Scan</span> <Chevron size={12} />
-        </span>
+      <span className="lib-go" aria-hidden="true">
+        <span className="lib-go-text inline-flex items-center" style={{ gap: 6 }}><IconScan size={13} /> Ask Scan</span> <Chevron size={12} />
       </span>
     </div>
   );

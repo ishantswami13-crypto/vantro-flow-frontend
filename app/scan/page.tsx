@@ -11,9 +11,10 @@ import { ScanFindings } from "@/components/os/ScanFindings";
 import { ScanComposer, businessNameFromStorage } from "@/components/scan/ScanComposer";
 import { ScanThinking } from "@/components/scan/ScanThinking";
 import { api, getUser } from "@/lib/api";
-import { createThread, listThreads } from "@/lib/scanStore";
+import { createThread, listThreads, type ScanThread } from "@/lib/scanStore";
 import { humaneError } from "@/components/scan/humaneError";
 import { firstName, greeting } from "@/lib/greeting";
+import { formatRelative, formatDateTime } from "@/lib/format";
 
 // Scan is a chat start: a greeting and one box. The assistant answers only
 // from connected data, and its tools can read and draft but never mark
@@ -31,7 +32,7 @@ export default function ScanPage() {
   const [ownerName, setOwnerName] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showFindings, setShowFindings] = useState(false);
-  const [hasHistory, setHasHistory] = useState(false);
+  const [recent, setRecent] = useState<ScanThread[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function ScanPage() {
     const q = new URLSearchParams(window.location.search).get("q");
     if (q && q.trim()) { setQuestion(q); void submit(q); }
     if (new URLSearchParams(window.location.search).get("books") === "1") setShowFindings(true);
-    setHasHistory(listThreads().length > 0);
+    setRecent(listThreads());
     // Greet the person by their own first name only (lib/greeting): a
     // business name or an email prefix is not a name.
     setOwnerName(firstName());
@@ -75,12 +76,12 @@ export default function ScanPage() {
 
   return (
     <DashboardLayout pageTitle="Scan">
-      <div className="scan-stage" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: showFindings ? "flex-start" : "center", minHeight: showFindings ? undefined : "calc(100vh - 200px)", padding: showFindings ? "24px 0 8px" : "24px 0", boxSizing: "border-box" }}>
-        <div className="fade-once" style={{ width: 720, maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div className={`scan-stage${showFindings ? " scan-stage-findings" : ""}`}>
+        <div className="fade-once scan-column">
           <h1 className="scan-greeting" style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, color: "var(--ink)", textAlign: "center" }}>
             {greeting()}{ownerName ? `, ${ownerName}` : ""}
           </h1>
-          <p style={{ margin: "8px 0 24px", fontSize: 13.5, color: "var(--ink-2)", textAlign: "center" }}>
+          <p className="scan-lede">
             Ask about money owed, cash coming in or any customer.
           </p>
 
@@ -127,30 +128,49 @@ export default function ScanPage() {
           )}
 
           {!showFindings && !submitting && (
-            <nav aria-label="Start from" className="scan-flows">
-              {WORKFLOWS.map((w) => {
-                const body = (
-                  <>
-                    <span className="scan-flow-icon" aria-hidden="true">{w.icon}</span>
-                    <span className="flex flex-col min-w-0" style={{ flex: 1 }}>
-                      <span style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.4 }}>{w.title}</span>
-                      <span style={{ fontSize: 12, color: "var(--ink-3)", lineHeight: 1.4 }}>{w.hint}</span>
-                    </span>
-                    <Chevron size={13} />
-                  </>
-                );
-                return "ask" in w
-                  ? <button key={w.title} type="button" disabled={submitting} onClick={() => submit(w.ask)} className="scan-flow">{body}</button>
-                  : <Link key={w.title} href={w.href} className="scan-flow">{body}</Link>;
-              })}
-            </nav>
+            <section className="scan-start-section" aria-labelledby="scan-start-from">
+              <h2 id="scan-start-from" className="section-label">Start from</h2>
+              <nav aria-label="Start from" className="scan-flows">
+                {WORKFLOWS.map((w) => {
+                  const body = (
+                    <>
+                      <span className="scan-flow-icon" aria-hidden="true">{w.icon}</span>
+                      <span className="flex flex-col min-w-0" style={{ flex: 1 }}>
+                        <span className="scan-flow-title">{w.title}</span>
+                        <span className="scan-flow-hint">{w.hint}</span>
+                      </span>
+                      <Chevron size={13} />
+                    </>
+                  );
+                  return "ask" in w
+                    ? <button key={w.title} type="button" disabled={submitting} onClick={() => submit(w.ask)} className="scan-flow">{body}</button>
+                    : <Link key={w.title} href={w.href} className="scan-flow">{body}</Link>;
+                })}
+              </nav>
+            </section>
           )}
 
-          <div className="flex items-center justify-center flex-wrap" style={{ gap: 4, marginTop: 16 }}>
-            {hasHistory && (
-              <Link href="/scan/history" className="scan-tool"><IconHistory size={14} /> Past conversations</Link>
-            )}
-            <Link href="/library" className="scan-tool"><IconLibrary size={14} /> Library</Link>
+          {!showFindings && !submitting && recent.length > 0 && (
+            <section className="scan-start-section" aria-labelledby="scan-recent">
+              <div className="flex items-baseline justify-between">
+                <h2 id="scan-recent" className="section-label">Recent conversations</h2>
+                <Link href="/scan/history" className="scan-tool" style={{ marginRight: -9 }}><IconHistory size={14} /> All <span className="num-quiet">{recent.length}</span></Link>
+              </div>
+              <ul className="scan-recent">
+                {recent.slice(0, 3).map((t) => (
+                  <li key={t.id}>
+                    <Link href={`/scan/${t.id}`} className="scan-recent-row">
+                      <span className="truncate" style={{ flex: 1, minWidth: 0 }}>{t.title}</span>
+                      <span className="scan-recent-when" title={formatDateTime(t.updatedAt)}>{formatRelative(t.updatedAt)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <div className="flex items-center justify-center flex-wrap" style={{ gap: 4, marginTop: 20 }}>
+            <Link href="/library" className="scan-tool"><IconLibrary size={14} /> Browse the Library</Link>
           </div>
         </div>
       </div>
