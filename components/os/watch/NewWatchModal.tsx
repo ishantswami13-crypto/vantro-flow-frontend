@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { api, Watch, WatchConditionConfig } from "@/lib/api";
 import { Modal } from "@/components/ui/Modal";
 import { METRIC_OPTIONS, OPERATOR_OPTIONS } from "./conditions";
+import { inrWhole, formatCount } from "@/lib/format";
 
 /** Create a watch condition (POST /api/watches). */
 export function NewWatchModal({ open, onClose, onCreated, prefillMetric, prefillEntity }: {
@@ -22,8 +23,21 @@ export function NewWatchModal({ open, onClose, onCreated, prefillMetric, prefill
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Start in the name field. The dialog focuses its first control (the close
+  // button) on open, so move focus once that has happened.
+  useEffect(() => {
+    if (!open) return;
+    const id = requestAnimationFrame(() => document.getElementById("nw-name")?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [open]);
+
   const metric = METRIC_OPTIONS.find((m) => m.value === metricKey);
   const needsEntity = metric?.needsEntity;
+  // The sentence Starlane will check, read back from the form as typed.
+  const t = threshold.trim() === "" ? NaN : Number(threshold);
+  const preview = Number.isFinite(t)
+    ? `${metric?.short || ""}${needsEntity && entityName.trim() ? ` for ${entityName.trim()}` : ""} ${OPERATOR_OPTIONS.find((o) => o.value === operator)?.short || ""} ${metric?.unit === "days" ? `${formatCount(t)} days` : inrWhole(t)}`
+    : null;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,7 +70,7 @@ export function NewWatchModal({ open, onClose, onCreated, prefillMetric, prefill
       width={460}
       footer={
         <>
-          <button type="button" onClick={onClose} className="ui-btn ui-btn-ghost">Cancel</button>
+          <button type="button" onClick={onClose} className="ui-btn ui-btn-secondary">Cancel</button>
           <button type="submit" form="new-watch-form" disabled={saving} className="ui-btn ui-btn-primary">{saving ? "Creating…" : "Create watch"}</button>
         </>
       }
@@ -82,9 +96,12 @@ export function NewWatchModal({ open, onClose, onCreated, prefillMetric, prefill
             </select>
           </Field>
           <Field label={metric?.unit === "days" ? "Threshold (days)" : "Threshold (₹)"} htmlFor="nw-th">
-            <input id="nw-th" className="ui-input w-full tabular-nums" type="number" inputMode="decimal" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder={metric?.unit === "days" ? "45" : "500000"} />
+            <input id="nw-th" className="ui-input w-full num" type="number" inputMode="decimal" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder={metric?.unit === "days" ? "45" : "500000"} />
           </Field>
         </div>
+        <p aria-live="polite" style={{ margin: 0, padding: "10px 0 0", borderTop: "1px solid var(--line)", fontSize: 12.5, color: preview ? "var(--body)" : "var(--ink-3)" }}>
+          {preview ? <>Raises when <span style={{ color: "var(--ink)" }}>{preview}</span>.</> : "Enter a threshold to see the condition."}
+        </p>
         {formError && <p role="alert" style={{ margin: 0, fontSize: 12.5, color: "var(--critical)" }}>{formError}</p>}
       </form>
     </Modal>
@@ -94,7 +111,7 @@ export function NewWatchModal({ open, onClose, onCreated, prefillMetric, prefill
 function Field({ label, htmlFor, children }: { label: string; htmlFor: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-w-0" style={{ gap: 6 }}>
-      <label htmlFor={htmlFor} style={{ fontSize: 12.5, color: "var(--ink-2)" }}>{label}</label>
+      <label htmlFor={htmlFor} style={{ fontSize: 12, fontWeight: 500, color: "var(--ink-2)" }}>{label}</label>
       {children}
     </div>
   );

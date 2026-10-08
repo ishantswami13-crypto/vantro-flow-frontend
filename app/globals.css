@@ -1193,3 +1193,84 @@ a:hover .row-chevron, button:hover .row-chevron, tr:hover .row-chevron { transfo
 .sb-search { height: 30px; background: rgba(255,255,255,0.035); border-color: rgba(255,255,255,0.06); }
 .sb-divider { background: rgba(255,255,255,0.05); }
 .sb-menu { background: #171716; border-color: rgba(255,255,255,0.07); }
+
+/* REFINE: Bridge, Watch, Sources
+   Rows on a shared canvas: hairline separators, a barely-there hover that
+   bleeds 8px past the text edge, columns that collapse to two lines below
+   900px. Used only by app/bridge, app/watch, app/sources and their parts. */
+.rf-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.rf-list > li { border-bottom: 1px solid var(--line); }
+.rf-row { display: grid; column-gap: 16px; row-gap: 2px; align-items: baseline; padding: 11px 0; width: 100%; text-align: left; transition: background-color var(--dur-instant) var(--ease), box-shadow var(--dur-instant) var(--ease); }
+a.rf-row:hover, button.rf-row:hover, .rf-row.rf-hover:hover { background: var(--surface-2); box-shadow: -8px 0 0 var(--surface-2), 8px 0 0 var(--surface-2); }
+.rf-head { display: none; column-gap: 16px; padding: 0 0 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-3); border-bottom: 1px solid var(--line); }
+.rf-title { font-size: 13.5px; line-height: 1.45; color: var(--ink); }
+.rf-sub { font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+.rf-kind { font-size: 12px; color: var(--ink-3); }
+.rf-fig { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; font-size: 13px; color: var(--ink); text-align: right; white-space: nowrap; }
+.rf-time { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-3); text-align: right; white-space: nowrap; }
+.rf-desk { display: none; }
+.rf-mob { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 4px; font-size: 12px; color: var(--ink-3); }
+.rf-actions { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.rf-cols-2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; }
+.rf-cols-3 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; }
+.rf-bar { display: block; height: 2px; border-radius: 1px; background: var(--surface-3); overflow: hidden; }
+.rf-bar > span { display: block; height: 100%; background: var(--ink-3); }
+@media (hover: hover) and (min-width: 900px) {
+  .rf-reveal { opacity: 0; transition: opacity var(--dur-instant) var(--ease); }
+  .rf-row:hover .rf-reveal, .rf-row:focus-within .rf-reveal { opacity: 1; }
+}
+@media (min-width: 900px) {
+  .rf-head { display: grid; }
+  .rf-head + .rf-list { border-top: none; }
+  .rf-desk { display: block; }
+  .rf-mob { display: none; }
+  .rf-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; }
+  .rf-cols-3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) minmax(0, 0.9fr); gap: 40px; }
+}
+
+/* Bridge: the KPI strip, one quiet ledger line. */
+.rf-strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.rf-strip > div { min-width: 0; padding: 12px 16px 12px 0; }
+.rf-strip dt { font-size: 12px; color: var(--ink-3); }
+.rf-strip dd { margin: 3px 0 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 8px; }
+.rf-strip .rf-strip-v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; font-size: 17px; line-height: 1.3; color: var(--ink); }
+.rf-strip .rf-strip-s { font-size: 12px; color: var(--ink-3); }
+@media (max-width: 899px) { .rf-strip > div:nth-child(-n+2) { border-bottom: 1px solid var(--line); } .rf-strip > div:nth-child(even) { padding-left: 16px; border-left: 1px solid var(--line); } }
+@media (min-width: 900px) {
+  .rf-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .rf-strip > div + div { padding-left: 20px; border-left: 1px solid var(--line); }
+}
+
+/* Bridge: What needs you. */
+.rf-needs { position: relative; grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 13px 0; }
+.rf-needs.rf-first::before { content: ""; position: absolute; left: -12px; top: 12px; bottom: 12px; width: 2px; border-radius: 1px; background: var(--ink); }
+@media (min-width: 900px) { .rf-needs { grid-template-columns: 112px minmax(0, 1fr) 168px 64px 104px; } }
+
+/* Bridge + Watch: What changed / what Watch raised. */
+.rf-change { grid-template-columns: minmax(0, 1fr) auto; }
+@media (min-width: 900px) { .rf-change { grid-template-columns: 112px minmax(0, 1fr) 96px 104px 64px 14px; } }
+
+/* Watch: the conditions table. One column on phones, six from 900px. */
+.rf-watch > .rf-row { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
+.rf-watch .rf-actions { justify-content: flex-start; margin-left: -9px; }
+@media (min-width: 900px) {
+  .rf-watch > .rf-row { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr) 160px 92px 92px 172px; }
+  .rf-watch .rf-actions { justify-content: flex-end; margin-left: 0; margin-right: -9px; }
+}
+.rf-evidence { padding: 4px 0 16px; max-width: 760px; }
+@media (min-width: 900px) { .rf-evidence { padding-left: 128px; } }
+
+/* Sources: connected, available and sync tables. */
+.rf-src, .rf-sync { grid-template-columns: minmax(0, 1fr) auto; }
+.rf-avail { grid-template-columns: minmax(0, 1fr); row-gap: 8px; }
+.rf-avail .rf-actions { justify-content: flex-start; }
+@media (min-width: 900px) {
+  .rf-src { grid-template-columns: minmax(0, 1.1fr) 150px 96px minmax(0, 1.5fr) 156px; }
+  .rf-sync { grid-template-columns: minmax(0, 1fr) 128px 148px minmax(0, 2fr); }
+  .rf-avail { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) 172px; }
+  .rf-avail .rf-actions { justify-content: flex-end; }
+}
+
+/* Sub-table headings that also act as titles stay visible on phones. */
+.rf-head.rf-head-keep { display: grid; }
+.rf-head-keep + .rf-list { border-top: none; }

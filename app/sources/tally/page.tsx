@@ -4,10 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type Connector, type DataConnection } from "@/lib/api";
-import { PageHeader, SkeletonRows, IconTile, Sep } from "@/components/v32/ui";
-import { IconSources } from "@/components/v32/icons";
+import { PageHeader, SkeletonRows, Sep } from "@/components/v32/ui";
 import { StatusChip, type StatusTone } from "@/components/ui/Badge";
-import { ErrorState } from "@/components/ui/ErrorState";
+import { QuietError } from "@/components/os/bridge/kit";
 import { healthOf, OFFLINE } from "@/components/connectors/health";
 import { formatDateTime, formatRelative } from "@/lib/format";
 
@@ -34,7 +33,7 @@ function Fact({ label, children, tone }: { label: string; children: React.ReactN
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>{title}</h2>
+      <h2 className="section-label">{title}</h2>
       {children}
     </section>
   );
@@ -81,15 +80,14 @@ export default function SourcesTallyPage() {
     <DashboardLayout pageTitle="TallyPrime">
       <style>{`
         .tally-grid { display: grid; gap: 32px; grid-template-columns: minmax(0, 1fr); align-items: start; }
-        @media (min-width: 1000px) { .tally-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 48px; } }
-        .tally-fact { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+        @media (min-width: 1000px) { .tally-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 280px); gap: 56px; } }
+        .tally-fact { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
         .tally-fact:first-child { border-top: 1px solid var(--line); }
         @media (max-width: 560px) { .tally-fact { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
       `}</style>
-      <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 24 }}>
-
+      <div className="page-stack" style={{ maxWidth: 1180 }}>
         <PageHeader
-          title={<span className="inline-flex items-center" style={{ gap: 12 }}><IconTile size={34}><IconSources size={16} /></IconTile>TallyPrime</span>}
+          title="TallyPrime"
           subtitle={
             <span className="inline-flex items-center flex-wrap" style={{ gap: 8 }}>
               Accounting <Sep /> {loading ? <span className="skeleton" style={{ width: 70, height: 12, display: "inline-block" }} /> : <StatusChip tone={status.tone}>{status.label}</StatusChip>}
@@ -99,17 +97,17 @@ export default function SourcesTallyPage() {
         />
 
         {loadFailed ? (
-          <ErrorState title="Couldn't load Tally's status" message={OFFLINE} onRetry={load} />
+          <QuietError message={`Couldn't load Tally's status. ${OFFLINE}`} onRetry={load} />
         ) : (
           <div className="tally-grid fade-once">
-            <div style={{ display: "flex", flexDirection: "column", gap: 32, minWidth: 0 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 28, minWidth: 0 }}>
               <Section title="Overview">
                 {loading ? <SkeletonRows rows={3} height={44} /> : !tally ? (
                   <Quiet>Tally is not connected yet. Connect it to see its sync history and what Starlane reads from it.</Quiet>
                 ) : (
                   <dl style={{ margin: 0 }}>
                     <Fact label="Last successful sync">
-                      {lastOk ? <span title={formatDateTime(lastOk)}>{formatRelative(lastOk)} <span style={{ color: "var(--ink-3)" }}>· {formatDateTime(lastOk)}</span></span> : <span style={{ color: "var(--ink-3)" }}>Never</span>}
+                      {lastOk ? <span>{formatRelative(lastOk)} <span style={{ color: "var(--ink-3)" }}>· {formatDateTime(lastOk)}</span></span> : <span style={{ color: "var(--ink-3)" }}>Never</span>}
                     </Fact>
                     <Fact label="Connected since">{formatDateTime(tally.connected_at)}</Fact>
                     {devices.length > 0 && (
@@ -128,7 +126,7 @@ export default function SourcesTallyPage() {
                 </Quiet>
               </Section>
             </div>
-            <aside style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>
+            <aside style={{ display: "flex", flexDirection: "column", gap: 28, minWidth: 0 }}>
               <Section title="Access">
                 <Quiet>Read only. The bridge never creates, edits or deletes anything in Tally, and its device credential can be revoked from Sources at any time.</Quiet>
               </Section>

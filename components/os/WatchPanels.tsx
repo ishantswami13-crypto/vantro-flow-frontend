@@ -7,7 +7,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { osApi, Objective, AutopilotMode, AUTOPILOT_LABEL, HEALTH_LABEL } from "@/lib/os";
-import { formatRelative, formatCount } from "@/lib/format";
+import { formatRelative, formatCount, formatDateTime } from "@/lib/format";
 import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 import { SkeletonRows } from "@/components/v32/ui";
 import { IconArrowRight } from "@/components/v32/icons";
@@ -23,8 +23,8 @@ export function WatchBrief() {
   const { data, error, loading, reload } = useLoad(() => osApi.brief());
   return (
     <section aria-labelledby="brief-h" className="min-w-0">
-      <SectionHead id="brief-h" title="Today's brief" meta={data?.generatedAt ? formatRelative(data.generatedAt) : undefined} />
-      <p style={{ margin: "-4px 0 12px", fontSize: 13, color: "var(--ink-2)" }}>Only what changed or needs someone. Everything on track is left out.</p>
+      <SectionHead id="brief-h" title="Today's brief" right={data?.generatedAt ? <span className="meta" title={formatDateTime(data.generatedAt)}>{formatRelative(data.generatedAt)}</span> : undefined} />
+      <p className="meta" style={{ margin: "-2px 0 10px" }}>Only what changed or needs someone. Everything on track is left out.</p>
       {loading && !data && <SkeletonRows rows={3} height={44} />}
       {error && !data ? <QuietError onRetry={reload} /> : null}
       {data && (data.lines.length === 0 ? (
@@ -34,7 +34,7 @@ export function WatchBrief() {
           {data.lines.map((l, i) => {
             const chip = BRIEF_CHIP[l.tone];
             return (
-              <li key={i} className="flex items-start" style={{ gap: 12, padding: "12px 0", borderBottom: "1px solid var(--line)" }}>
+              <li key={i} className="flex items-baseline" style={{ gap: 16, padding: "11px 0", borderBottom: "1px solid var(--line)" }}>
                 <span className="flex-1 min-w-0 tabular-nums" style={{ fontSize: 13.5, lineHeight: 1.55, color: l.tone === "positive" || l.tone === "neutral" ? "var(--body)" : "var(--ink)" }}>{plain(l.text)}</span>
                 {chip && <StatusChip tone={chip.tone} className="shrink-0">{chip.label}</StatusChip>}
               </li>
@@ -81,24 +81,26 @@ export function ObjectivesPanel() {
   const list = objectives.data?.objectives || [];
   return (
     <section aria-labelledby="obj-h" className="min-w-0">
-      <div className="flex items-start justify-between" style={{ gap: 12 }}>
-        <SectionHead id="obj-h" title="Objectives" meta={list.length ? formatCount(list.length) : undefined} />
-        {list.length > 0 && <button type="button" className="ui-btn ui-btn-secondary ui-btn-sm" onClick={reevaluate} disabled={busy}>{busy ? "Checking…" : "Check again"}</button>}
-      </div>
-      <p style={{ margin: "-4px 0 12px", fontSize: 13, color: "var(--ink-2)" }}>A target the business is steering towards, checked against the ledger and forecast forward.</p>
+      <SectionHead
+        id="obj-h"
+        title="Objectives"
+        meta={list.length ? formatCount(list.length) : undefined}
+        right={list.length > 0 ? <button type="button" className="hover-dim" style={{ fontSize: 12, color: "var(--ink-2)" }} onClick={reevaluate} disabled={busy}>{busy ? "Checking…" : "Check again"}</button> : undefined}
+      />
+      <p className="meta" style={{ margin: "-2px 0 10px" }}>A target the business is steering towards, checked against the ledger and forecast forward.</p>
 
       {objectives.loading && !objectives.data && <SkeletonRows rows={2} height={56} />}
       {objectives.error && !objectives.data ? <QuietError onRetry={objectives.reload} /> : null}
 
       {list.length > 0 && (
-        <div style={{ border: "1px solid var(--line)", borderRadius: 12, background: "var(--surface)" }}>
-          {list.map((o, i) => <ObjectiveRow key={o.id} o={o} first={i === 0} />)}
+        <div style={{ borderTop: "1px solid var(--line)" }}>
+          {list.map((o) => <ObjectiveRow key={o.id} o={o} />)}
         </div>
       )}
 
       {objectives.data && collections && !hasCollections && (
-        <div style={{ border: "1px solid var(--line)", borderRadius: 12, background: "var(--surface)", padding: "18px 20px", marginTop: list.length ? 16 : 0 }}>
-          <div style={{ fontSize: 14, color: "var(--ink)", fontWeight: 500 }}>{collections.name}</div>
+        <div style={{ borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", padding: "14px 0 16px", marginTop: list.length ? 20 : 0 }}>
+          <div style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 500 }}>{collections.name}</div>
           <p style={{ margin: "4px 0 14px", fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55 }}>{collections.detail}</p>
           <form onSubmit={(e) => { e.preventDefault(); create(); }} className="flex flex-wrap items-center" style={{ gap: 8, fontSize: 13, color: "var(--body)" }}>
             <span>Keep overdue share at most</span>
@@ -111,7 +113,7 @@ export function ObjectivesPanel() {
             </select>
             <button type="submit" className="ui-btn ui-btn-secondary" disabled={busy}>{busy ? "Checking…" : "Set objective"}</button>
           </form>
-          <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--ink-3)" }}>Acting within policy without approval is not offered. Every reminder waits for a person.</p>
+          <p className="meta" style={{ margin: "12px 0 0" }}>Acting within policy without approval is not offered. Every reminder waits for a person.</p>
         </div>
       )}
 
@@ -124,7 +126,7 @@ export function ObjectivesPanel() {
 
       {blocked.length > 0 && (
         <div style={{ marginTop: 18 }}>
-          <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginBottom: 6 }}>Not available yet</div>
+          <div className="section-label" style={{ marginBottom: 6 }}>Not available yet</div>
           <ul style={{ margin: 0, padding: 0, listStyle: "none" }} className="flex flex-col">
             {blocked.map((t) => (
               <li key={t.key} style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55, padding: "4px 0" }}>
@@ -138,54 +140,68 @@ export function ObjectivesPanel() {
   );
 }
 
-function ObjectiveRow({ o, first }: { o: Objective; first: boolean }) {
+function ObjectiveRow({ o }: { o: Objective }) {
   const f = o.latest?.forecast;
   const unit = o.metric.endsWith("_pct") ? "%" : "";
   const p = f?.breachProbability;
+  const points = f?.points?.slice(0, 4) || [];
   return (
-    <div style={{ padding: "18px 20px", borderTop: first ? undefined : "1px solid var(--line)" }}>
-      <div className="flex items-start justify-between flex-wrap" style={{ gap: 12 }}>
+    <div style={{ padding: "14px 0 16px", borderBottom: "1px solid var(--line)" }}>
+      <div className="flex items-baseline justify-between flex-wrap" style={{ gap: 12 }}>
         <div className="min-w-0">
-          <div className="tabular-nums" style={{ fontSize: 14.5, color: "var(--ink)", fontWeight: 500 }}>
-            {o.name} {o.operator === "<=" ? "at most" : "at least"} {o.target}{unit}
+          <div style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 500 }}>
+            {o.name} {o.operator === "<=" ? "at most" : "at least"} <span className="num">{o.target}{unit}</span>
           </div>
-          <div className="tabular-nums" style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 3 }}>
-            Within {formatCount(o.horizonDays)} days · {AUTOPILOT_LABEL[o.autopilotMode]} · {o.lastEvaluatedAt ? `checked ${formatRelative(o.lastEvaluatedAt)}` : "not checked yet"}
+          <div className="meta tabular-nums" style={{ marginTop: 2 }}>
+            Within {formatCount(o.horizonDays)} days · {AUTOPILOT_LABEL[o.autopilotMode]} · {o.lastEvaluatedAt ? <span title={formatDateTime(o.lastEvaluatedAt)}>checked {formatRelative(o.lastEvaluatedAt)}</span> : "not checked yet"}
           </div>
         </div>
         <StatusChip tone={HEALTH_TONE[o.health] || "unknown"}>{HEALTH_LABEL[o.health] || "Not known yet"}</StatusChip>
       </div>
 
-      {f?.explanation && <p className="tabular-nums" style={{ margin: "12px 0 0", fontSize: 13.5, lineHeight: 1.6, color: "var(--body)" }}>{plain(f.explanation)}</p>}
+      {f?.explanation && <p className="tabular-nums" style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.6, color: "var(--body)", maxWidth: "68ch" }}>{plain(f.explanation)}</p>}
       {p != null && o.health !== "OFF_TRACK" && (
-        <p className="tabular-nums" style={{ margin: "6px 0 0", fontSize: 13, color: p >= 0.5 ? "var(--critical)" : p >= 0.2 ? "var(--warning)" : "var(--ink-2)" }}>
-          {Math.round(p * 100)}% chance of missing the target{f?.breachInDays != null ? `, most likely in about ${formatCount(f.breachInDays)} days` : ""}.
+        <p className="tabular-nums" style={{ margin: "4px 0 0", fontSize: 13, color: p >= 0.5 ? "var(--critical)" : "var(--ink-2)" }}>
+          <span className="num">{Math.round(p * 100)}%</span> chance of missing the target{f?.breachInDays != null ? `, most likely in about ${formatCount(f.breachInDays)} days` : ""}.
         </p>
       )}
 
-      {f?.points && f.points.length > 0 && (
-        <div className="grid tabular-nums" style={{ gridTemplateColumns: `repeat(${Math.min(f.points.length, 4)}, minmax(0, 1fr))`, gap: 12, marginTop: 14, padding: "12px 14px", borderRadius: 8, background: "var(--surface-2)" }}>
-          {f.points.slice(0, 4).map((pt) => (
-            <div key={pt.day} className="min-w-0">
-              <div style={{ fontSize: 12, color: "var(--ink-3)" }}>Day {pt.day}</div>
-              <div style={{ fontSize: 15, color: "var(--ink)", marginTop: 2 }}>{pt.p50}{unit}</div>
-              <div style={{ fontSize: 11.5, color: "var(--ink-3)", marginTop: 1 }}>{pt.p10}–{pt.p90}{unit} likely</div>
-            </div>
-          ))}
-        </div>
+      {points.length > 0 && (
+        <table className="tabular-nums" style={{ marginTop: 12, width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+          <caption className="sr-only">Forecast: most likely value and likely range</caption>
+          <thead>
+            <tr>
+              <th scope="col" style={{ ...TH, textAlign: "left" }}>Forecast</th>
+              {points.map((pt) => <th key={pt.day} scope="col" style={TH}>Day {pt.day}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row" style={{ ...TD, textAlign: "left", fontWeight: 400, color: "var(--ink-2)" }}>Most likely</th>
+              {points.map((pt) => <td key={pt.day} className="num" style={{ ...TD, color: "var(--ink)" }}>{pt.p50}{unit}</td>)}
+            </tr>
+            <tr>
+              <th scope="row" style={{ ...TD, textAlign: "left", fontWeight: 400, color: "var(--ink-2)" }}>Likely range</th>
+              {points.map((pt) => <td key={pt.day} className="num" style={{ ...TD, color: "var(--ink-3)" }}>{pt.p10}–{pt.p90}{unit}</td>)}
+            </tr>
+          </tbody>
+        </table>
       )}
 
       {o.latest?.confidence && o.latest.confidence.reasons.length > 0 && (
-        <p style={{ margin: "10px 0 0", fontSize: 12.5, color: "var(--ink-2)" }}>
+        <p className="meta" style={{ margin: "10px 0 0" }}>
           Confidence {o.latest.confidence.level.toLowerCase()}: {o.latest.confidence.reasons.join("; ")}.
         </p>
       )}
       {o.workflowId && (
-        <Link href="/missions" className="hover-dim inline-flex items-center" style={{ gap: 4, marginTop: 10, fontSize: 12.5, color: "var(--ink-2)" }}>
+        <Link href="/missions" className="hover-dim inline-flex items-center" style={{ gap: 4, marginTop: 8, fontSize: 12.5, color: "var(--ink-2)" }}>
           The overdue follow-up workflow works towards this<IconArrowRight size={12} />
         </Link>
       )}
-      {!f && <p style={{ margin: "10px 0 0", fontSize: 12.5, color: "var(--ink-3)" }}>Not evaluated yet.</p>}
+      {!f && <p className="meta" style={{ margin: "8px 0 0" }}>Not evaluated yet.</p>}
     </div>
   );
 }
+
+const TH: React.CSSProperties = { padding: "6px 0", fontSize: 11, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-3)", textAlign: "right", borderBottom: "1px solid var(--line)" };
+const TD: React.CSSProperties = { padding: "6px 0", textAlign: "right", borderBottom: "1px solid var(--line-hairline)" };

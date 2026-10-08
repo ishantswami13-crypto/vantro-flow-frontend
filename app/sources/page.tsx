@@ -4,11 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type Connector } from "@/lib/api";
-import { PageHeader, Subnav, Chevron, EmptyLine, SkeletonRows, IconTile, Sep } from "@/components/v32/ui";
-import { IconSources, IconUpload, IconWatch, IconLink, IconPlus, IconSync } from "@/components/v32/icons";
+import { PageHeader, Subnav, Chevron, SkeletonRows, Sep } from "@/components/v32/ui";
+import { IconUpload, IconPlus } from "@/components/v32/icons";
 import { StatusChip, type StatusTone } from "@/components/ui/Badge";
-import { ErrorState } from "@/components/ui/ErrorState";
 import { Modal } from "@/components/ui/Modal";
+import { QuietError, QuietLine, SectionHead } from "@/components/os/bridge/kit";
 import Button from "@/components/ui/Button";
 import { DataQuality } from "@/components/connectors/DataQuality";
 import { healthOf, isConnected, categoryLabel, CAPABILITY_TEXT, OFFLINE } from "@/components/connectors/health";
@@ -28,14 +28,6 @@ import { formatDateTime, formatRelative, formatCount } from "@/lib/format";
 
 type TabKey = "connected" | "available" | "sync" | "quality" | "reconciliation";
 
-function SourceIcon({ c, tone }: { c: Connector; tone?: "critical" | "warning" }) {
-  const icon = c.authType === "file_import" ? <IconUpload size={15} />
-    : c.authType === "public_feed" ? <IconWatch size={15} />
-    : c.authType === "oauth" ? <IconLink size={15} />
-    : <IconSources size={15} />;
-  return <IconTile size={32} tone={tone}>{icon}</IconTile>;
-}
-
 function noteFor(c: Connector): string {
   if (c.state.health === "error" && c.state.lastError) return c.state.lastError;
   if (c.state.health === "stale" && !c.state.lastSyncAt) return "Paired, but nothing has synced yet";
@@ -46,12 +38,13 @@ function noteFor(c: Connector): string {
   return c.summary;
 }
 
-const GRID = "src-grid";
+const SYNC_COLS = "minmax(0, 1fr) 128px 148px minmax(0, 2fr)";
+const SRC_COLS = "minmax(0, 1.1fr) 150px 96px minmax(0, 1.5fr) 156px";
 
 function TableHeader({ last = "" }: { last?: string }) {
   return (
-    <div className={`${GRID} src-head`} aria-hidden="true">
-      <span /><span>Source</span><span>Health</span><span>Last sync</span><span>Note</span><span style={{ textAlign: "right" }}>{last}</span>
+    <div className="rf-head" style={{ gridTemplateColumns: SRC_COLS }} aria-hidden="true">
+      <span>Source</span><span>Status</span><span style={{ textAlign: "right" }}>Last sync</span><span>Note</span><span style={{ textAlign: "right" }}>{last}</span>
     </div>
   );
 }
@@ -62,43 +55,39 @@ function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
   const cap = isConnected(c) && c.state.capabilityLabel ? CAPABILITY_TEXT[c.state.capabilityLabel] : undefined;
   const note = noteFor(c);
   const errorTone = c.state.health === "error";
-  const name = href ? (
-    <Link href={href} className="src-name hover-dim">{c.name}</Link>
-  ) : <span className="src-name">{c.name}</span>;
   return (
-    <div className={`${GRID} src-row row-hover`} style={{ opacity: c.availability === "available" ? 1 : 0.72 }}>
-      <SourceIcon c={c} tone={errorTone ? "critical" : undefined} />
-      <div className="min-w-0">
-        {name}
-        <div className="src-meta">
-          {categoryLabel(c)}
-          {cap && <><Sep /> {cap}</>}
+    <li>
+      <div className="rf-row rf-hover rf-src" style={{ alignItems: "center", opacity: c.availability === "available" ? 1 : 0.72 }}>
+        <div className="min-w-0">
+          {href ? <Link href={href} className="rf-title hover-dim" style={{ fontWeight: 500 }}>{c.name}</Link> : <span className="rf-title" style={{ fontWeight: 500 }}>{c.name}</span>}
+          <div className="rf-kind flex items-center flex-wrap" style={{ gap: 6 }}>
+            {categoryLabel(c)}
+            {cap && <><Sep /> {cap}</>}
+          </div>
+          <div className="rf-mob">
+            <StatusChip tone={st.tone}>{st.label}</StatusChip>
+            {c.state.lastSyncAt && <span title={formatDateTime(c.state.lastSyncAt)}>{formatRelative(c.state.lastSyncAt)}</span>}
+          </div>
         </div>
-        <div className="src-mobile">
-          <StatusChip tone={st.tone}>{st.label}</StatusChip>
-          {c.state.lastSyncAt && <span title={formatDateTime(c.state.lastSyncAt)}>{formatRelative(c.state.lastSyncAt)}</span>}
+        <div className="rf-desk"><StatusChip tone={st.tone}>{st.label}</StatusChip></div>
+        <div className="rf-desk rf-time" style={{ color: "var(--body)" }} title={c.state.lastSyncAt ? formatDateTime(c.state.lastSyncAt) : undefined}>
+          {c.state.lastSyncAt ? formatRelative(c.state.lastSyncAt) : <span style={{ color: "var(--ink-3)" }}>Never</span>}
+        </div>
+        <div className="rf-desk rf-sub min-w-0 truncate" style={{ color: errorTone ? "var(--critical)" : undefined }} title={note}>{note}</div>
+        <div className="rf-actions">
+          {action}
+          {href && <Link href={href} aria-label={`${c.name} details`} className="inline-flex" style={{ padding: 4, marginRight: -4 }}><Chevron size={13} /></Link>}
         </div>
       </div>
-      <div className="src-desk"><StatusChip tone={st.tone}>{st.label}</StatusChip></div>
-      <div className="src-desk tabular-nums" style={{ fontSize: 13, color: "var(--body)" }} title={c.state.lastSyncAt ? formatDateTime(c.state.lastSyncAt) : undefined}>
-        {c.state.lastSyncAt ? formatRelative(c.state.lastSyncAt) : <span style={{ color: "var(--ink-3)" }}>Never</span>}
-      </div>
-      <div className="src-desk min-w-0 truncate" style={{ fontSize: 12.5, color: errorTone ? "var(--critical)" : "var(--ink-2)" }} title={note}>{note}</div>
-      <div className="src-actions">
-        {action}
-        {href && <Chevron />}
-      </div>
-    </div>
+    </li>
   );
 }
 
 function Group({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <section style={{ marginTop: 28 }}>
-      <div className="flex items-baseline flex-wrap" style={{ gap: 8, marginBottom: 6 }}>
-        <h2 style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>{title}</h2>
-        {hint && <span style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{hint}</span>}
-      </div>
+    <section style={{ marginTop: 32 }}>
+      <SectionHead title={title} />
+      {hint && <p className="meta" style={{ margin: "-2px 0 8px" }}>{hint}</p>}
       {children}
     </section>
   );
@@ -205,173 +194,139 @@ export default function SourcesPage() {
 
   return (
     <DashboardLayout pageTitle="Sources">
-      <style>{`
-        .src-wrap { max-width: 1180px; display: flex; flex-direction: column; gap: 20px; }
-        .src-grid { display: grid; align-items: center; column-gap: 16px; grid-template-columns: 32px minmax(0, 1fr) auto; }
-        .src-head { display: none; }
-        .src-row { padding: 12px 10px; min-height: 60px; border-bottom: 1px solid var(--line); border-radius: 0; }
-        .src-name { font-size: 13.5px; font-weight: 500; color: var(--ink); }
-        .src-meta { font-size: 12px; color: var(--ink-3); margin-top: 2px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .src-desk { display: none; }
-        .src-mobile { display: flex; gap: 10px; align-items: center; margin-top: 8px; font-size: 12px; color: var(--ink-3); }
-        .src-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-        @media (min-width: 900px) {
-          .src-grid { grid-template-columns: 32px minmax(170px, 1fr) 120px 100px minmax(0, 1.5fr) 150px; }
-          .src-head { display: grid; padding: 0 10px 8px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line); }
-          .src-desk { display: block; }
-          .src-mobile { display: none; }
-        }
-        .sync-grid { display: grid; column-gap: 16px; align-items: center; grid-template-columns: minmax(0, 1fr) auto; }
-        .sync-head { display: none; }
-        .sync-row { padding: 12px 10px; border-bottom: 1px solid var(--line); min-height: 52px; }
-        .sync-desk { display: none; }
-        @media (min-width: 900px) {
-          .sync-grid { grid-template-columns: minmax(160px, 1fr) 120px 150px minmax(0, 2fr); }
-          .sync-head { display: grid; padding: 0 10px 8px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line); }
-          .sync-desk { display: block; }
-          .sync-mobile { display: none; }
-        }
-        .avail-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
-        @media (min-width: 760px) { .avail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-      `}</style>
-      <div className="src-wrap">
+      <div className="w-full page-stack" style={{ maxWidth: 1180 }}>
         <PageHeader
           title="Sources"
           subtitle={
             connectors && connected.length ? (
               <span className="inline-flex items-center flex-wrap" style={{ gap: 6 }}>
-                {connected.length} connected
-                {lastSync && <><Sep /> last sync {formatRelative(lastSync)}</>}
-                {needsLook > 0 && <><Sep /> <span style={{ color: "var(--warning)" }}>{needsLook} need{needsLook === 1 ? "s" : ""} a look</span></>}
+                {formatCount(connected.length)} connected
+                {lastSync && <><Sep /> <span title={formatDateTime(lastSync)}>last sync {formatRelative(lastSync)}</span></>}
+                {needsLook > 0 && <><Sep /> <StatusChip tone="attention">{formatCount(needsLook)} need{needsLook === 1 ? "s" : ""} a look</StatusChip></>}
               </span>
             ) : "Where Starlane gets its data. Every connection is read only and can be revoked."
           }
           right={<Link href="/sources/connect" className="ui-btn ui-btn-primary"><IconPlus size={14} /> Connect a source</Link>}
         />
 
-        <Subnav items={tabs} active={tab} onChange={(k) => setTab(k as TabKey)} label="Sources" />
+        <div>
+          <Subnav items={tabs} active={tab} onChange={(k) => setTab(k as TabKey)} label="Sources" />
 
-        <div className="fade-once" role="tabpanel">
-          {loadFailed && tab !== "quality" && tab !== "reconciliation" && (
-            <ErrorState title="Couldn't load your sources" message={OFFLINE} onRetry={load} />
-          )}
+          <div className="fade-once" role="tabpanel" style={{ marginTop: 16 }}>
+            {loadFailed && tab !== "quality" && tab !== "reconciliation" && (
+              <QuietError message={`Couldn't load your sources. ${OFFLINE}`} onRetry={load} />
+            )}
 
-          {connectors === null && !loadFailed && tab !== "quality" && tab !== "reconciliation" && <SkeletonRows rows={4} height={60} />}
+            {connectors === null && !loadFailed && tab !== "quality" && tab !== "reconciliation" && <SkeletonRows rows={4} height={56} />}
 
-          {connectors && tab === "connected" && (
-            <>
-              {connected.length > 0 ? (
-                <div>
-                  <TableHeader />
-                  {connected.map((c) => <Row key={c.id} c={c} action={actionFor(c)} />)}
-                </div>
-              ) : (
-                <EmptyLine
-                  icon={<IconSources size={17} />}
-                  title="No company system is connected yet"
-                  body="Connect Tally or upload an export so Starlane works from your real receivables, payables and stock."
-                  action={
-                    <div className="flex flex-wrap" style={{ gap: 8 }}>
+            {connectors && tab === "connected" && (
+              <>
+                {connected.length > 0 ? (
+                  <div>
+                    <TableHeader />
+                    <ul className="rf-list">{connected.map((c) => <Row key={c.id} c={c} action={actionFor(c)} />)}</ul>
+                  </div>
+                ) : (
+                  <div>
+                    <QuietLine>No company system is connected yet. Connect Tally or upload an export so Starlane works from your real receivables, payables and stock.</QuietLine>
+                    <div className="flex flex-wrap" style={{ gap: 8, marginTop: 4 }}>
                       <Link href="/sources/connect" className="ui-btn ui-btn-secondary ui-btn-sm">Connect Tally</Link>
                       <Button variant="ghost" size="sm" onClick={() => setTab("available")}>See all sources</Button>
                     </div>
-                  }
-                />
-              )}
-              {world.length > 0 && (
-                <Group title="External signals" hint="Public feeds. Nothing about your company is sent to them.">
-                  <div>{world.map((c) => <Row key={c.id} c={c} />)}</div>
-                </Group>
-              )}
-            </>
-          )}
+                  </div>
+                )}
+                {world.length > 0 && (
+                  <Group title="External signals" hint="Public feeds. Nothing about your company is sent to them.">
+                    <ul className="rf-list">{world.map((c) => <Row key={c.id} c={c} />)}</ul>
+                  </Group>
+                )}
+              </>
+            )}
 
-          {connectors && tab === "available" && (
-            <>
-              {buildable.length > 0 ? (
-                <div className="avail-grid">
-                  {buildable.map((c) => (
-                    <div key={c.id} className="ui-panel" style={{ padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
-                      <div className="flex items-start" style={{ gap: 12 }}>
-                        <SourceIcon c={c} />
-                        <div className="min-w-0 flex-1">
-                          <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{c.name}</div>
-                          <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 2, lineHeight: 1.5 }}>{c.summary}</div>
+            {connectors && tab === "available" && (
+              <>
+                {buildable.length > 0 ? (
+                  <ul className="rf-list">
+                    {buildable.map((c) => (
+                      <li key={c.id}>
+                        <div className="rf-row rf-avail">
+                          <div className="min-w-0">
+                            <div className="rf-title" style={{ fontWeight: 500 }}>{c.name}</div>
+                            <div className="rf-sub">{c.summary}</div>
+                          </div>
+                          {c.access.length > 0 ? (
+                            <ul className="min-w-0" style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 3 }}>
+                              {c.access.map((a) => <li key={a} className="rf-sub" style={{ fontSize: 12 }}>{a}</li>)}
+                            </ul>
+                          ) : <span />}
+                          <div className="rf-actions" style={{ alignSelf: "start" }}>
+                            {c.authType === "local_bridge"
+                              ? <Link href="/sources/connect" className="ui-btn ui-btn-secondary ui-btn-sm">Connect {c.name}</Link>
+                              : c.authType === "file_import"
+                                ? <Link href="/collections?import=1" className="ui-btn ui-btn-secondary ui-btn-sm"><IconUpload size={13} /> Upload a file</Link>
+                                : null}
+                          </div>
                         </div>
-                      </div>
-                      {c.access.length > 0 && (
-                        <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6 }}>
-                          {c.access.map((a) => (
-                            <li key={a} className="flex" style={{ gap: 8, fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.5 }}>
-                              <span aria-hidden="true" style={{ width: 4, height: 4, borderRadius: 2, background: "var(--ink-3)", marginTop: 8, flexShrink: 0 }} />{a}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      <div className="flex" style={{ gap: 8, marginTop: "auto" }}>
-                        {c.authType === "local_bridge"
-                          ? <Link href="/sources/connect" className="ui-btn ui-btn-secondary ui-btn-sm">Connect {c.name}</Link>
-                          : c.authType === "file_import"
-                            ? <Link href="/collections?import=1" className="ui-btn ui-btn-secondary ui-btn-sm"><IconUpload size={13} /> Upload a file</Link>
-                            : null}
-                      </div>
-                    </div>
-                  ))}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <QuietLine>Everything available is connected. New connectors appear here as they are built.</QuietLine>
+                )}
+                {notBuilt.length > 0 && (
+                  <Group title="Not built yet" hint="A CSV export from any of these works today.">
+                    <ul className="rf-list">
+                      {notBuilt.map((c) => (
+                        <li key={c.id}>
+                          <div className="rf-row" style={{ gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "center" }}>
+                            <div className="min-w-0">
+                              <div className="rf-title" style={{ color: "var(--ink-2)" }}>{c.name}</div>
+                              <div className="rf-kind">{c.unavailableReason || categoryLabel(c)}</div>
+                            </div>
+                            <span className="rf-kind">{categoryLabel(c)}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </Group>
+                )}
+              </>
+            )}
+
+            {connectors && tab === "sync" && (
+              syncEntries.length ? (
+                <div>
+                  <div className="rf-head" style={{ gridTemplateColumns: SYNC_COLS }} aria-hidden="true"><span>Source</span><span>Result</span><span style={{ textAlign: "right" }}>When</span><span>Detail</span></div>
+                  <ul className="rf-list">
+                    {syncEntries.map((e) => (
+                      <li key={e.c.id}>
+                        <div className="rf-row rf-hover rf-sync" style={{ alignItems: "center" }}>
+                          <div className="min-w-0">
+                            <div className="rf-title" style={{ fontWeight: 500 }}>{e.c.name}</div>
+                            <div className="rf-mob">{e.at ? formatDateTime(e.at) : "Time not recorded"} · {e.detail}</div>
+                          </div>
+                          <div><StatusChip tone={e.tone}>{e.label}</StatusChip></div>
+                          <div className="rf-desk rf-time" style={{ color: "var(--body)" }} title={e.at ? formatDateTime(e.at) : undefined}>{e.at ? formatDateTime(e.at) : "—"}</div>
+                          <div className="rf-desk rf-sub truncate" style={{ color: e.tone === "critical" ? "var(--critical)" : undefined }} title={e.detail}>{e.detail}</div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="meta" style={{ margin: "10px 0 0" }}>The latest attempt for each source. Older runs are not kept here.</p>
                 </div>
               ) : (
-                <EmptyLine title="Everything available is connected" body="New connectors appear here as they are built." />
-              )}
-              {notBuilt.length > 0 && (
-                <Group title="Not built yet" hint="A CSV export from any of these works today.">
-                  <div>
-                    {notBuilt.map((c) => (
-                      <div key={c.id} className="src-grid src-row" style={{ gridTemplateColumns: "32px minmax(0, 1fr) auto" }}>
-                        <SourceIcon c={c} />
-                        <div className="min-w-0">
-                          <div className="src-name" style={{ color: "var(--ink-2)" }}>{c.name}</div>
-                          <div className="src-meta">{c.unavailableReason || categoryLabel(c)}</div>
-                        </div>
-                        <StatusChip tone="unknown">Not available yet</StatusChip>
-                      </div>
-                    ))}
-                  </div>
-                </Group>
-              )}
-            </>
-          )}
+                <QuietLine>No sync activity yet. Once a source syncs, its latest attempt and result appear here.</QuietLine>
+              )
+            )}
 
-          {connectors && tab === "sync" && (
-            syncEntries.length ? (
-              <div>
-                <div className="sync-grid sync-head" aria-hidden="true"><span>Source</span><span>Result</span><span>When</span><span>Detail</span></div>
-                {syncEntries.map((e) => (
-                  <div key={e.c.id} className="sync-grid sync-row row-hover">
-                    <div className="min-w-0">
-                      <div className="src-name">{e.c.name}</div>
-                      <div className="sync-mobile" style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 3 }}>
-                        {e.at ? formatDateTime(e.at) : "Time not recorded"} · {e.detail}
-                      </div>
-                    </div>
-                    <div><StatusChip tone={e.tone}>{e.label}</StatusChip></div>
-                    <div className="sync-desk tabular-nums" style={{ fontSize: 13, color: "var(--body)" }}>{e.at ? formatDateTime(e.at) : "—"}</div>
-                    <div className="sync-desk truncate" style={{ fontSize: 12.5, color: e.tone === "critical" ? "var(--critical)" : "var(--ink-2)" }} title={e.detail}>{e.detail}</div>
-                  </div>
-                ))}
-                <p style={{ fontSize: 12, color: "var(--ink-3)", margin: "12px 10px 0" }}>The latest attempt for each source. Older runs are not kept here.</p>
-              </div>
-            ) : (
-              <EmptyLine icon={<IconSync size={17} />} title="No sync activity yet" body="Once a source syncs, its latest attempt and result appear here." />
-            )
-          )}
+            {tab === "quality" && <DataQuality />}
 
-          {tab === "quality" && <DataQuality />}
-
-          {tab === "reconciliation" && (
-            <EmptyLine
-              title="Reconciliation isn't running yet"
-              body="Planned: receivables, payables and sales totals compared against Tally before those numbers are used anywhere else. Nothing is compared today, so no match or mismatch is shown."
-            />
-          )}
+            {tab === "reconciliation" && (
+              <QuietLine>
+                Reconciliation isn&apos;t running yet. Planned: receivables, payables and sales totals compared against Tally before those numbers are used anywhere else. Nothing is compared today, so no match or mismatch is shown.
+              </QuietLine>
+            )}
+          </div>
         </div>
       </div>
 
