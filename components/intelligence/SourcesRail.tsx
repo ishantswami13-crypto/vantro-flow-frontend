@@ -9,10 +9,8 @@ import type { IntelligenceEvidenceItem } from "@/lib/api";
 export function SourcesRail({ evidence, highlighted }: { evidence: IntelligenceEvidenceItem[]; highlighted: number | null }) {
   return (
     <div>
-      <p className="text-[12px] mb-3" style={{ color: "var(--ink-3)" }}>
-        Sources <span className="tabular-nums">{evidence.length}</span>
-      </p>
-      <ol className="space-y-1.5">
+      <h2 className="section-label">Sources<span className="wk-count">{evidence.length}</span></h2>
+      <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
         {evidence.map((item, i) => {
           const n = i + 1;
           const active = highlighted === n;
@@ -20,14 +18,11 @@ export function SourcesRail({ evidence, highlighted }: { evidence: IntelligenceE
             <li
               key={n}
               id={`source-${n}`}
-              className="rounded-lg px-3 py-2.5 transition-colors"
-              style={{ background: active ? "var(--surface)" : "transparent", border: `1px solid ${active ? "rgba(var(--accent-rgb), 0.5)" : "transparent"}` }}
+              className="int-source"
+              data-active={active || undefined}
             >
               <div className="flex items-start gap-2.5">
-                <span
-                  className="shrink-0 mt-[1px] inline-flex items-center justify-center min-w-[18px] h-[18px] rounded text-[10px] font-semibold"
-                  style={{ background: "var(--surface-3)", color: "var(--ink-2)", fontVariantNumeric: "tabular-nums" }}
-                >
+                <span className="num shrink-0" style={{ minWidth: 16, fontSize: 11, lineHeight: "18px", color: "var(--ink-3)" }}>
                   {n}
                 </span>
                 <div className="min-w-0">

@@ -8,8 +8,8 @@ import type { IntelligencePrediction, ImpactComponent } from "@/lib/api";
 // the model provides.
 function Cell({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="min-w-0" style={{ padding: "12px 14px", borderRadius: "var(--radius-md)", background: "var(--surface)", border: "1px solid var(--line-card)" }}>
-      <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 8 }}>{label}</div>
+    <div className="min-w-0" style={{ padding: "12px 0" }}>
+      <div className="tabular-nums" style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 6 }}>{label}</div>
       {children}
     </div>
   );
@@ -33,9 +33,9 @@ export function ForecastTimeline({ predictions, component }: { predictions: Inte
 
   return (
     <div>
-      <div className="grid grid-cols-2 sm:grid-cols-4" style={{ gap: 8 }}>
+      <div className="grid grid-cols-2 sm:grid-cols-4" style={{ columnGap: 24, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
         <Cell label="Today">
-          <span className="tabular-nums" style={{ fontSize: 14, color: "var(--ink)" }}>
+          <span className="tabular-nums" style={{ fontSize: 13, color: "var(--ink)" }}>
             {component.coverage.sufficientData ? `${component.coverage.coverageDays} days of stock` : "Not known yet"}
           </span>
         </Cell>
@@ -48,7 +48,7 @@ export function ForecastTimeline({ predictions, component }: { predictions: Inte
           />
         ))}
       </div>
-      <p style={{ margin: "10px 0 0", fontSize: 12, lineHeight: 1.55, color: "var(--ink-3)" }}>
+      <p className="meta" style={{ margin: "10px 0 0", lineHeight: 1.55, maxWidth: "68ch" }}>
         &ldquo;Stocked out&rdquo; means below safety stock. Based on current inventory, average daily demand and safety stock; the sources hold the underlying figures. This is a forecast, not an observation.
       </p>
     </div>

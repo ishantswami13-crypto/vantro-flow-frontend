@@ -9,8 +9,7 @@ export function Cite({ n, onCite }: { n?: number; onCite: (n: number) => void })
       type="button"
       onClick={() => onCite(n)}
       aria-label={`Source ${n}`}
-      className="inline-flex items-center justify-center align-[2px] ml-0.5 min-w-[16px] h-[16px] px-1 rounded text-[10px] font-semibold leading-none focus-ring hover:bg-surface-3"
-      style={{ background: "var(--surface-3)", color: "var(--ink-2)", fontVariantNumeric: "tabular-nums" }}
+      className="int-cite focus-ring"
     >
       {n}
     </button>
