@@ -67,7 +67,7 @@ export default function TopBar({ pageTitle, onMenu, onSearch }: { pageTitle?: st
         {crumbs.map((c, i) => {
           const last = i === crumbs.length - 1;
           return (
-            <span key={i} className={`flex items-center gap-1.5 min-w-0 ${i === 0 && crumbs.length > 1 ? "hidden sm:flex" : ""}`}>
+            <span key={i} className={`flex items-center gap-1.5 min-w-0 ${!last ? "hidden sm:flex" : ""}`}>
               {c.href && !last ? <Link href={c.href} className="truncate">{c.label}</Link>
                 : <span className="truncate" aria-current={last ? "page" : undefined}>{c.label}</span>}
               {!last && <span aria-hidden="true" style={{ color: "var(--line-strong)" }}>/</span>}

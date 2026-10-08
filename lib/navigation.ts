@@ -71,7 +71,6 @@ export const OTHER_PAGES: { href: string; label: string }[] = [
   { href: "/ai-actions",     label: "Action center" },
   { href: "/brain",          label: "Starlane brain" },
   { href: "/analytics",      label: "Analytics" },
-  { href: "/control/approvals", label: "Approvals" },
   { href: "/billing",        label: "Billing" },
 ];
 
