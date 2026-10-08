@@ -173,7 +173,7 @@
 .kv dt { color: var(--ink-2); }
 .kv dd { margin: 0; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-.split { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.split { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 40px; }
 @media (max-width: 1099px) { .split { grid-template-columns: 1fr; } }
 
 .chartWrap { padding: 4px 0 0; margin-left: -6px; }

@@ -74,7 +74,7 @@ export default function DecisionControlsPage() {
       <div key={`${row.scope}:${row.key}`} className="sw-row ops-row ops-static">
         <div className="min-w-0">
           <div style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: row.scope === "TENANT" ? 500 : 400 }}>{row.label}</div>
-          {meta && <div className="truncate" style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }} title={rec ? formatDateTime(rec.set_at) : undefined}>{meta}</div>}
+          {meta && <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2, lineHeight: 1.5 }} title={rec ? formatDateTime(rec.set_at) : undefined}>{meta}</div>}
         </div>
         <div className="hidden md:block">{on ? <StatusChip tone="critical">Stopped</StatusChip> : <StatusChip tone="positive">Running</StatusChip>}</div>
         <div className="flex items-center justify-end" style={{ gap: 8 }}>
