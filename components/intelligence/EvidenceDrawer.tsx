@@ -2,14 +2,24 @@
 
 import React from "react";
 import { Drawer } from "@/components/ui/Drawer";
-import { EvidenceKindBadge, ConfidenceBadge } from "./EvidenceKindBadge";
 import { formatDateTime } from "./format";
+import { formatRelative } from "@/lib/format";
+import css from "./evidence.module.css";
 import type { IntelligenceEvidenceItem } from "@/lib/api";
 
 // This drawer is a trust surface, not decoration — every conclusion shown
 // elsewhere on the impact screen must be traceable back to one of these
 // items. Grouping by kind keeps facts, assumptions, and forecasts visually
 // separated rather than interleaved.
+const KIND_LABEL: Record<IntelligenceEvidenceItem["kind"], string> = {
+  OBSERVED_FACT: "Observed",
+  CALCULATED_FACT: "Calculated",
+  ASSUMPTION: "Assumption",
+  FORECAST: "Forecast",
+  EXTERNAL_EVIDENCE: "External",
+  INTERNAL_EVIDENCE: "Internal",
+};
+
 const GROUP_ORDER: IntelligenceEvidenceItem["kind"][] = [
   "EXTERNAL_EVIDENCE",
   "OBSERVED_FACT",
@@ -43,45 +53,37 @@ export function EvidenceDrawer({
       titleId="evidence-drawer-title"
       title={title}
       onClose={onClose}
-      eyebrow="Evidence"
-      titleSize={19}
-      subtitle={record ? <span style={{ fontSize: 12.5 }}>{record}</span> : undefined}
+      eyebrow={<span className="section-label" style={{ margin: 0 }}>Evidence</span>}
+      titleSize={18}
+      subtitle={record}
       footer="Conclusion → analysis → evidence → source record. Every figure in Starlane can be traced back to here."
     >
-      <p className="mb-5" style={{ fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.6 }}>
-        Every number on this screen traces back to one of the items below. Facts are things Starlane read directly from your
-        records or the external event. Assumptions are planning parameters you or Starlane recorded. Forecasts are
-        projections, not observations.
+      <p className={css.intro}>
+        Facts were read directly from your records or the external event. Assumptions are planning parameters. Forecasts are projections, not observations.
       </p>
-      {/* Open list, thin dividers — not a card per fact. Opening this drawer
-          should feel like reading the system's reasoning, not scrolling a
-          stack of boxes. Only real fields render: claim, classification,
-          source, timestamp, confidence — nothing invented to fill a slot
-          this data doesn't have (no Entity/Location/Calculation, since the
-          API doesn't carry them). */}
-      <div className="space-y-6">
-        {grouped.map((group) => (
-          <div key={group.kind}>
-            <div className="mb-1">
-              <EvidenceKindBadge kind={group.kind} />
-            </div>
-            <ul className="mt-2" style={{ borderTop: "1px solid var(--line)" }}>
-              {group.items.map((item, i) => (
-                <li key={`${group.kind}-${i}`} className="py-3" style={{ borderBottom: "1px solid var(--line)" }}>
-                  <p style={{ fontSize: 13, color: "var(--ink)" }}>{item.label}</p>
-                  <p className="mt-1" style={{ fontSize: 12.5, color: "var(--body)", lineHeight: 1.55 }}>{item.detail}</p>
-                  <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
-                    <span className="truncate" style={{ fontSize: 11.5, color: "var(--ink-3)", fontFamily: "var(--font-sans)" }}>
-                      {item.source}{item.timestamp ? ` · ${formatDateTime(item.timestamp)}` : ""}
-                    </span>
-                    <ConfidenceBadge level={item.confidence} />
-                  </div>
-                </li>
-              ))}
-            </ul>
+      {/* Open list on hairlines, not a card per fact. Only real fields
+          render: claim, kind, source, timestamp, confidence. */}
+      {grouped.map((group) => (
+        <div key={group.kind} className={css.group}>
+          <div className={css.groupHead}>
+            <h3 className="section-label" style={{ margin: 0 }}>{KIND_LABEL[group.kind]}</h3>
+            <span className={css.count}>{group.items.length}</span>
           </div>
-        ))}
-      </div>
+          <ul className={css.items}>
+            {group.items.map((item, i) => (
+              <li key={`${group.kind}-${i}`} className={css.item}>
+                <div className={css.head}><span className={css.label}>{item.label}</span></div>
+                <p className={css.detail}>{item.detail}</p>
+                <div className={css.src}>
+                  {item.source && <span className={css.kind}>{item.source}</span>}
+                  {item.timestamp && <span title={formatDateTime(item.timestamp)}>{formatRelative(item.timestamp)}</span>}
+                  <span className={css.kind}>{item.confidence === "UNKNOWN" ? "Confidence not known" : `${item.confidence.charAt(0)}${item.confidence.slice(1).toLowerCase()} confidence`}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </Drawer>
   );
 }

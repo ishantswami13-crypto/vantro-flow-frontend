@@ -8,6 +8,7 @@ import React from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import type { EvidenceSet, EvidenceItem } from "../../packages/contracts/src/features";
 import { inrWhole, formatDateTime, formatCount } from "@/lib/format";
+import css from "@/components/intelligence/evidence.module.css";
 
 const KIND: Record<string, string> = { fact: "Fact", calculated: "Calculated", assumption: "Assumption", estimate: "Estimate", model: "Model" };
 const SOURCE: Record<string, string> = { invoices: "Invoices in Starlane", payments: "Payments", tally: "Tally", your_books: "Your books" };
@@ -23,19 +24,19 @@ function Row({ label, value, mono, note }: { label: string; value: React.ReactNo
   return (
     <div style={{ padding: "7px 0", borderBottom: "1px solid var(--line)" }}>
       <div className="flex items-baseline justify-between gap-4">
-        <span style={{ fontSize: 12.5, color: "var(--ink-2)" }}>{label}</span>
-        <span className="text-right" style={{ fontSize: 13, color: "var(--ink)", fontVariantNumeric: mono ? "tabular-nums" : undefined }}>{value}</span>
+        <span className={css.kvLabel}>{label}</span>
+        <span className={`${css.kvValue} ${mono ? "num" : ""}`}>{value}</span>
       </div>
-      {note && <div style={{ fontSize: 11.5, color: "var(--ink-3)", marginTop: 2 }}>{note}</div>}
+      {note && <div className={css.kvNote}>{note}</div>}
     </div>
   );
 }
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 22 }}>
-      <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 8 }}>{label}</div>
-      {children}
+    <div className={css.group}>
+      <div className={css.groupHead}><h3 className="section-label" style={{ margin: 0 }}>{label}</h3></div>
+      <div style={{ borderTop: "1px solid var(--line)" }}>{children}</div>
     </div>
   );
 }
@@ -54,14 +55,14 @@ export function EvidenceSetDrawer({ title, record, evidence, onClose, children }
       titleId="evidence-set-drawer-title"
       title={title}
       onClose={onClose}
-      eyebrow="Evidence"
-      titleSize={19}
-      subtitle={record ? <span style={{ fontSize: 12.5 }}>{record}</span> : undefined}
+      eyebrow={<span className="section-label" style={{ margin: 0 }}>Evidence</span>}
+      titleSize={18}
+      subtitle={record}
       footer="Every figure in Starlane traces back to its source record here."
     >
       <Section label="Source">
         <Row label="System" value={(evidence?.sources || []).map((s) => SOURCE[s] || s).join(", ") || "—"} />
-        {when && <Row label="Computed" value={when} />}
+        {when && <Row label="Computed" value={when} mono />}
         {evidence?.method && <Row label="Method" value={evidence.method} />}
       </Section>
       {facts.length > 0 && (
@@ -73,7 +74,7 @@ export function EvidenceSetDrawer({ title, record, evidence, onClose, children }
       )}
       {evidence?.summary && (
         <Section label="Why this supports the conclusion">
-          <p style={{ fontSize: 13, color: "var(--body)", lineHeight: 1.6 }}>{evidence.summary}</p>
+          <p className={css.prose} style={{ paddingTop: 8 }}>{evidence.summary}</p>
         </Section>
       )}
       {children}
