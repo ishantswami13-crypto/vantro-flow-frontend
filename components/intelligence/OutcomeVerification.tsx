@@ -19,16 +19,16 @@ export function OutcomeVerification({ signalId }: { signalId: string }) {
   });
 
   return (
-    <div style={{ padding: "16px 18px", marginBottom: 32, borderRadius: "var(--radius-lg)", background: "var(--surface)", border: "1px solid var(--line-card)" }}>
-      <div className="flex items-center justify-between" style={{ gap: 12, marginBottom: 8 }}>
-        <p style={{ margin: 0, fontSize: 14, color: "var(--ink)" }}>Did it work?</p>
+    <div style={{ marginBottom: 32 }}>
+      <div className="flex items-center justify-between" style={{ gap: 12, marginBottom: 6 }}>
+        <h2 className="section-label" style={{ margin: 0 }}>Outcome check</h2>
         <Button variant="ghost" size="sm" icon={<IconRefresh size={13} />} loading={mutation.isPending} onClick={() => mutation.mutate()}>
           Check now
         </Button>
       </div>
 
       {!result && !mutation.isPending && (
-        <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-2)" }}>
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "var(--ink-2)", maxWidth: "68ch" }}>
           Not checked yet. A check compares each prediction&rsquo;s horizon with real, current inventory and order data; nothing here is guessed.
         </p>
       )}

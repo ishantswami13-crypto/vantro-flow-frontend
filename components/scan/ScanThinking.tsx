@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { ThinkingDots } from "@/components/v32/ui";
-import { ScanMark } from "./ScanMark";
 
 // What Scan shows while an answer is on its way. POST /api/ai-chat does not
 // stream and reports no progress, so nothing here pretends to: one honest
@@ -21,13 +20,9 @@ export function ScanThinking() {
 
   return (
     <div role="status" aria-live="polite" className="scan-answer fade-once">
-      <div className="scan-answer-head">
-        <ScanMark />
-        <span style={{ color: "var(--ink)", fontWeight: 500 }}>Starlane</span>
-        <span className="tabular-nums" style={{ color: "var(--ink-3)" }}>{seconds > 0 ? `${seconds}s` : ""}</span>
-      </div>
-      <div className="flex items-center" style={{ gap: 10, fontSize: 14, color: "var(--body)", minHeight: 24 }}>
+      <div className="flex items-center" style={{ gap: 10, fontSize: 13.5, color: "var(--body)", minHeight: 24 }}>
         <ThinkingDots /> Reading your data and writing an answer
+        <span className="num" style={{ fontSize: 12, color: "var(--ink-3)" }}>{seconds > 0 ? `${seconds}s` : ""}</span>
       </div>
       <p style={{ margin: "6px 0 0", fontSize: 12.5, color: "var(--ink-3)", lineHeight: 1.55 }}>
         Starlane reads your open invoices, then runs any read-only lookups the question needs.

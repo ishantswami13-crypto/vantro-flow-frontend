@@ -11,10 +11,10 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { request } from "@/lib/api";
 import { inrWhole, formatCount } from "@/lib/format";
-import { PageHeader } from "@/components/v32/ui";
+import { PageHeader, SectionTitle, Figure } from "@/components/v32/ui";
 import Button from "@/components/ui/Button";
 import { StatusChip } from "@/components/ui/Badge";
-import { PageColumn, BackLink, SectionHead, Panel, Note, humaneError, NETWORK_ERROR } from "@/components/os/missions/ui";
+import { PageColumn, BackLink, Note, humaneError, NETWORK_ERROR } from "@/components/os/missions/ui";
 import type { Mission, MissionDraft, MissionInput, Simulation } from "../../../packages/contracts/src/features";
 
 type Preview = { errors: string[]; draft: MissionDraft; simulation: Simulation | null };
@@ -73,17 +73,17 @@ export default function NewMissionPage() {
 
   return (
     <DashboardLayout pageTitle="New mission">
-      <PageColumn gap={20}>
+      <PageColumn gap={16}>
         <BackLink href="/missions">Missions</BackLink>
         <PageHeader
           title="New collections mission"
           subtitle="One objective with a deadline, measured against your books. Nothing is sent until you approve it."
         />
         {input ? (
-          <div className="grid min-[900px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" style={{ gap: 28, alignItems: "start" }}>
+          <div className="grid min-[1000px]:grid-cols-[minmax(0,520px)_minmax(0,1fr)]" style={{ gap: "32px 64px", alignItems: "start", marginTop: 16 }}>
             <section className="min-w-0">
-              <SectionHead title="What to collect" />
-              <Panel style={{ padding: "18px 20px" }}>
+              <SectionTitle>What to collect</SectionTitle>
+              <div style={{ borderTop: "1px solid var(--line)", paddingTop: 16 }}>
                 <form className="grid" style={{ gap: 18 }} onSubmit={(e) => { e.preventDefault(); void create(true); }}>
                   <label style={label}>
                     Who
@@ -116,7 +116,7 @@ export default function NewMissionPage() {
                     </div>
                   </label>
                   <label style={label}>
-                    <span className="flex justify-between"><span>Deadline</span><span className="tabular-nums" style={{ color: "var(--ink)" }}>Within {input.horizonDays} days</span></span>
+                    <span className="flex justify-between"><span>Deadline</span><span style={{ color: "var(--ink)" }}><span className="num">{input.horizonDays}</span> days</span></span>
                     <input type="range" min={3} max={60} value={input.horizonDays} style={{ width: "100%", accentColor: "var(--ink)", minHeight: 28 }} aria-valuetext={`${input.horizonDays} days`}
                       onChange={(e) => setInput((i) => ({ ...i!, horizonDays: Number(e.target.value) }))} />
                     <span className="flex justify-between" style={{ fontSize: 11.5, color: "var(--ink-3)" }}><span>3 days</span><span>60 days</span></span>
@@ -125,7 +125,7 @@ export default function NewMissionPage() {
                     <input type="checkbox" style={{ marginTop: 3 }} checked={!!input.constraints?.allowEscalation} onChange={(e) => setInput((i) => ({ ...i!, constraints: { ...i!.constraints, allowEscalation: e.target.checked } }))} />
                     <span>Allow escalation beyond a firm reminder<span style={{ display: "block", fontSize: 12, color: "var(--ink-3)" }}>Calls and bad-debt review. Off means reminders only.</span></span>
                   </label>
-                  <p style={{ margin: 0, fontSize: 12, color: "var(--ink-3)", lineHeight: 1.55, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--ink-3)", lineHeight: 1.6, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
                     Disputed invoices are always left out. Customers contacted in the last 3 days are not proposed again. Starting proposes one reminder per customer for your approval.
                   </p>
                   {preview?.errors.length ? <Note tone="attention">{preview.errors.join(" ")}</Note> : null}
@@ -135,51 +135,56 @@ export default function NewMissionPage() {
                     <Button variant="ghost" disabled={blocked} loading={busy === "draft"} onClick={() => void create(false)}>Save as draft</Button>
                   </div>
                 </form>
-              </Panel>
+              </div>
             </section>
 
-            <section className="min-w-0 flex flex-col" style={{ gap: 28 }}>
+            <section className="min-w-0 flex flex-col" style={{ gap: 32 }}>
               <div>
-                <SectionHead title="Objective" />
-                {previewError && !preview ? (
-                  <Panel>
-                    <Note tone="critical">{previewError}</Note>
-                    <div style={{ marginTop: 10 }}><Button variant="secondary" size="sm" onClick={() => setRetry((n) => n + 1)}>Try again</Button></div>
-                  </Panel>
-                ) : !d ? (
-                  <Panel><div role="status" aria-busy="true" aria-label="Working out the objective" className="grid" style={{ gap: 8 }}><div className="skeleton" style={{ height: 12, width: "80%" }} /><div className="skeleton" style={{ height: 12, width: "55%" }} /></div></Panel>
-                ) : (
-                  <Panel>
-                    <div style={{ fontSize: 14, color: "var(--ink)", lineHeight: 1.55 }}>{d.objective}</div>
-                    {d.excluded.length ? (
-                      <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--line)" }}>
-                        <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 4 }}>Left out</div>
-                        {d.excluded.map((x) => (
-                          <div key={x.id} className="flex justify-between" style={{ gap: 12, fontSize: 13, padding: "3px 0" }}>
-                            <span style={{ color: "var(--body)" }}>{x.customer}</span>
-                            <span style={{ color: "var(--ink-3)" }}>{x.reason}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-                  </Panel>
-                )}
+                <SectionTitle>Objective</SectionTitle>
+                <div style={{ borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+                  {previewError && !preview ? (
+                    <>
+                      <Note tone="critical">{previewError}</Note>
+                      <div style={{ marginTop: 10 }}><Button variant="secondary" size="sm" onClick={() => setRetry((n) => n + 1)}>Try again</Button></div>
+                    </>
+                  ) : !d ? (
+                    <div role="status" aria-busy="true" aria-label="Working out the objective" className="grid" style={{ gap: 8 }}><div className="skeleton" style={{ height: 11, width: "80%" }} /><div className="skeleton" style={{ height: 11, width: "55%" }} /></div>
+                  ) : (
+                    <>
+                      <p className="prose-measure" style={{ margin: 0, fontSize: 14, color: "var(--ink)" }}>{d.objective}</p>
+                      {d.excluded.length ? (
+                        <div style={{ marginTop: 16 }}>
+                          <div className="meta" style={{ marginBottom: 4 }}>Left out</div>
+                          {d.excluded.map((x) => (
+                            <div key={x.id} className="flex justify-between" style={{ gap: 12, fontSize: 13, padding: "7px 0", borderTop: "1px solid var(--line)" }}>
+                              <span style={{ color: "var(--body)" }}>{x.customer}</span>
+                              <span style={{ color: "var(--ink-3)", fontSize: 12.5 }}>{x.reason}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                    </>
+                  )}
+                </div>
               </div>
               {sim ? (
                 <div>
-                  <SectionHead title="Estimate" right={<StatusChip tone="unknown">Simulated, not a promise</StatusChip>} />
-                  <Panel style={{ padding: "18px 20px" }}>
-                    <div className="tabular-nums" style={{ fontFamily: "var(--font-display)", fontSize: 30, lineHeight: 1.1, color: "var(--ink)" }}>{inrWhole(sim.estimate.expected.value)}</div>
-                    <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 4 }}>expected within {sim.horizonDays} days</div>
-                    <div className="tabular-nums" style={{ fontSize: 13, color: "var(--body)", marginTop: 12 }}>Likely range {inrWhole(sim.estimate.range.low)} to {inrWhole(sim.estimate.range.high)}</div>
+                  <SectionTitle>Estimate</SectionTitle>
+                  <div style={{ borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+                    <div className="grid grid-cols-2" style={{ gap: 20, maxWidth: 480 }}>
+                      <Figure value={inrWhole(sim.estimate.expected.value)} label={`Expected within ${sim.horizonDays} days`} />
+                      <Figure value={<span style={{ fontSize: 15 }}>{inrWhole(sim.estimate.range.low)} – {inrWhole(sim.estimate.range.high)}</span>} label="Likely range" />
+                    </div>
                     {sim.target ? (
-                      <div className="flex items-start flex-wrap" style={{ gap: 8, marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+                      <div className="flex items-baseline flex-wrap" style={{ gap: "4px 10px", marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
                         <StatusChip tone={reachTone}>{sim.target.reach === "likely" ? "Target likely" : sim.target.reach === "possible" ? "Target possible" : "Target unlikely"}</StatusChip>
-                        <span style={{ fontSize: 13, color: "var(--body)", lineHeight: 1.5, flex: "1 1 200px" }}>{sim.target.text}</span>
+                        <span className="tabular-nums" style={{ fontSize: 13, color: "var(--body)", lineHeight: 1.5, flex: "1 1 220px" }}>{sim.target.text}</span>
                       </div>
                     ) : null}
-                    {(sim.caveat || sim.method) && <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--ink-3)", lineHeight: 1.55 }}>{[sim.method, sim.caveat].filter(Boolean).join(" ")}</p>}
-                  </Panel>
+                    <p className="prose-measure" style={{ margin: "12px 0 0", fontSize: 12, color: "var(--ink-3)", lineHeight: 1.6 }}>
+                      Simulated, not a promise.{(sim.caveat || sim.method) ? ` ${[sim.method, sim.caveat].filter(Boolean).join(" ")}` : ""}
+                    </p>
+                  </div>
                 </div>
               ) : null}
             </section>

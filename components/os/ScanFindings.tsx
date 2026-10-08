@@ -10,8 +10,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import { StatusChip } from "@/components/ui/Badge";
-import { SkeletonRows, EmptyLine } from "@/components/v32/ui";
-import { IconSparkle } from "@/components/v32/icons";
+import { SkeletonRows } from "@/components/v32/ui";
 import { osApi, ScanResult } from "@/lib/os";
 import { pct } from "@/lib/decisions";
 import { formatCount, formatRelative, inrWhole } from "@/lib/format";
@@ -20,6 +19,7 @@ import { humaneError } from "@/components/scan/humaneError";
 import { useLoad } from "./shared";
 
 const P: React.CSSProperties = { margin: 0, fontSize: 13.5, lineHeight: 1.6, color: "var(--body)" };
+const STEP_COLS = "40px minmax(0,1fr) 96px 140px 120px";
 const META: React.CSSProperties = { margin: 0, fontSize: 12, lineHeight: 1.55, color: "var(--ink-3)" };
 
 export function ScanFindings() {
@@ -40,23 +40,19 @@ export function ScanFindings() {
         subtitle={scan
           ? <>Last scanned {formatRelative(scan.asOf)}. Every number here is computed from your ledger; no language model decides one.</>
           : "Scan rebuilds how invoices turn into cash, finds where it slows down, and proposes only what it can measure."}
-        right={<Button variant={scan ? "secondary" : "primary"} size="sm" onClick={run} loading={busy}>{busy ? "Scanning" : scan ? "Scan again" : "Run scan"}</Button>}
+        right={<Button variant={scan ? "secondary" : "primary"} size="sm" onClick={run} loading={busy}>{busy ? "Scanning" : scan ? "Scan again" : "Scan my books"}</Button>}
       >
         <div style={{ paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
           {loading && <SkeletonRows rows={3} height={36} />}
           {err && <InlineError onRetry={run}>{err}</InlineError>}
           {!loading && error != null && !err && <InlineError onRetry={reload}>{humaneError(error)}</InlineError>}
           {!loading && error == null && !scan && !err && (
-            <EmptyLine
-              icon={<IconSparkle size={17} />}
-              title="No scan yet"
-              body={<>Import a receivables file or connect Tally, then run a scan. <Link href="/decisions/import" style={{ color: "var(--ink)", textDecoration: "underline" }}>Import a file</Link> · <Link href="/sources" style={{ color: "var(--ink)", textDecoration: "underline" }}>Connect Tally</Link></>}
-            />
+            <p className="wk-empty">No scan yet. Import a receivables file or connect Tally, then scan your books. <Link href="/decisions/import" className="underline">Import a file</Link> · <Link href="/sources" className="underline">Connect Tally</Link></p>
           )}
           {scan && (
             <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
               {scan.summary.map((l) => (
-                <li key={l} className="flex" style={{ gap: 12, ...P, color: "var(--ink)", fontSize: 14.5 }}>
+                <li key={l} className="flex" style={{ gap: 12, ...P, color: "var(--ink)", fontSize: 14 }}>
                   <span aria-hidden="true" style={{ width: 4, height: 4, borderRadius: 2, background: "var(--ink-3)", marginTop: 10, flexShrink: 0 }} />
                   <span>{l}</span>
                 </li>
@@ -100,22 +96,27 @@ function ProcessPanel({ scan }: { scan: ScanResult }) {
       </div>
 
       {(p.steps || []).length > 0 && (
-        <ol className="flex flex-col md:flex-row" style={{ listStyle: "none", margin: 0, padding: 0, gap: 8 }}>
+        <div role="table" aria-label="Steps from invoice to payment" className="wk-list wk-flat">
+          <div role="row" className="wk-head" style={{ gridTemplateColumns: STEP_COLS }}>
+            <span role="columnheader">Step</span>
+            <span role="columnheader">Stage</span>
+            <span role="columnheader" style={{ textAlign: "right" }}>Median</span>
+            <span role="columnheader" style={{ textAlign: "right" }}>Based on</span>
+            <span role="columnheader" />
+          </div>
           {(p.steps || []).map((s, i) => {
             const slow = p.bottleneck?.step === s.key;
             return (
-              <li key={s.key} className="flex-1 min-w-0" style={{ padding: "12px 14px", borderRadius: "var(--radius-md)", background: "var(--surface)", border: `1px solid ${slow ? "rgb(var(--tk-warning) / 0.4)" : "var(--line-card)"}` }}>
-                <div className="flex items-center justify-between" style={{ gap: 8 }}>
-                  <span style={{ fontSize: 12, color: "var(--ink-3)" }}>Step {i + 1}</span>
-                  {slow && <StatusChip tone="attention">Bottleneck</StatusChip>}
-                </div>
-                <div style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 6 }}>{s.label}</div>
-                <div className="tabular-nums" style={{ fontSize: 18, color: "var(--ink)", marginTop: 4 }}>{s.medianDays != null ? `${s.medianDays} days` : "Not known yet"}</div>
-                <div className="tabular-nums" style={{ ...META, marginTop: 2 }}>median of {formatCount(s.n)} invoices</div>
-              </li>
+              <div key={s.key} role="row" className={`wk-row ${slow ? "wk-attn" : ""}`} style={{ gridTemplateColumns: STEP_COLS, paddingTop: 10, paddingBottom: 10 }}>
+                <span role="cell" className="num" style={{ fontSize: 12, color: "var(--ink-3)" }}>{i + 1}</span>
+                <span role="cell" style={{ fontSize: 13, color: "var(--ink)" }}>{s.label}</span>
+                <span role="cell" className="md:text-right" style={{ display: "block", fontSize: 13, color: "var(--ink)" }}>{s.medianDays != null ? <><span className="num">{s.medianDays}</span> days</> : "Not known yet"}</span>
+                <span role="cell" className="md:text-right" style={{ display: "block", fontSize: 12, color: "var(--ink-3)" }}><span className="num">{formatCount(s.n)}</span> invoices</span>
+                <span role="cell" className="md:text-right">{slow ? <StatusChip tone="attention">Bottleneck</StatusChip> : null}</span>
+              </div>
             );
           })}
-        </ol>
+        </div>
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 16 }}>
@@ -146,12 +147,12 @@ function AutomationPanel({ scan }: { scan: ScanResult }) {
           <div key={a.key} style={{ padding: "20px 0", borderBottom: "1px solid var(--line)" }}>
             <div className="flex items-start justify-between flex-wrap" style={{ gap: 16 }}>
               <div className="min-w-0" style={{ flex: "1 1 360px" }}>
-                <div style={{ fontSize: 15, color: "var(--ink)" }}>{a.title}</div>
+                <div className="wk-title" style={{ fontSize: 14 }}>{a.title}</div>
                 <p style={{ ...P, marginTop: 4 }}>{a.summary}</p>
               </div>
               <div className="text-right shrink-0">
-                <div className="tabular-nums" style={{ fontFamily: "var(--font-display)", fontSize: 30, lineHeight: 1, color: "var(--ink)" }}>{Math.round(a.score * 100)}</div>
-                <div style={{ ...META, marginTop: 4 }}>fit score of 100</div>
+                <div className="num" style={{ fontSize: 20, lineHeight: 1.2, color: "var(--ink)" }}>{Math.round(a.score * 100)}<span style={{ fontSize: 12, color: "var(--ink-3)" }}> / 100</span></div>
+                <div style={{ ...META, marginTop: 4 }}>Fit score</div>
               </div>
             </div>
 
@@ -211,18 +212,18 @@ function OpportunityPanel({ scan }: { scan: ScanResult }) {
         {scan.opportunities.map((o) => (
           <li key={o.key} className="flex items-start justify-between" style={{ gap: 16, padding: "14px 0", borderBottom: "1px solid var(--line)" }}>
             <div className="min-w-0">
-              <div style={{ fontSize: 14, color: "var(--ink)" }}>{o.title}</div>
+              <div style={{ fontSize: 13.5, color: "var(--ink)" }}>{o.title}</div>
               <p style={{ ...META, fontSize: 12.5, marginTop: 3 }}>{o.detail}</p>
             </div>
             <div className="text-right shrink-0">
-              <div className="tabular-nums" style={{ fontSize: 15, color: "var(--ink)" }}>{inrWhole(o.value)}</div>
+              <div className="num" style={{ fontSize: 13.5, color: "var(--ink)" }}>{inrWhole(o.value)}</div>
               <div style={{ ...META, marginTop: 2 }}>{o.valueLabel}</div>
             </div>
           </li>
         ))}
       </ul>
       <div style={{ paddingTop: 16 }}>
-        <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 6 }}>What limits the business most</div>
+        <div className="section-label" style={{ marginBottom: 6 }}>What limits the business most</div>
         <p style={P}>
           {scan.constraint.constraint ? <><span style={{ color: "var(--ink)" }}>{scan.constraint.label}.</span> {scan.constraint.why}</> : scan.constraint.why}
         </p>

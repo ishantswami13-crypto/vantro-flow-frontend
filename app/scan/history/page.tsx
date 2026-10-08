@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyLine, PageHeader, SearchField, SkeletonRows } from "@/components/v32/ui";
-import { IconHistory, IconPlus, IconTrash } from "@/components/v32/icons";
+import { PageHeader, SearchField, SkeletonRows } from "@/components/v32/ui";
+import { IconPlus, IconTrash } from "@/components/v32/icons";
 import { deleteThread, listThreads, type ScanThread } from "@/lib/scanStore";
 import { formatClock, formatDateTime, formatRelative } from "@/lib/format";
 
@@ -43,7 +43,7 @@ export default function ScanHistoryPage() {
 
   return (
     <DashboardLayout pageTitle="History">
-      <div style={{ width: "100%", maxWidth: "var(--content-max)" }}>
+      <div className="page-stack w-full" style={{ maxWidth: "var(--content-max)" }}>
         <PageHeader
           title="History"
           subtitle="Your Scan conversations, kept in this browser on this device."
@@ -56,47 +56,42 @@ export default function ScanHistoryPage() {
           )}
         </PageHeader>
 
-        {threads === null && <div style={{ marginTop: 24 }}><SkeletonRows rows={4} height={56} /></div>}
+        {threads === null && <SkeletonRows rows={4} height={52} />}
 
         {q && threads && threads.length > 0 && shown.length === 0 && (
-          <div style={{ marginTop: 16 }}>
-            <EmptyLine icon={<IconHistory size={17} />} title="No conversation matches" body="Search looks through every question and answer kept on this device." />
-          </div>
+          <p className="wk-empty">No conversation matches. Search looks through every question and answer kept on this device.</p>
         )}
 
         {threads && threads.length === 0 && (
-          <div style={{ marginTop: 16 }}>
-            <EmptyLine
-              icon={<IconHistory size={17} />}
-              title="No conversations yet"
-              body="Questions you ask in Scan appear here, so you can pick them up again. They stay in this browser and don't follow you to other devices."
-              action={<Link href="/scan" className="ui-btn ui-btn-secondary ui-btn-sm">Ask a question</Link>}
-            />
-          </div>
+          <p className="wk-empty">
+            No conversations yet. Questions you ask in Scan appear here and stay in this browser. <Link className="underline" href="/scan">Ask a question</Link>
+          </p>
         )}
 
-        {groups.map(g => (
-          <section key={g.label} style={{ marginTop: 28 }} aria-label={g.label}>
-            <div className="flex items-baseline justify-between" style={{ fontSize: 12, color: "var(--ink-3)", paddingBottom: 8, borderBottom: "1px solid var(--line)" }}>
+        {groups.length > 0 && (
+          <div className="flex flex-col" style={{ gap: 28 }}>
+            {groups.map(g => (
+          <section key={g.label} aria-label={g.label}>
+            <div className="section-label flex items-baseline justify-between" style={{ margin: "0 -12px", padding: "0 12px 8px", borderBottom: "1px solid var(--line)" }}>
               <span>{g.label}</span>
-              <span className="tabular-nums">{g.items.length}</span>
+              <span className="num" style={{ letterSpacing: 0 }}>{g.items.length}</span>
             </div>
             <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-              {g.items.map((t, i) => {
+              {g.items.map((t) => {
                 const last = t.turns[t.turns.length - 1];
                 return (
-                  <li key={t.id} className="scan-hist-row rise-in" style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}>
-                    <Link href={`/scan/${t.id}`} className="flex items-center min-w-0" style={{ gap: 16, flex: 1, textDecoration: "none", padding: "6px 0" }}>
+                  <li key={t.id} className="scan-hist-row">
+                    <Link href={`/scan/${t.id}`} className="flex items-center min-w-0" style={{ gap: 16, flex: 1, textDecoration: "none", padding: "2px 0" }}>
                       <span className="flex flex-col min-w-0" style={{ flex: 1 }}>
-                        <span className="truncate" style={{ fontSize: 14, color: "var(--ink)" }}>{t.title}</span>
+                        <span className="truncate" style={{ fontSize: 13.5, color: "var(--ink)" }}>{t.title}</span>
                         {t.turns.length > 1 && last && (
-                          <span className="truncate" style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 3 }}>Last asked: {last.question}</span>
+                          <span className="truncate" style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>Last asked: {last.question}</span>
                         )}
                       </span>
-                      <span className="hidden sm:inline tabular-nums shrink-0" style={{ fontSize: 12.5, color: "var(--ink-3)", width: 92, textAlign: "right" }}>
-                        {t.turns.length} {t.turns.length === 1 ? "question" : "questions"}
+                      <span className="hidden sm:inline shrink-0" style={{ fontSize: 12, color: "var(--ink-3)", width: 92, textAlign: "right" }}>
+                        <span className="num">{t.turns.length}</span> {t.turns.length === 1 ? "question" : "questions"}
                       </span>
-                      <span className="tabular-nums shrink-0" style={{ fontSize: 12.5, color: "var(--ink-2)", width: 84, textAlign: "right" }} title={formatDateTime(t.updatedAt)}>
+                      <span className="shrink-0" style={{ fontSize: 12, color: "var(--ink-2)", width: 84, textAlign: "right" }} title={formatDateTime(t.updatedAt)}>
                         {g.label === "Today" ? formatClock(t.updatedAt) : formatRelative(t.updatedAt)}
                       </span>
                     </Link>
@@ -108,7 +103,9 @@ export default function ScanHistoryPage() {
               })}
             </ul>
           </section>
-        ))}
+            ))}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

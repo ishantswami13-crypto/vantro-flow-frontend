@@ -12,12 +12,11 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { osApi } from "@/lib/os";
 import { useLoad } from "@/components/os/shared";
-import { PageColumn, humaneError, NETWORK_ERROR } from "@/components/os/missions/ui";
-import { PageHeader, Subnav, Lettermark, EmptyLine } from "@/components/v32/ui";
+import { humaneError, NETWORK_ERROR } from "@/components/os/missions/ui";
+import { PageHeader, Subnav, Chevron } from "@/components/v32/ui";
 import { StatusChip } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { IconAgents, IconArrowRight } from "@/components/v32/icons";
-import { formatRelative, formatCount } from "@/lib/format";
+import { formatRelative, formatDateTime, formatCount } from "@/lib/format";
 import { agentStatus, PERMISSION_LABEL } from "@/components/agents/shared";
 
 export default function AgentsPage() {
@@ -27,48 +26,57 @@ export default function AgentsPage() {
 
   return (
     <DashboardLayout pageTitle="Agents">
-      <PageColumn gap={20}>
-        <PageHeader title="Agents" subtitle="The workers that run on your data, what each may do, and when it last ran." />
-        <Subnav
-          label="Agent sections"
-          active={tab}
-          onChange={(k) => setTab(k as "running" | "planned")}
-          items={[
-            { key: "running", label: "Ready", count: data ? agents.length : null },
-            { key: "planned", label: "Coming", count: data ? data.notBuilt.length : null },
-          ]}
-        />
+      <div className="page-stack w-full" style={{ maxWidth: "var(--content-max)" }}>
+        <PageHeader title="Agents" subtitle="The workers that run on your data, what each may do, and when it last ran.">
+          <div style={{ marginTop: 20 }}>
+            <Subnav
+              label="Agent sections"
+              active={tab}
+              onChange={(k) => setTab(k as "running" | "planned")}
+              items={[
+                { key: "running", label: "Ready", count: data ? agents.length : null },
+                { key: "planned", label: "Coming", count: data ? data.notBuilt.length : null },
+              ]}
+            />
+          </div>
+        </PageHeader>
 
-        <div className="fade-once flex flex-col" style={{ gap: 20 }}>
-          {loading && <GallerySkeleton />}
-          {!loading && !!error && <ErrorState className="ui-panel" title="Agents didn't load" message={humaneError(error, NETWORK_ERROR)} onRetry={reload} />}
+        <div className="flex flex-col" style={{ gap: 20 }}>
+          {loading && <TableSkeleton />}
+          {!loading && !!error && <ErrorState title="Agents didn't load" message={humaneError(error, NETWORK_ERROR)} onRetry={reload} />}
 
           {data && tab === "running" && (
-            agents.length === 0 ? <EmptyLine icon={<IconAgents size={17} />} title="No agent is registered for this workspace" body="Agents appear here once the backend registers them. Nothing runs in the meantime." /> : (
-              <div className="lib-grid agent-grid">
-                {agents.map((a, i) => {
+            agents.length === 0 ? <p className="wk-empty">No agent is registered for this workspace. Agents appear once the backend registers them; nothing runs in the meantime.</p> : (
+              <div className="wk-list" role="table" aria-label="Agents">
+                <div className="wk-head" role="row" style={{ gridTemplateColumns: COLS }}>
+                  <span role="columnheader">Agent</span>
+                  <span role="columnheader">May</span>
+                  <span role="columnheader">Measured</span>
+                  <span role="columnheader" style={{ textAlign: "right" }}>Runs</span>
+                  <span role="columnheader">Last run</span>
+                  <span role="columnheader">Status</span>
+                </div>
+                {agents.map((a) => {
                   const st = agentStatus(a);
                   return (
-                    <Link key={a.key} href={`/agents/${encodeURIComponent(a.key)}`} className="lib-card agent-card rise-in" style={{ animationDelay: `${i * 40}ms` }} aria-label={`${a.name}, ${st.label}`}>
-                      <div className="flex items-center justify-between" style={{ gap: 10 }}>
-                        <div className="flex items-center min-w-0" style={{ gap: 12 }}>
-                          <Lettermark letter={a.name} size={36} />
-                          <div className="agent-name truncate">{a.name}</div>
-                        </div>
-                        <StatusChip tone={st.tone}>{st.label}</StatusChip>
+                    <Link key={a.key} href={`/agents/${encodeURIComponent(a.key)}`} role="row" className="wk-row" style={{ gridTemplateColumns: COLS }} aria-label={`${a.name}, ${st.label}`}>
+                      <div role="cell" className="min-w-0">
+                        <div className="wk-title">{a.name}</div>
+                        <div className="wk-sub line-clamp-2" title={a.purpose}>{a.purpose}</div>
                       </div>
-                      <div className="agent-purpose">{a.purpose}</div>
-                      {a.permissions.length > 0 && (
-                        <div className="flex flex-wrap" style={{ gap: 6 }}>
-                          {a.permissions.map((p) => <span key={p} className="agent-perm">{PERMISSION_LABEL[p] || p}</span>)}
-                        </div>
-                      )}
-                      <div className="agent-foot">
-                        <span className="tabular-nums">
-                          {a.lastRunAt ? `Last run ${formatRelative(a.lastRunAt)}` : "Has not run yet"}
-                          {a.runs > 0 ? ` · ${formatCount(a.runs)} run${a.runs === 1 ? "" : "s"}` : ""}
-                        </span>
-                        <IconArrowRight size={13} className="row-chevron" />
+                      <div role="cell" className="wk-meta mt-1.5 md:mt-0" style={{ color: "var(--ink-2)", fontSize: 12.5 }}>
+                        {a.permissions.length ? a.permissions.map((p) => PERMISSION_LABEL[p] || p).join(", ") : "Nothing"}
+                      </div>
+                      <div role="cell" className="hidden md:block min-w-0" style={{ fontSize: 12.5, color: a.performance ? "var(--ink-2)" : "var(--ink-3)", lineHeight: 1.5 }}>
+                        <span className="line-clamp-2" title={a.performance || undefined}>{a.performance || "Not measured yet"}</span>
+                      </div>
+                      <div role="cell" className="hidden md:block num" style={{ textAlign: "right", fontSize: 12.5, color: "var(--ink)" }}>{formatCount(a.runs)}</div>
+                      <div role="cell" className="hidden md:block" style={{ fontSize: 12.5, color: "var(--ink-2)" }} title={a.lastRunAt ? formatDateTime(a.lastRunAt) : undefined}>
+                        {a.lastRunAt ? formatRelative(a.lastRunAt) : "Not yet"}
+                      </div>
+                      <div role="cell" className="flex items-center justify-between mt-1.5 md:mt-0" style={{ gap: 8 }}>
+                        <StatusChip tone={st.tone}>{st.label}</StatusChip>
+                        <Chevron size={13} />
                       </div>
                     </Link>
                   );
@@ -78,20 +86,20 @@ export default function AgentsPage() {
           )}
 
           {data && tab === "planned" && (
-            data.notBuilt.length === 0 ? <EmptyLine icon={<IconAgents size={17} />} title="Nothing is waiting to be built" /> : (
-              <div className="flex flex-col" style={{ gap: 12 }}>
-                <p style={{ fontSize: 12.5, color: "var(--ink-3)", margin: 0 }}>Planned workers. None of them runs, and none is shown as working until it does.</p>
-                <div className="lib-grid agent-grid">
-                  {data.notBuilt.map((n, i) => (
-                    <div key={n.name} className="lib-card agent-card agent-card-muted rise-in" style={{ animationDelay: `${i * 40}ms` }}>
-                      <div className="flex items-center justify-between" style={{ gap: 10 }}>
-                        <div className="flex items-center min-w-0" style={{ gap: 12 }}>
-                          <Lettermark letter={n.name} size={36} />
-                          <div className="agent-name truncate" style={{ color: "var(--body)" }}>{n.name}</div>
-                        </div>
-                        <StatusChip tone="unknown">Coming</StatusChip>
-                      </div>
-                      <div className="agent-purpose agent-purpose-full">{n.reason}</div>
+            data.notBuilt.length === 0 ? <p className="wk-empty">Nothing is waiting to be built.</p> : (
+              <div>
+                <p className="meta" style={{ margin: "0 0 10px" }}>Planned workers. None of them runs, and none is shown as working until it does.</p>
+                <div className="wk-list wk-flat" role="table" aria-label="Planned agents">
+                  <div className="wk-head" role="row" style={{ gridTemplateColumns: PLANNED_COLS }}>
+                    <span role="columnheader">Agent</span>
+                    <span role="columnheader">Why it isn&apos;t running</span>
+                    <span role="columnheader">Status</span>
+                  </div>
+                  {data.notBuilt.map((n) => (
+                    <div key={n.name} role="row" className="wk-row" style={{ gridTemplateColumns: PLANNED_COLS, alignItems: "start" }}>
+                      <div role="cell" className="wk-title" style={{ fontWeight: 400, color: "var(--body)" }}>{n.name}</div>
+                      <div role="cell" className="wk-sub" style={{ lineHeight: 1.55 }}>{n.reason}</div>
+                      <div role="cell" className="mt-1.5 md:mt-0"><StatusChip tone="unknown">Coming</StatusChip></div>
                     </div>
                   ))}
                 </div>
@@ -100,28 +108,31 @@ export default function AgentsPage() {
           )}
 
           {data && (
-            <p style={{ fontSize: 12.5, color: "var(--ink-3)", margin: 0, maxWidth: 640, lineHeight: 1.6 }}>
+            <p className="meta" style={{ margin: 0, maxWidth: 640, lineHeight: 1.6 }}>
               Each agent is fixed code: none calls a language model or sends a message on its own. Pause or stop one from{" "}
               <Link className="underline" href="/control/decisions">Control, Decisions</Link>.
             </p>
           )}
         </div>
-      </PageColumn>
+      </div>
     </DashboardLayout>
   );
 }
 
-function GallerySkeleton() {
+// Agent, permissions, measured performance, runs, last run, status.
+const COLS = "minmax(0,1.5fr) minmax(0,0.8fr) minmax(0,1fr) 48px 88px 116px";
+const PLANNED_COLS = "minmax(0,0.6fr) minmax(0,1.4fr) 120px";
+
+function TableSkeleton() {
   return (
-    <div className="lib-grid agent-grid" role="status" aria-busy="true" aria-label="Loading agents">
+    <div className="wk-list" role="status" aria-busy="true" aria-label="Loading agents">
+      <div className="wk-head" style={{ gridTemplateColumns: COLS }}><span>Agent</span><span>May</span><span>Measured</span><span /><span>Last run</span><span>Status</span></div>
       {[0, 1, 2].map((i) => (
-        <div key={i} className="lib-card agent-card agent-card-muted">
-          <div className="flex items-center" style={{ gap: 12 }}>
-            <div className="skeleton" style={{ width: 36, height: 36, borderRadius: 9 }} />
-            <div className="skeleton" style={{ height: 12, width: 120 }} />
-          </div>
-          <div className="skeleton" style={{ height: 10, width: "90%" }} />
-          <div className="skeleton" style={{ height: 10, width: "70%" }} />
+        <div key={i} className="wk-row" style={{ gridTemplateColumns: COLS }}>
+          <div style={{ display: "grid", gap: 7 }}><div className="skeleton" style={{ height: 11, width: 120 }} /><div className="skeleton" style={{ height: 9, width: "80%" }} /></div>
+          <div className="skeleton hidden md:block" style={{ height: 9, width: "70%" }} />
+          <div className="skeleton hidden md:block" style={{ height: 9, width: "80%" }} />
+          <div /><div className="skeleton hidden md:block" style={{ height: 9, width: 48 }} /><div className="skeleton hidden md:block" style={{ height: 9, width: 56 }} />
         </div>
       ))}
     </div>

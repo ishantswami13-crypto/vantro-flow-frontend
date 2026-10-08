@@ -7,8 +7,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ErrorState } from "@/components/ui/ErrorState";
 import Button from "@/components/ui/Button";
 import { StatusChip, type StatusTone } from "@/components/ui/Badge";
-import { EmptyLine, PageHeader, SkeletonRows } from "@/components/v32/ui";
-import { IconArrowRight, IconRefresh, IconWatch } from "@/components/v32/icons";
+import { Chevron, PageHeader, SectionTitle, SkeletonRows } from "@/components/v32/ui";
+import { IconRefresh } from "@/components/v32/icons";
 import { formatDateTime, confidenceFromScore, humanizeCode } from "@/components/intelligence/format";
 import { OFFLINE_LINE } from "@/components/scan/humaneError";
 import { api, type IntelligenceSignal } from "@/lib/api";
@@ -36,31 +36,35 @@ function cleanTitle(t: string | null | undefined): string {
   return (t || "External event").replace(/^[\p{Extended_Pictographic}️\s]+/u, "").trim() || "External event";
 }
 
+// Signal, event, exposed through, confidence, status, updated. One template
+// for the header and every row so the columns share alignment lines.
+const COLS = "minmax(0,1fr) 148px 132px 104px 112px 132px";
+
 function SignalRow({ signal }: { signal: IntelligenceSignal }) {
   const isExternal = Boolean(signal.event_type);
   const confidence = confidenceFromScore(signal.plausibility_confidence);
   const status = STATUS[signal.status] || { label: humanizeCode(signal.status), tone: "neutral" as StatusTone };
-  const meta = [
-    isExternal ? humanizeCode(signal.event_type) || "External event" : "Internal signal",
-    signal.related_entity_type ? `${humanizeCode(signal.related_entity_type)} risk` : null,
-    `Updated ${formatDateTime(signal.last_updated_at || signal.first_detected_at)}`,
-    confidence !== "UNKNOWN" ? `${humanizeCode(confidence)} confidence` : "Confidence not known yet",
-  ].filter(Boolean);
+  const updated = signal.last_updated_at || signal.first_detected_at;
 
   return (
-    <li>
-      <Link href={`/intelligence/${signal.id}`} className="row-hover flex items-start" style={{ gap: 16, padding: "16px 12px", margin: "0 -12px", borderRadius: "var(--radius-md)", textDecoration: "none" }}>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
-            <span style={{ fontSize: 15, color: "var(--ink)" }}>{cleanTitle(signal.event_title)}</span>
-            <StatusChip tone={status.tone}>{status.label}</StatusChip>
-          </div>
-          <p style={{ margin: "4px 0 0", fontSize: 13, lineHeight: 1.55, color: "var(--ink-2)", maxWidth: 680 }}>{humanReason(signal)}</p>
-          <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--ink-3)" }}>{meta.join(" · ")}</p>
+    <Link href={`/intelligence/${signal.id}`} role="row" className="wk-row" style={{ gridTemplateColumns: COLS }}>
+      <div className="min-w-0" role="cell">
+        <div className="wk-title md:truncate">{cleanTitle(signal.event_title)}</div>
+        <div className="wk-sub line-clamp-2 md:truncate">{signal.why_exists || humanReason(signal)}</div>
+      </div>
+      <div className="wk-cells md:contents">
+        <div role="cell" className="wk-sub md:truncate">{isExternal ? humanizeCode(signal.event_type) || "External event" : "Internal signal"}</div>
+        <div role="cell" className="wk-sub md:truncate">{signal.related_entity_type ? humanizeCode(signal.related_entity_type) : "—"}</div>
+        <div role="cell" className="wk-sub">{confidence !== "UNKNOWN" ? humanizeCode(confidence) : <span style={{ color: "var(--ink-3)" }}>Not known yet</span>}</div>
+        <div role="cell"><StatusChip tone={status.tone}>{status.label}</StatusChip></div>
+        <div role="cell" className="ml-auto md:ml-0 md:text-right" style={{ fontSize: 12, color: "var(--ink-3)" }}>
+          <span className="inline-flex items-center" style={{ gap: 6 }}>
+            <span className="tabular-nums">{formatDateTime(updated)}</span>
+            <Chevron size={13} />
+          </span>
         </div>
-        <span aria-hidden="true" className="row-chevron shrink-0" style={{ color: "var(--ink-3)", marginTop: 4, display: "inline-flex", transition: "transform 160ms var(--ease)" }}><IconArrowRight size={14} /></span>
-      </Link>
-    </li>
+      </div>
+    </Link>
   );
 }
 
@@ -99,46 +103,48 @@ export default function IntelligencePage() {
 
   return (
     <DashboardLayout pageTitle="Intelligence">
-      <div style={{ width: "100%", maxWidth: "var(--content-max)" }}>
+      <div className="page-stack" style={{ width: "100%", maxWidth: "var(--content-max)" }}>
         <PageHeader
           title="Intelligence"
           subtitle="Outside events that reach your suppliers or customers, and what they put at risk."
         />
 
-        <div style={{ marginTop: 24 }}>
-          {isLoading && <SkeletonRows rows={3} height={84} />}
+        <section>
+          <SectionTitle>Open signals{!isLoading && !isError && signals.length > 0 && <span className="wk-count">{signals.length}</span>}</SectionTitle>
+
+          {isLoading && <SkeletonRows rows={3} height={56} />}
 
           {isError && (
             <ErrorState title="Couldn't load intelligence" message={OFFLINE_LINE} onRetry={() => refetch()} />
           )}
 
           {!isLoading && !isError && signals.length === 0 && (
-            <EmptyLine
-              icon={<IconWatch size={17} />}
-              title="No material change detected"
-              body="Starlane hasn't found an outside event that reaches your business in the evidence it has. New signals appear here as soon as one matches."
-            />
+            <p className="wk-empty">
+              No outside event reaches your business in the evidence Starlane has. A signal shows here as soon as one matches a supplier or customer you depend on.
+            </p>
           )}
 
           {!isLoading && !isError && signals.length > 0 && (
-            <>
-              <div className="flex items-baseline justify-between" style={{ fontSize: 12, color: "var(--ink-3)", paddingBottom: 8, borderBottom: "1px solid var(--line)" }}>
-                <span>Open signals</span>
-                <span className="tabular-nums">{signals.length}</span>
+            <div className="wk-list" role="table" aria-label="Open signals">
+              <div className="wk-head" role="row" style={{ gridTemplateColumns: COLS }}>
+                <span role="columnheader">Signal</span>
+                <span role="columnheader">Event</span>
+                <span role="columnheader">Reaches</span>
+                <span role="columnheader">Confidence</span>
+                <span role="columnheader">Status</span>
+                <span role="columnheader" style={{ textAlign: "right" }}>Updated</span>
               </div>
-              <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-                {signals.map((s) => <SignalRow key={s.id} signal={s} />)}
-              </ul>
-            </>
+              {signals.map((s) => <SignalRow key={s.id} signal={s} />)}
+            </div>
           )}
-        </div>
+        </section>
 
         {/* Internal demo control, not a customer feature. The backend only
             honours it for admins on non-production deployments with
             DEMO_RESET_ENABLED=true, so it renders only where the deployment
             opts in; otherwise it would be a dead control. */}
         {DEMO_CONTROLS_ENABLED && (
-          <div className="flex items-center justify-between flex-wrap" style={{ gap: 12, marginTop: 32, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+          <div className="flex items-center justify-between flex-wrap" style={{ gap: 12, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
             <span style={{ fontSize: 12, color: "var(--ink-3)" }}>Internal: 2xA meeting demo control{resetMessage ? ` · ${resetMessage}` : ""}</span>
             <Button variant="ghost" size="sm" icon={<IconRefresh size={13} />} loading={resetMutation.isPending} onClick={() => resetMutation.mutate()}>
               Reset 2xA demo

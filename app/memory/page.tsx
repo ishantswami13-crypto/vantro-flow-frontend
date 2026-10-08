@@ -5,11 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type AuditEvent } from "@/lib/api";
 import { MemoryKnowledge, MemoryOutcomes } from "@/components/os/MemoryPanels";
-import { PageHeader, Subnav, EmptyLine, SkeletonRows } from "@/components/v32/ui";
-import { IconHistory } from "@/components/v32/icons";
+import { PageHeader, Subnav, SkeletonRows } from "@/components/v32/ui";
 import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
 import { OFFLINE_LINE } from "@/components/scan/humaneError";
 
 // Memory: what Starlane knows, whether its follow-ups worked, and how each
@@ -67,13 +66,6 @@ function entityLabel(type: string | null | undefined, id: string | null | undefi
   return id ? `${t} ${String(id).slice(0, 8)}` : t;
 }
 
-function reasonFor(e: AuditEvent): string {
-  const parts: string[] = [];
-  if (e.entity_type || e.entity_id) parts.push(entityLabel(e.entity_type, e.entity_id));
-  else parts.push("No linked record");
-  if (e.actor) parts.push(`by ${e.actor}`);
-  return parts.join(" · ");
-}
 
 const EMPTY_COPY: Record<"timeline" | "decisions" | "replay" | "turning-points", { title: string; body: string }> = {
   timeline: {
@@ -94,35 +86,61 @@ const EMPTY_COPY: Record<"timeline" | "decisions" | "replay" | "turning-points",
   },
 };
 
-// One recorded change: date, a node on a hairline, what happened, which
-// record and an outcome chip when the action string implies one.
-function TimelineNode({ e, last }: { e: AuditEvent; last: boolean }) {
-  const cls = classify(e.action);
-  return (
-    <li className="card-in memory-node" style={{ display: "grid", gridTemplateColumns: "64px 14px minmax(0, 1fr)", columnGap: 14 }}>
-      <time dateTime={e.created_at} title={formatDateTime(e.created_at)} className="tabular-nums" style={{ fontSize: 12.5, color: "var(--ink-3)", paddingTop: 2 }}>
-        {formatDate(e.created_at)}
-      </time>
-      <span aria-hidden="true" style={{ position: "relative", display: "flex", justifyContent: "center" }}>
-        <span style={{ width: 7, height: 7, borderRadius: "50%", marginTop: 6, background: "var(--surface)", boxShadow: "inset 0 0 0 1.5px var(--ink-3)", zIndex: 1 }} />
-        {!last && <span style={{ position: "absolute", top: 16, bottom: -6, width: 1, background: "var(--line-strong)" }} />}
-      </span>
-      <div className="min-w-0" style={{ paddingBottom: 24 }}>
-        <div className="flex items-start justify-between flex-wrap" style={{ gap: 8 }}>
-          <span style={{ fontSize: 14, color: "var(--ink)" }}>{e.title || humanize(e.action)}</span>
-          {cls && <StatusChip tone={cls.tone}>{cls.outcome}</StatusChip>}
-        </div>
-        <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 3 }}>{reasonFor(e)}</div>
-      </div>
-    </li>
-  );
+const RESULT_TONE: Record<string, StatusTone> = {
+  approved: "positive", executed: "positive", verified: "positive", paid: "positive",
+  rejected: "critical", declined: "critical", failed: "critical", blocked: "critical",
+  proposed: "neutral", cancelled: "neutral",
+};
+
+// What a recorded change led to: the backend's own result when it sends
+// one, else the deterministic reading of the action name, else nothing.
+function outcomeOf(e: AuditEvent): { outcome: string; tone: StatusTone } | null {
+  if (e.result) {
+    const r = String(e.result).toLowerCase();
+    return { outcome: humanize(r), tone: RESULT_TONE[r] || "neutral" };
+  }
+  return classify(e.action);
 }
 
-function Timeline({ events }: { events: AuditEvent[] }) {
+function kindOf(e: AuditEvent): string {
+  if (e.source === "decision") return "Decision";
+  return e.entity_type ? humanize(e.entity_type) : "Record";
+}
+
+const TL_COLS = "112px 84px minmax(0,1fr) 104px 150px 128px";
+
+/** The organisation's history, one dense row per recorded change: when, what
+ *  kind of record, what happened, which record, who acted and what it led
+ *  to. Every value is a field of the audit row or a fixed label derived from
+ *  one. */
+function Timeline({ events, oldestFirst = false }: { events: AuditEvent[]; oldestFirst?: boolean }) {
   return (
-    <ol style={{ listStyle: "none", margin: 0, padding: "8px 0 0" }}>
-      {events.map((e, i) => <TimelineNode key={e.id} e={e} last={i === events.length - 1} />)}
-    </ol>
+    <div role="table" aria-label={oldestFirst ? "Changes, oldest first" : "Changes, newest first"} className="wk-list wk-flat">
+      <div className="wk-head" role="row" style={{ gridTemplateColumns: TL_COLS }}>
+        <span role="columnheader">When</span>
+        <span role="columnheader">Kind</span>
+        <span role="columnheader">What happened</span>
+        <span role="columnheader">Record</span>
+        <span role="columnheader">By</span>
+        <span role="columnheader">Outcome</span>
+      </div>
+      {events.map((e) => {
+        const out = outcomeOf(e);
+        return (
+          <div key={e.id} role="row" className="wk-row mem-row" style={{ gridTemplateColumns: TL_COLS }}>
+            <time role="cell" dateTime={e.created_at} title={formatDateTime(e.created_at)} className="num" style={{ fontSize: 12, color: "var(--ink-3)" }}>{formatDateTime(e.created_at)}</time>
+            <span role="cell" className="mem-kind">{kindOf(e)}</span>
+            <span role="cell" className="min-w-0" style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.45 }}>
+              {e.title || humanize(e.action)}
+              {e.title && <span className="mem-action">{humanize(e.action)}</span>}
+            </span>
+            <span role="cell" className="num mem-record truncate" title={e.entity_id ? `${kindOf(e)} ${e.entity_id}` : undefined}>{e.entity_id ? String(e.entity_id).slice(0, 8) : "—"}</span>
+            <span role="cell" className="mem-by truncate" title={e.model ? `${e.actor || "Unknown"} · ${e.model}` : undefined}>{e.actor || "—"}</span>
+            <span role="cell" className="mem-out">{out ? <StatusChip tone={out.tone}>{out.outcome}</StatusChip> : <span style={{ color: "var(--ink-3)", fontSize: 12 }}>—</span>}</span>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -155,7 +173,7 @@ export default function MemoryPage() {
 
   const events = useMemo(() => data?.events ?? [], [data]);
   const decisions = useMemo(() => events.filter((e) => DECISION_HINTS.some((h) => e.action.toLowerCase().includes(h))), [events]);
-  const turningPoints = useMemo(() => events.filter((e) => classify(e.action)), [events]);
+  const turningPoints = useMemo(() => events.filter((e) => outcomeOf(e)), [events]);
 
   // Records present in the real data, most changed first.
   const entities = useMemo(() => {
@@ -180,11 +198,11 @@ export default function MemoryPage() {
   }, [events, activeReplayEntity]);
 
   const ready = auditTab && !isLoading && !isError;
-  const empty = (k: keyof typeof EMPTY_COPY) => <EmptyLine icon={<IconHistory size={17} />} {...EMPTY_COPY[k]} />;
+  const empty = (k: keyof typeof EMPTY_COPY) => <p className="wk-empty">{EMPTY_COPY[k].title}. {EMPTY_COPY[k].body}</p>;
 
   return (
     <DashboardLayout pageTitle="Memory">
-      <div style={{ width: "100%", maxWidth: "var(--content-max)", display: "flex", flexDirection: "column", gap: 24 }}>
+      <div className="page-stack w-full" style={{ maxWidth: "var(--content-max)" }}>
         <PageHeader title="Memory" subtitle="What Starlane knows, whether its follow-ups worked, and how each record got here.">
           <div style={{ marginTop: 20 }}>
             <Subnav label="Memory sections" items={TABS} active={tab} onChange={choose} />
@@ -206,17 +224,17 @@ export default function MemoryPage() {
 
         {ready && tab === "replay" && (
           entities.length === 0 || replaySequence.length === 0 ? empty("replay") : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div>
-                <label htmlFor="replay-record" style={{ display: "block", fontSize: 12, color: "var(--ink-3)", marginBottom: 6 }}>
-                  Record to replay <span className="tabular-nums">({entities.length})</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div className="flex items-center flex-wrap" style={{ gap: 10 }}>
+                <label htmlFor="replay-record" className="meta">
+                  Record to replay <span className="num">{entities.length}</span>
                 </label>
                 <select
                   id="replay-record"
                   value={activeReplayEntity ?? ""}
                   onChange={(e) => setReplayEntity(e.target.value)}
                   className="ui-input"
-                  style={{ width: "100%", maxWidth: 360 }}
+                  style={{ width: "100%", maxWidth: 320 }}
                 >
                   {entities.map((ent) => (
                     <option key={`${ent.entity_type}:${ent.entity_id}`} value={ent.entity_id}>
@@ -225,7 +243,7 @@ export default function MemoryPage() {
                   ))}
                 </select>
               </div>
-              <Timeline events={replaySequence} />
+              <Timeline events={replaySequence} oldestFirst />
             </div>
           )
         )}
