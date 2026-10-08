@@ -7,7 +7,9 @@ import { EvidenceDrawer } from "@/components/intelligence/EvidenceDrawer";
 import { LensDrawer, type LensSection } from "@/components/ui/LensDrawer";
 import { formatDateTime } from "@/components/intelligence/format";
 import { api, type SignalImpact, type IntelligenceEvidenceItem, type ImpactComponent } from "@/lib/api";
-import { FiChevronLeft } from "react-icons/fi";
+import { IconChevronDown } from "@/components/v32/icons";
+import { PageBody, RetryLine } from "@/components/os/prepared/kit";
+import { inrWhole } from "@/lib/format";
 import { Button, Mono } from "@/components/v32/ui";
 
 // Discover detail — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§6/§16.
@@ -34,6 +36,7 @@ export default function DiscoverDetailPage() {
 
   const [impact, setImpact] = useState<SignalImpact | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [showEvidence, setShowEvidence] = useState(false);
   const [showSupplierLens, setShowSupplierLens] = useState(false);
 
@@ -41,33 +44,34 @@ export default function DiscoverDetailPage() {
     let cancelled = false;
     api.intelligence.impact(signalId)
       .then(res => { if (!cancelled) setImpact(res.impact); })
-      .catch(() => { if (!cancelled) setError("Couldn't load this finding — it may no longer exist."); });
+      .catch(() => { if (!cancelled) setError("Couldn't load this finding. It may no longer exist, or Starlane couldn't be reached."); });
     return () => { cancelled = true; };
-  }, [signalId]);
+  }, [signalId, reloadKey]);
 
   const loading = impact === null && !error;
 
   return (
     <DashboardLayout pageTitle="Discover">
+      <PageBody gap={0}>
       <button
         onClick={() => router.push("/discover")}
         className="hover-dim flex items-center gap-1 mb-4"
         style={{ fontSize: 12.5, color: "var(--ink-2)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
       >
-        <FiChevronLeft size={13} /> Discover
+        <span aria-hidden="true" style={{ display: "inline-flex", transform: "rotate(90deg)" }}><IconChevronDown size={13} /></span> Discover
       </button>
 
-      {loading && <p style={{ fontSize: 13, color: "var(--ink-2)" }}>Loading this finding…</p>}
-      {error && <p className="v32-body" style={{ color: "var(--critical)" }}>{error}</p>}
+      {loading && <div role="status" aria-busy="true" aria-label="Loading"><div className="skeleton h-3 w-32 mb-4" /><div className="skeleton h-5 w-[420px] max-w-full mb-3" /><div className="skeleton h-3 w-full max-w-[560px]" /></div>}
+      {error && <RetryLine error={error} onRetry={() => { setError(null); setReloadKey((k) => k + 1); }} />}
 
       {impact && (
         <div className="flex flex-col lg:flex-row fade-once" style={{ gap: 32 }}>
           {/* Left column — the finding itself (flex:1.4) */}
           <div style={{ flex: 1.4, minWidth: 0 }}>
-            <div style={{ fontSize: 11, letterSpacing: "0.6px", color: RISKY.has(impact.signal.impact_status) ? "var(--critical)" : "var(--ink-2)", marginBottom: 6 }}>
-              {(impact.signal.related_entity_type || impact.signal.event_type || "Signal").replace(/_/g, " ")}
+            <div style={{ fontSize: 12, color: RISKY.has(impact.signal.impact_status) ? "var(--critical)" : "var(--ink-3)", marginBottom: 6 }}>
+              {(() => { const t = (impact.signal.related_entity_type || impact.signal.event_type || "Signal").replace(/_/g, " ").toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); })()}
             </div>
-            <h1 style={{ margin: "0 0 16px", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 21, color: "var(--ink)", lineHeight: 1.4 }}>
+            <h1 style={{ margin: "0 0 16px", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, color: "var(--ink)", lineHeight: 1.3 }}>
               {impact.signal.event_title || impact.signal.why_exists}
             </h1>
             {impact.signal.event_title && impact.signal.why_exists && (
@@ -77,7 +81,7 @@ export default function DiscoverDetailPage() {
               <Block label="Why it matters">{impact.signal.rule_explanation}</Block>
             )}
             {impact.totalRevenueExposure != null && (
-              <Block label="Magnitude / impact">Revenue exposure of <Mono size={13}>₹{(impact.totalRevenueExposure / 100000).toFixed(1)}L</Mono> across {impact.components?.length || 0} traced component{(impact.components?.length || 0) === 1 ? "" : "s"}.</Block>
+              <Block label="Magnitude / impact">Revenue exposure of <Mono size={13}>{inrWhole(impact.totalRevenueExposure)}</Mono> across {impact.components?.length || 0} traced component{(impact.components?.length || 0) === 1 ? "" : "s"}.</Block>
             )}
 
             {/* Known / Unknown transparency block — real, from the backend's
@@ -88,7 +92,7 @@ export default function DiscoverDetailPage() {
                 <div className="space-y-3">
                   <KVLine label="Known" value={`Quantified downstream impact across ${impact.components?.length || 0} component${(impact.components?.length || 0) === 1 ? "" : "s"}.`} tone="known" />
                   {impact.totalRevenueExposure != null && (
-                    <KVLine label="Known" value={`Total revenue exposure: ₹${(impact.totalRevenueExposure / 100000).toFixed(1)}L`} tone="known" />
+                    <KVLine label="Known" value={`Total revenue exposure: ${inrWhole(impact.totalRevenueExposure)}`} tone="known" />
                   )}
                   <KVLine label="Unknown" value="Anything outside the traced component/order chain below is not covered by this calculation." tone="unknown" />
                 </div>
@@ -174,6 +178,7 @@ export default function DiscoverDetailPage() {
           onClose={() => setShowSupplierLens(false)}
         />
       )}
+      </PageBody>
     </DashboardLayout>
   );
 }
@@ -194,7 +199,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function RailLabel({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 10.5, letterSpacing: 0, color: "var(--ink-3)", marginBottom: 6 }}>{children}</div>;
+  return <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 6 }}>{children}</div>;
 }
 
 function Block({ label, children }: { label: string; children: React.ReactNode }) {
@@ -246,7 +251,7 @@ function ComponentRow({ component }: { component: ImpactComponent }) {
         </div>
         {component.revenueExposure.sufficientData && (
           <span style={{ fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--ink)" }}>
-            ₹{(component.revenueExposure.totalRevenueExposure / 100000).toFixed(1)}L
+            {inrWhole(component.revenueExposure.totalRevenueExposure)}
           </span>
         )}
       </div>

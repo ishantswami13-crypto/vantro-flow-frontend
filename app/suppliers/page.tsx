@@ -242,7 +242,7 @@ export default function SuppliersPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedSupplier(null)}
-                  className="w-9 h-9 rounded-xl bg-surface-2 border border-border text-primary flex items-center justify-center hover:bg-surface hover:text-black transition-all"
+                  className="w-9 h-9 rounded-xl bg-surface-2 border border-border text-primary flex items-center justify-center hover:bg-surface-3 transition-all"
                   aria-label="Close supplier details"
                 >
                   <FiX size={16} />

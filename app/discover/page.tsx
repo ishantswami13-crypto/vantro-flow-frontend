@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EvidenceDrawer } from "@/components/intelligence/EvidenceDrawer";
-import { formatDateTime } from "@/components/intelligence/format";
 import { api, getUser, type IntelligenceSignal, type IntelligenceEvidenceItem, type IntelligenceOpportunity } from "@/lib/api";
 import { IconDiscover, IconSparkle } from "@/components/v32/icons";
-import { PageHeader, Subnav, Sep, IconTile, Mono, Chevron, EvMark, EmptyLine, ErrorBanner } from "@/components/v32/ui";
+import { PageHeader, Subnav, Sep, IconTile, Mono, Chevron, EvMark, EmptyLine, SkeletonRows } from "@/components/v32/ui";
+import { StatusChip, toneForStatus } from "@/components/ui/Badge";
+import { PageBody, RetryLine, sentence } from "@/components/os/prepared/kit";
+import { formatRelative } from "@/lib/format";
 
 // Discover — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
 //
@@ -55,16 +57,7 @@ const TABS: { key: TabKey; label: string }[] = [
 const RISK_STATUSES = new Set(["EXPOSED", "OBSERVED_IMPACT"]);
 
 function relativeTime(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  const ms = Date.now() - new Date(iso).getTime();
-  if (!Number.isFinite(ms) || ms < 0) return formatDateTime(iso);
-  const mins = Math.floor(ms / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return formatRelative(iso) || "Not known yet";
 }
 
 function confidenceLabel(p: number | null): string | null {
@@ -78,6 +71,7 @@ export default function DiscoverPage() {
   const router = useRouter();
   const [signals, setSignals] = useState<IntelligenceSignal[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [tab, setTab] = useState<TabKey>("overview");
 
   const [opportunities, setOpportunities] = useState<IntelligenceOpportunity[] | null>(null);
@@ -90,9 +84,11 @@ export default function DiscoverPage() {
 
   useEffect(() => {
     let cancelled = false;
+    setLoadError(null);
+    setOpportunitiesError(null);
     api.intelligence.signals()
       .then(res => { if (!cancelled) setSignals(res.signals || []); })
-      .catch(() => { if (!cancelled) { setSignals([]); setLoadError("Couldn't reach Starlane's intelligence backend."); } });
+      .catch(() => { if (!cancelled) { setSignals([]); setLoadError("Couldn't reach Starlane. Check your connection and try again."); } });
 
     const user = getUser();
     if (user?.id) {
@@ -105,13 +101,13 @@ export default function DiscoverPage() {
         .catch(() => {
           if (cancelled) return;
           setOpportunities([]);
-          setOpportunitiesError("Couldn't reach Starlane's opportunity engine.");
+          setOpportunitiesError("Starlane couldn't check your suppliers for opportunities just now. Try again in a moment.");
         });
     } else {
       setOpportunities([]);
     }
     return () => { cancelled = true; };
-  }, []);
+  }, [reloadKey]);
 
   const openEvidence = async (signalId: string) => {
     setEvidenceSignalId(signalId);
@@ -168,6 +164,7 @@ export default function DiscoverPage() {
 
   return (
     <DashboardLayout pageTitle="Discover">
+      <PageBody gap={20}>
       <PageHeader
         title="Discover"
         subtitle="Things Starlane found that may be worth your attention."
@@ -187,16 +184,17 @@ export default function DiscoverPage() {
           <span style={{ color: "var(--ink-2)" }}>{changed.length} changed</span>
         </div>
       )}
-      {loadError && <ErrorBanner>{loadError}</ErrorBanner>}
+      {loadError && <RetryLine error={loadError} onRetry={() => { setSignals(null); setOpportunities(null); setReloadKey((k) => k + 1); }} />}
 
       <Subnav
-        items={TABS.map((t) => ({ key: t.key, label: t.label }))}
+        label="Discover"
+        items={TABS.map((t) => ({ key: t.key, label: t.label, count: loading ? null : t.key === "overview" ? all.length : t.key === "changes" ? changed.length : t.key === "risks" ? risks.length : t.key === "opportunities" ? (opportunitiesLoading ? null : (opportunities || []).length) : null }))}
         active={tab}
         onChange={(k) => setTab(k as TabKey)}
       />
 
       {tab === "opportunities" && !opportunitiesLoading && opportunitiesError && (
-        <p className="v32-meta mt-1 mb-3" style={{ color: "var(--critical)" }}>{opportunitiesError}</p>
+        <RetryLine error={opportunitiesError} onRetry={() => { setSignals(null); setOpportunities(null); setReloadKey((k) => k + 1); }} />
       )}
 
       {tab === "opportunities" && !opportunitiesLoading && (opportunities || []).length === 0 && !opportunitiesError && (
@@ -220,9 +218,11 @@ export default function DiscoverPage() {
         </div>
       )}
 
-      {tab !== "opportunities" && !loading && hasRealBacking && visible.length === 0 && (
+      {(loading || (tab === "opportunities" && opportunitiesLoading)) && <SkeletonRows rows={3} height={72} />}
+
+      {tab !== "opportunities" && !loading && !loadError && hasRealBacking && visible.length === 0 && (
         <EmptyLine
-          title="Nothing here yet."
+          title="Nothing here yet"
           body={tab === "changes" ? "No signal has changed since it was first detected." : "No signal currently meets this bar."}
         />
       )}
@@ -255,6 +255,7 @@ export default function DiscoverPage() {
           />
         )
       )}
+      </PageBody>
     </DashboardLayout>
   );
 }
@@ -272,12 +273,12 @@ function DiscoveryRow({
       role="button"
       tabIndex={0}
     >
-      <IconTile tone={signal.status === "ACTIVE" ? "critical" : signal.status === "UPDATED" ? "warning" : undefined}><IconDiscover size={16} /></IconTile>
+      <IconTile><IconDiscover size={16} /></IconTile>
       <div className="min-w-0 flex-1">
-        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "var(--ink-2)", marginBottom: 4 }}>
-          {(signal.related_entity_type || signal.event_type || "Signal").replace(/_/g, " ")}
+        <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 4 }}>
+          {sentence(signal.related_entity_type || signal.event_type || "Signal")}
         </div>
-        <div style={{ fontSize: 15.5, fontWeight: 600, color: "var(--ink)", marginBottom: 4 }}>
+        <div style={{ fontSize: 15, fontWeight: 500, color: "var(--ink)", marginBottom: 4 }}>
           {signal.event_title || signal.why_exists}
         </div>
         {signal.event_title && signal.why_exists && (
@@ -286,9 +287,8 @@ function DiscoveryRow({
             <EvMark onClick={onOpenEvidence} />
           </div>
         )}
-        <div className="flex items-center flex-wrap" style={{ gap: 8, fontSize: 11.5, color: "var(--ink-3)" }}>
-          <span>{signal.impact_status ? signal.impact_status.replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase()) : signal.status.toLowerCase()}</span>
-          <Sep />
+        <div className="flex items-center flex-wrap" style={{ gap: 8, fontSize: 12, color: "var(--ink-3)" }}>
+          <StatusChip tone={RISK_STATUSES.has(signal.impact_status) ? "critical" : signal.status === "UPDATED" ? "attention" : toneForStatus(signal.impact_status || signal.status)}>{sentence(signal.impact_status || signal.status)}</StatusChip>
           <span>{relativeTime(signal.last_updated_at || signal.first_detected_at)}</span>
           {conf && <><Sep /><span>{conf}</span></>}
           {!(signal.event_title && signal.why_exists) && <EvMark onClick={onOpenEvidence} />}
@@ -304,21 +304,21 @@ function OpportunityRow({
 }: { opportunity: IntelligenceOpportunity; onOpenEvidence: (e: React.MouseEvent) => void }) {
   return (
     <div className="row-hover flex items-start" style={{ gap: 14, padding: "16px 10px", borderBottom: "1px solid var(--line)", borderRadius: 6 }}>
-      <IconTile tone="positive"><IconSparkle size={16} /></IconTile>
+      <IconTile><IconSparkle size={16} /></IconTile>
       <div className="min-w-0 flex-1">
-        <div style={{ fontSize: 11, letterSpacing: "0.6px", color: "var(--ink-2)", marginBottom: 4 }}>
+        <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 4 }}>
           Opportunity · {opportunity.affectedEntities.supplierName}
         </div>
-        <div style={{ fontSize: 15.5, fontWeight: 600, color: "var(--ink)", marginBottom: 4 }}>{opportunity.opportunity}</div>
+        <div style={{ fontSize: 15, fontWeight: 500, color: "var(--ink)", marginBottom: 4 }}>{opportunity.opportunity}</div>
         <div style={{ fontSize: 13, color: "var(--body)", marginBottom: 6 }}>
           {opportunity.reasoning}
           <EvMark onClick={onOpenEvidence} />
         </div>
         <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
           {opportunity.materiality != null && <><Mono size={13}>+{opportunity.materiality}% demand</Mono><Sep /></>}
-          <span style={{ fontSize: 11.5, color: "var(--ink-3)" }}>Bounded opportunity</span>
+          <StatusChip tone="positive">Bounded opportunity</StatusChip>
           <Sep />
-          <span style={{ fontSize: 11.5, color: "var(--ink-3)" }}>{relativeTime(opportunity.timestamp)}</span>
+          <span style={{ fontSize: 12, color: "var(--ink-3)" }}>{relativeTime(opportunity.timestamp)}</span>
         </div>
       </div>
     </div>

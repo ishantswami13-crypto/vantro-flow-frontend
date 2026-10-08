@@ -818,7 +818,7 @@ export default function SalesPage() {
                 className="flex items-center justify-center disabled:opacity-30 transition-transform active:scale-95"
                 style={{
                   width: 80, height: 80, borderRadius: "50%",
-                  background: "var(--surface)",
+                  background: "#FFFFFF",
                   boxShadow: "0 0 0 5px rgba(255,255,255,0.25), 0 8px 32px rgba(0,0,0,0.5)",
                 }}>
                 <FiCamera size={32} className="text-black" />
