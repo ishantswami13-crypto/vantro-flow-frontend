@@ -98,7 +98,7 @@ function OptionsTable({ d, max, recKey, canChoose, choosing, busy, onChoose }: {
         ].filter(Boolean);
         const sv = second?.get(o);
         return (
-          <div key={o.key} className={`${m.trow} ${o.valid ? "" : m.dim}`} role="row">
+          <div key={o.key} className={`${m.trow} ${rec ? m.trowRec : ""} ${o.valid ? "" : m.dim}`} role="row">
             <div className="min-w-0" role="cell">
               <div className={m.optName}>
                 {o.label}
