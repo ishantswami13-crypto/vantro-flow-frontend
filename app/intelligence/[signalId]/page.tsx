@@ -72,7 +72,7 @@ function Turn({ label, className = "", children }: { label: string; className?: 
 
 function Fact({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "danger" }) {
   return (
-    <div className="px-4 py-3.5 [&:not(:last-child)]:border-r border-b sm:border-b-0" style={{ borderColor: "var(--line)" }}>
+    <div className="px-4 py-3.5 min-w-0" style={{ background: "var(--surface)" }}>
       <dt className="text-[11.5px]" style={{ color: "var(--ink-3)" }}>{label}</dt>
       <dd className="text-[20px] leading-tight mt-1.5" style={{ color: tone === "danger" ? "var(--critical)" : "var(--ink)", fontWeight: 400, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>{value}</dd>
       {sub && <dd className="text-[11px] mt-0.5 truncate" style={{ color: "var(--ink-3)" }}>{sub}</dd>}
@@ -215,11 +215,11 @@ export default function SignalImpactPage() {
                 )}
               </p>
 
-              <dl className="grid grid-cols-2 sm:grid-cols-4 mt-6 overflow-hidden" style={{ border: "1px solid var(--line-card)", borderRadius: "var(--radius-lg)", background: "var(--surface)" }}>
+              <dl className="grid grid-cols-2 sm:grid-cols-4 mt-6 overflow-hidden" style={{ gap: 1, border: "1px solid var(--line-card)", borderRadius: "var(--radius-lg)", background: "var(--line)" }}>
                 <Fact label="Revenue exposed" value={formatINR(impact.totalRevenueExposure)} sub={components.length > 1 ? `Across ${components.length} parts` : undefined} tone="danger" />
                 <Fact
                   label="Time to stockout"
-                  value={soonest ? (soonest.days === 0 ? "Now" : `${soonest.days}d`) : "—"}
+                  value={soonest ? (soonest.days === 0 ? "Now" : `${soonest.days} ${soonest.days === 1 ? "day" : "days"}`) : "Not known yet"}
                   sub={soonest ? (soonest.days === 0 ? "Below safety stock" : formatDate(soonest.component.stockout.stockoutDate)) : undefined}
                 />
                 <Fact label="Affected orders" value={String(affectedOrderCount)} />

@@ -6,6 +6,7 @@ import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { IconBox, IconCheck } from "@/components/v32/icons";
 import { formatINR, formatDateTime, humanizeCode } from "./format";
+import { formatCount } from "@/lib/format";
 import { api, type IntelligenceAction, type ImpactComponent, type DemoExecutionResult } from "@/lib/api";
 
 type ExecState = "PROPOSED" | "APPROVING" | "EXECUTED" | "FAILED";
@@ -67,7 +68,7 @@ function ActionCard({ action, rank, dominant, onApprove, execState, execResult }
   const alreadyDone = action.status === "done" || execState === "EXECUTED";
   const product = action.parameters?.products?.[0];
   const orderLine = product
-    ? `Order ${product.quantity.toLocaleString("en-IN")} units of ${product.name} (${product.sku})`
+    ? `Order ${formatCount(product.quantity)} units of ${product.name} (${product.sku})`
     : null;
 
   return (
