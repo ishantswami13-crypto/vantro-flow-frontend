@@ -1566,3 +1566,7 @@ body { color: var(--ink); }
 @media (min-width: 768px) { .mis-row .wk-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
 @media (max-width: 639px) { .lib-new { display: none !important; } .lib-search, .lib-search .page-search { width: calc(100vw - 32px); max-width: 100%; } }
 @media (max-width: 639px) { .lib-go .lib-go-text { display: none; } }
+
+/* One semantic indicator everywhere: the dot carries critical tone, the word
+   stays in strong ink rather than repeating the colour. */
+.chip-critical { color: var(--ink); }
