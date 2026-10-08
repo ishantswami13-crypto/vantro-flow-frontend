@@ -4,7 +4,7 @@ import { authHeaders, isLoggedIn } from "@/lib/api";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { PageHeader, Figure, SkeletonRows, EmptyLine } from "@/components/v32/ui";
+import { PageHeader, Figure, SkeletonRows } from "@/components/v32/ui";
 import { IconRefresh } from "@/components/v32/icons";
 import { StatusChip } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -66,6 +66,8 @@ export default function AdminPage() {
     { label: "Signed up today", value: formatCount(stats.signups_today) },
     { label: "Signed up in 7 days", value: formatCount(stats.signups_last_7d) },
     { label: "Monthly recurring revenue", value: inrWhole(stats.mrr_inr) },
+  ] : [];
+  const secondary = stats ? [
     { label: "Paid users", value: formatCount(stats.paid_users) },
     { label: "Free users", value: formatCount(stats.free_users) },
     { label: "Users with data", value: formatCount(stats.users_with_data) },
@@ -75,13 +77,17 @@ export default function AdminPage() {
   return (
     <DashboardLayout pageTitle="Admin">
       <style>{`
-        .adm-figs { display: grid; gap: 28px 24px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        @media (min-width: 900px) { .adm-figs { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-        .adm-row { display: grid; align-items: center; gap: 4px 16px; padding: 12px 10px; border-bottom: 1px solid var(--line); min-height: 52px;
+        .adm-row { display: grid; align-items: center; gap: 4px 16px; padding: 10px 0; min-height: 48px;
           grid-template-columns: minmax(0, 1fr) auto; }
-        @media (min-width: 760px) { .adm-row { grid-template-columns: minmax(0, 1fr) 90px 170px; } }
+        .adm-head { display: none; }
+        @media (min-width: 760px) {
+          .adm-row { grid-template-columns: minmax(0, 1fr) 120px 140px; }
+          .adm-head { display: grid; min-height: 0; padding: 0 0 8px; }
+        }
+        .adm-sub { display: flex; flex-wrap: wrap; gap: 6px 28px; margin-top: 16px; font-size: 12.5px; color: var(--ink-3); }
+        .adm-sub b { font-weight: 400; color: var(--ink); font-family: var(--font-mono); font-size: 12.5px; margin-left: 6px; }
       `}</style>
-      <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 28 }}>
+      <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 32 }}>
         <PageHeader
           title="Admin"
           subtitle="Founder analytics. Private to Starlane admins."
@@ -89,7 +95,7 @@ export default function AdminPage() {
             <div className="flex items-center" style={{ gap: 8 }}>
               <Link href="/admin/access" className="ui-btn ui-btn-ghost">Access review</Link>
               <Link href="/admin/errors" className="ui-btn ui-btn-ghost">Errors</Link>
-              <Button variant="secondary" onClick={load} loading={loading} icon={<IconRefresh size={14} />}>Refresh</Button>
+              <Button variant="secondary" onClick={load} loading={loading} icon={<IconRefresh size={14} />}>Refresh stats</Button>
             </div>
           }
         />
@@ -99,24 +105,30 @@ export default function AdminPage() {
 
         {stats && (
           <>
-            <div className="adm-figs fade-once">
-              {figures.map((m) => <Figure key={m.label} value={m.value} label={m.label} />)}
+            <div className="fade-once">
+              <div className="ops-figures">
+                {figures.map((m) => <Figure key={m.label} value={m.value} label={m.label} />)}
+              </div>
+              <dl className="adm-sub" style={{ margin: "16px 0 0" }}>
+                {secondary.map((m) => <div key={m.label} className="flex items-baseline"><dt>{m.label}</dt><dd style={{ margin: 0 }}><b>{m.value}</b></dd></div>)}
+              </dl>
             </div>
 
             <section>
-              <h2 style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>Recent signups</h2>
+              <h2 className="section-label">Recent signups</h2>
               {stats.recent_signups.length === 0 ? (
-                <EmptyLine title="No signups yet" body="New accounts appear here as they are created." />
+                <p className="ops-list" style={{ margin: 0, padding: "12px 0", fontSize: 13, color: "var(--ink-2)", borderBottom: "1px solid var(--line)" }}>No signups yet. New accounts appear here as they are created.</p>
               ) : (
-                <div style={{ borderTop: "1px solid var(--line)" }}>
+                <div>
+                  <div className="adm-row adm-head ops-head" aria-hidden="true"><span>Business</span><span>Plan</span><span style={{ textAlign: "right" }}>Joined</span></div>
                   {stats.recent_signups.map((u, i) => (
-                    <div key={`${u.email}-${i}`} className="adm-row row-hover">
+                    <div key={`${u.email}-${i}`} className="adm-row ops-row">
                       <div className="min-w-0">
                         <div className="truncate" style={{ fontSize: 13.5, color: "var(--ink)" }}>{u.business || <span style={{ color: "var(--ink-3)" }}>No business name</span>}</div>
                         <div className="truncate" style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{u.email}</div>
                       </div>
                       <div><StatusChip tone={u.plan !== "free" ? "positive" : "neutral"}>{u.plan.replace(/^./, (c) => c.toUpperCase())}</StatusChip></div>
-                      <div className="hidden md:block tabular-nums" style={{ fontSize: 12.5, color: "var(--ink-2)", textAlign: "right" }} title={formatDateTime(u.joined)}>{formatRelative(u.joined)}</div>
+                      <div className="hidden md:block tabular-nums" style={{ fontSize: 12.5, color: "var(--ink-2)", textAlign: "right" }} title={formatDateTime(u.joined)}>{formatRelative(u.joined).replace(/^./, (c) => c.toUpperCase())}</div>
                     </div>
                   ))}
                 </div>
