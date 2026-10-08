@@ -9,8 +9,8 @@ import type { IntelligenceEvidenceItem } from "@/lib/api";
 export function SourcesRail({ evidence, highlighted }: { evidence: IntelligenceEvidenceItem[]; highlighted: number | null }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase mb-3" style={{ color: "var(--ink-3)", letterSpacing: "0.08em" }}>
-        Sources · {evidence.length}
+      <p className="text-[12px] mb-3" style={{ color: "var(--ink-3)" }}>
+        Sources <span className="tabular-nums">{evidence.length}</span>
       </p>
       <ol className="space-y-1.5">
         {evidence.map((item, i) => {
@@ -21,7 +21,7 @@ export function SourcesRail({ evidence, highlighted }: { evidence: IntelligenceE
               key={n}
               id={`source-${n}`}
               className="rounded-lg px-3 py-2.5 transition-colors"
-              style={{ background: active ? "var(--surface)" : "transparent", border: `1px solid ${active ? "var(--id-b, var(--line-strong))" : "transparent"}` }}
+              style={{ background: active ? "var(--surface)" : "transparent", border: `1px solid ${active ? "rgba(var(--accent-rgb), 0.5)" : "transparent"}` }}
             >
               <div className="flex items-start gap-2.5">
                 <span
@@ -36,7 +36,7 @@ export function SourcesRail({ evidence, highlighted }: { evidence: IntelligenceE
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     <EvidenceKindBadge kind={item.kind} />
                     <span className="text-[11px]" style={{ color: "var(--ink-3)" }}>
-                      {item.confidence === "UNKNOWN" ? "Confidence unknown" : `${humanizeCode(item.confidence)} confidence`}
+                      {item.confidence === "UNKNOWN" ? "Confidence not known yet" : `${humanizeCode(item.confidence)} confidence`}
                       {item.timestamp ? ` · ${formatDateTime(item.timestamp)}` : ""}
                     </span>
                   </div>

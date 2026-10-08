@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useCallback, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { FiArrowLeft, FiArrowUp, FiChevronRight, FiFileText, FiLoader } from "react-icons/fi";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { LoadingState } from "@/components/ui/LoadingState";
+import Link from "next/link";
+import { SkeletonRows, ThinkingDots } from "@/components/v32/ui";
+import { IconArrowUp, IconAudit, IconChevronDown } from "@/components/v32/icons";
+import { ScanMark } from "@/components/scan/ScanMark";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { EvidenceDrawer } from "@/components/intelligence/EvidenceDrawer";
@@ -40,20 +42,19 @@ function earliestStockout(components: ImpactComponent[]): { component: ImpactCom
   return best;
 }
 
-// Breadcrumb doubles as back-navigation — one line, no separate button,
-// matching the AppHeader's own quiet breadcrumb language.
-function Breadcrumb({ router, title }: { router: ReturnType<typeof useRouter>; title: string }) {
+// Breadcrumb doubles as back-navigation: one quiet line, no separate button.
+function Breadcrumb({ title }: { title: string }) {
   return (
-    <button
-      type="button"
-      onClick={() => router.push("/intelligence")}
-      className="block text-left text-[12px] mb-2 hover:underline"
-      style={{ color: "var(--ink-3)" }}
-    >
-      Intelligence / {title}
-    </button>
+    <nav aria-label="Breadcrumb" style={{ fontSize: 12.5, color: "var(--ink-3)", marginBottom: 10 }}>
+      <Link href="/intelligence" className="hover:underline" style={{ color: "var(--ink-2)" }}>Intelligence</Link>
+      <span aria-hidden="true" style={{ margin: "0 6px" }}>/</span>
+      <span>{title}</span>
+    </nav>
   );
 }
+
+const TITLE: React.CSSProperties = { margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, lineHeight: 1.2, color: "var(--ink)" };
+const WRAP: React.CSSProperties = { width: "100%", maxWidth: "var(--content-max)" };
 
 // One "turn" of the answer thread — a small Starlane mark and label, then
 // the content indented under it, the way an assistant reply reads.
@@ -61,14 +62,8 @@ function Turn({ label, className = "", children }: { label: string; className?: 
   return (
     <div className={className}>
       <div className="flex items-center gap-2 mb-3">
-        <span
-          aria-hidden="true"
-          className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px]"
-          style={{ background: "var(--inverse)", color: "var(--on-inverse)", fontFamily: "var(--font-display)" }}
-        >
-          S
-        </span>
-        <span className="text-[12.5px] font-medium" style={{ color: "var(--ink-2)" }}>{label}</span>
+        <ScanMark />
+        <span className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>{label}</span>
       </div>
       <div className="sm:pl-8">{children}</div>
     </div>
@@ -79,7 +74,7 @@ function Fact({ label, value, sub, tone }: { label: string; value: string; sub?:
   return (
     <div className="px-4 py-3.5 [&:not(:last-child)]:border-r border-b sm:border-b-0" style={{ borderColor: "var(--line)" }}>
       <dt className="text-[11.5px]" style={{ color: "var(--ink-3)" }}>{label}</dt>
-      <dd className="text-[19px] leading-tight mt-1" style={{ color: tone === "danger" ? "var(--critical)" : "var(--ink)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>{value}</dd>
+      <dd className="text-[20px] leading-tight mt-1.5" style={{ color: tone === "danger" ? "var(--critical)" : "var(--ink)", fontWeight: 400, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>{value}</dd>
       {sub && <dd className="text-[11px] mt-0.5 truncate" style={{ color: "var(--ink-3)" }}>{sub}</dd>}
     </div>
   );
@@ -87,7 +82,6 @@ function Fact({ label, value, sub, tone }: { label: string; value: string; sub?:
 
 export default function SignalImpactPage() {
   const params = useParams<{ signalId: string }>();
-  const router = useRouter();
   const signalId = params.signalId;
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [predictions, setPredictions] = useState<IntelligencePrediction[] | null>(null);
@@ -156,54 +150,45 @@ export default function SignalImpactPage() {
   return (
     <DashboardLayout pageTitle={pageTitle}>
       {isLoading && (
-        <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
-          <LoadingState label="Loading impact analysis" rows={3} />
+        <div style={WRAP}>
+          <div className="skeleton h-3 w-40" style={{ marginBottom: 14 }} />
+          <div className="skeleton h-6 w-96 max-w-full" style={{ marginBottom: 24 }} />
+          <SkeletonRows rows={4} height={56} />
         </div>
       )}
 
       {isError && (
-        <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
-          <button
-            type="button"
-            onClick={() => router.push("/intelligence")}
-            className="inline-flex items-center gap-1.5 text-[12px] mb-4 focus-ring rounded"
-            style={{ color: "var(--ink-3)" }}
-          >
-            <FiArrowLeft size={12} /> Back to Intelligence
-          </button>
-          <ErrorState title="Couldn't load this signal" message="It may have been removed, or your account may not have access to it." onRetry={() => refetch()} />
+        <div style={WRAP}>
+          <Breadcrumb title="Signal" />
+          <ErrorState title="Couldn't load this signal" message="Check your connection and try again. If it keeps failing, the signal may have been removed." onRetry={() => refetch()} />
         </div>
       )}
 
       {!isLoading && !isError && impact && !impact.sufficientDataForQuantification && (
-        <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
-          <Breadcrumb router={router} title={impact.signal.event_title || "External signal"} />
-          <h1 className="text-[26px] lg:text-[32px] leading-[1.15] mb-6" style={{ color: "var(--ink)", fontWeight: 500, letterSpacing: "-0.01em" }}>
-            {impact.signal.event_title || "External signal"}
-          </h1>
+        <div style={WRAP}>
+          <Breadcrumb title={impact.signal.event_title || "External signal"} />
+          <h1 style={{ ...TITLE, marginBottom: 24 }}>{impact.signal.event_title || "External signal"}</h1>
           <EmptyState
-            title="Not enough data to quantify business impact"
-            message={impact.reason || "Starlane detected relevance but does not have enough recorded data to calculate a dollar impact — this is shown honestly rather than guessed."}
+            title="Not enough data to put a rupee figure on this"
+            message={impact.reason || "Starlane found this event relevant, but there isn't enough recorded data to calculate the impact. It's shown as unknown rather than guessed."}
           />
         </div>
       )}
 
       {!isLoading && !isError && impact && impact.sufficientDataForQuantification && primaryComponent && (
-        <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-14">
+        <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_300px] xl:gap-14" style={WRAP}>
           {/* READING COLUMN — one centered column that reads top to bottom
               like an answer: the question, Starlane's answer with inline
               citations, the reasoning behind it, then the decision. */}
           <div className="min-w-0 max-w-[700px]">
-            <Breadcrumb router={router} title={impact.signal.event_title || "Investigation"} />
-            <h1 className="text-[24px] lg:text-[30px] leading-[1.2] mb-2" style={{ color: "var(--ink)", fontWeight: 500, letterSpacing: "-0.01em" }}>
-              {impact.signal.event_title || "External signal"}
-            </h1>
+            <Breadcrumb title={impact.signal.event_title || "Investigation"} />
+            <h1 style={{ ...TITLE, marginBottom: 8 }}>{impact.signal.event_title || "External signal"}</h1>
             <p className="text-[13px]" style={{ color: "var(--ink-2)" }}>
               {impact.supplier?.name}{impact.supplier?.country ? ` · ${impact.supplier.country}` : ""} · Detected {formatDateTime(impact.signal.first_detected_at)} · {confidenceLabel(impact.signal.event_confidence)} confidence
             </p>
 
             <Turn label="Starlane" className="mt-8">
-              <p className="text-[17px] leading-[1.55]" style={{ color: "var(--ink)", fontWeight: 500 }}>
+              <p className="text-[17px] leading-[1.55]" style={{ color: "var(--ink)", fontWeight: 400 }}>
                 {formatINR(impact.totalRevenueExposure)} in open orders is at risk
                 <Cite n={components.length === 1 ? citations.byComponent[primaryComponent.component.id]?.revenue : undefined} onCite={onCite} />
                 {soonest && (
@@ -230,7 +215,7 @@ export default function SignalImpactPage() {
                 )}
               </p>
 
-              <dl className="grid grid-cols-2 sm:grid-cols-4 mt-6 rounded-xl overflow-hidden" style={{ border: "1px solid var(--line-hairline)", background: "var(--surface)" }}>
+              <dl className="grid grid-cols-2 sm:grid-cols-4 mt-6 overflow-hidden" style={{ border: "1px solid var(--line-card)", borderRadius: "var(--radius-lg)", background: "var(--surface)" }}>
                 <Fact label="Revenue exposed" value={formatINR(impact.totalRevenueExposure)} sub={components.length > 1 ? `Across ${components.length} parts` : undefined} tone="danger" />
                 <Fact
                   label="Time to stockout"
@@ -245,17 +230,16 @@ export default function SignalImpactPage() {
               <button
                 type="button"
                 onClick={() => setEvidenceOpen(true)}
-                className="lg:hidden inline-flex items-center gap-1.5 mt-4 text-[13px] font-medium rounded-full px-3 py-1.5 focus-ring"
-                style={{ color: "var(--ink)", border: "1px solid var(--line-hairline)", background: "var(--surface)" }}
+                className="xl:hidden ui-btn ui-btn-secondary ui-btn-sm mt-4"
               >
-                <FiFileText size={13} /> Sources · {impact.evidence.length}
+                <IconAudit size={13} /> Sources · {impact.evidence.length}
               </button>
             </Turn>
 
             {/* REASONING — collapsible like a model's working, open by default. */}
             <details open className="group mt-10">
               <summary className="list-none cursor-pointer select-none inline-flex items-center gap-1.5 text-[13px] font-medium focus-ring rounded" style={{ color: "var(--ink-2)" }}>
-                <FiChevronRight size={14} className="transition-transform group-open:rotate-90" />
+                <span className="inline-flex transition-transform -rotate-90 group-open:rotate-0"><IconChevronDown size={14} /></span>
                 How Starlane got here
               </summary>
               <div className="mt-5">
@@ -270,8 +254,8 @@ export default function SignalImpactPage() {
                           role="tab"
                           aria-selected={selected}
                           onClick={() => setComponentIndex(i)}
-                          className="text-left rounded-full px-3.5 py-1.5 text-[12.5px] focus-ring"
-                          style={{ border: `1px solid ${selected ? "var(--ink)" : "var(--line-hairline)"}`, color: "var(--ink)", background: selected ? "var(--surface)" : "transparent" }}
+                          className="text-left px-3 text-[12.5px]"
+                          style={{ height: 32, borderRadius: "var(--radius-md)", border: `1px solid ${selected ? "var(--line-emphasis)" : "var(--line-card)"}`, color: "var(--ink)", background: selected ? "var(--selected)" : "transparent" }}
                         >
                           <span className="font-medium">{c.component.name}</span>
                           <span className="ml-2" style={{ color: "var(--ink-3)", fontVariantNumeric: "tabular-nums" }}>{formatINR(c.revenueExposure.totalRevenueExposure)}</span>
@@ -297,22 +281,22 @@ export default function SignalImpactPage() {
                   type="button"
                   onClick={() => analyzeMutation.mutate()}
                   disabled={analyzeMutation.isPending}
-                  className="w-full text-left rounded-2xl px-5 py-4 flex items-center justify-between gap-4 focus-ring transition-colors hover:bg-surface disabled:opacity-70"
-                  style={{ border: "1px solid var(--line-strong)", background: "#FBFBF9" }}
+                  className="row-hover w-full text-left px-5 py-4 flex items-center justify-between gap-4 disabled:opacity-70"
+                  style={{ border: "1px solid var(--line-card)", borderRadius: "var(--radius-lg)", background: "var(--surface)" }}
                 >
                   <span>
                     <span className="block text-[14.5px] font-medium" style={{ color: "var(--ink)" }}>
-                      {analyzeMutation.isPending ? "Forecasting and ranking options…" : "Forecast this and recommend what to do"}
+                      {analyzeMutation.isPending ? "Forecasting and ranking options" : "Forecast this and recommend what to do"}
                     </span>
                     <span className="block text-[12.5px] mt-0.5" style={{ color: "var(--ink-3)" }}>
                       Runs Starlane's deterministic forecast and ranks interventions for {components.length > 1 ? "each part" : primaryComponent.component.name}.
                     </span>
                   </span>
-                  <span className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full id-gradient" style={{ color: "#FFFFFF", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.25)" }}>
-                    {analyzeMutation.isPending ? <FiLoader size={15} className="animate-spin" /> : <FiArrowUp size={16} />}
+                  <span className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full" style={{ background: "var(--inverse)", color: "var(--on-inverse)" }}>
+                    {analyzeMutation.isPending ? <ThinkingDots color="var(--on-inverse)" /> : <IconArrowUp size={15} />}
                   </span>
                 </button>
-                {analyzeMutation.isError && <p className="text-[12px] mt-2" style={{ color: "var(--critical)" }}>Analysis failed. Try again, or check the backend log.</p>}
+                {analyzeMutation.isError && <p role="alert" className="text-[12.5px] mt-2" style={{ color: "var(--ink-2)" }}>Starlane couldn&rsquo;t finish the forecast just now. Try again in a moment.</p>}
               </div>
             )}
 
@@ -348,7 +332,7 @@ export default function SignalImpactPage() {
           </div>
 
           {/* SOURCES RAIL — every citation above points here. */}
-          <aside className="hidden lg:block" aria-label="Sources">
+          <aside className="hidden xl:block" aria-label="Sources">
             <div className="sticky top-6 max-h-[calc(100vh-7rem)] overflow-y-auto pr-1 -mr-1">
               <SourcesRail evidence={impact.evidence} highlighted={highlighted} />
             </div>

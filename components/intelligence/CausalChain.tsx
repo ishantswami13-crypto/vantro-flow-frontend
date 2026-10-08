@@ -64,7 +64,7 @@ export function CausalChain({ impact, component, citations, onCite }: {
       />
       <Step
         index={3}
-        title={<>They supply {component.component.name} <span className="font-mono text-[12px]" style={{ color: "var(--ink-3)" }}>{component.component.sku}</span>.</>}
+        title={<>They supply {component.component.name} <span className="text-[12px] tabular-nums" style={{ color: "var(--ink-3)" }}>{component.component.sku}</span>.</>}
         detail={component.alternateSource ? `Alternate source on record: ${component.alternateSource.name}` : "No alternate source on record."}
         cites={<><Cite n={c.inventory} onCite={onCite} /><Cite n={c.alternate} onCite={onCite} /></>}
       />

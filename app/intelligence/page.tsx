@@ -1,83 +1,72 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { FiChevronRight, FiRefreshCw } from "react-icons/fi";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ErrorState } from "@/components/ui/ErrorState";
 import Button from "@/components/ui/Button";
-import { formatDateTime, confidenceFromScore } from "@/components/intelligence/format";
+import { StatusChip, type StatusTone } from "@/components/ui/Badge";
+import { EmptyLine, PageHeader, SkeletonRows } from "@/components/v32/ui";
+import { IconArrowRight, IconRefresh, IconWatch } from "@/components/v32/icons";
+import { formatDateTime, confidenceFromScore, humanizeCode } from "@/components/intelligence/format";
+import { OFFLINE_LINE } from "@/components/scan/humaneError";
 import { api, type IntelligenceSignal } from "@/lib/api";
 
-// Real-status labels only — CANDIDATE/ACTIVE/UPDATED are the only statuses
-// the backend actually emits today (see IntelligenceSignal in lib/api.ts).
-// No "Needs attention / Monitoring / Resolved" grouping is added here: the
-// backend doesn't yet distinguish those as real states, and inventing the
-// grouping in the frontend would be exactly the kind of fabricated status
-// this product explicitly refuses to show.
-function statusLabel(status: string): string {
-  if (status === "CANDIDATE") return "New";
-  if (status === "UPDATED") return "Updated";
-  if (status === "ACTIVE") return "Active";
-  return status;
-}
+// Real-status labels only: CANDIDATE, ACTIVE and UPDATED are the only
+// statuses the backend emits today (IntelligenceSignal in lib/api.ts). No
+// "Needs attention / Monitoring / Resolved" grouping is invented here.
+const STATUS: Record<string, { label: string; tone: StatusTone }> = {
+  CANDIDATE: { label: "New", tone: "info" },
+  UPDATED: { label: "Updated", tone: "attention" },
+  ACTIVE: { label: "Active", tone: "neutral" },
+};
 
-// The entry point for Starlane's continuous external-world watch. Mirrors
-// the honesty pattern already established by ExternalConditionsSection: a
-// list of real signals when they exist, or an explicit, calm "nothing
-// material" state — never a fabricated all-clear and never a blank screen.
+// The entry point for Starlane's external-world watch: real signals when
+// they exist, or an explicit, calm "nothing material" state, never a
+// fabricated all-clear and never a blank screen.
 function humanReason(signal: IntelligenceSignal): string {
-  return signal.related_entity_type === "supplier" ? "This external event matched a verified supplier location exposure." : "This external event matched a recorded business exposure.";
+  return signal.related_entity_type === "supplier"
+    ? "This event matched a verified supplier location you depend on."
+    : "This event matched a recorded business exposure.";
 }
 
-// A row, not a card — hairline separation, open canvas, no boxed gallery
-// tile. External events get a small restrained accent mark (Starlane's
-// world-context signature, used sparingly); internal-only signals stay
-// neutral graphite.
-function SignalRow({ signal, onOpen }: { signal: IntelligenceSignal; onOpen: () => void }) {
+// Strip leading warning emoji some agents put in titles; status is a chip.
+function cleanTitle(t: string | null | undefined): string {
+  return (t || "External event").replace(/^[\p{Extended_Pictographic}️\s]+/u, "").trim() || "External event";
+}
+
+function SignalRow({ signal }: { signal: IntelligenceSignal }) {
   const isExternal = Boolean(signal.event_type);
   const confidence = confidenceFromScore(signal.plausibility_confidence);
-
-  const metaParts = [
-    isExternal ? "External event" : "Internal signal",
-    signal.related_entity_type ? `${signal.related_entity_type.charAt(0).toUpperCase()}${signal.related_entity_type.slice(1)} risk` : null,
+  const status = STATUS[signal.status] || { label: humanizeCode(signal.status), tone: "neutral" as StatusTone };
+  const meta = [
+    isExternal ? humanizeCode(signal.event_type) || "External event" : "Internal signal",
+    signal.related_entity_type ? `${humanizeCode(signal.related_entity_type)} risk` : null,
+    `Updated ${formatDateTime(signal.last_updated_at || signal.first_detected_at)}`,
+    confidence !== "UNKNOWN" ? `${humanizeCode(confidence)} confidence` : "Confidence not known yet",
   ].filter(Boolean);
 
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="w-full text-left group flex items-start gap-4 py-6"
-      style={{ borderBottom: "1px solid var(--line-hairline)" }}
-      onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "var(--surface-2)")}
-      onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
-    >
-      <span
-        aria-hidden="true"
-        className="mt-1.5 rounded-full shrink-0"
-        style={{ width: 6, height: 6, background: isExternal ? "var(--ink)" : "var(--line-strong)" }}
-      />
-      <div className="min-w-0 flex-1">
-        <p className="text-[12px]" style={{ color: "var(--ink-3)" }}>{metaParts.join(" · ")}</p>
-        <p className="text-[15px] font-medium mt-1" style={{ color: "var(--ink)" }}>{signal.event_title || "External event"}</p>
-        <p className="text-[13px] mt-1 leading-[1.5] max-w-[640px] line-clamp-2" style={{ color: "var(--ink-2)" }}>{humanReason(signal)}</p>
-        <p className="text-[12px] mt-2" style={{ color: "var(--ink-3)" }}>
-          Updated {formatDateTime(signal.last_updated_at || signal.first_detected_at)}
-          {confidence !== "UNKNOWN" && ` · ${confidence.charAt(0)}${confidence.slice(1).toLowerCase()} confidence`}
-          {` · ${statusLabel(signal.status)}`}
-        </p>
-      </div>
-      <FiChevronRight className="shrink-0 mt-1.5 transition-colors" size={16} style={{ color: "var(--ink-3)" }} />
-    </button>
+    <li>
+      <Link href={`/intelligence/${signal.id}`} className="row-hover flex items-start" style={{ gap: 16, padding: "16px 12px", margin: "0 -12px", borderRadius: "var(--radius-md)", textDecoration: "none" }}>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
+            <span style={{ fontSize: 15, color: "var(--ink)" }}>{cleanTitle(signal.event_title)}</span>
+            <StatusChip tone={status.tone}>{status.label}</StatusChip>
+          </div>
+          <p style={{ margin: "4px 0 0", fontSize: 13, lineHeight: 1.55, color: "var(--ink-2)", maxWidth: 680 }}>{humanReason(signal)}</p>
+          <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--ink-3)" }}>{meta.join(" · ")}</p>
+        </div>
+        <span aria-hidden="true" className="row-chevron shrink-0" style={{ color: "var(--ink-3)", marginTop: 4, display: "inline-flex", transition: "transform 160ms var(--ease)" }}><IconArrowRight size={14} /></span>
+      </Link>
+    </li>
   );
 }
 
 const DEMO_CONTROLS_ENABLED = process.env.NEXT_PUBLIC_DEMO_CONTROLS === "true";
 
 export default function IntelligencePage() {
-  const router = useRouter();
-  const [resetting, setResetting] = useState(false);
   const [resetMessage, setResetMessage] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -88,20 +77,17 @@ export default function IntelligencePage() {
 
   const resetMutation = useMutation({
     mutationFn: () => api.demo2xa.reset(),
-    onMutate: () => { setResetting(true); setResetMessage(null); },
+    onMutate: () => setResetMessage(null),
     onSuccess: () => {
-      setResetMessage("Demo reset — the earthquake event has been re-triggered through the real relevance pipeline.");
+      setResetMessage("Demo reset. The earthquake event was re-triggered through the real relevance pipeline.");
       refetch();
     },
-    onError: () => setResetMessage("Reset failed — check the backend log."),
-    onSettled: () => setResetting(false),
+    onError: () => setResetMessage("Reset didn't go through. Try again in a moment."),
   });
 
-  // Multiple transmission channels can legitimately fire for the same
-  // (event, supplier) pair — e.g. both SUPPLY_SHOCK and DEMAND_SHOCK. That's
-  // real, correct backend behavior, but showing 3 near-identical cards for
-  // one real-world story would clutter the entry point. Group for display
-  // only; the impact view below still operates on one real signal id.
+  // Several transmission channels can fire for the same (event, supplier)
+  // pair; that is correct backend behaviour, but one real-world story should
+  // read as one row. Grouped for display only.
   const activeSignals = (data?.signals || []).filter((s) => s.status === "CANDIDATE" || s.status === "ACTIVE" || s.status === "UPDATED");
   const seen = new Set<string>();
   const signals = activeSignals.filter((s) => {
@@ -113,80 +99,53 @@ export default function IntelligencePage() {
 
   return (
     <DashboardLayout pageTitle="Intelligence">
-      <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
-        <h1 className="text-[28px] lg:text-[32px] leading-[1.15] mb-2" style={{ color: "var(--ink)", fontWeight: 500, letterSpacing: "-0.01em" }}>
-          Intelligence
-        </h1>
-        <p className="text-[14px] max-w-[700px] mb-9" style={{ color: "var(--ink-2)" }}>
-          Changes, risks and opportunities Starlane has detected across your organization and the external environment.
-        </p>
+      <div style={{ width: "100%", maxWidth: "var(--content-max)" }}>
+        <PageHeader
+          title="Intelligence"
+          subtitle="Outside events that reach your suppliers or customers, and what they put at risk."
+        />
 
-        {isLoading && (
-          <div>
-            {[0, 1, 2].map(i => (
-              <div key={i} className="py-6" style={{ borderBottom: "1px solid var(--line-hairline)" }}>
-                <div className="skeleton h-3 w-32 mb-3" />
-                <div className="skeleton h-4 w-72 mb-2" />
-                <div className="skeleton h-3 w-full max-w-[500px]" />
+        <div style={{ marginTop: 24 }}>
+          {isLoading && <SkeletonRows rows={3} height={84} />}
+
+          {isError && (
+            <ErrorState title="Couldn't load intelligence" message={OFFLINE_LINE} onRetry={() => refetch()} />
+          )}
+
+          {!isLoading && !isError && signals.length === 0 && (
+            <EmptyLine
+              icon={<IconWatch size={17} />}
+              title="No material change detected"
+              body="Starlane hasn't found an outside event that reaches your business in the evidence it has. New signals appear here as soon as one matches."
+            />
+          )}
+
+          {!isLoading && !isError && signals.length > 0 && (
+            <>
+              <div className="flex items-baseline justify-between" style={{ fontSize: 12, color: "var(--ink-3)", paddingBottom: 8, borderBottom: "1px solid var(--line)" }}>
+                <span>Open signals</span>
+                <span className="tabular-nums">{signals.length}</span>
               </div>
-            ))}
-          </div>
-        )}
+              <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                {signals.map((s) => <SignalRow key={s.id} signal={s} />)}
+              </ul>
+            </>
+          )}
+        </div>
 
-        {isError && (
-          <ErrorState
-            title="Intelligence is temporarily unavailable"
-            message="We couldn't load the latest intelligence. Existing business data remains available."
-            onRetry={() => refetch()}
-          />
-        )}
-
-        {!isLoading && !isError && signals.length === 0 && (
-          <div className="py-16 text-center relative overflow-hidden">
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 flex items-center justify-center select-none pointer-events-none"
-              style={{ fontSize: "clamp(56px, 16vw, 140px)", fontWeight: 600, color: "var(--ink)", opacity: 0.03, letterSpacing: "-0.04em", whiteSpace: "nowrap" }}
-            >
-              Starlane
-            </span>
-            <div className="relative">
-              <p className="text-[15px] font-medium" style={{ color: "var(--ink)" }}>No material changes detected</p>
-              <p className="text-[13px] mt-1.5 max-w-[440px] mx-auto" style={{ color: "var(--ink-3)" }}>
-                Starlane hasn't identified a material change from the evidence currently available.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {!isLoading && !isError && signals.length > 0 && (
-          <div>
-            {signals.map((s) => (
-              <SignalRow key={s.id} signal={s} onOpen={() => router.push(`/intelligence/${s.id}`)} />
-            ))}
+        {/* Internal demo control, not a customer feature. The backend only
+            honours it for admins on non-production deployments with
+            DEMO_RESET_ENABLED=true, so it renders only where the deployment
+            opts in; otherwise it would be a dead control. */}
+        {DEMO_CONTROLS_ENABLED && (
+          <div className="flex items-center justify-between flex-wrap" style={{ gap: 12, marginTop: 32, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+            <span style={{ fontSize: 12, color: "var(--ink-3)" }}>Internal: 2xA meeting demo control{resetMessage ? ` · ${resetMessage}` : ""}</span>
+            <Button variant="ghost" size="sm" icon={<IconRefresh size={13} />} loading={resetMutation.isPending} onClick={() => resetMutation.mutate()}>
+              Reset 2xA demo
+            </Button>
           </div>
         )}
       </div>
-
-      {/* Internal demo control — not a customer-facing product feature. The
-          backend only honours it for admins on non-production deployments
-          with DEMO_RESET_ENABLED=true, so it is rendered only where the
-          deployment opts in; otherwise it would be a dead control. */}
-      {DEMO_CONTROLS_ENABLED && (<>
-      <div className="max-w-[1100px] mx-auto px-6 lg:px-10 pb-8 mt-2 pt-4 border-t border-border flex items-center justify-between">
-        <p className="text-2xs text-muted">Internal — 2xA meeting demo control</p>
-        <Button
-          variant="ghost"
-          size="xs"
-          icon={<FiRefreshCw size={12} className={resetting ? "animate-spin" : ""} />}
-          loading={resetting}
-          onClick={() => resetMutation.mutate()}
-        >
-          Reset 2xA demo
-        </Button>
-      </div>
-      {resetMessage && <p className="text-2xs text-muted mt-2">{resetMessage}</p>}
-      </>)}
     </DashboardLayout>
   );
 }
