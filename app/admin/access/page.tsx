@@ -121,7 +121,7 @@ export default function AccessReviewPage() {
               {rows === null && <SkeletonRows rows={4} height={56} />}
               {rows && rows.length === 0 && <EmptyLine title="No applications here" body="Applications with this status appear here." />}
               {rows && rows.length > 0 && (
-                <div role="list" style={{ borderTop: `1px solid ${LINE}` }}>
+                <div role="list">
                   {rows.map((r) => (
                     <div key={r.id} role="listitem" className="acc-row row-hover" aria-current={selected?.id === r.id ? "true" : undefined} onClick={() => open(r.id)}>
                       <div className="min-w-0">
@@ -167,9 +167,9 @@ export default function AccessReviewPage() {
                 <div style={{ borderTop: `1px solid ${LINE}`, paddingTop: 16 }}>
                   <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
                     <StatusChip tone={TIER[selected.eligibility.tier].tone}>{TIER[selected.eligibility.tier].label}</StatusChip>
-                    <span style={{ fontSize: 13, color: INK }}>{selected.eligibility.label}</span>
+                    {selected.eligibility.label !== TIER[selected.eligibility.tier].label && <span style={{ fontSize: 13, color: INK }}>{selected.eligibility.label}</span>}
                   </div>
-                  <ul style={{ margin: "8px 0 0", paddingLeft: 18, fontSize: 12.5, color: SOFT, lineHeight: 1.6 }}>{selected.eligibility.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
+                  <ul style={{ margin: "8px 0 0", padding: 0, listStyle: "none", display: "grid", gap: 4, fontSize: 12.5, color: SOFT, lineHeight: 1.55 }}>{selected.eligibility.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
                   <p style={{ margin: "6px 0 0", fontSize: 12, color: FAINT }}>Rules {selected.eligibility.rules_version}</p>
                 </div>
 

@@ -73,7 +73,7 @@ export default function AdminErrorsDashboard() {
         }
       `}</style>
       <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 28 }}>
-        <PageHeader title="Errors" subtitle="What failed in production today, newest first." />
+        <PageHeader title="Errors" subtitle="The latest errors in production, newest first." />
 
         <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: 24 }}>
           <Figure value={fig(summary?.totalErrors)} label="Errors today" />
