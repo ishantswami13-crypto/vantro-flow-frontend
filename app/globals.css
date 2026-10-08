@@ -1231,19 +1231,22 @@ a.rf-row:hover, button.rf-row:hover, .rf-row.rf-hover:hover { background: var(--
 @media (min-width: 900px) { .rf-change { grid-template-columns: 112px minmax(0, 1fr) 96px 104px 64px 14px; } }
 
 /* Watch: a live control table. One column on phones, seven from 900px:
-   watching | threshold | value when met | status | last met | checked | actions.
+   watching | threshold | value when met | status (and when checked) | last met | actions.
    The threshold reads as the line, the value found as the reading against it. */
 .rf-watch > .rf-row { grid-template-columns: minmax(0, 1fr); row-gap: 6px; align-items: center; padding: 13px 0; }
 .rf-watch .rf-actions { justify-content: flex-start; margin-left: -9px; }
-.rf-watch-head { grid-template-columns: minmax(0, 1fr) 156px 128px 148px 80px 80px 172px; }
+.rf-watch-head { grid-template-columns: minmax(0, 1fr) 188px 150px 168px 80px 164px; }
 .rf-watch-threshold { text-align: right; white-space: nowrap; font-size: 13px; color: var(--ink-2); }
 .rf-watch-threshold .num { color: var(--ink-2); font-weight: 400; }
 .rf-watch-op { font-size: 12px; color: var(--ink-3); }
 .rf-watch-value { text-align: right; white-space: nowrap; font-size: 13.5px; color: var(--ink); }
+.rf-watch-status { align-items: center; gap: 2px 10px; }
+.rf-watch-checked { font-size: 12px; color: var(--ink-3); }
+@media (min-width: 900px) { .rf-watch-status { flex-direction: column; align-items: flex-start; } .rf-watch-checked { padding-left: 12px; } }
 .rf-watch-unit { font-size: 12px; color: var(--ink-3); }
 .rf-watch-none { color: var(--ink-3); }
 @media (min-width: 900px) {
-  .rf-watch > .rf-row { grid-template-columns: minmax(0, 1fr) 156px 128px 148px 80px 80px 172px; }
+  .rf-watch > .rf-row { grid-template-columns: minmax(0, 1fr) 188px 150px 168px 80px 164px; }
   .rf-watch .rf-actions { justify-content: flex-end; margin-left: 0; margin-right: -9px; }
 }
 .rf-evidence { padding: 4px 0 16px; max-width: 760px; }

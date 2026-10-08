@@ -231,7 +231,6 @@ function ConditionsTable({ rows, events, busyId, onCheck, onToggle, onDelete }: 
         <span role="columnheader" style={{ textAlign: "right" }} title="The value Starlane found when the condition was last met">Value when met</span>
         <span role="columnheader">Status</span>
         <span role="columnheader" style={{ textAlign: "right" }}>Last met</span>
-        <span role="columnheader" style={{ textAlign: "right" }}>Checked</span>
         <span role="columnheader"><span className="sr-only">Actions</span></span>
       </div>
       <div role="rowgroup" className="rf-list rf-watch">
@@ -243,8 +242,8 @@ function ConditionsTable({ rows, events, busyId, onCheck, onToggle, onDelete }: 
           return (
             <div key={w.id} role="row" className="rf-row rf-hover" style={{ opacity: busy ? 0.6 : 1, borderBottom: "1px solid var(--line)" }}>
               <span role="cell" className="min-w-0">
-                <span className="rf-title block" style={{ fontWeight: 500, overflowWrap: "anywhere" }}>{w.name}</span>
-                <span className="rf-kind block">{t.metric}{t.who ? ` · ${t.who}` : ""}</span>
+                <span className="rf-title line-clamp-2" style={{ fontWeight: 500, overflowWrap: "anywhere" }} title={w.name}>{w.name}</span>
+                <span className="rf-kind block truncate" title={t.who || undefined}>{t.metric}{t.who ? ` · ${t.who}` : ""}</span>
                 <span className="rf-mob">
                   <span>{t.op} <span className="num" style={{ color: "var(--ink-2)" }}>{t.value}</span>{t.unit && ` ${t.unit}`}</span>
                   {found != null && <span style={{ color: "var(--ink)" }}>Found <MetricFigure w={w} n={found} /></span>}
@@ -256,15 +255,12 @@ function ConditionsTable({ rows, events, busyId, onCheck, onToggle, onDelete }: 
               <span role="cell" className="rf-desk rf-watch-value">
                 {found != null ? <MetricFigure w={w} n={found} /> : <span className="rf-watch-none">—</span>}
               </span>
-              <span role="cell" className="flex items-center flex-wrap" style={{ gap: 10 }}>
+              <span role="cell" className="flex flex-wrap rf-watch-status">
                 <StatusChip tone={s.tone}>{s.label}</StatusChip>
-                <span className="rf-mob" style={{ marginTop: 0 }}>Checked {w.last_evaluated_at ? formatRelative(w.last_evaluated_at) : "never"}</span>
+                {w.last_evaluated_at && <span className="rf-watch-checked" title={formatDateTime(w.last_evaluated_at)}>Checked {formatRelative(w.last_evaluated_at)}</span>}
               </span>
               <span role="cell" className="rf-time rf-desk" style={{ color: w.last_triggered_at ? "var(--ink-2)" : undefined }} title={w.last_triggered_at ? formatDateTime(w.last_triggered_at) : undefined}>
                 {w.last_triggered_at ? formatRelative(w.last_triggered_at) : "Never"}
-              </span>
-              <span role="cell" className="rf-time rf-desk" title={w.last_evaluated_at ? formatDateTime(w.last_evaluated_at) : undefined}>
-                {w.last_evaluated_at ? formatRelative(w.last_evaluated_at) : "Never"}
               </span>
               <span role="cell" className="rf-actions rf-reveal" style={{ gap: 0 }}>
                 <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" disabled={busy || w.status === "paused"} onClick={() => onCheck(w)}>Check now</button>

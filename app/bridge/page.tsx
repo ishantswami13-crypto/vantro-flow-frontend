@@ -149,7 +149,7 @@ export default function BridgePage() {
         {data && data.hasData && (
           <>
             {data.partial && (
-              <p className="meta" style={{ margin: "12px 0 0" }}>
+              <p className="meta" style={{ marginBottom: 0 }}>
                 Part of your data couldn&apos;t be read this time, so some sections may be incomplete.{" "}
                 <button type="button" onClick={load} className="hover-dim" style={{ color: "var(--ink-2)", textDecoration: "underline", textUnderlineOffset: 3 }}>Try again</button>
               </p>
@@ -190,7 +190,10 @@ export default function BridgePage() {
                     {[0, 1].map((i) => <div key={i} className="skeleton" style={{ height: 14, margin: "18px 0", maxWidth: 360 }} />)}
                   </div>
                 ) : pipeline.isError ? (
-                  <QuietLine>Not known right now. Starlane couldn&apos;t read the decision pipeline.</QuietLine>
+                  <QuietLine>
+                    Not known right now. Starlane couldn&apos;t read the decision pipeline.{" "}
+                    <button type="button" onClick={() => pipeline.refetch()} className="hover-dim" style={{ color: "var(--ink)", textDecoration: "underline", textUnderlineOffset: 3 }}>Try again</button>
+                  </QuietLine>
                 ) : forming.length === 0 ? (
                   <QuietLine>No decision is forming. Starlane looks for new ones in your ledger after each sync.</QuietLine>
                 ) : (
@@ -364,7 +367,7 @@ function NeedsYou({ decisions, topEvent, watching, onOpenEvent }: { decisions: F
               <span className={`rf-desk ${css.needsCat}`}>{typeLabel(a.type)}</span>
               <div className="min-w-0">
                 <Link href={actionHref(a)} className={`hover-dim ${css.needsTitle}`}>{plain(a.title)}</Link>
-                {a.description && <span className={css.needsContext}>{plain(a.description)}</span>}
+                {a.description && <span className={`${css.needsContext} ${css.clamp2}`}>{plain(a.description)}</span>}
                 <div className="rf-mob">
                   <span>{typeLabel(a.type)}</span>
                   <StatusChip tone={tone}>{state}</StatusChip>
@@ -457,9 +460,9 @@ function FormingRow({ d }: { d: DecisionListItem }) {
             {due && <span className={due.now ? css.formingDueNow : css.formingDue}>{due.text}</span>}
             {band && <span>{band} confidence</span>}
           </span>
-          <span className={css.formingTitle} style={{ marginTop: 2 }}>{plain(d.title)}</span>
+          <span className={`${css.formingTitle} ${css.clamp2}`} style={{ marginTop: 2 }} title={plain(d.title)}>{plain(d.title)}</span>
           {d.recommendation && (
-            <span className={css.formingRec}>
+            <span className={`${css.formingRec} truncate`}>
               {d.recommendation.informationFirst ? "Recommended: find out first" : <>Recommended: <b>{plain(d.recommendation.label)}</b></>}
             </span>
           )}
@@ -500,7 +503,7 @@ function MissionRow({ m }: { m: Mission }) {
           )}
         </span>
         <span className="rf-time" style={{ paddingTop: 2 }} title={m.endsAt ? formatDateTime(m.endsAt) : undefined}>
-          {p?.daysLeft != null ? `${plural(p.daysLeft, "day")} left` : m.endsAt ? `Ends ${formatDate(m.endsAt)}` : ""}
+          {p?.daysLeft != null ? (p.daysLeft <= 0 ? "Last day" : `${plural(p.daysLeft, "day")} left`) : m.endsAt ? `Ends ${formatDate(m.endsAt)}` : ""}
         </span>
         <span className={css.chev}><Chevron size={13} /></span>
       </Link>
@@ -508,7 +511,7 @@ function MissionRow({ m }: { m: Mission }) {
   );
 }
 
-const AGE_COLS = "minmax(0, 1fr) 48px 44px 104px";
+const AGE_COLS = "minmax(64px, 1fr) minmax(0, 40px) auto minmax(96px, auto)";
 const LATE_BANDS = new Set(["31_90", "90_plus"]);
 
 /** Business state: the headline figures straight from `state`, then where
@@ -559,14 +562,14 @@ function BusinessState({ data }: { data: BridgeView }) {
         </div>
 
         <div className="min-w-0">
-          <div className="rf-head rf-head-keep" style={{ gridTemplateColumns: "minmax(0, 1fr) 56px 104px" }}>
+          <div className="rf-head rf-head-keep" style={{ gridTemplateColumns: "minmax(0, 1fr) auto minmax(96px, auto)" }}>
             <span>Most overdue</span><span style={{ textAlign: "right" }}>Oldest</span><span style={{ textAlign: "right" }}>Overdue</span>
           </div>
           {!s || s.topOverdue.length === 0 ? <QuietLine>No customer is overdue.</QuietLine> : (
             <ul className="rf-list">
               {s.topOverdue.slice(0, 5).map((c) => (
                 <li key={c.key}>
-                  <div className="rf-row" style={{ gridTemplateColumns: "minmax(0, 1fr) 56px 104px", padding: "9px 0" }}>
+                  <div className="rf-row" style={{ gridTemplateColumns: "minmax(0, 1fr) auto minmax(96px, auto)", padding: "9px 0" }}>
                     <span className="min-w-0">
                       <span className="rf-sub block truncate" style={{ color: "var(--ink)" }} title={c.name}>{c.name}</span>
                       <span className="rf-kind block">{plural(c.count, "invoice")}</span>
