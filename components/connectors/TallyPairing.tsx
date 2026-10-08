@@ -1,6 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type Connector } from "@/lib/api";
+import { IconCheck, IconCopy } from "@/components/v32/icons";
+import { formatClock } from "@/lib/format";
+import { OFFLINE } from "./health";
 
 // Pair TallyPrime through the local bridge. Every state shown is real:
 //   1. the bridge file comes from the backend (with its SHA-256);
@@ -14,16 +17,21 @@ import { api, type Connector } from "@/lib/api";
 type Pairing = { code: string; expiresAt: string; command: string; knownDeviceIds: string[] };
 const POLL_MS = 4000;
 
-const ink = "var(--ink)", soft = "var(--ink-2)", faint = "var(--ink-3)", line = "var(--line)", ok = "var(--positive)", bad = "var(--critical)";
-
-function Step({ n, title, done, active, children }: { n: number; title: string; done: boolean; active: boolean; children?: React.ReactNode }) {
+function Step({ n, title, done, active, last, children }: { n: number; title: string; done: boolean; active: boolean; last?: boolean; children?: React.ReactNode }) {
   return (
-    <li style={{ display: "grid", gridTemplateColumns: "28px 1fr", gap: 14, padding: "18px 0", borderTop: `1px solid ${line}`, opacity: active || done ? 1 : 0.5 }}>
-      <span aria-hidden style={{ width: 24, height: 24, borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600,
-        background: done ? ok : active ? ink : "var(--surface-2)", color: done ? "var(--bg)" : active ? "var(--on-inverse)" : soft }}>{done ? "✓" : n}</span>
-      <div style={{ minWidth: 0 }}>
-        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: ink }}>{title}<span className="sr-only">{done ? " — done" : active ? " — current step" : ""}</span></p>
-        {children && <div style={{ marginTop: 8 }}>{children}</div>}
+    <li style={{ display: "grid", gridTemplateColumns: "28px minmax(0, 1fr)", columnGap: 16, position: "relative" }}>
+      {!last && <span aria-hidden="true" style={{ position: "absolute", left: 13.5, top: 34, bottom: 4, width: 1, background: "var(--line)" }} />}
+      <span aria-hidden="true" className="tabular-nums" style={{
+        width: 28, height: 28, borderRadius: 14, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, fontWeight: 500,
+        background: done ? "rgb(var(--tk-positive) / 0.14)" : active ? "var(--inverse)" : "transparent",
+        color: done ? "var(--positive)" : active ? "var(--on-inverse)" : "var(--ink-3)",
+        boxShadow: done || active ? "none" : "inset 0 0 0 1px var(--line-strong)",
+      }}>{done ? <IconCheck size={14} /> : n}</span>
+      <div style={{ minWidth: 0, paddingBottom: last ? 0 : 26, opacity: active || done ? 1 : 0.55 }}>
+        <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>
+          {title}<span className="sr-only">{done ? ", done" : active ? ", current step" : ""}</span>
+        </p>
+        {children && <div style={{ marginTop: 10 }}>{children}</div>}
       </div>
     </li>
   );
@@ -67,7 +75,7 @@ export function TallyPairing({ onConnected }: { onConnected?: (tally: Connector)
   async function download() {
     setDownloading(true); setError(null);
     try { setDownloaded(await api.connectors.downloadBridge("tally")); }
-    catch (e) { setError(e instanceof Error ? e.message : "Download failed"); }
+    catch { setError(`The bridge didn't download. ${OFFLINE}`); }
     finally { setDownloading(false); }
   }
 
@@ -81,8 +89,8 @@ export function TallyPairing({ onConnected }: { onConnected?: (tally: Connector)
       setNow(Date.now());
       stopPolling();
       pollRef.current = setInterval(refresh, POLL_MS);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create a pairing code");
+    } catch {
+      setError(`No pairing code was created. ${OFFLINE}`);
     } finally { setPairingBusy(false); }
   }
 
@@ -93,51 +101,67 @@ export function TallyPairing({ onConnected }: { onConnected?: (tally: Connector)
 
   const secondsLeft = pairing ? Math.max(0, Math.round((new Date(pairing.expiresAt).getTime() - now) / 1000)) : 0;
 
+  const P = { fontSize: 13, color: "var(--ink-2)", margin: 0, lineHeight: 1.6 } as const;
+
   return (
     <div>
-      {error && <p role="alert" style={{ fontSize: 13, color: bad, background: "#FBEFEF", border: "1px solid #F0D5D5", borderRadius: 8, padding: 12, marginBottom: 12 }}>{error}</p>}
+      {error && (
+        <div role="alert" className="flex items-center justify-between flex-wrap" style={{ gap: 10, fontSize: 13, color: "var(--critical)", background: "rgb(var(--tk-critical) / 0.08)", border: "1px solid rgb(var(--tk-critical) / 0.22)", borderRadius: 8, padding: "10px 12px", marginBottom: 18 }}>
+          {error}
+          <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" onClick={() => setError(null)}>Dismiss</button>
+        </div>
+      )}
       <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
         <Step n={1} title="Download the Starlane Tally bridge" done={!!downloaded} active={!downloaded}>
-          <p style={{ fontSize: 13, color: soft, margin: "0 0 10px", lineHeight: 1.55 }}>
-            Save it on the computer that runs TallyPrime. It needs Node.js 18 or newer, and Tally&apos;s XML server enabled (F1 › Settings › Connectivity, port 9000).
+          <p style={{ ...P, marginBottom: 12 }}>
+            Save it on the computer that runs TallyPrime. It needs Node.js 18 or newer, and Tally&apos;s XML server switched on (F1, Settings, Connectivity, port 9000).
           </p>
-          <button type="button" onClick={download} disabled={downloading} className="btn-primary" style={{ background: ink, color: "#fff", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500, border: "none", cursor: "pointer" }}>
+          <button type="button" onClick={download} disabled={downloading} className={`ui-btn ${downloaded ? "ui-btn-secondary" : "ui-btn-primary"}`} aria-busy={downloading || undefined}>
             {downloading ? "Downloading…" : downloaded ? "Download again" : "Download tally-sync.mjs"}
           </button>
-          {downloaded?.sha256 && <p style={{ fontSize: 11, color: faint, marginTop: 8, wordBreak: "break-all" }}>SHA-256 {downloaded.sha256}</p>}
+          {downloaded?.sha256 && (
+            <p style={{ fontSize: 12, color: "var(--ink-3)", margin: "10px 0 0", wordBreak: "break-all" }}>
+              SHA-256 <span className="tabular-nums" style={{ color: "var(--ink-2)" }}>{downloaded.sha256}</span>
+            </p>
+          )}
         </Step>
 
         <Step n={2} title="Pair it with a one-time code" done={!!newDevice} active={!!downloaded && !newDevice}>
           {!pairing || expired ? (
             <>
-              {expired && !newDevice && <p style={{ fontSize: 13, color: bad, margin: "0 0 10px" }}>That code expired before a device used it. Get a new one.</p>}
-              <button type="button" onClick={getCode} disabled={pairingBusy} style={{ background: "none", border: `1px solid ${ink}`, color: ink, borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+              {expired && !newDevice && <p style={{ ...P, color: "var(--warning)", marginBottom: 10 }}>That code expired before a computer used it. Get a new one.</p>}
+              <button type="button" onClick={getCode} disabled={pairingBusy} className={`ui-btn ${downloaded ? "ui-btn-primary" : "ui-btn-secondary"}`} aria-busy={pairingBusy || undefined}>
                 {pairingBusy ? "Creating…" : pairing ? "Get a new code" : "Get pairing code"}
               </button>
             </>
           ) : (
             <>
-              <p style={{ fontSize: 13, color: soft, margin: "0 0 8px" }}>In the folder where you saved the bridge, run:</p>
-              <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
-                <code style={{ flex: 1, minWidth: 0, fontFamily: "var(--font-sans)", fontSize: 12.5, background: "#F6F5F2", border: `1px solid ${line}`, borderRadius: 8, padding: "10px 12px", overflowX: "auto", whiteSpace: "nowrap", color: ink }}>{pairing.command}</code>
-                <button type="button" onClick={copy} style={{ background: "none", border: `1px solid ${line}`, borderRadius: 8, padding: "0 12px", fontSize: 12.5, cursor: "pointer", color: ink }}>{copied ? "Copied" : "Copy"}</button>
+              <p style={{ ...P, marginBottom: 8 }}>In the folder where you saved the bridge, run:</p>
+              <div className="flex" style={{ gap: 8, alignItems: "stretch" }}>
+                <code style={{ flex: 1, minWidth: 0, fontFamily: "var(--font-sans)", fontSize: 12.5, background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 8, padding: "9px 12px", overflowX: "auto", whiteSpace: "nowrap", color: "var(--ink)" }}>{pairing.command}</code>
+                <button type="button" onClick={copy} className="ui-btn ui-btn-secondary" style={{ height: "auto" }} aria-label={copied ? "Copied" : "Copy command"}>
+                  {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}{copied ? "Copied" : "Copy"}
+                </button>
               </div>
-              <p style={{ fontSize: 12, color: faint, marginTop: 8 }} aria-live="polite">
-                Code works once and expires in {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}. The bridge gets its own credential; your password never leaves Starlane.
+              <p style={{ fontSize: 12, color: "var(--ink-3)", margin: "8px 0 0", lineHeight: 1.55 }} aria-live="polite">
+                The code works once and expires in <span className="tabular-nums" style={{ color: "var(--ink-2)" }}>{Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}</span>. The bridge gets its own credential; your password never leaves Starlane.
               </p>
             </>
           )}
-          {newDevice && <p style={{ fontSize: 13, color: ok, margin: 0 }}>Paired: {newDevice.name}</p>}
+          {newDevice && <p style={{ ...P, color: "var(--positive)" }}>Paired with {newDevice.name}</p>}
         </Step>
 
-        <Step n={3} title="First sync" done={synced} active={!!newDevice && !synced}>
+        <Step n={3} title="First sync" done={synced} active={!!newDevice && !synced} last>
+          {!newDevice && <p style={P}>Starts by itself right after pairing.</p>}
           {newDevice && !synced && (
-            <p style={{ fontSize: 13, color: soft, margin: 0 }} aria-live="polite">
-              Waiting for the bridge to send its first vouchers… This happens right after pairing; if nothing arrives, check the bridge window for an error (usually Tally&apos;s XML server being off).
+            <p style={P} aria-live="polite">
+              Waiting for the bridge to send its first vouchers. If nothing arrives in a minute, check the bridge window for an error; usually Tally&apos;s XML server is off.
             </p>
           )}
           {synced && tally?.state.lastSyncAt && (
-            <p style={{ fontSize: 13, color: ok, margin: 0 }}>Received at {new Date(tally.state.lastSyncAt).toLocaleTimeString()}. Keep <code>node tally-sync.mjs --watch</code> running to sync every 30 minutes.</p>
+            <p style={P}>
+              <span style={{ color: "var(--positive)" }}>Received at {formatClock(tally.state.lastSyncAt)}.</span> Keep <code style={{ fontFamily: "var(--font-sans)", color: "var(--ink)" }}>node tally-sync.mjs --watch</code> running to sync every 30 minutes.
+            </p>
           )}
         </Step>
       </ol>

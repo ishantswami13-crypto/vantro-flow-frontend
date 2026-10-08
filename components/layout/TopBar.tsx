@@ -80,14 +80,18 @@ export default function TopBar({ pageTitle, onMenu, onSearch }: { pageTitle?: st
           <IconSearch size={15} />
         </button>
         {fresh && (
+          // The wrapper carries the responsive hide: .chip sets its own display
+          // and would override a `hidden` utility on the same element.
+          <span className="hidden md:inline-flex">
           <Link
             href="/sources"
-            className={`chip chip-${fresh.tone} hidden md:inline-flex`}
+            className={`chip chip-${fresh.tone}`}
             style={{ marginRight: 4 }}
             title={pulse?.dataAsOf ? `Business data as of ${formatDateTime(pulse.dataAsOf)}` : "No source has synced yet"}
           >
             {pulse?.source ? `${pulse.source} · ` : ""}{fresh.word}{pulse?.dataAsOf && pulse.freshness !== "none" ? ` · ${formatRelative(pulse.dataAsOf)}` : ""}
           </Link>
+          </span>
         )}
         {pulse && (
           <Link href="/prepared" className="icon-btn relative" aria-label={pulse.needs ? `${pulse.needs} need you` : "Nothing needs you"} title={pulse.needs ? `${pulse.needs} need you` : "Nothing needs you"}>
@@ -100,9 +104,11 @@ export default function TopBar({ pageTitle, onMenu, onSearch }: { pageTitle?: st
           </Link>
         )}
         {!pathname.startsWith("/scan") && (
-          <Link href="/scan" className="ui-btn ui-btn-ghost ui-btn-sm hidden sm:inline-flex" style={{ gap: 6 }}>
-            <IconScan size={14} /> Ask Starlane
-          </Link>
+          <span className="hidden sm:inline-flex">
+            <Link href="/scan" className="ui-btn ui-btn-ghost ui-btn-sm" style={{ gap: 6 }}>
+              <IconScan size={14} /> Ask Starlane
+            </Link>
+          </span>
         )}
         <button
           type="button"

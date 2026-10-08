@@ -5,10 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { PageHeader, StatusDot, Sep, Lettermark, EmptyLine, Button } from "@/components/v32/ui";
-import { ControlSubnav, type ControlTab } from "@/components/control/ControlSubnav";
+import { StatusChip } from "@/components/ui/Badge";
+import { Figure, Lettermark, EmptyLine, SkeletonRows } from "@/components/v32/ui";
+import { IconUsers } from "@/components/v32/icons";
+import { ControlHeader, ControlPage, type ControlTab } from "@/components/control/ControlSubnav";
+import { OFFLINE } from "@/components/connectors/health";
+import { formatCount, formatDateTime, formatRelative } from "@/lib/format";
 import { api, type CortexHealthResponse, type DataConnection, type UserSettings } from "@/lib/api";
 
 // Control — what Starlane can see, what it's doing, and whether it's
@@ -37,97 +40,75 @@ import { api, type CortexHealthResponse, type DataConnection, type UserSettings 
 // the subnav; old links to them fall back to Overview.
 const MIN_EVALUATED_FOR_RATE = 3;
 
-function timeSince(iso: string | null): string {
-  if (!iso) return "never";
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
+function Section({ title, hint, right, children }: { title: string; hint?: React.ReactNode; right?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section>
+      <div className="flex items-end justify-between flex-wrap" style={{ gap: 12, marginBottom: 10 }}>
+        <div className="min-w-0">
+          <h2 style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{title}</h2>
+          {hint && <p style={{ margin: "3px 0 0", fontSize: 12.5, color: "var(--ink-3)", maxWidth: 640 }}>{hint}</p>}
+        </div>
+        {right}
+      </div>
+      {children}
+    </section>
+  );
 }
+
+const sourceName = (t: string) => ({ TALLY: "TallyPrime", FILE_IMPORT: "Spreadsheet or CSV" } as Record<string, string>)[t] || humanize(t);
+const humanize = (s: string) => s.replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase());
 
 function ConnectionSection({ connections }: { connections: DataConnection[] }) {
   if (connections.length === 0) {
     return (
-      <EmptyLine title="No sources connected yet." body="Connect a business system so Starlane can reason from real, current data." action={<Button small href="/sources">Open Sources</Button>} />
+      <EmptyLine title="No sources connected yet" body="Connect a business system so Starlane reasons from real, current data."
+        action={<Link href="/sources/connect" className="ui-btn ui-btn-secondary ui-btn-sm">Connect a source</Link>} />
     );
   }
   return (
-    <div>
-      {connections.map(c => (
-        <div key={c.id} className="flex items-center justify-between" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid var(--line)" }}>
-          <div className="min-w-0">
-            <div style={{ fontSize: 13, color: "var(--ink)" }}>{c.source_type.charAt(0) + c.source_type.slice(1).toLowerCase()}</div>
-            {c.last_sync_error && <div style={{ fontSize: 12, color: "var(--critical)", marginTop: 2 }}>{c.last_sync_error}</div>}
-          </div>
-          <div className="flex items-center shrink-0" style={{ gap: 16 }}>
-            <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--body)" }}>{timeSince(c.last_sync_at)}</span>
-            <StatusDot label={String(c.status).toUpperCase() === "CONNECTED" ? "Connected" : "Not connected"} color={String(c.status).toUpperCase() === "CONNECTED" ? "var(--positive)" : "rgb(var(--tk-ink) / 0.25)"} />
-          </div>
-        </div>
-      ))}
+    <div style={{ borderTop: "1px solid var(--line)" }}>
+      {connections.map((c) => {
+        const ok = String(c.status).toUpperCase() === "CONNECTED";
+        const err = String(c.status).toUpperCase() === "ERROR" || !!c.last_sync_error;
+        return (
+          <Link key={c.id} href="/sources" className="row-hover flex items-center justify-between" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid var(--line)", minHeight: 52 }}>
+            <div className="min-w-0">
+              <div style={{ fontSize: 13.5, color: "var(--ink)" }}>{sourceName(c.source_type)}</div>
+              {c.last_sync_error && <div className="truncate" style={{ fontSize: 12, color: "var(--critical)", marginTop: 2 }}>{c.last_sync_error}</div>}
+            </div>
+            <div className="flex items-center shrink-0" style={{ gap: 16 }}>
+              <span className="tabular-nums" style={{ fontSize: 12.5, color: "var(--ink-2)" }} title={c.last_sync_at ? formatDateTime(c.last_sync_at) : undefined}>
+                {c.last_sync_at ? `Synced ${formatRelative(c.last_sync_at)}` : "Never synced"}
+              </span>
+              <StatusChip tone={err ? "critical" : ok ? "positive" : "unknown"}>{err ? "Error" : ok ? "Connected" : "Not connected"}</StatusChip>
+            </div>
+          </Link>
+        );
+      })}
     </div>
   );
 }
 
-// Plain sans, tabular-nums — numbers carry hierarchy through size/weight,
-// not monospace (monospace is reserved for genuinely technical values).
-function Stat({ value, label, tone }: { value: React.ReactNode; label: string; tone?: "danger" | "warning" | "success" }) {
-  // Tone only when there is something to report: a coloured zero is noise.
-  const empty = value === 0 || value === null || value === undefined || value === "—";
-  const color = empty ? "var(--ink)" : tone === "danger" ? "var(--critical)" : tone === "warning" ? "var(--warning)" : tone === "success" ? "var(--positive)" : "var(--ink)";
-  return (
-    <div>
-      <div style={{ fontSize: 12, color: "var(--ink-2)", marginBottom: 6 }}>{label}</div>
-      <div style={{ fontFamily: "var(--font-sans)", fontSize: 22, color, lineHeight: 1 }}>{value}</div>
-    </div>
-  );
-}
-
-function IntelligenceSection({ stats }: { stats: CortexHealthResponse["stats"] }) {
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-      <Stat value={stats.pending_actions} label="Pending actions" />
-      <Stat value={stats.pending_by_priority.urgent} label="Urgent" tone="danger" />
-      <Stat value={stats.pending_by_priority.high} label="High priority" tone="warning" />
-      <Stat value={stats.active_plans} label="Active plans" />
-      <Stat value={stats.memory_entries} label="Memory entries" />
-    </div>
-  );
-}
-
-function OutcomesSection({ stats }: { stats: CortexHealthResponse["stats"] }) {
-  const enough = stats.evaluated_actions >= MIN_EVALUATED_FOR_RATE;
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <Stat value={stats.evaluated_actions} label="Actions evaluated" />
-      <Stat
-        value={enough && stats.effectiveness_rate !== null ? `${stats.effectiveness_rate}%` : "—"}
-        label={enough ? "Effectiveness rate" : "Not enough data yet"}
-        tone={enough && stats.effectiveness_rate !== null ? (stats.effectiveness_rate >= 60 ? "success" : stats.effectiveness_rate >= 40 ? "warning" : "danger") : undefined}
-      />
-      <Stat value={stats.effective_count} label="Verified effective" tone="success" />
-      <Stat value={stats.ineffective_count} label="Verified ineffective" tone="danger" />
-    </div>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--ink-2)", marginBottom: 8 }}>{children}</div>;
-}
+// Org-wide fixed policy, identical for every business; no per-org override
+// exists in the backend. L4 Execute always requires approval: the core
+// trust mechanism of the product.
+const POLICY_LEVELS: { level: string; name: string; description: string; granted: boolean }[] = [
+  { level: "L1", name: "Observe", description: "Read business data and surface findings.", granted: true },
+  { level: "L2", name: "Prepare", description: "Draft actions and recommendations for review.", granted: true },
+  { level: "L3", name: "Propose", description: "Put a specific action in front of you to decide on.", granted: true },
+  { level: "L4", name: "Execute", description: "Carry out an action that changes business data.", granted: false },
+];
 
 function PolicyRows() {
   return (
-    <div>
+    <div style={{ borderTop: "1px solid var(--line)" }}>
       {POLICY_LEVELS.map((p) => (
-        <div key={p.level} className="flex items-start flex-wrap md:flex-nowrap" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid var(--line)" }}>
-          <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--ink-3)", width: 20, paddingTop: 1, flexShrink: 0 }}>{p.level}</span>
-          <div style={{ width: 110, flexShrink: 0, fontSize: 13, color: "var(--ink)" }}>{p.name}</div>
-          <div style={{ flex: 1, minWidth: 180, fontSize: 12.5, color: "var(--ink-2)" }}>{p.description}</div>
-          <div style={{ width: 210, flexShrink: 0 }}>
-            <StatusDot label={p.granted ? "Allowed" : "Requires approval every time"} color={p.granted ? "var(--positive)" : "var(--warning)"} />
+        <div key={p.level} className="policy-row">
+          <span className="tabular-nums" style={{ fontSize: 12, color: "var(--ink-3)" }}>{p.level}</span>
+          <div style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 500 }}>{p.name}</div>
+          <div className="policy-desc" style={{ fontSize: 13, color: "var(--ink-2)" }}>{p.description}</div>
+          <div className="policy-chip">
+            <StatusChip tone={p.granted ? "positive" : "attention"}>{p.granted ? "Allowed" : "Your approval, every time"}</StatusChip>
           </div>
         </div>
       ))}
@@ -147,15 +128,12 @@ function OverviewTab() {
     staleTime: 25_000,
   });
 
-  const isLoading = health.isLoading || connections.isLoading;
-  const isError = health.isError || connections.isError;
-
-  if (isLoading) return <LoadingState label="Loading operating health" rows={3} />;
-  if (isError) {
+  if (health.isLoading || connections.isLoading) return <SkeletonRows rows={5} />;
+  if (health.isError || connections.isError) {
     return (
       <ErrorState
         title="Couldn't load operating health"
-        message="Check your connection and try again."
+        message={OFFLINE}
         onRetry={() => { health.refetch(); connections.refetch(); }}
       />
     );
@@ -163,40 +141,48 @@ function OverviewTab() {
 
   const conns = connections.data?.connections || [];
   const connectedN = conns.filter((c) => String(c.status).toUpperCase() === "CONNECTED").length;
-  const pending = health.data?.stats?.pending_actions ?? 0;
+  const stats = health.data?.stats;
+  const pending = stats?.pending_actions ?? null;
+  const enough = !!stats && stats.evaluated_actions >= MIN_EVALUATED_FOR_RATE && stats.effectiveness_rate !== null;
 
   return (
-    <div className="flex flex-col" style={{ gap: 26 }}>
-      <div className="flex items-center flex-wrap" style={{ gap: 10, fontSize: 13, color: "var(--body)" }}>
-        <span>1 user</span><Sep />
-        <span>{connectedN} connected source{connectedN === 1 ? "" : "s"}</span><Sep />
-        <span style={{ color: pending > 0 ? "var(--warning)" : undefined }}>
-          {pending} pending approval{pending === 1 ? "" : "s"}
-        </span>
+    <div className="flex flex-col" style={{ gap: 36 }}>
+      <div className="ctl-figures">
+        <Link href="/control/approvals" className="hover-dim" style={{ display: "block" }}>
+          <Figure value={pending == null ? "—" : formatCount(pending)} label="Waiting for your approval" tone={pending ? "var(--warning)" : undefined} />
+        </Link>
+        <Figure value={formatCount(connectedN)} label={`Connected source${connectedN === 1 ? "" : "s"}`} />
+        <Figure value="1" label="User, the owner" />
+        <Figure value={enough ? `${stats!.effectiveness_rate}%` : "—"} label={enough ? "Of evaluated actions worked" : "Effectiveness not known yet"} />
       </div>
 
-      <div>
-        <SectionLabel>What Starlane is allowed to do</SectionLabel>
-        <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginBottom: 10 }}>The same four levels used on every agent.</div>
+      <Section title="What Starlane is allowed to do" hint="The same four levels apply to every agent. Changing business data always needs you.">
         <PolicyRows />
-      </div>
+      </Section>
 
-      <div>
-        <SectionLabel>Connections</SectionLabel>
+      <Section title="Connections" right={<Link href="/sources" className="ui-btn ui-btn-ghost ui-btn-sm">Open Sources</Link>}>
         <ConnectionSection connections={conns} />
-      </div>
+      </Section>
 
-      {health.data?.stats && (
-        <div>
-          <SectionLabel>Intelligence</SectionLabel>
-          <IntelligenceSection stats={health.data.stats} />
-        </div>
-      )}
-
-      {health.data?.stats && (
-        <div>
-          <SectionLabel>Outcomes</SectionLabel>
-          <OutcomesSection stats={health.data.stats} />
+      {stats && (
+        <div className="ctl-two">
+          <Section title="Work in progress">
+            <dl className="ctl-stats">
+              <div><dt>Pending actions</dt><dd>{formatCount(stats.pending_actions)}</dd></div>
+              <div><dt>Urgent</dt><dd style={{ color: stats.pending_by_priority.urgent ? "var(--critical)" : undefined }}>{formatCount(stats.pending_by_priority.urgent)}</dd></div>
+              <div><dt>High priority</dt><dd style={{ color: stats.pending_by_priority.high ? "var(--warning)" : undefined }}>{formatCount(stats.pending_by_priority.high)}</dd></div>
+              <div><dt>Active plans</dt><dd>{formatCount(stats.active_plans)}</dd></div>
+              <div><dt>Memory entries</dt><dd>{formatCount(stats.memory_entries)}</dd></div>
+            </dl>
+          </Section>
+          <Section title="Outcomes" hint={enough ? undefined : `A rate is shown once ${MIN_EVALUATED_FOR_RATE} or more actions have been evaluated.`}>
+            <dl className="ctl-stats">
+              <div><dt>Actions evaluated</dt><dd>{formatCount(stats.evaluated_actions)}</dd></div>
+              <div><dt>Effectiveness</dt><dd>{enough ? `${stats.effectiveness_rate}%` : <span style={{ color: "var(--ink-3)" }}>Not known yet</span>}</dd></div>
+              <div><dt>Verified effective</dt><dd>{formatCount(stats.effective_count)}</dd></div>
+              <div><dt>Verified ineffective</dt><dd>{formatCount(stats.ineffective_count)}</dd></div>
+            </dl>
+          </Section>
         </div>
       )}
     </div>
@@ -210,72 +196,63 @@ function UsersTab() {
     staleTime: 25_000,
   });
 
-  if (isLoading) return <LoadingState label="Loading users" rows={2} />;
-  if (isError) return <ErrorState title="Couldn't load users" message="Check your connection and try again." onRetry={() => refetch()} />;
+  if (isLoading) return <SkeletonRows rows={2} />;
+  if (isError) return <ErrorState title="Couldn't load users" message={OFFLINE} onRetry={() => refetch()} />;
 
-  const u = data?.settings;
+  const u = data?.settings as (UserSettings & { owner_name?: string }) | undefined;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <SectionLabel>Owner</SectionLabel>
-        <div className="flex items-center justify-between" style={{ gap: 14, padding: "14px 10px", borderBottom: "1px solid var(--line)" }}>
-          <div className="flex items-center" style={{ gap: 12 }}>
-            <Lettermark letter={u?.business_name || u?.email || "O"} />
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{u?.business_name || "Owner"}</div>
-              <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{u?.email}</div>
+    <div className="flex flex-col" style={{ gap: 32 }}>
+      <Section title="Owner">
+        <div className="flex items-center justify-between flex-wrap" style={{ gap: 14, padding: "14px 10px", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+          <div className="flex items-center min-w-0" style={{ gap: 12 }}>
+            <Lettermark letter={u?.owner_name || u?.business_name || u?.email || "O"} size={32} />
+            <div className="min-w-0">
+              <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>{u?.owner_name || u?.business_name || "Owner"}</div>
+              <div className="truncate" style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{u?.email}</div>
             </div>
           </div>
-          <span style={{ fontSize: 12.5, color: "var(--body)" }}>Owner · full access</span>
+          <StatusChip tone="info">Owner, full access</StatusChip>
         </div>
-      </div>
-      <div>
-        <SectionLabel>Team</SectionLabel>
-        <EmptyLine title="No other users have been added yet." body="Invited teammates will appear here with their own role and agent permissions." />
-      </div>
+      </Section>
+      <Section title="Team">
+        <EmptyLine icon={<IconUsers size={17} />} title="No other users yet" body="Invited teammates will appear here with their own role and agent permissions. Inviting is not available yet." />
+      </Section>
     </div>
   );
 }
 
-// §13/§488 — org-wide fixed policy, identical for every business, no
-// per-org override exists in the backend. L4 Execute always requires
-// approval: the core trust mechanism of the product.
-const POLICY_LEVELS: { level: string; name: string; description: string; granted: boolean }[] = [
-  { level: "L1", name: "Observe", description: "Read business data and surface findings.", granted: true },
-  { level: "L2", name: "Prepare", description: "Draft actions and recommendations for review.", granted: true },
-  { level: "L3", name: "Propose", description: "Put a specific action in front of you to decide on.", granted: true },
-  { level: "L4", name: "Execute", description: "Carry out an action that changes business data.", granted: false },
-];
-
 function PermissionsTab() {
   return (
-    <div>
-      <SectionLabel>Organization-wide policy</SectionLabel>
-      <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginBottom: 10, maxWidth: 640 }}>
-        This governs every agent in Starlane. It applies the same way to all agents and cannot be changed per agent.
-      </div>
+    <Section title="Organisation-wide policy" hint="This governs every agent in Starlane. It applies the same way to all agents and cannot be changed per agent.">
       <PolicyRows />
-    </div>
+    </Section>
   );
 }
 
 function AutomationTab() {
+  const P = { margin: 0, fontSize: 13.5, color: "var(--ink-2)", lineHeight: 1.65 } as const;
+  const A = { color: "var(--ink)", textDecoration: "underline", textDecorationColor: "var(--line-strong)", textUnderlineOffset: 3 } as const;
   return (
-    <div className="max-w-[640px] space-y-3 text-[13.5px]" style={{ color: "var(--ink-2)" }}>
-      <p>
-        Automations in Starlane are workflows you deploy from a proposal on{" "}
-        <Link className="underline" href="/prepared">Prepared</Link>. Each one starts in shadow mode, never sends a message on its own,
-        and has an action budget per run.
+    <div className="flex flex-col" style={{ gap: 12, maxWidth: 640 }}>
+      <p style={P}>
+        Automations in Starlane are workflows you deploy from a proposal on <Link style={A} href="/prepared">Prepared</Link>. Each one starts in shadow mode,
+        never sends a message on its own, and has an action budget per run.
       </p>
-      <p>
-        Their runs, what is waiting for you and what was verified are on{" "}
-        <Link className="underline" href="/missions">Missions</Link>. To stop everything or one agent, use the switches on{" "}
-        <Link className="underline" href="/control/decisions">Control, Decisions</Link>.
+      <p style={P}>
+        Their runs, what is waiting for you and what was verified are on <Link style={A} href="/missions">Missions</Link>. To stop everything or one agent,
+        use the switches on <Link style={A} href="/control/decisions">Control, Decisions</Link>.
       </p>
     </div>
   );
 }
+
+const SUBTITLE: Partial<Record<ControlTab, string>> = {
+  overview: "What Starlane may see, prepare and do, and how that is going.",
+  users: "Who can use Starlane for this business.",
+  permissions: "The levels of autonomy every agent works within.",
+  automation: "Where automations live and how to stop them.",
+};
 
 function ControlPageInner() {
   const params = useSearchParams();
@@ -285,23 +262,39 @@ function ControlPageInner() {
 
   return (
     <DashboardLayout pageTitle="Control">
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
-        <PageHeader title="Control" subtitle="What Starlane may see, prepare and do" />
-
-        <ControlSubnav active={tab} />
-
+      <style>{`
+        .ctl-figures { display: grid; gap: 24px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        @media (min-width: 900px) { .ctl-figures { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+        .ctl-two { display: grid; gap: 36px; grid-template-columns: minmax(0, 1fr); }
+        @media (min-width: 900px) { .ctl-two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        .ctl-stats { margin: 0; border-top: 1px solid var(--line); }
+        .ctl-stats > div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 10px; border-bottom: 1px solid var(--line); font-size: 13px; }
+        .ctl-stats dt { color: var(--ink-2); }
+        .ctl-stats dd { margin: 0; color: var(--ink); font-variant-numeric: tabular-nums; }
+        .policy-row { display: grid; align-items: center; gap: 6px 16px; padding: 12px 10px; border-bottom: 1px solid var(--line); min-height: 52px;
+          grid-template-columns: 24px minmax(0, 1fr) auto; }
+        .policy-desc { grid-column: 2 / 4; grid-row: 2; }
+        .policy-chip { grid-column: 3; grid-row: 1; justify-self: end; }
+        @media (min-width: 760px) {
+          .policy-row { grid-template-columns: 28px 120px minmax(0, 1fr) 210px; }
+          .policy-desc { grid-column: auto; grid-row: auto; }
+          .policy-chip { grid-column: auto; grid-row: auto; }
+        }
+      `}</style>
+      <ControlPage>
+        <ControlHeader active={tab} subtitle={SUBTITLE[tab]} />
         <div className="fade-once">
           {tab === "overview" && <OverviewTab />}
           {tab === "users" && <UsersTab />}
           {tab === "permissions" && <PermissionsTab />}
           {tab === "automation" && <AutomationTab />}
         </div>
-      </div>
+      </ControlPage>
     </DashboardLayout>
   );
 }
 
-export default function ControlPage() {
+export default function ControlRoute() {
   return (
     <Suspense fallback={null}>
       <ControlPageInner />

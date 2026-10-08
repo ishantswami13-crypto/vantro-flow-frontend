@@ -1,249 +1,257 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { EmptyLine } from "@/components/v32/ui";
-import { LoadingState } from "@/components/ui/LoadingState";
+import { EmptyLine, SkeletonRows, Sep } from "@/components/v32/ui";
+import { IconCheck } from "@/components/v32/icons";
+import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { ControlSubnav } from "@/components/control/ControlSubnav";
-import { formatDateTime } from "@/components/intelligence/format";
+import { Modal } from "@/components/ui/Modal";
+import { Drawer } from "@/components/ui/Drawer";
+import Button from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
+import { ControlHeader, ControlPage } from "@/components/control/ControlSubnav";
+import { OFFLINE } from "@/components/connectors/health";
+import { formatDateTime, formatRelative, inrWhole } from "@/lib/format";
 import { api, type RankedAction } from "@/lib/api";
 
-// Priority 5 — Control Approvals. Real pending ai_actions for this tenant,
-// same two-column layout the honest-empty shell already had (§6:
-// ControlApprovals — left flex:1 queue list, right flex:1;max-width:380px
-// detail rail, the widest rail in the system). Approve/Reject reuse the
-// same api.aiActions.updateStatus() → PATCH /api/ai-actions/:id pathway
-// already proven from the Bridge Lens drawer (commit 3ad513f) — no parallel
-// approval system. The list itself comes from the existing, now-fixed
-// GET /api/ai-actions route (server.js) — see that route's comment for the
-// pgSupabaseShim embedded-join bug fixed alongside this page.
-function priorityLabel(priority: RankedAction["priority"]): string {
-  if (priority === "urgent") return "Urgent";
-  if (priority === "high") return "High priority";
-  if (priority === "medium") return "Medium priority";
-  return "Low priority";
+// Control > Approvals. Real pending ai_actions for this business from
+// GET /api/ai-actions (tenant-scoped server-side). Approve and Reject use
+// the same api.aiActions.updateStatus() -> PATCH /api/ai-actions/:id path as
+// the Bridge, so there is no parallel approval system. Approve always asks
+// for confirmation first; Reject lives in the detail drawer.
+
+// Backend rule titles can carry ⚠ or 🚨; strip them at render.
+const clean = (s: string | null | undefined) =>
+  String(s || "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu, "").replace(/\s{2,}/g, " ").trim();
+
+const humanize = (s: string) => s.replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase());
+
+function actorLabel(a: RankedAction): string | null {
+  return a.customers?.name || a.customer?.name || null;
 }
 
-function priorityColor(priority: RankedAction["priority"]): string {
-  if (priority === "urgent" || priority === "high") return "var(--critical)";
-  return "var(--ink-3)";
+/** The ₹ amount at stake, when the rule that raised the action recorded one. */
+function amountOf(a: RankedAction): number | null {
+  const v = (a.reason_json as { amount?: unknown } | null | undefined)?.amount;
+  const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-function actorLabel(action: RankedAction): string {
-  if (action.customers?.name) return action.customers.name;
-  if (action.customer?.name) return action.customer.name;
-  return "Starlane";
-}
+const RISK: Record<string, { label: string; tone: StatusTone }> = {
+  high: { label: "High risk", tone: "critical" },
+  medium: { label: "Medium risk", tone: "attention" },
+  low: { label: "Low risk", tone: "neutral" },
+};
+const riskOf = (a: RankedAction) => (a.risk_level && RISK[a.risk_level]) || { label: "Risk not known", tone: "unknown" as StatusTone };
 
-function ApprovalRow({
-  action,
-  selected,
-  onSelect,
-}: {
-  action: RankedAction;
-  selected: boolean;
-  onSelect: () => void;
-}) {
+const PRIORITY: Record<RankedAction["priority"], string> = { urgent: "Urgent", high: "High priority", medium: "Medium priority", low: "Low priority" };
+
+function Meta({ a }: { a: RankedAction }) {
+  const who = actorLabel(a);
   return (
-    <button
-      onClick={onSelect}
-      className="row-hover"
-      style={{
-        display: "flex", flexDirection: "column", gap: 4, width: "100%", textAlign: "left",
-        padding: "12px 14px", borderRadius: 10, border: "1px solid",
-        borderColor: selected ? "var(--accent)" : "var(--line)",
-        background: selected ? "#F4F6FE" : "transparent",
-        cursor: "pointer", marginBottom: 8,
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-        <span className="text-sm font-medium" style={{ color: "var(--ink)" }}>{action.title}</span>
-        <span className="text-2xs" style={{ color: priorityColor(action.priority), fontWeight: 600, whiteSpace: "nowrap" }}>
-          {priorityLabel(action.priority)}
-        </span>
-      </div>
-      <div className="text-2xs" style={{ color: "var(--ink-3)" }}>
-        {actorLabel(action)} · {formatDateTime(action.created_at)}
-      </div>
-    </button>
+    <span className="inline-flex items-center flex-wrap" style={{ gap: 6 }}>
+      {who && <>{who}<Sep /></>}
+      {humanize(a.action_type)}
+      <Sep />
+      <span title={formatDateTime(a.created_at)}>{formatRelative(a.created_at)}</span>
+    </span>
   );
 }
 
 export default function ControlApprovalsPage() {
+  const notify = useToast();
   const [actions, setActions] = useState<RankedAction[] | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [decisionPending, setDecisionPending] = useState(false);
-  const [decisionError, setDecisionError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [pending, setPending] = useState<"approved" | "rejected" | null>(null);
+  const [decisionFailed, setDecisionFailed] = useState(false);
 
-  const load = () => {
-    setLoadError(null);
-    // ?id=<action id> (from Prepared's Review) opens with that action selected.
+  const load = useCallback(() => {
+    setLoadFailed(false);
+    // ?id=<action id> (from Prepared's Review) opens that action's detail.
     let linkedId: string | null = null;
     try { linkedId = new URLSearchParams(window.location.search).get("id"); } catch { /* no window */ }
     api.aiActions.list("pending")
-      .then(res => {
+      .then((res) => {
         const list = res.actions || [];
         setActions(list);
-        setSelectedId(prev => {
-          if (prev && list.some(a => a.id === prev)) return prev;
-          return linkedId && list.some(a => a.id === linkedId) ? linkedId : null;
+        setOpenId((prev) => {
+          if (prev && list.some((a) => a.id === prev)) return prev;
+          return linkedId && list.some((a) => a.id === linkedId) ? linkedId : null;
         });
       })
-      .catch(() => {
-        setActions(null);
-        setLoadError("Couldn't reach Starlane's intelligence backend — try again.");
-      });
-  };
+      .catch(() => { setActions(null); setLoadFailed(true); });
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
-  const selected = actions?.find(a => a.id === selectedId) || null;
+  const opened = actions?.find((a) => a.id === openId) || null;
+  const confirming = actions?.find((a) => a.id === confirmId) || null;
 
-  const decide = async (status: "approved" | "rejected") => {
-    if (!selected) return;
-    setDecisionPending(true);
-    setDecisionError(null);
+  const decide = async (a: RankedAction, status: "approved" | "rejected") => {
+    setPending(status);
+    setDecisionFailed(false);
     try {
-      await api.aiActions.updateStatus(selected.id, status);
-      setActions(prev => (prev || []).filter(a => a.id !== selected.id));
-      setSelectedId(null);
+      await api.aiActions.updateStatus(a.id, status);
+      setActions((prev) => (prev || []).filter((x) => x.id !== a.id));
+      setConfirmId(null);
+      setOpenId(null);
+      notify(status === "approved" ? `Approved: ${clean(a.title)}` : `Rejected: ${clean(a.title)}`, status === "approved" ? "positive" : "neutral");
     } catch {
-      setDecisionError("Couldn't save that decision. Try again.");
+      setDecisionFailed(true);
     } finally {
-      setDecisionPending(false);
+      setPending(null);
     }
   };
 
+  const count = actions?.length ?? null;
+  const total = (actions || []).reduce((s, a) => s + (amountOf(a) || 0), 0);
+
   return (
     <DashboardLayout pageTitle="Approvals">
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
+      <style>{`
+        .ap-grid { display: grid; column-gap: 20px; row-gap: 10px; align-items: center; grid-template-columns: minmax(0, 1fr); }
+        .ap-actions { flex-direction: row-reverse; justify-content: flex-end; margin-left: -2px; }
+        .ap-head { display: none; }
+        .ap-row { padding: 14px 10px; border-bottom: 1px solid var(--line); min-height: 64px; }
+        .ap-desk { display: none; }
+        .ap-mobile { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+        @media (min-width: 900px) {
+          .ap-grid { grid-template-columns: minmax(0, 1fr) 130px 120px 172px; }
+          .ap-head { display: grid; padding: 0 10px 8px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line); }
+          .ap-desk { display: block; }
+          .ap-mobile { display: none; }
+          .ap-actions { flex-direction: row; justify-content: flex-end; margin-left: 0; }
+        }
+        .ap-title { font-size: 13.5px; font-weight: 500; color: var(--ink); text-align: left; background: none; border: none; padding: 0; cursor: pointer; }
+        .ap-title:hover { text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+      `}</style>
+      <ControlPage>
+        <ControlHeader
+          active="approvals"
+          counts={{ approvals: count }}
+          subtitle={count ? (
+            <>Actions waiting on your decision before Starlane carries them out{total > 0 ? <>. <span className="tabular-nums" style={{ color: "var(--ink)" }}>{inrWhole(total)}</span> at stake.</> : "."}</>
+          ) : "Actions waiting on your decision before Starlane carries them out."}
+        />
+
         <div className="fade-once">
-          <h1 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, color: "var(--ink)" }}>
-            Control
-          </h1>
-          <p className="text-[13.5px] mt-2 max-w-[640px]" style={{ color: "var(--ink-2)" }}>
-            Actions waiting on your decision before Starlane carries them out.
-          </p>
+          {loadFailed && <ErrorState title="Couldn't load approvals" message={OFFLINE} onRetry={load} />}
+          {actions === null && !loadFailed && <SkeletonRows rows={4} height={64} />}
+
+          {actions !== null && actions.length === 0 && (
+            <EmptyLine
+              icon={<IconCheck size={17} />}
+              title="Nothing is waiting for your approval"
+              body={<>New decisions Starlane raises wait on <Link className="underline" href="/prepared">Prepared</Link> until they need your sign-off here.</>}
+            />
+          )}
+
+          {actions !== null && actions.length > 0 && (
+            <div role="list" aria-label="Waiting for approval">
+              <div className="ap-grid ap-head" aria-hidden="true">
+                <span>Action</span><span style={{ textAlign: "right" }}>Amount</span><span>Risk</span><span />
+              </div>
+              {actions.map((a) => {
+                const amt = amountOf(a);
+                const risk = riskOf(a);
+                return (
+                  <div key={a.id} role="listitem" className="ap-grid ap-row row-hover">
+                    <div className="min-w-0">
+                      <div className="flex items-center" style={{ gap: 8 }}>
+                        {(a.priority === "urgent" || a.priority === "high") && <StatusChip tone={a.priority === "urgent" ? "critical" : "attention"}>{PRIORITY[a.priority]}</StatusChip>}
+                        <button type="button" className="ap-title truncate" onClick={() => { setDecisionFailed(false); setOpenId(a.id); }}>{clean(a.title)}</button>
+                      </div>
+                      {a.description && <div className="truncate" style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 3 }}>{clean(a.description)}</div>}
+                      <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 3 }}><Meta a={a} /></div>
+                      <div className="ap-mobile">
+                        {amt != null && <span className="tabular-nums" style={{ fontSize: 13, color: "var(--ink)" }}>{inrWhole(amt)}</span>}
+                        <StatusChip tone={risk.tone}>{risk.label}</StatusChip>
+                      </div>
+                    </div>
+                    <div className="ap-desk tabular-nums" style={{ textAlign: "right", fontSize: 14, color: amt != null ? "var(--ink)" : "var(--ink-3)" }}>
+                      {amt != null ? inrWhole(amt) : "—"}
+                    </div>
+                    <div className="ap-desk"><StatusChip tone={risk.tone}>{risk.label}</StatusChip></div>
+                    <div className="ap-actions flex items-center" style={{ gap: 6 }}>
+                      <Button variant="ghost" size="sm" onClick={() => { setDecisionFailed(false); setOpenId(a.id); }}>Review</Button>
+                      <Button variant="secondary" size="sm" onClick={() => { setDecisionFailed(false); setConfirmId(a.id); }}>Approve</Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
+      </ControlPage>
 
-        <ControlSubnav active="approvals" />
-
-        <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 20 }}>
-          <div style={{ flex: 1, minWidth: 0, overflow: "auto" }}>
-            {actions === null && !loadError && <LoadingState label="Loading approvals" rows={4} />}
-
-            {loadError && (
-              <ErrorState title="Couldn't load approvals" message={loadError} onRetry={load} />
-            )}
-
-            {actions !== null && !loadError && actions.length === 0 && (
-              <EmptyLine
-                title="No other actions are waiting for a decision right now."
-                body={<>Decisions Starlane raises wait on <Link className="underline" href="/prepared">Prepared</Link>.</>}
-              />
-            )}
-
-            {actions !== null && !loadError && actions.length > 0 && (
+      {opened && !confirming && (
+        <Drawer
+          titleId="approval-detail"
+          title={clean(opened.title)}
+          eyebrow={PRIORITY[opened.priority]}
+          subtitle={<span style={{ fontSize: 12.5, color: "var(--ink-3)" }}><Meta a={opened} /></span>}
+          onClose={() => setOpenId(null)}
+          footer={
+            <div className="flex items-center justify-end flex-wrap" style={{ gap: 8 }}>
+              {decisionFailed && <span role="alert" style={{ fontSize: 12.5, color: "var(--critical)", marginRight: "auto" }}>That decision wasn&apos;t saved. Try again.</span>}
+              <Button variant="secondary" loading={pending === "rejected"} disabled={!!pending} onClick={() => decide(opened, "rejected")}>Reject</Button>
+              <Button variant="primary" disabled={!!pending} onClick={() => { setDecisionFailed(false); setConfirmId(opened.id); }}>Approve</Button>
+            </div>
+          }
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {opened.description && <p style={{ margin: 0, fontSize: 13.5, color: "var(--body)", lineHeight: 1.6 }}>{clean(opened.description)}</p>}
+            <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "120px minmax(0, 1fr)", rowGap: 10, columnGap: 12, fontSize: 13 }}>
+              <dt style={{ color: "var(--ink-3)" }}>Amount</dt>
+              <dd className="tabular-nums" style={{ margin: 0, color: "var(--ink)" }}>{amountOf(opened) != null ? inrWhole(amountOf(opened)) : "Not recorded"}</dd>
+              <dt style={{ color: "var(--ink-3)" }}>Risk</dt>
+              <dd style={{ margin: 0 }}><StatusChip tone={riskOf(opened).tone}>{riskOf(opened).label}</StatusChip></dd>
+              <dt style={{ color: "var(--ink-3)" }}>For</dt>
+              <dd style={{ margin: 0, color: "var(--ink)" }}>{actorLabel(opened) || "Your business"}</dd>
+              <dt style={{ color: "var(--ink-3)" }}>Action</dt>
+              <dd style={{ margin: 0, color: "var(--ink)" }}>{humanize(opened.action_type)}</dd>
+              <dt style={{ color: "var(--ink-3)" }}>Raised</dt>
+              <dd className="tabular-nums" style={{ margin: 0, color: "var(--ink)" }}>{formatDateTime(opened.created_at)}{opened.suggested_by ? ` by ${opened.suggested_by === "rule" ? "a rule" : opened.suggested_by === "ai" ? "Starlane" : "the system"}` : ""}</dd>
+            </dl>
+            {opened.recommended_message && (
               <div>
-                {actions.map(a => (
-                  <ApprovalRow
-                    key={a.id}
-                    action={a}
-                    selected={a.id === selectedId}
-                    onSelect={() => { setSelectedId(a.id); setDecisionError(null); }}
-                  />
-                ))}
+                <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 6 }}>Message that would be prepared</div>
+                <p style={{ margin: 0, padding: "12px 14px", borderRadius: 8, background: "var(--surface-2)", border: "1px solid var(--line)", fontSize: 13, color: "var(--body)", lineHeight: 1.6 }}>
+                  {opened.recommended_message}
+                </p>
               </div>
             )}
           </div>
+        </Drawer>
+      )}
 
-          <div
-            style={{
-              flex: 1, maxWidth: 380, minWidth: 280, borderLeft: "1px solid var(--line)",
-              paddingLeft: 20, display: "flex", flexDirection: selected ? "column" : "row",
-              alignItems: selected ? "stretch" : "center", justifyContent: selected ? "flex-start" : "center",
-              gap: 14, overflow: "auto",
-            }}
-          >
-            {!selected && (
-              <p className="text-[13px] text-center" style={{ color: "var(--ink-3)", maxWidth: 260 }}>
-                Select an item from the queue to see its details here.
-              </p>
-            )}
-
-            {selected && (
-              <>
-                <div>
-                  <div className="text-2xs" style={{ color: priorityColor(selected.priority), fontWeight: 600, letterSpacing: "0.04em" }}>
-                    {priorityLabel(selected.priority)}
-                  </div>
-                  <h2 style={{ margin: "6px 0 0", fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>{selected.title}</h2>
-                </div>
-
-                {selected.description && (
-                  <p className="text-sm" style={{ color: "var(--body)", lineHeight: 1.5 }}>{selected.description}</p>
-                )}
-
-                {selected.recommended_message && (
-                  <div style={{ padding: 12, borderRadius: 8, background: "#F7F7F5", border: "1px solid var(--line)" }}>
-                    <div className="text-2xs" style={{ color: "var(--ink-3)", marginBottom: 4 }}>Recommended message</div>
-                    <p className="text-sm" style={{ color: "var(--body)" }}>{selected.recommended_message}</p>
-                  </div>
-                )}
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <div className="text-2xs" style={{ color: "var(--ink-3)" }}>
-                    Actor: <span style={{ color: "var(--body)" }}>{actorLabel(selected)}</span>
-                  </div>
-                  <div className="text-2xs" style={{ color: "var(--ink-3)" }}>
-                    Action type: <span style={{ color: "var(--body)" }}>{selected.action_type}</span>
-                  </div>
-                  <div className="text-2xs" style={{ color: "var(--ink-3)" }}>
-                    Created: <span style={{ color: "var(--body)" }}>{formatDateTime(selected.created_at)}</span>
-                  </div>
-                  {selected.risk_level && (
-                    <div className="text-2xs" style={{ color: "var(--ink-3)" }}>
-                      Risk: <span style={{ color: "var(--body)" }}>{selected.risk_level}</span>
-                    </div>
-                  )}
-                </div>
-
-                {decisionError && (
-                  <p className="text-2xs" style={{ color: "var(--critical)" }}>{decisionError}</p>
-                )}
-
-                <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-                  <button
-                    onClick={() => decide("approved")}
-                    disabled={decisionPending}
-                    style={{
-                      flex: 1, padding: "9px 14px", borderRadius: 8, border: "none",
-                      background: "var(--ink)", color: "var(--surface-2)", fontSize: 13, fontWeight: 600,
-                      cursor: decisionPending ? "default" : "pointer", opacity: decisionPending ? 0.6 : 1,
-                    }}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => decide("rejected")}
-                    disabled={decisionPending}
-                    style={{
-                      flex: 1, padding: "9px 14px", borderRadius: 8, border: "1px solid var(--line)",
-                      background: "transparent", color: "var(--body)", fontSize: 13, fontWeight: 600,
-                      cursor: decisionPending ? "default" : "pointer", opacity: decisionPending ? 0.6 : 1,
-                    }}
-                  >
-                    Reject
-                  </button>
-                </div>
-              </>
-            )}
+      <Modal
+        open={!!confirming}
+        onClose={() => { if (!pending) setConfirmId(null); }}
+        title="Approve this action?"
+        description={confirming ? clean(confirming.title) : undefined}
+        footer={
+          <>
+            <Button variant="ghost" disabled={!!pending} onClick={() => setConfirmId(null)}>Cancel</Button>
+            <Button variant="primary" loading={pending === "approved"} onClick={() => confirming && decide(confirming, "approved")}>Approve</Button>
+          </>
+        }
+      >
+        {confirming && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55 }}>
+            <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
+              {amountOf(confirming) != null && <span className="tabular-nums" style={{ fontSize: 15, color: "var(--ink)" }}>{inrWhole(amountOf(confirming))}</span>}
+              <StatusChip tone={riskOf(confirming).tone}>{riskOf(confirming).label}</StatusChip>
+            </div>
+            <p style={{ margin: 0 }}>Approving records your decision and adds it to the audit log. Nothing is sent to a customer from this screen.</p>
+            {decisionFailed && <p role="alert" style={{ margin: 0, color: "var(--critical)" }}>That decision wasn&apos;t saved. {OFFLINE}</p>}
           </div>
-        </div>
-      </div>
+        )}
+      </Modal>
     </DashboardLayout>
   );
 }
