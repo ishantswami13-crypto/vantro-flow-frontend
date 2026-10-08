@@ -166,14 +166,14 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapsed, o
             {V32_NAV_ITEMS.map(n => <Row key={n.href} item={n} />)}
           </nav>
 
-          <nav aria-label="Workspace" className="flex flex-col" style={{ gap: 1, marginTop: 18 }}>
+          <nav aria-label="Workspace" className="flex flex-col" style={{ gap: 1, marginTop: 20 }}>
             {!rail && <p className="sb-label">Workspace</p>}
             {rail && <div className="sb-divider" />}
             {V32_WORKSPACE_NAV_ITEMS.map(n => <Row key={n.href} item={n} />)}
           </nav>
 
           {moreItems.length > 0 && (
-            <nav aria-label="More" className="flex flex-col" style={{ gap: 1, marginTop: 18 }}>
+            <nav aria-label="More" className="flex flex-col" style={{ gap: 1, marginTop: 20 }}>
               {rail ? (
                 <>
                   <div className="sb-divider" />
@@ -215,7 +215,7 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapsed, o
         </div>
 
         {/* Account */}
-        <div ref={accountRef} className="relative shrink-0" style={{ padding: 10, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div ref={accountRef} className="relative shrink-0" style={{ padding: "8px 10px 10px" }}>
           {rail && (
             <button type="button" onClick={onToggleCollapsed} className="sb-row" aria-label="Expand sidebar" title="Expand sidebar" style={{ marginBottom: 4 }}>
               <IconSidebar size={16} />
@@ -227,15 +227,18 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapsed, o
             aria-expanded={accountOpen}
             aria-haspopup="menu"
             className="sb-row w-full"
-            style={{ height: 40, gap: 10 }}
+            style={{ height: 42, gap: 10, padding: "0 8px" }}
             title={rail ? userName || "Account" : undefined}
           >
-            <IdentityAvatar name={userName || "?"} size={24} initial />
+            <IdentityAvatar name={userName || "?"} size={22} initial />
             {!rail && (
-              <span className="min-w-0 flex-1 text-left">
-                <span className="block truncate" style={{ fontSize: 13, color: "#DAD9D4" }}>{userName || "Your account"}</span>
-                {userEmail && userEmail !== userName && <span className="block truncate" style={{ fontSize: 11.5, color: "#7C7B75" }}>{userEmail}</span>}
-              </span>
+              <>
+                <span className="min-w-0 flex-1 text-left" style={{ lineHeight: 1.3 }}>
+                  <span className="block truncate" style={{ fontSize: 12.5, fontWeight: 500, color: "#E2E1DC" }}>{userName || "Your account"}</span>
+                  {userEmail && userEmail !== userName && <span className="block truncate" style={{ fontSize: 11, color: "#6F6E69" }}>{userEmail}</span>}
+                </span>
+                <IconChevronDown size={12} style={{ color: "#6F6E69", transform: accountOpen ? "rotate(180deg)" : "none", transition: "transform var(--dur-fast) var(--ease)" }} />
+              </>
             )}
           </button>
 

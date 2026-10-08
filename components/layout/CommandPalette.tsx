@@ -4,8 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, type IntelligenceSignal } from "@/lib/api";
 import { getRecents, timeAgo, type RecentEntry } from "@/lib/recents";
-import { IconSearch, IconClock, IconPlus, IconScan, IconWatch, IconMissions, IconSimulate } from "@/components/v32/icons";
-import { Chevron } from "@/components/v32/ui";
+import { IconSearch, IconClock, IconPage, IconPlus, IconScan, IconWatch, IconMissions, IconSimulate } from "@/components/v32/icons";
 import { IconSun } from "@/components/v32/icons";
 import { toggleTheme } from "@/lib/theme";
 
@@ -22,10 +21,10 @@ interface CommandPaletteProps {
   routes: SearchableRoute[];
 }
 
-type Row = { key: string; href: string; title: string; context?: string; icon: React.ReactNode; shortcut?: string };
+type Row = { key: string; href: string; title: string; context?: string; icon: React.ReactNode; kind: string; shortcut?: string };
 type Group = { label: string; rows: Row[] };
 
-const ICON = { size: 16, style: { color: "var(--ink-2)" } };
+const ICON = { size: 15, style: { color: "var(--ink-3)" } };
 
 // The command palette (Ctrl/Cmd+K): 660px, grouped results, 40px rows.
 // Real content only: pages that exist, this browser's recent pages, live
@@ -57,21 +56,21 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
     const hit = (s: string) => !q || s.toLowerCase().includes(q);
     const out: Group[] = [];
     const recentRows = recents.filter(r => hit(r.label)).slice(0, 3)
-      .map(r => ({ key: `r:${r.href}`, href: r.href, title: r.label, context: `opened ${timeAgo(r.at)}`, icon: <IconClock {...ICON} /> }));
+      .map(r => ({ key: `r:${r.href}`, href: r.href, title: r.label, context: `Opened ${timeAgo(r.at)}`, icon: <IconClock {...ICON} />, kind: "Recent" }));
     if (recentRows.length) out.push({ label: "Recent", rows: recentRows });
     const signalRows = (signals || []).filter(s => hit(s.event_title || "")).slice(0, 4)
-      .map(s => ({ key: `s:${s.id}`, href: `/intelligence/${s.id}`, title: s.event_title || "External event", context: s.related_entity_type || "Signal", icon: <IconScan {...ICON} /> }));
+      .map(s => ({ key: `s:${s.id}`, href: `/intelligence/${s.id}`, title: s.event_title || "External event", context: s.related_entity_type || undefined, icon: <IconScan {...ICON} />, kind: "Signal" }));
     if (signalRows.length) out.push({ label: "Signals", rows: signalRows });
     const pageRows = routes.filter(r => hit(r.label)).slice(0, q ? 8 : 6)
-      .map(r => ({ key: `p:${r.href}`, href: r.href, title: r.label, context: r.context, icon: <span style={{ width: 16, display: "inline-block" }} /> }));
+      .map(r => ({ key: `p:${r.href}`, href: r.href, title: r.label, context: r.context, icon: <IconPage {...ICON} />, kind: "Page" }));
     if (pageRows.length) out.push({ label: "Pages", rows: pageRows });
     const actions: Row[] = [
-      { key: "a:ask", href: "/scan", title: "Ask Starlane", context: "Open Scan", icon: <IconScan {...ICON} />, shortcut: "↵" },
-      { key: "a:watch", href: "/watch?new=1", title: "New Watch", icon: <IconPlus {...ICON} /> },
-      { key: "a:mission", href: "/missions/new", title: "New Mission", icon: <IconMissions {...ICON} /> },
-      { key: "a:sim", href: "/simulate", title: "Simulate", context: "Run a new scenario", icon: <IconSimulate {...ICON} /> },
-      { key: "a:watchlist", href: "/watch", title: "Watch", context: "What Starlane is watching", icon: <IconWatch {...ICON} /> },
-      { key: "a:theme", href: "#theme", title: "Switch theme", context: "Dark or light", icon: <IconSun {...ICON} /> },
+      { key: "a:ask", href: "/scan", title: "Ask Starlane", context: "Open Scan", icon: <IconScan {...ICON} />, kind: "Action" },
+      { key: "a:watch", href: "/watch?new=1", title: "New watch", icon: <IconPlus {...ICON} />, kind: "Action" },
+      { key: "a:mission", href: "/missions/new", title: "New mission", icon: <IconMissions {...ICON} />, kind: "Action" },
+      { key: "a:sim", href: "/simulate", title: "Simulate a scenario", icon: <IconSimulate {...ICON} />, kind: "Action" },
+      { key: "a:watchlist", href: "/watch", title: "Open Watch", context: "What Starlane is watching", icon: <IconWatch {...ICON} />, kind: "Action" },
+      { key: "a:theme", href: "#theme", title: "Switch theme", context: "Light or dark workspace", icon: <IconSun {...ICON} />, kind: "Action" },
     ].filter(a => hit(a.title));
     if (actions.length) out.push({ label: "Actions", rows: actions });
     return out;
@@ -118,40 +117,39 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
   let index = -1;
   return (
     <div className="fixed inset-0" style={{ zIndex: 70 }} onClick={onClose}>
-      <div className="fixed inset-0 lens-backdrop" style={{ background: "rgba(0,0,0,0.5)" }} />
+      <div className="fixed inset-0 lens-backdrop" style={{ background: "rgb(14 14 13 / 0.32)" }} />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Search Starlane"
         className="fixed pop-in flex flex-col overflow-hidden"
         style={{
-          top: "12vh", left: "50%", transform: "translateX(-50%)", width: "min(660px, calc(100vw - 32px))", maxHeight: "70vh",
-          background: "var(--elevated)", border: "1px solid var(--line)", borderRadius: 12, boxShadow: "var(--shadow-lg)",
+          top: "14vh", left: "50%", marginLeft: "calc(min(640px, 100vw - 32px) / -2)", width: "min(640px, calc(100vw - 32px))", maxHeight: "64vh",
+          background: "var(--elevated)", border: "1px solid var(--line)", borderRadius: 10, boxShadow: "var(--shadow-lg)",
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 shrink-0" style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+        <div className="flex items-center gap-3 shrink-0" style={{ height: 50, padding: "0 16px", borderBottom: "1px solid var(--line)" }}>
           <IconSearch size={15} style={{ color: "var(--ink-3)" }} />
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search Starlane or run a command…"
+            placeholder="Search pages, signals and actions"
             className="flex-1 bg-transparent outline-none"
-            style={{ color: "var(--ink)", fontSize: 14.5, boxShadow: "none" }}
+            style={{ color: "var(--ink)", fontSize: 14, boxShadow: "none", outline: "none" }}
             role="combobox"
             aria-expanded="true"
             aria-controls="command-palette-results"
             aria-activedescendant={flat[activeIndex] ? `command-palette-row-${activeIndex}` : undefined}
           />
-          <kbd className="kbd">Esc</kbd>
         </div>
-        <div ref={listRef} id="command-palette-results" role="listbox" className="overflow-y-auto" style={{ padding: "4px 8px 8px" }}>
+        <div ref={listRef} id="command-palette-results" role="listbox" className="overflow-y-auto" style={{ padding: "4px 6px 6px" }}>
           {flat.length === 0 ? (
-            <p style={{ fontSize: 13, color: "var(--ink-3)", padding: "28px 0", textAlign: "center" }}>No results</p>
+            <p style={{ fontSize: 13, color: "var(--ink-3)", padding: "28px 0", textAlign: "center" }}>Nothing matches “{query.trim()}”.</p>
           ) : groups.map(g => (
             <div key={g.label}>
-              <div style={{ padding: "10px 12px 4px", fontSize: 11.5, color: "var(--ink-3)" }}>{g.label}</div>
+              <div className="section-label" style={{ padding: "10px 10px 2px", margin: 0, fontSize: 10.5 }}>{g.label}</div>
               {g.rows.map(r => {
                 index += 1;
                 const i = index;
@@ -166,20 +164,27 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
                     onClick={() => go(r.href)}
                     onMouseEnter={() => setActiveIndex(i)}
                     className="w-full flex items-center text-left"
-                    style={{ height: 40, gap: 12, padding: "0 12px", borderRadius: 8, background: selected ? "rgb(var(--tk-ink) / 0.07)" : "transparent" }}
+                    style={{ height: 36, gap: 10, padding: "0 10px", borderRadius: 6, background: selected ? "var(--surface-2)" : "transparent", boxShadow: selected ? "inset 2px 0 0 var(--ink)" : "none" }}
                   >
                     {r.icon}
-                    <span className="shrink-0" style={{ fontSize: 13.5, color: "var(--ink)" }}>{r.title}</span>
+                    <span className="shrink-0" style={{ fontSize: 13, color: "var(--ink)" }}>{r.title}</span>
                     {r.context && <span className="truncate flex-1" style={{ fontSize: 12, color: "var(--ink-3)" }}>{r.context}</span>}
                     {!r.context && <span className="flex-1" />}
                     {r.shortcut
                       ? <kbd className="kbd">{r.shortcut}</kbd>
-                      : <Chevron size={13} />}
+                      : <span className="shrink-0" style={{ fontSize: 11, color: "var(--ink-3)" }}>{selected ? "↵" : r.kind}</span>}
                   </button>
                 );
               })}
             </div>
           ))}
+        </div>
+        <div className="hidden sm:flex items-center gap-4 shrink-0" style={{ height: 34, padding: "0 14px", borderTop: "1px solid var(--line)", fontSize: 11, color: "var(--ink-3)" }}>
+          <span className="flex items-center gap-1.5"><kbd className="kbd">↑</kbd><kbd className="kbd">↓</kbd> Move</span>
+          <span className="flex items-center gap-1.5"><kbd className="kbd">↵</kbd> Open</span>
+          <span className="flex items-center gap-1.5"><kbd className="kbd">Esc</kbd> Close</span>
+          <span className="flex-1" />
+          <span className="flex items-center gap-1.5"><kbd className="kbd">Ctrl</kbd><kbd className="kbd">1–7</kbd> Surfaces</span>
         </div>
       </div>
     </div>

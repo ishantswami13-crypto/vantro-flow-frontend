@@ -33,6 +33,7 @@ export const IconSearch = (p: P) => <Svg {...p} strokeWidth={1.8}><circle cx="11
 export const IconPlus = (p: P) => <Svg {...p} strokeWidth={1.6}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></Svg>;
 export const IconCalendar = (p: P) => <Svg {...p}><rect x="4" y="5" width="16" height="15" rx="2" /><line x1="4" y1="10" x2="20" y2="10" /><line x1="9" y1="3" x2="9" y2="7" /><line x1="15" y1="3" x2="15" y2="7" /></Svg>;
 export const IconClock = (p: P) => <Svg {...p}><circle cx="12" cy="12" r="9" /><polyline points="12,7 12,12 15,14" /></Svg>;
+export const IconPage = (p: P) => <Svg {...p}><path d="M7 3h7l4 4v14H7z" /><polyline points="14,3 14,7 18,7" /></Svg>;
 export const IconFileCheck = (p: P) => <Svg {...p}><rect x="4" y="4" width="16" height="16" rx="2" /><polyline points="8,12.5 11,15.5 16,9" /></Svg>;
 export const IconMic = (p: P) => <Svg {...p}><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0" /><line x1="12" y1="18" x2="12" y2="21" /></Svg>;
 export const IconArrowUp = (p: P) => <Svg {...p} strokeWidth={1.8}><line x1="12" y1="19" x2="12" y2="5" /><polyline points="6,11 12,5 18,11" /></Svg>;
