@@ -143,6 +143,13 @@ export default function SourcesPage() {
     catch { setLoadFailed(true); }
   }, []);
   useEffect(() => { load(); }, [load]);
+  // ?tab=quality (and the other tab keys) opens that tab directly.
+  useEffect(() => {
+    try {
+      const t = new URLSearchParams(window.location.search).get("tab");
+      if (t && ["connected", "available", "sync", "quality", "reconciliation"].includes(t)) setTab(t as TabKey);
+    } catch { /* no window */ }
+  }, []);
 
   const revoke = async () => {
     if (!confirmRevoke) return;
@@ -209,7 +216,7 @@ export default function SourcesPage() {
         .src-mobile { display: flex; gap: 10px; align-items: center; margin-top: 8px; font-size: 12px; color: var(--ink-3); }
         .src-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
         @media (min-width: 900px) {
-          .src-grid { grid-template-columns: 32px minmax(170px, 1fr) 150px 110px minmax(0, 1.5fr) 190px; }
+          .src-grid { grid-template-columns: 32px minmax(170px, 1fr) 120px 100px minmax(0, 1.5fr) 150px; }
           .src-head { display: grid; padding: 0 10px 8px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line); }
           .src-desk { display: block; }
           .src-mobile { display: none; }

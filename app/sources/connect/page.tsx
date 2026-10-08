@@ -29,10 +29,6 @@ export default function SourcesConnectPage() {
         @media (min-width: 1000px) { .connect-grid { grid-template-columns: minmax(0, 680px) minmax(0, 300px); gap: 48px; } }
       `}</style>
       <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 24 }}>
-        <nav aria-label="Breadcrumb" style={{ fontSize: 12.5, color: "var(--ink-3)" }}>
-          <Link href="/sources" className="hover-dim" style={{ color: "var(--ink-2)" }}>Sources</Link>
-          <span aria-hidden="true" style={{ margin: "0 6px" }}>/</span>Connect Tally
-        </nav>
         <PageHeader title="Connect TallyPrime" subtitle="Three steps on the computer where Tally runs. About five minutes." />
 
         <div className="connect-grid">

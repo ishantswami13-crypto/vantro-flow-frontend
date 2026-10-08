@@ -78,7 +78,7 @@ export default function SourcesTallyPage() {
   const devices = (bridge?.state.devices || []).filter((d) => d.status === "ACTIVE");
 
   return (
-    <DashboardLayout pageTitle="Sources">
+    <DashboardLayout pageTitle="TallyPrime">
       <style>{`
         .tally-grid { display: grid; gap: 32px; grid-template-columns: minmax(0, 1fr); align-items: start; }
         @media (min-width: 1000px) { .tally-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 48px; } }
@@ -87,10 +87,6 @@ export default function SourcesTallyPage() {
         @media (max-width: 560px) { .tally-fact { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
       `}</style>
       <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 24 }}>
-        <nav aria-label="Breadcrumb" style={{ fontSize: 12.5, color: "var(--ink-3)" }}>
-          <Link href="/sources" className="hover-dim" style={{ color: "var(--ink-2)" }}>Sources</Link>
-          <span aria-hidden="true" style={{ margin: "0 6px" }}>/</span>TallyPrime
-        </nav>
 
         <PageHeader
           title={<span className="inline-flex items-center" style={{ gap: 12 }}><IconTile size={34}><IconSources size={16} /></IconTile>TallyPrime</span>}
@@ -128,7 +124,7 @@ export default function SourcesTallyPage() {
               <Section title="What Starlane understands from Tally">
                 <Quiet>
                   Coverage per area (customers, receivables, sales, suppliers, purchases, stock) is not computed yet, so no coverage status is shown here.
-                  What Starlane read from your data is on <Link href="/sources" className="underline" style={{ color: "var(--ink)" }}>Sources</Link>, under Data quality.
+                  What Starlane read from your data is on <Link href="/sources?tab=quality" className="underline" style={{ color: "var(--ink)" }}>Sources, under Data quality</Link>.
                 </Quiet>
               </Section>
             </div>
