@@ -13,6 +13,7 @@ import { ScanThinking } from "@/components/scan/ScanThinking";
 import { api, getUser } from "@/lib/api";
 import { createThread, listThreads } from "@/lib/scanStore";
 import { humaneError } from "@/components/scan/humaneError";
+import { firstName, greeting } from "@/lib/greeting";
 
 // Scan is a chat start: a greeting and one box. The assistant answers only
 // from connected data, and its tools can read and draft but never mark
@@ -21,11 +22,6 @@ import { humaneError } from "@/components/scan/humaneError";
 // the way until the person opens it from the box's plus menu.
 // The V32 mockup's world/scope selectors and pills were removed: the backend
 // has no such scoping, and a control that does nothing is not shown.
-function getGreeting(): string {
-  const h = new Date().getHours();
-  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-}
-
 export default function ScanPage() {
   const router = useRouter();
   const [question, setQuestion] = useState("");
@@ -48,18 +44,13 @@ export default function ScanPage() {
   }, [menuOpen]);
 
   useEffect(() => {
-    const user = getUser();
-    const stored = (() => {
-      try { return JSON.parse(localStorage.getItem("vantro_user") || "{}"); } catch { return {}; }
-    })();
     const q = new URLSearchParams(window.location.search).get("q");
     if (q && q.trim()) { setQuestion(q); void submit(q); }
     if (new URLSearchParams(window.location.search).get("books") === "1") setShowFindings(true);
     setHasHistory(listThreads().length > 0);
-    // Greet the person by their own first name only. A business name or an
-    // email prefix is not a name, so without one the greeting stands alone.
-    const own = String(stored.owner_name || (user as { owner_name?: string } | null)?.owner_name || "").trim();
-    setOwnerName(own.split(/\s+/)[0] || "");
+    // Greet the person by their own first name only (lib/greeting): a
+    // business name or an email prefix is not a name.
+    setOwnerName(firstName());
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = async (q: string) => {
@@ -87,7 +78,7 @@ export default function ScanPage() {
       <div className="scan-stage" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: showFindings ? "flex-start" : "center", minHeight: showFindings ? undefined : "calc(100vh - 200px)", padding: showFindings ? "24px 0 8px" : "24px 0", boxSizing: "border-box" }}>
         <div className="fade-once" style={{ width: 720, maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <h1 className="scan-greeting" style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, color: "var(--ink)", textAlign: "center" }}>
-            {getGreeting()}{ownerName ? `, ${ownerName}` : ""}
+            {greeting()}{ownerName ? `, ${ownerName}` : ""}
           </h1>
           <p style={{ margin: "10px 0 28px", fontSize: 14, color: "var(--ink-2)", textAlign: "center" }}>
             Ask about money owed, cash coming in or any customer.

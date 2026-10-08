@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { EmptyLine, PageHeader, SearchField, SkeletonRows } from "@/components/v32/ui";
 import { IconHistory, IconPlus, IconTrash } from "@/components/v32/icons";
 import { deleteThread, listThreads, type ScanThread } from "@/lib/scanStore";
-import { formatClock, formatRelative } from "@/lib/format";
+import { formatClock, formatDateTime, formatRelative } from "@/lib/format";
 
 // Past Scan conversations. They live in this browser (see lib/scanStore.ts),
 // so the page says "on this device" rather than implying an account history.
@@ -96,7 +96,7 @@ export default function ScanHistoryPage() {
                       <span className="hidden sm:inline tabular-nums shrink-0" style={{ fontSize: 12.5, color: "var(--ink-3)", width: 92, textAlign: "right" }}>
                         {t.turns.length} {t.turns.length === 1 ? "question" : "questions"}
                       </span>
-                      <span className="tabular-nums shrink-0" style={{ fontSize: 12.5, color: "var(--ink-2)", width: 84, textAlign: "right" }} title={new Date(t.updatedAt).toLocaleString("en-IN")}>
+                      <span className="tabular-nums shrink-0" style={{ fontSize: 12.5, color: "var(--ink-2)", width: 84, textAlign: "right" }} title={formatDateTime(t.updatedAt)}>
                         {g.label === "Today" ? formatClock(t.updatedAt) : formatRelative(t.updatedAt)}
                       </span>
                     </Link>

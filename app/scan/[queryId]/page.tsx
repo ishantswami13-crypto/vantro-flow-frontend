@@ -106,7 +106,7 @@ export default function ScanThreadPage() {
                     <ScanThinking />
                   </div>
                 )}
-                <div ref={endRef} />
+                <div ref={endRef} style={{ scrollMarginBottom: 170 }} />
               </div>
 
               <div className="scan-dock">
