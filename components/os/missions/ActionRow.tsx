@@ -41,11 +41,13 @@ export function MissionActionRow({ a, first, onDecided }: { a: FeatureAction; fi
   }
 
   return (
-    <div style={{ padding: "14px 18px", borderTop: first ? 0 : "1px solid var(--line)", display: "grid", gap: 8 }}>
+    // A row waiting on the owner carries the 2px ink rule in the left gutter,
+    // so its text stays on the same line as every other row.
+    <div className={a.canDecide ? "wk-attn" : undefined} style={{ padding: "14px 0", borderTop: first ? 0 : "1px solid var(--line)", display: "grid", gap: 8 }}>
       <div className="flex items-start flex-wrap" style={{ gap: "6px 12px" }}>
         <div className="min-w-0" style={{ flex: "1 1 240px" }}>
-          <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>{a.title}</div>
-          {a.description && <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 2, lineHeight: 1.5 }}>{a.description}</div>}
+          <div className="wk-title">{a.title}</div>
+          {a.description && <div className="tabular-nums" style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 2, lineHeight: 1.5 }}>{a.description}</div>}
         </div>
         <div className="flex items-center" style={{ gap: 6 }}>
           {high && <StatusChip tone="critical">High risk</StatusChip>}
@@ -54,9 +56,9 @@ export function MissionActionRow({ a, first, onDecided }: { a: FeatureAction; fi
       </div>
       {a.lifecycleNote && <div style={{ fontSize: 12.5, color: "var(--ink-2)" }}>{a.lifecycleNote}</div>}
       {a.draft && (
-        <figure style={{ margin: 0, padding: "10px 12px", background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: "var(--radius-md)" }}>
-          <figcaption style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 4 }}>Drafted message, not sent</figcaption>
-          <div style={{ fontSize: 13, color: "var(--body)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{a.draft}</div>
+        <figure style={{ margin: "2px 0 0", padding: "2px 0 2px 12px", borderLeft: "2px solid var(--line-strong)", maxWidth: 680 }}>
+          <figcaption className="meta" style={{ marginBottom: 3 }}>Drafted message, not sent</figcaption>
+          <div style={{ fontSize: 13, color: "var(--body)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{a.draft}</div>
         </figure>
       )}
       {a.canDecide && (

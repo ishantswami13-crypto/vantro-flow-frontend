@@ -12,10 +12,9 @@ import Link from "next/link";
 import { Mission, MissionState, MISSION_STATE_LABEL } from "@/lib/os";
 import { StatusChip } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { EmptyLine } from "@/components/v32/ui";
-import { IconMissions, IconArrowRight } from "@/components/v32/icons";
-import { formatRelative } from "@/lib/format";
-import { cleanTitle, humanDates, humaneError, missionTone, outcomeColor, OUTCOME_SHORT, NETWORK_ERROR } from "./missions/ui";
+import { Chevron } from "@/components/v32/ui";
+import { formatRelative, formatDateTime } from "@/lib/format";
+import { cleanTitle, humanDates, humaneError, missionTone, outcomeColor, Meter, OUTCOME_SHORT, NETWORK_ERROR } from "./missions/ui";
 
 export type MissionFilter = "active" | "at_risk" | "completed";
 const FILTERS: { key: MissionFilter; label: string; states: MissionState[] }[] = [
@@ -46,7 +45,9 @@ export function missionCount(all: Mission[], k: MissionFilter): number {
 // decision_action_runs statuses that count as a finished step (060_decision_core.sql).
 const STEP_DONE = new Set(["SUCCEEDED", "SHADOWED", "PREPARED"]);
 
-const GRID = "md:grid md:grid-cols-[minmax(0,1fr)_172px_176px_84px] md:items-center";
+// Mission, status, progress, outcome, updated. One template for the header
+// and every row so the columns share their alignment lines.
+const COLS = "minmax(0,1fr) 168px 132px 164px 84px";
 
 /** Mission rows for one subnav tab. The list is loaded by the page. */
 export function MissionsList({ all, filter, loading, error, agentNames, onRetry, onOpenWorkflows }: {
@@ -59,108 +60,113 @@ export function MissionsList({ all, filter, loading, error, agentNames, onRetry,
   if (loading) return <MissionsSkeleton />;
   if (error) {
     const msg = humaneError(error, NETWORK_ERROR);
-    return <ErrorState title="Missions didn't load" message={`${msg} Nothing has been changed.`} onRetry={onRetry} className="ui-panel" />;
+    return <ErrorState title="Missions didn't load" message={`${msg} Nothing has been changed.`} onRetry={onRetry} />;
   }
   if (all.length === 0) {
     return (
-      <EmptyLine
-        icon={<IconMissions size={17} />}
-        title="Nothing is being handled yet"
-        body={<>Start a collections mission, or open a decision in <Link className="underline" href="/prepared">Prepared</Link> and choose Handle it. Workflows you deploy appear here too, running in shadow mode first.</>}
-      />
+      <p className="wk-empty">
+        Nothing is being handled yet. Start a collections mission, or open a decision in <Link className="underline" href="/prepared">Prepared</Link> and choose Handle it.
+      </p>
     );
   }
   if (list.length === 0) {
     return (
-      <EmptyLine
-        icon={<IconMissions size={17} />}
-        title={filter === "at_risk" ? "No mission is at risk" : filter === "completed" ? "No mission has finished yet" : "No active mission"}
-        body={filter === "at_risk" ? "Nothing is blocked or waiting on you right now." : filter === "completed" ? "Finished missions show here with their verified outcome." : undefined}
-      />
+      <p className="wk-empty">
+        {filter === "at_risk" ? "No mission is at risk. Nothing is blocked or waiting on you." : filter === "completed" ? "No mission has finished yet. Finished missions show here with their verified outcome." : "No mission is active."}
+      </p>
     );
   }
   return (
-    <div className="ui-panel overflow-hidden" style={{ borderRadius: "var(--radius-lg)" }}>
-      <div className={`hidden ${GRID}`} style={{ padding: "0 18px", columnGap: 20, height: 36, fontSize: 12, color: "var(--ink-3)", borderBottom: "1px solid var(--line)" }}>
-        <span>Mission</span>
-        <span>State</span>
-        <span>Outcome</span>
-        <span style={{ textAlign: "right" }}>Updated</span>
+    <div className="wk-list" role="table" aria-label="Missions">
+      <div className="wk-head" role="row" style={{ gridTemplateColumns: COLS }}>
+        <span role="columnheader">Mission</span>
+        <span role="columnheader">Status</span>
+        <span role="columnheader">Progress</span>
+        <span role="columnheader">Outcome</span>
+        <span role="columnheader" style={{ textAlign: "right" }}>Updated</span>
       </div>
-      <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-        {list.map((m, i) => <MissionRow key={m.id} m={m} first={i === 0} agentNames={agentNames} onOpenWorkflows={onOpenWorkflows} />)}
-      </ul>
+      {list.map((m) => <MissionRow key={m.id} m={m} agentNames={agentNames} onOpenWorkflows={onOpenWorkflows} />)}
     </div>
   );
 }
 
-function MissionRow({ m, first, agentNames, onOpenWorkflows }: { m: Mission; first: boolean; agentNames?: Record<string, string>; onOpenWorkflows?: () => void }) {
-  const tools = missionTools(m);
-  const total = m.steps.length;
-  const done = m.steps.filter((s) => STEP_DONE.has((s.status || "").toUpperCase())).length;
-  const showSteps = m.source === "DECISION" && total > 0;
-  const mode = m.mode === "SHADOW" ? "Shadow mode" : m.mode === "WITH_APPROVAL" ? "Waits for your approval" : m.mode ? "Live" : null;
+/** Progress from what the backend reports: steps that ran for a decision,
+ *  items waiting for a workflow. Collections progress lives on the mission
+ *  page (measured from the books), so the list says nothing it can't show. */
+function progressOf(m: Mission): { text: string; ratio: number | null; tone: "critical" | null; title?: string } | null {
+  if (m.source === "DECISION" && m.steps.length) {
+    const total = m.steps.length;
+    const done = m.steps.filter((s) => STEP_DONE.has((s.status || "").toUpperCase())).length;
+    const failed = m.steps.some((s) => (s.status || "").toUpperCase() === "FAILED");
+    const tools = missionTools(m);
+    return { text: `${done} of ${total} steps`, ratio: done / total, tone: failed ? "critical" : null, title: tools.length ? `Tools: ${tools.join(", ")}` : undefined };
+  }
+  const waiting = m.counts?.awaitingApproval;
+  if (m.source === "WORKFLOW" && waiting != null) return { text: waiting ? `${waiting} waiting for you` : "Nothing waiting", ratio: null, tone: null };
+  return null;
+}
+
+function MissionRow({ m, agentNames, onOpenWorkflows }: { m: Mission; agentNames?: Record<string, string>; onOpenWorkflows?: () => void }) {
+  const mode = m.mode === "SHADOW" ? "Shadow mode" : m.mode === "WITH_APPROVAL" ? "With your approval" : m.mode ? "Live" : null;
   const source = m.source === "DECISION" ? "Decision" : m.source === "COLLECTION" ? "Collections" : "Workflow";
-  const meta = [
-    source,
-    m.assigned ? agentLabel(m.assigned.agent, agentNames) : null,
-    tools.length ? `Tools: ${tools.join(", ")}` : null,
-    showSteps ? `${done} of ${total} steps ran` : null,
-    mode,
-  ].filter(Boolean) as string[];
+  const meta = [source, m.assigned ? agentLabel(m.assigned.agent, agentNames) : null, mode].filter(Boolean) as string[];
   const outcome = m.outcome.status;
   const outcomeExtra = m.outcome.met != null && m.outcome.notMet != null && (m.outcome.met + m.outcome.notMet) > 0
     ? `${m.outcome.met} of ${m.outcome.met + m.outcome.notMet} paid after`
     : null;
+  const p = progressOf(m);
+  const reason = m.stateReason || m.objective;
 
   const inner = (
     <>
-      <div className="min-w-0">
-        <div className="md:truncate" style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)", lineHeight: 1.4 }}>{cleanTitle(m.title)}</div>
-        {(m.stateReason || m.objective) && (
-          <div className="line-clamp-2 md:truncate" style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 3, lineHeight: 1.5 }}>
-            {humanDates(m.stateReason || m.objective || "")}
-          </div>
-        )}
-        <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 6, lineHeight: 1.6 }}>{meta.join("  ·  ")}</div>
+      <div className="min-w-0" role="cell">
+        <div className="wk-title md:truncate">{cleanTitle(m.title)}</div>
+        {reason && <div className="wk-sub line-clamp-2 md:truncate">{humanDates(reason)}</div>}
+        <div className="wk-meta" style={{ marginTop: 3 }}>{meta.join(" · ")}</div>
       </div>
-      <div className="flex flex-wrap items-center mt-3 md:contents" style={{ columnGap: 10, rowGap: 6 }}>
-        <div><StatusChip tone={missionTone(m.state)}>{MISSION_STATE_LABEL[m.state]}</StatusChip></div>
-        <div className="min-w-0">
-          <div style={{ fontSize: 13, color: outcomeColor(outcome) }}>{OUTCOME_SHORT[outcome]}</div>
+      <div className="wk-cells md:contents">
+        <div role="cell"><StatusChip tone={missionTone(m.state)}>{MISSION_STATE_LABEL[m.state]}</StatusChip></div>
+        <div role="cell" className="min-w-0" title={p?.title}>
+          {p ? (
+            <>
+              <div className="tabular-nums" style={{ fontSize: 12.5, color: p.tone ? "var(--critical)" : "var(--ink-2)" }}>{p.text}</div>
+              {p.ratio != null && <div className="hidden md:block" style={{ marginTop: 5, maxWidth: 96 }}><Meter ratio={p.ratio} tone={p.tone ? "critical" : "ink"} label={p.text} /></div>}
+            </>
+          ) : <span className="hidden md:inline" style={{ fontSize: 12, color: "var(--ink-3)" }}>—</span>}
+        </div>
+        <div role="cell" className="min-w-0">
+          <div style={{ fontSize: 12.5, color: outcomeColor(outcome) }}>{OUTCOME_SHORT[outcome]}</div>
           {outcomeExtra && <div className="tabular-nums hidden md:block" style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{outcomeExtra}</div>}
         </div>
-        <div className="ml-auto md:ml-0 md:text-right" style={{ fontSize: 12, color: "var(--ink-3)" }}>
-          <span className="tabular-nums inline-flex items-center" style={{ gap: 6 }}>
+        <div role="cell" className="ml-auto md:ml-0 md:text-right" style={{ fontSize: 12, color: "var(--ink-3)" }}>
+          <span className="inline-flex items-center" style={{ gap: 6 }} title={m.updatedAt ? formatDateTime(m.updatedAt) : undefined}>
             {m.updatedAt ? formatRelative(m.updatedAt) : "Not yet"}
-            <IconArrowRight size={12} className="row-chevron hidden md:inline" style={{ color: "var(--ink-3)" }} />
+            <Chevron size={13} />
           </span>
         </div>
       </div>
     </>
   );
-  const cls = `row-hover block w-full text-left ${GRID}`;
-  const style: React.CSSProperties = { padding: "14px 18px", columnGap: 20, borderTop: first ? 0 : "1px solid var(--line)", color: "inherit", background: "transparent" };
-  return (
-    <li>
-      {m.source === "WORKFLOW"
-        ? <button type="button" onClick={onOpenWorkflows} className={cls} style={style} aria-label={`${cleanTitle(m.title)}: open in Workflows`}>{inner}</button>
-        : <Link href={m.href} className={cls} style={style}>{inner}</Link>}
-    </li>
-  );
+  const style: React.CSSProperties = { gridTemplateColumns: COLS };
+  return m.source === "WORKFLOW"
+    ? <button type="button" role="row" onClick={onOpenWorkflows} className="wk-row" style={style} aria-label={`${cleanTitle(m.title)}: open in Workflows`}>{inner}</button>
+    : <Link href={m.href} role="row" className="wk-row" style={style}>{inner}</Link>;
 }
 
 function MissionsSkeleton() {
   return (
-    <div className="ui-panel" role="status" aria-busy="true" aria-label="Loading missions" style={{ borderRadius: "var(--radius-lg)" }}>
+    <div className="wk-list" role="status" aria-busy="true" aria-label="Loading missions">
+      <div className="wk-head" style={{ gridTemplateColumns: COLS }}><span>Mission</span><span>Status</span><span>Progress</span><span>Outcome</span><span /></div>
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="flex items-center" style={{ gap: 20, padding: "18px 18px", borderTop: i ? "1px solid var(--line)" : 0 }}>
-          <div className="flex-1 min-w-0" style={{ display: "grid", gap: 8 }}>
-            <div className="skeleton" style={{ height: 12, width: "46%" }} />
-            <div className="skeleton" style={{ height: 10, width: "70%" }} />
+        <div key={i} className="wk-row" style={{ gridTemplateColumns: COLS }}>
+          <div style={{ display: "grid", gap: 7 }}>
+            <div className="skeleton" style={{ height: 11, width: "46%" }} />
+            <div className="skeleton" style={{ height: 9, width: "64%" }} />
           </div>
-          <div className="skeleton hidden md:block" style={{ height: 18, width: 96, borderRadius: 999 }} />
-          <div className="skeleton hidden md:block" style={{ height: 10, width: 110 }} />
+          <div className="skeleton hidden md:block" style={{ height: 9, width: 84 }} />
+          <div className="skeleton hidden md:block" style={{ height: 9, width: 64 }} />
+          <div className="skeleton hidden md:block" style={{ height: 9, width: 96 }} />
+          <div />
         </div>
       ))}
     </div>
