@@ -12,8 +12,7 @@ import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import { StatusChip, type StatusTone } from "@/components/ui/Badge";
-import { EmptyLine, Figure, SkeletonRows } from "@/components/v32/ui";
-import { IconMemory, IconSparkle } from "@/components/v32/icons";
+import { Figure, SkeletonRows } from "@/components/v32/ui";
 import { osApi, KIND_LABEL, type KnowledgeItem, type MemoryResponse, type OutcomeMode } from "@/lib/os";
 import { pct } from "@/lib/decisions";
 import { formatCount, formatDate, inrWhole } from "@/lib/format";
@@ -86,21 +85,17 @@ export function MemoryKnowledge() {
         count={data ? total : null}
         subtitle="Kept apart by where it came from. Only measured patterns drive suggestions; what people say is context."
       >
-        <div style={{ paddingTop: 16 }}>
+        <div style={{ paddingTop: 12 }}>
           {loading && !data && <SkeletonRows rows={4} height={56} />}
           {!loading && error != null && <InlineError onRetry={reload}>{humaneError(error)}</InlineError>}
           {err && <div style={{ marginBottom: 12 }}><InlineError>{err}</InlineError></div>}
 
           {data && total === 0 && (
-            <EmptyLine
-              icon={<IconMemory size={17} />}
-              title="Starlane doesn't know anything yet"
-              body="Patterns appear once a workflow has run and its outcomes have been checked in your ledger. You can also tell Starlane something the data can't show, below."
-            />
+            <p className="wk-empty">Starlane doesn&apos;t know anything yet. Patterns appear once a workflow has run and its outcomes have been checked in your ledger; you can also tell Starlane something the data can&apos;t show, below.</p>
           )}
 
           {data && groups.length > 1 && (
-            <div role="tablist" aria-label="Filter by kind" className="flex flex-wrap" style={{ gap: 6, marginBottom: 8 }}>
+            <div role="tablist" aria-label="Filter by kind" className="flex flex-wrap" style={{ gap: "4px 18px", marginBottom: 4 }}>
               <FilterChip on={filter === "ALL"} onClick={() => setFilter("ALL")} label="All" count={total} />
               {groups.map(([kind, items]) => (
                 <FilterChip key={kind} on={filter === kind} onClick={() => setFilter(kind)} label={KIND_LABEL[kind] || kind} count={items.length} />
@@ -109,15 +104,13 @@ export function MemoryKnowledge() {
           )}
 
           {shown.map(([kind, items]) => (
-            <div key={kind} style={{ marginTop: 20 }}>
-              <div className="flex items-baseline justify-between flex-wrap" style={{ gap: 8 }}>
-                <h3 style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>
-                  {KIND_LABEL[kind] || kind}
-                  <span className="tabular-nums" style={{ fontWeight: 400, color: "var(--ink-3)", marginLeft: 8 }}>{items.length}</span>
-                </h3>
-              </div>
-              {KIND_HELP[kind] && <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "var(--ink-3)" }}>{KIND_HELP[kind]}</p>}
-              <ul style={{ listStyle: "none", margin: "8px 0 0", padding: 0 }}>
+            <div key={kind} style={{ marginTop: 24 }}>
+              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>
+                {KIND_LABEL[kind] || kind}
+                <span className="wk-count">{items.length}</span>
+              </h3>
+              {KIND_HELP[kind] && <p className="meta" style={{ margin: "2px 0 0" }}>{KIND_HELP[kind]}</p>}
+              <ul style={{ listStyle: "none", margin: "8px 0 0", padding: 0, borderTop: "1px solid var(--line)" }}>
                 {items.map((k) => <KnowledgeRow key={k.id} k={k} onForget={HUMAN_KINDS.has(k.kind) ? () => forget(k) : undefined} />)}
               </ul>
             </div>
@@ -134,14 +127,14 @@ function FilterChip({ on, onClick, label, count }: { on: boolean; onClick: () =>
   return (
     <button
       type="button" role="tab" aria-selected={on} onClick={onClick}
-      className="inline-flex items-center"
+      className="hover-dim inline-flex items-center"
       style={{
-        gap: 6, height: 28, padding: "0 10px", borderRadius: "var(--radius-sm)", fontSize: 12.5, cursor: "pointer",
-        border: `1px solid ${on ? "var(--line-emphasis)" : "var(--line-card)"}`,
-        background: on ? "var(--selected)" : "transparent", color: on ? "var(--ink)" : "var(--ink-2)",
+        gap: 5, height: 28, padding: 0, fontSize: 12.5, cursor: "pointer", border: 0, background: "transparent",
+        color: on ? "var(--ink)" : "var(--ink-3)", fontWeight: on ? 500 : 400,
+        boxShadow: on ? "inset 0 -1px 0 var(--ink)" : "none",
       }}
     >
-      {label}<span className="tabular-nums" style={{ color: "var(--ink-3)" }}>{count}</span>
+      {label}<span className="num" style={{ fontSize: 11, color: "var(--ink-3)", fontWeight: 400 }}>{count}</span>
     </button>
   );
 }
@@ -157,10 +150,10 @@ function KnowledgeRow({ k, onForget }: { k: KnowledgeItem; onForget?: () => void
   parts.push(k.last_verified_at ? `Checked ${formatDate(k.last_verified_at)}` : `Added ${formatDate(k.created_at)}`);
 
   return (
-    <li className="flex items-start justify-between" style={{ gap: 16, padding: "12px 0", borderBottom: "1px solid var(--line)" }}>
+    <li className="flex items-start justify-between" style={{ gap: 16, padding: "11px 0", borderBottom: "1px solid var(--line)" }}>
       <div className="min-w-0">
-        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: quarantined ? "var(--ink-3)" : "var(--ink)" }}>{k.statement}</p>
-        <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--ink-3)", lineHeight: 1.5 }}>{parts.join(" · ")}</p>
+        <p className="prose-measure" style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: quarantined ? "var(--ink-3)" : "var(--ink)" }}>{k.statement}</p>
+        <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--ink-3)", lineHeight: 1.5 }}>{parts.join(" · ")}</p>
       </div>
       <div className="flex items-center shrink-0" style={{ gap: 6 }}>
         {quarantined && <StatusChip tone="critical" title="It reads like an instruction to Starlane, so it is not used.">Quarantined, not used</StatusChip>}
@@ -192,7 +185,7 @@ function TeachForm({ onSaved }: { onSaved: () => void }) {
   const ok = statement.trim().length >= 5;
   return (
     <Section title="Teach Starlane" subtitle="Tell Starlane something the data can't show. It's kept as what a person said, shown next to decisions, and never written into messages or rules.">
-      <form onSubmit={(e) => { e.preventDefault(); if (ok) submit(); }} style={{ paddingTop: 16, display: "flex", flexDirection: "column", gap: 10, maxWidth: 760 }}>
+      <form onSubmit={(e) => { e.preventDefault(); if (ok) submit(); }} style={{ paddingTop: 14, display: "flex", flexDirection: "column", gap: 10, maxWidth: 760 }}>
         <label htmlFor="teach-statement" className="sr-only">What Starlane should know</label>
         <textarea
           id="teach-statement"
@@ -202,7 +195,7 @@ function TeachForm({ onSaved }: { onSaved: () => void }) {
           maxLength={1000}
           placeholder="For example: Sharma Hardware pays after the 10th, once their own customers have paid."
           className="ui-input"
-          style={{ resize: "vertical", fontSize: 14 }}
+          style={{ resize: "vertical", fontSize: 13.5, height: "auto", padding: "8px 10px", lineHeight: 1.5 }}
         />
         <div className="flex flex-wrap items-center" style={{ gap: 8 }}>
           <label htmlFor="teach-kind" className="sr-only">Kind</label>
@@ -211,7 +204,7 @@ function TeachForm({ onSaved }: { onSaved: () => void }) {
           </select>
           <label htmlFor="teach-about" className="sr-only">About a customer (optional)</label>
           <input id="teach-about" value={about} onChange={(e) => setAbout(e.target.value)} placeholder="About a customer (optional)" maxLength={120} className="ui-input" style={{ flex: "1 1 180px", minWidth: 0 }} />
-          <Button type="submit" variant="secondary" loading={busy} disabled={!ok}>{busy ? "Saving" : "Save"}</Button>
+          <Button type="submit" variant="secondary" loading={busy} disabled={!ok}>{busy ? "Saving" : "Teach Starlane"}</Button>
         </div>
         {note && <p role="status" style={{ margin: 0, fontSize: 12.5, color: "var(--ink-2)" }}>{note}</p>}
         {err && <InlineError>{err}</InlineError>}
@@ -251,26 +244,21 @@ export function MemoryOutcomes() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
       <Section
-        title="Did it work?"
+        title="Follow-up outcomes"
         subtitle="Each follow-up is checked against the ledger after 7 days and compared with how often customers paid without one."
         right={<Button variant="secondary" size="sm" onClick={verify} loading={busy}>{busy ? "Checking" : "Check outcomes now"}</Button>}
       >
-        <div style={{ paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ paddingTop: 4, display: "flex", flexDirection: "column", gap: 12 }}>
           {loading && !data && <SkeletonRows rows={2} height={64} />}
           {note && <p role="status" style={{ margin: 0, fontSize: 13, color: "var(--ink-2)" }}>{note}</p>}
           {err && <InlineError onRetry={verify}>{err}</InlineError>}
           {!loading && error != null && <InlineError onRetry={reload}>{humaneError(error)}</InlineError>}
           {data && data.outcomes.length === 0 && (
-            <EmptyLine
-              icon={<IconSparkle size={17} />}
-              title="No outcome has been checked yet"
-              body="The first check runs 7 days after the first approved follow-up. Nothing is claimed before then."
-              action={<Link href="/missions" className="ui-btn ui-btn-secondary ui-btn-sm">See missions</Link>}
-            />
+            <p className="wk-empty">No outcome has been checked yet. The first check runs 7 days after the first approved follow-up; nothing is claimed before then. <Link className="underline" href="/missions">View missions</Link></p>
           )}
           {data?.outcomes.map((o) => (
-            <div key={o.workflowId} style={{ padding: "4px 0 8px" }}>
-              <div style={{ fontSize: 15, color: "var(--ink)" }}>{o.name}</div>
+            <div key={o.workflowId} style={{ padding: "12px 0 16px", borderBottom: "1px solid var(--line)" }}>
+              <div className="wk-title">{o.name}</div>
               {Object.entries(o.byMode).map(([mode, m]) => <OutcomeBlock key={mode} mode={mode} m={m} />)}
             </div>
           ))}
@@ -286,20 +274,21 @@ function OutcomeBlock({ mode, m }: { mode: string; m: OutcomeMode }) {
   const md = MODE[mode] || { label: mode, tone: "neutral" as StatusTone };
   const rec = REC[m.recommendation] || { label: m.recommendation, tone: "neutral" as StatusTone };
   return (
-    <div style={{ marginTop: 12 }}>
-      <StatusChip tone={md.tone}>{md.label}</StatusChip>
-      <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: "20px 24px", marginTop: 16 }}>
+    <div style={{ marginTop: 4 }}>
+      <div className="meta">{md.label}</div>
+      <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: "20px 24px", marginTop: 14 }}>
         <Figure value={pct(m.observedRate)} label="Paid within 7 days" />
         <Figure value={<span style={{ color: "var(--ink-2)" }}>{pct(m.expectedRate)}</span>} label="Expected without a reminder" />
-        <Figure value={`${formatCount(m.met)} of ${formatCount(m.resolved)}`} label="Follow-ups paid" />
+        <Figure value={<>{formatCount(m.met)}<span style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--ink-3)" }}> of </span>{formatCount(m.resolved)}</>} label="Follow-ups paid" />
         <Figure value={inrWhole(m.collected)} label="Collected" />
       </div>
       {m.interval80 && (
-        <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "var(--ink-3)" }}>Likely range {pct(m.interval80[0])} to {pct(m.interval80[1])} (80% interval).</p>
+        <p className="meta" style={{ margin: "12px 0 0" }}>Likely range <span className="num">{pct(m.interval80[0])}</span> to <span className="num">{pct(m.interval80[1])}</span> (80% interval).</p>
       )}
-      <div className="flex items-start flex-wrap" style={{ gap: 10, marginTop: 14 }}>
-        <StatusChip tone={rec.tone}>{rec.label}</StatusChip>
-        <span style={{ fontSize: 13.5, lineHeight: 1.55, color: "var(--body)", flex: "1 1 280px" }}>{m.why}</span>
+      <div className="wk-attn" style={{ marginTop: 16, padding: "2px 0" }}>
+        <div className="meta">Recommendation</div>
+        <div style={{ fontSize: 13.5, color: "var(--ink)", marginTop: 2 }}>{rec.label}</div>
+        <p className="prose-measure" style={{ margin: "2px 0 0", fontSize: 13, color: "var(--body)" }}>{m.why}</p>
       </div>
     </div>
   );
@@ -309,7 +298,7 @@ function RecentOutcomes({ items }: { items: MemoryResponse["recentOutcomes"] }) 
   return (
     <Section title="Recently checked" count={items.length}>
       <div role="table" aria-label="Recently checked follow-ups">
-        <div role="row" className="hidden md:grid" style={{ gridTemplateColumns: COLS, gap: 16, padding: "10px 0", fontSize: 12, color: "var(--ink-3)", borderBottom: "1px solid var(--line)" }}>
+        <div role="row" className="hidden md:grid" style={{ gridTemplateColumns: COLS, gap: 16, padding: "8px 0", fontSize: 11, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-3)", borderBottom: "1px solid var(--line)" }}>
           <span role="columnheader">Customer</span>
           <span role="columnheader" style={{ textAlign: "right" }}>Amount</span>
           <span role="columnheader">Result</span>
@@ -322,11 +311,11 @@ function RecentOutcomes({ items }: { items: MemoryResponse["recentOutcomes"] }) 
             : { tone: "unknown" as StatusTone, label: "Couldn't tell" };
           // Four cells: a two-by-two stack on phones, one row of four from md up.
           return (
-            <div role="row" key={i.id} className="grid items-center grid-cols-[minmax(0,1fr)_auto] md:grid-cols-[minmax(0,1fr)_140px_150px_130px]" style={{ gap: "6px 16px", padding: "12px 0", borderBottom: "1px solid var(--line)", minHeight: 48 }}>
-              <span role="cell" className="truncate" style={{ fontSize: 14, color: "var(--ink)" }}>{i.target}</span>
-              <span role="cell" className="tabular-nums" style={{ textAlign: "right", fontSize: 13.5, color: "var(--ink)" }}>{inrWhole(i.amount)}</span>
+            <div role="row" key={i.id} className="grid items-center grid-cols-[minmax(0,1fr)_auto] md:grid-cols-[minmax(0,1fr)_140px_150px_130px]" style={{ gap: "6px 16px", padding: "11px 0", borderBottom: "1px solid var(--line)" }}>
+              <span role="cell" className="truncate" style={{ fontSize: 13, color: "var(--ink)" }}>{i.target}</span>
+              <span role="cell" className="num" style={{ textAlign: "right", fontSize: 12.5, color: "var(--ink)" }}>{inrWhole(i.amount)}</span>
               <span role="cell"><StatusChip tone={result.tone}>{result.label}</StatusChip></span>
-              <span role="cell" className="tabular-nums" style={{ textAlign: "right", fontSize: 12.5, color: "var(--ink-3)" }}>{i.verifyAfter ? formatDate(i.verifyAfter) : "Not known yet"}</span>
+              <span role="cell" style={{ textAlign: "right", fontSize: 12, color: "var(--ink-3)" }}>{i.verifyAfter ? formatDate(i.verifyAfter) : "Not known yet"}</span>
             </div>
           );
         })}

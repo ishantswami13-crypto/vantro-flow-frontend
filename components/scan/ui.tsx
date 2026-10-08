@@ -6,9 +6,10 @@
 
 import React from "react";
 
-/** A titled block of the page: serif heading, one-line subtitle, optional
- *  right-hand action, then its content. Hierarchy comes from spacing and a
- *  hairline, not a box, so these never nest as cards. */
+/** A titled block of the page: a small wide-tracked section label (with an
+ *  optional count), one quiet line of subtitle, an optional right-hand action,
+ *  then its content under a hairline. Hierarchy comes from spacing and the
+ *  rule, not a box or a heading size, so these never nest as cards. */
 export function Section({ title, subtitle, right, children, id, count }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
@@ -18,14 +19,14 @@ export function Section({ title, subtitle, right, children, id, count }: {
   count?: number | null;
 }) {
   return (
-    <section id={id} aria-label={typeof title === "string" ? title : undefined} className="fade-once" style={{ minWidth: 0 }}>
-      <div className="flex items-end justify-between flex-wrap" style={{ gap: 12, paddingBottom: 12, borderBottom: "1px solid var(--line)" }}>
+    <section id={id} aria-label={typeof title === "string" ? title : undefined} style={{ minWidth: 0 }}>
+      <div className="flex items-end justify-between flex-wrap" style={{ gap: 12, paddingBottom: 10, borderBottom: "1px solid var(--line)" }}>
         <div className="min-w-0">
-          <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 20, lineHeight: 1.25, color: "var(--ink)" }}>
+          <h2 className="section-label" style={{ margin: 0 }}>
             {title}
-            {count != null && <span className="tabular-nums" style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--ink-3)", marginLeft: 8 }}>{count}</span>}
+            {count != null && <span className="wk-count">{count}</span>}
           </h2>
-          {subtitle && <p style={{ margin: "4px 0 0", fontSize: 13, lineHeight: 1.55, color: "var(--ink-2)", maxWidth: 720 }}>{subtitle}</p>}
+          {subtitle && <p style={{ margin: "4px 0 0", fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-3)", maxWidth: 720 }}>{subtitle}</p>}
         </div>
         {right && <div className="flex items-center shrink-0" style={{ gap: 8 }}>{right}</div>}
       </div>
@@ -49,7 +50,7 @@ export function Stat({ label, value, sub, tone }: { label: React.ReactNode; valu
   return (
     <div className="min-w-0">
       <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{label}</div>
-      <div className="tabular-nums" style={{ fontSize: 22, lineHeight: 1.2, marginTop: 6, color: tone ? `var(--${tone})` : "var(--ink)", letterSpacing: "-0.01em" }}>{value}</div>
+      <div className="num" style={{ fontSize: 20, lineHeight: 1.2, marginTop: 6, color: tone ? `var(--${tone})` : "var(--ink)", letterSpacing: "-0.02em" }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: "var(--ink-2)", marginTop: 4 }}>{sub}</div>}
     </div>
   );
