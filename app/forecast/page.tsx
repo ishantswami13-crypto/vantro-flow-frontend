@@ -8,7 +8,7 @@ import { Fragment, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   ResponsiveContainer, ComposedChart, Area, Line,
-  XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
+  XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ReferenceArea,
 } from "recharts";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Alert } from "@/components/ui/Alert";
@@ -61,11 +61,14 @@ function ChartSkeleton() {
 /** A figure that is a sentence, not a number ("Not set"): quiet sans, never mono. */
 const wordFigure = (text: string) => <span style={{ fontFamily: "var(--font-sans)", fontSize: 15, lineHeight: "24px", letterSpacing: 0, color: "var(--ink-2)" }}>{text}</span>;
 
+// Neutral lines: the case you pick reads in ink, the other two recede.
+// Colour is kept for the one thing that matters, cash running out.
 const SERIES = [
-  { key: "optimistic", label: "Optimistic", color: "var(--positive)", dash: false },
-  { key: "expected", label: "Expected", color: "var(--ink)", dash: false },
-  { key: "pessimistic", label: "Pessimistic", color: "var(--critical)", dash: true },
+  { key: "optimistic", label: "Optimistic", dash: "" },
+  { key: "expected", label: "Expected", dash: "" },
+  { key: "pessimistic", label: "Pessimistic", dash: "4 3" },
 ] as const;
+type SeriesKey = (typeof SERIES)[number]["key"];
 
 export default function ForecastPage() {
   const [mode, setMode]         = useState<"classic" | "v2">("classic");
@@ -74,16 +77,21 @@ export default function ForecastPage() {
   const [v2Loading, setV2Loading] = useState(false);
   const [v2Error, setV2Error]   = useState(false);
   const [range, setRange]       = useState<30 | 60 | 90>(30);
+  const [focus, setFocus]       = useState<SeriesKey>("expected");
   const [loading, setLoading]   = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [chartData, setChartData] = useState<Point[]>([]);
   const [kpis, setKpis]         = useState({ cashStart: 0, burnRate: 0, avgCollections: 0, runwayDays: 0 });
   const [topImpact, setTopImpact] = useState<Impact[]>([]);
   const [noData, setNoData]     = useState(false);
-  const [openingCash, setOpeningCash] = useState(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("vantro_opening_cash") || "";
-    return "";
-  });
+  // Read after mount: reading storage during render made the server and
+  // client disagree about the header button once cash had been saved.
+  const [openingCash, setOpeningCash] = useState("");
+  const [cashReady, setCashReady] = useState(false);
+  useEffect(() => {
+    try { setOpeningCash(localStorage.getItem("vantro_opening_cash") || ""); } catch { /* storage blocked */ }
+    setCashReady(true);
+  }, []);
   const [cashInput, setCashInput] = useState("");
   const [showCashInput, setShowCashInput] = useState(false);
 
@@ -158,7 +166,7 @@ export default function ForecastPage() {
     }
   }, [openingCash]);
 
-  useEffect(() => { if (mode === "classic") loadForecast(range); }, [range, loadForecast, mode]);
+  useEffect(() => { if (mode === "classic" && cashReady) loadForecast(range); }, [range, loadForecast, mode, cashReady]);
 
   const loadForecastV2 = useCallback(async (horizon: 7 | 14 | 30) => {
     const user = getUser();
@@ -195,7 +203,7 @@ export default function ForecastPage() {
 
   const saveCash = () => {
     const val = cashInput.trim();
-    localStorage.setItem("vantro_opening_cash", val);
+    try { localStorage.setItem("vantro_opening_cash", val); } catch { /* storage blocked: still used for this visit */ }
     setOpeningCash(val);
     setShowCashInput(false);
     setCashInput("");
@@ -206,8 +214,14 @@ export default function ForecastPage() {
     { key: "name", header: "Customer", width: "minmax(0, 1.6fr)", render: c => <div className={s.name} title={c.name}>{c.name}</div> },
     { key: "late", header: "Days late", width: "96px", align: "right", hide: "sm", render: c => c.days_overdue > 0 ? <span>{formatCount(c.days_overdue)}</span> : <span style={{ fontFamily: "var(--font-sans)", color: "var(--ink-3)" }}>Not yet due</span> },
     { key: "amount", header: "Amount", width: "130px", widthSm: "auto", align: "right", render: c => <span className={s.amount}>{inrWhole(c.amount)}</span> },
-    { key: "go", header: <span className="sr-only">Action</span>, width: "120px", widthSm: "auto", align: "right", render: () => <Link href="/collections" className="ui-btn ui-btn-ghost ui-btn-sm">Collect</Link> },
+    { key: "go", header: <span className="sr-only">Action</span>, width: "120px", widthSm: "auto", align: "right", render: () => <span className={s.hoverAction}><Link href="/collections" className="ui-btn ui-btn-ghost ui-btn-sm">Collect</Link></span> },
   ];
+
+  // The first day the highlighted case reaches zero (the curve is clamped
+  // at zero), only when cash in hand is known; otherwise zero means nothing.
+  const focusLabel = SERIES.find(x => x.key === focus)!.label;
+  const zeroAt = openingCash ? chartData.findIndex((p, i) => i > 0 && p[focus] <= 0) : -1;
+  const runsOut = zeroAt > 0 ? { date: chartData[zeroAt].date } : null;
 
   const runwayValue = !runwayKnown ? wordFigure("Not known yet") : runwayNever ? wordFigure("Holds") : `${formatCount(kpis.runwayDays)} days`;
 
@@ -269,29 +283,40 @@ export default function ForecastPage() {
 
               <Panel
                 title={`Cash balance, next ${range} days`}
-                sub="Three cases from your actual collection rate"
+                sub="Three cases from your actual collection rate. Pick the one to read in full."
                 right={<Segmented label="Forecast range" value={range} onChange={setRange} options={[{ key: 30, label: "30 days" }, { key: 60, label: "60 days" }, { key: 90, label: "90 days" }]} />}
                 flush
               >
-                <div className={s.legend} style={{ padding: "2px 0 4px" }}>
-                  {SERIES.map(x => (
-                    <span key={x.key} style={{ color: x.color }} className="flex items-center">
-                      <span className={s.legendSwatch} style={{ borderTopStyle: x.dash ? "dashed" : "solid" }} />
-                      <span style={{ color: "var(--ink-2)" }}>{x.label}</span>
+                <div className={s.legend} style={{ padding: "2px 0 6px" }}>
+                  <div className={s.segmented} role="group" aria-label="Case to highlight">
+                    {SERIES.map(x => (
+                      <button key={x.key} type="button" aria-pressed={focus === x.key} onClick={() => setFocus(x.key)} className="flex items-center">
+                        <span className={s.legendSwatch} style={{ color: focus === x.key ? "var(--ink)" : "var(--ink-3)", borderTopStyle: x.dash ? "dashed" : "solid" }} />
+                        {x.label}
+                      </button>
+                    ))}
+                  </div>
+                  {runsOut && (
+                    <span className="flex items-center" style={{ gap: 6, color: "var(--ink)" }}>
+                      <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 2, background: "rgb(var(--tk-critical) / 0.14)", boxShadow: "inset 0 0 0 1px rgb(var(--tk-critical) / 0.35)", display: "inline-block" }} />
+                      Cash runs out {runsOut.date} in the {focusLabel.toLowerCase()} case
                     </span>
-                  ))}
+                  )}
                 </div>
                 <div className={s.chartWrap}>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <ComposedChart data={chartData} margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <ComposedChart data={chartData} margin={{ top: 12, right: 12, left: 4, bottom: 0 }}>
                       <CartesianGrid stroke="var(--line)" vertical={false} />
                       <XAxis dataKey="date" tick={AXIS} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
                       <YAxis tickFormatter={inrShort} tick={AXIS} axisLine={false} tickLine={false} width={60} />
                       <Tooltip content={<ChartTooltip />} cursor={{ stroke: "var(--line-strong)", strokeWidth: 1 }} />
-                      <ReferenceLine y={0} stroke="var(--line-strong)" />
-                      <Area type="monotone" dataKey="expected" name="Expected" stroke="var(--ink)" strokeWidth={1.75} fill="var(--ink)" fillOpacity={0.05} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
-                      <Line type="monotone" dataKey="optimistic" name="Optimistic" stroke="var(--positive)" strokeWidth={1.5} dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
-                      <Line type="monotone" dataKey="pessimistic" name="Pessimistic" stroke="var(--critical)" strokeWidth={1.5} strokeDasharray="4 3" dot={false} activeDot={{ r: 3 }} isAnimationActive={false} />
+                      {runsOut && <ReferenceArea x1={runsOut.date} x2={chartData[chartData.length - 1].date} fill="var(--critical)" fillOpacity={0.07} stroke="none" ifOverflow="extendDomain" />}
+                      {runsOut && <ReferenceLine x={runsOut.date} stroke="var(--critical)" strokeDasharray="3 3" strokeWidth={1} />}
+                      <ReferenceLine y={0} stroke="var(--ink-2)" strokeWidth={1} label={{ value: "Zero cash", position: "insideBottomRight", fill: "var(--ink-3)", fontSize: 11, dy: -4 }} />
+                      {SERIES.filter(x => x.key !== focus).map(x => (
+                        <Line key={x.key} type="monotone" dataKey={x.key} name={x.label} stroke="var(--ink-3)" strokeOpacity={0.75} strokeWidth={1.25} strokeDasharray={x.dash || undefined} dot={false} activeDot={{ r: 2.5, fill: "var(--ink-3)" }} isAnimationActive={false} />
+                      ))}
+                      <Area key={focus} type="monotone" dataKey={focus} name={focusLabel} stroke="var(--ink)" strokeWidth={2} strokeDasharray={SERIES.find(x => x.key === focus)?.dash || undefined} fill="var(--ink)" fillOpacity={0.05} dot={false} activeDot={{ r: 3.5, fill: "var(--ink)" }} isAnimationActive={false} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>

@@ -33,6 +33,8 @@ const REPORTS = [
   { id: "gst", name: "GST summary", desc: "Sales and outstanding by GSTIN, ready for your CA and filing.", formats: ["Excel", "CSV", "PDF"] },
 ];
 
+const FORMATS = ["Excel", "CSV", "PDF"];
+
 export default function ReportsPage() {
   const notify = useToast();
   const [range, setRange] = useState<RangeKey>("month");
@@ -95,18 +97,29 @@ export default function ReportsPage() {
         </div>
 
         <div className={s.panel} role="table" aria-label="Reports">
-          <div role="row" className={`${s.head} flex items-center justify-between`} style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-3)" }}>
+          <style>{`
+            .rp-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 16px; align-items: center; }
+            .rp-formats { display: flex; gap: 4px; margin-left: -10px; }
+            .rp-none { display: none; }
+            @media (min-width: 768px) {
+              .rp-row { grid-template-columns: minmax(0, 1fr) auto; }
+              .rp-formats { display: grid; grid-template-columns: repeat(3, 64px); justify-items: end; gap: 0; margin: 0 -8px 0 0; }
+              .rp-none { display: inline; }
+            }
+          `}</style>
+          <div role="row" className={`${s.head} rp-row`}>
             <span role="columnheader">Report</span>
-            <span role="columnheader">Download as</span>
+            <span role="columnheader" className="hidden md:block" style={{ textAlign: "right" }}>Download as</span>
           </div>
           {REPORTS.map(r => (
-            <div key={r.id} role="row" className={`${s.attnRow} flex items-center justify-between flex-wrap`}>
-              <div role="cell" className="min-w-0" style={{ flex: "1 1 280px" }}>
-                <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>{r.name}</div>
+            <div key={r.id} role="row" className={`${s.attnRow} rp-row`}>
+              <div role="cell" className="min-w-0">
+                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{r.name}</div>
                 <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 2, lineHeight: 1.5 }}>{r.desc}</div>
               </div>
-              <div role="cell" className="flex items-center" style={{ gap: 2, marginRight: -8 }} aria-label={`Download ${r.name}`}>
-                {r.formats.map(fmt => {
+              <div role="cell" className="rp-formats" aria-label={`Download ${r.name}`}>
+                {FORMATS.map(fmt => {
+                  if (!r.formats.includes(fmt)) return <span key={fmt} aria-hidden="true" className="rp-none" style={{ fontSize: 12.5, color: "var(--ink-3)", paddingRight: 10 }}>—</span>;
                   const key = `${r.id}-${fmt.toLowerCase()}`;
                   return (
                     <Button key={fmt} variant="ghost" size="sm" loading={downloading === key} disabled={!!downloading && downloading !== key}

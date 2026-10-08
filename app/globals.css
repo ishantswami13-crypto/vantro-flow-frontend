@@ -1413,3 +1413,9 @@ body { color: var(--ink); }
    separated by hairlines, without becoming a card. */
 .lead-band { background: var(--surface); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 :root[data-theme="dark"] .lead-band { background: rgb(var(--tk-surface) / 0.6); }
+
+/* REFINE: ops final polish (Control, Collections, Customers, Forecast, Invoices, Inventory, Reports, Settings, Admin)
+   One semantic indicator: where a dot already carries the tone, the word
+   stays neutral ink instead of repeating the colour. */
+.chip.chip-quiet { color: var(--ink-2); }
+.chip.chip-quiet.chip-critical { color: var(--ink); }

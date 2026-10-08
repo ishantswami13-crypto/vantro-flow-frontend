@@ -9,6 +9,8 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { StatusChip } from "@/components/ui/Badge";
 import { Figure, Lettermark, SkeletonRows, Chevron } from "@/components/v32/ui";
 import { ControlHeader, ControlPage, ControlSection as Section, type ControlTab } from "@/components/control/ControlSubnav";
+import { AuthorityLadder, PolicyTable, controlStyles as c } from "@/components/control/Authority";
+import { decisionsApi } from "@/lib/decisions";
 import { OFFLINE } from "@/components/connectors/health";
 import { formatCount, formatDateTime, formatRelative } from "@/lib/format";
 import { api, type CortexHealthResponse, type DataConnection, type UserSettings } from "@/lib/api";
@@ -42,63 +44,35 @@ const MIN_EVALUATED_FOR_RATE = 3;
 const sourceName = (t: string) => ({ TALLY: "TallyPrime", FILE_IMPORT: "Spreadsheet or CSV" } as Record<string, string>)[t] || humanize(t);
 const humanize = (s: string) => s.replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase());
 
-function ConnectionSection({ connections }: { connections: DataConnection[] }) {
+function ConnectionRows({ connections }: { connections: DataConnection[] }) {
   if (connections.length === 0) {
     return (
-      <div className="ops-list flex items-center justify-between flex-wrap" style={{ gap: 12, padding: "12px 0", borderBottom: "1px solid var(--line)" }}>
-        <p style={{ margin: 0, fontSize: 13, color: "var(--ink-2)" }}>No sources connected. Starlane reasons only from systems you connect.</p>
+      <div className={c.facts} style={{ padding: "12px 0", borderBottom: "1px solid var(--line)" }}>
+        <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55 }}>No systems connected. Starlane reasons only from systems you connect.</p>
         <Link href="/sources/connect" className="ui-btn ui-btn-secondary ui-btn-sm">Connect a source</Link>
       </div>
     );
   }
   return (
-    <div className="ops-list">
-      {connections.map((c) => {
-        const ok = String(c.status).toUpperCase() === "CONNECTED";
-        const err = String(c.status).toUpperCase() === "ERROR" || !!c.last_sync_error;
+    <div style={{ borderTop: "1px solid var(--line)" }}>
+      {connections.map((x) => {
+        const ok = String(x.status).toUpperCase() === "CONNECTED";
+        const err = String(x.status).toUpperCase() === "ERROR" || !!x.last_sync_error;
         return (
-          <Link key={c.id} href="/sources" className="ops-row flex items-center justify-between" style={{ gap: 14, padding: "11px 0", minHeight: 46 }}>
+          <Link key={x.id} href="/sources" className={`${c.conn} ops-row`}>
             <div className="min-w-0">
-              <div style={{ fontSize: 13.5, color: "var(--ink)" }}>{sourceName(c.source_type)}</div>
-              {c.last_sync_error && <div className="truncate" style={{ fontSize: 12, color: "var(--critical)", marginTop: 2 }}>{c.last_sync_error}</div>}
+              <div className={`${c.connName} truncate`}>{sourceName(x.source_type)}</div>
+              {x.last_sync_error
+                ? <div className={`${c.connErr} truncate`} title={x.last_sync_error}>{x.last_sync_error}</div>
+                : <div className={c.connMeta} title={x.last_sync_at ? formatDateTime(x.last_sync_at) : undefined}>{x.last_sync_at ? `Synced ${formatRelative(x.last_sync_at)}` : "Never synced"}</div>}
             </div>
-            <div className="flex items-center shrink-0" style={{ gap: 16 }}>
-              <span style={{ fontSize: 12.5, color: "var(--ink-3)" }} title={c.last_sync_at ? formatDateTime(c.last_sync_at) : undefined}>
-                {c.last_sync_at ? `Synced ${formatRelative(c.last_sync_at)}` : "Never synced"}
-              </span>
-              <span style={{ minWidth: 104 }}><StatusChip tone={err ? "critical" : ok ? "positive" : "unknown"}>{err ? "Error" : ok ? "Connected" : "Not connected"}</StatusChip></span>
+            <div className="flex items-center shrink-0" style={{ gap: 10 }}>
+              <StatusChip tone={err ? "critical" : ok ? "positive" : "unknown"} className={err ? undefined : "chip-quiet"}>{err ? "Error" : ok ? "Connected" : "Not connected"}</StatusChip>
               <Chevron />
             </div>
           </Link>
         );
       })}
-    </div>
-  );
-}
-
-// Org-wide fixed policy, identical for every business; no per-org override
-// exists in the backend. L4 Execute always requires approval: the core
-// trust mechanism of the product.
-const POLICY_LEVELS: { level: string; name: string; description: string; granted: boolean }[] = [
-  { level: "L1", name: "Observe", description: "Read business data and surface findings.", granted: true },
-  { level: "L2", name: "Prepare", description: "Draft actions and recommendations for review.", granted: true },
-  { level: "L3", name: "Propose", description: "Put a specific action in front of you to decide on.", granted: true },
-  { level: "L4", name: "Execute", description: "Carry out an action that changes business data.", granted: false },
-];
-
-function PolicyRows() {
-  return (
-    <div className="ops-list">
-      {POLICY_LEVELS.map((p) => (
-        <div key={p.level} className="policy-row ops-row ops-static">
-          <span className="num" style={{ fontSize: 12, color: "var(--ink-3)" }}>{p.level}</span>
-          <div style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 500 }}>{p.name}</div>
-          <div className="policy-desc" style={{ fontSize: 13, color: "var(--ink-2)" }}>{p.description}</div>
-          <div className="policy-chip">
-            <StatusChip tone={p.granted ? "positive" : "attention"}>{p.granted ? "Allowed" : "Your approval, every time"}</StatusChip>
-          </div>
-        </div>
-      ))}
     </div>
   );
 }
@@ -114,6 +88,9 @@ function OverviewTab() {
     queryFn: () => api.connections.list(),
     staleTime: 25_000,
   });
+  // Same request and cache as Control > Decisions; the band shows its facts
+  // only when it answers.
+  const controls = useQuery({ queryKey: ["decision-controls"], queryFn: decisionsApi.controls, staleTime: 25_000 });
 
   if (health.isLoading || connections.isLoading) return <SkeletonRows rows={5} />;
   if (health.isError || connections.isError) {
@@ -127,51 +104,82 @@ function OverviewTab() {
   }
 
   const conns = connections.data?.connections || [];
-  const connectedN = conns.filter((c) => String(c.status).toUpperCase() === "CONNECTED").length;
+  const connectedN = conns.filter((x) => String(x.status).toUpperCase() === "CONNECTED").length;
+  const failingN = conns.filter((x) => String(x.status).toUpperCase() === "ERROR" || !!x.last_sync_error).length;
   const stats = health.data?.stats;
   const pending = stats?.pending_actions ?? null;
   const enough = !!stats && stats.evaluated_actions >= MIN_EVALUATED_FOR_RATE && stats.effectiveness_rate !== null;
+  const ctl = controls.data;
+  const stoppedClasses = ctl ? ctl.controls.filter((x) => x.scope === "ACTION_CLASS" && x.stopped).length : 0;
+  const allStopped = !!ctl && (ctl.globalStop || ctl.controls.some((x) => x.scope === "TENANT" && x.stopped));
 
   return (
-    <div className="flex flex-col" style={{ gap: 32 }}>
-      <div className="ops-figures">
-        <Link href="/control/approvals" className="hover-dim" style={{ display: "block" }}>
-          <Figure value={pending == null ? "—" : formatCount(pending)} label="Waiting for your approval" />
-        </Link>
-        <Figure value={formatCount(connectedN)} label={`Connected source${connectedN === 1 ? "" : "s"}`} />
-        <Figure value="1" label="User, the owner" />
-        <Figure value={enough ? `${stats!.effectiveness_rate}%` : "—"} label={enough ? "Of evaluated actions worked" : "Effectiveness not known yet"} />
-      </div>
-
-      <Section title="What Starlane is allowed to do" hint="The same four levels apply to every agent. Changing business data always needs you.">
-        <PolicyRows />
-      </Section>
-
-      <Section title="Connections" right={<Link href="/sources" className="ui-btn ui-btn-ghost ui-btn-sm" style={{ marginRight: -9 }}>Open Sources</Link>}>
-        <ConnectionSection connections={conns} />
-      </Section>
-
-      {stats && (
-        <div className="ctl-two">
-          <Section title="Work in progress">
-            <dl className="ctl-stats">
-              <div><dt>Pending actions</dt><dd>{formatCount(stats.pending_actions)}</dd></div>
-              <div><dt>Urgent</dt><dd style={{ color: stats.pending_by_priority.urgent ? "var(--critical)" : undefined }}>{formatCount(stats.pending_by_priority.urgent)}</dd></div>
-              <div><dt>High priority</dt><dd style={{ color: stats.pending_by_priority.high ? "var(--warning)" : undefined }}>{formatCount(stats.pending_by_priority.high)}</dd></div>
-              <div><dt>Active plans</dt><dd>{formatCount(stats.active_plans)}</dd></div>
-              <div><dt>Memory entries</dt><dd>{formatCount(stats.memory_entries)}</dd></div>
-            </dl>
-          </Section>
-          <Section title="Outcomes" hint={enough ? undefined : `A rate is shown once ${MIN_EVALUATED_FOR_RATE} or more actions have been evaluated.`}>
-            <dl className="ctl-stats">
-              <div><dt>Actions evaluated</dt><dd>{formatCount(stats.evaluated_actions)}</dd></div>
-              <div><dt>Effectiveness</dt><dd>{enough ? `${stats.effectiveness_rate}%` : <span style={{ color: "var(--ink-3)" }}>Not known yet</span>}</dd></div>
-              <div><dt>Verified effective</dt><dd>{formatCount(stats.effective_count)}</dd></div>
-              <div><dt>Verified ineffective</dt><dd>{formatCount(stats.ineffective_count)}</dd></div>
-            </dl>
-          </Section>
+    <div className="flex flex-col" style={{ gap: 36 }}>
+      <section className={c.band} aria-labelledby="authority-title">
+        <div className={c.bandHead}>
+          <h2 id="authority-title" className="section-label section-label-lead">Authority boundary</h2>
+          <span className={c.bandNote}>The same for every agent. It cannot be changed per agent.</span>
         </div>
-      )}
+        <AuthorityLadder />
+        <dl className={c.bandFacts}>
+          {ctl && <div><dt>Pilot mode</dt><dd>{ctl.pilotMode === "SHADOW" ? "Shadow, nothing is changed" : "Live, approved decisions run"}</dd></div>}
+          {ctl && <div><dt>Customer messages</dt><dd>{ctl.externalSendEnabled ? "Sent after your approval" : "Drafts only"}</dd></div>}
+          {ctl && (allStopped || stoppedClasses > 0) && (
+            <div><dt>Stopped</dt><dd><Link href="/control/decisions" className="hover-dim" style={{ color: "var(--critical)" }}>{allStopped ? "Everything" : `${formatCount(stoppedClasses)} action type${stoppedClasses === 1 ? "" : "s"}`}</Link></dd></div>
+          )}
+          <div><dt>Users</dt><dd>1, the owner</dd></div>
+        </dl>
+      </section>
+
+      <div className={c.tri}>
+        <section className={c.col} aria-labelledby="ctl-approvals">
+          <div className={c.colHead}>
+            <h2 id="ctl-approvals" className="section-label">Needs your approval</h2>
+          </div>
+          <div className={c.colFigure}>
+            <Link href="/control/approvals" className="hover-dim" style={{ display: "block" }}>
+              <Figure value={pending == null ? "—" : formatCount(pending)} label={pending === 1 ? "Action waiting for you" : "Actions waiting for you"} />
+            </Link>
+          </div>
+          {stats && (
+            <dl className={c.facts}>
+              <div><dt>Urgent</dt><dd className="num" style={{ color: stats.pending_by_priority.urgent ? "var(--critical)" : undefined }}>{formatCount(stats.pending_by_priority.urgent)}</dd></div>
+              <div><dt>High priority</dt><dd className="num">{formatCount(stats.pending_by_priority.high)}</dd></div>
+              <div><dt>Active plans</dt><dd className="num">{formatCount(stats.active_plans)}</dd></div>
+            </dl>
+          )}
+        </section>
+
+        <section className={c.col} aria-labelledby="ctl-systems">
+          <div className={c.colHead}>
+            <h2 id="ctl-systems" className="section-label">Connected systems</h2>
+            <Link href="/sources" className="ui-btn ui-btn-ghost ui-btn-sm" style={{ marginRight: -10 }}>Open Sources</Link>
+          </div>
+          <div className={c.colFigure}>
+            <Figure value={formatCount(connectedN)} label={failingN ? `Connected, ${formatCount(failingN)} failing` : `Connected system${connectedN === 1 ? "" : "s"}`} />
+          </div>
+          <ConnectionRows connections={conns} />
+        </section>
+
+        <section className={c.col} aria-labelledby="ctl-verified">
+          <div className={c.colHead}>
+            <h2 id="ctl-verified" className="section-label">Verified actions</h2>
+          </div>
+          <div className={c.colFigure}>
+            <Figure
+              value={enough ? `${stats!.effectiveness_rate}%` : <span className="num-quiet" style={{ fontSize: 16, color: "var(--ink-2)" }}>Not known yet</span>}
+              label={enough ? "Of evaluated actions worked" : `Shown once ${MIN_EVALUATED_FOR_RATE} or more actions are evaluated`}
+            />
+          </div>
+          {stats && (
+            <dl className={c.facts}>
+              <div><dt>Actions evaluated</dt><dd className="num">{formatCount(stats.evaluated_actions)}</dd></div>
+              <div><dt>Verified effective</dt><dd className="num">{formatCount(stats.effective_count)}</dd></div>
+              <div><dt>Verified ineffective</dt><dd className="num">{formatCount(stats.ineffective_count)}</dd></div>
+            </dl>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
@@ -212,10 +220,26 @@ function UsersTab() {
 }
 
 function PermissionsTab() {
+  const controls = useQuery({ queryKey: ["decision-controls"], queryFn: decisionsApi.controls, staleTime: 25_000 });
+  const ctl = controls.data;
+  const stoppedClasses = ctl ? ctl.controls.filter((x) => x.scope === "ACTION_CLASS" && x.stopped).length : 0;
+  const allStopped = !!ctl && (ctl.globalStop || ctl.controls.some((x) => x.scope === "TENANT" && x.stopped));
   return (
-    <Section title="Organisation-wide policy" hint="This governs every agent in Starlane. It applies the same way to all agents and cannot be changed per agent.">
-      <PolicyRows />
-    </Section>
+    <div className="flex flex-col" style={{ gap: 36 }}>
+      <Section title="Organisation-wide policy" hint="This governs every agent in Starlane. It applies the same way to all agents and cannot be changed per agent.">
+        <PolicyTable />
+      </Section>
+      {ctl && (
+        <Section title="Enforced now" hint="Set for this business and enforced by the backend, outside any model." right={<Link href="/control/decisions" className="ui-btn ui-btn-ghost ui-btn-sm" style={{ marginRight: -10 }}>Change in Decisions</Link>}>
+          <dl className={c.facts}>
+            <div><dt>Autonomy ceiling</dt><dd className="num">{ctl.autonomyCeiling}</dd></div>
+            <div><dt>Pilot mode</dt><dd>{ctl.pilotMode === "SHADOW" ? "Shadow, nothing is changed" : "Live, approved decisions run"}</dd></div>
+            <div><dt>Customer messages</dt><dd>{ctl.externalSendEnabled ? "Sent after your approval" : "Drafts only, sending is off"}</dd></div>
+            <div><dt>Stop switches</dt><dd style={{ color: allStopped || stoppedClasses ? "var(--critical)" : undefined }}>{allStopped ? "Everything is stopped" : stoppedClasses ? `${formatCount(stoppedClasses)} action type${stoppedClasses === 1 ? "" : "s"} stopped` : "None on"}</dd></div>
+          </dl>
+        </Section>
+      )}
+    </div>
   );
 }
 
@@ -237,11 +261,19 @@ function AutomationTab() {
 }
 
 const SUBTITLE: Partial<Record<ControlTab, string>> = {
-  overview: "What Starlane may see, prepare and do, and how that is going.",
+  overview: "What Starlane may do on its own, what needs you, and what it has proven.",
   users: "Who can use Starlane for this business.",
   permissions: "The levels of autonomy every agent works within.",
   automation: "Where automations live and how to stop them.",
 };
+
+/** The Overview's one primary action, only while something is waiting. */
+function ReviewApprovals() {
+  const health = useQuery<CortexHealthResponse>({ queryKey: ["control-cortex-health"], queryFn: () => api.cortexHealth(), staleTime: 25_000 });
+  const n = health.data?.stats?.pending_actions ?? 0;
+  if (!n) return null;
+  return <Link href="/control/approvals" className="ui-btn ui-btn-primary">Review {formatCount(n)} approval{n === 1 ? "" : "s"}</Link>;
+}
 
 function ControlPageInner() {
   const params = useSearchParams();
@@ -251,25 +283,8 @@ function ControlPageInner() {
 
   return (
     <DashboardLayout pageTitle="Control">
-      <style>{`
-        .ctl-two { display: grid; gap: 32px 48px; grid-template-columns: minmax(0, 1fr); }
-        @media (min-width: 900px) { .ctl-two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-        .ctl-stats { margin: 0; border-top: 1px solid var(--line); }
-        .ctl-stats > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
-        .ctl-stats dt { color: var(--ink-2); }
-        .ctl-stats dd { margin: 0; color: var(--ink); font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-        .policy-row { display: grid; align-items: center; gap: 4px 16px; padding: 11px 0; min-height: 46px;
-          grid-template-columns: 24px minmax(0, 1fr) auto; }
-        .policy-desc { grid-column: 2 / 4; grid-row: 2; }
-        .policy-chip { grid-column: 3; grid-row: 1; justify-self: end; }
-        @media (min-width: 760px) {
-          .policy-row { grid-template-columns: 32px 112px minmax(0, 1fr) 200px; }
-          .policy-desc { grid-column: auto; grid-row: auto; }
-          .policy-chip { grid-column: auto; grid-row: auto; }
-        }
-      `}</style>
       <ControlPage>
-        <ControlHeader active={tab} subtitle={SUBTITLE[tab]} />
+        <ControlHeader active={tab} subtitle={SUBTITLE[tab]} right={tab === "overview" ? <ReviewApprovals /> : undefined} />
         <div className="fade-once">
           {tab === "overview" && <OverviewTab />}
           {tab === "users" && <UsersTab />}

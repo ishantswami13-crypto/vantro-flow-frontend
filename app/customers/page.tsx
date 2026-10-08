@@ -10,7 +10,7 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, authHeaders, getUser, type CustomerPortfolioResponse } from "@/lib/api";
 import { inrWhole, formatDate, formatCount } from "@/lib/format";
-import { PageHeader, SearchField, SkeletonRows } from "@/components/v32/ui";
+import { PageHeader, SearchField, SkeletonRows, Chevron } from "@/components/v32/ui";
 import { IconRefresh, IconUsers } from "@/components/v32/icons";
 import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -153,15 +153,15 @@ export default function CustomersPage() {
         </div>
       ),
     },
-    { key: "given", header: "Billed", width: "120px", align: "right", hide: "md", render: c => <span>{inrWhole(Number(c.total_debit || 0))}</span> },
-    { key: "paid", header: "Paid", width: "120px", align: "right", hide: "md", render: c => <span>{inrWhole(Number(c.total_credit || 0))}</span> },
-    { key: "balance", header: "Balance", width: "130px", widthSm: "auto", align: "right", render: balanceCell },
+    { key: "given", header: "Billed", width: "128px", align: "right", hide: "md", render: c => <span>{inrWhole(Number(c.total_debit || 0))}</span> },
+    { key: "paid", header: "Paid", width: "128px", align: "right", hide: "md", render: c => <span>{inrWhole(Number(c.total_credit || 0))}</span> },
+    { key: "balance", header: "Balance", width: "136px", widthSm: "auto", align: "right", render: balanceCell },
     {
       key: "risk", header: "Risk", width: "120px", hide: "sm",
       render: c => {
         const r = scoreMap[c.customer_name];
         const t = r && TIER[r.tier];
-        return t ? <StatusChip tone={t.tone} title={`Risk score ${r.score} of 100`}>{t.label}</StatusChip> : <StatusChip tone="unknown">Not scored</StatusChip>;
+        return t ? <StatusChip tone={t.tone} className="chip-quiet" title={`Risk score ${r.score} of 100`}>{t.label}</StatusChip> : <StatusChip tone="unknown">Not scored</StatusChip>;
       },
     },
     { key: "last", header: "Last activity", width: "110px", hide: "sm", render: c => <span>{c.last_entry ? formatDate(c.last_entry) : <span className={s.muted}>None yet</span>}</span> },
@@ -222,30 +222,32 @@ export default function CustomersPage() {
 
         {customers.length > 0 && !error && (
           <>
-            <FigureRow items={figures} />
+            <FigureRow items={figures} lead={1} />
 
             {portfolio?.enabled && attentionList.length > 0 && (
               <Panel title="Needs attention" sub="From the last 90 days of sales and payments" flush>
                 <div style={{ borderTop: "1px solid var(--line)" }}>
                   {attentionList.map(c => {
                     const h = HEALTH[c.healthLabel] || { label: c.healthLabel, tone: "neutral" as StatusTone };
-                    return (
-                      <div key={c.customerId || c.customerName} className={`${s.attnRow} flex items-center justify-between`}>
+                    const match = customers.find(x => x.customer_name === c.customerName);
+                    const body = (
+                      <>
                         <div className="min-w-0">
-                          <div className="flex items-center" style={{ gap: 8 }}>
+                          <div className="flex items-center" style={{ gap: 10 }}>
                             <span className={s.name}>{c.customerName}</span>
-                            <StatusChip tone={h.tone}>{h.label}</StatusChip>
+                            <StatusChip tone={h.tone} className="chip-quiet">{h.label}</StatusChip>
                           </div>
                           <div className={s.sub} style={{ color: "var(--ink-2)", fontSize: 12.5 }}><span>{plain(c.healthEvidence[0] || c.evidence[0])}</span></div>
                         </div>
-                        {(() => {
-                          const match = customers.find(x => x.customer_name === c.customerName);
-                          return match
-                            ? <Button variant="ghost" size="sm" onClick={() => setLensCustomer(match)}>View customer</Button>
-                            : <Link href={`/khata?customer=${encodeURIComponent(c.customerName)}`} className="ui-btn ui-btn-ghost ui-btn-sm">Open khata</Link>;
-                        })()}
-                      </div>
+                        <span className="flex items-center shrink-0" style={{ gap: 8, fontSize: 12.5, color: "var(--ink-2)" }}>
+                          {match ? "View customer" : "Open khata"}<Chevron />
+                        </span>
+                      </>
                     );
+                    const cls = `${s.attnRow} ${s.attnLink} ${h.tone === "critical" ? s.attnLead : ""}`;
+                    return match
+                      ? <button key={c.customerId || c.customerName} type="button" className={cls} onClick={() => setLensCustomer(match)}>{body}</button>
+                      : <Link key={c.customerId || c.customerName} href={`/khata?customer=${encodeURIComponent(c.customerName)}`} className={cls}>{body}</Link>;
                   })}
                 </div>
               </Panel>

@@ -289,7 +289,7 @@ function SettingsPageInner() {
   return (
     <DashboardLayout pageTitle="Settings">
       <SettingsStyles />
-      <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 32 }}>
+      <div style={{ maxWidth: 952, display: "flex", flexDirection: "column", gap: 32 }}>
         <PageHeader title="Settings" subtitle="Your account, your business and how Starlane works for you." />
 
         <div className="set-layout">

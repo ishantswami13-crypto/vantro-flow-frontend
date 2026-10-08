@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ControlHeader, ControlPage, ControlSection as Section } from "@/components/control/ControlSubnav";
+import { controlStyles as cs } from "@/components/control/Authority";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { StatusChip } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
@@ -68,6 +69,8 @@ export default function DecisionControlsPage() {
     if (!c) return null;
     const on = row.scope === "TENANT" ? tenantStopped : row.scope === "AGENT" ? agentStopped : stopped(row.scope, row.key);
     const rec = c.controls.find((x) => x.scope === row.scope && x.scope_key === row.key);
+    // With everything stopped, a switch that is still on cannot run either.
+    const held = !on && row.scope !== "TENANT" && (tenantStopped || c.globalStop);
     const busy = set.isPending && set.variables?.scope === row.scope && set.variables?.scopeKey === row.key;
     const meta = [row.detail, rec ? `Last changed ${formatRelative(rec.set_at)}` : null].filter(Boolean).join(" · ");
     return (
@@ -76,12 +79,12 @@ export default function DecisionControlsPage() {
           <div style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: row.scope === "TENANT" ? 500 : 400 }}>{row.label}</div>
           {meta && <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2, lineHeight: 1.5 }} title={rec ? formatDateTime(rec.set_at) : undefined}>{meta}</div>}
         </div>
-        <div className="hidden md:block">{on ? <StatusChip tone="critical">Stopped</StatusChip> : <StatusChip tone="positive">Running</StatusChip>}</div>
+        <div className="hidden md:block">{on ? <StatusChip tone="critical">Stopped</StatusChip> : held ? <StatusChip tone="unknown" title="Everything is stopped, so this cannot run either">Held</StatusChip> : <StatusChip tone="positive" className="chip-quiet">Running</StatusChip>}</div>
         <div className="flex items-center justify-end" style={{ gap: 8 }}>
           <span className="md:hidden">{on && <StatusChip tone="critical">Stopped</StatusChip>}</span>
           <Button
             size="sm"
-            variant={on ? "secondary" : row.scope === "TENANT" ? "danger" : "ghost"}
+            variant={on ? "secondary" : "ghost"}
             loading={busy}
             onClick={() => set.mutate({ scope: row.scope, scopeKey: row.key, stopped: !on, reason: on ? undefined : `Stop ${row.label.toLowerCase()} (set in Control)` })}
           >
@@ -92,61 +95,89 @@ export default function DecisionControlsPage() {
     );
   };
 
+  const stoppedActions = c ? ACTION_CLASSES.filter((a) => stopped("ACTION_CLASS", a.key)).length : 0;
+
+  // "Everything": the one switch that halts all analysis and execution.
+  const masterRow = () => {
+    if (!c) return null;
+    const rec = c.controls.find((x) => x.scope === "TENANT" && x.scope_key === "tenant");
+    const busy = set.isPending && set.variables?.scope === "TENANT";
+    return (
+      <div className={cs.master}>
+        <div className="min-w-0">
+          <div className="flex items-center flex-wrap" style={{ gap: 10 }}>
+            <span className={cs.masterName}>Everything</span>
+            {tenantStopped ? <StatusChip tone="critical">Stopped</StatusChip> : <StatusChip tone="positive" className="chip-quiet">Running</StatusChip>}
+          </div>
+          <div className={cs.masterDetail} title={rec ? formatDateTime(rec.set_at) : undefined}>
+            No analysis runs and no action executes for this business.{rec ? ` Last changed ${formatRelative(rec.set_at)}.` : ""}
+          </div>
+        </div>
+        <Button
+          variant={tenantStopped ? "secondary" : "danger"}
+          loading={busy}
+          onClick={() => set.mutate({ scope: "TENANT", scopeKey: "tenant", stopped: !tenantStopped, reason: tenantStopped ? undefined : "Stop everything (set in Control)" })}
+        >
+          {tenantStopped ? "Resume everything" : "Stop everything"}
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <DashboardLayout pageTitle="Decisions">
       <style>{`
         .sw-row { display: grid; align-items: center; gap: 8px 16px; padding: 10px 0; min-height: 46px;
           grid-template-columns: minmax(0, 1fr) auto; }
         @media (min-width: 760px) { .sw-row { grid-template-columns: minmax(0, 1fr) 96px 84px; } }
-        .sw-facts { display: flex; flex-wrap: wrap; gap: 6px 28px; margin: 12px 0 0; font-size: 12px; }
-        .sw-facts dt { color: var(--ink-3); }
-        .sw-facts dd { margin: 2px 0 0; color: var(--ink); }
       `}</style>
       <ControlPage>
-        <ControlHeader active="decisions" subtitle="Pilot mode and stop switches. The backend enforces these outside any model." />
+        <ControlHeader active="decisions" subtitle="Pilot mode and stop switches, enforced by the backend outside any model." />
 
         {q.isLoading && <SkeletonRows rows={4} height={56} />}
         {q.isError && <ErrorState title="Couldn't load decision controls" message={OFFLINE} onRetry={() => q.refetch()} />}
         {set.isError && <Notice title="That change wasn't saved">{OFFLINE}</Notice>}
 
         {c && (
-          <div className="fade-once flex flex-col" style={{ gap: 32 }}>
+          <div className="fade-once flex flex-col" style={{ gap: 36 }}>
             {c.globalStop && (
               <Notice title="Operator stop is on">Starlane&apos;s operator has paused all decision actions. This overrides the settings below.</Notice>
             )}
 
-            <Section title="Pilot mode">
-              <div className="ops-list">
-                <div className="ops-row ops-static flex flex-wrap items-start justify-between" style={{ padding: "14px 0", gap: 16 }}>
-                  <div className="min-w-0" style={{ flex: "1 1 320px", maxWidth: 720 }}>
-                    <div className="flex items-center" style={{ gap: 10, marginBottom: 4 }}>
-                      <span style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{shadow ? "Shadow" : "Live"}</span>
-                      <StatusChip tone={shadow ? "info" : "positive"}>{shadow ? "Nothing is changed" : "Approved decisions run"}</StatusChip>
-                    </div>
-                    <p style={{ margin: 0, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.6 }}>
-                      {shadow
-                        ? "Approved decisions are recorded exactly as they would run, but nothing is changed. Use this to see how Starlane would act before trusting it."
-                        : "Approved decisions are carried out and each step is checked in the system it changed. Customer messages are still prepared for your approval."}
-                    </p>
-                    <dl className="sw-facts">
-                      <div><dt>Customer messages</dt><dd>{c.externalSendEnabled ? "Sent after your approval" : "Drafts only, sending is off"}</dd></div>
-                      <div><dt>Autonomy ceiling</dt><dd className="num">{c.autonomyCeiling}</dd></div>
-                      <div><dt>Approval</dt><dd>Every action</dd></div>
-                    </dl>
-                  </div>
-                  {shadow
-                    ? <Button variant="secondary" onClick={() => setConfirmLive(true)}>Switch to live</Button>
-                    : <Button variant="secondary" loading={set.isPending && set.variables?.pilotMode === "SHADOW"} onClick={() => set.mutate({ pilotMode: "SHADOW" })}>Back to shadow</Button>}
-                </div>
+            <section className={cs.band} aria-labelledby="pilot-title">
+              <div className={cs.bandHead}>
+                <h2 id="pilot-title" className="section-label section-label-lead">Pilot mode</h2>
               </div>
-            </Section>
+              <div className={cs.mode}>
+                <div className="min-w-0" style={{ flex: "1 1 360px" }}>
+                  <div className={cs.modeLine}>
+                    <span className={cs.modeName}>{shadow ? "Shadow" : "Live"}</span>
+                    <StatusChip tone={shadow ? "info" : "positive"} className="chip-quiet">{shadow ? "Nothing is changed" : "Approved decisions run"}</StatusChip>
+                  </div>
+                  <p className={cs.modeBody}>
+                    {shadow
+                      ? "Approved decisions are recorded exactly as they would run, but nothing is changed. Use this to see how Starlane would act before trusting it."
+                      : "Approved decisions are carried out and each step is checked in the system it changed. Customer messages are still prepared for your approval."}
+                  </p>
+                </div>
+                {shadow
+                  ? <Button variant="secondary" onClick={() => setConfirmLive(true)}>Switch to live</Button>
+                  : <Button variant="secondary" loading={set.isPending && set.variables?.pilotMode === "SHADOW"} onClick={() => set.mutate({ pilotMode: "SHADOW" })}>Back to shadow</Button>}
+              </div>
+              <dl className={cs.bandFacts}>
+                <div><dt>Customer messages</dt><dd>{c.externalSendEnabled ? "Sent after your approval" : "Drafts only, sending is off"}</dd></div>
+                <div><dt>Autonomy ceiling</dt><dd className="num">{c.autonomyCeiling}</dd></div>
+                <div><dt>Approval</dt><dd>Every action</dd></div>
+              </dl>
+            </section>
 
             <Section title="Stop switches" hint="A stop takes effect immediately and stays on until you resume it.">
-              <div className="ops-list">{engineRows.map(switchRow)}</div>
+              {masterRow()}
+              <div className="ops-list" style={{ borderTop: "none" }}>{engineRows.filter((r) => r.scope !== "TENANT").map(switchRow)}</div>
             </Section>
 
-            <Section title="Stop by action" hint="Decisions that need a stopped action cannot run.">
-              <div className="ops-list">{actionRows.map(switchRow)}</div>
+            <Section title="Stop by action" hint={stoppedActions ? `${stoppedActions} stopped. Decisions that need a stopped action cannot run.` : "Decisions that need a stopped action cannot run."}>
+              <div className={cs.switchGrid}>{actionRows.map(switchRow)}</div>
             </Section>
           </div>
         )}

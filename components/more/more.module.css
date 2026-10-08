@@ -18,11 +18,16 @@
 .figures {
   display: grid;
   grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr));
+  align-items: end;
 }
 .figureCell { min-width: 0; padding: 2px 24px; border-left: 1px solid var(--line); }
 .figureCell:first-child { padding-left: 0; border-left: none; }
-.figureNote { font-size: 11.5px; color: var(--ink-3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.figureNote { font-size: 12px; color: var(--ink-3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .figures :global(.num) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The page's anchor figure: one step larger than the rest, never a wall. */
+.figureLead :global(.num) { font-size: 27px !important; line-height: 1.15 !important; letter-spacing: -0.03em !important; }
+/* Crore-scale values keep their lead weight without being cut off. */
+.figureLeadLong :global(.num) { font-size: 23px !important; line-height: 1.2 !important; letter-spacing: -0.03em !important; }
 @media (max-width: 1099px) {
   .figureCell { padding: 2px 18px; }
 }
@@ -30,6 +35,7 @@
   .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 20px; }
   .figureCell, .figureCell:first-child { padding: 0 12px 0 0; border-left: none; }
   .figures :global(.num) { font-size: 18px !important; }
+  .figureLead :global(.num), .figureLeadLong :global(.num) { font-size: 20px !important; }
 }
 
 /* Toolbar under the tabs: search on the left, quiet controls on the right. */
@@ -45,8 +51,8 @@
 }
 .panelHead > :first-child { flex: 1 1 220px; }
 .panelTitle {
-  margin: 0; font-size: 11px; font-weight: 500; line-height: 16px; letter-spacing: 0.07em;
-  text-transform: uppercase; color: var(--ink-3);
+  margin: 0; font-size: 11px; font-weight: 600; line-height: 16px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-2);
 }
 .panelSub { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.5; }
 .panelBody { padding: 0; }
@@ -72,14 +78,14 @@
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: var(--ink-3);
+  color: var(--ink-2);
   border-bottom: 1px solid var(--line);
 }
 .head > * { white-space: nowrap; }
 .cell { min-width: 0; font-size: 13px; color: var(--body); }
 .right { text-align: right; justify-self: end; }
-.num { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.head .cell, .head .num { font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-3); }
+.num { font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.head .cell, .head .num { font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-2); }
 .num button, .num a, .num [role="menu"] { font-family: var(--font-sans); letter-spacing: normal; }
 @media (max-width: 1099px) {
   .row { grid-template-columns: var(--cols-md); }
@@ -103,12 +109,22 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .sub > span { overflow: hidden; text-overflow: ellipsis; }
-.amount { font-family: var(--font-mono); font-size: 13px; letter-spacing: -0.01em; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.amount { font-family: var(--font-mono); font-size: 13px; font-weight: 500; letter-spacing: -0.015em; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .muted { color: var(--ink-3); }
 /* A short list above a table ("Needs attention"): hairline rows on the canvas. */
 .attnRow { gap: 16px; padding: 10px 0; min-height: 52px; border-bottom: 1px solid var(--line); transition: background-color 120ms var(--ease, ease), box-shadow 120ms var(--ease, ease); }
 .attnRow:hover { background: var(--surface-2); box-shadow: -10px 0 0 var(--surface-2), 10px 0 0 var(--surface-2); }
 .actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+/* A row's own action, shown on hover or keyboard focus only (pointer
+   devices), so a long list doesn't repeat the same button on every line. */
+@media (hover: hover) and (pointer: fine) {
+  .hoverAction { opacity: 0; transition: opacity var(--dur-instant, 120ms) var(--ease, ease); }
+  .body .row:hover .hoverAction, .body .row:focus-within .hoverAction, .hoverAction[data-busy] { opacity: 1; }
+}
+/* Rows that need attention first: the 2px ink rule, no box. */
+.attnLead { box-shadow: inset 2px 0 0 var(--ink); padding-left: 12px; }
+.attnLink { display: flex; align-items: center; justify-content: space-between; color: inherit; text-decoration: none; cursor: pointer; width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid var(--line); font: inherit; }
+.attnLink:hover :global(.row-chevron) { transform: translateX(2px); }
 
 .sortBtn {
   display: inline-flex; align-items: center; gap: 4px; background: none; border: none; padding: 0;

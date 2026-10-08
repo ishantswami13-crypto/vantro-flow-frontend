@@ -519,7 +519,7 @@ export default function CollectionsPage() {
       key: "risk", header: "Risk", width: "118px", hide: "sm",
       render: c => {
         const r = scoreMap[c.name] && RISK[scoreMap[c.name].tier];
-        return r ? <StatusChip tone={r.tone} title={`Risk score ${scoreMap[c.name].score} of 100`}>{r.label}</StatusChip> : <span className={s.muted}>Not scored</span>;
+        return r ? <StatusChip tone={r.tone} className="chip-quiet" title={`Risk score ${scoreMap[c.name].score} of 100`}>{r.label}</StatusChip> : <span className={s.muted}>Not scored</span>;
       },
     },
     {
@@ -538,14 +538,14 @@ export default function CollectionsPage() {
         const phone = c.contact.replace(/\D/g, "");
         return (
           <div className={s.actions}>
-            <span className={s.mdUp}>
+            <span className={`${s.mdUp} ${s.hoverAction}`} data-busy={rState ? "" : undefined}>
               <Button variant="ghost" size="sm" loading={rState === "loading"} disabled={rState === "sent"} onClick={() => handleSendReminder(c)}
                 title={c.lastReminderSent ? `Last reminded ${formatRelative(c.lastReminderSent)}` : "Send a payment reminder with a payment link"}>
-                {rState === "sent" ? "Sent" : "Remind"}
+                {rState === "sent" ? "Sent" : "Send reminder"}
               </Button>
             </span>
             <RowMenu label={`More actions for ${c.name}`} items={[
-              { label: rState === "sent" ? "Reminder sent" : "Send reminder", onSelect: () => handleSendReminder(c), phoneOnly: true, disabled: rState === "sent" || rState === "loading" },
+              { label: rState === "sent" ? "Reminder sent" : "Send reminder", onSelect: () => handleSendReminder(c), disabled: rState === "sent" || rState === "loading" },
               { label: "Log a call", onSelect: () => { setLogModal(c); setCallForm({ did_pick_up: true, promised_date: "", notes: "" }); } },
               { label: "Log their reply", onSelect: () => { setReplyModal(c); setReplyText(""); } },
               ...(broken && phone ? [{ label: "Nudge about broken promise", href: `https://wa.me/91${phone}?text=${encodeURIComponent(getPromiseNudgeMsg(c))}`, external: true }] : []),
@@ -612,7 +612,7 @@ export default function CollectionsPage() {
 
         {tableData.length > 0 && (
           <>
-            <FigureRow items={[
+            <FigureRow lead={0} items={[
               { label: "Outstanding", value: inrWhole(figures.total), note: `${formatCount(tableData.length)} unpaid invoice${tableData.length === 1 ? "" : "s"}` },
               { label: "Overdue", value: inrWhole(figures.overdue), note: `${formatCount(figures.overdueCount)} past due date` },
               { label: "Over 60 days late", value: inrWhole(figures.over60), note: figures.over60Count ? `${formatCount(figures.over60Count)} to chase first` : "None" },
