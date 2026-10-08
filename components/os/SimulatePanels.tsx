@@ -10,13 +10,15 @@ import { Pill } from "@/components/decisions/ui";
 import { osApi, Workflow, Replay, WORKFLOW_STATUS_LABEL, SalesWhatIf as SalesWhatIfResult } from "@/lib/os";
 import { pct } from "@/lib/decisions";
 import { formatDate, formatCount } from "@/lib/format";
-import { Figure, EmptyLine, SkeletonRows } from "@/components/v32/ui";
-import { IconChart, IconSimulate, IconChevronDown } from "@/components/v32/icons";
+import { SectionTitle, SkeletonRows } from "@/components/v32/ui";
+import { IconChevronDown } from "@/components/v32/icons";
 import { useLoad } from "./shared";
-import { RetryLine, SectionHead, amount, signedAmount, humaneError } from "./prepared/kit";
-import { SimBars } from "./simulate/SimChart";
+import { EmptyNote, RetryLine, SectionHead, amount, signedAmount, humaneError } from "./prepared/kit";
+import lab from "./simulate/lab.module.css";
 
-const panel: React.CSSProperties = { background: "var(--surface)", border: "1px solid var(--line-card)", borderRadius: 12 };
+function RFig({ value, label }: { value: React.ReactNode; label: React.ReactNode }) {
+  return <div className={lab.fig}><div className={lab.figValue}>{value}</div><div className={lab.figLabel}>{label}</div></div>;
+}
 
 // Business-level what-if: a change in sales, played through this business's
 // own payment timing. Read-only; nothing is saved.
@@ -24,82 +26,98 @@ export function SalesWhatIf() {
   const [change, setChange] = useState(-20);
   const [days, setDays] = useState(60);
   const [res, setRes] = useState<SalesWhatIfResult | null>(null);
+  const [ranFor, setRanFor] = useState<{ change: number; days: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<unknown>(null);
   const run = async () => {
     setBusy(true); setErr(null);
-    try { setRes(await osApi.salesWhatIf(change, days)); } catch (e) { setErr(e); } finally { setBusy(false); }
+    try { setRes(await osApi.salesWhatIf(change, days)); setRanFor({ change, days }); } catch (e) { setErr(e); } finally { setBusy(false); }
   };
-  const label: React.CSSProperties = { display: "block", fontSize: 12, color: "var(--ink-2)", marginBottom: 6 };
   const cash = res?.cashFromNewSales;
+  const stale = !!ranFor && (ranFor.change !== change || ranFor.days !== days);
+  const row = (label: string, base: React.ReactNode, scen: React.ReactNode, delta: React.ReactNode, deltaCls = "") => (
+    <tr>
+      <th scope="row" style={{ fontWeight: 400, textAlign: "left", padding: "11px 0", fontSize: 12.5, color: "var(--body)", borderBottom: "1px solid var(--line)", letterSpacing: 0 }}>{label}</th>
+      <td>{base}</td>
+      <td className={lab.focus}>{scen}</td>
+      <td className={deltaCls}>{delta}</td>
+    </tr>
+  );
+  const dash = <span className={lab.empty}>—</span>;
   return (
-    <div className="grid gap-5 lg:grid-cols-[340px_minmax(0,1fr)] items-start">
-      <section aria-labelledby="sales-assumptions" className="fade-once" style={{ ...panel, padding: 20 }}>
-        <h2 id="sales-assumptions" style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 17, color: "var(--ink)" }}>Assumptions</h2>
-        <p style={{ margin: "4px 0 16px", fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.5 }}>A change in sales, played through how fast your customers really pay.</p>
+    <div className={lab.lab}>
+      <section aria-labelledby="sales-assumptions" className={lab.rail}>
+        <h2 id="sales-assumptions" className="section-label">Assumptions</h2>
         <div className="grid grid-cols-2" style={{ gap: 12 }}>
           <div>
-            <label htmlFor="sales-change" style={label}>Sales change (%)</label>
-            <input id="sales-change" className="ui-input" type="number" min={-100} max={200} step={5} value={change} onChange={(e) => setChange(Number(e.target.value))} style={{ fontVariantNumeric: "tabular-nums" }} />
+            <label htmlFor="sales-change" className={lab.fieldLabel}>Sales change, %</label>
+            <input id="sales-change" className="ui-input num" type="number" min={-100} max={200} step={5} value={change} onChange={(e) => setChange(Number(e.target.value))} style={{ fontSize: 12.5 }} />
           </div>
           <div>
-            <label htmlFor="sales-days" style={label}>Over (days)</label>
-            <input id="sales-days" className="ui-input" type="number" min={7} max={180} step={1} value={days} onChange={(e) => setDays(Number(e.target.value))} style={{ fontVariantNumeric: "tabular-nums" }} />
+            <label htmlFor="sales-days" className={lab.fieldLabel}>Over, days</label>
+            <input id="sales-days" className="ui-input num" type="number" min={7} max={180} step={1} value={days} onChange={(e) => setDays(Number(e.target.value))} style={{ fontSize: 12.5 }} />
           </div>
         </div>
-        <button type="button" onClick={run} disabled={busy} className="ui-btn ui-btn-primary" style={{ width: "100%", marginTop: 18, height: 38 }}>
-          {busy ? "Running…" : res ? "Run again" : "Run simulation"}
+        <button type="button" onClick={run} disabled={busy} className={`ui-btn ui-btn-primary ${lab.run}`}>
+          {busy ? "Simulating…" : res ? "Simulate again" : "Simulate"}
         </button>
-        <p style={{ margin: "10px 0 0", fontSize: 12, color: "var(--ink-3)" }}>Nothing is saved.</p>
+        <p className={lab.hint}>{stale ? "The result shown is for your previous inputs." : "Played through how fast your customers really pay. Nothing is saved."}</p>
       </section>
 
-      <div className="min-w-0 flex flex-col" style={{ gap: 16 }}>
+      <div className={lab.main}>
+        <SectionTitle>Comparison{res && res.status === "PROJECTED" ? ` · next ${res.horizonDays} days` : ""}</SectionTitle>
         {err ? <RetryLine error={humaneError(err, "Starlane couldn't run this what-if just now. Try again in a moment.")} onRetry={run} /> : null}
         {!res && !err && (
-          <div style={{ ...panel, padding: "28px 24px", borderStyle: "dashed", background: "transparent" }}>
-            <p style={{ margin: 0, fontSize: 14, color: "var(--ink)" }}>{busy ? "Working it out from your invoices…" : "The cash effect appears here"}</p>
-            <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.6, maxWidth: 520 }}>Starlane uses your average monthly sales and your customers&apos; real payment timing. It needs a few months of invoices and payments.</p>
-          </div>
+          <p className={lab.placeholder}>{busy ? "Working it out from your invoices…" : "Simulate to see how a change in sales reaches your cash, using your average monthly sales and your customers' real payment timing."}</p>
         )}
         {res && res.status === "INSUFFICIENT_EVIDENCE" && (
-          <div style={{ ...panel, padding: "6px 20px" }}>
-            <EmptyLine icon={<IconChart size={17} />} title="Not enough history to project this yet" body={res.reason || "Starlane needs more paid invoices before it can say how a change in sales reaches your cash."} />
-          </div>
+          <p className={lab.placeholder}>Not enough history to project this yet. {res.reason || "Starlane needs more paid invoices before it can say how a change in sales reaches your cash."}</p>
         )}
         {res && res.status === "PROJECTED" && cash && (
-          <section aria-label="Result" className="fade-once flex flex-col" style={{ gap: 16 }}>
-            <div style={{ ...panel, padding: "20px 22px" }}>
-              <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 14 }}>
-                Sales {res.changePct > 0 ? "up" : "down"} {Math.abs(res.changePct)}% · next {res.horizonDays} days
-              </div>
-              <div className="grid gap-6 grid-cols-1 sm:grid-cols-3">
-                <Figure value={signedAmount(cash.delta)} label="Cash from new sales, change" tone={cash.delta < 0 ? "var(--critical)" : cash.delta > 0 ? "var(--positive)" : undefined} />
-                <Figure value={amount(cash.scenario)} label={`Cash in ${res.horizonDays} days with the change`} />
-                <Figure value={res.salesPerMonth != null ? amount(res.salesPerMonth) : "Not known yet"} label={res.scenarioSalesPerMonth != null ? `Sales a month, becomes ${amount(res.scenarioSalesPerMonth)}` : "Sales a month"} />
-              </div>
+          <section aria-label="Result" className="fade-once">
+            <p className={lab.context}>Sales <b>{res.changePct > 0 ? "up" : "down"} <span className="num">{Math.abs(res.changePct)}%</span></b> over the next <b className="num">{res.horizonDays}</b> days.</p>
+            <div className="overflow-x-auto">
+              <table className={lab.table}>
+                <thead>
+                  <tr>
+                    <th scope="col"><span className="sr-only">Measure</span></th>
+                    <th scope="col">As things are</th>
+                    <th scope="col" className={lab.focus}>With the change</th>
+                    <th scope="col">Difference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {row(`Cash from new sales in ${res.horizonDays} days`, amount(cash.baseline), amount(cash.scenario), signedAmount(cash.delta), cash.delta < 0 ? lab.bad : cash.delta > 0 ? lab.good : "")}
+                  {res.salesPerMonth != null && row("Sales a month", amount(res.salesPerMonth), res.scenarioSalesPerMonth != null ? amount(res.scenarioSalesPerMonth) : dash, res.scenarioSalesPerMonth != null ? signedAmount(res.scenarioSalesPerMonth - res.salesPerMonth) : dash)}
+                </tbody>
+              </table>
             </div>
-            <div style={{ ...panel, padding: "18px 22px 12px" }}>
-              <div className="flex items-baseline justify-between flex-wrap" style={{ gap: 8, marginBottom: 8 }}>
-                <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>Cash from new sales in {res.horizonDays} days</h3>
-                {res.medianDaysToCash != null && <span style={{ fontSize: 12, color: "var(--ink-3)" }}>Customers take a median of {res.medianDaysToCash} days to pay</span>}
-              </div>
-              <SimBars
-                ariaLabel={`As things are: ${amount(cash.baseline)}. With the change: ${amount(cash.scenario)}.`}
-                bars={[{ label: "As things are", value: cash.baseline, tone: "ink" }, { label: "With the change", value: cash.scenario, tone: "accent" }]}
-              />
-            </div>
-            <div style={{ padding: "4px 2px" }}>
-              <h3 style={{ margin: "0 0 8px", fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>Why</h3>
-              {res.summary && <p style={{ margin: 0, fontSize: 13, color: "var(--body)", lineHeight: 1.6, maxWidth: 760 }}>{res.summary}</p>}
-              {(res.assumptions || []).length > 0 && (
-                <ul className="flex flex-col" style={{ gap: 4, margin: "10px 0 0", padding: 0, listStyle: "none" }}>
-                  {(res.assumptions || []).map((a) => <li key={a} style={{ fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.55 }}>– {a}</li>)}
-                </ul>
-              )}
-            </div>
+            {res.summary && <p className={lab.foot} style={{ fontSize: 13, color: "var(--body)", marginTop: 16 }}>{res.summary}</p>}
           </section>
         )}
       </div>
+
+      <aside className={lab.side} aria-label="Uncertainty">
+        <div>
+          <SectionTitle>Uncertainty</SectionTitle>
+          {res && res.status === "PROJECTED" ? (
+            <>
+              {res.medianDaysToCash != null && (
+                <div className={lab.kv}><span className={lab.kvLabel}>Median days to cash</span><span className={`${lab.kvValue} num`}>{res.medianDaysToCash}</span></div>
+              )}
+              <p className={lab.small} style={{ marginTop: 8, color: "var(--ink-3)" }}>A single projection from your history; no probability band was computed.</p>
+            </>
+          ) : (
+            <p className={lab.small}>How sure this is, and what it rests on, appears here.</p>
+          )}
+        </div>
+        {res && (res.assumptions || []).length > 0 && (
+          <div>
+            <SectionTitle>Assumptions used</SectionTitle>
+            <ul className={lab.smallList}>{(res.assumptions || []).map((a) => <li key={a}>{a}</li>)}</ul>
+          </div>
+        )}
+      </aside>
     </div>
   );
 }
@@ -113,11 +131,9 @@ export function WorkflowReplays() {
       {loading && <SkeletonRows rows={2} />}
       {error ? <RetryLine error={error} onRetry={reload} /> : null}
       {!loading && !error && list.length === 0 && (
-        <EmptyLine icon={<IconSimulate size={17} />} title="No automation to replay yet" body="Run a scan and Starlane proposes automations from your own history. Each one can be replayed here before it runs." />
+        <EmptyNote>No automation to replay yet. Run a scan and Starlane proposes automations from your own history; each can be replayed here before it runs.</EmptyNote>
       )}
-      <div className="flex flex-col" style={{ gap: 14 }}>
-        {list.map((w) => <ReplayCard key={w.id} w={w} />)}
-      </div>
+      {list.length > 0 && <div style={{ borderTop: "1px solid var(--line)" }}>{list.map((w) => <ReplayCard key={w.id} w={w} />)}</div>}
     </section>
   );
 }
@@ -132,14 +148,12 @@ function ReplayCard({ w }: { w: Workflow }) {
     try { setSim((await osApi.simulate(w.id)).simulation); } catch (e) { setErr(e); } finally { setBusy(false); }
   };
   return (
-    <article className="card-in" style={{ ...panel, padding: "18px 20px" }}>
-      <div className="flex items-start justify-between flex-wrap" style={{ gap: 12 }}>
+    <article className={lab.replay}>
+      <div className={lab.replayHead}>
         <div className="min-w-0" style={{ flex: "1 1 280px" }}>
-          <div className="flex items-center flex-wrap" style={{ gap: 8, marginBottom: 6 }}>
-            <Pill tone="accent">{WORKFLOW_STATUS_LABEL[w.status] || w.status}</Pill>
-          </div>
-          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 500, color: "var(--ink)" }}>{w.name}</h3>
-          <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--ink-2)" }}>{w.trigger.description}</p>
+          <div style={{ marginBottom: 3 }}><Pill>{WORKFLOW_STATUS_LABEL[w.status] || w.status}</Pill></div>
+          <h3 className={lab.replayTitle}>{w.name}</h3>
+          <p className={lab.replaySub}>{w.trigger.description}</p>
         </div>
         <button type="button" className="ui-btn ui-btn-secondary ui-btn-sm" onClick={rerun} disabled={busy}>{busy ? "Replaying…" : sim ? "Replay again" : "Replay"}</button>
       </div>
@@ -147,40 +161,40 @@ function ReplayCard({ w }: { w: Workflow }) {
       {!sim && !err && <p style={{ margin: "14px 0 0", fontSize: 12.5, color: "var(--ink-3)" }}>Not replayed yet.</p>}
       {sim && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: 20, marginTop: 18 }}>
-            <Figure value={formatCount(sim.episodes)} label={`Would have fired, ${sim.perMonth} a month`} />
-            <Figure value={amount(sim.amountTriggered)} label="Amount it covered" />
-            <Figure value={formatCount(sim.paidWithinWindowWithoutAction)} label={`Paid anyway in 7 days (${pct(sim.baselineRate)})`} />
-            <Figure value={`${sim.humanHoursPerMonth}h`} label="Checking time saved a month, estimate" />
+          <div className={lab.figs}>
+            <RFig value={formatCount(sim.episodes)} label={`Would have fired, ${sim.perMonth} a month`} />
+            <RFig value={amount(sim.amountTriggered)} label="Amount it covered" />
+            <RFig value={formatCount(sim.paidWithinWindowWithoutAction)} label={`Paid anyway in 7 days (${pct(sim.baselineRate)})`} />
+            <RFig value={`${sim.humanHoursPerMonth}h`} label="Checking time saved a month, estimate" />
           </div>
-          <p style={{ margin: "16px 0 0", fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.55 }}>
+          <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--ink-3)", lineHeight: 1.55 }}>
             {sim.replays} weekly replays over {sim.lookbackDays} days. Future data: {sim.leakage}.
           </p>
-          {sim.cannotSay && <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--warning)", lineHeight: 1.55 }}>{sim.cannotSay}</p>}
+          {sim.cannotSay && <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--warning)", lineHeight: 1.55 }}>{sim.cannotSay}</p>}
           {sim.sample.length > 0 && (
             <div style={{ marginTop: 12 }}>
-              <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" aria-expanded={open} onClick={() => setOpen((v) => !v)} style={{ paddingLeft: 6 }}>
+              <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" aria-expanded={open} onClick={() => setOpen((v) => !v)} style={{ paddingLeft: 0, marginLeft: -2 }}>
                 <span style={{ display: "inline-flex", transform: open ? "rotate(180deg)" : undefined, transition: "transform 160ms" }}><IconChevronDown size={13} /></span>
-                {open ? "Hide" : "Show"} {sim.sample.length} example firing{sim.sample.length === 1 ? "" : "s"}
+                {open ? "Hide" : "View"} {sim.sample.length} example firing{sim.sample.length === 1 ? "" : "s"}
               </button>
               {open && (
                 <div className="overflow-x-auto" style={{ marginTop: 8 }}>
-                  <table className="w-full" style={{ fontSize: 12.5, borderCollapse: "collapse", minWidth: 420 }}>
+                  <table className={lab.table} style={{ minWidth: 420, maxWidth: 720 }}>
                     <thead>
-                      <tr style={{ color: "var(--ink-3)", fontSize: 12 }}>
-                        <th className="text-left font-normal" style={{ padding: "8px 8px 8px 0" }}>Week of</th>
-                        <th className="text-left font-normal" style={{ padding: 8 }}>Customer</th>
-                        <th className="text-right font-normal" style={{ padding: 8 }}>Owed</th>
-                        <th className="text-right font-normal" style={{ padding: "8px 0 8px 8px" }}>Paid in 7 days</th>
+                      <tr>
+                        <th scope="col">Week of</th>
+                        <th scope="col" style={{ textAlign: "left" }}>Customer</th>
+                        <th scope="col">Owed</th>
+                        <th scope="col">Paid in 7 days</th>
                       </tr>
                     </thead>
                     <tbody>
                       {sim.sample.map((s, i) => (
-                        <tr key={i} className="row-hover" style={{ borderTop: "1px solid var(--line)", color: "var(--body)", height: 44 }}>
-                          <td style={{ padding: "0 8px 0 0" }}>{formatDate(s.asOf)}</td>
-                          <td style={{ padding: "0 8px", color: "var(--ink)" }}>{s.customer}</td>
-                          <td className="text-right" style={{ padding: "0 8px", fontVariantNumeric: "tabular-nums" }}>{amount(s.amount)}</td>
-                          <td className="text-right" style={{ padding: "0 0 0 8px" }}>{s.paidWithinWindow ? "Yes" : "No"}</td>
+                        <tr key={i}>
+                          <td>{formatDate(s.asOf)}</td>
+                          <td style={{ textAlign: "left", fontFamily: "var(--font-sans)", color: "var(--ink)" }}>{s.customer}</td>
+                          <td>{amount(s.amount)}</td>
+                          <td style={{ fontFamily: "var(--font-sans)" }}>{s.paidWithinWindow ? "Yes" : "No"}</td>
                         </tr>
                       ))}
                     </tbody>

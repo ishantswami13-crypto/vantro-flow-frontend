@@ -6,11 +6,11 @@ import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type ScenarioInvoice, type SimulateScenarioResponse } from "@/lib/api";
 import { SalesWhatIf, WorkflowReplays } from "@/components/os/SimulatePanels";
-import { PageHeader, Subnav, Figure, EmptyLine } from "@/components/v32/ui";
-import { IconChevronDown, IconSimulate, IconUpload } from "@/components/v32/icons";
-import { PageBody, RetryLine, amount, signedAmount, humaneError } from "@/components/os/prepared/kit";
-import { SimBars } from "@/components/os/simulate/SimChart";
-import { formatDate, formatDue } from "@/lib/format";
+import { PageHeader, Subnav, SectionTitle } from "@/components/v32/ui";
+import { IconChevronDown, IconUpload } from "@/components/v32/icons";
+import { EmptyNote, PageBody, RetryLine, amount, sentence, signedAmount, humaneError } from "@/components/os/prepared/kit";
+import { formatDate, formatDue, inrShort } from "@/lib/format";
+import lab from "@/components/os/simulate/lab.module.css";
 
 // Simulate — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§6/§14/§16.
 //
@@ -103,7 +103,7 @@ function SimulatePageInner() {
   return (
     <DashboardLayout pageTitle="Simulate">
       <PageBody>
-        <PageHeader title="Simulate" subtitle="Try a what-if against your own figures. Nothing is saved and your books are not changed." />
+        <PageHeader title="Simulate" subtitle="Try a decision against your own figures before you make it. Nothing is saved." />
         <Subnav
           active={tab}
           onChange={(k) => setTab(k as Tab)}
@@ -113,21 +113,19 @@ function SimulatePageInner() {
 
         {tab === "replays" ? <WorkflowReplays /> : tab === "sales" ? <SalesWhatIf /> : (
           invoicesLoading ? (
-            <div className="grid gap-5 lg:grid-cols-[340px_minmax(0,1fr)]">
-              <div className="skeleton" style={{ height: 300, borderRadius: 12 }} />
-              <div className="skeleton" style={{ height: 300, borderRadius: 12 }} />
+            <div className={lab.lab} aria-busy="true">
+              <div className={lab.rail}><div className="skeleton" style={{ height: 220, borderRadius: 6 }} /></div>
+              <div className={lab.main}><div className="skeleton" style={{ height: 180, borderRadius: 6 }} /></div>
+              <div className={lab.side}><div className="skeleton" style={{ height: 120, borderRadius: 6 }} /></div>
             </div>
           ) : invoicesError ? (
             <RetryLine error={invoicesError} onRetry={() => setReloadKey((k) => k + 1)} />
           ) : invoices.length === 0 ? (
-            <EmptyLine
-              icon={<IconSimulate size={17} />}
-              title="No open invoices to simulate against"
-              body="Simulate works from your own receivables. Import them or connect Tally, and every open invoice can be tried here."
-              action={<Link href="/decisions/import" className="ui-btn ui-btn-secondary ui-btn-sm"><IconUpload size={14} /> Bring your data</Link>}
-            />
+            <EmptyNote action={<Link href="/decisions/import" className="ui-btn ui-btn-secondary ui-btn-sm"><IconUpload size={13} /> Bring your data</Link>}>
+              No open invoices to simulate against. Import your receivables or connect Tally, and every open invoice can be tried here.
+            </EmptyNote>
           ) : (
-            <div className="grid gap-5 lg:grid-cols-[340px_minmax(0,1fr)] items-start">
+            <div className={lab.lab}>
               <Assumptions
                 invoices={invoices}
                 selected={selectedInvoice}
@@ -139,12 +137,25 @@ function SimulatePageInner() {
                 onRun={runSimulation}
                 stale={!!result && (ranFor?.invoice?.id !== selectedInvoiceId || ranFor?.mode !== mode)}
               />
-              <div className="min-w-0 flex flex-col" style={{ gap: 16 }}>
+              <div className={lab.main}>
+                <SectionTitle>Comparison · next 30 days</SectionTitle>
                 {runError ? (
                   <RetryLine error={humaneError(runError, "Starlane couldn't run this simulation just now. Try again in a moment.")} onRetry={runSimulation} />
                 ) : null}
-                {result && ranFor ? <ScenarioResult result={result} invoice={ranFor.invoice} mode={ranFor.mode} /> : !runError && <ResultPlaceholder running={running} />}
+                {result && ranFor ? <ScenarioResult result={result} invoice={ranFor.invoice} mode={ranFor.mode} /> : !runError && (
+                  <p className={lab.placeholder} aria-busy={running || undefined}>
+                    {running ? "Working it out from your ledger…" : "Run the simulation to compare your overdue total and cash outlook today with the same figures if this invoice goes the way you picked."}
+                  </p>
+                )}
               </div>
+              <aside className={lab.side} aria-label="Uncertainty">
+                {result && ranFor ? <Uncertainty result={result} invoice={ranFor.invoice} /> : (
+                  <div>
+                    <SectionTitle>Uncertainty</SectionTitle>
+                    <p className={lab.small}>The range between your best reasonable and stress cases appears here, with how strong each assumption is.</p>
+                  </div>
+                )}
+              </aside>
             </div>
           )
         )}
@@ -153,71 +164,57 @@ function SimulatePageInner() {
   );
 }
 
-const panel: React.CSSProperties = { background: "var(--surface)", border: "1px solid var(--line-card)", borderRadius: 12 };
+const STRENGTH: Record<string, string> = { STRONG: "High", HIGH: "High", MODERATE: "Medium", MEDIUM: "Medium", WEAK: "Low", LOW: "Low" };
 
 function Assumptions({ invoices, selected, selectedId, onSelect, mode, onMode, running, onRun, stale }: {
   invoices: ScenarioInvoice[]; selected: ScenarioInvoice | null; selectedId: string; onSelect: (id: string) => void;
   mode: Mode; onMode: (m: Mode) => void; running: boolean; onRun: () => void; stale: boolean;
 }) {
-  const choice = (m: Mode, title: string, hint: string) => {
-    const on = mode === m;
-    return (
-      <label className="flex items-start cursor-pointer row-hover" style={{ gap: 10, padding: "10px 12px", borderRadius: 8, border: `1px solid ${on ? "rgba(var(--accent-rgb), 0.55)" : "var(--line-input)"}`, background: on ? "var(--selected)" : "transparent" }}>
-        <input type="radio" name="sim-mode" value={m} checked={on} onChange={() => onMode(m)} className="sim-radio" />
-        <span className="min-w-0">
-          <span style={{ display: "block", fontSize: 13, color: "var(--ink)" }}>{title}</span>
-          <span style={{ display: "block", fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{hint}</span>
-        </span>
-      </label>
-    );
-  };
+  const choice = (m: Mode, title: string, hint: string) => (
+    <label className={`${lab.choice} ${mode === m ? "" : lab.choiceOff}`}>
+      <input type="radio" name="sim-mode" value={m} checked={mode === m} onChange={() => onMode(m)} />
+      <span className="min-w-0">
+        <span className={lab.choiceTitle}>{title}</span>
+        <span className={lab.choiceHint}>{hint}</span>
+      </span>
+    </label>
+  );
   return (
-    <section aria-labelledby="sim-assumptions" style={{ ...panel, padding: 20 }} className="fade-once">
-      <h2 id="sim-assumptions" style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 17, color: "var(--ink)" }}>Assumptions</h2>
-      <p style={{ margin: "4px 0 16px", fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.5 }}>Pick one open invoice and what happens to it over the next 30 days.</p>
+    <section aria-labelledby="sim-assumptions" className={lab.rail}>
+      <h2 id="sim-assumptions" className="section-label">Assumptions</h2>
 
-      <label htmlFor="sim-invoice" style={{ display: "block", fontSize: 12, color: "var(--ink-2)", marginBottom: 6 }}>Invoice</label>
-      <div className="relative">
-        <select id="sim-invoice" value={selectedId} onChange={(e) => onSelect(e.target.value)} className="ui-input sim-select" style={{ width: "100%", paddingRight: 32 }}>
-          {invoices.map((inv) => (
-            <option key={inv.id} value={inv.id}>
-              {inv.customer_name || "Unknown customer"} · {amount(inv.invoice_amount, inv.currency)}
-            </option>
-          ))}
-        </select>
-        <span aria-hidden="true" className="pointer-events-none absolute" style={{ right: 10, top: "50%", transform: "translateY(-50%)", color: "var(--ink-3)", display: "inline-flex" }}><IconChevronDown size={14} /></span>
-      </div>
-      {selected && (
-        <dl className="grid" style={{ gridTemplateColumns: "auto 1fr", columnGap: 12, rowGap: 4, margin: "10px 0 0", fontSize: 12.5 }}>
-          <dt style={{ color: "var(--ink-3)" }}>Amount</dt><dd style={{ margin: 0, color: "var(--ink)", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{amount(selected.invoice_amount, selected.currency)}</dd>
-          <dt style={{ color: "var(--ink-3)" }}>Due</dt><dd style={{ margin: 0, color: "var(--ink)", textAlign: "right" }}>{selected.due_date ? `${formatDate(selected.due_date)}, ${formatDue(selected.due_date)}` : "Not known yet"}</dd>
-        </dl>
-      )}
-
-      <fieldset style={{ border: 0, padding: 0, margin: "18px 0 0" }}>
-        <legend style={{ fontSize: 12, color: "var(--ink-2)", marginBottom: 6 }}>What happens</legend>
-        <div className="flex flex-col" style={{ gap: 8 }}>
-          {choice("earlier", "It gets collected", "Paid in full within the next 30 days")}
-          {choice("unpaid", "It stays unpaid", "Nothing comes in for the next 30 days")}
+      <div className={lab.field} style={{ marginTop: 0 }}>
+        <label htmlFor="sim-invoice" className={lab.fieldLabel}>Invoice</label>
+        <div className="relative">
+          <select id="sim-invoice" value={selectedId} onChange={(e) => onSelect(e.target.value)} className="ui-input sim-select" style={{ width: "100%", paddingRight: 30, fontSize: 12.5 }}>
+            {invoices.map((inv) => (
+              <option key={inv.id} value={inv.id}>
+                {inv.customer_name || "Unknown customer"} · {inv.currency && inv.currency !== "INR" ? amount(inv.invoice_amount, inv.currency) : inrShort(inv.invoice_amount)}
+              </option>
+            ))}
+          </select>
+          <span aria-hidden="true" className="pointer-events-none absolute" style={{ right: 10, top: "50%", transform: "translateY(-50%)", color: "var(--ink-3)", display: "inline-flex" }}><IconChevronDown size={14} /></span>
         </div>
+        {selected && (
+          <dl className={lab.facts}>
+            <dt>Amount</dt><dd>{amount(selected.invoice_amount, selected.currency)}</dd>
+            <dt>Due</dt><dd title={selected.due_date ? formatDue(selected.due_date) : undefined}>{selected.due_date ? formatDate(selected.due_date) : "Not known"}</dd>
+            {selected.days_overdue != null && selected.days_overdue > 0 && <><dt>Overdue</dt><dd>{selected.days_overdue} days</dd></>}
+          </dl>
+        )}
+      </div>
+
+      <fieldset className={`${lab.choices} ${lab.field}`} style={{ marginTop: 18 }}>
+        <legend className={lab.fieldLabel}>Over the next 30 days</legend>
+        {choice("earlier", "It gets collected", "Paid in full")}
+        {choice("unpaid", "It stays unpaid", "Nothing comes in")}
       </fieldset>
 
-      <button type="button" onClick={onRun} disabled={!selectedId || running} className="ui-btn ui-btn-primary" style={{ width: "100%", marginTop: 18, height: 38 }}>
-        {running ? "Running…" : stale ? "Run again" : "Run simulation"}
+      <button type="button" onClick={onRun} disabled={!selectedId || running} className={`ui-btn ui-btn-primary ${lab.run}`}>
+        {running ? "Simulating…" : stale ? "Simulate again" : "Simulate"}
       </button>
-      {stale && <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--ink-3)" }}>The result shown is for your previous choice.</p>}
+      <p className={lab.hint}>{stale ? "The result shown is for your previous choice." : "Nothing is saved; your books are not changed."}</p>
     </section>
-  );
-}
-
-function ResultPlaceholder({ running }: { running: boolean }) {
-  return (
-    <div style={{ ...panel, padding: "28px 24px", borderStyle: "dashed", background: "transparent" }} aria-busy={running || undefined}>
-      <p style={{ margin: 0, fontSize: 14, color: "var(--ink)" }}>{running ? "Working it out from your ledger…" : "The 30-day effect appears here"}</p>
-      <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.6, maxWidth: 520 }}>
-        Starlane compares your overdue total and cash outlook today with the same figures if this invoice goes the way you picked. Every number comes from your own invoices.
-      </p>
-    </div>
   );
 }
 
@@ -225,19 +222,10 @@ function ScenarioResult({ result, invoice, mode }: { result: SimulateScenarioRes
   const b = result.baseline;
   const p = result.simulated.projected_state;
   const cur = invoice?.currency || "INR";
-  const cashDelta = p.cashImpactDelta;
-  const overdueDelta = result.delta.delta;
   const name = invoice?.customer_name || "this customer";
   const cases = b.cases || null;
-
-  // Each bar is a figure the backend returned: the overdue total in 30 days
-  // under its bounded cases, and under this scenario.
-  const bars = [
-    cases ? { label: "Best reasonable", value: Math.abs(cases.bestReasonable.cashImpact), tone: "muted" as const } : null,
-    b.totalOverdue != null ? { label: "As things are", value: b.totalOverdue, tone: "ink" as const } : null,
-    { label: "This what-if", value: p.projectedTotalOverdue, tone: "accent" as const },
-    cases ? { label: "Stress case", value: Math.abs(cases.stress.cashImpact), tone: "muted" as const } : null,
-  ].filter((x): x is { label: string; value: number; tone: "muted" | "ink" | "accent" } => !!x && Number.isFinite(x.value));
+  const dash = <span className={lab.empty} title="Not computed for this case">—</span>;
+  const tone = (v: number, goodWhenNegative = false) => (v === 0 ? "" : (v < 0) === goodWhenNegative ? lab.good : lab.bad);
 
   const reasons: string[] = [
     p.narrative,
@@ -247,41 +235,123 @@ function ScenarioResult({ result, invoice, mode }: { result: SimulateScenarioRes
     mode === "earlier"
       ? `If ${name} pays, your overdue total in 30 days falls to ${amount(p.projectedTotalOverdue, cur)}.`
       : `If ${name} doesn't pay, your overdue total stays at ${amount(p.projectedTotalOverdue, cur)} and this invoice keeps ageing.`,
-    result.fx?.reason ? result.fx.reason : "",
   ].filter(Boolean);
 
   return (
-    <section aria-label="Result" className="fade-once flex flex-col" style={{ gap: 16 }}>
-      <div style={{ ...panel, padding: "20px 22px" }}>
-        <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 14 }}>
-          If {name}&apos;s {invoice ? amount(invoice.invoice_amount, cur) : ""} invoice {mode === "earlier" ? "is collected" : "stays unpaid"} · next 30 days
-        </div>
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-3">
-          <Figure value={signedAmount(cashDelta, cur)} label="Cash against today's outlook" tone={cashDelta > 0 ? "var(--positive)" : cashDelta < 0 ? "var(--critical)" : undefined} />
-          <Figure value={amount(p.projectedTotalOverdue, cur)} label="Overdue in 30 days" />
-          <Figure value={signedAmount(overdueDelta, cur)} label="Change in overdue" tone={result.delta.direction === "IMPROVEMENT_VS_BASELINE" ? "var(--positive)" : result.delta.direction === "WORSE_VS_BASELINE" ? "var(--critical)" : undefined} />
-        </div>
+    <section aria-label="Result" className="fade-once">
+      <p className={lab.context}>
+        If <b>{name}</b>{/s$/i.test(name) ? "’" : "’s"} {invoice ? <b className="num">{amount(invoice.invoice_amount, cur)}</b> : null} invoice {mode === "earlier" ? "is collected" : "stays unpaid"}, against your own bounded cases.
+      </p>
+      <div className="overflow-x-auto">
+        <table className={lab.table}>
+          <thead>
+            <tr>
+              <th scope="col"><span className="sr-only">Measure</span></th>
+              <th scope="col">As things are</th>
+              <th scope="col" className={lab.focus}>This what-if</th>
+              {cases && <th scope="col">Best case</th>}
+              {cases && <th scope="col">Stress</th>}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row" style={{ fontWeight: 400, textAlign: "left", padding: "11px 0", fontSize: 12.5, color: "var(--body)", borderBottom: "1px solid var(--line)", letterSpacing: 0 }}>Overdue in 30 days</th>
+              <td>{b.totalOverdue != null ? amount(b.totalOverdue, cur) : dash}</td>
+              <td className={lab.focus}>{amount(p.projectedTotalOverdue, cur)}</td>
+              {cases && <td>{amount(Math.abs(cases.bestReasonable.cashImpact), cur)}</td>}
+              {cases && <td>{amount(Math.abs(cases.stress.cashImpact), cur)}</td>}
+            </tr>
+            <tr>
+              <th scope="row" style={{ fontWeight: 400, textAlign: "left", padding: "11px 0", fontSize: 12.5, color: "var(--body)", borderBottom: "1px solid var(--line)", letterSpacing: 0 }}>Change in overdue</th>
+              <td>{dash}</td>
+              <td className={`${lab.focus} ${tone(result.delta.delta, true)}`}>{signedAmount(result.delta.delta, cur)}</td>
+              {cases && <td>{dash}</td>}
+              {cases && <td>{dash}</td>}
+            </tr>
+            <tr>
+              <th scope="row" style={{ fontWeight: 400, textAlign: "left", padding: "11px 0", fontSize: 12.5, color: "var(--body)", borderBottom: "1px solid var(--line)", letterSpacing: 0 }}>Cash vs. outlook</th>
+              <td>{dash}</td>
+              <td className={`${lab.focus} ${tone(p.cashImpactDelta)}`}>{signedAmount(p.cashImpactDelta, cur)}</td>
+              {cases && <td>{dash}</td>}
+              {cases && <td>{dash}</td>}
+            </tr>
+          </tbody>
+        </table>
       </div>
-
-      <div style={{ ...panel, padding: "18px 22px 12px" }}>
-        <div className="flex items-baseline justify-between flex-wrap" style={{ gap: 8, marginBottom: 8 }}>
-          <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>Overdue after 30 days</h3>
-          <span style={{ fontSize: 12, color: "var(--ink-3)" }}>Your bounded cases against this what-if</span>
-        </div>
-        <SimBars bars={bars} ariaLabel={bars.map((x) => `${x.label}: ${amount(x.value, cur)}`).join(". ")} />
-      </div>
-
-      <div style={{ padding: "4px 2px" }}>
-        <h3 style={{ margin: "0 0 8px", fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>Why</h3>
-        <ul className="flex flex-col" style={{ gap: 6, margin: 0, padding: 0, listStyle: "none" }}>
-          {reasons.map((r) => (
-            <li key={r} className="flex" style={{ gap: 10, fontSize: 13, color: "var(--body)", lineHeight: 1.6 }}>
-              <span aria-hidden="true" style={{ color: "var(--ink-3)" }}>–</span><span>{r}</span>
-            </li>
-          ))}
-        </ul>
-        <p style={{ margin: "10px 0 0", fontSize: 12, color: "var(--ink-3)" }}>{result.delta.note}</p>
-      </div>
+      <ul className={lab.why}>
+        {reasons.map((r) => <li key={r}>{r}</li>)}
+      </ul>
+      <p className={lab.foot}>{result.delta.note}</p>
     </section>
+  );
+}
+
+/** Uncertainty: the bounded range the backend returned, the strength of
+ *  each assumption and what would invalidate the result. Nothing more. */
+function Uncertainty({ result, invoice }: { result: SimulateScenarioResponse; invoice: ScenarioInvoice | null }) {
+  const cur = invoice?.currency || "INR";
+  const b = result.baseline;
+  const p = result.simulated.projected_state;
+  const cases = b.cases || null;
+  const lo = cases ? Math.abs(cases.bestReasonable.cashImpact) : null;
+  const hi = cases ? Math.abs(cases.stress.cashImpact) : null;
+  const max = Math.max(hi || 0, b.totalOverdue || 0, p.projectedTotalOverdue || 0, 1);
+  const x = (v: number) => `${Math.max(0, Math.min(100, (v / max) * 100))}%`;
+  const assumptions = result.simulated.assumptions || [];
+  const invalid = result.simulated.invalidation_conditions || [];
+  return (
+    <>
+      <div>
+        <SectionTitle>Uncertainty</SectionTitle>
+        {lo != null && hi != null ? (
+          <>
+            <p className={lab.small}>Overdue in 30 days, best reasonable to stress.</p>
+            <div className={lab.band} role="img" aria-label={`Range ${amount(lo, cur)} to ${amount(hi, cur)}; as things are ${amount(b.totalOverdue, cur)}; this what-if ${amount(p.projectedTotalOverdue, cur)}`}>
+              <div className={lab.bandTrack} />
+              <div className={lab.bandRange} style={{ left: x(lo), width: `calc(${x(hi)} - ${x(lo)})` }} />
+              {b.totalOverdue != null && <div className={lab.bandMark} style={{ left: x(b.totalOverdue) }} />}
+              <div className={`${lab.bandMark} ${lab.bandMarkOn}`} style={{ left: x(p.projectedTotalOverdue) }} />
+            </div>
+            <div className={lab.bandScale}><span>{inrShort(0)}</span><span>{inrShort(max)}</span></div>
+            <div className={lab.legend}>
+              <span>Range <b>{amount(lo, cur)}</b> to <b>{amount(hi, cur)}</b></span>
+              {b.totalOverdue != null && <span>Grey mark: as things are</span>}
+              <span>Black mark: this what-if</span>
+            </div>
+          </>
+        ) : (
+          <p className={lab.small}>No bounded cases were returned for this scenario.</p>
+        )}
+        {result.simulated.uncertainty == null && <p className={lab.small} style={{ marginTop: 8, color: "var(--ink-3)" }}>No probability band was computed for this what-if; it is a single path.</p>}
+      </div>
+
+      {assumptions.length > 0 && (
+        <div>
+          <SectionTitle>Assumption strength</SectionTitle>
+          {assumptions.map((a, i) => (
+            <div key={i} className={lab.kv} title={a.basis}>
+              <span className={lab.kvLabel}>{a.assumption.replace(/\b[Ii]nvoice inv-[\w-]+\b/g, "This invoice").replace(/\binv-[\w-]+\b/g, "this invoice")}</span>
+              <span className={lab.kvValue}>{STRENGTH[a.strength] || sentence(a.strength)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {invalid.length > 0 && (
+        <div>
+          <SectionTitle>Would be wrong if</SectionTitle>
+          <ul className={lab.smallList}>
+            {invalid.map((c) => <li key={c}>{c.replace(/payment_status/g, "payment status").replace(/\binvoice inv-[\w-]+\b/g, "this invoice")}</li>)}
+          </ul>
+        </div>
+      )}
+
+      {result.fx?.reason && (
+        <div>
+          <SectionTitle>Currency</SectionTitle>
+          <p className={lab.small}>{result.fx.reason}</p>
+        </div>
+      )}
+    </>
   );
 }
