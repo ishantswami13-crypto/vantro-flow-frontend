@@ -19,16 +19,16 @@ const POLL_MS = 4000;
 
 function Step({ n, title, done, active, last, children }: { n: number; title: string; done: boolean; active: boolean; last?: boolean; children?: React.ReactNode }) {
   return (
-    <li style={{ display: "grid", gridTemplateColumns: "28px minmax(0, 1fr)", columnGap: 16, position: "relative" }}>
-      {!last && <span aria-hidden="true" style={{ position: "absolute", left: 13.5, top: 34, bottom: 4, width: 1, background: "var(--line)" }} />}
+    <li style={{ display: "grid", gridTemplateColumns: "24px minmax(0, 1fr)", columnGap: 16, position: "relative" }}>
+      {!last && <span aria-hidden="true" style={{ position: "absolute", left: 11.5, top: 31, bottom: 4, width: 1, background: "var(--line)" }} />}
       <span aria-hidden="true" className="tabular-nums" style={{
-        width: 28, height: 28, borderRadius: 14, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, fontWeight: 500,
-        background: done ? "rgb(var(--tk-positive) / 0.14)" : active ? "var(--inverse)" : "transparent",
-        color: done ? "var(--positive)" : active ? "var(--on-inverse)" : "var(--ink-3)",
-        boxShadow: done || active ? "none" : "inset 0 0 0 1px var(--line-strong)",
-      }}>{done ? <IconCheck size={14} /> : n}</span>
-      <div style={{ minWidth: 0, paddingBottom: last ? 0 : 26, opacity: active || done ? 1 : 0.55 }}>
-        <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>
+        width: 24, height: 24, borderRadius: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 500, marginTop: 1,
+        background: active ? "var(--inverse)" : "transparent",
+        color: done ? "var(--ink)" : active ? "var(--on-inverse)" : "var(--ink-3)",
+        boxShadow: active ? "none" : `inset 0 0 0 1px ${done ? "var(--line-emphasis)" : "var(--line-strong)"}`,
+      }}>{done ? <IconCheck size={13} /> : n}</span>
+      <div style={{ minWidth: 0, paddingBottom: last ? 0 : 24, opacity: active || done ? 1 : 0.55 }}>
+        <p style={{ margin: "3px 0 0", fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>
           {title}<span className="sr-only">{done ? ", done" : active ? ", current step" : ""}</span>
         </p>
         {children && <div style={{ marginTop: 10 }}>{children}</div>}
@@ -106,7 +106,7 @@ export function TallyPairing({ onConnected }: { onConnected?: (tally: Connector)
   return (
     <div>
       {error && (
-        <div role="alert" className="flex items-center justify-between flex-wrap" style={{ gap: 10, fontSize: 13, color: "var(--critical)", background: "rgb(var(--tk-critical) / 0.08)", border: "1px solid rgb(var(--tk-critical) / 0.22)", borderRadius: 8, padding: "10px 12px", marginBottom: 18 }}>
+        <div role="alert" className="flex items-center justify-between flex-wrap" style={{ gap: 10, fontSize: 13, color: "var(--critical)", border: "1px solid var(--line)", borderRadius: 6, padding: "8px 12px", marginBottom: 18 }}>
           {error}
           <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" onClick={() => setError(null)}>Dismiss</button>
         </div>
@@ -121,7 +121,7 @@ export function TallyPairing({ onConnected }: { onConnected?: (tally: Connector)
           </button>
           {downloaded?.sha256 && (
             <p style={{ fontSize: 12, color: "var(--ink-3)", margin: "10px 0 0", wordBreak: "break-all" }}>
-              SHA-256 <span className="tabular-nums" style={{ color: "var(--ink-2)" }}>{downloaded.sha256}</span>
+              SHA-256 <span className="num" style={{ color: "var(--ink-2)", fontSize: 11.5 }}>{downloaded.sha256}</span>
             </p>
           )}
         </Step>
@@ -138,13 +138,13 @@ export function TallyPairing({ onConnected }: { onConnected?: (tally: Connector)
             <>
               <p style={{ ...P, marginBottom: 8 }}>In the folder where you saved the bridge, run:</p>
               <div className="flex" style={{ gap: 8, alignItems: "stretch" }}>
-                <code style={{ flex: 1, minWidth: 0, fontFamily: "var(--font-sans)", fontSize: 12.5, background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 8, padding: "9px 12px", overflowX: "auto", whiteSpace: "nowrap", color: "var(--ink)" }}>{pairing.command}</code>
+                <code style={{ flex: 1, minWidth: 0, fontFamily: "var(--font-mono)", fontSize: 12, background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: 6, padding: "7px 12px", overflowX: "auto", whiteSpace: "nowrap", color: "var(--ink)" }}>{pairing.command}</code>
                 <button type="button" onClick={copy} className="ui-btn ui-btn-secondary" style={{ height: "auto" }} aria-label={copied ? "Copied" : "Copy command"}>
                   {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}{copied ? "Copied" : "Copy"}
                 </button>
               </div>
               <p style={{ fontSize: 12, color: "var(--ink-3)", margin: "8px 0 0", lineHeight: 1.55 }} aria-live="polite">
-                The code works once and expires in <span className="tabular-nums" style={{ color: "var(--ink-2)" }}>{Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}</span>. The bridge gets its own credential; your password never leaves Starlane.
+                The code works once and expires in <span className="num" style={{ color: "var(--ink-2)" }}>{Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, "0")}</span>. The bridge gets its own credential; your password never leaves Starlane.
               </p>
             </>
           )}
@@ -160,7 +160,7 @@ export function TallyPairing({ onConnected }: { onConnected?: (tally: Connector)
           )}
           {synced && tally?.state.lastSyncAt && (
             <p style={P}>
-              <span style={{ color: "var(--positive)" }}>Received at {formatClock(tally.state.lastSyncAt)}.</span> Keep <code style={{ fontFamily: "var(--font-sans)", color: "var(--ink)" }}>node tally-sync.mjs --watch</code> running to sync every 30 minutes.
+              <span style={{ color: "var(--positive)" }}>Received at {formatClock(tally.state.lastSyncAt)}.</span> Keep <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--ink)" }}>node tally-sync.mjs --watch</code> running to sync every 30 minutes.
             </p>
           )}
         </Step>

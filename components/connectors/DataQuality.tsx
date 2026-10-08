@@ -3,10 +3,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { osApi, type BridgeOverview } from "@/lib/os";
 import { StatusChip } from "@/components/ui/Badge";
-import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/v32/ui";
-import { formatCount, formatRelative } from "@/lib/format";
+import { formatCount, formatDateTime, formatRelative } from "@/lib/format";
 import { OFFLINE } from "./health";
+import { QuietError } from "@/components/os/bridge/kit";
 
 // Sources > Data quality. What Starlane understood from the connected
 // systems, read from GET /api/os/bridge (backend lib/routes/os.js): counts
@@ -25,17 +25,17 @@ function Block({ title, hint, children }: { title: string; hint?: React.ReactNod
   return (
     <section className="dq-block">
       <div className="dq-block-head">
-        <h3 style={{ margin: 0, fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>{title}</h3>
-        {hint && <p style={{ margin: "3px 0 0", fontSize: 12.5, color: "var(--ink-3)", lineHeight: 1.5 }}>{hint}</p>}
+        <h3 style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>{title}</h3>
+        {hint && <p className="meta" style={{ margin: "3px 0 0", lineHeight: 1.5 }}>{hint}</p>}
       </div>
       <div className="min-w-0">{children}</div>
     </section>
   );
 }
 
-function Line({ children, tone }: { children: React.ReactNode; tone?: "warning" }) {
+function Line({ children }: { children: React.ReactNode }) {
   return (
-    <li style={{ fontSize: 13, color: tone === "warning" ? "var(--warning)" : "var(--body)", lineHeight: 1.55, padding: "7px 0", borderBottom: "1px solid var(--line)" }}>
+    <li style={{ fontSize: 13, color: "var(--body)", lineHeight: 1.55, padding: "8px 0", borderBottom: "1px solid var(--line)" }}>
       {children}
     </li>
   );
@@ -46,7 +46,7 @@ export function DataQuality() {
 
   if (q.isLoading) return <SkeletonRows rows={4} />;
   if (q.isError || !q.data) {
-    return <ErrorState title="Couldn't load data quality" message={OFFLINE} onRetry={() => q.refetch()} />;
+    return <QuietError message={`Couldn't load data quality. ${OFFLINE}`} onRetry={() => q.refetch()} />;
   }
   const d = q.data;
   const definitions = Object.entries(d.semantics.definitions).filter(([k]) => k !== "baseCurrency");
@@ -54,14 +54,15 @@ export function DataQuality() {
   return (
     <div className="fade-once">
       <style>{`
-        .dq-block { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 32px; padding: 22px 0; border-top: 1px solid var(--line); }
-        .dq-block:first-child { border-top: none; padding-top: 6px; }
+        .dq-block { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 40px; padding: 18px 0; border-top: 1px solid var(--line); }
+        .dq-block:first-of-type { border-top: none; padding-top: 4px; }
+        .dq-flush > li:first-child { padding-top: 0; }
+        .dq-flush > li:last-child { border-bottom: none !important; padding-bottom: 0; }
         .dq-block ul { list-style: none; margin: 0; padding: 0; }
-        .dq-block li:last-child { border-bottom: none !important; }
         @media (max-width: 860px) { .dq-block { grid-template-columns: minmax(0, 1fr); gap: 10px; } }
       `}</style>
 
-      <Block title="Freshness" hint={d.freshness.lastUpdateAt ? `Updated ${formatRelative(d.freshness.lastUpdateAt)}` : undefined}>
+      <Block title="Freshness" hint={d.freshness.lastUpdateAt ? <span title={formatDateTime(d.freshness.lastUpdateAt)}>Updated {formatRelative(d.freshness.lastUpdateAt)}</span> : undefined}>
         <div className="flex items-center flex-wrap" style={{ gap: 10 }}>
           <StatusChip tone={(FRESH[d.freshness.status] || FRESH.UNKNOWN).tone}>{(FRESH[d.freshness.status] || FRESH.UNKNOWN).label}</StatusChip>
           <span style={{ fontSize: 13, color: "var(--body)" }}>{d.freshness.detail}</span>
@@ -72,16 +73,16 @@ export function DataQuality() {
         <div className="grid grid-cols-2 sm:grid-cols-4" style={{ gap: 18 }}>
           {d.discovered.map((x) => (
             <div key={x.entity} className="min-w-0">
-              <div className="tabular-nums" style={{ fontFamily: "var(--font-display)", fontSize: 26, lineHeight: 1.1, color: x.count ? "var(--ink)" : "var(--ink-3)" }}>
+              <div className="num" style={{ fontSize: 20, lineHeight: 1.2, letterSpacing: "-0.02em", color: x.count ? "var(--ink)" : "var(--ink-3)" }}>
                 {x.count == null ? "—" : formatCount(x.count)}
               </div>
-              <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 4 }}>{x.entity.replace(/^./, (c) => c.toUpperCase())}</div>
+              <div className="meta" style={{ marginTop: 3 }}>{x.entity.replace(/^./, (c) => c.toUpperCase())}</div>
             </div>
           ))}
         </div>
         {d.missing.length > 0 && (
-          <ul style={{ marginTop: 14 }}>
-            {d.missing.map((m) => <Line key={m} tone="warning">{m}</Line>)}
+          <ul style={{ marginTop: 14, borderTop: "1px solid var(--line)" }}>
+            {d.missing.map((m) => <Line key={m}><StatusChip tone="attention">Missing</StatusChip> <span style={{ marginLeft: 6 }}>{m}</span></Line>)}
           </ul>
         )}
       </Block>
@@ -90,7 +91,7 @@ export function DataQuality() {
         {d.entityResolution.candidates.length === 0 ? (
           <p style={{ margin: 0, fontSize: 13, color: "var(--ink-2)" }}>No likely duplicates found.</p>
         ) : (
-          <ul>
+          <ul className="dq-flush">
             {d.entityResolution.candidates.slice(0, 8).map((c) => (
               <Line key={c.normalized}>
                 <span style={{ color: "var(--ink)" }}>{c.names.join(" and ")}</span>
@@ -103,15 +104,15 @@ export function DataQuality() {
 
       {d.crossSource && d.crossSource.keptFromTally > 0 && (
         <Block title="In both Tally and a file" hint="Each bill is counted once, from Tally.">
-          <p style={{ margin: "0 0 6px", fontSize: 13, color: "var(--body)" }}>
+          <p className="tabular-nums" style={{ margin: "0 0 10px", fontSize: 13, color: "var(--body)" }}>
             {formatCount(d.crossSource.keptFromTally)} bill{d.crossSource.keptFromTally === 1 ? " was" : "s were"} in both.
             {d.crossSource.disagreements.length ? ` ${d.crossSource.disagreements.length} disagreed with the file.` : " The two copies agreed."}
           </p>
           {d.crossSource.disagreements.length > 0 && (
-            <ul>
+            <ul style={{ borderTop: "1px solid var(--line)" }}>
               {d.crossSource.disagreements.slice(0, 10).map((x) => (
                 <Line key={`${x.customer}|${x.bill}`}>
-                  <span style={{ color: "var(--ink)" }}>{x.customer}</span>, bill {x.bill}: <span style={{ color: "var(--warning)" }}>{x.detail}</span>
+                  <span style={{ color: "var(--ink)" }}>{x.customer}</span>, bill <span className="num">{x.bill}</span>: {x.detail}
                 </Line>
               ))}
             </ul>
@@ -120,7 +121,7 @@ export function DataQuality() {
       )}
 
       <Block title="How Starlane reads your data">
-        <ul>
+        <ul className="dq-flush">
           {definitions.map(([k, v]) => <Line key={k}>{v}</Line>)}
           {d.semantics.authority.map((a) => <Line key={a.fact}>{a.fact}: {a.source} is the authority.</Line>)}
           {d.semantics.authorityRule && <Line>{d.semantics.authorityRule}</Line>}
