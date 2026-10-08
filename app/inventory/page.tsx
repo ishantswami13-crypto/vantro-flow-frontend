@@ -253,7 +253,7 @@ export default function InventoryPage() {
         </div>
       ),
     },
-    { key: "stock", header: "In stock", width: "120px", widthSm: "auto", align: "right", render: p => <span className={s.amount} style={p.current_stock === 0 ? { color: "var(--critical)" } : undefined}>{formatCount(p.current_stock)} <span className={s.muted}>{p.unit}</span></span> },
+    { key: "stock", header: "In stock", width: "120px", widthSm: "auto", align: "right", render: p => <span className={s.amount} style={p.current_stock === 0 ? { color: "var(--critical)" } : undefined}>{formatCount(p.current_stock)} <span className={s.muted} style={{ fontFamily: "var(--font-sans)", fontSize: 12 }}>{p.unit}</span></span> },
     { key: "reorder", header: "Reorder at", width: "100px", align: "right", hide: "md", render: p => <span>{formatCount(p.low_stock_alert)}</span> },
     { key: "price", header: "Unit price", width: "110px", align: "right", hide: "md", render: p => <span>{inrWhole(p.unit_price)}</span> },
     { key: "value", header: "Value", width: "120px", align: "right", hide: "sm", render: p => <span className={s.amount}>{inrWhole(p.current_stock * p.unit_price)}</span> },
@@ -305,7 +305,7 @@ export default function InventoryPage() {
   ];
 
   const listRow = (key: string, left: React.ReactNode, sub: React.ReactNode, right: React.ReactNode, rightSub?: React.ReactNode) => (
-    <div key={key} className="flex items-center justify-between" style={{ gap: 12, padding: "10px 0", borderTop: "1px solid var(--line-row)" }}>
+    <div key={key} className="flex items-center justify-between" style={{ gap: 12, padding: "10px 0", borderTop: "1px solid var(--line)" }}>
       <div className="min-w-0">
         <div className={s.name}>{left}</div>
         <div className={s.sub}><span>{sub}</span></div>
@@ -335,7 +335,7 @@ export default function InventoryPage() {
           </div>
         </PageHeader>
 
-        {loading && <div className={s.panel} style={{ padding: "4px 20px" }}><SkeletonRows rows={6} /></div>}
+        {loading && <div className={s.panel}><SkeletonRows rows={6} height={50} /></div>}
 
         {!loading && error && (
           <div className={s.panel}><ErrorState title="Couldn't load your inventory" message={OFFLINE_TEXT} onRetry={load} /></div>
@@ -418,7 +418,7 @@ export default function InventoryPage() {
                       { label: "Sold", value: formatQuantity(querySold, queryUnit) },
                       { label: "Balance", value: formatQuantity(queryBought - querySold, queryUnit) },
                     ].map(k => (
-                      <div key={k.label}><dt style={{ fontSize: 12 }}>{k.label}</dt><dd style={{ textAlign: "left", fontSize: 16, marginTop: 2 }}>{k.value}</dd></div>
+                      <div key={k.label}><dt style={{ fontSize: 12, color: "var(--ink-3)" }}>{k.label}</dt><dd className="num" style={{ textAlign: "left", fontSize: 15, marginTop: 2 }}>{k.value}</dd></div>
                     ))}
                   </dl>
                   {ledgerMatches.length > 0

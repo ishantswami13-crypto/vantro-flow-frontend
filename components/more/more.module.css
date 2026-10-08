@@ -7,8 +7,10 @@
   max-width: 1180px;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
 }
+/* Header to first section: 32px; every next section: 24px. */
+.page > :first-child + * { margin-top: 8px; }
 
 .stack { display: flex; flex-direction: column; gap: 12px; }
 
@@ -19,37 +21,35 @@
 }
 .figureCell { min-width: 0; padding: 2px 24px; border-left: 1px solid var(--line); }
 .figureCell:first-child { padding-left: 0; border-left: none; }
-.figureNote { font-size: 12px; color: var(--ink-3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.figures :global(.figure-in) { white-space: nowrap; letter-spacing: -0.01em; }
+.figureNote { font-size: 11.5px; color: var(--ink-3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.figures :global(.num) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 1099px) {
-  .figures :global(.figure-in) { font-size: 26px !important; }
   .figureCell { padding: 2px 18px; }
 }
 @media (max-width: 767px) {
   .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 20px; }
   .figureCell, .figureCell:first-child { padding: 0 12px 0 0; border-left: none; }
-  .figures :global(.figure-in) { font-size: 22px !important; }
+  .figures :global(.num) { font-size: 18px !important; }
 }
 
 /* Toolbar under the tabs: search on the left, quiet controls on the right. */
 .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .toolbarEnd { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-/* Panel: surface, one hairline, no shadow. */
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--line-card);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
+/* Section: content on the shared canvas under a small tracked label. No
+   box, no fill: rows and hairlines carry the structure. */
+.panel { min-width: 0; }
 .panelHead {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-  padding: 16px 20px 12px;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 0 0 10px;
 }
 .panelHead > :first-child { flex: 1 1 220px; }
-.panelTitle { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0; }
-.panelSub { font-size: 12.5px; color: var(--ink-2); margin-top: 2px; }
-.panelBody { padding: 4px 20px 18px; }
+.panelTitle {
+  margin: 0; font-size: 11px; font-weight: 500; line-height: 16px; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.panelSub { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.5; }
+.panelBody { padding: 0; }
 
 /* Grid table: every row shares the header's column template; columns can
    drop out below 1100px (md) or 768px (sm). */
@@ -59,36 +59,40 @@
   grid-template-columns: var(--cols);
   align-items: center;
   column-gap: 16px;
-  padding: 0 20px;
-  min-height: 52px;
-  border-bottom: 1px solid var(--line-row);
-  transition: background-color 120ms var(--ease, ease);
+  padding: 0;
+  min-height: 50px;
+  border-bottom: 1px solid var(--line);
+  transition: background-color 120ms var(--ease, ease), box-shadow 120ms var(--ease, ease);
 }
-.body .row:last-child { border-bottom: none; }
-.body .row:hover { background: var(--surface-2); }
+/* Hover fills 10px past each edge so text stays on the page's alignment line. */
+.body .row:hover { background: var(--surface-2); box-shadow: -10px 0 0 var(--surface-2), 10px 0 0 var(--surface-2); }
 .clickable { cursor: pointer; }
 .head {
-  min-height: 38px;
-  font-size: 12px;
+  min-height: 32px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   color: var(--ink-3);
   border-bottom: 1px solid var(--line);
 }
 .head > * { white-space: nowrap; }
 .cell { min-width: 0; font-size: 13px; color: var(--body); }
 .right { text-align: right; justify-self: end; }
-.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.num { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.head .cell, .head .num { font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-3); }
+.num button, .num a, .num [role="menu"] { font-family: var(--font-sans); letter-spacing: normal; }
 @media (max-width: 1099px) {
   .row { grid-template-columns: var(--cols-md); }
   .hideMd { display: none; }
 }
 @media (max-width: 767px) {
-  .row { grid-template-columns: var(--cols-sm); padding: 0 14px; column-gap: 12px; min-height: 58px; }
+  .row { grid-template-columns: var(--cols-sm); column-gap: 12px; min-height: 56px; }
   .hideMd, .hideSm { display: none; }
   .head { display: none; }
 }
 
 .name {
-  font-size: 13.5px; font-weight: 500; color: var(--ink);
+  font-size: 13.5px; font-weight: 500; color: var(--ink); line-height: 1.35;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .nameBtn { background: none; border: none; padding: 0; text-align: left; cursor: pointer; max-width: 100%; display: block; }
@@ -99,8 +103,11 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .sub > span { overflow: hidden; text-overflow: ellipsis; }
-.amount { font-size: 13.5px; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.amount { font-family: var(--font-mono); font-size: 13px; letter-spacing: -0.01em; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .muted { color: var(--ink-3); }
+/* A short list above a table ("Needs attention"): hairline rows on the canvas. */
+.attnRow { gap: 16px; padding: 10px 0; min-height: 52px; border-bottom: 1px solid var(--line); transition: background-color 120ms var(--ease, ease), box-shadow 120ms var(--ease, ease); }
+.attnRow:hover { background: var(--surface-2); box-shadow: -10px 0 0 var(--surface-2), 10px 0 0 var(--surface-2); }
 .actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
 
 .sortBtn {
@@ -113,7 +120,7 @@
 /* Segmented control for ranges and views. */
 .segmented {
   display: inline-flex; align-items: center; gap: 2px; padding: 2px;
-  border: 1px solid var(--line-card); border-radius: var(--radius-md); background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius-md); background: transparent;
   max-width: 100%; overflow-x: auto; scrollbar-width: none;
 }
 .segmented::-webkit-scrollbar { display: none; }
@@ -123,7 +130,7 @@
   transition: background-color 120ms, color 120ms;
 }
 .segmented button:hover { color: var(--ink); }
-.segmented button[aria-pressed="true"] { background: var(--surface-2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-card); }
+.segmented button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line-card); }
 
 /* Row menu (portalled). */
 .menu {
@@ -153,11 +160,11 @@
 .formError { font-size: 12.5px; color: var(--critical); }
 .scrollBody { max-height: min(60vh, 560px); overflow-y: auto; margin: 0 -20px; padding: 0 20px; }
 
+/* A calm inline note: a 2px rule on the left, no box. */
 .notice {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  padding: 10px 14px; border-radius: var(--radius-md);
-  background: var(--surface); border: 1px solid var(--line-card);
-  font-size: 13px; color: var(--body);
+  padding: 2px 0 2px 12px; box-shadow: inset 2px 0 0 var(--line-strong);
+  font-size: 13px; color: var(--ink-2); line-height: 1.5;
 }
 .notice svg { color: var(--ink-3); flex-shrink: 0; }
 
@@ -169,7 +176,7 @@
 .split { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 1099px) { .split { grid-template-columns: 1fr; } }
 
-.chartWrap { padding: 0 12px 12px 4px; }
+.chartWrap { padding: 4px 0 0; margin-left: -6px; }
 .legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); }
 .legendSwatch { display: inline-block; width: 14px; height: 0; border-top: 2px solid currentColor; margin-right: 6px; vertical-align: middle; }
 .tooltip {
@@ -178,7 +185,7 @@
   font-size: 12px; color: var(--ink-2);
 }
 .tooltipRow { display: flex; justify-content: space-between; gap: 16px; margin-top: 4px; }
-.tooltipRow b { font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tooltipRow b { font-weight: 400; font-family: var(--font-mono); color: var(--ink); font-variant-numeric: tabular-nums; }
 
 .dropzone {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;

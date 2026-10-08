@@ -202,7 +202,7 @@ export default function CustomersPage() {
         />
 
         {loading && customers.length === 0 && (
-          <div className={s.panel} style={{ padding: "4px 20px" }}><SkeletonRows rows={6} /></div>
+          <div className={s.panel}><SkeletonRows rows={6} height={50} /></div>
         )}
 
         {!loading && error && (
@@ -226,22 +226,22 @@ export default function CustomersPage() {
 
             {portfolio?.enabled && attentionList.length > 0 && (
               <Panel title="Needs attention" sub="From the last 90 days of sales and payments" flush>
-                <div>
+                <div style={{ borderTop: "1px solid var(--line)" }}>
                   {attentionList.map(c => {
                     const h = HEALTH[c.healthLabel] || { label: c.healthLabel, tone: "neutral" as StatusTone };
                     return (
-                      <div key={c.customerId || c.customerName} className="flex items-center justify-between" style={{ gap: 16, padding: "12px 20px", borderTop: "1px solid var(--line-row)" }}>
+                      <div key={c.customerId || c.customerName} className={`${s.attnRow} flex items-center justify-between`}>
                         <div className="min-w-0">
                           <div className="flex items-center" style={{ gap: 8 }}>
                             <span className={s.name}>{c.customerName}</span>
                             <StatusChip tone={h.tone}>{h.label}</StatusChip>
                           </div>
-                          <div className={s.sub} style={{ color: "var(--ink-2)" }}><span>{plain(c.healthEvidence[0] || c.evidence[0])}</span></div>
+                          <div className={s.sub} style={{ color: "var(--ink-2)", fontSize: 12.5 }}><span>{plain(c.healthEvidence[0] || c.evidence[0])}</span></div>
                         </div>
                         {(() => {
                           const match = customers.find(x => x.customer_name === c.customerName);
                           return match
-                            ? <Button variant="ghost" size="sm" onClick={() => setLensCustomer(match)}>Review</Button>
+                            ? <Button variant="ghost" size="sm" onClick={() => setLensCustomer(match)}>View customer</Button>
                             : <Link href={`/khata?customer=${encodeURIComponent(c.customerName)}`} className="ui-btn ui-btn-ghost ui-btn-sm">Open khata</Link>;
                         })()}
                       </div>

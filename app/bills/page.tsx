@@ -168,7 +168,7 @@ export default function BillsPage() {
     { key: "date", header: "Date", width: "96px", hide: "sm", render: b => <span>{formatDate(b.bill_date)}</span> },
     {
       key: "due", header: "Due", width: "140px", hide: "md",
-      render: b => b.status === "paid" ? <span className={s.muted}>Paid</span>
+      render: b => b.status === "paid" ? <span className={s.muted}>—</span>
         : b.due_date ? <span style={{ color: formatDue(b.due_date).includes("overdue") ? "var(--critical)" : "var(--body)" }}>{formatDue(b.due_date).replace(/^./, c => c.toUpperCase())}</span>
         : <span className={s.muted}>No due date</span>,
     },
@@ -193,7 +193,7 @@ export default function BillsPage() {
           }
         />
 
-        {loading && bills.length === 0 && <div className={s.panel} style={{ padding: "4px 20px" }}><SkeletonRows rows={5} /></div>}
+        {loading && bills.length === 0 && <div className={s.panel}><SkeletonRows rows={5} height={50} /></div>}
 
         {!loading && error && (
           <div className={s.panel}><ErrorState title="Couldn't load your invoices" message={OFFLINE_TEXT} onRetry={load} /></div>

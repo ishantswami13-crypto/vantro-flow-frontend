@@ -50,13 +50,16 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
 
 function ChartSkeleton() {
   return (
-    <div className={s.panel} style={{ padding: 20 }} aria-busy="true" aria-label="Loading forecast">
-      <div className="skeleton" style={{ height: 13, width: 220, marginBottom: 8 }} />
-      <div className="skeleton" style={{ height: 10, width: 300, maxWidth: "80%", marginBottom: 20 }} />
-      <div className="skeleton" style={{ height: 260, borderRadius: 8 }} />
+    <div className={s.panel} aria-busy="true" aria-label="Loading forecast">
+      <div className="skeleton" style={{ height: 10, width: 160, marginBottom: 8 }} />
+      <div className="skeleton" style={{ height: 10, width: 280, maxWidth: "80%", marginBottom: 20 }} />
+      <div className="skeleton" style={{ height: 260, borderRadius: 6 }} />
     </div>
   );
 }
+
+/** A figure that is a sentence, not a number ("Not set"): quiet sans, never mono. */
+const wordFigure = (text: string) => <span style={{ fontFamily: "var(--font-sans)", fontSize: 15, lineHeight: "24px", letterSpacing: 0, color: "var(--ink-2)" }}>{text}</span>;
 
 const SERIES = [
   { key: "optimistic", label: "Optimistic", color: "var(--positive)", dash: false },
@@ -201,12 +204,12 @@ export default function ForecastPage() {
 
   const impactCols: Column<Impact>[] = [
     { key: "name", header: "Customer", width: "minmax(0, 1.6fr)", render: c => <div className={s.name} title={c.name}>{c.name}</div> },
-    { key: "late", header: "Late by", width: "110px", align: "right", hide: "sm", render: c => <span>{c.days_overdue > 0 ? `${formatCount(c.days_overdue)} days` : "Not yet due"}</span> },
+    { key: "late", header: "Days late", width: "96px", align: "right", hide: "sm", render: c => c.days_overdue > 0 ? <span>{formatCount(c.days_overdue)}</span> : <span style={{ fontFamily: "var(--font-sans)", color: "var(--ink-3)" }}>Not yet due</span> },
     { key: "amount", header: "Amount", width: "130px", widthSm: "auto", align: "right", render: c => <span className={s.amount}>{inrWhole(c.amount)}</span> },
     { key: "go", header: <span className="sr-only">Action</span>, width: "120px", widthSm: "auto", align: "right", render: () => <Link href="/collections" className="ui-btn ui-btn-ghost ui-btn-sm">Collect</Link> },
   ];
 
-  const runwayValue = !runwayKnown ? "Not known yet" : runwayNever ? "Holds" : `${formatCount(kpis.runwayDays)} days`;
+  const runwayValue = !runwayKnown ? wordFigure("Not known yet") : runwayNever ? wordFigure("Holds") : `${formatCount(kpis.runwayDays)} days`;
 
   return (
     <DashboardLayout pageTitle="Cash forecast">
@@ -258,7 +261,7 @@ export default function ForecastPage() {
           {!loading && !loadError && !noData && chartData.length > 0 && (
             <>
               <FigureRow items={[
-                { label: "Cash in hand", value: openingCash ? inrWhole(kpis.cashStart) : "Not set", note: openingCash ? "As you entered it" : "Set it to see your runway" },
+                { label: "Cash in hand", value: openingCash ? inrWhole(kpis.cashStart) : wordFigure("Not set"), note: openingCash ? "As you entered it" : "Set it to see your runway" },
                 { label: "Spending a day", value: inrWhole(kpis.burnRate), note: "From your purchases" },
                 { label: "Collections a day", value: inrWhole(kpis.avgCollections), note: "Average from history" },
                 { label: "Runway", value: runwayValue, note: !openingCash ? "Needs cash in hand" : runwayNever ? "Cash doesn't run out in any case" : "Pessimistic case", tone: isRunwayDanger ? "var(--critical)" : undefined },
@@ -270,7 +273,7 @@ export default function ForecastPage() {
                 right={<Segmented label="Forecast range" value={range} onChange={setRange} options={[{ key: 30, label: "30 days" }, { key: 60, label: "60 days" }, { key: 90, label: "90 days" }]} />}
                 flush
               >
-                <div className={s.legend} style={{ padding: "0 20px 8px" }}>
+                <div className={s.legend} style={{ padding: "2px 0 4px" }}>
                   {SERIES.map(x => (
                     <span key={x.key} style={{ color: x.color }} className="flex items-center">
                       <span className={s.legendSwatch} style={{ borderTopStyle: x.dash ? "dashed" : "solid" }} />
@@ -325,7 +328,7 @@ export default function ForecastPage() {
                   right={<Segmented label="Prediction horizon" value={v2Horizon} onChange={setV2Horizon} options={[{ key: 7, label: "7 days" }, { key: 14, label: "14 days" }, { key: 30, label: "30 days" }]} />}
                   flush
                 >
-                  <div className={s.legend} style={{ padding: "0 20px 8px" }}>
+                  <div className={s.legend} style={{ padding: "2px 0 4px" }}>
                     {[
                       { label: "Observed", color: "var(--ink-3)", dash: false },
                       { label: "Predicted", color: "var(--ink)", dash: false },
@@ -363,7 +366,7 @@ export default function ForecastPage() {
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
-                  <p style={{ margin: 0, padding: "0 20px 16px", fontSize: 12, color: "var(--ink-3)" }}>{v2.uncertainty_interval.note}</p>
+                  <p style={{ margin: 0, padding: "8px 0 0", fontSize: 12, color: "var(--ink-3)" }}>{v2.uncertainty_interval.note}</p>
                 </Panel>
 
                 <Panel title="About this forecast">

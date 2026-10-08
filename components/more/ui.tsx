@@ -51,7 +51,7 @@ export interface Column<T> {
   render: (row: T) => React.ReactNode;
 }
 
-/** One quiet table: header row, 52px rows, hover surface-2, figures right-aligned. */
+/** One quiet table on the canvas: 11px header, 50px hairline rows, mono figures right-aligned. */
 export function GridTable<T>({ columns, rows, rowKey, onRowClick, label }: {
   columns: Column<T>[];
   rows: T[];
@@ -70,7 +70,7 @@ export function GridTable<T>({ columns, rows, rowKey, onRowClick, label }: {
   return (
     <div className={s.table} style={vars} role="table" aria-label={label}>
       <div className={`${s.row} ${s.head}`} role="row">
-        {columns.map(c => <div key={c.key} role="columnheader" className={cellCls(c)} style={{ fontSize: 12, color: "var(--ink-3)" }}>{c.header}</div>)}
+        {columns.map(c => <div key={c.key} role="columnheader" className={cellCls(c)}>{c.header}</div>)}
       </div>
       <div className={s.body} role="rowgroup">
         {rows.map((r, i) => (
@@ -244,7 +244,8 @@ export function Field({ label, htmlFor, hint, children, required }: { label: str
   );
 }
 
-/** Panel with an optional title row. */
+/** A section on the shared canvas: a small tracked label, an optional
+ *  line under it and a right slot. No box. */
 export function Panel({ title, sub, right, children, flush }: { title?: React.ReactNode; sub?: React.ReactNode; right?: React.ReactNode; children: React.ReactNode; flush?: boolean }) {
   return (
     <section className={s.panel}>
