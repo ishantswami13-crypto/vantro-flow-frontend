@@ -55,7 +55,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "🏗️",
     color: "#F59E0B",
     description: "Builders, contractors, infra & civil works companies",
-    hiddenRoutes: ["/inventory", "/scanner", "/orders", "/network"],
+    hiddenRoutes: ["/inventory"],
     terms: {
       customer:    "Client",
       invoice:     "RA Bill",
@@ -100,7 +100,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "🧵",
     color: "#8B5CF6",
     description: "Fabric traders, yarn distributors, garment manufacturers",
-    hiddenRoutes: ["/orders", "/network"],
+    hiddenRoutes: [],
     terms: {
       customer:    "Buyer",
       invoice:     "Bill",
@@ -145,7 +145,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "💊",
     color: "#10B981",
     description: "Pharma distributors, stockists, medical supply companies",
-    hiddenRoutes: ["/orders", "/network", "/attendance", "/scanner", "/ledger"],
+    hiddenRoutes: [],
     terms: {
       customer:    "Retailer",
       invoice:     "Bill",
@@ -190,7 +190,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "🛒",
     color: "#F97316",
     description: "FMCG distributors, grocery wholesalers, kirana suppliers",
-    hiddenRoutes: ["/network"],
+    hiddenRoutes: [],
     terms: {
       customer:    "Retailer",
       invoice:     "Bill",
@@ -235,10 +235,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "🍽️",
     color: "#EF4444",
     description: "Restaurants, cloud kitchens, food & beverage businesses",
-    hiddenRoutes: [
-      "/collections", "/dunning", "/whatsapp", "/khata",
-      "/crm", "/forecast", "/network", "/scanner",
-    ],
+    hiddenRoutes: ["/collections", "/forecast"],
     terms: {
       customer:    "Table / Order",
       invoice:     "Bill",
@@ -282,7 +279,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "🏭",
     color: "var(--accent)",
     description: "Manufacturers, fabricators, processing units",
-    hiddenRoutes: ["/network"],
+    hiddenRoutes: [],
     terms: {
       customer:    "Buyer / Dealer",
       invoice:     "Invoice",
@@ -327,7 +324,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "🏢",
     color: "#6366F1",
     description: "Developers, builders, property managers, real estate agents",
-    hiddenRoutes: ["/inventory", "/scanner", "/orders", "/network", "/dunning"],
+    hiddenRoutes: ["/inventory"],
     terms: {
       customer:    "Buyer / Tenant",
       invoice:     "Demand Letter",
@@ -377,7 +374,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "🏪",
     color: "#0EA5E9",
     description: "General traders, distributors, dealers — any product category",
-    hiddenRoutes: ["/network"],
+    hiddenRoutes: [],
     terms: {
       customer:    "Party / Buyer",
       invoice:     "Bill",
@@ -422,7 +419,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "🎓",
     color: "#0EA5E9",
     description: "Schools, coaching centers, tuition institutes, ed-tech",
-    hiddenRoutes: ["/inventory", "/scanner", "/network", "/orders"],
+    hiddenRoutes: ["/inventory"],
     terms: {
       customer:    "Student / Parent",
       invoice:     "Fee Receipt",
@@ -458,7 +455,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "🏥",
     color: "#06B6D4",
     description: "Clinics, hospitals, diagnostic centers, medical suppliers",
-    hiddenRoutes: ["/orders", "/network", "/scanner"],
+    hiddenRoutes: [],
     terms: {
       customer:    "Patient / TPA",
       invoice:     "Bill / Invoice",
@@ -493,7 +490,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "⚙️",
     color: "#64748B",
     description: "Steel traders, TMT dealers, metal distributors, scrap dealers",
-    hiddenRoutes: ["/network", "/attendance"],
+    hiddenRoutes: [],
     terms: {
       customer:    "Buyer / Contractor",
       invoice:     "Invoice / Challan",
@@ -529,7 +526,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "🔧",
     color: "#DC2626",
     description: "Auto parts distributors, spare parts dealers, garage suppliers",
-    hiddenRoutes: ["/network", "/forecast"],
+    hiddenRoutes: ["/forecast"],
     terms: {
       customer:    "Garage / Retailer",
       invoice:     "Bill",
@@ -564,7 +561,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "💻",
     color: "#7C3AED",
     description: "IT agencies, software companies, web developers, SaaS businesses",
-    hiddenRoutes: ["/inventory", "/scanner", "/orders", "/attendance", "/network"],
+    hiddenRoutes: ["/inventory"],
     terms: {
       customer:    "Client",
       invoice:     "Invoice",
@@ -600,7 +597,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "🚛",
     color: "#EA580C",
     description: "Transport companies, logistics providers, courier aggregators",
-    hiddenRoutes: ["/scanner", "/network"],
+    hiddenRoutes: [],
     terms: {
       customer:    "Shipper / Client",
       invoice:     "LR / Invoice",
@@ -635,7 +632,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "💍",
     color: "#D97706",
     description: "Jewellers, gold traders, diamond dealers, jewellery manufacturers",
-    hiddenRoutes: ["/orders", "/network", "/attendance"],
+    hiddenRoutes: [],
     terms: {
       customer:    "Party / Retailer",
       invoice:     "Bill",
@@ -670,7 +667,7 @@ export const BUSINESS_TYPES: Record<BusinessTypeKey, BusinessTypeConfig> = {
     emoji: "🌾",
     color: "#16A34A",
     description: "Seed distributors, fertilizer dealers, agri input companies, mandis",
-    hiddenRoutes: ["/network", "/attendance"],
+    hiddenRoutes: [],
     terms: {
       customer:    "Farmer / Dealer",
       invoice:     "Bill",
@@ -841,22 +838,12 @@ export function getSmartHiddenRoutes(): Set<string> {
   // ── Flag-based rules ───────────────────────────────────────────────────────
   // No credit sales → hide all collections/receivables tooling
   if (flags.sells_credit === false) {
-    ["/collections", "/whatsapp", "/dunning", "/khata", "/crm", "/forecast"].forEach(r => hidden.add(r));
-  }
-
-  // No workers/employees → hide attendance
-  if (flags.has_workers === false) {
-    hidden.add("/attendance");
+    ["/collections", "/forecast"].forEach(r => hidden.add(r));
   }
 
   // Not GST registered → hide GST invoice generator
   if (flags.gst_registered === false) {
     hidden.add("/bills");
-  }
-
-  // Micro-business (under ₹50L) → hide network (B2B marketplace, not relevant yet)
-  if (flags.biz_size === "micro") {
-    hidden.add("/network");
   }
 
   return hidden;

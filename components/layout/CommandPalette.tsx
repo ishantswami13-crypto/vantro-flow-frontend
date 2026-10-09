@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, type IntelligenceSignal } from "@/lib/api";
 import { getRecents, timeAgo, type RecentEntry } from "@/lib/recents";
-import { IconSearch, IconClock, IconPage, IconPlus, IconScan, IconWatch, IconMissions, IconSimulate } from "@/components/v32/icons";
+import { IconSearch, IconClock, IconPage, IconPlus, IconScan, IconMissions } from "@/components/v32/icons";
 import { IconSun } from "@/components/v32/icons";
 import { toggleTheme } from "@/lib/theme";
 
@@ -68,8 +68,6 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
       { key: "a:ask", href: "/scan", title: "Ask Starlane", context: "Open Scan", icon: <IconScan {...ICON} />, kind: "Action" },
       { key: "a:watch", href: "/watch?new=1", title: "New watch", icon: <IconPlus {...ICON} />, kind: "Action" },
       { key: "a:mission", href: "/missions/new", title: "New mission", icon: <IconMissions {...ICON} />, kind: "Action" },
-      { key: "a:sim", href: "/simulate", title: "Simulate a scenario", icon: <IconSimulate {...ICON} />, kind: "Action" },
-      { key: "a:watchlist", href: "/watch", title: "Open Watch", context: "What Starlane is watching", icon: <IconWatch {...ICON} />, kind: "Action" },
       { key: "a:theme", href: "#theme", title: "Switch theme", context: "Light or dark workspace", icon: <IconSun {...ICON} />, kind: "Action" },
     ].filter(a => hit(a.title));
     if (actions.length) out.push({ label: "Actions", rows: actions });

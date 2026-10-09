@@ -86,9 +86,22 @@ const nextConfig = {
       },
     ];
   },
-  // Redirect HTTP → HTTPS (belt-and-suspenders, Vercel also does this)
+  // Pages removed in the product pruning pass. Old bookmarks and recent-page
+  // links land on the surface that now does the job instead of a 404.
+  // Temporary (307) so a page can come back without fighting browser caches.
   async redirects() {
-    return [];
+    const to = (dest, ...sources) => sources.map((source) => ({ source, destination: dest, permanent: false }));
+    return [
+      ...to('/bridge', '/dashboard', '/today', '/business-state', '/orders', '/attendance', '/industry', '/analytics', '/brain', '/crm', '/whatsapp', '/ai-train'),
+      ...to('/prepared', '/ai-actions', '/bad-debt'),
+      ...to('/intelligence/:id', '/discover/:id'),
+      ...to('/intelligence', '/discover', '/supply-chain-actions'),
+      ...to('/settings?tab=automation', '/dunning'),
+      ...to('/scan', '/ai-chat'),
+      ...to('/customers', '/khata'),
+      ...to('/sources', '/sales', '/purchases', '/bank', '/ledger', '/scanner'),
+      ...to('/control', '/team'),
+    ];
   },
 };
 

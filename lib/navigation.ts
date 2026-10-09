@@ -1,6 +1,6 @@
 import type React from "react";
 import {
-  IconBridge, IconScan, IconWatch, IconMissions, IconLibrary, IconHistory,
+  IconBridge, IconScan, IconWatch, IconMissions, IconLibrary,
   IconPrepared, IconSimulate, IconMemory, IconSources, IconAgents, IconControl, IconSettings,
   IconAudit, IconUsers, IconInvoice, IconChart, IconBox, IconRupee,
 } from "@/components/v32/icons";
@@ -35,8 +35,8 @@ export const V32_WORKSPACE_NAV_ITEMS: PrimaryNavItem[] = [
   { href: "/settings",      label: "Settings", icon: IconSettings },
 ];
 
-// "More": the handful of business pages people still reach for. Every other
-// older page stays reachable by its link and from Ctrl+K, but is off the rail.
+// "More": lenses into the business records behind decisions, plus Library.
+// Supporting pages below stay reachable from Ctrl+K but are off the rail.
 export const MORE_NAV_ITEMS: PrimaryNavItem[] = [
   { href: "/collections",  label: "Collections",   icon: IconRupee },
   { href: "/customers",    label: "Customers",     icon: IconUsers },
@@ -45,33 +45,15 @@ export const MORE_NAV_ITEMS: PrimaryNavItem[] = [
   { href: "/inventory",    label: "Inventory",     icon: IconBox },
   { href: "/reports",      label: "Reports",       icon: IconChart },
   { href: "/library",      label: "Library",       icon: IconLibrary },
-  { href: "/scan/history", label: "History",       icon: IconHistory },
 ];
 
-// Older pages: not on the rail, still searchable from Ctrl+K.
+// Supporting pages that are off the rail but still reachable from Ctrl+K and
+// from the pages that link to them.
 export const OTHER_PAGES: { href: string; label: string }[] = [
-  { href: "/discover",       label: "Discover" },
-  { href: "/today",          label: "Today" },
-  { href: "/business-state", label: "Business state" },
-  { href: "/dashboard",      label: "Overview" },
-  { href: "/suppliers",      label: "Suppliers" },
-  { href: "/invoice/new",    label: "New invoice" },
-  { href: "/bank",           label: "Bank monitor" },
-  { href: "/ledger",         label: "Bank ledger" },
-  { href: "/bad-debt",       label: "Bad debt radar" },
-  { href: "/khata",          label: "Customer khata" },
-  { href: "/sales",          label: "Sales" },
-  { href: "/purchases",      label: "Purchases" },
-  { href: "/orders",         label: "Today's orders" },
-  { href: "/scanner",        label: "Invoice scanner" },
-  { href: "/attendance",     label: "Staff attendance" },
-  { href: "/team",           label: "Team" },
-  { href: "/whatsapp",       label: "WhatsApp" },
-  { href: "/dunning",        label: "Auto follow-up" },
-  { href: "/ai-actions",     label: "Action center" },
-  { href: "/brain",          label: "Starlane brain" },
-  { href: "/analytics",      label: "Analytics" },
-  { href: "/billing",        label: "Billing" },
+  { href: "/intelligence", label: "Intelligence" },
+  { href: "/suppliers",    label: "Suppliers" },
+  { href: "/invoice/new",  label: "New invoice" },
+  { href: "/billing",      label: "Billing" },
 ];
 
 /** Is `href` the active nav item for `pathname`? The most specific item wins,

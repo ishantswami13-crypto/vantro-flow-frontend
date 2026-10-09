@@ -78,7 +78,7 @@ const SEARCHABLE: SearchableRoute[] = [
   ...V32_WORKSPACE_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const, context: "Workspace" })),
   ...MORE_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
   { href: "/intelligence", label: "Intelligence", type: "Page" as const },
-  ...OTHER_PAGES.map(n => ({ href: n.href, label: n.label, type: "Page" as const, context: "Older page" })),
+  ...OTHER_PAGES.map(n => ({ href: n.href, label: n.label, type: "Page" as const, context: "Supporting page" })),
 ];
 
 const SHORTCUTS = [
