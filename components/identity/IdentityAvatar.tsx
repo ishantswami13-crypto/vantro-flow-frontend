@@ -24,7 +24,7 @@ export function IdentityAvatar({ name, size = 26, rounded = "full", className = 
         background: identity.color,
         border: "1px solid rgba(255,255,255,0.14)",
         color: "#FFFFFF",
-        fontFamily: "'Fraunces', Georgia, serif",
+        fontFamily: "var(--font-display)",
         fontSize: Math.round(size * 0.46),
         fontWeight: 400,
       }}

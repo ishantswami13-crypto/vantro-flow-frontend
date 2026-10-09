@@ -6,33 +6,49 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { C, Pill, SectionLabel, Skeleton } from "@/components/decisions/ui";
 import { osApi, Objective, AutopilotMode, AUTOPILOT_LABEL, HEALTH_LABEL } from "@/lib/os";
-import { relTime } from "@/lib/decisions";
-import { Panel, Btn, Row, Muted, ErrorLine, errorText, healthTone, useLoad } from "./shared";
+import { formatRelative, formatCount, formatDateTime } from "@/lib/format";
+import { StatusChip, type StatusTone } from "@/components/ui/Badge";
+import { SkeletonRows } from "@/components/v32/ui";
+import { IconArrowRight } from "@/components/v32/icons";
+import { useLoad } from "./shared";
+import { QuietError, QuietLine, SectionHead, plain } from "./bridge/kit";
 
-const BRIEF_TONE = { positive: "good", negative: "bad", attention: "warn", neutral: "neutral" } as const;
+const BRIEF_CHIP: Record<string, { tone: StatusTone; label: string } | undefined> = {
+  negative: { tone: "critical", label: "Off track" },
+  attention: { tone: "attention", label: "Needs a look" },
+};
 
 export function WatchBrief() {
-  const { data, error, loading } = useLoad(() => osApi.brief());
+  const { data, error, loading, reload } = useLoad(() => osApi.brief());
   return (
-    <Panel title="Today's brief" subtitle="Only what changed or needs someone. Everything on track is left out.">
-      {loading && <Skeleton rows={2} />}
-      <ErrorLine error={error ? errorText(error) : null} />
-      {data && (
-        <ul className="space-y-2">
-          {data.lines.map((l, i) => (
-            <li key={i}>
-              <span className="text-[13.5px] leading-[1.55]" style={{ color: C.ink }}>{l.text}</span>
-            </li>
-          ))}
+    <section aria-labelledby="brief-h" className="min-w-0">
+      <SectionHead id="brief-h" title="Today's brief" right={data?.generatedAt ? <span className="meta" title={formatDateTime(data.generatedAt)}>{formatRelative(data.generatedAt)}</span> : undefined} />
+      <p className="meta" style={{ margin: "-2px 0 10px" }}>Only what changed or needs someone. Everything on track is left out.</p>
+      {loading && !data && <SkeletonRows rows={3} height={44} />}
+      {error && !data ? <QuietError onRetry={reload} /> : null}
+      {data && (data.lines.length === 0 ? (
+        <QuietLine>Nothing to report today.</QuietLine>
+      ) : (
+        <ul style={{ margin: 0, padding: 0, listStyle: "none", borderTop: "1px solid var(--line)" }}>
+          {data.lines.map((l, i) => {
+            const chip = BRIEF_CHIP[l.tone];
+            return (
+              <li key={i} className="flex items-baseline" style={{ gap: 16, padding: "11px 0", borderBottom: "1px solid var(--line)" }}>
+                <span className="flex-1 min-w-0 tabular-nums" style={{ fontSize: 13.5, lineHeight: 1.55, color: l.tone === "positive" || l.tone === "neutral" ? "var(--body)" : "var(--ink)" }}>{plain(l.text)}</span>
+                {chip && <StatusChip tone={chip.tone} className="shrink-0">{chip.label}</StatusChip>}
+              </li>
+            );
+          })}
         </ul>
-      )}
-    </Panel>
+      ))}
+    </section>
   );
 }
 
 const MODES: AutopilotMode[] = ["WATCH", "RECOMMEND", "PREPARE", "EXECUTE_WITH_APPROVAL"];
+
+const HEALTH_TONE: Record<string, StatusTone> = { ON_TRACK: "positive", AT_RISK: "attention", OFF_TRACK: "critical", UNKNOWN: "unknown" };
 
 export function ObjectivesPanel() {
   const objectives = useLoad(() => osApi.objectives());
@@ -54,92 +70,138 @@ export function ObjectivesPanel() {
       const r = await osApi.createObjective({ templateKey: "COLLECTIONS_AUTOPILOT", metricKey: "overdue_share_pct", operator: "<=", target: Number(target), horizonDays: Number(horizon), autopilotMode: mode });
       setResult(`${r.evaluation.explanation}${r.autopilot?.why ? ` ${r.autopilot.why}` : ""}`);
       objectives.reload();
-    } catch (e) { setErr(errorText(e)); } finally { setBusy(false); }
+    } catch { setErr("Couldn't set the objective. Check your connection and try again."); } finally { setBusy(false); }
   };
 
   const reevaluate = async () => {
     setBusy(true); setErr(null);
-    try { await osApi.evaluateObjectives(); objectives.reload(); } catch (e) { setErr(errorText(e)); } finally { setBusy(false); }
+    try { await osApi.evaluateObjectives(); objectives.reload(); } catch { setErr("Couldn't check the objectives again. Try again in a moment."); } finally { setBusy(false); }
   };
 
   const list = objectives.data?.objectives || [];
   return (
-    <Panel
-      title="Objectives"
-      subtitle="A target the business is steering towards, checked against the ledger and forecast forward."
-      right={list.length > 0 ? <Btn onClick={reevaluate} disabled={busy}>Check again</Btn> : undefined}
-    >
-      {objectives.loading && <Skeleton rows={2} />}
-      {list.map((o) => <ObjectiveRow key={o.id} o={o} />)}
+    <section aria-labelledby="obj-h" className="min-w-0">
+      <SectionHead
+        id="obj-h"
+        title="Objectives"
+        meta={list.length ? formatCount(list.length) : undefined}
+        right={list.length > 0 ? <button type="button" className="hover-dim" style={{ fontSize: 12, color: "var(--ink-2)" }} onClick={reevaluate} disabled={busy}>{busy ? "Checking…" : "Check again"}</button> : undefined}
+      />
+      <p className="meta" style={{ margin: "-2px 0 10px" }}>A target the business is steering towards, checked against the ledger and forecast forward.</p>
 
-      {collections && !hasCollections && (
-        <Row>
-          <SectionLabel>Collections autopilot</SectionLabel>
-          <p className="text-[12.5px] mb-2" style={{ color: C.muted }}>{collections.detail}</p>
-          <form onSubmit={(e) => { e.preventDefault(); create(); }} className="flex flex-wrap gap-2 items-center text-[12.5px]" style={{ color: C.body }}>
+      {objectives.loading && !objectives.data && <SkeletonRows rows={2} height={56} />}
+      {objectives.error && !objectives.data ? <QuietError onRetry={objectives.reload} /> : null}
+
+      {list.length > 0 && (
+        <div style={{ borderTop: "1px solid var(--line)" }}>
+          {list.map((o) => <ObjectiveRow key={o.id} o={o} />)}
+        </div>
+      )}
+
+      {objectives.data && collections && !hasCollections && (
+        <div style={{ borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", padding: "14px 0 16px", marginTop: list.length ? 20 : 0 }}>
+          <div style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 500 }}>{collections.name}</div>
+          <p style={{ margin: "4px 0 14px", fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55 }}>{collections.detail}</p>
+          <form onSubmit={(e) => { e.preventDefault(); create(); }} className="flex flex-wrap items-center" style={{ gap: 8, fontSize: 13, color: "var(--body)" }}>
             <span>Keep overdue share at most</span>
-            <input type="number" min={0} max={100} value={target} onChange={(e) => setTarget(e.target.value)} className="w-[64px] rounded-md px-2 py-[5px]" style={{ border: `1px solid ${C.line}` }} aria-label="Target percent" />
+            <input type="number" min={0} max={100} value={target} onChange={(e) => setTarget(e.target.value)} className="ui-input tabular-nums" style={{ width: 72 }} aria-label="Target percent" />
             <span>% within</span>
-            <input type="number" min={7} max={180} value={horizon} onChange={(e) => setHorizon(e.target.value)} className="w-[64px] rounded-md px-2 py-[5px]" style={{ border: `1px solid ${C.line}` }} aria-label="Horizon days" />
+            <input type="number" min={7} max={180} value={horizon} onChange={(e) => setHorizon(e.target.value)} className="ui-input tabular-nums" style={{ width: 72 }} aria-label="Horizon in days" />
             <span>days, and</span>
-            <select value={mode} onChange={(e) => setMode(e.target.value as AutopilotMode)} className="rounded-md px-2 py-[5px]" style={{ border: `1px solid ${C.line}` }} aria-label="Autopilot mode">
+            <select value={mode} onChange={(e) => setMode(e.target.value as AutopilotMode)} className="ui-input" style={{ width: "auto" }} aria-label="Autopilot mode">
               {MODES.map((m) => <option key={m} value={m}>{AUTOPILOT_LABEL[m].toLowerCase()}</option>)}
             </select>
-            <Btn primary type="submit" disabled={busy}>{busy ? "Checking…" : "Set objective"}</Btn>
+            <button type="submit" className="ui-btn ui-btn-secondary" disabled={busy}>{busy ? "Checking…" : "Set objective"}</button>
           </form>
-          <p className="text-[11.5px] mt-2" style={{ color: C.faint }}>Acting within policy without approval is not offered. Every reminder waits for a person.</p>
-        </Row>
+          <p className="meta" style={{ margin: "12px 0 0" }}>Acting within policy without approval is not offered. Every reminder waits for a person.</p>
+        </div>
       )}
-      {result && <p className="text-[12.5px] mt-2" style={{ color: C.body }}>{result}</p>}
-      <ErrorLine error={err || (objectives.error ? errorText(objectives.error) : null)} />
+
+      {objectives.data && list.length === 0 && !collections && (
+        <QuietLine>No objective is set. Objectives become available once your books are connected.</QuietLine>
+      )}
+
+      {result && <p style={{ margin: "12px 0 0", fontSize: 13, color: "var(--body)", lineHeight: 1.55 }}>{plain(result)}</p>}
+      {err && <div style={{ marginTop: 10 }}><QuietError message={err} compact /></div>}
 
       {blocked.length > 0 && (
-        <Row>
-          <SectionLabel>Not available yet</SectionLabel>
-          <ul className="space-y-1">
-            {blocked.map((t) => <li key={t.key} className="text-[12.5px]" style={{ color: C.muted }}><span style={{ color: C.body, fontWeight: 500 }}>{t.name}:</span> {t.detail}</li>)}
+        <div style={{ marginTop: 18 }}>
+          <div className="section-label" style={{ marginBottom: 6 }}>Not available yet</div>
+          <ul style={{ margin: 0, padding: 0, listStyle: "none" }} className="flex flex-col">
+            {blocked.map((t) => (
+              <li key={t.key} style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55, padding: "4px 0" }}>
+                <span style={{ color: "var(--body)" }}>{t.name}.</span> {t.detail}
+              </li>
+            ))}
           </ul>
-        </Row>
+        </div>
       )}
-    </Panel>
+    </section>
   );
 }
 
 function ObjectiveRow({ o }: { o: Objective }) {
   const f = o.latest?.forecast;
-  const last = f?.points?.[f.points.length - 1];
   const unit = o.metric.endsWith("_pct") ? "%" : "";
+  const p = f?.breachProbability;
+  const points = f?.points?.slice(0, 4) || [];
   return (
-    <Row>
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div style={{ minWidth: 0 }}>
-          <p className="text-[14px]" style={{ color: C.ink, fontWeight: 600 }}>{o.name} {o.operator === "<=" ? "at most" : "at least"} {o.target}{unit}</p>
-          <p className="text-[12px] mt-[2px]" style={{ color: C.faint }}>Within {o.horizonDays} days · {AUTOPILOT_LABEL[o.autopilotMode]} · checked {relTime(o.lastEvaluatedAt)}</p>
+    <div style={{ padding: "14px 0 16px", borderBottom: "1px solid var(--line)" }}>
+      <div className="flex items-baseline justify-between flex-wrap" style={{ gap: 12 }}>
+        <div className="min-w-0">
+          <div style={{ fontSize: 13.5, color: "var(--ink)", fontWeight: 500 }}>
+            {o.name} {o.operator === "<=" ? "at most" : "at least"} <span className="num">{o.target}{unit}</span>
+          </div>
+          <div className="meta tabular-nums" style={{ marginTop: 2 }}>
+            Within {formatCount(o.horizonDays)} days · {AUTOPILOT_LABEL[o.autopilotMode]} · {o.lastEvaluatedAt ? <span title={formatDateTime(o.lastEvaluatedAt)}>checked {formatRelative(o.lastEvaluatedAt)}</span> : "not checked yet"}
+          </div>
         </div>
-        <Pill tone={healthTone(o.health)}>{HEALTH_LABEL[o.health] || o.health}</Pill>
+        <StatusChip tone={HEALTH_TONE[o.health] || "unknown"}>{HEALTH_LABEL[o.health] || "Not known yet"}</StatusChip>
       </div>
-      {f?.explanation && <p className="text-[13px] mt-2 leading-[1.55]" style={{ color: C.body }}>{f.explanation}</p>}
-      {f?.breachProbability != null && o.health !== "OFF_TRACK" && (
-        <p className="text-[12.5px] mt-1" style={{ color: f.breachProbability >= 0.5 ? C.bad : f.breachProbability >= 0.2 ? C.warn : C.muted }}>
-          {Math.round(f.breachProbability * 100)}% chance of missing the target{f.breachInDays != null ? `, most likely in about ${f.breachInDays} days` : ""}.
+
+      {f?.explanation && <p className="tabular-nums" style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.6, color: "var(--body)", maxWidth: "68ch" }}>{plain(f.explanation)}</p>}
+      {p != null && o.health !== "OFF_TRACK" && (
+        <p className="tabular-nums" style={{ margin: "4px 0 0", fontSize: 13, color: p >= 0.5 ? "var(--critical)" : "var(--ink-2)" }}>
+          <span className="num">{Math.round(p * 100)}%</span> chance of missing the target{f?.breachInDays != null ? `, most likely in about ${formatCount(f.breachInDays)} days` : ""}.
         </p>
       )}
-      {f?.points && f.points.length > 0 && (
-        <div className="flex gap-3 mt-2 flex-wrap">
-          {f.points.map((p) => (
-            <div key={p.day} className="text-[11.5px]" style={{ color: C.muted }}>
-              <span style={{ color: C.faint }}>day {p.day}</span> <span style={{ color: C.ink, fontWeight: 500 }}>{p.p50}{unit}</span> <span style={{ color: C.faint }}>({p.p10} to {p.p90}{unit})</span>
-            </div>
-          ))}
-        </div>
+
+      {points.length > 0 && (
+        <table className="tabular-nums" style={{ marginTop: 12, width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+          <caption className="sr-only">Forecast: most likely value and likely range</caption>
+          <thead>
+            <tr>
+              <th scope="col" style={{ ...TH, textAlign: "left" }}>Forecast</th>
+              {points.map((pt) => <th key={pt.day} scope="col" style={TH}>Day {pt.day}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row" style={{ ...TD, textAlign: "left", fontWeight: 400, color: "var(--ink-2)" }}>Most likely</th>
+              {points.map((pt) => <td key={pt.day} className="num" style={{ ...TD, color: "var(--ink)" }}>{pt.p50}{unit}</td>)}
+            </tr>
+            <tr>
+              <th scope="row" style={{ ...TD, textAlign: "left", fontWeight: 400, color: "var(--ink-2)" }}>Likely range</th>
+              {points.map((pt) => <td key={pt.day} className="num" style={{ ...TD, color: "var(--ink-3)" }}>{pt.p10}–{pt.p90}{unit}</td>)}
+            </tr>
+          </tbody>
+        </table>
       )}
+
       {o.latest?.confidence && o.latest.confidence.reasons.length > 0 && (
-        <p className="text-[12px] mt-1" style={{ color: C.warn }}>Confidence {o.latest.confidence.level.toLowerCase()}: {o.latest.confidence.reasons.join("; ")}</p>
+        <p className="meta" style={{ margin: "10px 0 0" }}>
+          Confidence {o.latest.confidence.level.toLowerCase()}: {o.latest.confidence.reasons.join("; ")}.
+        </p>
       )}
-      {last && o.workflowId && (
-        <p className="text-[12px] mt-2"><Link href="/missions" className="underline" style={{ color: C.accent }}>The overdue follow-up workflow works towards this</Link></p>
+      {o.workflowId && (
+        <Link href="/missions" className="hover-dim inline-flex items-center" style={{ gap: 4, marginTop: 8, fontSize: 12.5, color: "var(--ink-2)" }}>
+          The overdue follow-up workflow works towards this<IconArrowRight size={12} />
+        </Link>
       )}
-      {!f && <Muted>Not evaluated yet.</Muted>}
-    </Row>
+      {!f && <p className="meta" style={{ margin: "8px 0 0" }}>Not evaluated yet.</p>}
+    </div>
   );
 }
+
+const TH: React.CSSProperties = { padding: "6px 0", fontSize: 11, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-3)", textAlign: "right", borderBottom: "1px solid var(--line)" };
+const TD: React.CSSProperties = { padding: "6px 0", textAlign: "right", borderBottom: "1px solid var(--line-hairline)" };

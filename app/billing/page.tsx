@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import Link from "next/link";
 import {
   FiCheck, FiArrowRight, FiZap, FiShield,
-  FiCalendar, FiTrendingUp, FiMessageSquare, FiUsers,
+  FiCalendar, FiMessageSquare,
 } from "react-icons/fi";
 import { api, getUser, type BillingRecord } from "@/lib/api";
 
@@ -16,86 +15,64 @@ const PLANS = [
   {
     id: "starter",
     name: "Starter",
-    tagline: "Know who to chase. Every day.",
+    tagline: "See what is true in your business.",
     price: 999,
     annual: 799,
     badge: null,
     highlight: false,
-    proof: "Solo founders & small teams",
+    proof: "Owner-run businesses",
     outcomes: [
-      "AI ranks who to call first — zero guesswork",
-      "Full picture: who owes what, since when",
-      "Pre-written WhatsApp message — you tap Send",
-      "Import from Excel or Tally in 2 minutes",
-      "30-day cash flow forecast",
+      "Bridge, Scan, Watch, Simulate, Prepared, Missions and Memory",
+      "Connect Tally through the desktop app, or import Excel and CSV",
+      "Every finding shows its source records and calculation",
+      "Cash forecast, reports and invoices",
+      "Reminder drafts that you approve before anything is sent",
     ],
-    cta: "Get Clarity",
+    cta: "Choose Starter",
   },
   {
     id: "growth",
     name: "Growth",
-    tagline: "Money collects itself.",
+    tagline: "Stock and cash in one picture.",
     price: 2499,
     annual: 1999,
-    badge: "Most Popular",
+    badge: null,
     highlight: true,
-    proof: "200+ MSMEs automating right now",
+    proof: "Businesses that hold inventory",
     outcomes: [
-      "WhatsApp fires automatically at Day 7, 14, 30",
-      "Customer gets UPI link — one tap to pay",
-      "Tally syncs overnight — zero manual entry",
-      "AI dunning sequences run while you sleep",
-      "3 team members + full analytics",
+      "Everything in Starter",
+      "Inventory and stock coverage",
     ],
-    cta: "Start Automating",
+    cta: "Choose Growth",
   },
   {
     id: "pro",
     name: "Pro",
-    tagline: "Total control. Zero manual work.",
+    tagline: "For larger books and more people.",
     price: 4999,
     annual: 3999,
-    badge: "Best Value",
+    badge: null,
     highlight: false,
-    proof: "CA firms & high-volume businesses",
+    proof: "High-volume businesses",
     outcomes: [
-      "Unlimited WhatsApp — bulk-send in 30 seconds",
-      "10 team members + CA multi-client view",
-      "Custom AI message voice in your brand tone",
-      "PDF invoices + Excel exports, one click",
-      "Dedicated account manager on WhatsApp",
+      "Everything in Growth",
     ],
-    cta: "Get Full Control",
-  },
-];
-
-const TESTIMONIALS = [
-  {
-    quote: "Collected ₹22L in 6 weeks that was stuck for 8 months. WhatsApp automation changed everything.",
-    name: "Vikram Mehta",
-    biz: "Mehta Fabrics, Surat",
-    avatar: "VM",
-  },
-  {
-    quote: "DSO dropped from 67 to 41 days in one quarter. The AI call list is sharper than my whole team.",
-    name: "Priya Sharma",
-    biz: "Sharma Steel Works, Ahmedabad",
-    avatar: "PS",
+    cta: "Choose Pro",
   },
 ];
 
 const FAQS = [
   {
     q: "Can I cancel anytime?",
-    a: "Yes — no contracts, no lock-in. Cancel from Settings in one click. You keep access until the end of your billing period.",
+    a: "Yes. There is no contract. Your plan stays active until the end of the period you paid for.",
   },
   {
-    q: "What if Starlane doesn't help me collect more?",
-    a: "If you don't recover more than the plan cost in your first 30 days, we refund. No questions asked.",
+    q: "Does Starlane send messages on its own?",
+    a: "No. Starlane prepares the message and shows it in Prepared. Nothing goes to a customer until you approve it.",
   },
   {
-    q: "Do I need to set up any WhatsApp API or account?",
-    a: "No. Starlane AutoPilot handles everything — WhatsApp reminders are sent via Starlane's managed system. Zero setup. Works the moment you upgrade.",
+    q: "Where does my data come from?",
+    a: "From the sources you connect: Tally through the Starlane desktop app, or files you import. Starlane reads them; it does not write to Tally.",
   },
 ];
 
@@ -118,11 +95,14 @@ export default function BillingPage() {
   const [history, setHistory] = useState<BillingRecord[]>([]);
   const [successPlan, setSuccessPlan] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const user = getUser();
+  // The signed-in user lives in localStorage, which the server render cannot
+  // see; read it after mount so server and client markup match.
+  const [user, setUser] = useState<ReturnType<typeof getUser>>(null);
   const currentPlan = user?.plan || "free";
   const isFree = currentPlan === "free";
 
   useEffect(() => {
+    setUser(getUser());
     api.billing.history().then(({ history }) => setHistory(history)).catch(() => {});
   }, []);
 
@@ -138,7 +118,7 @@ export default function BillingPage() {
           name: "Starlane",
           description: `${planId.charAt(0).toUpperCase() + planId.slice(1)} Plan — ${billing}`,
           prefill: { email: user?.email || "", contact: user?.phone || "", name: user?.business_name || "" },
-          theme: { color: "#0066FF" },
+          theme: { color: "var(--accent)" },
           handler: async (response: any) => {
             try {
               await api.billing.verify({
@@ -177,7 +157,7 @@ export default function BillingPage() {
         {successPlan && (
           <div className="px-4 py-3 rounded-xl bg-success/10 border border-success/30 text-sm text-success font-semibold flex items-center gap-2">
             <FiCheck size={15} />
-            You're now on <span className="capitalize font-black">{successPlan}</span>. Automation is live.
+            You're now on <span className="capitalize font-black">{successPlan}</span>.
           </div>
         )}
 
@@ -185,16 +165,12 @@ export default function BillingPage() {
         {isFree ? (
           <div className="rounded-2xl border border-danger/25 bg-danger/5 p-6">
             <div className="flex items-start gap-4">
-              <div className="text-3xl shrink-0">🔴</div>
               <div>
                 <h1 className="text-lg font-black text-primary mb-1">
-                  You're on Free — reminders aren't sending themselves.
+                  You're on the Free plan.
                 </h1>
                 <p className="text-sm text-secondary leading-relaxed">
-                  Every overdue invoice on your dashboard is waiting for a manual message.
-                  That's hours every week. Businesses on Growth recover
-                  <span className="text-white font-bold"> 3.2× more </span>
-                  in the same time — because automation does the chasing.
+                  Choose a plan below. Payment is handled by Razorpay.
                 </p>
               </div>
             </div>
@@ -209,7 +185,7 @@ export default function BillingPage() {
                 <p className="text-sm font-black text-primary">
                   {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} Plan — Active
                 </p>
-                <p className="text-xs text-muted">Automation is running. Thank you for building with Starlane.</p>
+                <p className="text-xs text-muted">Thank you for building with Starlane.</p>
               </div>
             </div>
             <button className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-secondary hover:text-primary hover:border-border transition-all">
@@ -217,21 +193,6 @@ export default function BillingPage() {
             </button>
           </div>
         )}
-
-        {/* ── ROI ANCHOR STRIP ──────────────────────────────────── */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { num: "₹3.8L", label: "avg extra collected in 60 days on Growth", icon: FiTrendingUp },
-            { num: "200+",  label: "Indian MSMEs automating collections right now", icon: FiUsers },
-            { num: "5 min", label: "to set up and start your first automation", icon: FiZap },
-          ].map(({ num, label, icon: Icon }) => (
-            <div key={num} className="rounded-xl border border-border bg-surface-1 p-4 text-center">
-              <Icon size={14} className="text-muted mx-auto mb-2" />
-              <p className="text-xl font-black text-primary mb-0.5">{num}</p>
-              <p className="text-2xs text-muted leading-snug">{label}</p>
-            </div>
-          ))}
-        </div>
 
         {/* ── TOGGLE ───────────────────────────────────────────── */}
         <div className="flex flex-col items-center gap-2">
@@ -270,7 +231,7 @@ export default function BillingPage() {
             /* White card for Growth, dark for others */
             if (isHighlight) {
               return (
-                <div key={plan.id} className="relative rounded-2xl bg-white p-7 flex flex-col shadow-2xl md:-mt-3 md:mb-3">
+                <div key={plan.id} className="relative rounded-2xl bg-[#F5F4F0] p-7 flex flex-col shadow-2xl md:-mt-3 md:mb-3">
                   {plan.badge && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                       <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-2xs font-black tracking-widest uppercase text-white bg-black shadow-lg">
@@ -320,7 +281,7 @@ export default function BillingPage() {
                       : <>{plan.cta} <FiArrowRight size={14} /></>
                     }
                   </button>
-                  <p className="text-2xs text-black/30 text-center mt-2">14-day free trial · cancel anytime</p>
+                  <p className="text-2xs text-black/30 text-center mt-2">Cancel anytime</p>
                 </div>
               );
             }
@@ -403,20 +364,11 @@ export default function BillingPage() {
                   }
                 </button>
                 {!isCurrent && (
-                  <p className="text-2xs text-muted text-center mt-2">14-day free trial · cancel anytime</p>
+                  <p className="text-2xs text-muted text-center mt-2">Cancel anytime</p>
                 )}
               </div>
             );
           })}
-        </div>
-
-        {/* ── URGENCY BAR ──────────────────────────────────────── */}
-        <div className="rounded-xl border border-warning/20 bg-warning/5 px-4 py-3 flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2.5">
-            <span className="text-base">⏳</span>
-            <p className="text-sm font-bold text-warning">Beta pricing — valid through June 2026</p>
-          </div>
-          <p className="text-xs text-muted">Prices will increase when we exit beta. Lock in now.</p>
         </div>
 
         {/* ── TRUST BAR ────────────────────────────────────────── */}
@@ -424,38 +376,12 @@ export default function BillingPage() {
           {[
             { icon: FiShield, text: "256-bit encrypted" },
             { icon: FiCheck,  text: "Cancel anytime, no lock-in" },
-            { icon: FiZap,    text: "Setup in under 5 minutes" },
-            { icon: FiMessageSquare, text: "Pay via Razorpay — Indian UPI accepted" },
+                        { icon: FiMessageSquare, text: "Pay via Razorpay — Indian UPI accepted" },
           ].map(({ icon: Icon, text }) => (
             <span key={text} className="flex items-center gap-1.5">
               <Icon size={12} className="text-success" />
               {text}
             </span>
-          ))}
-        </div>
-
-        {/* ── SOCIAL PROOF ─────────────────────────────────────── */}
-        <div className="grid sm:grid-cols-2 gap-4">
-          {TESTIMONIALS.map(({ quote, name, biz, avatar }) => (
-            <div key={name} className="rounded-2xl border border-border bg-surface-1 p-5 hover:border-border transition-all">
-              <div className="flex gap-0.5 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
-                ))}
-              </div>
-              <p className="text-sm text-secondary leading-relaxed mb-4">&ldquo;{quote}&rdquo;</p>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-surface-3 border border-border flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                  {avatar}
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-primary">{name}</p>
-                  <p className="text-2xs text-muted">{biz}</p>
-                </div>
-              </div>
-            </div>
           ))}
         </div>
 
@@ -485,8 +411,8 @@ export default function BillingPage() {
               <FiShield size={17} className="text-muted" />
             </div>
             <div>
-              <p className="text-sm font-bold text-primary">Enterprise / CA Firms</p>
-              <p className="text-xs text-muted">50+ clients · White-label · Custom integrations · Dedicated team</p>
+              <p className="text-sm font-bold text-primary">Larger organizations</p>
+              <p className="text-xs text-muted">Several businesses or custom sources — talk to us</p>
             </div>
           </div>
           <a href="mailto:ishantswami13@gmail.com?subject=Starlane Enterprise Enquiry"

@@ -1,35 +1,73 @@
 import type React from "react";
 import {
-  IconBridge, IconScan, IconWatch, IconMissions, IconLibrary, IconHistory,
-  IconDiscover, IconPrepared, IconSimulate, IconMemory, IconSources, IconAgents, IconControl, IconSettings,
+  IconBridge, IconScan, IconWatch, IconMissions, IconLibrary,
+  IconPrepared, IconSimulate, IconMemory, IconSources, IconAgents, IconControl, IconSettings,
+  IconAudit, IconUsers, IconInvoice, IconChart, IconBox, IconRupee,
 } from "@/components/v32/icons";
 
 export interface PrimaryNavItem {
   href: string;
   label: string;
   icon: (p: { size?: number; className?: string; style?: React.CSSProperties }) => React.ReactElement;
+  /** Extra path prefixes that light this item up (e.g. /decisions under Prepared). */
+  also?: string[];
 }
 
-// Primary nav: six places, the way Harvey keeps a few tools plus History and
-// Library in its sidebar. Everything else stays one click away under More.
+// The seven surfaces: how Starlane sees, checks, tries, prepares, acts and
+// remembers. They are the whole primary navigation.
 export const V32_NAV_ITEMS: PrimaryNavItem[] = [
-  { href: "/bridge",       label: "The Bridge", icon: IconBridge },
-  { href: "/scan",         label: "Scan",       icon: IconScan },
-  { href: "/watch",        label: "Watch",      icon: IconWatch },
-  { href: "/missions",     label: "Missions",   icon: IconMissions },
-  { href: "/library",      label: "Library",    icon: IconLibrary },
-  { href: "/scan/history", label: "History",    icon: IconHistory },
+  { href: "/bridge",   label: "Bridge",   icon: IconBridge },
+  { href: "/scan",     label: "Scan",     icon: IconScan },
+  { href: "/watch",    label: "Watch",    icon: IconWatch },
+  { href: "/simulate", label: "Simulate", icon: IconSimulate },
+  { href: "/prepared", label: "Prepared", icon: IconPrepared, also: ["/decisions"] },
+  { href: "/missions", label: "Missions", icon: IconMissions },
+  { href: "/memory",   label: "Memory",   icon: IconMemory },
 ];
 
-// The rest of the Version 32 pages, first in the More flyout. They keep
-// their icons so the flyout reads like the rail.
+// The workspace: who works for you, where data comes from, the rules,
+// the record and your account.
 export const V32_WORKSPACE_NAV_ITEMS: PrimaryNavItem[] = [
-  { href: "/discover", label: "Discover", icon: IconDiscover },
-  { href: "/prepared", label: "Prepared", icon: IconPrepared },
-  { href: "/simulate", label: "Simulate", icon: IconSimulate },
-  { href: "/memory",   label: "Memory",   icon: IconMemory },
-  { href: "/sources",  label: "Sources",  icon: IconSources },
-  { href: "/agents",   label: "Agents",   icon: IconAgents },
-  { href: "/control",  label: "Control",  icon: IconControl },
-  { href: "/settings", label: "Settings", icon: IconSettings },
+  { href: "/agents",        label: "Agents",   icon: IconAgents },
+  { href: "/sources",       label: "Sources",  icon: IconSources },
+  { href: "/control",       label: "Control",  icon: IconControl },
+  { href: "/control/audit", label: "Audit",    icon: IconAudit },
+  { href: "/settings",      label: "Settings", icon: IconSettings },
 ];
+
+// "More": lenses into the business records behind decisions, plus Library.
+// Supporting pages below stay reachable from Ctrl+K but are off the rail.
+export const MORE_NAV_ITEMS: PrimaryNavItem[] = [
+  { href: "/collections",  label: "Collections",   icon: IconRupee },
+  { href: "/customers",    label: "Customers",     icon: IconUsers },
+  { href: "/bills",        label: "Invoices",      icon: IconInvoice },
+  { href: "/forecast",     label: "Cash forecast", icon: IconChart },
+  { href: "/inventory",    label: "Inventory",     icon: IconBox },
+  { href: "/reports",      label: "Reports",       icon: IconChart },
+  { href: "/library",      label: "Library",       icon: IconLibrary },
+];
+
+// Supporting pages that are off the rail but still reachable from Ctrl+K and
+// from the pages that link to them.
+export const OTHER_PAGES: { href: string; label: string }[] = [
+  { href: "/intelligence", label: "Intelligence" },
+  { href: "/suppliers",    label: "Suppliers" },
+  { href: "/invoice/new",  label: "New invoice" },
+  { href: "/billing",      label: "Billing" },
+];
+
+/** Is `href` the active nav item for `pathname`? The most specific item wins,
+ *  so /control/audit lights Audit, not Control, and /scan/history lights History. */
+export function activeHref(pathname: string, items: { href: string; also?: string[] }[]): string | null {
+  let best: string | null = null;
+  let bestLen = -1;
+  for (const it of items) {
+    for (const h of [it.href, ...(it.also || [])]) {
+      if ((pathname === h || pathname.startsWith(h + "/")) && h.length > bestLen) {
+        best = it.href;
+        bestLen = h.length;
+      }
+    }
+  }
+  return best;
+}

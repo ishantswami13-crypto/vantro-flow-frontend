@@ -1,17 +1,20 @@
 "use client";
 
 // MISSIONS: everything Starlane is handling, in one list. A mission is
-// either a decision you told Starlane to handle or a workflow you deployed.
-// Its state and outcome come from the backend (GET /api/os/missions), which
-// derives them from the decision, its contract and its action runs, or from
-// the workflow's runs and items. "Steps ran" is never shown as "it worked":
-// the outcome is only verified from the ledger.
+// either a decision you told Starlane to handle, a workflow you deployed or
+// a collections mission. Its state and outcome come from the backend
+// (GET /api/os/missions), which derives them from the decision, its contract
+// and its action runs, or from the workflow's runs and items. "Steps ran" is
+// never shown as "it worked": the outcome is only verified from the ledger.
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { Mission, MissionState, MISSION_STATE_LABEL, MISSION_OUTCOME_LABEL } from "@/lib/os";
-import { V, SkeletonRows, EmptyLine, ErrorBanner, ago } from "@/components/v32/ui";
-import { errorText } from "./shared";
+import { Mission, MissionState, MISSION_STATE_LABEL } from "@/lib/os";
+import { StatusChip } from "@/components/ui/Badge";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Chevron } from "@/components/v32/ui";
+import { formatRelative, formatDateTime } from "@/lib/format";
+import { cleanTitle, humanDates, humaneError, missionTone, outcomeColor, Meter, OUTCOME_SHORT, NETWORK_ERROR } from "./missions/ui";
 
 export type MissionFilter = "active" | "at_risk" | "completed";
 const FILTERS: { key: MissionFilter; label: string; states: MissionState[] }[] = [
@@ -39,94 +42,159 @@ export function missionCount(all: Mission[], k: MissionFilter): number {
   return all.filter((m) => f.states.includes(m.state)).length;
 }
 
-// Status pill colours (handoff §5): outlined, 11px, radius 20.
-function stateColor(s: MissionState): string {
-  if (s === "COMPLETED") return V.positive;
-  if (s === "BLOCKED" || s === "FAILED") return V.critical;
-  if (s === "WAITING_FOR_APPROVAL" || s === "WAITING_FOR_INFORMATION") return V.warning;
-  if (s === "RUNNING" || s === "VERIFYING") return V.accent;
-  return V.secondary;
-}
+const NEEDS_PERSON = new Set<MissionState>(["WAITING_FOR_APPROVAL", "WAITING_FOR_INFORMATION", "BLOCKED"]);
 
-function outcomeColor(o: string): string {
-  if (o === "VERIFIED_SUCCESS") return V.positive;
-  if (o === "VERIFIED_FAILURE") return V.critical;
-  if (o === "OUTCOME_UNKNOWN") return V.warning;
-  return V.tertiary;
-}
-
-/** Mission cards for one subnav tab. The list is loaded by the page. */
-export function MissionsList({ all, filter, loading, error, agentNames }: { all: Mission[]; filter: MissionFilter; loading: boolean; error: unknown; agentNames?: Record<string, string> }) {
-  const f = FILTERS.find((x) => x.key === filter)!;
-  const list = all.filter((m) => f.states.includes(m.state));
-
-  if (loading) return <SkeletonRows rows={3} />;
-  if (error) return <ErrorBanner>Missions could not be loaded: {errorText(error)} Nothing has been changed.</ErrorBanner>;
-  if (all.length === 0) {
-    return (
-      <EmptyLine
-        title="Nothing is being handled yet."
-        body={<>Open a decision in <Link className="underline" href="/prepared">Prepared</Link> and choose Handle it, or deploy a proposed workflow. Starlane runs it in shadow mode first.</>}
-      />
-    );
-  }
-  if (list.length === 0) return <EmptyLine title={filter === "at_risk" ? "No mission is at risk." : filter === "completed" ? "No mission has finished yet." : "No active mission."} />;
-  return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-      {list.map((m) => <MissionCard key={m.id} m={m} agentNames={agentNames} />)}
-    </div>
-  );
-}
+/** The "what is happening now" line: the state's verb, then the backend's reason. */
+const NOW_PREFIX: Partial<Record<MissionState, string>> = {
+  BLOCKED: "Blocked",
+  WAITING_FOR_APPROVAL: "Waiting on you",
+  WAITING_FOR_INFORMATION: "Needs information",
+  RUNNING: "Now",
+  VERIFYING: "Checking",
+  PLANNING: "Next",
+  FAILED: "Failed",
+};
 
 // decision_action_runs statuses that count as a finished step (060_decision_core.sql).
 const STEP_DONE = new Set(["SUCCEEDED", "SHADOWED", "PREPARED"]);
 
-function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string, string> }) {
-  const tools = missionTools(m);
-  const total = m.steps.length;
-  const done = m.steps.filter((s) => STEP_DONE.has((s.status || "").toUpperCase())).length;
-  const pct = m.state === "COMPLETED" ? 100 : total ? Math.round((done / total) * 100) : 0;
-  const blockers = m.steps.filter((s) => s.error).length + (m.state === "BLOCKED" ? 1 : 0);
-  const color = stateColor(m.state);
-  const body = (
+// Mission, status, progress, outcome, updated. One template for the header
+// and every row so the columns share their alignment lines.
+const COLS = "minmax(0,1fr) 168px 132px 164px 84px";
+
+/** Mission rows for one subnav tab. The list is loaded by the page. */
+export function MissionsList({ all, filter, loading, error, agentNames, onRetry, onOpenWorkflows }: {
+  all: Mission[]; filter: MissionFilter; loading: boolean; error: unknown; agentNames?: Record<string, string>;
+  onRetry?: () => void; onOpenWorkflows?: () => void;
+}) {
+  const f = FILTERS.find((x) => x.key === filter)!;
+  // What needs a person comes first; otherwise the backend's order is kept.
+  const list = all.filter((m) => f.states.includes(m.state))
+    .map((m, i) => ({ m, i }))
+    .sort((x, y) => (NEEDS_PERSON.has(y.m.state) ? 1 : 0) - (NEEDS_PERSON.has(x.m.state) ? 1 : 0) || x.i - y.i)
+    .map((x) => x.m);
+
+  if (loading) return <MissionsSkeleton />;
+  if (error) {
+    const msg = humaneError(error, NETWORK_ERROR);
+    return <ErrorState title="Missions didn't load" message={`${msg} Nothing has been changed.`} onRetry={onRetry} />;
+  }
+  if (all.length === 0) {
+    return (
+      <p className="wk-empty">
+        Nothing is being handled yet. Start a collections mission, or open a decision in <Link className="underline" href="/prepared">Prepared</Link> and choose Handle it.
+      </p>
+    );
+  }
+  if (list.length === 0) {
+    return (
+      <p className="wk-empty">
+        {filter === "at_risk" ? "No mission is at risk. Nothing is blocked or waiting on you." : filter === "completed" ? "No mission has finished yet. Finished missions show here with their verified outcome." : "No mission is active."}
+      </p>
+    );
+  }
+  return (
+    <div className="wk-list" role="table" aria-label="Missions">
+      <div className="wk-head" role="row" style={{ gridTemplateColumns: COLS }}>
+        <span role="columnheader">Mission</span>
+        <span role="columnheader">Status</span>
+        <span role="columnheader">Progress</span>
+        <span role="columnheader">Outcome</span>
+        <span role="columnheader" style={{ textAlign: "right" }}>Updated</span>
+      </div>
+      {list.map((m) => <MissionRow key={m.id} m={m} agentNames={agentNames} onOpenWorkflows={onOpenWorkflows} />)}
+    </div>
+  );
+}
+
+/** Progress from what the backend reports: steps that ran for a decision,
+ *  items waiting for a workflow. Collections progress lives on the mission
+ *  page (measured from the books), so the list says nothing it can't show. */
+function progressOf(m: Mission): { text: string; ratio: number | null; tone: "critical" | null; title?: string } | null {
+  if (m.source === "DECISION" && m.steps.length) {
+    const total = m.steps.length;
+    const done = m.steps.filter((s) => STEP_DONE.has((s.status || "").toUpperCase())).length;
+    const failedAt = m.steps.findIndex((s) => (s.status || "").toUpperCase() === "FAILED");
+    const tools = missionTools(m);
+    const title = tools.length ? `Tools: ${tools.join(", ")}` : undefined;
+    if (failedAt >= 0) return { text: `Step ${failedAt + 1} of ${total} failed`, ratio: done / total, tone: "critical", title };
+    return { text: `${done} of ${total} steps done`, ratio: done / total, tone: null, title };
+  }
+  const waiting = m.counts?.awaitingApproval;
+  if (m.source === "WORKFLOW" && waiting != null) return { text: waiting ? `${waiting} waiting for you` : "Nothing waiting", ratio: null, tone: null };
+  return null;
+}
+
+function MissionRow({ m, agentNames, onOpenWorkflows }: { m: Mission; agentNames?: Record<string, string>; onOpenWorkflows?: () => void }) {
+  const mode = m.mode === "SHADOW" ? "Shadow mode" : m.mode === "WITH_APPROVAL" ? "With your approval" : m.mode ? "Live" : null;
+  const source = m.source === "DECISION" ? "Decision" : m.source === "COLLECTION" ? "Collections" : "Workflow";
+  const meta = [source, m.assigned ? agentLabel(m.assigned.agent, agentNames) : null, mode].filter(Boolean) as string[];
+  const outcome = m.outcome.status;
+  const outcomeExtra = m.outcome.met != null && m.outcome.notMet != null && (m.outcome.met + m.outcome.notMet) > 0
+    ? `${m.outcome.met} of ${m.outcome.met + m.outcome.notMet} paid after`
+    : null;
+  const p = progressOf(m);
+  const reason = m.stateReason || m.objective;
+  const prefix = m.stateReason ? NOW_PREFIX[m.state] : undefined;
+  const attn = NEEDS_PERSON.has(m.state);
+
+  const inner = (
     <>
-      <div>
-        <span className="inline-block" style={{ fontSize: 11, letterSpacing: 0, color, border: `1px solid ${color}`, borderRadius: 20, padding: "3px 10px", whiteSpace: "nowrap", marginBottom: 10 }}>
-          {MISSION_STATE_LABEL[m.state]}
-        </span>
-        <div style={{ fontFamily: V.serif, fontSize: 18, lineHeight: 1.35, color: V.ink, marginBottom: 4 }}>{m.title}</div>
-        {m.objective && <div style={{ fontSize: 12.5, color: V.secondary }}>{m.source === "DECISION" ? "Chosen option: " : ""}{m.objective}</div>}
+      <div className="min-w-0" role="cell">
+        <div className="wk-title md:truncate">{cleanTitle(m.title)}</div>
+        {reason && (
+          <div className={`wk-sub line-clamp-2${attn ? " mis-now-attn" : ""}`} title={humanDates(reason)}>
+            {prefix && <span className={m.state === "BLOCKED" || m.state === "FAILED" ? "mis-now mis-now-critical" : "mis-now"}>{prefix}</span>}
+            {humanDates(reason)}
+          </div>
+        )}
+        <div className="wk-meta" style={{ marginTop: 4 }}>{meta.join(" · ")}</div>
       </div>
-      {(m.stateReason || m.outcome.detail) && (
-        <div style={{ fontSize: 13, color: V.body, lineHeight: 1.55 }}>{m.stateReason || m.outcome.detail}</div>
-      )}
-      {m.assigned && (
-        <div style={{ fontSize: 12, color: V.secondary, lineHeight: 1.5 }}>
-          Agent: <span style={{ color: V.body }}>{agentLabel(m.assigned.agent, agentNames)}</span>
-          {tools.length ? <> · Tools: <span style={{ color: V.body }}>{tools.join(", ")}</span></> : null}
-          {" "}· You approve
+      <div className="wk-cells md:contents">
+        <div role="cell"><StatusChip tone={missionTone(m.state)}>{MISSION_STATE_LABEL[m.state]}</StatusChip></div>
+        <div role="cell" className="min-w-0" title={p?.title}>
+          {p ? (
+            <>
+              <div className="num-quiet" style={{ fontSize: 12.5, color: p.tone ? "var(--critical)" : "var(--ink)" }}>{p.text}</div>
+              {p.ratio != null && <div className="hidden md:block" style={{ marginTop: 5, maxWidth: 96 }}><Meter ratio={p.ratio} tone={p.tone ? "critical" : "ink"} label={p.text} /></div>}
+            </>
+          ) : <span className="hidden md:inline" style={{ fontSize: 12, color: "var(--ink-3)" }}>—</span>}
         </div>
-      )}
-      <div>
-        <div style={{ height: 5, background: "rgba(25,25,23,0.08)", borderRadius: 3, overflow: "hidden" }}>
-          <div style={{ width: `${pct}%`, height: "100%", background: V.ink }} />
+        <div role="cell" className="min-w-0">
+          <div style={{ fontSize: 12.5, color: outcome === "PENDING" ? "var(--ink-3)" : outcomeColor(outcome) }}>{OUTCOME_SHORT[outcome]}</div>
+          {outcomeExtra && <div className="tabular-nums hidden md:block" style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>{outcomeExtra}</div>}
         </div>
-        <div className="flex items-center justify-between" style={{ marginTop: 6, fontSize: 11.5, color: V.tertiary }}>
-          <span>{total ? `${done} of ${total} steps` : "No step has run yet"}</span>
-          <span style={{ color: outcomeColor(m.outcome.status) }}>{MISSION_OUTCOME_LABEL[m.outcome.status]}</span>
+        <div role="cell" className="ml-auto md:ml-0 md:text-right" style={{ fontSize: 12, color: "var(--ink-3)" }}>
+          <span className="inline-flex items-center" style={{ gap: 6 }} title={m.updatedAt ? formatDateTime(m.updatedAt) : undefined}>
+            {m.updatedAt ? formatRelative(m.updatedAt) : "Not yet"}
+            <Chevron size={13} />
+          </span>
         </div>
-      </div>
-      <div className="flex items-center justify-between" style={{ marginTop: "auto", fontSize: 12, color: V.secondary }}>
-        <span>{blockers > 0 ? `${blockers} blocker${blockers === 1 ? "" : "s"}` : m.source === "DECISION" ? "From a decision" : m.source === "COLLECTION" ? "Collection mission" : "Deployed workflow"}</span>
-        <span style={{ color: V.tertiary }}>
-          {m.mode === "SHADOW" ? "Shadow" : m.mode === "WITH_APPROVAL" ? "Waits for approval" : m.mode ? "Live" : ""}
-          {m.updatedAt ? `${m.mode ? " · " : ""}${ago(m.updatedAt)}` : ""}
-        </span>
       </div>
     </>
   );
-  const cls = "card-in hover-lift flex flex-col";
-  const style: React.CSSProperties = { boxSizing: "border-box", background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 8, padding: 20, gap: 12, minHeight: 200 };
-  if (m.source !== "WORKFLOW") return <Link href={m.href} className={cls} style={style}>{body}</Link>;
-  return <div className={cls} style={style}>{body}</div>;
+  const style: React.CSSProperties = { gridTemplateColumns: COLS };
+  return m.source === "WORKFLOW"
+    ? <button type="button" role="row" onClick={onOpenWorkflows} className={`wk-row mis-row${attn ? " wk-attn" : ""}`} style={style} aria-label={`${cleanTitle(m.title)}: open in Workflows`}>{inner}</button>
+    : <Link href={m.href} role="row" className={`wk-row mis-row${attn ? " wk-attn" : ""}`} style={style}>{inner}</Link>;
+}
+
+function MissionsSkeleton() {
+  return (
+    <div className="wk-list" role="status" aria-busy="true" aria-label="Loading missions">
+      <div className="wk-head" style={{ gridTemplateColumns: COLS }}><span>Mission</span><span>Status</span><span>Progress</span><span>Outcome</span><span /></div>
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="wk-row" style={{ gridTemplateColumns: COLS }}>
+          <div style={{ display: "grid", gap: 7 }}>
+            <div className="skeleton" style={{ height: 11, width: "46%" }} />
+            <div className="skeleton" style={{ height: 9, width: "64%" }} />
+          </div>
+          <div className="skeleton hidden md:block" style={{ height: 9, width: 84 }} />
+          <div className="skeleton hidden md:block" style={{ height: 9, width: 64 }} />
+          <div className="skeleton hidden md:block" style={{ height: 9, width: 96 }} />
+          <div />
+        </div>
+      ))}
+    </div>
+  );
 }

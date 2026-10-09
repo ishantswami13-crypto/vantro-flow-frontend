@@ -8,7 +8,6 @@
     "start": "next start",
     "lint": "eslint app components lib --ext .ts,.tsx",
     "security:secrets": "node scripts/frontend-env-guard.js",
-    "atlas:check": "node scripts/atlas-pack-registry-check.js",
     "test:auth-mode": "node scripts/auth-mode-test.js",
     "security:auth-usage": "node scripts/check-auth-usage.js",
     "typecheck": "tsc --noEmit",
@@ -22,7 +21,6 @@
     "posthog-js": "^1.407.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-hook-form": "^7.52.0",
     "react-icons": "^5.2.1",
     "react-markdown": "^10.1.0",
     "recharts": "^2.12.7",
@@ -32,7 +30,7 @@
   "overrides": {
     "dompurify": "^3.4.12",
     "postcss": "^8.5.23",
-    "sharp": "^0.35.0"
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",

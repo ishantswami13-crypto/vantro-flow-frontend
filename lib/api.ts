@@ -185,6 +185,8 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
       const errorObj = new Error(`${errorMsg} (Error ID: ${requestId})`);
       (errorObj as any).requestId = requestId;
       (errorObj as any).status = res.status;
+      (errorObj as any).code = data?.code;
+      (errorObj as any).serverMessage = data?.error;
 
       if (typeof window !== 'undefined') {
         authenticatedFetch('/api/client-errors', {
@@ -212,15 +214,6 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
   }
 }
 
-function stripDataUrl(value: string): string {
-  const [, base64] = value.split(',');
-  return base64 || value;
-}
-
-function ensureDataUrl(value: string, mimeType: string): string {
-  return value.startsWith('data:') ? value : `data:${mimeType};base64,${value}`;
-}
-
 async function signInCall<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: body === undefined ? 'GET' : 'POST',
@@ -243,8 +236,11 @@ export const api = {
   auth: {
     signup: (body: { email: string; phone: string; business_name: string; password: string }) =>
       request<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
+    // signInCall, not request(): a wrong password is a 401, and request()
+    // treats every 401 as an expired session and reloads /login, which wiped
+    // the form and never showed "Invalid email or password".
     login: (body: { email: string; password: string }) =>
-      request<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+      signInCall<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/login', body),
     // csrf_token is a secondary self-heal path (see the X-CSRF-Token
     // response-header mirror in request() above, which fires on every
     // authenticated call, not just this one) — kept here too since this
@@ -267,25 +263,6 @@ export const api = {
       signInCall<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/web/exchange', { id, code }),
   },
 
-  // ─── Dashboard ──────────────────────────────────────────
-  metrics: (userId: string) => request<{ metrics: Metrics }>(`/api/metrics/${userId}`),
-  metricsTrend: (userId: string) => request<{ days: { date: string; sales: number; purchases: number; cashIn: number; cashOut: number }[] }>(`/api/metrics/${userId}/trend`),
-  analytics: (userId: string) => request<{ analytics: Analytics }>(`/api/analytics/${userId}`),
-  controlRoom: () => request<{
-    success: boolean;
-    business: any;
-    metrics: {
-      total_outstanding: number;
-      total_payable: number;
-      ledger_balance: number;
-      inventory_value: number;
-    };
-    critical_actions: any[];
-    recent_activity: any[];
-    recent_notifications: any[];
-    collections_summary: any;
-    inventory_summary: any;
-  }>('/api/business/control-room'),
 
   // ─── Invoices / Collections ─────────────────────────────
   invoices: {
@@ -337,19 +314,6 @@ export const api = {
       request<{ success: boolean; timeline: any[] }>(`/api/collections/timeline/${userId}`),
   },
 
-  // ─── Scanner ────────────────────────────────────────────
-  scanner: {
-    extract: (imageBase64: string, mimeType = 'image/jpeg') =>
-      request<{ success?: boolean; extracted?: ExtractedInvoice; data?: ExtractedInvoice; error?: string }>('/api/scan-document', {
-        method: 'POST',
-        body: JSON.stringify({
-          image: stripDataUrl(imageBase64),
-          image_base64: ensureDataUrl(imageBase64, mimeType),
-          mimeType,
-          scan_type: 'invoice',
-        }),
-      }, 60_000),
-  },
 
   // ─── AI Chat ─────────────────────────────────────────────
   aiChat: (userId: string, messages: ChatMessage[], businessName: string) =>
@@ -358,22 +322,13 @@ export const api = {
       body: JSON.stringify({ user_id: userId, messages, business_name: businessName }),
     }),
 
-  // ─── WhatsApp ────────────────────────────────────────────
-  generateMessage: (body: { customer_name: string; amount: number; days_overdue: number }) =>
-    request<{ message: string }>('/api/generate-message', { method: 'POST', body: JSON.stringify(body) }),
 
   // ─── Calls ───────────────────────────────────────────────
   calls: {
-    list: (userId: string) => request<{ calls: CallLog[] }>(`/api/calls/${userId}`),
     log: (body: object) => request<{ log: CallLog }>('/api/log-call', { method: 'POST', body: JSON.stringify(body) }),
   },
 
-  // ─── ML Briefing ──────────────────────────────────────────
-  briefing: () => request<{ success: boolean; briefing: string }>('/api/ml/briefing', { method: 'POST' }),
 
-  // ─── Owner Briefing Agent (Phase 2C.8) ───────────────────
-  ownerBriefingPreview: () =>
-    request<OwnerBriefingResponse>('/api/agents/core.owner_briefing/preview'),
 
   // ─── Business State (canonical read-model, see lib/domain/intelligence/businessState.js) ───
   businessState: () => request<BusinessStateResponse>('/api/business-state'),
@@ -455,7 +410,9 @@ export const api = {
     // on the backend): baseline vs. hypothetical-scenario vs. delta, over the
     // tenant's own real invoices. Never computed client-side.
     scenarioInvoices: (userId: string) =>
-      request<{ invoices: ScenarioInvoice[] }>(`/api/intelligence/scenarios/${encodeURIComponent(userId)}/invoices`),
+      request<{ invoices: ScenarioInvoice[] }>(`/api/intelligence/scenarios/${encodeURIComponent(userId)}/invoices`)
+        // Postgres numeric arrives as a string; the page formats numbers.
+        .then((r) => ({ ...r, invoices: (r.invoices || []).map((i) => ({ ...i, invoice_amount: Number(i.invoice_amount) })) })),
     simulateScenario: (
       userId: string,
       params: { targetInvoiceId: string; daysEarlier?: number; remainsUnpaid?: boolean }
@@ -505,30 +462,8 @@ export const api = {
   // ─── User Features ────────────────────────────────────────
   userFeatures: () => request<{ success: boolean; features: any }>('/api/user/features'),
 
-  // ─── Khata ────────────────────────────────────────────────
-  khata: {
-    list: () => request<{ success: boolean; customers: any[] }>('/api/khata'),
-    get: (name: string) => request<{ success: boolean; entries: any[]; summary: any }>(`/api/khata/${encodeURIComponent(name)}`),
-    createEntry: (body: any) => request<{ success: boolean; entry: any }>('/api/khata/entry', { method: 'POST', body: JSON.stringify(body) }),
-    deleteEntry: (id: string | number) => request<{ success: boolean }>(`/api/khata/entry/${id}`, { method: 'DELETE' }),
-  },
 
-  // ─── Attendance ──────────────────────────────────────────
-  attendance: {
-    listWorkers: () => request<{ success: boolean; workers: any[] }>('/api/workers'),
-    list: (month?: string | number, year?: string | number) => {
-      let path = '/api/attendance';
-      if (month && year) path += `?month=${month}&year=${year}`;
-      else if (month) path += `?month=${month}`;
-      return request<{ success: boolean; attendance: any[] }>(path);
-    },
-    save: (body: any) => request<{ success: boolean; record: any }>('/api/attendance', { method: 'POST', body: JSON.stringify(body) }),
-    salary: (month: string | number, year: string | number) => request<{ success: boolean; salary: any[] }>(`/api/attendance/salary?month=${month}&year=${year}`),
-  },
 
-  // ─── Priority ─────────────────────────────────────────────
-  priority: (userId: string) =>
-    request<{ priority_list: Invoice[] }>(`/api/calculate-priority/${userId}`, { method: 'POST' }),
 
   // ─── Cash Forecast ────────────────────────────────────────
   forecast: (userId: string, params: { current_cash?: number; daily_expenses?: number; days?: number }) => {
@@ -543,16 +478,7 @@ export const api = {
   // ─── Inventory ───────────────────────────────────────────
   inventory: (userId: string) => request<{ products: Product[]; movements: Movement[]; summary: InventorySummary }>(`/api/inventory/${userId}`),
 
-  // ─── CRM / Prospects ─────────────────────────────────────
-  prospects: {
-    list: (userId: string) => request<{ prospects: Prospect[] }>(`/api/prospects/${userId}`),
-    create: (body: object) => request<{ prospect: Prospect }>('/api/prospects', { method: 'POST', body: JSON.stringify(body) }),
-    update: (id: string, body: object) =>
-      request<{ prospect: Prospect }>(`/api/prospects/${id}`, { method: 'POST', body: JSON.stringify(body) }),
-  },
 
-  // ─── AI Insights ─────────────────────────────────────────
-  aiInsights: (userId: string) => request<{ insights: Insight[]; stats: object }>(`/api/ai-insights/${userId}`),
 
   // ─── Dunning ─────────────────────────────────────────────
   dunning: {
@@ -579,55 +505,22 @@ export const api = {
       request<{ success: boolean; message: string }>('/api/auth/change-password', { method: 'POST', body: JSON.stringify({ current_password, new_password }) }),
     update: (body: Partial<UserSettings>) =>
       request<{ settings: UserSettings }>('/api/settings', { method: 'PATCH', body: JSON.stringify(body) }),
-    saveWhatsApp: (body: { provider: string; interakt_api_key?: string; wati_api_url?: string; wati_token?: string }) =>
-      request<{ success: boolean; message: string }>('/api/settings/whatsapp', { method: 'POST', body: JSON.stringify(body) }),
     testWhatsApp: () =>
       request<{ success: boolean; provider: string; message: string }>('/api/settings/whatsapp/test', { method: 'POST' }),
-    saveRazorpay: (body: { key_id: string; key_secret: string }) =>
-      request<{ success: boolean; valid: boolean; message: string }>('/api/settings/razorpay', { method: 'POST', body: JSON.stringify(body) }),
     toggleAutomation: (enabled: boolean) =>
       request<{ success: boolean; automation_enabled: boolean }>('/api/settings/automation/toggle', { method: 'POST', body: JSON.stringify({ enabled }) }),
-    saveTwilio: (body: { account_sid: string; auth_token: string; phone_number: string }) =>
-      request<{ success: boolean; message: string }>('/api/settings/twilio', { method: 'POST', body: JSON.stringify(body) }),
   },
 
-  // ─── Workers ─────────────────────────────────────────────
-  workers: {
-    list: () => request<{ success: boolean; workers: any[] }>('/api/workers'),
-    create: (body: any) => request<{ success: boolean; worker: any }>('/api/workers', { method: 'POST', body: JSON.stringify(body) }),
-    update: (id: string | number, body: any) => request<{ success: boolean; worker: any }>(`/api/workers/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
-    delete: (id: string | number) => request<{ success: boolean }>(`/api/workers/${id}`, { method: 'DELETE' }),
-  },
 
-  // ─── Voice ───────────────────────────────────────────────
-  voice: {
-    getWebhookUrl: () => request<{ success: boolean; url: string; webhook_url?: string; twilio_account_sid?: string; twilio_phone_number?: string }>('/api/voice/webhook-url'),
-  },
 
   // ─── Sales ──────────────────────────────────────────────
   sales: {
     list: () => request<{ success: boolean; sales: any[] }>('/api/sales'),
-    create: (body: any) => request<{ success: boolean; sale: any; receivable: any }>('/api/sales', { method: 'POST', body: JSON.stringify(body) }),
-    update: (id: string | number, body: any) => request<{ success: boolean; sale: any }>('/api/sales/' + id, { method: 'PATCH', body: JSON.stringify(body) }),
-    delete: (id: string | number) => request<{ success: boolean }>('/api/sales/' + id, { method: 'DELETE' }),
-    scan: (imageBase64: string, mimeType = 'image/jpeg') =>
-      request<{ success: boolean; data: any }>('/api/sales/scan', {
-        method: 'POST',
-        body: JSON.stringify({ image: stripDataUrl(imageBase64), mimeType }),
-      }, 60_000),
   },
 
   // ─── Purchases ──────────────────────────────────────────
   purchases: {
     list: () => request<{ success: boolean; purchases: any[] }>('/api/purchases'),
-    create: (body: any) => request<{ success: boolean; purchase: any; supplier: any; inventory: any }>('/api/purchases', { method: 'POST', body: JSON.stringify(body) }),
-    update: (id: string | number, body: any) => request<{ success: boolean; purchase: any }>('/api/purchases/' + id, { method: 'PATCH', body: JSON.stringify(body) }),
-    delete: (id: string | number) => request<{ success: boolean }>('/api/purchases/' + id, { method: 'DELETE' }),
-    scan: (imageBase64: string, mimeType = 'image/jpeg') =>
-      request<{ success: boolean; data: any }>('/api/purchases/scan', {
-        method: 'POST',
-        body: JSON.stringify({ image: stripDataUrl(imageBase64), mimeType }),
-      }, 60_000),
   },
 
   // ─── Suppliers ──────────────────────────────────────────
@@ -635,27 +528,6 @@ export const api = {
     list: (userId: string) => request<{ success: boolean; suppliers: any[] }>(`/api/suppliers/${userId}`),
   },
 
-  // ─── Bank Ledger / Transactions ──────────────────────────
-  transactions: {
-    list: (userId: string) =>
-      request<{ transactions: Transaction[]; summary: LedgerSummary }>(`/api/transactions/${userId}`),
-    create: (body: {
-      user_id: string; type: string; category: string; amount: string;
-      party_name?: string; description?: string; transaction_date: string;
-      payment_method?: string; reference?: string;
-    }) => request<{ transaction: Transaction }>('/api/transactions', { method: 'POST', body: JSON.stringify(body) }),
-    scan: (imageBase64: string, mimeType = 'image/jpeg') =>
-      request<{ success?: boolean; data?: ExtractedTransaction; extracted?: ExtractedTransaction; error?: string }>('/api/transactions/scan', {
-        method: 'POST',
-        body: JSON.stringify({
-          image: stripDataUrl(imageBase64),
-          image_base64: ensureDataUrl(imageBase64, mimeType),
-          mimeType,
-          scan_type: 'transaction',
-        }),
-      }, 60_000),
-    migrate: () => request<{ success: boolean }>('/api/transactions/migrate', { method: 'POST' }),
-  },
 
   // ─── Data connections (Tally, file upload, etc.) ────────
   connections: {
@@ -718,11 +590,6 @@ export const api = {
     complete: () => request<{ success: boolean }>('/api/onboarding/complete', { method: 'POST' }),
   },
 
-  // Real-world event ingestion sources (USGS, FX, ...) — tenant-agnostic
-  // registry health, not per-user data. See lib/world/freshnessCheck.js.
-  world: {
-    health: () => request<WorldHealthResponse>('/api/world/health'),
-  },
 };
 
 // Bridge connectors (Tally) also report pairing / connected / syncing /
@@ -758,27 +625,6 @@ export interface AccessApplicationDetail extends AccessApplicationRow {
   problem: string; desired_outcome: string; notes: string | null;
   events: Array<{ from_status: string | null; to_status: string; actor: string; note: string | null; created_at: string }>;
   entitlements: Array<{ id: string; expires_at: string; revoked_at: string | null; created_by: string; created_at: string; downloads: number; last_download_at: string | null }>;
-}
-
-export interface WorldSourceHealth {
-  source_id: string;
-  provider: string;
-  dataset: string;
-  is_internal: boolean;
-  status: 'FRESH' | 'STALE' | 'NEVER_SUCCEEDED' | string;
-  last_success: string | null;
-  last_failure: string | null;
-  last_failure_reason: string | null;
-  staleness_hours: number | null;
-  cadence_hours: number;
-  threshold_hours: number;
-}
-
-export interface WorldHealthResponse {
-  success: boolean;
-  sources: WorldSourceHealth[];
-  stale_count: number;
-  timestamp: string;
 }
 
 export interface DataConnection {
@@ -857,10 +703,13 @@ export function clearAuth() {
   clearClientCookie(SESSION_COOKIE);
   // The HttpOnly cookie can only be cleared server-side, so this call is what
   // actually ends a cookie-mode session — not best-effort cleanup.
+  // keepalive: sign-out navigates away at once, which aborted this request
+  // before the server could clear the cookie, leaving the session usable.
   fetch(`${BASE}/api/auth/logout`, {
     method: 'POST',
     credentials: 'include',
     headers,
+    keepalive: true,
   }).catch(() => {});
 }
 
@@ -914,6 +763,7 @@ export interface User {
 }
 
 export interface UserSettings extends User {
+  owner_name?: string;
   address?: string;
   logo_url?: string;
   whatsapp_phone?: string;
@@ -985,17 +835,6 @@ export interface BusinessProfile {
   invoice_prefix?: string;
 }
 
-export interface Metrics {
-  total_outstanding: number;
-  total_payable?: number;
-  total_paid: number;
-  pending_invoices: number;
-  total_customers: number;
-  total_suppliers?: number;
-  calls_made: number;
-  avg_recovery_rate: number;
-}
-
 export interface Analytics {
   total_outstanding: number;
   total_recovered: number;
@@ -1047,16 +886,6 @@ export interface InventorySummary {
   out_of_stock_count: number;
 }
 
-export interface Prospect {
-  id: string;
-  name: string;
-  phone?: string;
-  business_type?: string;
-  status: string;
-  amount_stuck?: number;
-  location?: string;
-}
-
 export interface Insight {
   title: string;
   insight: string;
@@ -1097,6 +926,8 @@ export interface ForecastResponse {
   cashStart: number;
   burnRate: number;
   avgDailyCollections: number;
+  /** bank credits, paid invoices, or an assumption when there is no history yet */
+  collectionsBasis?: "bank" | "history" | "assumed";
   totalOutstanding: number;
   scenarios: Record<string, { curve: { day: number; cash: number }[]; endCash: number; runwayDays: number }>;
 }
@@ -1119,32 +950,6 @@ export interface ForecastV2Response {
   insufficientDataReason: string | null;
 }
 
-export interface ExtractedInvoice {
-  customer_name: string;
-  customer_phone?: string;
-  customer_gstin?: string;
-  supplier_name?: string;
-  seller_gstin?: string;
-  invoice_number?: string;
-  total_amount?: number;
-  invoice_amount?: number;
-  invoice_date?: string;
-  due_date?: string;
-  notes?: string;
-  items?: string | { description?: string; qty?: number; unit?: string; price?: number; amount?: number }[];
-}
-
-export interface ExtractedTransaction {
-  type?: 'in' | 'out';
-  category?: string;
-  amount?: number | string;
-  party_name?: string;
-  description?: string;
-  transaction_date?: string;
-  payment_method?: string;
-  reference?: string;
-}
-
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -1155,30 +960,6 @@ export interface WaLink {
   phone: string;
   message: string;
   url: string;
-}
-
-export interface Transaction {
-  id: string;
-  user_id: string;
-  type: 'in' | 'out';
-  category: string;
-  amount: number;
-  party_name?: string;
-  description?: string;
-  notes?: string;
-  transaction_date: string;
-  payment_method?: string;
-  reference?: string;
-  created_at?: string;
-}
-
-export interface LedgerSummary {
-  totalIn: number;
-  totalOut: number;
-  balance: number;
-  monthIn: number;
-  monthOut: number;
-  monthBalance: number;
 }
 
 // ─── RAG Evidence Contract Types (Phase 2C.12) ───────────────────────────────
@@ -1218,50 +999,6 @@ export interface AgentRecommendation {
   requires_human_approval: boolean;
   safe_to_auto_execute: false;
   risk_level: 'low' | 'medium' | 'high' | 'critical';
-}
-
-export interface OwnerBriefingEvidenceContract {
-  briefing_id: string;
-  generated_at: string;
-  agent: 'core.owner_briefing' | string;
-  tenant_id?: string;
-  user_id?: string;
-  summary: string;
-  claims: AgentClaim[];
-  recommendations: AgentRecommendation[];
-  evidence: EvidenceItem[];
-  confidence: number;
-  safe_to_show: boolean;
-  blocked_claim_count: number;
-  evidence_source_ids: string[];
-  audit_id?: string;
-  fallback_reason?: string;
-  contract_version?: string;
-}
-
-// ─── Owner Briefing Agent Types (Phase 2C.8) ─────────────────────────────────
-export interface OwnerBriefingAction {
-  action_id: string;
-  action_type: string;
-  title: string;
-  explanation: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  entity_type?: string;
-  entity_id?: string;
-  suggested_next_step: string;
-  approval_required: boolean;
-  safe_to_auto_execute: boolean;
-}
-
-export interface OwnerBriefingSection {
-  section_id: string;
-  title: string;
-  priority: string;
-  summary: string;
-  items: Record<string, unknown>[];
-  source_tables: string[];
-  confidence: number;
-  action_required: boolean;
 }
 
 // ─── Business State (canonical read-model) ───────────────────────────────
@@ -1604,27 +1341,6 @@ export interface CustomerPortfolioResponse {
   top5SharePct: number;
   concentrationRiskCount: number;
 }
-
-export interface OwnerBriefingResponse {
-  agent_id: string;
-  status: string;
-  user_id?: string;
-  generated_at?: string;
-  briefing_date?: string;
-  headline: string;
-  risk_summary: string;
-  cash_summary: string;
-  sections: OwnerBriefingSection[];
-  top_actions: OwnerBriefingAction[];
-  total_actions: number;
-  duration_ms: number;
-  audit_context: string;
-  data_quality_summary?: unknown;
-  cost_route_summary?: unknown;
-  policy_summary?: unknown;
-  evidence_contract?: OwnerBriefingEvidenceContract;
-}
-
 
 // ─── Supply Chain Intelligence types (mirrors lib/domain/intelligence/supplyChainOrchestrator.js + business_signals/ai_actions/predictions table shapes exactly — see server.js /api/intelligence/*) ───
 

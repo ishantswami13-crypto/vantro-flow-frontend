@@ -1,0 +1,221 @@
+/* Layout and table language for the More pages (collections, customers,
+   invoices, forecast, inventory, reports). Every colour reads a token from
+   app/tokens.css, so both themes follow automatically. */
+
+.page {
+  width: 100%;
+  max-width: 1180px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+/* Header to first section: 32px; every next section: 24px. */
+.page > :first-child + * { margin-top: 8px; }
+
+.stack { display: flex; flex-direction: column; gap: 12px; }
+
+/* Headline figures: open numbers on a hairline rule, never tiles. */
+.figures {
+  display: grid;
+  grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr));
+  align-items: end;
+}
+.figureCell { min-width: 0; padding: 2px 24px; border-left: 1px solid var(--line); }
+.figureCell:first-child { padding-left: 0; border-left: none; }
+.figureNote { font-size: 12px; color: var(--ink-3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.figures :global(.num) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The page's anchor figure: one step larger than the rest, never a wall. */
+.figureLead :global(.num) { font-size: 27px !important; line-height: 1.15 !important; letter-spacing: -0.03em !important; }
+/* Crore-scale values keep their lead weight without being cut off. */
+.figureLeadLong :global(.num) { font-size: 23px !important; line-height: 1.2 !important; letter-spacing: -0.03em !important; }
+@media (max-width: 1099px) {
+  .figureCell { padding: 2px 18px; }
+}
+@media (max-width: 767px) {
+  .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 20px; }
+  .figureCell, .figureCell:first-child { padding: 0 12px 0 0; border-left: none; }
+  .figures :global(.num) { font-size: 18px !important; }
+  .figureLead :global(.num), .figureLeadLong :global(.num) { font-size: 20px !important; }
+}
+
+/* Toolbar under the tabs: search on the left, quiet controls on the right. */
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.toolbarEnd { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Section: content on the shared canvas under a small tracked label. No
+   box, no fill: rows and hairlines carry the structure. */
+.panel { min-width: 0; }
+.panelHead {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 0 0 10px;
+}
+.panelHead > :first-child { flex: 1 1 220px; }
+.panelTitle {
+  margin: 0; font-size: 11px; font-weight: 600; line-height: 16px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-2);
+}
+.panelSub { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.5; }
+.panelBody { padding: 0; }
+
+/* Grid table: every row shares the header's column template; columns can
+   drop out below 1100px (md) or 768px (sm). */
+.table { width: 100%; }
+.row {
+  display: grid;
+  grid-template-columns: var(--cols);
+  align-items: center;
+  column-gap: 16px;
+  padding: 0;
+  min-height: 50px;
+  border-bottom: 1px solid var(--line);
+  transition: background-color 120ms var(--ease, ease), box-shadow 120ms var(--ease, ease);
+}
+/* Hover fills 10px past each edge so text stays on the page's alignment line. */
+.body .row:hover { background: var(--surface-2); box-shadow: -10px 0 0 var(--surface-2), 10px 0 0 var(--surface-2); }
+.clickable { cursor: pointer; }
+.head {
+  min-height: 32px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--line);
+}
+.head > * { white-space: nowrap; }
+.cell { min-width: 0; font-size: 13px; color: var(--body); }
+.right { text-align: right; justify-self: end; }
+.num { font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.head .cell, .head .num { font-family: var(--font-sans); font-size: 11px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-2); }
+.num button, .num a, .num [role="menu"] { font-family: var(--font-sans); letter-spacing: normal; }
+@media (max-width: 1099px) {
+  .row { grid-template-columns: var(--cols-md); }
+  .hideMd { display: none; }
+}
+@media (max-width: 767px) {
+  .row { grid-template-columns: var(--cols-sm); column-gap: 12px; min-height: 56px; }
+  .hideMd, .hideSm { display: none; }
+  .head { display: none; }
+}
+
+.name {
+  font-size: 13.5px; font-weight: 500; color: var(--ink); line-height: 1.35;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nameBtn { background: none; border: none; padding: 0; text-align: left; cursor: pointer; max-width: 100%; display: block; }
+.nameBtn:hover { text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+.sub {
+  display: flex; align-items: center; gap: 6px; min-width: 0;
+  font-size: 12px; color: var(--ink-3); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sub > span { overflow: hidden; text-overflow: ellipsis; }
+.amount { font-family: var(--font-mono); font-size: 13px; font-weight: 500; letter-spacing: -0.015em; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.muted { color: var(--ink-3); }
+/* A short list above a table ("Needs attention"): hairline rows on the canvas. */
+.attnRow { gap: 16px; padding: 10px 0; min-height: 52px; border-bottom: 1px solid var(--line); transition: background-color 120ms var(--ease, ease), box-shadow 120ms var(--ease, ease); }
+.attnRow:hover { background: var(--surface-2); box-shadow: -10px 0 0 var(--surface-2), 10px 0 0 var(--surface-2); }
+.actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+/* A row's own action, shown on hover or keyboard focus only (pointer
+   devices), so a long list doesn't repeat the same button on every line. */
+@media (hover: hover) and (pointer: fine) {
+  .hoverAction { opacity: 0; transition: opacity var(--dur-instant, 120ms) var(--ease, ease); }
+  .body .row:hover .hoverAction, .body .row:focus-within .hoverAction, .hoverAction[data-busy] { opacity: 1; }
+}
+/* Rows that need attention first: the 2px ink rule, no box. */
+.attnLead { box-shadow: inset 2px 0 0 var(--ink); padding-left: 12px; }
+.attnLink { display: flex; align-items: center; justify-content: space-between; color: inherit; text-decoration: none; cursor: pointer; width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid var(--line); font: inherit; }
+.attnLink:hover :global(.row-chevron) { transform: translateX(2px); }
+
+.sortBtn {
+  display: inline-flex; align-items: center; gap: 4px; background: none; border: none; padding: 0;
+  font: inherit; color: inherit; cursor: pointer;
+}
+.sortBtn:hover { color: var(--ink); }
+.sortBtn[aria-pressed="true"] { color: var(--ink-2); }
+
+/* Segmented control for ranges and views. */
+.segmented {
+  display: inline-flex; align-items: center; gap: 2px; padding: 2px;
+  border: 1px solid var(--line); border-radius: var(--radius-md); background: transparent;
+  max-width: 100%; overflow-x: auto; scrollbar-width: none;
+}
+.segmented::-webkit-scrollbar { display: none; }
+.segmented button {
+  height: 26px; padding: 0 10px; border: none; border-radius: 6px; background: none;
+  font-size: 12.5px; color: var(--ink-2); cursor: pointer; white-space: nowrap; font-family: inherit;
+  transition: background-color 120ms, color 120ms;
+}
+.segmented button:hover { color: var(--ink); }
+.segmented button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line-card); }
+
+/* Row menu (portalled). */
+.menu {
+  position: fixed; min-width: 196px; padding: 4px;
+  background: var(--elevated); border: 1px solid var(--line); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md); z-index: var(--z-palette);
+}
+.menuItem {
+  display: flex; align-items: center; gap: 8px; width: 100%; height: 34px; padding: 0 10px;
+  border: none; background: none; border-radius: 6px; text-align: left;
+  font-size: 13px; color: var(--body); cursor: pointer; text-decoration: none; font-family: inherit;
+}
+.menuItem:hover, .menuItem:focus-visible { background: var(--hover); color: var(--ink); outline: none; }
+.menuItem[data-tone="critical"] { color: var(--critical); }
+.menuSep { height: 1px; background: var(--line); margin: 4px 2px; }
+@media (min-width: 768px) { .smOnly { display: none !important; } }
+@media (max-width: 767px) { .mdUp { display: none !important; } }
+
+/* Forms inside modals. */
+.form { display: flex; flex-direction: column; gap: 14px; }
+.formGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 520px) { .formGrid { grid-template-columns: 1fr; } }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fieldLabel { font-size: 12px; color: var(--ink-2); }
+.fieldHint { font-size: 12px; color: var(--ink-3); }
+.input { width: 100%; }
+.formError { font-size: 12.5px; color: var(--critical); }
+.scrollBody { max-height: min(60vh, 560px); overflow-y: auto; margin: 0 -20px; padding: 0 20px; }
+
+/* A calm inline note: a 2px rule on the left, no box. */
+.notice {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 2px 0 2px 12px; box-shadow: inset 2px 0 0 var(--line-strong);
+  font-size: 13px; color: var(--ink-2); line-height: 1.5;
+}
+.notice svg { color: var(--ink-3); flex-shrink: 0; }
+
+/* Key-value list inside drawers and panels. */
+.kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; font-size: 13px; }
+.kv dt { color: var(--ink-2); }
+.kv dd { margin: 0; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.split { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 40px; }
+@media (max-width: 1099px) { .split { grid-template-columns: 1fr; } }
+
+.chartWrap { padding: 4px 0 0; margin-left: -6px; }
+.legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); }
+.legendSwatch { display: inline-block; width: 14px; height: 0; border-top: 2px solid currentColor; margin-right: 6px; vertical-align: middle; }
+.tooltip {
+  min-width: 170px; padding: 10px 12px; border-radius: var(--radius-md);
+  background: var(--elevated); border: 1px solid var(--line); box-shadow: var(--shadow-md);
+  font-size: 12px; color: var(--ink-2);
+}
+.tooltipRow { display: flex; justify-content: space-between; gap: 16px; margin-top: 4px; }
+.tooltipRow b { font-weight: 400; font-family: var(--font-mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.dropzone {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  padding: 28px 16px; border: 1px dashed var(--line-strong); border-radius: var(--radius-lg);
+  background: var(--surface-2); cursor: pointer; text-align: center; width: 100%; font-family: inherit;
+  transition: border-color 120ms, background-color 120ms;
+}
+.dropzone:hover { border-color: var(--line-emphasis); background: var(--hover); }
+
+.steps { margin: 0; padding: 0 0 0 18px; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: var(--body); line-height: 1.55; }
+.steps b { font-weight: 500; color: var(--ink); }
+
+.linkBtn { background: none; border: none; padding: 0; font: inherit; font-size: 12.5px; color: var(--ink-2); cursor: pointer; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+.linkBtn:hover { color: var(--ink); }
+
+.skelPage { padding: 20px 16px 40px; display: flex; flex-direction: column; gap: 24px; max-width: 1180px; }
+@media (min-width: 1024px) { .skelPage { padding: 32px 48px 32px 40px; } }

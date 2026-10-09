@@ -69,9 +69,10 @@ export function identityGradient(identity: Identity): string {
   return identity.color;
 }
 
-function rgb(hex: string): string {
+function rgb(hex: string, lighten = 0): string {
   const n = parseInt(hex.slice(1), 16);
-  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+  const mix = (c: number) => Math.round(c + (255 - c) * lighten);
+  return `${mix((n >> 16) & 255)}, ${mix((n >> 8) & 255)}, ${mix(n & 255)}`;
 }
 
 // Writes the accent onto :root as CSS variables so any component (or plain
@@ -79,8 +80,10 @@ function rgb(hex: string): string {
 export function applyIdentity(identity: Identity) {
   if (typeof document === "undefined") return;
   const root = document.documentElement.style;
-  root.setProperty("--accent", identity.color);
-  root.setProperty("--accent-rgb", rgb(identity.color));
+  // app/tokens.css picks the plain accent on paper and the lightened one
+  // on the dark theme, so the accent stays legible on both.
+  root.setProperty("--id-accent-rgb", rgb(identity.color));
+  root.setProperty("--id-accent-light-rgb", rgb(identity.color, 0.42));
   root.setProperty("--id-a", identity.color);
   root.setProperty("--id-b", identity.color);
   root.setProperty("--id-c", identity.color);

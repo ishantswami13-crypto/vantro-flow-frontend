@@ -40,18 +40,18 @@ export default function CookieBanner() {
       <div
         className="flex flex-col gap-3 px-4 py-3.5 rounded-xl"
         style={{
-          background: "#FFFFFF",
-          border: "1px solid #E5E5E1",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+          background: "var(--elevated)",
+          border: "1px solid var(--line)",
+          boxShadow: "var(--shadow-lg)",
         }}
       >
         {/* Text */}
-        <p className="text-xs leading-relaxed" style={{ color: "#686868" }}>
+        <p className="text-xs leading-relaxed" style={{ color: "var(--ink-2)" }}>
           We use cookies to improve your experience and analyse usage.{" "}
           <Link
             href="/privacy"
-            className="underline transition-colors hover:text-gray-900"
-            style={{ color: "#191917" }}
+            className="underline"
+            style={{ color: "var(--ink)" }}
           >
             Privacy policy
           </Link>
@@ -61,15 +61,13 @@ export default function CookieBanner() {
         <div className="flex items-center justify-end gap-2 shrink-0">
           <button
             onClick={decline}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50"
-            style={{ color: "#686868" }}
+            className="ui-btn ui-btn-ghost ui-btn-sm"
           >
             Decline
           </button>
           <button
             onClick={accept}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-85"
-            style={{ background: "#191917", color: "#ffffff" }}
+            className="ui-btn ui-btn-primary ui-btn-sm"
           >
             Accept all
           </button>

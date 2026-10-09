@@ -1,223 +1,130 @@
 "use client";
-import { authHeaders } from "@/lib/api";
+
+// Reports: download your data for your CA, your bank or your own records,
+// from GET /api/reports/export. Each report is generated when you ask for
+// it; nothing here is pre-generated or scheduled.
 
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { authHeaders } from "@/lib/api";
+import { PageHeader } from "@/components/v32/ui";
 import Button from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { FiDownload, FiFileText, FiCalendar, FiFilter, FiTrendingUp, FiDollarSign, FiUsers, FiPhone } from "react-icons/fi";
+import { useToast } from "@/components/ui/Toast";
+import { MorePage, Segmented, moreStyles as s } from "@/components/more/ui";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
-// Map date-range label → number of days back
-const DATE_RANGE_DAYS: Record<string, number> = {
-  "This Month":      30,
-  "Last Month":      60,
-  "Last 3 Months":   90,
-  "Last 6 Months":   180,
-  "Financial Year":  365,
-  "Custom":          30,
-};
+// Date range → number of days back
+const RANGES = [
+  { key: "month", label: "Last 30 days", days: 30 },
+  { key: "2m", label: "60 days", days: 60 },
+  { key: "3m", label: "3 months", days: 90 },
+  { key: "6m", label: "6 months", days: 180 },
+  { key: "year", label: "12 months", days: 365 },
+] as const;
+type RangeKey = typeof RANGES[number]["key"];
 
 const REPORTS = [
-  {
-    id: "outstanding",
-    name: "Outstanding Receivables",
-    desc: "Full list of all unpaid invoices with customer details, days overdue, and AI collection score",
-    icon: <FiDollarSign size={18}/>,
-    color: "#F5424D",
-    formats: ["Excel", "CSV", "PDF"],
-    lastGenerated: "Today 9:00 AM",
-    pages: 4,
-  },
-  {
-    id: "collection",
-    name: "Collection Performance",
-    desc: "Monthly recovery rates, call logs, WhatsApp delivery, payment trends over time",
-    icon: <FiTrendingUp size={18}/>,
-    color: "#10D98A",
-    formats: ["Excel", "CSV", "PDF"],
-    lastGenerated: "Yesterday",
-    pages: 6,
-  },
-  {
-    id: "customer",
-    name: "Customer Statement",
-    desc: "Individual customer account statement — all invoices, payments, and outstanding balance",
-    icon: <FiUsers size={18}/>,
-    color: "#0066FF",
-    formats: ["Excel", "CSV", "PDF"],
-    lastGenerated: "12 May 2025",
-    pages: 2,
-  },
-  {
-    id: "cashflow",
-    name: "Cash Flow Forecast Report",
-    desc: "30/60/90-day cash projection with optimistic, expected, and pessimistic scenarios",
-    icon: <FiCalendar size={18}/>,
-    color: "#F5A524",
-    formats: ["Excel", "PDF"],
-    lastGenerated: "14 May 2025",
-    pages: 3,
-  },
-  {
-    id: "calls",
-    name: "Call Activity Log",
-    desc: "All collection calls — duration, outcome, promises made, follow-up status",
-    icon: <FiPhone size={18}/>,
-    color: "#9B6DFF",
-    formats: ["Excel", "CSV", "PDF"],
-    lastGenerated: "13 May 2025",
-    pages: 5,
-  },
-  {
-    id: "gst",
-    name: "GST Summary Report",
-    desc: "GSTIN-wise breakdown of all sales and outstanding — ready for CA and filing",
-    icon: <FiFileText size={18}/>,
-    color: "#0066FF",
-    formats: ["Excel", "CSV", "PDF"],
-    lastGenerated: "1 May 2025",
-    pages: 2,
-  },
+  { id: "outstanding", name: "Outstanding receivables", desc: "Every unpaid invoice with the customer, amount and days overdue.", formats: ["Excel", "CSV", "PDF"] },
+  { id: "collection", name: "Collection performance", desc: "Money recovered month by month, calls made and reminders sent.", formats: ["Excel", "CSV", "PDF"] },
+  { id: "customer", name: "Customer statement", desc: "Each customer's invoices, payments and balance, ready to send.", formats: ["Excel", "CSV", "PDF"] },
+  { id: "cashflow", name: "Cash forecast", desc: "The 30, 60 and 90 day cash projection with all three cases.", formats: ["Excel", "PDF"] },
+  { id: "calls", name: "Call log", desc: "Every collection call with outcome, promises made and follow-up.", formats: ["Excel", "CSV", "PDF"] },
+  { id: "gst", name: "GST summary", desc: "Sales and outstanding by GSTIN, ready for your CA and filing.", formats: ["Excel", "CSV", "PDF"] },
 ];
 
-const DATE_RANGES = ["This Month", "Last Month", "Last 3 Months", "Last 6 Months", "Financial Year", "Custom"];
+const FORMATS = ["Excel", "CSV", "PDF"];
 
 export default function ReportsPage() {
-  const [dateRange, setDateRange]     = useState("This Month");
+  const notify = useToast();
+  const [range, setRange] = useState<RangeKey>("month");
   const [downloading, setDownloading] = useState<string | null>(null);
-  const [downloaded, setDownloaded]   = useState<string[]>([]);
+  const days = RANGES.find(r => r.key === range)?.days || 30;
+  const rangeLabel = RANGES.find(r => r.key === range)?.label.toLowerCase() || "";
 
   const handleDownload = async (reportId: string, format: string) => {
     const key = `${reportId}-${format}`;
     setDownloading(key);
     try {
-      const days = DATE_RANGE_DAYS[dateRange] || 30;
       const toDate   = new Date().toISOString().split("T")[0];
       const fromDate = new Date(Date.now() - days * 86400000).toISOString().split("T")[0];
 
-      // PDF: fetch the backend HTML report and open in a new print tab
-      if (format.toLowerCase() === "pdf") {
+      // PDF: fetch the backend HTML report and open it in a new tab to print.
+      if (format === "pdf") {
         const url = `${BASE}/api/reports/export?report=${reportId}&format=html&from=${fromDate}&to=${toDate}`;
         const res = await fetch(url, { headers: { ...authHeaders() }, credentials: "include" });
-        if (!res.ok) { alert("Export failed"); return; }
+        if (!res.ok) { notify("That report couldn't be generated. Try again in a moment.", "critical"); return; }
         const html = await res.text();
-        const blob = new Blob([html], { type: "text/html" });
-        const blobUrl = URL.createObjectURL(blob);
+        const blobUrl = URL.createObjectURL(new Blob([html], { type: "text/html" }));
         const win = window.open(blobUrl, "_blank");
-        if (!win) alert("Pop-up blocked — please allow pop-ups for this site and try again.");
+        if (!win) notify("Your browser blocked the new tab. Allow pop-ups for Starlane and try again.", "critical");
+        else notify("Report opened in a new tab. Print it to save as PDF.", "positive");
         setTimeout(() => URL.revokeObjectURL(blobUrl), 8000);
-        setDownloaded(prev => [...prev, key]);
-        setTimeout(() => setDownloaded(prev => prev.filter(k => k !== key)), 4000);
         return;
       }
 
-      const fmt = format.toLowerCase() === "excel" ? "xlsx" : "csv";
+      const fmt = format === "excel" ? "xlsx" : "csv";
       const url = `${BASE}/api/reports/export?report=${reportId}&format=${fmt}&from=${fromDate}&to=${toDate}`;
       const res = await fetch(url, { headers: { ...authHeaders() }, credentials: "include" });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Export failed" }));
-        alert(err.error || "Export failed");
-        return;
-      }
+      if (!res.ok) { notify("That report couldn't be generated. Try again in a moment.", "critical"); return; }
       const blob = await res.blob();
-      const filename = res.headers.get("Content-Disposition")?.match(/filename="?([^"]+)"?/)?.[1]
-        || `vantro-${reportId}.${fmt}`;
+      const filename = res.headers.get("Content-Disposition")?.match(/filename="?([^"]+)"?/)?.[1] || `starlane-${reportId}.${fmt}`;
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = filename;
       a.click();
       URL.revokeObjectURL(a.href);
-      setDownloaded(prev => [...prev, key]);
-      setTimeout(() => setDownloaded(prev => prev.filter(k => k !== key)), 4000);
+      notify(`Downloaded ${filename}`, "positive");
     } catch {
-      alert("Download failed. Check your connection.");
+      notify("Couldn't reach Starlane. Check your connection and try again.", "critical");
     } finally {
       setDownloading(null);
     }
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <DashboardLayout pageTitle="Reports">
+      <MorePage>
+        <PageHeader
+          title="Reports"
+          subtitle="Download your data for your CA, your bank or your own records."
+          right={<Button variant="primary" loading={downloading === "outstanding-excel"} onClick={() => handleDownload("outstanding", "excel")}>Export outstanding</Button>}
+        />
 
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-primary">Reports & Export</h1>
-            <p className="text-sm text-muted mt-0.5">Download your data as PDF, Excel, or CSV</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <FiFilter size={13} className="text-muted" />
-            <div className="flex gap-1 p-1 bg-surface-2 rounded-xl border border-border flex-wrap">
-              {DATE_RANGES.map(r => (
-                <button key={r} onClick={() => setDateRange(r)}
-                  className={["px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
-                    dateRange === r ? "bg-gray-900 text-white" : "text-muted hover:text-primary",
-                  ].join(" ")}>{r}</button>
-              ))}
-            </div>
-          </div>
+        <div className={s.toolbar}>
+          <Segmented label="Date range" value={range} onChange={setRange} options={RANGES.map(r => ({ key: r.key, label: r.label }))} />
+          <span style={{ fontSize: 12, color: "var(--ink-3)" }}>Each report covers the {rangeLabel} and is built when you download it.</span>
         </div>
 
-        {/* Quick export bar */}
-        <div className="card-premium p-4 flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <p className="text-sm font-bold text-primary">Quick Export — All Data</p>
-            <p className="text-xs text-muted">Export everything for {dateRange} in one file</p>
+        <div className={s.panel} role="table" aria-label="Reports">
+          <style>{`
+            .rp-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 16px; align-items: center; }
+            .rp-formats { display: flex; gap: 4px; margin-left: -10px; }
+            .rp-none { display: none; }
+            @media (min-width: 768px) {
+              .rp-row { grid-template-columns: minmax(0, 1fr) auto; }
+              .rp-formats { display: grid; grid-template-columns: repeat(3, 64px); justify-items: end; gap: 0; margin: 0 -8px 0 0; }
+              .rp-none { display: inline; }
+            }
+          `}</style>
+          <div role="row" className={`${s.head} rp-row`}>
+            <span role="columnheader">Report</span>
+            <span role="columnheader" className="hidden md:block" style={{ textAlign: "right" }}>Download as</span>
           </div>
-          <div className="flex gap-2">
-            <Button variant="secondary" size="sm" icon={<FiDownload size={12}/>}
-              onClick={() => handleDownload("outstanding", "CSV")}
-              loading={downloading === "outstanding-CSV"}>
-              CSV
-            </Button>
-            <Button size="sm" icon={<FiDownload size={12}/>}
-              onClick={() => handleDownload("outstanding", "Excel")}
-              loading={downloading === "outstanding-Excel"}>
-              Excel (Outstanding)
-            </Button>
-          </div>
-        </div>
-
-        {/* Reports Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {REPORTS.map(report => (
-            <div key={report.id} className="card-premium p-5 hover:border-border-2 transition-all">
-              <div className="flex items-start gap-4 mb-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: `${report.color}18`, border: `1px solid ${report.color}30` }}>
-                  <span style={{ color: report.color }}>{report.icon}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-primary">{report.name}</p>
-                  <p className="text-xs text-muted mt-0.5 leading-relaxed">{report.desc}</p>
-                </div>
+          {REPORTS.map(r => (
+            <div key={r.id} role="row" className={`${s.attnRow} rp-row`}>
+              <div role="cell" className="min-w-0">
+                <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{r.name}</div>
+                <div style={{ fontSize: 12.5, color: "var(--ink-2)", marginTop: 2, lineHeight: 1.5 }}>{r.desc}</div>
               </div>
-
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2 text-2xs text-muted">
-                  <FiCalendar size={10}/>
-                  <span>Last: {report.lastGenerated}</span>
-                  <span>· {report.pages} pages</span>
-                </div>
-              </div>
-
-              <div className="flex gap-2 flex-wrap">
-                {report.formats.map(fmt => {
-                  const key = `${report.id}-${fmt.toLowerCase()}`;
-                  const isDone = downloaded.includes(key);
+              <div role="cell" className="rp-formats" aria-label={`Download ${r.name}`}>
+                {FORMATS.map(fmt => {
+                  if (!r.formats.includes(fmt)) return <span key={fmt} aria-hidden="true" className="rp-none" style={{ fontSize: 12.5, color: "var(--ink-3)", paddingRight: 10 }}>—</span>;
+                  const key = `${r.id}-${fmt.toLowerCase()}`;
                   return (
-                    <Button
-                      key={fmt}
-                      variant={isDone ? "success" : "secondary"}
-                      size="xs"
-                      icon={isDone ? undefined : <FiDownload size={11}/>}
-                      loading={downloading === key}
-                      onClick={() => handleDownload(report.id, fmt.toLowerCase())}
-                    >
-                      {isDone ? `✓ ${fmt}` : fmt}
+                    <Button key={fmt} variant="ghost" size="sm" loading={downloading === key} disabled={!!downloading && downloading !== key}
+                      onClick={() => handleDownload(r.id, fmt.toLowerCase())} aria-label={`${r.name} as ${fmt}`}>
+                      {fmt}
                     </Button>
                   );
                 })}
@@ -225,34 +132,7 @@ export default function ReportsPage() {
             </div>
           ))}
         </div>
-
-        {/* Scheduled Reports */}
-        <div className="card-premium p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm font-bold text-primary">Scheduled Reports</p>
-              <p className="text-xs text-muted">Auto-email reports to you or your CA</p>
-            </div>
-            <Button variant="secondary" size="sm" icon={<FiCalendar size={12}/>}>Schedule Report</Button>
-          </div>
-          <div className="divide-y divide-border/50">
-            {[
-              { name: "Outstanding Summary",    freq: "Every Monday 9 AM",    to: "you@business.com",  active: true  },
-              { name: "Monthly P&L Overview",   freq: "1st of every month",   to: "ca@charteredco.in", active: true  },
-              { name: "Collections Performance",freq: "Every Friday 6 PM",    to: "you@business.com",  active: false },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center justify-between py-3 gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-primary">{s.name}</p>
-                  <p className="text-xs text-muted">{s.freq} → {s.to}</p>
-                </div>
-                <Badge variant={s.active ? "success" : "muted"}>{s.active ? "Active" : "Paused"}</Badge>
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
+      </MorePage>
     </DashboardLayout>
   );
 }

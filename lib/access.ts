@@ -48,11 +48,7 @@ async function call<T>(path: string, init: RequestInit & { token?: string } = {}
   return { status: res.status, body };
 }
 
-/** Which Starlane apps have a real published build (backend: DESKTOP_/MOBILE_DOWNLOAD_URL_*). */
-export type Platforms = Partial<Record<"windows" | "macos" | "linux" | "android" | "ios", boolean>>;
-
 export const accessApi = {
-  platforms: () => call<{ success: boolean; platforms?: Platforms }>("/api/access/platforms"),
   catalog: () => call<{ success: boolean; connectors: CatalogConnector[] }>("/api/connectors/catalog"),
   submit: (input: ApplicationInput) =>
     call<SubmitResult>("/api/access/applications", { method: "POST", body: JSON.stringify(input) }),

@@ -1,62 +1,115 @@
 "use client";
 
 import React, { useState } from "react";
-import { FiCheckCircle, FiPackage } from "react-icons/fi";
 import { useMutation } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/Badge";
+import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
-import { formatINR, formatDateTime } from "./format";
+import { IconCheck } from "@/components/v32/icons";
+import { formatINR, formatDateTime, humanizeCode } from "./format";
+import { formatCount } from "@/lib/format";
 import { api, type IntelligenceAction, type ImpactComponent, type DemoExecutionResult } from "@/lib/api";
 
 type ExecState = "PROPOSED" | "APPROVING" | "EXECUTED" | "FAILED";
 
-function ComparisonCard({ component, topAction }: { component: ImpactComponent; topAction: IntelligenceAction }) {
-  const top = topAction.reason_json.rankedOptions[0];
+const LABEL: React.CSSProperties = { fontSize: 12, color: "var(--ink-3)" };
+
+function Fig({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <div className="card-premium p-4 border-danger/25">
-        <p className="section-label text-danger">Without action</p>
-        <dl className="mt-2 space-y-2">
-          <div>
-            <dt className="text-2xs text-muted">Stockout</dt>
-            <dd className="text-sm font-bold text-primary">
-              {component.stockout.sufficientData
-                ? component.stockout.alreadyBelowSafetyStock ? "Already below safety stock" : `${component.stockout.daysUntilStockout} days`
-                : "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-2xs text-muted">Revenue exposed</dt>
-            <dd className="text-sm font-bold text-danger">{formatINR(component.revenueExposure.totalRevenueExposure)}</dd>
-          </div>
-          <div>
-            <dt className="text-2xs text-muted">Orders exposed</dt>
-            <dd className="text-sm font-bold text-primary">{component.affectedDemand.affectedOrderCount}</dd>
-          </div>
+    <div className="min-w-0">
+      {value === "Not known yet"
+        ? <dd style={{ margin: 0, fontSize: 14, lineHeight: "20px", color: "var(--ink-3)" }}>{value}</dd>
+        : <dd className="num" style={{ margin: 0, fontSize: 16, lineHeight: 1.25, color: "var(--ink)" }}>{value}</dd>}
+      <dt style={{ ...LABEL, marginTop: 3 }}>{label}</dt>
+    </div>
+  );
+}
+
+// Before and after, side by side on one hairline strip: no boxes, no
+// colour on the figures. The words carry the difference.
+function Comparison({ component, topAction }: { component: ImpactComponent; topAction: IntelligenceAction }) {
+  const top = topAction.reason_json.rankedOptions[0];
+  const row = "grid grid-cols-1 md:grid-cols-[200px_minmax(0,1fr)] gap-y-3";
+  const head: React.CSSProperties = { fontSize: 13, color: "var(--ink-2)", paddingTop: 1 };
+  const figs = "grid grid-cols-3 max-w-[480px]";
+  return (
+    <div>
+      <div className={row} style={{ padding: "14px 0", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+        <div style={head}>Without action</div>
+        <dl className={figs} style={{ gap: 16, margin: 0 }}>
+          <Fig
+            label="Stockout"
+            value={component.stockout.sufficientData
+              ? component.stockout.alreadyBelowSafetyStock ? "Now" : `${component.stockout.daysUntilStockout} days`
+              : "Not known yet"}
+          />
+          <Fig label="Revenue exposed" value={formatINR(component.revenueExposure.totalRevenueExposure)} />
+          <Fig label="Orders exposed" value={component.affectedDemand.affectedOrderCount} />
         </dl>
       </div>
-      <div className="card-premium p-4 border-success/25">
-        <p className="section-label text-success">With recommended action</p>
-        <dl className="mt-2 space-y-2">
-          <div>
-            <dt className="text-2xs text-muted">Revenue protected</dt>
-            <dd className="text-sm font-bold text-success">{formatINR(top.avoidedRevenueExposure)}</dd>
-          </div>
-          <div>
-            <dt className="text-2xs text-muted">Estimated cost</dt>
-            <dd className="text-sm font-bold text-primary">{formatINR(top.cost)}</dd>
-          </div>
-          <div>
-            <dt className="text-2xs text-muted">Benefit-to-cost ratio</dt>
-            <dd className="text-sm font-bold text-primary">{top.benefitToCostRatio}×</dd>
-          </div>
+      <div className={row} style={{ padding: "14px 0", borderBottom: "1px solid var(--line)" }}>
+        <div style={head}>With the recommended action</div>
+        <dl className={figs} style={{ gap: 16, margin: 0 }}>
+          <Fig label="Revenue protected" value={formatINR(top.avoidedRevenueExposure)} />
+          <Fig label="Estimated cost" value={formatINR(top.cost)} />
+          <Fig label="Benefit to cost" value={`${top.benefitToCostRatio}×`} />
         </dl>
       </div>
     </div>
   );
 }
 
-function ActionCard({ action, rank, dominant, onApprove, execState, execResult }: {
+const PRIORITY_TONE: Record<string, StatusTone> = { urgent: "critical", high: "attention" };
+
+// Every status the backend writes (ai_actions, migration 045), in words.
+// Only `pending` can be approved: the backend refuses anything else.
+const ACTION_STATE: Record<IntelligenceAction["status"], { label: string; tone: StatusTone }> = {
+  pending: { label: "Waiting for your approval", tone: "attention" },
+  approved: { label: "Approved, not run yet", tone: "info" },
+  executing: { label: "Running now", tone: "info" },
+  done: { label: "Executed", tone: "positive" },
+  failed: { label: "Failed", tone: "critical" },
+  execution_unknown: { label: "Result unknown", tone: "unknown" },
+  rejected: { label: "Turned down", tone: "neutral" },
+  expired: { label: "Expired", tone: "neutral" },
+  cancelled: { label: "Cancelled", tone: "neutral" },
+  system_blocked: { label: "Blocked by policy", tone: "critical" },
+};
+
+/** What happened to an action that is no longer waiting: who approved it,
+ *  when it ran, and whether the outcome was verified. Real fields only. */
+function ActionRecord({ action }: { action: IntelligenceAction }) {
+  const st = ACTION_STATE[action.status] || { label: humanizeCode(action.status), tone: "neutral" as StatusTone };
+  const lines: { k: string; v: React.ReactNode }[] = [];
+  if (action.approved_at) lines.push({ k: "Approved", v: <>{formatDateTime(action.approved_at)}{action.approved_by ? <span style={{ color: "var(--ink-3)" }}> · by {action.approved_by === "you" ? "you" : "a person"}</span> : null}</> });
+  if (action.completed_at) lines.push({ k: "Ran", v: formatDateTime(action.completed_at) });
+  if (action.execution_attempts) lines.push({ k: "Attempts", v: <span className="num">{action.execution_attempts}</span> });
+  const outcome = action.outcome === "effective" ? { label: "Verified: it worked", tone: "positive" as StatusTone }
+    : action.outcome === "ineffective" ? { label: "Verified: it did not work", tone: "critical" as StatusTone }
+    : action.status === "done" ? { label: "Outcome not checked yet", tone: "unknown" as StatusTone } : null;
+  return (
+    <div className="int-record">
+      <div className="flex items-center flex-wrap" style={{ gap: "4px 14px" }}>
+        <StatusChip tone={st.tone}>{st.label}</StatusChip>
+        {outcome && <StatusChip tone={outcome.tone}>{outcome.label}</StatusChip>}
+        {action.outcome_at && <span className="meta">checked {formatDateTime(action.outcome_at)}</span>}
+      </div>
+      {lines.length > 0 && (
+        <dl className="int-record-facts">
+          {lines.map((l) => <React.Fragment key={l.k}><dt>{l.k}</dt><dd>{l.v}</dd></React.Fragment>)}
+        </dl>
+      )}
+      {action.outcome_notes && <p className="meta" style={{ margin: "6px 0 0" }}>{action.outcome_notes}</p>}
+      {action.last_execution_error && (action.status === "failed" || action.status === "execution_unknown") && (
+        <p className="int-record-error">{action.last_execution_error}</p>
+      )}
+      {action.status === "execution_unknown" && (
+        <p className="meta" style={{ margin: "6px 0 0", lineHeight: 1.55 }}>Starlane can&rsquo;t tell whether this ran. Check the target system before doing it again; it is never retried on its own.</p>
+      )}
+    </div>
+  );
+}
+
+function ActionRow({ action, rank, dominant, onApprove, execState, execResult }: {
   action: IntelligenceAction;
   rank: number;
   dominant: boolean;
@@ -66,108 +119,88 @@ function ActionCard({ action, rank, dominant, onApprove, execState, execResult }
 }) {
   const top = action.reason_json.rankedOptions[0];
   const alreadyDone = action.status === "done" || execState === "EXECUTED";
+  const waiting = action.status === "pending" && execState !== "EXECUTED";
   const product = action.parameters?.products?.[0];
   const orderLine = product
-    ? `Order ${product.quantity.toLocaleString("en-IN")} units of ${product.name} (${product.sku})`
+    ? `Order ${formatCount(product.quantity)} units of ${product.name} (${product.sku})`
     : null;
+  const meta = [dominant ? "Recommended" : null, `${humanizeCode(action.risk_level)} risk`].filter(Boolean).join(" · ");
 
   return (
-    <div className={["card-premium p-5", dominant ? "border-accent/40" : ""].join(" ")}>
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="w-6 h-6 rounded-full bg-surface-2 border border-border flex items-center justify-center text-2xs font-bold text-secondary shrink-0">
-            {rank}
-          </span>
-          <Badge variant={action.priority === "urgent" ? "danger" : action.priority === "high" ? "warning" : "default"}>{action.priority}</Badge>
-          {dominant && <Badge variant="accent">Recommended</Badge>}
+    <li className={`grid grid-cols-[24px_minmax(0,1fr)] ${dominant && waiting ? "wk-attn" : ""}`} style={{ gap: 8, padding: "18px 0", borderBottom: "1px solid var(--line)" }}>
+      <span className="num" style={{ fontSize: 12.5, lineHeight: "20px", color: "var(--ink-3)" }}>{rank}</span>
+      <div className="min-w-0">
+        <div className="flex items-start justify-between flex-wrap" style={{ gap: 8 }}>
+          <p style={{ margin: 0, fontSize: 14.5, lineHeight: "20px", fontWeight: 500, color: waiting || alreadyDone ? "var(--ink)" : "var(--ink-2)" }}>{action.title}</p>
+          {waiting && <StatusChip tone={PRIORITY_TONE[action.priority] || "neutral"}>{humanizeCode(action.priority)} priority</StatusChip>}
         </div>
-        <Badge variant={action.risk_level === "high" ? "danger" : action.risk_level === "medium" ? "warning" : "success"} className="whitespace-nowrap shrink-0">{action.risk_level} risk</Badge>
-      </div>
+        {/* The backend description repeats the figures shown below, so show the
+            order itself when the frozen parameters carry it; a description
+            that only repeats the title is left out. */}
+        {(orderLine || (action.description && action.description !== action.title)) && (
+          <p style={{ margin: "2px 0 0", fontSize: 13, lineHeight: 1.55, color: "var(--ink-2)" }}>{orderLine || action.description}</p>
+        )}
+        <p className="meta" style={{ margin: "2px 0 0" }}>{meta}</p>
 
-      <p className="text-sm font-bold text-primary">{action.title}</p>
-      {/* The backend description repeats the figures shown just below, so
-          show the order itself instead when the frozen parameters carry it. */}
-      {orderLine ? (
-        <p className="text-2xs text-secondary mt-1 leading-relaxed">{orderLine}</p>
-      ) : (
-        <p className="text-2xs text-secondary mt-1 leading-relaxed">{action.description}</p>
-      )}
+        <dl className="grid grid-cols-3" style={{ gap: 16, margin: "14px 0 0", maxWidth: 480 }}>
+          <Fig label="Revenue protected" value={formatINR(top.avoidedRevenueExposure)} />
+          <Fig label="Estimated cost" value={formatINR(top.cost)} />
+          <Fig label="Lead time" value={top.leadTimeDays != null ? `${top.leadTimeDays} days` : "Not known yet"} />
+        </dl>
 
-      <div className="grid grid-cols-3 gap-3 mt-4">
-        <div>
-          <p className="text-2xs text-muted">Revenue protected</p>
-          <p className="text-sm font-bold text-success">{formatINR(top.avoidedRevenueExposure)}</p>
-        </div>
-        <div>
-          <p className="text-2xs text-muted">Estimated cost</p>
-          <p className="text-sm font-bold text-primary">{formatINR(top.cost)}</p>
-        </div>
-        <div>
-          <p className="text-2xs text-muted">Lead time</p>
-          <p className="text-sm font-bold text-primary">{top.leadTimeDays != null ? `${top.leadTimeDays}d` : "—"}</p>
-        </div>
-      </div>
-
-      {action.reason_json.rankedOptions.length > 1 && (
-        <details className="mt-3">
-          <summary className="text-2xs text-muted cursor-pointer hover:text-secondary">
-            {action.reason_json.rankedOptions.length - 1} other option(s) considered
-          </summary>
-          <ul className="mt-2 space-y-1.5">
-            {action.reason_json.rankedOptions.slice(1).map((opt, i) => (
-              <li key={i} className="text-2xs text-muted flex items-center justify-between border-t border-border pt-1.5">
-                <span>{opt.label}</span>
-                <span className="font-mono">{opt.benefitToCostRatio}× · {formatINR(opt.cost)}</span>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
-
-      <div className="mt-4 pt-4 border-t border-border">
-        {!alreadyDone && (
-          <div className="card-premium p-3 mb-3 bg-surface-2">
-            <p className="text-2xs font-semibold text-secondary">What will happen</p>
-            <p className="text-2xs text-muted mt-0.5">Create a draft purchase order: {action.title}.</p>
-            <p className="text-2xs text-muted mt-0.5">
-              Simulated execution — writes to Starlane's demo ERP adapter only, no live Odoo write occurs.
-            </p>
-          </div>
+        {action.reason_json.rankedOptions.length > 1 && (
+          <details style={{ marginTop: 14 }}>
+            <summary style={{ fontSize: 12.5, color: "var(--ink-3)", cursor: "pointer" }}>
+              {action.reason_json.rankedOptions.length - 1} other {action.reason_json.rankedOptions.length - 1 === 1 ? "option" : "options"} considered
+            </summary>
+            <ul style={{ listStyle: "none", margin: "8px 0 0", padding: 0, maxWidth: 560 }}>
+              {action.reason_json.rankedOptions.slice(1).map((opt, i) => (
+                <li key={i} className="flex items-center justify-between" style={{ gap: 12, padding: "8px 0", borderTop: "1px solid var(--line)", fontSize: 12.5, color: "var(--ink-2)" }}>
+                  <span>{opt.label}</span>
+                  <span className="num" style={{ fontSize: 12, color: "var(--ink-3)" }}>{opt.benefitToCostRatio}× · {formatINR(opt.cost)}</span>
+                </li>
+              ))}
+            </ul>
+          </details>
         )}
 
-        {alreadyDone && execResult ? (
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <FiCheckCircle className="text-success" size={16} />
-              <p className="text-xs font-bold text-success">Simulated execution complete</p>
+        <div style={{ marginTop: 16 }}>
+          {alreadyDone && execResult ? (
+            <div style={{ maxWidth: 480 }}>
+              <div className="flex items-center" style={{ gap: 6, marginBottom: 8, color: "var(--positive)", fontSize: 13 }}>
+                <IconCheck size={14} /> Simulated run complete
+              </div>
+              <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)]" style={{ gap: "6px 16px", margin: 0, fontSize: 12.5 }}>
+                <dt style={{ color: "var(--ink-3)" }}>Purchase order</dt><dd className="num" style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>#{execResult.purchaseOrder.id}</dd>
+                <dt style={{ color: "var(--ink-3)" }}>Status</dt><dd style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>Draft, demo adapter</dd>
+                <dt style={{ color: "var(--ink-3)" }}>Supplier</dt><dd style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>{execResult.purchaseOrder.supplier_name}</dd>
+                <dt style={{ color: "var(--ink-3)" }}>Related action</dt><dd className="truncate num" style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>{execResult.purchaseOrder.related_ai_action_id.slice(0, 8)}</dd>
+                <dt style={{ color: "var(--ink-3)" }}>Time</dt><dd className="num" style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>{formatDateTime(execResult.purchaseOrder.created_at)}</dd>
+              </dl>
+              {execResult.note && <p className="meta" style={{ margin: "10px 0 0" }}>{execResult.note}</p>}
             </div>
-            <dl className="text-2xs text-secondary space-y-1">
-              <div className="flex justify-between"><dt className="text-muted">Purchase order</dt><dd className="font-mono">#{execResult.purchaseOrder.id}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Status</dt><dd>Draft — Demo Adapter</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Supplier</dt><dd>{execResult.purchaseOrder.supplier_name}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Related action</dt><dd className="font-mono truncate ml-2">{execResult.purchaseOrder.related_ai_action_id.slice(0, 8)}…</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Timestamp</dt><dd>{formatDateTime(execResult.purchaseOrder.created_at)}</dd></div>
-            </dl>
-            <p className="text-2xs text-muted mt-2 italic">{execResult.note}</p>
-          </div>
-        ) : alreadyDone ? (
-          <Badge variant="success">Already executed</Badge>
-        ) : (
-          <Button
-            variant={dominant ? "primary" : "secondary"}
-            size="md"
-            fullWidth
-            loading={execState === "APPROVING"}
-            disabled={execState === "APPROVING"}
-            icon={<FiPackage size={14} />}
-            onClick={onApprove}
-          >
-            Approve &amp; execute
-          </Button>
-        )}
-        {execState === "FAILED" && <p className="text-2xs text-danger mt-2">Execution failed — check the backend log and try again.</p>}
+          ) : !waiting ? (
+            <ActionRecord action={action} />
+          ) : (
+            <div className="flex items-start flex-wrap" style={{ gap: 16 }}>
+              <Button
+                variant={dominant ? "primary" : "secondary"}
+                size="sm"
+                loading={execState === "APPROVING"}
+                disabled={execState === "APPROVING"}
+                onClick={onApprove}
+              >
+                Approve and run
+              </Button>
+              <p style={{ margin: 0, flex: "1 1 260px", fontSize: 12, lineHeight: 1.55, color: "var(--ink-3)", maxWidth: 440 }}>
+                Creates a draft purchase order in Starlane&rsquo;s demo ERP adapter. Nothing is written to a live system.
+              </p>
+            </div>
+          )}
+          {execState === "FAILED" && <p role="alert" style={{ margin: "8px 0 0", fontSize: 12.5, color: "var(--ink-2)" }}>That didn&rsquo;t go through. Nothing was created; try again.</p>}
+        </div>
       </div>
-    </div>
+    </li>
   );
 }
 
@@ -196,10 +229,10 @@ export function DecisionSection({ actions, component }: { actions: IntelligenceA
 
   return (
     <div>
-      <ComparisonCard component={component} topAction={dominant} />
-      <div className="mt-4 space-y-3">
+      <Comparison component={component} topAction={dominant} />
+      <ol style={{ listStyle: "none", margin: "8px 0 0", padding: 0 }}>
         {actions.map((a, i) => (
-          <ActionCard
+          <ActionRow
             key={a.id}
             action={a}
             rank={i + 1}
@@ -209,7 +242,7 @@ export function DecisionSection({ actions, component }: { actions: IntelligenceA
             execResult={results[a.id] || null}
           />
         ))}
-      </div>
+      </ol>
     </div>
   );
 }

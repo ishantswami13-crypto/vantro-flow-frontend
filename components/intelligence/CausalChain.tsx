@@ -16,24 +16,15 @@ function Step({ index, title, detail, cites, last = false, tone }: {
   tone?: "danger";
 }) {
   return (
-    <li className="relative pl-9" style={{ paddingBottom: last ? 0 : 20 }}>
-      {!last && <span aria-hidden="true" className="absolute left-[11px] top-7 bottom-0" style={{ width: 1, background: "#E5E4DF" }} />}
-      <span
-        aria-hidden="true"
-        className="absolute left-0 top-0 inline-flex items-center justify-center w-[23px] h-[23px] rounded-full text-[11px] font-semibold"
-        style={{
-          background: tone === "danger" ? "rgba(166,79,75,0.10)" : "#F3F2EE",
-          color: tone === "danger" ? "#A64F4B" : "#63635F",
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {index}
-      </span>
-      <p className="text-[14px] leading-[1.55]" style={{ color: "#191917" }}>
-        {title}
-        {cites}
-      </p>
-      {detail && <p className="text-[12.5px] mt-0.5 leading-snug" style={{ color: "#8A8A86" }}>{detail}</p>}
+    <li className="grid grid-cols-[32px_minmax(0,1fr)]" style={{ paddingBottom: last ? 0 : 16 }}>
+      <span aria-hidden="true" className="num" style={{ fontSize: 11.5, lineHeight: "22px", color: "var(--ink-3)" }}>{index}</span>
+      <div className="min-w-0">
+        <p className="text-[14px] leading-[1.55]" style={{ margin: 0, color: "var(--ink)", fontWeight: tone === "danger" && last ? 500 : 400 }}>
+          {title}
+          {cites}
+        </p>
+        {detail && <p className="text-[12.5px] mt-0.5 leading-snug" style={{ margin: "2px 0 0", color: tone === "danger" && !last ? "var(--critical)" : "var(--ink-3)" }}>{detail}</p>}
+      </div>
     </li>
   );
 }
@@ -50,7 +41,7 @@ export function CausalChain({ impact, component, citations, onCite }: {
   const eventType = humanizeCode(impact.signal.event_type) || "External event";
 
   return (
-    <ol>
+    <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
       <Step
         index={1}
         title={<>{eventType}: {impact.signal.event_title || "external event"}</>}
@@ -64,7 +55,7 @@ export function CausalChain({ impact, component, citations, onCite }: {
       />
       <Step
         index={3}
-        title={<>They supply {component.component.name} <span className="font-mono text-[12px]" style={{ color: "#8A8A86" }}>{component.component.sku}</span>.</>}
+        title={<>They supply {component.component.name} <span className="num text-[12px]" style={{ color: "var(--ink-3)" }}>{component.component.sku}</span>.</>}
         detail={component.alternateSource ? `Alternate source on record: ${component.alternateSource.name}` : "No alternate source on record."}
         cites={<><Cite n={c.inventory} onCite={onCite} /><Cite n={c.alternate} onCite={onCite} /></>}
       />
@@ -88,7 +79,7 @@ export function CausalChain({ impact, component, citations, onCite }: {
         index={6}
         last
         tone="danger"
-        title={<>{formatINR(component.revenueExposure.totalRevenueExposure)} of revenue is exposed.</>}
+        title={<><span className="tabular-nums">{formatINR(component.revenueExposure.totalRevenueExposure)}</span> of revenue is exposed.</>}
         detail={component.revenueExposure.excludedLineCount ? `${component.revenueExposure.excludedLineCount} order line(s) excluded for missing price data.` : undefined}
         cites={<Cite n={c.revenue} onCite={onCite} />}
       />

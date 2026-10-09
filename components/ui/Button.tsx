@@ -13,20 +13,22 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?:     React.ReactNode;
 }
 
+// One button family (app/globals.css .ui-btn-*). "success" is kept as an
+// alias of primary for older call sites; WhatsApp keeps its brand green.
 const VARIANTS: Record<Variant, string> = {
-  primary:   "btn-primary border-transparent",
-  secondary: "bg-surface-2 text-secondary hover:text-primary hover:bg-surface-3 border border-border hover:border-border-2 transition-all",
-  danger:    "bg-gradient-danger text-white border-transparent shadow-danger",
-  ghost:     "bg-transparent text-muted hover:text-primary hover:bg-surface-2 border border-transparent transition-all",
-  success:   "bg-gradient-success text-white border-transparent shadow-success",
-  whatsapp:  "bg-[#25D366] hover:bg-[#128C7E] text-white border-transparent shadow-[0_2px_12px_rgba(37,211,102,0.3)]",
+  primary:   "ui-btn-primary",
+  secondary: "ui-btn-secondary",
+  danger:    "ui-btn-danger",
+  ghost:     "ui-btn-ghost",
+  success:   "ui-btn-primary",
+  whatsapp:  "bg-[#25D366] hover:bg-[#1EBE5A] text-[#06140B]",
 };
 
 const SIZES: Record<Size, string> = {
-  xs: "h-7 px-3 text-xs rounded-lg gap-1.5",
-  sm: "h-8 px-3.5 text-xs rounded-lg gap-1.5",
-  md: "h-10 px-4 text-sm rounded-xl gap-2",
-  lg: "h-12 px-6 text-sm font-semibold rounded-xl gap-2.5",
+  xs: "ui-btn-sm",
+  sm: "ui-btn-sm",
+  md: "",
+  lg: "ui-btn-lg",
 };
 
 export default function Button({
@@ -38,25 +40,21 @@ export default function Button({
   children,
   disabled,
   className = "",
+  type = "button",
   ...props
 }: ButtonProps) {
   return (
     <button
+      type={type}
       disabled={disabled || loading}
-      className={[
-        "inline-flex items-center justify-center font-medium border transition-all duration-150 focus-ring cursor-pointer",
-        "disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
-        VARIANTS[variant],
-        SIZES[size],
-        fullWidth ? "w-full" : "",
-        className,
-      ].join(" ")}
+      aria-busy={loading || undefined}
+      className={["ui-btn", VARIANTS[variant], SIZES[size], fullWidth ? "w-full" : "", className].join(" ")}
       {...props}
     >
       {loading ? (
-        <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin shrink-0" />
+        <span aria-hidden="true" className="w-3.5 h-3.5 border-[1.5px] border-current border-t-transparent rounded-full animate-spin shrink-0" />
       ) : icon ? (
-        <span className="shrink-0">{icon}</span>
+        <span className="shrink-0 inline-flex">{icon}</span>
       ) : null}
       {children}
     </button>

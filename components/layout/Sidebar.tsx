@@ -3,175 +3,93 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { FiLogOut, FiX, FiUser, FiSliders, FiCommand } from "react-icons/fi";
-import { api, getUser, clearAuth } from "@/lib/api";
+import { getUser, clearAuth } from "@/lib/api";
 import { getSmartHiddenRoutes } from "@/lib/businessTypes";
 import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
-import { CommandPalette, type SearchableRoute } from "./CommandPalette";
 import { IdentityAvatar } from "@/components/identity/IdentityAvatar";
 import { IdentityPicker } from "@/components/identity/IdentityPicker";
-import { V32_NAV_ITEMS, V32_WORKSPACE_NAV_ITEMS, type PrimaryNavItem } from "@/lib/navigation";
+import {
+  V32_NAV_ITEMS, V32_WORKSPACE_NAV_ITEMS, MORE_NAV_ITEMS, activeHref, type PrimaryNavItem,
+} from "@/lib/navigation";
 import { listThreads, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
-import { IconBell, IconSearch, IconMore } from "@/components/v32/icons";
+import { getTheme, toggleTheme, THEME_EVENT, type Theme } from "@/lib/theme";
+import {
+  IconSearch, IconMore, IconSidebar, IconSun, IconMoon, IconUser, IconKeyboard, IconLogout, IconX, IconChevronDown,
+} from "@/components/v32/icons";
+import StarlaneMark from "@/components/brand/StarlaneMark";
 
-// Everything real that sits outside the Version 32 nav lives in the "More"
-// flyout: it is still reachable, but the rail stays as quiet as the design.
-const MORE_GROUPS: { label: string; items: { href: string; label: string; badge?: string | null }[] }[] = [
-  {
-    label: "Business",
-    items: [
-      { href: "/today",          label: "Today" },
-      { href: "/business-state", label: "Business State" },
-      { href: "/dashboard",      label: "Overview" },
-      { href: "/customers",      label: "Customers" },
-      { href: "/suppliers",      label: "Suppliers" },
-    ],
-  },
-  {
-    label: "Money",
-    items: [
-      { href: "/collections", label: "Collections", badge: "live" },
-      { href: "/invoice/new", label: "New Invoice" },
-      { href: "/bills",       label: "GST Invoices" },
-      { href: "/bank",        label: "Bank Monitor" },
-      { href: "/ledger",      label: "Bank Ledger" },
-      { href: "/forecast",    label: "Cash Forecast" },
-      { href: "/bad-debt",    label: "Bad Debt Radar" },
-      { href: "/khata",       label: "Customer Khata" },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      { href: "/sales",      label: "Sales" },
-      { href: "/purchases",  label: "Purchases" },
-      { href: "/orders",     label: "Today's Orders" },
-      { href: "/inventory",  label: "Inventory" },
-      { href: "/scanner",    label: "Invoice Scanner" },
-      { href: "/attendance", label: "Staff Attendance" },
-      { href: "/team",       label: "Team" },
-    ],
-  },
-  {
-    label: "Automation",
-    items: [
-      { href: "/whatsapp",   label: "WhatsApp" },
-      { href: "/dunning",    label: "Auto Follow-Up" },
-      { href: "/ai-actions", label: "Action Center" },
-      { href: "/brain",      label: "Starlane Brain" },
-      { href: "/ai-chat",    label: "AI Founder" },
-      { href: "/ai-train",   label: "AI Training" },
-    ],
-  },
-  {
-    label: "Insights",
-    items: [
-      { href: "/analytics", label: "Analytics" },
-      { href: "/reports",   label: "Reports" },
-    ],
-  },
-  {
-    label: "Account",
-    items: [
-      { href: "/billing",  label: "Billing" },
-    ],
-  },
-];
-const MORE_HREFS = new Set([
-  ...V32_WORKSPACE_NAV_ITEMS.map(n => n.href),
-  "/decisions",
-  ...MORE_GROUPS.flatMap(g => g.items.map(i => i.href)),
-]);
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+  onSearch: () => void;
+  onShortcuts: () => void;
+}
 
-interface SidebarProps { open: boolean; onClose: () => void; }
+const ALL_ITEMS = [...V32_NAV_ITEMS, ...V32_WORKSPACE_NAV_ITEMS, ...MORE_NAV_ITEMS];
 
-export default function Sidebar({ open, onClose }: SidebarProps) {
+// The rail is dark in both themes: it is the frame, the page is the work.
+// Seven surfaces, then the workspace, then a short More. Collapses to icons.
+export default function Sidebar({ open, onClose, collapsed, onToggleCollapsed, onSearch, onShortcuts }: SidebarProps) {
   const pathname = usePathname();
-  const [userName, setUserName]           = useState("User");
-  const [isAdmin, setIsAdmin]             = useState(false);
-  const [hiddenRoutes, setHiddenRoutes]   = useState<Set<string>>(new Set());
-  const [grantedFeatures, setGrantedFeatures] = useState<Set<FeatureKey>>(new Set());
-  const [pendingCount, setPendingCount]   = useState<number | null>(null);
-  const [moreOpen, setMoreOpen]           = useState(false);
-  const [accountOpen, setAccountOpen]     = useState(false);
-  const [searchOpen, setSearchOpen]       = useState(false);
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [recent, setRecent]               = useState<ScanThread[]>([]);
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [hiddenRoutes, setHiddenRoutes] = useState<Set<string>>(new Set());
+  const [granted, setGranted] = useState<Set<FeatureKey>>(new Set());
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [recent, setRecent] = useState<ScanThread[]>([]);
+  const [theme, setThemeState] = useState<Theme>("dark");
   const accountRef = useRef<HTMLDivElement>(null);
-  const moreRef = useRef<HTMLDivElement>(null);
-  const moreBtnRef = useRef<HTMLButtonElement>(null);
 
-  const isMoreActive = MORE_HREFS.has(pathname) || [...MORE_HREFS].some(h => pathname.startsWith(h + "/"));
+  const current = activeHref(pathname, ALL_ITEMS);
+  const moreActive = MORE_NAV_ITEMS.some(n => n.href === current);
+
+  // Keep More open while one of its pages is showing.
+  useEffect(() => { if (moreActive) setMoreOpen(true); }, [moreActive]);
 
   useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
-      if (accountRef.current && !accountRef.current.contains(e.target as Node)) setAccountOpen(false);
-      if (moreOpen && moreRef.current && !moreRef.current.contains(e.target as Node) && moreBtnRef.current && !moreBtnRef.current.contains(e.target as Node)) setMoreOpen(false);
-    }
-    if (accountOpen || moreOpen) document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [accountOpen, moreOpen]);
+    if (!accountOpen) return;
+    const onDown = (e: MouseEvent) => { if (accountRef.current && !accountRef.current.contains(e.target as Node)) setAccountOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setAccountOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [accountOpen]);
 
-  // Recent Scan conversations, like Harvey's recent work in its sidebar.
-  // They come from this browser's store and refresh when one is added.
+  // Recent Scan conversations from this browser's store.
   useEffect(() => {
-    const load = () => setRecent(listThreads().slice(0, 5));
+    const load = () => setRecent(listThreads().slice(0, 4));
     load();
     window.addEventListener(SCAN_THREADS_EVENT, load);
     window.addEventListener("storage", load);
     return () => { window.removeEventListener(SCAN_THREADS_EVENT, load); window.removeEventListener("storage", load); };
   }, []);
 
-  // Global search shortcut
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setSearchOpen(true);
-      }
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    setThemeState(getTheme());
+    const on = () => setThemeState(getTheme());
+    window.addEventListener(THEME_EVENT, on);
+    return () => window.removeEventListener(THEME_EVENT, on);
   }, []);
 
-  // Escape closes the keyboard-shortcuts reference (CommandPalette handles
-  // its own Escape internally).
   useEffect(() => {
-    if (!shortcutsOpen) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setShortcutsOpen(false);
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [shortcutsOpen]);
-
-  useEffect(() => {
-    const loadBizType = () => {
+    const load = () => {
       setHiddenRoutes(getSmartHiddenRoutes());
-      try {
-        const ctx = getUserContext();
-        setGrantedFeatures(getGrantedFeatures(ctx));
-      } catch { /* fallback: all granted */ }
+      try { setGranted(getGrantedFeatures(getUserContext())); } catch { /* all granted */ }
     };
-
     const u = getUser();
     if (u) {
-      const emailName = u.email?.split("@")[0] || "User";
-      setUserName(u.business_name || emailName);
+      setUserName(u.business_name || u.email?.split("@")[0] || "");
+      setUserEmail(u.email || "");
       setIsAdmin(u.email === "ishantswami13@gmail.com");
-      api.metrics(u.id).then(d => {
-        const count = d.metrics?.pending_invoices;
-        if (typeof count === "number") setPendingCount(count);
-      }).catch(() => {});
     }
-    loadBizType();
-
-    window.addEventListener("storage", loadBizType);
-    window.addEventListener("vantro:refresh", loadBizType);
-    return () => {
-      window.removeEventListener("storage", loadBizType);
-      window.removeEventListener("vantro:refresh", loadBizType);
-    };
+    load();
+    window.addEventListener("storage", load);
+    window.addEventListener("vantro:refresh", load);
+    return () => { window.removeEventListener("storage", load); window.removeEventListener("vantro:refresh", load); };
   }, []);
 
   const handleLogout = () => {
@@ -180,277 +98,169 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     window.location.href = "/login";
   };
 
-  const isRouteLocked = (href: string) => {
-    const featureKey = ROUTE_TO_FEATURE[href];
-    return featureKey ? grantedFeatures.size > 0 && !grantedFeatures.has(featureKey) : false;
+  const locked = (href: string) => {
+    const key = ROUTE_TO_FEATURE[href];
+    return key ? granted.size > 0 && !granted.has(key) : false;
   };
+  const moreItems = MORE_NAV_ITEMS.filter(n => !(hiddenRoutes.size > 0 && hiddenRoutes.has(n.href)) && !locked(n.href));
 
-  const searchableRoutes: SearchableRoute[] = [
-    { href: "/intelligence", label: "Intelligence", type: "Page" },
-    ...V32_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
-    ...V32_WORKSPACE_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
-    ...MORE_GROUPS.flatMap(g => g.items.map(i => ({ href: i.href, label: i.label, type: "Page" as const }))),
-  ];
+  // On phones the rail is a drawer and never collapsed.
+  const rail = collapsed && !open;
 
-  function NavRow({ href, label, Icon, active, onClick }: { href: string; label: string; Icon: PrimaryNavItem["icon"]; active: boolean; onClick?: () => void }) {
+  function Row({ item }: { item: PrimaryNavItem }) {
+    const active = current === item.href;
+    const Icon = item.icon;
     return (
       <Link
-        href={href}
-        onClick={onClick}
+        href={item.href}
+        onClick={onClose}
         aria-current={active ? "page" : undefined}
-        className={`flex items-center ${active ? "" : "hover-fade"}`}
-        style={{
-          gap: 10, padding: "8px 8px", borderRadius: 7, fontSize: 13, lineHeight: "16px",
-          background: active ? "rgba(255,255,255,0.09)" : "transparent",
-          color: active ? "#F5F4F0" : "#9A9993",
-        }}
+        title={rail ? item.label : undefined}
+        className={`sb-row ${active ? "sb-row-active" : ""}`}
       >
         <Icon size={16} />
-        <span className="flex-1 truncate">{label}</span>
+        {!rail && <span className="truncate">{item.label}</span>}
       </Link>
     );
   }
 
-  const isActive = (href: string) => {
-    // Scan owns /scan and each conversation; History owns /scan/history.
-    if (href === "/scan") return pathname === "/scan" || (pathname.startsWith("/scan/") && pathname !== "/scan/history");
-    return pathname === href || pathname.startsWith(href + "/");
-  };
-
   return (
     <>
-      {open && (
-        <div className="fixed inset-0 z-20 lg:hidden lens-backdrop" style={{ background: "rgba(20,20,18,0.28)" }} onClick={onClose} />
-      )}
+      {open && <div className="fixed inset-0 md:hidden lens-backdrop" style={{ zIndex: 29, background: "rgba(0,0,0,0.55)" }} onClick={onClose} aria-hidden="true" />}
 
       <aside
+        aria-label="Starlane"
+        data-rail={rail ? "true" : undefined}
         className={[
-          "fixed top-0 left-0 z-30 h-full flex flex-col",
-          "transition-transform duration-200 ease-out",
-          "lg:translate-x-0 lg:static lg:z-30",
-          open ? "translate-x-0" : "-translate-x-full",
+          "sb fixed md:static top-0 left-0 h-full flex flex-col shrink-0",
+          "transition-[transform,width] duration-200 ease-out",
+          open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         ].join(" ")}
-        style={{ width: 264, flexShrink: 0, boxSizing: "border-box", background: "#141412", borderRight: "1px solid rgba(255,255,255,0.06)", padding: "22px 16px" }}
+        style={{ width: rail ? 60 : 248, zIndex: 30 }}
       >
-        {/* Wordmark, notifications, search */}
-        <div className="flex items-center justify-between shrink-0" style={{ padding: "4px 8px 22px 8px" }}>
-          <Link href="/bridge" onClick={onClose} aria-label="Starlane — The Bridge" className="flex items-baseline" style={{ color: "#F5F4F0" }}>
-            <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, fontWeight: 400, letterSpacing: "-0.3px", color: "#F5F4F0" }}>Starlane</span>
+        {/* Workspace header */}
+        <div className="flex items-center shrink-0" style={{ height: 52, padding: rail ? "0 14px" : "0 10px 0 14px", gap: 10 }}>
+          <Link href="/bridge" onClick={onClose} aria-label="Starlane, go to the Bridge" className="flex items-center min-w-0" style={{ gap: 10, color: "#EDECE8" }}>
+            <StarlaneMark size={22} />
+            {!rail && <span style={{ fontFamily: "var(--font-display)", fontSize: 18, letterSpacing: "-0.01em", color: "#EDECE8" }}>Starlane</span>}
           </Link>
-          <div className="flex items-center" style={{ gap: 4 }}>
-            {/* The dot is the pending follow-up count, so the bell opens them. */}
-            <Link
-              href="/collections"
-              onClick={onClose}
-              aria-label={pendingCount ? `${pendingCount} pending follow-up${pendingCount === 1 ? "" : "s"}` : "Follow-ups"}
-              title={pendingCount ? `${pendingCount} pending follow-up${pendingCount === 1 ? "" : "s"}` : "Follow-ups"}
-              className="hover-fade relative flex items-center justify-center"
-              style={{ width: 26, height: 26, borderRadius: 6, color: "#8A8A86" }}
-            >
-              <IconBell size={15} />
-              {pendingCount !== null && pendingCount > 0 && (
-                <span className="absolute" style={{ width: 5, height: 5, borderRadius: "50%", top: 4, right: 5, background: "var(--accent)" }} />
-              )}
-            </Link>
-            <button
-              onClick={() => setSearchOpen(true)}
-              aria-label="Search Starlane (Ctrl+K)"
-              title="Search (Ctrl+K)"
-              className="hover-fade flex items-center justify-center"
-              style={{ width: 26, height: 26, borderRadius: 6, color: "#8A8A86" }}
-            >
-              <IconSearch size={14} />
+          {!rail && <span className="flex-1" />}
+          {!rail && (
+            <button type="button" onClick={onToggleCollapsed} className="sb-icon hidden md:inline-flex" aria-label="Collapse sidebar" title="Collapse sidebar">
+              <IconSidebar size={15} />
             </button>
-            <button aria-label="Close menu" onClick={onClose} className="lg:hidden hover-fade flex items-center justify-center" style={{ width: 26, height: 26, borderRadius: 6, color: "#8A8A86" }}>
-              <FiX size={14} />
-            </button>
-          </div>
+          )}
+          <button type="button" onClick={onClose} className="sb-icon md:hidden" aria-label="Close menu"><IconX size={15} /></button>
         </div>
 
+        {/* Search */}
+        <div className="shrink-0" style={{ padding: rail ? "2px 10px 10px" : "2px 10px 12px" }}>
+          <button type="button" onClick={onSearch} className="sb-search" aria-label="Search or jump to (Ctrl+K)" title={rail ? "Search (Ctrl+K)" : undefined}>
+            <IconSearch size={14} />
+            {!rail && <><span className="flex-1 text-left truncate">Search or jump to…</span><kbd className="sb-kbd">Ctrl K</kbd></>}
+          </button>
+        </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0" style={{ margin: "0 -4px", padding: "0 4px" }}>
-          <nav aria-label="Primary" className="flex flex-col" style={{ gap: 2 }}>
-            {V32_NAV_ITEMS.map(n => (
-              <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
-            ))}
-
-            {/* More — floating flyout, never expands inline */}
-            <button
-              ref={moreBtnRef}
-              onClick={() => setMoreOpen(v => !v)}
-              aria-expanded={moreOpen}
-              className={`flex items-center w-full text-left ${isMoreActive ? "" : "hover-fade"}`}
-              style={{
-                gap: 10, padding: "8px 8px", borderRadius: 7, fontSize: 13, lineHeight: "16px",
-                background: isMoreActive || moreOpen ? "rgba(255,255,255,0.09)" : "transparent",
-                color: isMoreActive || moreOpen ? "#F5F4F0" : "#9A9993",
-              }}
-            >
-              <IconMore size={16} />
-              <span className="flex-1">More</span>
-            </button>
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden" style={{ padding: "0 10px" }}>
+          <nav aria-label="Surfaces" className="flex flex-col" style={{ gap: 1 }}>
+            {V32_NAV_ITEMS.map(n => <Row key={n.href} item={n} />)}
           </nav>
 
-          {recent.length > 0 && (
-            <nav aria-label="Recent conversations" className="flex flex-col" style={{ gap: 1, marginTop: 22 }}>
-              <p style={{ padding: "0 8px 6px", fontSize: 11.5, color: "#63635F" }}>Recent</p>
+          <nav aria-label="Workspace" className="flex flex-col" style={{ gap: 1, marginTop: 20 }}>
+            {!rail && <p className="sb-label">Workspace</p>}
+            {rail && <div className="sb-divider" />}
+            {V32_WORKSPACE_NAV_ITEMS.map(n => <Row key={n.href} item={n} />)}
+          </nav>
+
+          {moreItems.length > 0 && (
+            <nav aria-label="More" className="flex flex-col" style={{ gap: 1, marginTop: 20 }}>
+              {rail ? (
+                <>
+                  <div className="sb-divider" />
+                  <button type="button" onClick={() => { setMoreOpen(true); onToggleCollapsed(); }} className={`sb-row ${moreActive ? "sb-row-active" : ""}`} title="More" aria-label="More pages">
+                    <IconMore size={16} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button type="button" onClick={() => setMoreOpen(v => !v)} aria-expanded={moreOpen} className="sb-label sb-label-btn">
+                    <span>More</span>
+                    <IconChevronDown size={12} style={{ transform: moreOpen ? "none" : "rotate(-90deg)", transition: "transform var(--dur-fast) var(--ease)" }} />
+                  </button>
+                  {moreOpen && moreItems.map(n => <Row key={n.href} item={n} />)}
+                  {moreOpen && isAdmin && (
+                    <Link href="/admin" onClick={onClose} className={`sb-row ${pathname.startsWith("/admin") ? "sb-row-active" : ""}`}>
+                      <span style={{ width: 16 }} /><span>Admin</span>
+                    </Link>
+                  )}
+                </>
+              )}
+            </nav>
+          )}
+
+          {!rail && recent.length > 0 && (
+            <nav aria-label="Recent conversations" className="flex flex-col" style={{ gap: 1, marginTop: 18, paddingBottom: 12 }}>
+              <p className="sb-label">Recent</p>
               {recent.map(t => {
                 const active = pathname === `/scan/${t.id}`;
                 return (
-                  <Link
-                    key={t.id}
-                    href={`/scan/${t.id}`}
-                    onClick={onClose}
-                    aria-current={active ? "page" : undefined}
-                    title={t.title}
-                    className={`truncate ${active ? "" : "hover-fade"}`}
-                    style={{ display: "block", padding: "6px 8px", borderRadius: 7, fontSize: 12.5, color: active ? "#F5F4F0" : "#8A8A86", background: active ? "rgba(255,255,255,0.09)" : "transparent" }}
-                  >
-                    {t.title}
+                  <Link key={t.id} href={`/scan/${t.id}`} onClick={onClose} aria-current={active ? "page" : undefined} title={t.title}
+                    className={`sb-row sb-row-quiet ${active ? "sb-row-active" : ""}`}>
+                    <span className="truncate">{t.title}</span>
                   </Link>
                 );
               })}
             </nav>
           )}
-
-          {moreOpen && (
-            <div
-              ref={moreRef}
-              className="fixed z-40 overflow-hidden pop-in"
-              style={{
-                left: typeof window !== "undefined" && window.innerWidth < 600 ? 12 : 252,
-                top: Math.max(12, (moreBtnRef.current?.getBoundingClientRect().top ?? 0) - 120),
-                width: 272,
-                maxHeight: "72vh",
-                background: "#1B1B18",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 10,
-                boxShadow: "0 12px 32px rgba(0,0,0,0.35)",
-              }}
-            >
-              <div className="overflow-y-auto" style={{ maxHeight: "72vh", padding: 8 }}>
-                <div style={{ marginBottom: 10 }}>
-                  <p style={{ padding: "4px 8px", fontSize: 10.5, letterSpacing: 0, color: "#63635F" }}>Workspace</p>
-                  {V32_WORKSPACE_NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-                    const active = isActive(href) || (href === "/prepared" && pathname.startsWith("/decisions"));
-                    return (
-                      <Link
-                        key={href}
-                        href={href}
-                        onClick={() => { setMoreOpen(false); onClose(); }}
-                        className={`flex items-center ${active ? "" : "hover-fade"}`}
-                        style={{ height: 32, padding: "0 8px", gap: 9, borderRadius: 6, fontSize: 13, background: active ? "rgba(255,255,255,0.09)" : "transparent", color: active ? "#F5F4F0" : "#B9B8B2" }}
-                      >
-                        <Icon size={15} />
-                        <span className="flex-1 truncate">{label}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-                {MORE_GROUPS.map(({ label, items }) => {
-                  const visibleItems = items.filter(n => !(hiddenRoutes.size > 0 && hiddenRoutes.has(n.href)) && !isRouteLocked(n.href));
-                  if (visibleItems.length === 0) return null;
-                  return (
-                    <div key={label} style={{ marginBottom: 10 }}>
-                      <p style={{ padding: "4px 8px", fontSize: 10.5, letterSpacing: 0, color: "#63635F" }}>{label}</p>
-                      {visibleItems.map(({ href, label: itemLabel, badge }) => {
-                        const active = isActive(href);
-                        const liveBadge = badge === "live" && pendingCount !== null && pendingCount > 0 ? String(pendingCount) : null;
-                        return (
-                          <Link
-                            key={href}
-                            href={href}
-                            onClick={() => { setMoreOpen(false); onClose(); }}
-                            className={`flex items-center ${active ? "" : "hover-fade"}`}
-                            style={{ height: 32, padding: "0 8px", gap: 8, borderRadius: 6, fontSize: 13, background: active ? "rgba(255,255,255,0.09)" : "transparent", color: active ? "#F5F4F0" : "#B9B8B2" }}
-                          >
-                            <span className="flex-1 truncate">{itemLabel}</span>
-                            {liveBadge && <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#8A8A86" }}>{liveBadge}</span>}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-                {isAdmin && (
-                  <Link href="/admin" onClick={() => { setMoreOpen(false); onClose(); }} className="hover-fade flex items-center" style={{ height: 32, padding: "0 8px", borderRadius: 6, fontSize: 13, color: "#B9B8B2" }}>
-                    Admin
-                  </Link>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* User row */}
-        <div ref={accountRef} className="relative shrink-0">
+        {/* Account */}
+        <div ref={accountRef} className="relative shrink-0" style={{ padding: "8px 10px 10px" }}>
+          {rail && (
+            <button type="button" onClick={onToggleCollapsed} className="sb-row" aria-label="Expand sidebar" title="Expand sidebar" style={{ marginBottom: 4 }}>
+              <IconSidebar size={16} />
+            </button>
+          )}
           <button
+            type="button"
             onClick={() => setAccountOpen(v => !v)}
             aria-expanded={accountOpen}
-            className="hover-fade flex items-center w-full text-left"
-            style={{ gap: 10, padding: "10px 8px 4px 8px", borderTop: "1px solid rgba(255,255,255,0.08)", marginTop: 8, borderRadius: 0 }}
+            aria-haspopup="menu"
+            className="sb-row w-full"
+            style={{ height: 42, gap: 10, padding: "0 8px" }}
+            title={rail ? userName || "Account" : undefined}
           >
-            <IdentityAvatar name={userName} size={26} />
-            <span className="truncate" style={{ fontSize: 13, color: "#B9B8B2" }}>{userName}</span>
+            <IdentityAvatar name={userName || "?"} size={22} initial />
+            {!rail && (
+              <>
+                <span className="min-w-0 flex-1 text-left" style={{ lineHeight: 1.3 }}>
+                  <span className="block truncate" style={{ fontSize: 12.5, fontWeight: 500, color: "#E2E1DC" }}>{userName || "Your account"}</span>
+                  {userEmail && userEmail !== userName && <span className="block truncate" style={{ fontSize: 11, color: "#6F6E69" }}>{userEmail}</span>}
+                </span>
+                <IconChevronDown size={12} style={{ color: "#6F6E69", transform: accountOpen ? "rotate(180deg)" : "none", transition: "transform var(--dur-fast) var(--ease)" }} />
+              </>
+            )}
           </button>
 
           {accountOpen && (
-            <div className="absolute z-40 overflow-hidden pop-in" style={{
-              left: 0, right: 0, bottom: 44, background: "#1B1B18", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-            }}>
+            <div role="menu" className="sb-menu pop-in" style={rail ? { left: 64, bottom: 10, width: 248 } : { left: 10, right: 10, bottom: 56 }}>
               <div style={{ padding: 12, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                 <IdentityPicker dark />
               </div>
-              {[
-                { href: "/settings?tab=profile", label: "Profile", Icon: FiUser },
-                { href: "/settings?tab=preferences", label: "Preferences", Icon: FiSliders },
-              ].map(({ href, label, Icon }) => (
-                <Link key={href} href={href} onClick={onClose} className="hover-fade flex items-center" style={{ gap: 8, height: 36, padding: "0 12px", fontSize: 13, color: "#B9B8B2" }}>
-                  <Icon size={13} /> {label}
-                </Link>
-              ))}
-              <button onClick={() => { setAccountOpen(false); setShortcutsOpen(true); }} className="hover-fade flex items-center w-full" style={{ gap: 8, height: 36, padding: "0 12px", fontSize: 13, color: "#B9B8B2" }}>
-                <FiCommand size={13} /> Keyboard shortcuts
-              </button>
-              <button onClick={handleLogout} className="hover-fade flex items-center w-full" style={{ gap: 8, height: 36, padding: "0 12px", fontSize: 13, color: "#B9B8B2", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                <FiLogOut size={13} /> Sign out
-              </button>
+              <div style={{ padding: 4 }}>
+                <Link role="menuitem" href="/settings?tab=profile" onClick={() => { setAccountOpen(false); onClose(); }} className="sb-menu-item"><IconUser size={14} /> Profile and settings</Link>
+                <button role="menuitem" type="button" onClick={() => setThemeState(toggleTheme())} className="sb-menu-item">
+                  {theme === "dark" ? <IconSun size={14} /> : <IconMoon size={14} />} {theme === "dark" ? "Light theme" : "Dark theme"}
+                </button>
+                <button role="menuitem" type="button" onClick={() => { setAccountOpen(false); onShortcuts(); }} className="sb-menu-item"><IconKeyboard size={14} /> Keyboard shortcuts</button>
+              </div>
+              <div style={{ padding: 4, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                <button role="menuitem" type="button" onClick={handleLogout} className="sb-menu-item"><IconLogout size={14} /> Sign out</button>
+              </div>
             </div>
           )}
         </div>
       </aside>
-
-      <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} routes={searchableRoutes} />
-
-      {shortcutsOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center px-4" onClick={() => setShortcutsOpen(false)}>
-          <div className="fixed inset-0" style={{ background: "rgba(0,0,0,0.35)" }} />
-          <div
-            role="dialog" aria-modal="true" aria-label="Keyboard shortcuts"
-            className="relative w-full sm:w-[380px] rounded-xl overflow-hidden"
-            style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-4" style={{ height: "48px", borderBottom: "1px solid #EDEDE9" }}>
-              <p className="text-sm font-medium" style={{ color: "#171717" }}>Keyboard shortcuts</p>
-              <button onClick={() => setShortcutsOpen(false)} aria-label="Close" style={{ color: "#8A8A86" }}><FiX size={16} /></button>
-            </div>
-            <div className="p-4 space-y-2.5">
-              {[
-                { keys: "Ctrl/Cmd K", desc: "Open search" },
-                { keys: "↑ / ↓", desc: "Move through results" },
-                { keys: "Enter", desc: "Open selected result" },
-                { keys: "Esc", desc: "Close search or dialog" },
-              ].map(s => (
-                <div key={s.keys} className="flex items-center justify-between">
-                  <span className="text-sm" style={{ color: "#686868" }}>{s.desc}</span>
-                  <kbd className="text-[11px] px-1.5 py-0.5 rounded font-mono" style={{ color: "#8A8A86", background: "#F2F2EE" }}>{s.keys}</kbd>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
