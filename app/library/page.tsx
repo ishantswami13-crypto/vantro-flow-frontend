@@ -4,19 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Chevron, PageHeader, SearchField, SectionTitle, Subnav } from "@/components/v32/ui";
-import {
-  IconAgents, IconBookmarkFilled, IconLink, IconMemory,
-  IconMissions, IconPlus, IconPrepared, IconScan, IconSimulate, IconSparkle, IconUpload, IconWatch,
-} from "@/components/v32/icons";
+import { Chevron, PageHeader, SearchField, SectionTitle } from "@/components/v32/ui";
+import { IconBookmarkFilled, IconPlus, IconScan } from "@/components/v32/icons";
 import { listSavedPrompts, removeSavedPrompt, SAVED_PROMPTS_EVENT, type SavedPrompt } from "@/lib/promptStore";
 import { listThreads, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
 import { formatRelative, formatDateTime } from "@/lib/format";
 
-// Library: ready questions to ask Scan, the ones the person saved, and the
-// workflows Starlane can run. Like Harvey's Library (Prompts, Workflows),
-// but every entry here maps to something that already works: a prompt opens
-// Scan with the question asked, and a workflow opens the screen that does it.
+// Library: ready questions to start a Scan from, and the ones the person saved.
+// Every entry opens Scan with the question asked. Screens are reached from the
+// sidebar and Ctrl+K, so the Library doesn't repeat them.
 
 type Prompt = { text: string; area: string };
 const PROMPTS: Prompt[] = [
@@ -32,28 +28,13 @@ const PROMPTS: Prompt[] = [
   { area: "Sales", text: "Which customers bought the most this month?" },
 ];
 
-type Workflow = { title: string; does: string; get: string; href: string; area: string; icon: React.ReactNode };
-const WORKFLOWS: Workflow[] = [
-  { area: "Collections", title: "Chase overdue invoices", does: "Picks who to follow up and prepares reminders.", get: "Reminders waiting for your approval", href: "/missions/new", icon: <IconMissions size={14} /> },
-  { area: "Collections", title: "Decide what's waiting", does: "Decisions Starlane has prepared, with what is at stake.", get: "Options you approve or turn down", href: "/prepared", icon: <IconPrepared size={14} /> },
-  { area: "Cash", title: "Forecast cash", does: "Tries a what-if against your open invoices.", get: "Expected cash in by week", href: "/simulate", icon: <IconSimulate size={14} /> },
-  { area: "Cash", title: "Watch a number", does: "Re-checks a condition, like overdue share, against live data.", get: "An alert when it changes", href: "/watch", icon: <IconWatch size={14} /> },
-  { area: "Data", title: "Import invoices", does: "Bring in a receivables or sales export.", get: "Your invoices ready to scan", href: "/decisions/import", icon: <IconUpload size={14} /> },
-  { area: "Data", title: "Connect Tally", does: "Sync customers and invoices from Tally.", get: "Data that stays up to date", href: "/sources", icon: <IconLink size={14} /> },
-  { area: "Insight", title: "Scan my books", does: "Rebuilds how invoices turn into cash.", get: "Bottlenecks and opportunities", href: "/scan?books=1", icon: <IconSparkle size={14} /> },
-  { area: "Insight", title: "See what changed", does: "How each item reached its current state.", get: "A timeline you can trace", href: "/memory", icon: <IconMemory size={14} /> },
-  { area: "Insight", title: "See what runs for you", does: "The agents working in this workspace.", get: "Last run and status of each", href: "/agents", icon: <IconAgents size={14} /> },
-];
-
 export default function LibraryPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<"prompts" | "workflows">("prompts");
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState<SavedPrompt[]>([]);
   const [recent, setRecent] = useState<ScanThread[]>([]);
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("tab") === "workflows") setTab("workflows");
     const load = () => setSaved(listSavedPrompts());
     const loadRecent = () => setRecent(listThreads());
     load();
@@ -75,7 +56,6 @@ export default function LibraryPage() {
     }
     return out;
   }, [prompts]);
-  const workflows = useMemo(() => WORKFLOWS.filter(w => !q || `${w.title} ${w.does} ${w.area}`.toLowerCase().includes(q)), [q]);
 
   const ask = (text: string) => router.push(`/scan?q=${encodeURIComponent(text)}`);
 
@@ -84,26 +64,13 @@ export default function LibraryPage() {
       <div className="page-stack w-full" style={{ maxWidth: "var(--content-max)" }}>
       <PageHeader
         title="Library"
-        subtitle="Questions to ask Scan and workflows Starlane can run for you."
+        subtitle="Questions to start a Scan from, and the ones you saved."
         right={<>
-          <div className="lib-search"><SearchField id="library-search" value={query} onChange={setQuery} placeholder={tab === "prompts" ? "Search prompts" : "Search workflows"} /></div>
+          <div className="lib-search"><SearchField id="library-search" value={query} onChange={setQuery} placeholder="Search prompts" /></div>
           <Link href="/scan" className="ui-btn ui-btn-primary lib-new"><IconPlus size={14} /> New conversation</Link>
         </>}
-      >
-        <div style={{ marginTop: 20 }}>
-          <Subnav
-            label="Library sections"
-            active={tab}
-            onChange={k => setTab(k as "prompts" | "workflows")}
-            items={[
-              { key: "prompts", label: "Prompts", count: PROMPTS.length + saved.length },
-              { key: "workflows", label: "Workflows", count: WORKFLOWS.length },
-            ]}
-          />
-        </div>
-      </PageHeader>
+      />
 
-      {tab === "prompts" && (
         <div className="lib-layout">
           <section aria-labelledby="lib-ready" className="min-w-0">
             <SectionTitle className="section-label-lead"><span id="lib-ready">Ready to ask</span><span className="wk-count">{prompts.length}</span></SectionTitle>
@@ -166,39 +133,10 @@ export default function LibraryPage() {
             <p className="meta" style={{ margin: 0, lineHeight: 1.55 }}>Saved prompts and conversations are kept in this browser only.</p>
           </aside>
         </div>
-      )}
-
-      {tab === "workflows" && (
-        workflows.length > 0 ? (
-          <div className="wk-list" role="table" aria-label="Workflows">
-            <div className="wk-head" role="row" style={{ gridTemplateColumns: FLOW_COLS }}>
-              <span role="columnheader">Workflow</span>
-              <span role="columnheader">What it does</span>
-              <span role="columnheader">You get</span>
-              <span role="columnheader">Area</span>
-              <span />
-            </div>
-            {workflows.map((w) => (
-              <Link key={w.title} href={w.href} role="row" className="wk-row" style={{ gridTemplateColumns: FLOW_COLS }}>
-                <span role="cell" className="flex items-center min-w-0" style={{ gap: 10 }}>
-                  <span aria-hidden="true" className="inline-flex shrink-0" style={{ color: "var(--ink-3)" }}>{w.icon}</span>
-                  <span className="wk-title">{w.title}</span>
-                </span>
-                <span role="cell" className="wk-sub block">{w.does}</span>
-                <span role="cell" className="hidden md:block" style={{ fontSize: 12.5, color: "var(--ink-2)" }}>{w.get}</span>
-                <span role="cell" className="hidden md:block wk-meta">{w.area}</span>
-                <span role="cell" className="hidden md:flex justify-end"><Chevron size={13} /></span>
-              </Link>
-            ))}
-          </div>
-        ) : <p className="wk-empty">No workflow matches. Try a shorter word, or ask Scan what you want done.</p>
-      )}
       </div>
     </DashboardLayout>
   );
 }
-
-const FLOW_COLS = "minmax(0,0.9fr) minmax(0,1.3fr) minmax(0,1fr) 88px 20px";
 
 /** One ready question: the whole row asks it in Scan. */
 function PromptRow({ text, onAsk }: { text: string; onAsk: () => void }) {
