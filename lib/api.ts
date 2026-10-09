@@ -185,6 +185,8 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
       const errorObj = new Error(`${errorMsg} (Error ID: ${requestId})`);
       (errorObj as any).requestId = requestId;
       (errorObj as any).status = res.status;
+      (errorObj as any).code = data?.code;
+      (errorObj as any).serverMessage = data?.error;
 
       if (typeof window !== 'undefined') {
         authenticatedFetch('/api/client-errors', {
@@ -234,8 +236,11 @@ export const api = {
   auth: {
     signup: (body: { email: string; phone: string; business_name: string; password: string }) =>
       request<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
+    // signInCall, not request(): a wrong password is a 401, and request()
+    // treats every 401 as an expired session and reloads /login, which wiped
+    // the form and never showed "Invalid email or password".
     login: (body: { email: string; password: string }) =>
-      request<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+      signInCall<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/login', body),
     // csrf_token is a secondary self-heal path (see the X-CSRF-Token
     // response-header mirror in request() above, which fires on every
     // authenticated call, not just this one) — kept here too since this
@@ -405,7 +410,9 @@ export const api = {
     // on the backend): baseline vs. hypothetical-scenario vs. delta, over the
     // tenant's own real invoices. Never computed client-side.
     scenarioInvoices: (userId: string) =>
-      request<{ invoices: ScenarioInvoice[] }>(`/api/intelligence/scenarios/${encodeURIComponent(userId)}/invoices`),
+      request<{ invoices: ScenarioInvoice[] }>(`/api/intelligence/scenarios/${encodeURIComponent(userId)}/invoices`)
+        // Postgres numeric arrives as a string; the page formats numbers.
+        .then((r) => ({ ...r, invoices: (r.invoices || []).map((i) => ({ ...i, invoice_amount: Number(i.invoice_amount) })) })),
     simulateScenario: (
       userId: string,
       params: { targetInvoiceId: string; daysEarlier?: number; remainsUnpaid?: boolean }
@@ -696,10 +703,13 @@ export function clearAuth() {
   clearClientCookie(SESSION_COOKIE);
   // The HttpOnly cookie can only be cleared server-side, so this call is what
   // actually ends a cookie-mode session — not best-effort cleanup.
+  // keepalive: sign-out navigates away at once, which aborted this request
+  // before the server could clear the cookie, leaving the session usable.
   fetch(`${BASE}/api/auth/logout`, {
     method: 'POST',
     credentials: 'include',
     headers,
+    keepalive: true,
   }).catch(() => {});
 }
 
@@ -753,6 +763,7 @@ export interface User {
 }
 
 export interface UserSettings extends User {
+  owner_name?: string;
   address?: string;
   logo_url?: string;
   whatsapp_phone?: string;
@@ -915,6 +926,8 @@ export interface ForecastResponse {
   cashStart: number;
   burnRate: number;
   avgDailyCollections: number;
+  /** bank credits, paid invoices, or an assumption when there is no history yet */
+  collectionsBasis?: "bank" | "history" | "assumed";
   totalOutstanding: number;
   scenarios: Record<string, { curve: { day: number; cash: number }[]; endCash: number; runwayDays: number }>;
 }

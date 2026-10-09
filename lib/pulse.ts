@@ -21,7 +21,11 @@ export function loadPulse(): Promise<Pulse | null> {
   if (inflight) return inflight;
   inflight = request<BridgeView>("/api/client/bridge")
     .then((b) => {
-      const src = b.sources.find((s) => s.lastSuccessAt) || b.sources[0] || null;
+      // A file import has no sync runs, so it has no lastSuccessAt; a healthy
+      // one still beats a source that was never connected.
+      const src = b.sources.find((s) => s.lastSuccessAt)
+        || b.sources.find((s) => s.health !== "not_connected")
+        || b.sources[0] || null;
       const value: Pulse = {
         freshness: b.freshness,
         dataAsOf: b.dataAsOf || src?.lastSuccessAt || null,

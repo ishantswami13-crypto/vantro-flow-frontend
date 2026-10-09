@@ -67,7 +67,7 @@ const RISK: Record<string, { label: string; tone: StatusTone }> = {
 type Bucket = "all" | "today" | "d1_7" | "d8_30" | "d31_60" | "d60";
 const BUCKETS: { key: Bucket; label: string; test: (d: number) => boolean }[] = [
   { key: "all", label: "All", test: () => true },
-  { key: "today", label: "Due today", test: d => d <= 0 },
+  { key: "today", label: "Not overdue", test: d => d <= 0 },
   { key: "d1_7", label: "1–7 days", test: d => d >= 1 && d <= 7 },
   { key: "d8_30", label: "8–30 days", test: d => d >= 8 && d <= 30 },
   { key: "d31_60", label: "31–60 days", test: d => d >= 31 && d <= 60 },
@@ -79,7 +79,7 @@ type SortKey = "outstanding" | "daysOverdue";
 const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 
 function lateText(d: number): string {
-  if (d <= 0) return "Due today";
+  if (d <= 0) return "Not overdue";
   return `${formatCount(d)} day${d === 1 ? "" : "s"} late`;
 }
 
@@ -250,7 +250,7 @@ export default function CollectionsPage() {
         posthog.capture("reminder_auto_sent", { provider: result.provider });
         notify(`Reminder sent to ${c.name}`, "positive");
         const user = getUser();
-        if (user?.id) loadInvoices(user.id);
+        if (user?.id) { loadInvoices(user.id); refreshSummary(user.id); }
         setTimeout(() => setReminderState(st => { const n = { ...st }; delete n[key]; return n; }), 4000);
       } else {
         // WhatsApp not configured: the owner sends the prepared message by hand.
@@ -305,6 +305,7 @@ export default function CollectionsPage() {
       posthog.capture("csv_uploaded", { invoice_count: res.count });
       setShowImport(false);
       loadInvoices(user.id);
+      refreshSummary(user.id);
     } catch {
       notify("That CSV couldn't be read. Check the columns and try again.", "critical");
     } finally { setUploading(false); }
@@ -403,7 +404,8 @@ export default function CollectionsPage() {
       const d = await r.json();
       if (d.success) {
         setImportMsg({ ok: true, text: `${formatCount(d.imported)} invoices imported.` });
-        setTimeout(() => { setShowImport(false); setImportMsg(null); const user = getUser(); if (user?.id) loadInvoices(user.id); }, 1600);
+        const user = getUser(); if (user?.id) { loadInvoices(user.id); refreshSummary(user.id); }
+        setTimeout(() => { setShowImport(false); setImportMsg(null); }, 1600);
       } else {
         setImportMsg({ ok: false, text: d.hint ? `That file couldn't be imported. ${d.hint}` : "That file couldn't be imported. Check that it has customer, amount and date columns." });
       }
@@ -432,6 +434,7 @@ export default function CollectionsPage() {
       setShowAddInvoice(false);
       setAddForm(emptyAdd());
       loadInvoices(user.id);
+      refreshSummary(user.id);
     } catch {
       setAddError("Couldn't save the invoice. Check your connection and try again.");
     } finally {
@@ -512,7 +515,7 @@ export default function CollectionsPage() {
       key: "late", header: <SortHeader label="Days late" active={sortKey === "daysOverdue"} dir={sortDir} onClick={() => toggleSort("daysOverdue")} />,
       width: "96px", align: "right", hide: "sm",
       render: c => c.daysOverdue <= 0
-        ? <span style={{ fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--ink-2)" }}>Due today</span>
+        ? <span style={{ fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--ink-2)" }}>Not overdue</span>
         : <span style={{ color: c.daysOverdue > 60 ? "var(--ink)" : "var(--body)" }}>{formatCount(c.daysOverdue)}</span>,
     },
     {
@@ -616,7 +619,7 @@ export default function CollectionsPage() {
               { label: "Outstanding", value: inrWhole(figures.total), note: `${formatCount(tableData.length)} unpaid invoice${tableData.length === 1 ? "" : "s"}` },
               { label: "Overdue", value: inrWhole(figures.overdue), note: `${formatCount(figures.overdueCount)} past due date` },
               { label: "Over 60 days late", value: inrWhole(figures.over60), note: figures.over60Count ? `${formatCount(figures.over60Count)} to chase first` : "None" },
-              { label: "Due today", value: inrWhole(figures.dueToday), note: `${formatCount(figures.dueTodayCount)} invoice${figures.dueTodayCount === 1 ? "" : "s"}` },
+              { label: "Not overdue yet", value: inrWhole(figures.dueToday), note: `${formatCount(figures.dueTodayCount)} invoice${figures.dueTodayCount === 1 ? "" : "s"}` },
             ]} />
 
             <div className={s.stack}>

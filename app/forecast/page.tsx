@@ -81,7 +81,7 @@ export default function ForecastPage() {
   const [loading, setLoading]   = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [chartData, setChartData] = useState<Point[]>([]);
-  const [kpis, setKpis]         = useState({ cashStart: 0, burnRate: 0, avgCollections: 0, runwayDays: 0 });
+  const [kpis, setKpis]         = useState({ cashStart: 0, burnRate: 0, avgCollections: 0, runwayDays: 0, collectionsBasis: "history" as string });
   const [topImpact, setTopImpact] = useState<Impact[]>([]);
   const [noData, setNoData]     = useState(false);
   // Read after mount: reading storage during render made the server and
@@ -143,6 +143,7 @@ export default function ForecastPage() {
             cashStart:      f.cashStart || 0,
             burnRate:       f.burnRate || 0,
             avgCollections: f.avgDailyCollections || 0,
+            collectionsBasis: f.collectionsBasis || "history",
             runwayDays:     sc?.pessimistic?.runwayDays ?? sc?.expected?.runwayDays ?? 0,
           });
         }
@@ -277,13 +278,13 @@ export default function ForecastPage() {
               <FigureRow items={[
                 { label: "Cash in hand", value: openingCash ? inrWhole(kpis.cashStart) : wordFigure("Not set"), note: openingCash ? "As you entered it" : "Set it to see your runway" },
                 { label: "Spending a day", value: inrWhole(kpis.burnRate), note: "From your purchases" },
-                { label: "Collections a day", value: inrWhole(kpis.avgCollections), note: "Average from history" },
+                { label: "Collections a day", value: inrWhole(kpis.avgCollections), note: kpis.collectionsBasis === "assumed" ? "Assumed: no payments recorded yet" : kpis.collectionsBasis === "bank" ? "From bank credits, last 30 days" : "Average from paid invoices" },
                 { label: "Runway", value: runwayValue, note: !openingCash ? "Needs cash in hand" : runwayNever ? "Cash doesn't run out in any case" : "Pessimistic case", tone: isRunwayDanger ? "var(--critical)" : undefined },
               ]} />
 
               <Panel
                 title={`Cash balance, next ${range} days`}
-                sub="Three cases from your actual collection rate. Pick the one to read in full."
+                sub={kpis.collectionsBasis === "assumed" ? "Three cases from an assumed collection rate until payments are recorded. Pick the one to read in full." : "Three cases from your actual collection rate. Pick the one to read in full."}
                 right={<Segmented label="Forecast range" value={range} onChange={setRange} options={[{ key: 30, label: "30 days" }, { key: 60, label: "60 days" }, { key: 90, label: "90 days" }]} />}
                 flush
               >

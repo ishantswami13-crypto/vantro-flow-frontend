@@ -101,6 +101,7 @@ const nextConfig = {
       ...to('/customers', '/khata'),
       ...to('/sources', '/sales', '/purchases', '/bank', '/ledger', '/scanner'),
       ...to('/control', '/team'),
+      ...to('/control/audit', '/audit'),
     ];
   },
 };
