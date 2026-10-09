@@ -170,16 +170,12 @@ export default function BillingPage() {
         {isFree ? (
           <div className="rounded-2xl border border-danger/25 bg-danger/5 p-6">
             <div className="flex items-start gap-4">
-              <div className="text-3xl shrink-0">🔴</div>
               <div>
                 <h1 className="text-lg font-black text-primary mb-1">
                   You're on Free — reminders aren't sending themselves.
                 </h1>
                 <p className="text-sm text-secondary leading-relaxed">
-                  Every overdue invoice on your dashboard is waiting for a manual message.
-                  That's hours every week. Businesses on Growth recover
-                  <span className="text-white font-bold"> 3.2× more </span>
-                  in the same time — because automation does the chasing.
+                  Every overdue invoice is waiting for a manual message.
                 </p>
               </div>
             </div>
