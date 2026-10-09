@@ -12,14 +12,13 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { PageHeader, SkeletonRows } from "@/components/v32/ui";
-import { IconSparkle, IconWhatsApp, IconLogout, IconTrash, IconPlus, IconSun, IconMoon } from "@/components/v32/icons";
+import { IconWhatsApp, IconLogout, IconTrash, IconPlus, IconSun, IconMoon } from "@/components/v32/icons";
 import { Panel, Group, Fields, Field, Prefixed, Segmented, Switch, SaveBar, SettingsStyles } from "@/components/settings/SettingsUI";
-import { api, getUser, clearAuth, type DunningRule, type DeliveryLine, type DeliveryStatus, authHeaders } from "@/lib/api";
+import { api, getUser, clearAuth, type DunningRule, type DeliveryLine, type DeliveryStatus } from "@/lib/api";
 import { INDUSTRY_OPTIONS, setBusinessType } from "@/lib/businessTypes";
 import { getTheme, setTheme, THEME_EVENT, type Theme } from "@/lib/theme";
 import { formatCount } from "@/lib/format";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 const OFFLINE = "Couldn't reach Starlane. Check your connection and try again.";
 const NOT_SAVED = "Your changes weren't saved. Check your connection and try again.";
 

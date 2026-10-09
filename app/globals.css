@@ -73,51 +73,9 @@
 /* ============================================================
    STARLANE / NEW DESIGN SYSTEM
    ============================================================ */
-.atlas-grain::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-  opacity: 0.5;
-}
-.atlas-mark-anim {
-  animation: atlasBreath 4s ease-in-out infinite;
-}
 @keyframes atlasBreath {
   0%,100% { opacity: .82; }
   50%      { opacity: 1;   }
-}
-@keyframes marqueeL {
-  to { transform: translateX(-50%); }
-}
-@keyframes marqueeR {
-  to { transform: translateX(50%); }
-}
-.animate-marquee-l {
-  animation: marqueeL 52s linear infinite;
-}
-.animate-marquee-r {
-  animation: marqueeR 58s linear infinite;
-}
-.tmarquee-pause:hover .animate-marquee-l,
-.tmarquee-pause:hover .animate-marquee-r {
-  animation-play-state: paused;
-}
-@keyframes integrationMq {
-  to { transform: translateX(-50%); }
-}
-.animate-mq { animation: integrationMq 28s linear infinite; }
-
-.pipe-signal-anim {
-  animation: pipeSignal 3s ease-in-out infinite;
-}
-@keyframes pipeSignal {
-  0%   { top: 0;    opacity: 0; }
-  10%  { opacity: 1; }
-  90%  { opacity: 1; }
-  100% { top: 100%; opacity: 0; }
 }
 
 /* ============================================================
@@ -132,15 +90,6 @@
 /* ============================================================
    GLASSMORPHISM
    ============================================================ */
-.glass {
-  background: #080808;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-
-.glass-surface {
-  background: #0e0e0e;
-  border: 1px solid rgba(255,255,255,0.06);
-}
 
 /* Figures: the UI sans with tabular numbers. */
 .metric-value {
@@ -157,16 +106,6 @@
   font-size: 2rem;
   letter-spacing: -0.02em;
   line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
-}
-
-.metric-xl {
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: 2.5rem;
-  letter-spacing: -0.02em;
-  line-height: 1;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
@@ -200,16 +139,14 @@
    ============================================================ */
 .card,
 .card-premium,
-.card-metric,
-.card-base {
+.card-metric {
   background: var(--surface-1);
   border: 1px solid var(--border);
   border-radius: 10px;
   transition: border-color 0.15s ease;
 }
 
-.card-metric,
-.card-base {
+.card-metric {
   background: var(--surface-2);
 }
 
@@ -222,38 +159,11 @@
 /* ============================================================
    PROGRESS BAR
    ============================================================ */
-.progress-bar {
-  height: 3px;
-  background: var(--border);
-  border-radius: 99px;
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  border-radius: 99px;
-  transition: width 1s cubic-bezier(0.4,0,0.2,1);
-}
 
 /* ============================================================
    INPUT BASE  (.card-base is now defined above, in the unified
    surface/card primitive block — kept as one alias, not redefined here)
    ============================================================ */
-.input-base {
-  background: var(--surface);
-  border: 1px solid var(--line-hairline);
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: var(--ink);
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.2s, background 0.2s;
-  width: 100%;
-}
-.input-base:focus {
-  border-color: rgba(var(--accent-rgb), 0.5);
-  background: var(--surface);
-}
-.input-base::placeholder { color: var(--ink-3); }
 
 /* ============================================================
    TABLE PREMIUM
@@ -270,10 +180,6 @@
 /* ============================================================
    SIDEBAR
    ============================================================ */
-.sidebar-glass {
-  background: var(--sidebar);
-  border-right: 1px solid rgba(255,255,255,0.06);
-}
 
 /* ============================================================
    BUTTONS
@@ -290,15 +196,6 @@
 /* ── Primary action button — monochrome, no brand-color CTA system.
    Kept as .btn-cta for now (call sites unchanged) but restyled to the
    same restrained near-black-fill language as .btn-primary. ── */
-.btn-cta {
-  background: var(--inverse);
-  color: var(--on-inverse);
-  font-weight: 500;
-  border: 1px solid var(--inverse);
-  transition: background var(--dur-fast) var(--ease);
-}
-.btn-cta:hover { background: var(--inverse-hover); }
-.btn-cta:active { background: var(--inverse-hover); }
 
 /* ============================================================
    STATUS INDICATOR — a static dot, not an infinite pulsing glow.
@@ -306,19 +203,6 @@
    card-metric-critical fix); "live" is communicated by the word itself
    and the dot, not by motion.
    ============================================================ */
-.status-live {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.status-live::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--positive);
-}
 
 /* ============================================================
    SKELETON LOADER
@@ -340,7 +224,6 @@
    system above; new Phase-3/4 pages should build on these rather than
    the Atlas dark-theme primitives.
    ============================================================ */
-.v32-ease { transition-timing-function: cubic-bezier(0.2,0.8,0.2,1); }
 
 @keyframes fadeInOnce {
   from { opacity: 0; transform: translateY(4px); }
@@ -354,15 +237,6 @@
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.card-in {
-  animation: fadeUp 420ms cubic-bezier(0.16,1,0.3,1) both;
-}
-.card-in:nth-child(1) { animation-delay: 0ms; }
-.card-in:nth-child(2) { animation-delay: 70ms; }
-.card-in:nth-child(3) { animation-delay: 140ms; }
-.card-in:nth-child(4) { animation-delay: 210ms; }
-.card-in:nth-child(5) { animation-delay: 280ms; }
-.card-in:nth-child(6) { animation-delay: 350ms; }
 
 @keyframes drawerIn {
   from { opacity: 0; transform: translateX(16px); }
@@ -373,7 +247,7 @@
   to   { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .fade-once, .card-in { animation: none; }
+  .fade-once { animation: none; }
 }
 
 /* Global base transitions (handoff §3 Motion) — applied to every interactive
@@ -394,9 +268,6 @@ a, button, input, textarea {
 .row-hover:hover { background: var(--surface-2) !important; }
 .row-chevron { transition: transform 120ms cubic-bezier(0.2,0.8,0.2,1), color 120ms cubic-bezier(0.2,0.8,0.2,1); color: var(--ink-3); }
 .row-hover:hover .row-chevron { transform: translateX(2px); color: var(--ink); }
-
-.hover-fade { transition: color 120ms cubic-bezier(0.2,0.8,0.2,1), background-color 120ms cubic-bezier(0.2,0.8,0.2,1); }
-.hover-fade:hover { color: #F5F4F0 !important; background: rgba(255,255,255,0.08); }
 .hover-dim { transition: opacity 120ms cubic-bezier(0.2,0.8,0.2,1); }
 .hover-dim:hover { opacity: 0.72; }
 .hover-lift { transition: transform 120ms cubic-bezier(0.2,0.8,0.2,1), box-shadow 180ms cubic-bezier(0.2,0.8,0.2,1), border-color 120ms cubic-bezier(0.2,0.8,0.2,1); }
@@ -411,11 +282,6 @@ a, button, input, textarea {
   transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
 }
 .btn-primary-v32:hover { background: var(--inverse-hover) !important; }
-.btn-primary-sidebar {
-  background: #1B1B18; color: #F5F4F0; border: 1px solid rgba(255,255,255,0.14); border-radius: 7px;
-  transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
-}
-.btn-primary-sidebar:hover { background: #2A2A2E !important; }
 .btn-secondary-v32 {
   background: none; border: 1px solid rgb(var(--tk-ink) / 0.14); color: var(--body); border-radius: 6px;
   transition: background-color 120ms cubic-bezier(0.2,0.8,0.2,1), border-color 120ms cubic-bezier(0.2,0.8,0.2,1), transform 120ms cubic-bezier(0.2,0.8,0.2,1);
@@ -424,39 +290,10 @@ a, button, input, textarea {
 button:not(:disabled):active { transform: scale(0.98); }
 
 /* Type scale (handoff §3) */
-.v32-page-title { font-family: var(--font-display); font-weight: 400; font-size: 26px; color: var(--ink); }
-.v32-section-label {
-  font-size: 12px; color: var(--ink-3); font-weight: 400;
-}
-.v32-meta { font-size: 11.5px; color: var(--ink-3); }
-.v32-body { font-size: 13.5px; color: var(--body); }
 
 /* Table visual language (handoff §12) */
-.v32-table thead th {
-  background: var(--surface-2); font-size: 12px; color: var(--ink-3);
-  text-align: left; padding: 10px 16px; font-weight: 500;
-}
-.v32-table tbody td { padding: 10px 16px; font-size: 13px; color: var(--ink); }
-.v32-table tbody td.v32-numeric { font-variant-numeric: tabular-nums; }
-.v32-table tbody tr { border-bottom: 1px solid rgb(var(--tk-ink) / 0.06); }
 
 /* Drawer shell (Lens / Evidence — handoff §9/§10) */
-.v32-drawer-backdrop {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: var(--z-drawer);
-  animation: backdropIn 200ms cubic-bezier(0.2,0.8,0.2,1) both;
-}
-.v32-drawer-panel {
-  position: fixed; top: 0; right: 0; bottom: 0; width: 560px; background: var(--elevated); z-index: var(--z-drawer);
-  border-left: 1px solid var(--line); box-shadow: var(--shadow-lg);
-  animation: drawerIn 220ms cubic-bezier(0.2,0.8,0.2,1) both;
-  display: flex; flex-direction: column;
-}
-@media (prefers-reduced-motion: reduce) {
-  .v32-drawer-backdrop, .v32-drawer-panel { animation: none; }
-}
-@media (max-width: 768px) {
-  .v32-drawer-panel { width: 100vw; }
-}
 
 /* ============================================================
    FOCUS / ACCESSIBILITY
@@ -471,18 +308,6 @@ button:not(:disabled):active { transform: scale(0.98); }
 /* ============================================================
    SCORE BAR (collection probability)
    ============================================================ */
-.score-bar-track {
-  width: 56px;
-  height: 4px;
-  background: var(--border);
-  border-radius: 99px;
-  overflow: hidden;
-}
-.score-bar-fill {
-  height: 100%;
-  border-radius: 99px;
-  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
-}
 
 /* ============================================================
    PAGE TRANSITIONS
@@ -494,13 +319,6 @@ button:not(:disabled):active { transform: scale(0.98); }
 }
 
 /* Stagger children */
-.stagger-children > * { animation: fade-in-up 0.3s ease-out both; }
-.stagger-children > *:nth-child(1) { animation-delay: 0ms;  }
-.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 100ms;}
-.stagger-children > *:nth-child(4) { animation-delay: 150ms;}
-.stagger-children > *:nth-child(5) { animation-delay: 200ms;}
-.stagger-children > *:nth-child(6) { animation-delay: 250ms;}
 
 /* ============================================================
    RECHARTS OVERRIDES
@@ -560,32 +378,14 @@ input:focus, select:focus, textarea:focus {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
-.animate-marquee {
-  display: flex;
-  width: max-content;
-  animation: marquee 22s linear infinite;
-  will-change: transform;
-}
-.animate-marquee:hover { animation-play-state: paused; }
 
 /* ============================================================
    LANDING PAGE — FLOAT
    ============================================================ */
-@keyframes float-slow {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-10px); }
-}
-.animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
 
 /* ============================================================
    LANDING PAGE — FADE IN SCALE (hero cards)
    ============================================================ */
-.animate-fade-in {
-  animation: fade-in 0.4s ease-out both;
-}
-.animate-fade-in-scale {
-  animation: fade-in-scale 0.5s cubic-bezier(0.22,1,0.36,1) both;
-}
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fade-in-scale {
   from { opacity: 0; transform: scale(0.94) translateY(12px); }
@@ -598,30 +398,20 @@ input:focus, select:focus, textarea:focus {
 /* ============================================================
    PAGE FADE (used in DashboardLayout)
    ============================================================ */
-.page-fade { animation: fade-in 0.25s ease-out both; }
 
 /* ============================================================
    CRITICAL CARD — static, not pulsing. A permanently-glowing red card
    trained the eye to ignore it (everything "important" pulsed); a fixed
    border is the calmer, more legible way to say "this one needs a look."
    ============================================================ */
-.card-metric-critical {
-  border-color: rgb(var(--tk-critical) / 0.4) !important;
-}
 
 /* ============================================================
    SCORE RING — SVG circular progress
    ============================================================ */
-.score-ring-track { fill: none; stroke: var(--line); }
-.score-ring-fill  { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1); }
 
 /* ============================================================
    WHATSAPP BUBBLE PREVIEW
    ============================================================ */
-.wa-bubble-bg {
-  background-color: #0B1418;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-}
 
 /* ============================================================
    COOKIE CONSENT BANNER
@@ -665,10 +455,8 @@ main h2 {
 }
 
 .id-gradient { background: var(--accent); }
-.id-gradient-text { color: var(--accent); }
 
 /* Kept as a no-op: the canvas is flat. */
-.id-wash { background-image: none; }
 
 /* Reduced motion, everywhere: people who ask the OS for less motion get none,
    including the width-animated progress and score bars and Tailwind's
@@ -716,8 +504,7 @@ button:disabled { cursor: default; }
 @media (min-width: 1024px) { .scan-greeting { font-size: 34px; } }
 
 /* Simulate: real <select>s and radios drawn with tokens. */
-.sim-pill, .sim-select { appearance: none; -webkit-appearance: none; cursor: pointer; background-image: none; }
-.sim-radio { accent-color: var(--accent); margin-top: 3px; flex-shrink: 0; }
+.sim-select { appearance: none; -webkit-appearance: none; cursor: pointer; background-image: none; }
 
 
 /* ============================================================
@@ -747,18 +534,8 @@ button:disabled { cursor: default; }
 .page-in { animation: pageIn 420ms var(--ease-out-soft) backwards; }
 
 /* Rows arrive one after another (delay set inline per index). */
-@keyframes riseIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to   { opacity: 1; transform: none; }
-}
-.rise-in { animation: riseIn 460ms var(--ease-out-soft) both; }
 
 /* Figures settle into focus the first time they render. */
-@keyframes figureIn {
-  from { opacity: 0; filter: blur(3px); letter-spacing: 0.04em; }
-  to   { opacity: 1; filter: blur(0); letter-spacing: normal; }
-}
-.figure-in { animation: figureIn 620ms var(--ease-out-soft) both; display: inline-block; }
 
 /* Hairline rules draw in from the left. */
 @keyframes ruleDraw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
@@ -786,13 +563,13 @@ button:disabled { cursor: default; }
 }
 
 /* Primary buttons: a single light sheen passes on hover. */
-.btn-primary-v32, .btn-primary-sidebar { position: relative; overflow: hidden; isolation: isolate; }
-.btn-primary-v32::after, .btn-primary-sidebar::after {
+.btn-primary-v32 { position: relative; overflow: hidden; isolation: isolate; }
+.btn-primary-v32::after {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background: linear-gradient(110deg, transparent 30%, rgb(var(--tk-ink) / 0.10) 50%, transparent 70%);
   transform: translateX(-120%);
 }
-.btn-primary-v32:hover::after, .btn-primary-sidebar:hover::after {
+.btn-primary-v32:hover::after {
   transform: translateX(120%); transition: transform 700ms var(--ease-out-soft);
 }
 
@@ -822,12 +599,11 @@ button:disabled { cursor: default; }
 .pop-in { animation: popIn 200ms var(--ease-out-soft) both; transform-origin: top center; }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-in, .rise-in, .figure-in, .rule-draw, .pop-in,
-  .thinking-dots > span, .v32-wrap .skeleton {
+  .page-in, .rule-draw, .pop-in, .thinking-dots > span, .v32-wrap .skeleton {
     animation: none !important;
   }
-  .figure-in, .page-in { filter: none; }
-  .btn-primary-v32:hover::after, .btn-primary-sidebar:hover::after { transition: none; transform: translateX(-120%); }
+  .page-in { filter: none; }
+  .btn-primary-v32:hover::after { transition: none; transform: translateX(-120%); }
 }
 
 /* Scan composer: one rounded box like a chat app, a plus menu on the left
@@ -946,16 +722,6 @@ button:disabled { cursor: default; }
 .page-search input:focus, .page-search input:focus-visible { outline: none; box-shadow: none; }
 
 /* Card grid still used by Bridge's recent conversations (not a Work page). */
-.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
-@media (max-width: 480px) { .lib-grid { grid-template-columns: minmax(0, 1fr); } }
-.lib-card {
-  position: relative; display: flex; flex-direction: column; gap: 12px; padding: 16px; text-align: left; box-sizing: border-box; min-height: 128px;
-  background: var(--surface); border: 1px solid var(--line-card); border-radius: var(--radius-lg); cursor: pointer; text-decoration: none;
-  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
-}
-.lib-card:hover, .lib-card:focus-visible { background: var(--surface-2); border-color: var(--line-emphasis); }
-.lib-card:focus-visible { outline: 2px solid rgba(var(--accent-rgb), 0.7); outline-offset: 2px; }
-.lib-tag { font-size: 12px; color: var(--ink-3); }
 
 /* Library: prompts and workflows as rows. A prompt row is a quiet table
    line whose question asks Scan; the "Ask Scan" cue darkens on hover. */
@@ -1102,7 +868,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: rgb(var(--accent-rgb
 :root { --paper-grain: none; }
 
 /* Type: figures that must align use IBM Plex Mono. */
-.num, [data-numeric], td.v32-numeric { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.num, [data-numeric] { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 body { font-size: 13.5px; line-height: 1.5; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 .prose-measure { max-width: 68ch; line-height: 1.6; color: var(--body); }
 
@@ -1119,15 +885,13 @@ body { font-size: 13.5px; line-height: 1.5; -webkit-font-smoothing: antialiased;
 
 /* Motion: one subtle page entrance, no staggers, no blur, no theatrics. */
 @keyframes slEnter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.page-in, .page-enter, .page-fade, .fade-once { animation: slEnter 180ms var(--ease) backwards; }
-.card-in, .rise-in, .stagger-children > *, .fade-in, .fade-in-scale { animation: none !important; }
-.figure-in { animation: none; }
+.page-in, .page-enter, .fade-once { animation: slEnter 180ms var(--ease) backwards; }
 .rule-draw { animation: none; }
 @keyframes drawerIn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
 @keyframes slModal { from { opacity: 0; transform: scale(0.985); } to { opacity: 1; transform: none; } }
 .pop-in { animation: slModal 160ms var(--ease) both; }
 .hover-lift:hover { transform: none !important; box-shadow: none !important; }
-@media (prefers-reduced-motion: reduce) { .page-in, .page-enter, .page-fade, .fade-once, .pop-in { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .page-in, .page-enter, .fade-once, .pop-in { animation: none; } }
 
 /* Controls: compact, one height family, a quiet press. */
 .ui-btn { height: 30px; padding: 0 12px; font-size: 13px; border-radius: var(--radius-sm); transition: background-color var(--dur-instant) var(--ease), border-color var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease), transform var(--dur-instant) var(--ease); }
@@ -1156,21 +920,20 @@ body { font-size: 13.5px; line-height: 1.5; -webkit-font-smoothing: antialiased;
 .ui-panel { border-color: var(--line); border-radius: var(--radius-md); box-shadow: none; }
 
 /* Tables: muted 11px headers, hairline rows, a barely-there hover. */
-.v32-table thead th, table.sl-table thead th {
+table.sl-table thead th {
   background: transparent;
   font-size: 11px; font-weight: 500; letter-spacing: 0.02em; text-transform: none; color: var(--ink-3);
   padding-top: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
 }
-.v32-table tbody tr, table.sl-table tbody tr { transition: background-color var(--dur-instant) var(--ease); }
-.v32-table tbody tr:hover, table.sl-table tbody tr:hover { background: var(--surface-2); }
+table.sl-table tbody tr { transition: background-color var(--dur-instant) var(--ease); }
+table.sl-table tbody tr:hover { background: var(--surface-2); }
 .row-chevron { transition: transform var(--dur-instant) var(--ease), color var(--dur-instant) var(--ease); }
 a:hover .row-chevron, button:hover .row-chevron, tr:hover .row-chevron { transform: translateX(2px); color: var(--ink); }
 
 /* Human attention: a slight left rule, not a loud box. */
-.needs-you { box-shadow: inset 2px 0 0 var(--ink); }
 
 /* Drawers: white, thin left border, soft shadow, short slide. */
-.v32-drawer-panel, .lens-drawer { border-left: 1px solid var(--line); box-shadow: var(--shadow-lg); }
+.lens-drawer { border-left: 1px solid var(--line); box-shadow: var(--shadow-lg); }
 
 /* Focus: a thin high-contrast ring. */
 :focus-visible { outline: 1.5px solid var(--ink); outline-offset: 2px; }
@@ -1380,7 +1143,7 @@ a.wk-row:hover, button.wk-row:hover { background: var(--surface-2); }
 
 /* Mono is for numbers, ids and technical values, and never fragile:
    weight 500 renders solid at 11–13px. Tiny timestamps stay in the sans. */
-.num, [data-numeric], td.v32-numeric { font-weight: 500; letter-spacing: -0.015em; }
+.num, [data-numeric] { font-weight: 500; letter-spacing: -0.015em; }
 .num-quiet { font-family: var(--font-sans); font-variant-numeric: tabular-nums; font-weight: 400; letter-spacing: 0; }
 
 /* Section labels read as structure, not as a whisper. */
@@ -1404,7 +1167,7 @@ body { color: var(--ink); }
 .ui-input { height: 34px; }
 
 /* Table headers: muted but legible. */
-.v32-table thead th, table.sl-table thead th { color: var(--ink-2); }
+table.sl-table thead th { color: var(--ink-2); }
 
 /* Elevated band: a page's lead section can sit on white over the warm canvas,
    separated by hairlines, without becoming a card. */

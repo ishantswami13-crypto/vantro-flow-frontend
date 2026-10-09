@@ -3,7 +3,6 @@
 // Real numbers only; null when it can't be read (the shell then shows nothing).
 
 import { request, isLoggedIn } from "@/lib/api";
-import { isDemoMode } from "@/lib/demo";
 import type { BridgeView } from "../packages/contracts/src/features";
 
 export type Pulse = {
@@ -17,7 +16,7 @@ let cache: { at: number; value: Pulse | null } | null = null;
 let inflight: Promise<Pulse | null> | null = null;
 
 export function loadPulse(): Promise<Pulse | null> {
-  if (typeof window === "undefined" || !isLoggedIn() || isDemoMode()) return Promise.resolve(null);
+  if (typeof window === "undefined" || !isLoggedIn()) return Promise.resolve(null);
   if (cache && Date.now() - cache.at < 60_000) return Promise.resolve(cache.value);
   if (inflight) return inflight;
   inflight = request<BridgeView>("/api/client/bridge")

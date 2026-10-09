@@ -5,15 +5,12 @@ import TopBar from "./TopBar";
 import { CommandPalette, type SearchableRoute } from "./CommandPalette";
 import { Modal } from "@/components/ui/Modal";
 import { V32_NAV_ITEMS, V32_WORKSPACE_NAV_ITEMS, MORE_NAV_ITEMS, OTHER_PAGES } from "@/lib/navigation";
-import { IconInfo } from "@/components/v32/icons";
 import InstallPrompt from "@/components/ui/InstallPrompt";
 import { usePathname, useRouter } from "next/navigation";
-import { isDemoMode, exitDemoMode } from "@/lib/demo";
 import { hydrateUserContext } from "@/lib/featureGating";
 import { api, authenticatedFetch, authHeaders, isLoggedIn } from "@/lib/api";
 import { recordRecent } from "@/lib/recents";
 import { useApplyIdentity } from "@/components/identity/useIdentity";
-import Link from "next/link";
 
 
 interface DashboardLayoutProps {
@@ -98,13 +95,11 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [showNotifBanner, setShowNotifBanner] = useState(false);
-  const [isDemo, setIsDemo] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   // Keeps the user's colour identity (--id-* CSS variables) on :root.
   useApplyIdentity();
 
-  useEffect(() => { setIsDemo(isDemoMode()); }, []);
 
   // The rail starts collapsed on narrow windows (the desktop app's 960px
   // minimum) unless the person chose otherwise.
@@ -226,26 +221,8 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <TopBar pageTitle={pageTitle} onMenu={() => setSidebarOpen(true)} onSearch={() => setPaletteOpen(true)} />
 
-        {/* Demo notice: a quiet strip, sentence case, never alarming. */}
-        {isDemo && (
-          <div className="flex items-center justify-between gap-3 px-5 shrink-0" style={{ height: 34, background: "var(--surface-2)", borderBottom: "1px solid var(--line)" }}>
-            <span className="text-xs flex items-center gap-1.5" style={{ color: "var(--ink-2)" }}>
-              <IconInfo size={13} />
-              Sample data for a demonstration, not your business
-            </span>
-            <div className="flex items-center gap-3 shrink-0">
-              <Link href="/signup" onClick={() => exitDemoMode()} className="text-xs font-medium" style={{ color: "var(--ink)" }}>
-                Sign up to use your own data
-              </Link>
-              <button onClick={() => { exitDemoMode(); window.location.href = "/login"; }} className="text-xs" style={{ color: "var(--ink-2)" }}>
-                Exit
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Push notification permission banner */}
-        {showNotifBanner && !isDemo && (
+        {showNotifBanner && (
           <div className="px-5 flex items-center justify-between gap-3 shrink-0" style={{ height: 40, background: "var(--surface)", borderBottom: "1px solid var(--line)", fontSize: 12.5 }}>
             <span style={{ color: "var(--body)" }}>Get a notification the moment a payment lands.</span>
             <div className="flex gap-1 shrink-0">
