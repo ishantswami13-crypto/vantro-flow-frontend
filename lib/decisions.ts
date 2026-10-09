@@ -344,12 +344,6 @@ export interface ImportCommit {
   firstLook: FirstLook;
 }
 
-export interface DataProfile extends LedgerProfile {
-  freshness: { status: string; lastUpdateAt: string | null; detail: string };
-  sources: Record<string, number>;
-  recentImports: { filename: string; status: string; completed_at: string | null; rows_total: number; rows_accepted: number; rows_rejected: number }[];
-}
-
 export const FEEDBACK_KINDS = [
   { kind: 'USEFUL', label: 'Useful' },
   { kind: 'MATTERS', label: 'This matters' },
@@ -409,7 +403,6 @@ export const decisionsApi = {
   backtest: (horizonDays = 60) => call<BacktestResponse>('POST', '/backtest', { horizonDays }, 120_000),
   importPreview: (file: File, options?: ImportOptions | null) => upload<ImportPreview>('/import/preview', file, options),
   importCommit: (file: File, options: ImportOptions) => upload<ImportCommit>('/import/commit', file, options),
-  dataProfile: () => call<DataProfile>('GET', '/data-profile'),
   feedback: (id: string, kind: FeedbackKind, note?: string, optionKey?: string) => call<{ recorded: boolean; label: string }>('POST', `/${encodeURIComponent(id)}/feedback`, { kind, note, optionKey }),
   similar: (id: string) => call<SimilarResponse>('GET', `/${encodeURIComponent(id)}/similar`),
   getFeedback: (id: string) => call<{ feedback: { kind: FeedbackKind; label: string; note: string | null; optionKey: string | null; at: string }[] }>('GET', `/${encodeURIComponent(id)}/feedback`),
