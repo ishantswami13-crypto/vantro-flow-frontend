@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Chevron, PageHeader, SearchField, SectionTitle, Subnav } from "@/components/v32/ui";
 import {
-  IconAgents, IconBookmarkFilled, IconDiscover, IconLink, IconMemory,
+  IconAgents, IconBookmarkFilled, IconLink, IconMemory,
   IconMissions, IconPlus, IconPrepared, IconScan, IconSimulate, IconSparkle, IconUpload, IconWatch,
 } from "@/components/v32/icons";
 import { listSavedPrompts, removeSavedPrompt, SAVED_PROMPTS_EVENT, type SavedPrompt } from "@/lib/promptStore";
@@ -41,7 +41,6 @@ const WORKFLOWS: Workflow[] = [
   { area: "Data", title: "Import invoices", does: "Bring in a receivables or sales export.", get: "Your invoices ready to scan", href: "/decisions/import", icon: <IconUpload size={14} /> },
   { area: "Data", title: "Connect Tally", does: "Sync customers and invoices from Tally.", get: "Data that stays up to date", href: "/sources", icon: <IconLink size={14} /> },
   { area: "Insight", title: "Scan my books", does: "Rebuilds how invoices turn into cash.", get: "Bottlenecks and opportunities", href: "/scan?books=1", icon: <IconSparkle size={14} /> },
-  { area: "Insight", title: "Find opportunities", does: "Findings Starlane spotted in your data.", get: "A ranked list to act on", href: "/discover", icon: <IconDiscover size={14} /> },
   { area: "Insight", title: "See what changed", does: "How each item reached its current state.", get: "A timeline you can trace", href: "/memory", icon: <IconMemory size={14} /> },
   { area: "Insight", title: "See what runs for you", does: "The agents working in this workspace.", get: "Last run and status of each", href: "/agents", icon: <IconAgents size={14} /> },
 ];
