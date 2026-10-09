@@ -44,8 +44,8 @@ const securityHeaders = [
   { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
   // Don't leak URL in Referer header to third parties
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  // Restrict browser features — allow camera/mic only on same origin (needed for OCR scanner)
-  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=(), payment=(self "https://checkout.razorpay.com"), usb=()' },
+  // Restrict browser features. Nothing in the app uses the camera or microphone.
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(self "https://checkout.razorpay.com"), usb=()' },
   // Content Security Policy — allow only our own assets + backend + trusted CDNs
   {
     key: 'Content-Security-Policy',

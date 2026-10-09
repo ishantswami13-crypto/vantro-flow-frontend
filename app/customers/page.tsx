@@ -1,12 +1,11 @@
 "use client";
 
-// Customers: everyone you sell to, built from sales, invoices and khata
+// Customers: everyone you sell to, built from your books and invoices
 // (GET /api/khata), with the balance each one carries, their risk tier when
 // scoring is on, and the customers the portfolio view says need attention.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, authHeaders, getUser, type CustomerPortfolioResponse } from "@/lib/api";
 import { inrWhole, formatDate, formatCount } from "@/lib/format";
@@ -170,7 +169,6 @@ export default function CustomersPage() {
       render: c => (
         <RowMenu label={`Actions for ${c.customer_name}`} items={[
           { label: "Open details", onSelect: () => setLensCustomer(c) },
-          { label: "Open khata", href: `/khata?customer=${encodeURIComponent(c.customer_name)}` },
           ...(c.customer_phone ? [{ label: "Call", href: `tel:${c.customer_phone}` }] : []),
           { label: c.customer_phone ? "Send statement on WhatsApp" : "Copy statement", onSelect: () => whatsappStatement(c) },
         ]} />
@@ -192,11 +190,10 @@ export default function CustomersPage() {
       <MorePage>
         <PageHeader
           title="Customers"
-          subtitle="Everyone you sell to, added from sales, invoices and khata."
+          subtitle="Everyone you sell to, from your connected books and invoices."
           right={
             <>
               <button type="button" className="icon-btn" aria-label="Refresh customers" title="Refresh" onClick={loadCustomers}><IconRefresh size={15} /></button>
-              <Button variant="primary" onClick={() => router.push("/khata")}>Open khata</Button>
             </>
           }
         />
@@ -214,8 +211,8 @@ export default function CustomersPage() {
             <EmptyState
               icon={<IconUsers size={17} />}
               title="No customers yet"
-              message="Customers appear here on their own when you record a sale, raise an invoice or add a khata entry."
-              action={<Button variant="secondary" onClick={() => router.push("/khata")}>Add a khata entry</Button>}
+              message="Customers appear here on their own once your books are connected or you raise an invoice."
+              action={<Button variant="secondary" onClick={() => router.push("/sources/connect")}>Connect a source</Button>}
             />
           </div>
         )}
@@ -239,15 +236,17 @@ export default function CustomersPage() {
                           </div>
                           <div className={s.sub} style={{ color: "var(--ink-2)", fontSize: 12.5 }}><span>{plain(c.healthEvidence[0] || c.evidence[0])}</span></div>
                         </div>
-                        <span className="flex items-center shrink-0" style={{ gap: 8, fontSize: 12.5, color: "var(--ink-2)" }}>
-                          {match ? "View customer" : "Open khata"}<Chevron />
-                        </span>
+                        {match && (
+                          <span className="flex items-center shrink-0" style={{ gap: 8, fontSize: 12.5, color: "var(--ink-2)" }}>
+                            View customer<Chevron />
+                          </span>
+                        )}
                       </>
                     );
-                    const cls = `${s.attnRow} ${s.attnLink} ${h.tone === "critical" ? s.attnLead : ""}`;
+                    const lead = h.tone === "critical" ? s.attnLead : "";
                     return match
-                      ? <button key={c.customerId || c.customerName} type="button" className={cls} onClick={() => setLensCustomer(match)}>{body}</button>
-                      : <Link key={c.customerId || c.customerName} href={`/khata?customer=${encodeURIComponent(c.customerName)}`} className={cls}>{body}</Link>;
+                      ? <button key={c.customerId || c.customerName} type="button" className={`${s.attnRow} ${s.attnLink} ${lead}`} onClick={() => setLensCustomer(match)}>{body}</button>
+                      : <div key={c.customerId || c.customerName} className={`${s.attnRow} ${lead}`}>{body}</div>;
                   })}
                 </div>
               </Panel>
@@ -303,7 +302,6 @@ export default function CustomersPage() {
             statusLabel={balance > 0 ? "Balance owed" : balance < 0 ? "Advance on account" : "Account settled"}
             sections={sections}
             actions={[
-              { label: "Open khata", onClick: () => { window.location.href = `/khata?customer=${encodeURIComponent(lensCustomer.customer_name)}`; } },
               { label: "WhatsApp", onClick: () => whatsappStatement(lensCustomer) },
               // Simulate: only when a real open invoice for this customer exists.
               ...(lensSimInvoiceId
