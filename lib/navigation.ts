@@ -50,10 +50,7 @@ export const MORE_NAV_ITEMS: PrimaryNavItem[] = [
 
 // Older pages: not on the rail, still searchable from Ctrl+K.
 export const OTHER_PAGES: { href: string; label: string }[] = [
-  { href: "/discover",       label: "Discover" },
   { href: "/today",          label: "Today" },
-  { href: "/business-state", label: "Business state" },
-  { href: "/dashboard",      label: "Overview" },
   { href: "/suppliers",      label: "Suppliers" },
   { href: "/invoice/new",    label: "New invoice" },
   { href: "/bank",           label: "Bank monitor" },
@@ -64,13 +61,9 @@ export const OTHER_PAGES: { href: string; label: string }[] = [
   { href: "/purchases",      label: "Purchases" },
   { href: "/orders",         label: "Today's orders" },
   { href: "/scanner",        label: "Invoice scanner" },
-  { href: "/attendance",     label: "Staff attendance" },
   { href: "/team",           label: "Team" },
   { href: "/whatsapp",       label: "WhatsApp" },
   { href: "/dunning",        label: "Auto follow-up" },
-  { href: "/ai-actions",     label: "Action center" },
-  { href: "/brain",          label: "Starlane brain" },
-  { href: "/analytics",      label: "Analytics" },
   { href: "/billing",        label: "Billing" },
 ];
 

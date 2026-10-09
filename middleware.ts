@@ -2,15 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const PROTECTED = [
-  '/dashboard', '/collections', '/whatsapp', '/dunning', '/forecast',
-  '/analytics', '/reports', '/inventory', '/crm', '/scanner',
-  '/ai-chat', '/billing', '/settings', '/bills', '/khata', '/bank',
-  '/today', '/customers', '/suppliers', '/sales', '/purchases', '/orders', '/attendance', '/team', '/brain', '/business-state',
-  '/neural-engine', '/network', '/ledger', '/my-id', '/admin',
-  '/ai-train', '/industry', '/invoice',
-  '/bad-debt', '/disputes', '/referrals', '/ca-portal', '/payment-plans',
-  '/onboarding', '/ai-actions',
-  '/decisions', '/control', '/approvals', '/connections',
+  '/collections', '/whatsapp', '/dunning', '/forecast', '/reports', '/inventory', '/scanner',
+  '/billing', '/settings', '/bills', '/khata', '/bank', '/today', '/customers', '/suppliers',
+  '/sales', '/purchases', '/orders', '/team', '/ledger', '/admin', '/invoice', '/bad-debt',
+  '/onboarding', '/decisions', '/control', '/approvals', '/connections', '/intelligence',
   // The seven surfaces and their supporting pages — guarded server-side so a
   // signed-out visitor never sees a page shell before the client-side bounce.
   '/bridge', '/scan', '/watch', '/simulate', '/prepared', '/missions', '/memory',

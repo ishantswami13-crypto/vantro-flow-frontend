@@ -69,21 +69,6 @@ const PLANS = [
   },
 ];
 
-const TESTIMONIALS = [
-  {
-    quote: "Collected ₹22L in 6 weeks that was stuck for 8 months. WhatsApp automation changed everything.",
-    name: "Vikram Mehta",
-    biz: "Mehta Fabrics, Surat",
-    avatar: "VM",
-  },
-  {
-    quote: "DSO dropped from 67 to 41 days in one quarter. The AI call list is sharper than my whole team.",
-    name: "Priya Sharma",
-    biz: "Sharma Steel Works, Ahmedabad",
-    avatar: "PS",
-  },
-];
-
 const FAQS = [
   {
     q: "Can I cancel anytime?",
@@ -434,30 +419,6 @@ export default function BillingPage() {
           ))}
         </div>
 
-        {/* ── SOCIAL PROOF ─────────────────────────────────────── */}
-        <div className="grid sm:grid-cols-2 gap-4">
-          {TESTIMONIALS.map(({ quote, name, biz, avatar }) => (
-            <div key={name} className="rounded-2xl border border-border bg-surface-1 p-5 hover:border-border transition-all">
-              <div className="flex gap-0.5 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                  </svg>
-                ))}
-              </div>
-              <p className="text-sm text-secondary leading-relaxed mb-4">&ldquo;{quote}&rdquo;</p>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-surface-3 border border-border flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                  {avatar}
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-primary">{name}</p>
-                  <p className="text-2xs text-muted">{biz}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* ── FAQ ─────────────────────────────────────────────── */}
         <div className="space-y-2">

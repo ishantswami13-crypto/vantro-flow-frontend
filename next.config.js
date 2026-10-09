@@ -45,7 +45,7 @@ const securityHeaders = [
   // Don't leak URL in Referer header to third parties
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   // Restrict browser features — allow camera/mic only on same origin (needed for OCR scanner)
-  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=(), payment=(self "https://checkout.razorpay.com"), usb=()' },
+  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=(), payment=(self "https://checkout.razorpay.com"), usb=()' },
   // Content Security Policy — allow only our own assets + backend + trusted CDNs
   {
     key: 'Content-Security-Policy',
@@ -87,8 +87,24 @@ const nextConfig = {
     ];
   },
   // Redirect HTTP → HTTPS (belt-and-suspenders, Vercel also does this)
+  // Surfaces retired in the product-pruning pass (PRODUCT_PRUNING_REPORT.md).
+  // Old links and bookmarks land on the surface that now does that job.
   async redirects() {
-    return [];
+    const to = (source, destination) => ({ source, destination, permanent: false });
+    return [
+      to('/ai-chat', '/scan'),
+      to('/brain', '/memory'),
+      to('/ai-train', '/settings'),
+      to('/ai-actions', '/prepared'),
+      to('/dashboard', '/bridge'),
+      to('/business-state', '/bridge'),
+      to('/discover', '/intelligence'),
+      to('/discover/:id', '/intelligence/:id'),
+      to('/industry', '/settings'),
+      to('/crm', '/customers'),
+      to('/analytics', '/reports'),
+      to('/attendance', '/bridge'),
+    ];
   },
 };
 

@@ -7,7 +7,6 @@ import { Modal } from "@/components/ui/Modal";
 import { V32_NAV_ITEMS, V32_WORKSPACE_NAV_ITEMS, MORE_NAV_ITEMS, OTHER_PAGES } from "@/lib/navigation";
 import { IconInfo } from "@/components/v32/icons";
 import InstallPrompt from "@/components/ui/InstallPrompt";
-import PaymentCelebration from "@/components/PaymentCelebration";
 import { usePathname, useRouter } from "next/navigation";
 import { isDemoMode, exitDemoMode } from "@/lib/demo";
 import { hydrateUserContext } from "@/lib/featureGating";
@@ -275,7 +274,6 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
       </Modal>
 
       <InstallPrompt />
-      {!isDemo && <PaymentCelebration />}
     </div>
   );
 }
