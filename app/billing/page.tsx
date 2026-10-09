@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import Link from "next/link";
 import {
   FiCheck, FiArrowRight, FiZap, FiShield,
-  FiCalendar, FiTrendingUp, FiMessageSquare, FiUsers,
+  FiCalendar, FiMessageSquare,
 } from "react-icons/fi";
 import { api, getUser, type BillingRecord } from "@/lib/api";
 
@@ -39,7 +38,7 @@ const PLANS = [
     annual: 1999,
     badge: "Most Popular",
     highlight: true,
-    proof: "200+ MSMEs automating right now",
+    proof: "Growing businesses with regular credit sales",
     outcomes: [
       "WhatsApp fires automatically at Day 7, 14, 30",
       "Customer gets UPI link — one tap to pay",
@@ -198,21 +197,6 @@ export default function BillingPage() {
             </button>
           </div>
         )}
-
-        {/* ── ROI ANCHOR STRIP ──────────────────────────────────── */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { num: "₹3.8L", label: "avg extra collected in 60 days on Growth", icon: FiTrendingUp },
-            { num: "200+",  label: "Indian MSMEs automating collections right now", icon: FiUsers },
-            { num: "5 min", label: "to set up and start your first automation", icon: FiZap },
-          ].map(({ num, label, icon: Icon }) => (
-            <div key={num} className="rounded-xl border border-border bg-surface-1 p-4 text-center">
-              <Icon size={14} className="text-muted mx-auto mb-2" />
-              <p className="text-xl font-black text-primary mb-0.5">{num}</p>
-              <p className="text-2xs text-muted leading-snug">{label}</p>
-            </div>
-          ))}
-        </div>
 
         {/* ── TOGGLE ───────────────────────────────────────────── */}
         <div className="flex flex-col items-center gap-2">
