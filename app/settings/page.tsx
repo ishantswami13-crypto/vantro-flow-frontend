@@ -23,31 +23,23 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-pro
 const OFFLINE = "Couldn't reach Starlane. Check your connection and try again.";
 const NOT_SAVED = "Your changes weren't saved. Check your connection and try again.";
 
-type Tab = "profile" | "business" | "preferences" | "voice" | "integrations" | "automation" | "billing";
+type Tab = "profile" | "business" | "preferences" | "integrations" | "automation" | "billing";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "profile",      label: "Profile" },
   { key: "business",     label: "Business" },
   { key: "preferences",  label: "Preferences" },
-  { key: "voice",        label: "Message voice" },
   { key: "integrations", label: "Delivery" },
   { key: "automation",   label: "Reminder rules" },
   { key: "billing",      label: "Billing" },
 ];
-// Older links (?tab=integrations, ?tab=automation, ?tab=voice) keep working.
+// Older links (?tab=integrations, ?tab=automation) keep working.
 const TAB_KEYS = new Set<Tab>(TABS.map(t => t.key));
 
 const languageOptions = [
   { value: "hinglish", label: "Hinglish (Hindi and English)" },
   { value: "english",  label: "English" },
   { value: "hindi",    label: "Hindi" },
-];
-const voiceStyleOptions = [
-  { value: "casual_hinglish", label: "Casual Hinglish", hint: "'Bhai', 'yaar', short and direct" },
-  { value: "formal_hindi",    label: "Formal Hindi", hint: "'Aap', respectful, full sentences" },
-  { value: "direct_english",  label: "Direct English", hint: "Professional, no-nonsense" },
-  { value: "friendly_urdu",   label: "Friendly Urdu-Hindi", hint: "Warm, relationship-first" },
-  { value: "regional_hindi",  label: "Regional Hinglish", hint: "Local dialect, city-specific" },
 ];
 const CITIES = [
   "Mumbai","Delhi","Bangalore","Chennai","Hyderabad","Pune","Ahmedabad","Kolkata",
@@ -96,13 +88,6 @@ function SettingsPageInner() {
   const [prefs, setPrefs]       = useState({ language: "hinglish", contact_time: "" });
   const [theme, setThemeState]  = useState<Theme>("dark");
 
-  // Voice profile
-  const [voice, setVoice] = useState({ owner_name: "", city: "", voice_style: "casual_hinglish", ai_persona: "" });
-  const [samples, setSamples]         = useState(["", "", ""]);
-  const [extracting, setExtracting]   = useState(false);
-  const [extractResult, setExtractResult] = useState<{ style_description: string; sample_phrase: string } | null>(null);
-  const [extractFailed, setExtractFailed] = useState(false);
-  const [voiceActive, setVoiceActive] = useState(false);
 
   // Delivery test (WhatsApp only; the rest is Starlane-managed)
   const [testLoading, setTestLoading]     = useState(false);
@@ -140,7 +125,6 @@ function SettingsPageInner() {
       const settings = { automation_enabled: raw?.automation_enabled };
       const industry = str("industry"), address = str("business_address"), city = str("city"), upi = str("upi_id"), prefix = str("invoice_prefix");
       const language = str("language"), contactTime = str("contact_time"), ownerName = str("owner_name"), phone = str("phone");
-      const voiceStyle = str("voice_style"), persona = str("ai_persona");
       if (industry)    { setBusiness(b => ({ ...b, industry })); setBusinessType(industry); }
       if (address)     setBusiness(b => ({ ...b, business_address: address }));
       if (city)        setBusiness(b => ({ ...b, city }));
@@ -150,10 +134,6 @@ function SettingsPageInner() {
       if (contactTime) setPrefs(p => ({ ...p, contact_time: contactTime }));
       if (ownerName)   setProfile(p => ({ ...p, full_name: ownerName }));
       if (phone)       setProfile(p => ({ ...p, phone: p.phone || phone }));
-      if (ownerName || persona) {
-        setVoice({ owner_name: ownerName, city, voice_style: voiceStyle || "casual_hinglish", ai_persona: persona });
-        setVoiceActive(!!(ownerName && persona));
-      }
       if (settings.automation_enabled !== undefined) setAutoEnabled(!!settings.automation_enabled);
       setLoaded(true);
     }).catch(() => setLoadFailed(true));
@@ -209,21 +189,6 @@ function SettingsPageInner() {
     save({ business_name: business.business_name, gstin: business.gstin, industry: business.industry, business_address: business.business_address, city: business.city, upi_id: business.upi_id, invoice_prefix: business.invoice_prefix });
   };
   const handlePrefsSave = (e: React.FormEvent) => { e.preventDefault(); save({ language: prefs.language, contact_time: prefs.contact_time }); };
-  const handleVoiceSave = async (e: React.FormEvent) => { e.preventDefault(); const ok = await save({ owner_name: voice.owner_name, city: voice.city, voice_style: voice.voice_style, ai_persona: voice.ai_persona }); if (ok) setVoiceActive(!!(voice.owner_name && voice.ai_persona)); };
-  const clearVoice = async () => { setVoice({ owner_name: "", city: "", voice_style: "casual_hinglish", ai_persona: "" }); setSamples(["", "", ""]); setExtractResult(null); setVoiceActive(false); await save({ owner_name: "", city: "", voice_style: "", ai_persona: "" }); };
-
-  const handleExtractVoice = async () => {
-    const validSamples = samples.filter(s => s.trim().length > 5);
-    if (!validSamples.length) return;
-    setExtracting(true); setExtractFailed(false);
-    try {
-      const r = await fetch(`${BASE}/api/ai/extract-voice`, { method: "POST", headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ samples: validSamples }) });
-      const data = await r.json();
-      if (data.success) { setExtractResult({ style_description: data.style_description, sample_phrase: data.sample_phrase }); setVoice(v => ({ ...v, ai_persona: data.style_description || v.ai_persona, voice_style: data.detected_style || v.voice_style })); setVoiceActive(true); }
-      else setExtractFailed(true);
-    } catch { setExtractFailed(true); }
-    finally { setExtracting(false); }
-  };
 
   const handleTestWhatsApp = async () => {
     setTestLoading(true); setTestResult(null);
@@ -297,7 +262,6 @@ function SettingsPageInner() {
             {TABS.map(({ key, label }) => (
               <button key={key} type="button" onClick={() => setTab(key)} aria-current={tab === key ? "page" : undefined}>
                 <span>{label}</span>
-                {key === "voice" && voiceActive && <span className="set-on">On</span>}
                 {key === "automation" && autoEnabled && <span className="set-on">On</span>}
               </button>
             ))}
@@ -446,81 +410,6 @@ function SettingsPageInner() {
                   </form>
                 )}
               </>
-            )}
-
-            {/* Message voice */}
-            {tab === "voice" && gate(
-              <form onSubmit={handleVoiceSave}>
-                <Panel
-                  id="sec-voice"
-                  title="Message voice"
-                  description="Reminders Starlane drafts can sound like you. Drafts still wait for your approval before anything is sent."
-                  footer={
-                    <SaveBar saving={saving} saved={saved} error={error} label="Save voice" disabled={loadFailed}
-                      extra={voiceActive ? <Button variant="ghost" onClick={clearVoice} icon={<IconTrash size={14} />}>Reset voice</Button> : undefined} />
-                  }
-                >
-                  <div className="flex items-center" style={{ gap: 8, marginBottom: 20 }}>
-                    <StatusChip tone={voiceActive ? "positive" : "unknown"}>{voiceActive ? "Voice on" : "Not set up"}</StatusChip>
-                  </div>
-                  <Group first title="About you">
-                    <Fields>
-                      <Field label="First name" htmlFor="owner_name">
-                        <input id="owner_name" className="ui-input" type="text" placeholder="Rajesh" value={voice.owner_name} onChange={e => setVoice(v => ({ ...v, owner_name: e.target.value }))} />
-                      </Field>
-                      <Field label="Business city" htmlFor="voice_city">
-                        <select id="voice_city" className="ui-input" value={voice.city} onChange={e => setVoice(v => ({ ...v, city: e.target.value }))}>
-                          <option value="">Select a city</option>
-                          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </Field>
-                    </Fields>
-                  </Group>
-                  <Group title="Style">
-                    <div role="radiogroup" aria-label="Communication style" className="set-list">
-                      {voiceStyleOptions.map(opt => {
-                        const on = voice.voice_style === opt.value;
-                        return (
-                          <label key={opt.value} className="set-choice">
-                            <input type="radio" name="voice_style" value={opt.value} checked={on} onChange={e => setVoice(v => ({ ...v, voice_style: e.target.value }))} />
-                            <span style={{ fontSize: 13, color: "var(--ink)", fontWeight: on ? 500 : 400, minWidth: 150 }}>{opt.label}</span>
-                            <span style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{opt.hint}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </Group>
-                  <Group title="Learn from your messages" hint="Paste two or three WhatsApp messages you have actually sent.">
-                    <div style={{ display: "grid", gap: 12 }}>
-                      {samples.map((s, i) => (
-                        <Field key={i} label={`Message ${i + 1}${i === 0 ? "" : " (optional)"}`} htmlFor={`sample_${i}`}>
-                          <textarea id={`sample_${i}`} className="ui-input" rows={2} style={{ resize: "vertical" }}
-                            placeholder={i === 0 ? "Ramesh bhai, aapka ₹45,000 pending hai. Aaj possible hai kya?" : "Another message"}
-                            value={s} onChange={e => setSamples(prev => prev.map((v, j) => j === i ? e.target.value : v))} />
-                        </Field>
-                      ))}
-                      <div>
-                        <Button variant="secondary" onClick={handleExtractVoice} loading={extracting} disabled={!samples[0].trim()} icon={<IconSparkle size={14} />}>
-                          {extracting ? "Reading your style…" : "Learn my style"}
-                        </Button>
-                      </div>
-                      {extractFailed && <p role="alert" style={{ margin: 0, fontSize: 12.5, color: "var(--critical)" }}>Starlane couldn&apos;t read a style from those messages. Try again, or describe your style below.</p>}
-                      {extractResult && (
-                        <div className="set-note">
-                          <div style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 4 }}>What Starlane picked up</div>
-                          <p style={{ margin: 0, fontSize: 13, color: "var(--body)", lineHeight: 1.6 }}>{extractResult.style_description}</p>
-                          {extractResult.sample_phrase && <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--ink-2)", fontStyle: "italic" }}>&ldquo;{extractResult.sample_phrase}&rdquo;</p>}
-                        </div>
-                      )}
-                    </div>
-                  </Group>
-                  <Group title="Describe your style" hint="Filled in from your messages above, or write it yourself.">
-                    <textarea id="ai_persona" aria-label="Describe your style" className="ui-input" rows={4} style={{ resize: "vertical" }}
-                      placeholder="I talk in casual Hinglish, use 'bhai' often and keep messages short."
-                      value={voice.ai_persona} onChange={e => setVoice(v => ({ ...v, ai_persona: e.target.value }))} />
-                  </Group>
-                </Panel>
-              </form>
             )}
 
             {/* Delivery */}
