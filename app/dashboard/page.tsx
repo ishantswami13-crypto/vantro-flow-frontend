@@ -7,19 +7,15 @@ import { Badge } from "@/components/ui/Badge";
 import Link from "next/link";
 import {
   FiList, FiPlus, FiArrowRight,
-  FiMessageSquare, FiCheckSquare, FiTrendingUp, FiSettings, FiZap,
+  FiMessageSquare, FiTrendingUp, FiSettings, FiZap,
 } from "react-icons/fi";
 import { api, getUser, type Metrics, type Invoice, type OwnerBriefingResponse, type IntelligenceSignal } from "@/lib/api";
 import QuickSale from "@/components/QuickSale";
 import OwnerBriefingCard from "@/components/agents/OwnerBriefingCard";
 import { isDemoMode } from "@/lib/demo";
+import DailyRitual from "@/components/daily/DailyRitual";
 
 const DEMO_BRIEFING = "3 priority calls today — Mehta Fabrics (₹8.4L, 62 days overdue) first. Sharma Steel didn't pick up last time — try again. Cash runway is 12 days; ₹5L+ is needed this week.";
-
-function getGreeting(): string {
-  const h = new Date().getHours();
-  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-}
 
 const CUSTOMERS: { id: number; name: string; outstanding: number; days: number; score: number; lastPayment: string; contact: string }[] = [];
 
@@ -53,11 +49,15 @@ export default function DashboardPage() {
   const [ownerBriefingError, setOwnerBriefingError] = useState(false);
   const [ownerBriefingFetchedAt, setOwnerBriefingFetchedAt] = useState<Date | null>(null);
   const [signals, setSignals] = useState<IntelligenceSignal[] | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [pendingApprovals, setPendingApprovals] = useState<number | null>(null);
+  const [invoicesLoaded, setInvoicesLoaded] = useState(false);
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     const user = getUser();
     if (!user?.id) return;
+    setUserId(String(user.id));
     setUserPlan(user.plan || "free");
 
     const stored = (() => { try { return JSON.parse(localStorage.getItem("vantro_user") || "{}"); } catch { return {}; } })();
@@ -86,6 +86,13 @@ export default function DashboardPage() {
 
     api.metrics(user.id).then(d => setMetrics(d.metrics)).catch(() => {});
 
+    // Decisions waiting on the owner — the same list Control › Approvals shows.
+    if (!isDemoMode()) {
+      api.aiActions.list("pending")
+        .then(d => setPendingApprovals(typeof d.total === "number" ? d.total : (d.actions || []).length))
+        .catch(() => setPendingApprovals(null));
+    }
+
     // Real "what changed" signals — same active-status filter as the
     // Intelligence list page. Empty array (not null) once resolved, so the
     // section can tell "loading" from "genuinely nothing active."
@@ -110,6 +117,7 @@ export default function DashboardPage() {
         contact: inv.customer_phone || "",
       }));
       if (mapped.length > 0) setLiveCustomers(mapped);
+      setInvoicesLoaded(true);
     }).catch(() => {});
 
     api.calls.list(user.id).then(d => {
@@ -196,7 +204,15 @@ export default function DashboardPage() {
   }
 
   const hasBusinessData = metrics !== null;
-  const dateLabel = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
+  const promisesDueToday = promises.filter(p => p.promised_payment_date && p.promised_payment_date <= today);
+  // The numbers "since you were last here" compares. Only once the real
+  // metrics and invoices have loaded, so a slow request never records a false zero.
+  const pulse = metrics && invoicesLoaded ? {
+    outstanding: Number(metrics.total_outstanding) || 0,
+    paid: Number(metrics.total_paid) || 0,
+    pending: Number(metrics.pending_invoices) || 0,
+    overdue30,
+  } : null;
 
   return (
     <DashboardLayout pageTitle="Overview">
@@ -212,12 +228,16 @@ export default function DashboardPage() {
           not a centered narrow column. */}
       <div className="-m-4 lg:-m-5 min-h-[calc(100vh-3rem)]" style={{ background: "#F7F7F4" }}>
         <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-8 space-y-12">
-          {/* ── Page header — left-aligned, normal weight. No centered
-              50px serif hero; the greeting is the subtitle, not the title. ── */}
-          <div>
-            <h1 className="text-[30px] leading-[1.15] text-gray-900" style={{ fontWeight: 450 }}>Overview</h1>
-            <p className="text-sm text-gray-500 mt-1">{getGreeting()}, {ownerName} · {dateLabel}</p>
-          </div>
+          {/* ── Your day — greeting, what moved since the last visit, and a
+              short list the owner can finish. See components/daily. ── */}
+          <DailyRitual
+            userId={userId}
+            ownerName={ownerName}
+            pulse={pulse}
+            calls={liveCustomers.map(c => ({ name: c.name, amount: c.outstanding, days: c.days, contact: c.contact }))}
+            promises={promisesDueToday.map(p => ({ name: p.customer_name, amount: p.amount || 0 }))}
+            pendingApprovals={pendingApprovals}
+          />
 
           {/* ── Command input — compact, no pill row inside it. Real
               destination: the actual AI Founder chat. Suggestions sit below
@@ -322,26 +342,6 @@ export default function DashboardPage() {
             </p>
           )}
 
-          {/* ── Promises due today — a plain list, not a Hindi-language
-              urgency banner. ── */}
-          {promises.length > 0 && (() => {
-            const dueToday = promises.filter(p => p.promised_payment_date && p.promised_payment_date <= today);
-            if (dueToday.length === 0) return null;
-            return (
-              <div className="border-t border-gray-200 pt-6">
-                <p className="text-[13px] font-medium text-gray-500 mb-3">Promised today</p>
-                <div className="divide-y divide-gray-200">
-                  {dueToday.map((p, i) => (
-                    <div key={i} className="flex items-center justify-between py-3">
-                      <span className="text-sm text-gray-900">{p.customer_name}</span>
-                      <span className="text-sm metric-value text-gray-600">{p.amount > 0 ? fmtAmt(p.amount) : "—"}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-
           {/* ── Top customers to call — same table, calmer treatment: no
               colored priority pill, no per-row tinted avatar circle. Row
               height 44px+, hairline horizontal borders only. ── */}
@@ -390,10 +390,6 @@ export default function DashboardPage() {
                             <FiMessageSquare size={11} />
                             <span className="hidden sm:inline">WhatsApp</span>
                           </a>
-                          <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors">
-                            <FiCheckSquare size={11} />
-                            <span className="hidden sm:inline">Log</span>
-                          </button>
                         </div>
                       </td>
                     </tr>
