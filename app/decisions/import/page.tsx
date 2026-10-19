@@ -280,7 +280,7 @@ export default function ImportPage() {
                   return (
                     <div key={f} className="flex flex-wrap items-center gap-3 px-4 py-3" style={{ borderTop: i ? `1px solid ${C.line}` : undefined, background: i % 2 ? C.wash : "var(--surface)" }}>
                       <span className="w-[160px] text-[13px]" style={{ color: C.ink, fontWeight: 500 }}>
-                        {FIELD_LABEL[f]}{REQUIRED.includes(f) && <span style={{ color: C.bad }}> *</span>}
+                        {FIELD_LABEL[f]}{REQUIRED.includes(f) && !(f === "amount" && options.mapping.outstanding) && <span style={{ color: C.bad }}> *</span>}
                       </span>
                       <select
                         value={chosen}
