@@ -104,9 +104,31 @@ export default function BridgePage() {
   const forming = (pipeline.data?.decisions || []).filter((d) => LIVE_DECISION.has(d.status));
   const running = (data?.missions || []).filter((m) => m.status === "active");
   const urgentCount = data?.attention.watch.urgent || 0;
-  const decisionCount = data?.attention.decisions || 0;
+  // Decisions waiting on the owner's choice. When no prepared action is
+  // waiting, the top ones lead "What needs you" and leave the forming list,
+  // so a decision marked "Needs a decision" never sits under "Nothing needs you".
+  const awaiting = forming.filter((d) => d.status === "OPEN" || d.status === "SELECTED");
+  const actionCount = data?.attention.decisions || 0;
+  const leadDecisions = actionCount === 0 ? awaiting.slice(0, 2) : [];
+  const formingRest = forming.filter((d) => !leadDecisions.includes(d));
+  const decisionCount = actionCount || awaiting.length;
   const topEvent = latest.find(isUrgent) || null;
   const watchTotal = data ? data.attention.watch.open + data.attention.watch.acknowledged : 0;
+
+  // Right after an import or sync, Watch and the decision pipeline fill in
+  // within seconds on the server. Until they do, re-read every few seconds,
+  // for a short window only, so the owner never has to reload to see them.
+  const justSynced = !!data?.dataAsOf && Date.now() - Date.parse(data.dataAsOf) < 3 * 60_000;
+  const settling = !!data?.hasData && justSynced && !pipeline.isPending && (forming.length === 0 || watchTotal === 0);
+  const refetchPipeline = pipeline.refetch;
+  useEffect(() => {
+    if (!settling) return;
+    const t = setTimeout(() => {
+      request<BridgeView>("/api/client/bridge").then((d) => setData(d)).catch(() => {});
+      refetchPipeline();
+    }, 5000);
+    return () => clearTimeout(t);
+  }, [settling, data, refetchPipeline]);
 
   const hi = `${hello || "Hello"}${name ? `, ${name}` : ""}.`;
   const summary = !data
@@ -162,13 +184,15 @@ export default function BridgePage() {
                   What needs you
                   {decisionCount > 0 && <span className={css.leadCount}>{formatCount(decisionCount)}</span>}
                 </h2>
-                {decisionCount > decisions.slice(0, 4).length && (
+                {actionCount > decisions.slice(0, 4).length && (
                   <Link href="/prepared" className="hover-dim inline-flex items-center shrink-0" style={{ gap: 4, fontSize: 12.5, color: "var(--ink-2)" }}>
-                    All {formatCount(decisionCount)} in Prepared<Chevron size={12} />
+                    All {formatCount(actionCount)} in Prepared<Chevron size={12} />
                   </Link>
                 )}
               </div>
-              <NeedsYou decisions={decisions} topEvent={topEvent} watching={watchTotal} onOpenEvent={setOpen} />
+              {leadDecisions.length > 0
+                ? <ul className="rf-list">{leadDecisions.map((d, i) => <DecisionNeedRow key={d.id} d={d} first={i === 0} />)}</ul>
+                : <NeedsYou decisions={decisions} topEvent={topEvent} watching={watchTotal} onOpenEvent={setOpen} />}
             </section>
 
             <section aria-labelledby="changed-h">
@@ -184,7 +208,7 @@ export default function BridgePage() {
 
             <div className="rf-cols-2">
               <section aria-labelledby="forming-h" className="min-w-0">
-                <SectionHead id="forming-h" title="Decisions forming" meta={forming.length ? formatCount(forming.length) : undefined} href={forming.length ? "/decisions" : undefined} linkLabel="All decisions" />
+                <SectionHead id="forming-h" title="Decisions forming" meta={formingRest.length ? formatCount(formingRest.length) : undefined} href={forming.length ? "/decisions" : undefined} linkLabel="All decisions" />
                 {pipeline.isPending ? (
                   <div role="status" aria-busy="true" aria-label="Loading decisions">
                     {[0, 1].map((i) => <div key={i} className="skeleton" style={{ height: 14, margin: "18px 0", maxWidth: 360 }} />)}
@@ -194,11 +218,11 @@ export default function BridgePage() {
                     Not known right now. Starlane couldn&apos;t read the decision pipeline.{" "}
                     <button type="button" onClick={() => pipeline.refetch()} className="hover-dim" style={{ color: "var(--ink)", textDecoration: "underline", textUnderlineOffset: 3 }}>Try again</button>
                   </QuietLine>
-                ) : forming.length === 0 ? (
-                  <QuietLine>No decision is forming. Starlane looks for new ones in your ledger after each sync.</QuietLine>
+                ) : formingRest.length === 0 ? (
+                  <QuietLine>{forming.length ? "Nothing else is forming." : "No decision is forming. Starlane looks for new ones in your ledger after each sync."}</QuietLine>
                 ) : (
                   <ul className="rf-list">
-                    {forming.slice(0, 3).map((d) => <FormingRow key={d.id} d={d} />)}
+                    {formingRest.slice(0, 3).map((d) => <FormingRow key={d.id} d={d} />)}
                   </ul>
                 )}
               </section>
@@ -477,6 +501,42 @@ function FormingRow({ d }: { d: DecisionListItem }) {
         </span>
         <span className={css.chev}><Chevron size={13} /></span>
       </Link>
+    </li>
+  );
+}
+
+/** A decision waiting on the owner, in the "What needs you" row layout. */
+function DecisionNeedRow({ d, first }: { d: DecisionListItem; first: boolean }) {
+  const due = deadlineOf(d);
+  const stake = stakeOf(d);
+  const state = STATUS_LABEL[d.status] || d.status;
+  const rec = d.recommendation
+    ? d.recommendation.informationFirst ? "Recommended: find out first" : `Recommended: ${plain(d.recommendation.label)}`
+    : null;
+  const context = [stake ? `${stake.value} ${stake.note}` : null, rec].filter(Boolean).join(". ");
+  return (
+    <li>
+      <div className={`rf-row ${css.needs} ${first ? css.first : ""}`}>
+        <span className={`rf-desk ${css.needsCat}`}>Decision</span>
+        <div className="min-w-0">
+          <Link href={`/decisions/${d.id}`} className={`hover-dim ${css.needsTitle}`}>{plain(d.title)}</Link>
+          {context && <span className={`${css.needsContext} ${css.clamp2}`}>{context}</span>}
+          <div className="rf-mob">
+            <span>Decision</span>
+            <StatusChip tone="attention">{state}</StatusChip>
+            {due && <span className={due.now ? css.riskHigh : undefined}>{due.text}</span>}
+          </div>
+        </div>
+        <span className={`rf-desk ${css.stateCell}`}>
+          <StatusChip tone="attention">{state}</StatusChip>
+        </span>
+        <span className={`rf-time rf-desk ${due?.now ? css.riskHigh : ""}`} style={{ alignSelf: "start", paddingTop: 3 }}>{due?.text || ""}</span>
+        <span className="rf-actions">
+          {first
+            ? <Link href={`/decisions/${d.id}`} className="ui-btn ui-btn-primary ui-btn-sm">Decide</Link>
+            : <Link href={`/decisions/${d.id}`} className="ui-btn ui-btn-ghost ui-btn-sm" style={{ color: "var(--ink)" }}>Review</Link>}
+        </span>
+      </div>
     </li>
   );
 }
