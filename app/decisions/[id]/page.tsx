@@ -108,7 +108,7 @@ function OptionsTable({ d, max, recKey, canChoose, choosing, busy, onChoose }: {
               </div>
               {o.summary && <div className={m.optSub}>{o.summary}</div>}
               {extra.length > 0 && <div className={m.optMeta}>{extra.join(" · ")}</div>}
-              {!o.isDoNothing && o.blastRadius?.summary && <div className={m.optMeta}>Touches {o.blastRadius.summary.charAt(0).toLowerCase() + o.blastRadius.summary.slice(1)}</div>}
+              {!o.isDoNothing && o.blastRadius?.summary && <div className={m.optMeta}>Affects: {o.blastRadius.summary}</div>}
               {!o.isDoNothing && o.approval?.reason && <div className={m.optMeta}>{o.approval.reason}</div>}
               {!o.valid && o.invalidReason && <div className={`${m.optMeta} ${m.invalid}`}>Not allowed: {o.invalidReason}</div>}
             </div>
@@ -533,9 +533,9 @@ export default function DecisionDetailPage() {
                     <div className="flex flex-wrap items-center" style={{ gap: "4px 12px", fontSize: 13 }}>
                       <span style={{ color: "var(--ink)" }}>{INTENT_WORDS[r.intent_type] || r.intent_type}</span>
                       <Pill tone={r.status === "SUCCEEDED" || r.status === "PREPARED" ? "good" : r.status === "FAILED" || r.status === "BLOCKED" ? "bad" : "neutral"}>{r.status.charAt(0) + r.status.slice(1).toLowerCase()}</Pill>
-                      <span className="num" style={{ fontSize: 11.5, color: "var(--ink-3)" }}>via {r.adapter}</span>
                     </div>
-                    {r.status === "SHADOWED" && r.would_have && <p className={m.tfoot} style={{ marginTop: 2 }}>Would have written: {String((r.would_have as { write?: string }).write || "")}</p>}
+                    {/* The adapter and table write are support detail, kept in the tooltip, not owner copy. */}
+                    {r.status === "SHADOWED" && <p className={m.tfoot} style={{ marginTop: 2 }} title={[r.adapter, (r.would_have as { write?: string } | null)?.write].filter(Boolean).join(" · ")}>Recorded only: shadow mode changed nothing. With shadow mode off, this step would run as described.</p>}
                     {r.postcondition?.note && <p className={m.tfoot} style={{ marginTop: 2 }}>{r.postcondition.note}</p>}
                     {r.error && <p className={m.tfoot} style={{ marginTop: 2, color: "var(--critical)" }}>This step didn&apos;t complete. Nothing was left half-done.</p>}
                   </li>

@@ -289,8 +289,12 @@ export default function CollectionsPage() {
       notify(<span><b style={{ fontWeight: 500 }}>{c.name}</b> paid {inrWhole(c.outstanding)}. Marked as received.</span>, "positive");
       const user = getUser();
       if (user?.id) { loadInvoices(user.id); refreshSummary(user.id); }
-    } catch {
-      notify("Couldn't mark this invoice as paid. Try again.", "critical");
+    } catch (e) {
+      // 503: hand-entered settlements are switched off on the server (the
+      // books are the record), so "try again" would never work.
+      notify((e as { status?: number })?.status === 503
+        ? "Payments come from your books, not from here. Record it in Tally and it shows up after the next sync."
+        : "Couldn't mark this invoice as paid. Try again.", "critical");
     } finally { setMarkingPaid(null); }
   };
 

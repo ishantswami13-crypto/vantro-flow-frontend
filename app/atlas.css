@@ -368,10 +368,6 @@
 }
 .atlas-page.auth-page .so-btn:hover:not(:disabled) { background: rgba(255,255,255,.11); border-color: rgba(255,255,255,.28) }
 .atlas-page.auth-page .so-btn:disabled { opacity: .5; cursor: default }
-.atlas-page.auth-page .so-soon {
-  font-style: normal; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase;
-  padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.7); margin-left: 4px;
-}
 .atlas-page.auth-page .so-google { display: flex; justify-content: center; min-height: 44px }
 .atlas-page.auth-page .so-phone { display: flex; gap: 8px; flex-wrap: wrap }
 .atlas-page.auth-page .so-phone input {
@@ -406,6 +402,5 @@
 .atlas-page.auth-page .btn-login, .atlas-page.auth-page .btn-main { background: #EDECE8; color: #0D0D0C; font-weight: 500; font-size: 14px; padding: 12px 20px; border-radius: 8px; }
 .atlas-page.auth-page .btn-login:hover, .atlas-page.auth-page .btn-main:hover { opacity: 1; background: #DAD9D4; transform: none; }
 .atlas-page.auth-page .page-foot { font-family: var(--font-sans); font-size: 12px; letter-spacing: 0; text-transform: none; color: #7C7B75; border-top-color: rgba(255,255,255,.06); }
-.atlas-page.auth-page .so-soon { font-family: var(--font-sans); font-style: normal; font-size: 11px; letter-spacing: 0; text-transform: none; }
 .atlas-page.auth-page .so-divider { font-family: var(--font-sans); font-size: 12px; letter-spacing: 0; text-transform: none; color: #7C7B75; }
 .atlas-page.auth-page .so-btn { border-radius: 8px; }
