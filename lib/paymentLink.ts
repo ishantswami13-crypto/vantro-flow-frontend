@@ -34,19 +34,28 @@ export function generateUPIIntentLink(opts: PaymentLinkOptions): string {
 export function generateWhatsAppPaymentLink({
   customerPhone, customerName = "ji", payeeName, upiId, amount, note = "payment",
 }: PaymentLinkOptions): string {
-  const upiLink = generateUPILink({ upiId, payeeName, amount, note });
+  // This text goes to a real customer: with no saved UPI ID or business name,
+  // leave those lines out rather than fill them with a placeholder.
+  const upi = upiId.trim();
+  const payee = payeeName.trim();
   const fmt = (n: number) =>
     n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : n >= 1000 ? `₹${(n / 1000).toFixed(0)}K` : `₹${n}`;
 
   const message = [
     `Namaskar ${customerName} 🙏`,
     ``,
-    `${payeeName} ka ₹${fmt(amount).replace("₹","")} payment pending hai.`,
+    payee
+      ? `${payee} ka ₹${fmt(amount).replace("₹","")} payment pending hai.`
+      : `Aapka ₹${fmt(amount).replace("₹","")} payment pending hai.`,
     ``,
-    `Neeche UPI link se directly pay karein:`,
-    upiLink,
-    ``,
-    `Ya UPI ID pe send karein: ${upiId}`,
+    ...(upi
+      ? [
+          `Neeche UPI link se directly pay karein:`,
+          generateUPILink({ upiId: upi, payeeName: payee || upi, amount, note }),
+          ``,
+          `Ya UPI ID pe send karein: ${upi}`,
+        ]
+      : [`Payment details ke liye is message ka reply karein.`]),
     ``,
     `Dhanyawad 🙏`,
   ].join("\n");

@@ -229,9 +229,10 @@ export default function CollectionsPage() {
       // No invoice id (cached demo row): open the message for the owner to send.
       const user = (() => { try { return JSON.parse(localStorage.getItem("vantro_user") || "{}"); } catch { return {}; } })();
       const text = generateWhatsAppPaymentLink({
-        upiId: user.upi_id || "demo@upi",
-        // This text reaches a customer: never fall back to a placeholder business name.
-        payeeName: user.business_name || "Hamara",
+        // This text reaches a customer: never fall back to a placeholder UPI ID or
+        // business name. Blank values leave those lines out of the message.
+        upiId: user.upi_id || "",
+        payeeName: user.business_name || "",
         amount: c.outstanding,
         note: user.business_name ? `Invoice from ${user.business_name}` : "Invoice payment",
         customerPhone: c.contact,
