@@ -4,11 +4,15 @@ import { useEffect } from "react";
 // Scroll reveal for the landing page. Everything marked data-reveal is fully
 // visible without JavaScript; only once this runs does the page opt in (the
 // "sl-js" class) to fading each block up as it enters the viewport. Skipped
-// entirely with prefers-reduced-motion.
+// entirely with prefers-reduced-motion. Also drives the pointer spotlight on
+// the landing cards.
 export function Reveal() {
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(".sl-home");
-    if (!root || typeof IntersectionObserver === "undefined") return;
+    if (!root) return;
+    // On narrow screens the business graph scrolls sideways; start it centred.
+    root.querySelectorAll<HTMLElement>(".slg").forEach((g) => { g.scrollLeft = (g.scrollWidth - g.clientWidth) / 2; });
+    if (typeof IntersectionObserver === "undefined") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const els = Array.from(root.querySelectorAll<HTMLElement>("[data-reveal]"));
     const io = new IntersectionObserver((entries) => {
@@ -22,7 +26,16 @@ export function Reveal() {
       else io.observe(el);
     }
     root.classList.add("sl-js");
-    return () => io.disconnect();
+    // Cards light up under the pointer.
+    const spot = (e: PointerEvent) => {
+      const card = (e.target as Element | null)?.closest<HTMLElement>(".slh-b-link, .slh-c, .slh-control");
+      if (!card) return;
+      const r = card.getBoundingClientRect();
+      card.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      card.style.setProperty("--my", `${e.clientY - r.top}px`);
+    };
+    root.addEventListener("pointermove", spot, { passive: true });
+    return () => { io.disconnect(); root.removeEventListener("pointermove", spot); };
   }, []);
   return null;
 }

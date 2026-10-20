@@ -10,6 +10,8 @@ import { AskDemo } from "@/components/marketing/landing/AskDemo";
 import { HowItThinks } from "@/components/marketing/landing/HowItThinks";
 import { StarField } from "@/components/marketing/landing/StarField";
 import { Reveal } from "@/components/marketing/landing/Reveal";
+import { HeroCards } from "@/components/marketing/landing/HeroCards";
+import { BusinessGraph } from "@/components/marketing/landing/BusinessGraph";
 import { BridgeViz, WatchViz, MissionsViz, SimulateViz, MemoryViz, PreparedViz } from "@/components/marketing/landing/SurfaceVisuals";
 
 // Starlane — public landing. A dark, cinematic frame (hero, decision, Scan,
@@ -74,6 +76,18 @@ const VIZ: Record<string, { el: React.ReactNode; span: string }> = {
   Prepared: { el: <PreparedViz />, span: "slh-b-full" },
 };
 
+const HEADLINE = "Your company’s state, turned into decisions and carried out.".split(" ");
+const SCRUB = "None of them answers the question an owner faces every morning: what should we do today, and why?".split(" ");
+
+const FAQ = [
+  { q: "Will Starlane message my customers on its own?", a: "No. External messages are off by default and stay off until they are explicitly enabled. Even then, every reminder waits for a person to approve it, the text is shown in full before you do, and each approved action runs at most once." },
+  { q: "What does it need from TallyPrime?", a: "A small bridge program on the computer that runs Tally reads vouchers and stock through Tally’s local export port and sends them to Starlane. It is read-only, paired with a one-time code, and you can revoke it from Starlane at any time." },
+  { q: "We don’t use Tally. Can we still use Starlane?", a: "Yes, if your system can export invoices as CSV or Excel. Identical files are recognised and never imported twice. Connections to QuickBooks, Zoho Books, Xero and others through their official APIs are not built yet, so tell us what you use when you apply." },
+  { q: "Can it change my books?", a: "No. Starlane never marks a payment received, changes an amount or deletes records on its own, and Scan cannot change records at all. It reads your books and checks them again to see what actually happened after an action." },
+  { q: "Is there a Mac app?", a: "Not yet. The desktop app runs on Windows 10 and 11, 64-bit, and Starlane also runs in the browser." },
+  { q: "How do we get started?", a: "Starlane is onboarding a small number of companies at a time, starting with businesses that run on TallyPrime or can export their books. Request a pilot and you will see straight away whether your systems are supported." },
+];
+
 const SOURCES = ["TallyPrime", "CSV exports", "Excel workbooks", "Bank statements", "ECB reference rates", "USGS earthquake feed", "WhatsApp drafts, sent only on approval", "Purchase history", "Stock and products"];
 
 const PROMISES = [
@@ -105,7 +119,9 @@ export default function LandingPage() {
           </div>
           <div className="sl-wrap slh-hero-copy">
             <span className="slh-pill"><i />Now onboarding a small number of companies</span>
-            <h1 className="slh-display">Your company’s state, turned into decisions and carried out.</h1>
+            <h1 className="slh-display slh-words" aria-label="Your company’s state, turned into decisions and carried out.">
+              {HEADLINE.map((w, i) => <span key={i} aria-hidden style={{ animationDelay: `${0.12 + i * 0.07}s` }}>{w}</span>)}
+            </h1>
             <p className="slh-lede">
               Starlane connects to the systems your business already runs on, builds one current picture of it, weighs
               what could improve it, shows the evidence for each option, and once you approve, carries it out and checks
@@ -123,6 +139,7 @@ export default function LandingPage() {
               <Image src="/product/bridge-desktop.webp" width={2880} height={1800} priority sizes="(max-width: 767px) 100vw, 1180px"
                 alt="The Bridge in the Starlane desktop app for a fictional demo company: what it is owed and how much is overdue, two reminders waiting for approval, Watch alerts for invoices slipping past 30 and 90 days, two collection missions with progress, receivables by overdue band and who owes the most." />
             </figure>
+            <HeroCards />
             <p className="slh-shot-cap">Real product view, on a fictional demo company’s books. Every figure opens to the invoices behind it.</p>
           </div>
         </header>
@@ -146,8 +163,23 @@ export default function LandingPage() {
               <p data-reveal><span>Dashboards</span> show what already happened.</p>
               <p data-reveal><span>Reports</span> arrive after it mattered.</p>
               <p data-reveal><span>Automations</span> do exactly what they were told, whether or not it still makes sense.</p>
-              <p data-reveal className="slh-statement-last">None of them answers the question an owner faces every morning: what should we do today, and why?</p>
+              <p className="slh-statement-last">{SCRUB.map((w, i) => <span key={i} className="slh-scrub">{w}</span>)}</p>
             </div>
+          </div>
+        </section>
+
+        {/* 3b — One picture of the business */}
+        <section className="sl-dark slh-section slh-graph" aria-labelledby="graph-h">
+          <div className="sl-wrap">
+            <div className="sl-split-head" data-reveal>
+              <div>
+                <p className="sl-eyebrow">One picture</p>
+                <h2 id="graph-h" className="slh-h2">Every row in your books becomes one living picture of the business.</h2>
+              </div>
+              <p className="sl-p">Vouchers become invoices, payments and stock movements. Customers, suppliers and products are linked by what actually happened between them, and every row keeps where it came from.</p>
+            </div>
+            <div data-reveal><BusinessGraph /></div>
+            <p className="sl-product-caption">Illustration on the fictional demo company from the product view above.</p>
           </div>
         </section>
 
@@ -267,6 +299,24 @@ export default function LandingPage() {
             <div className="slh-controls">
               {CONTROLS.map((r) => (
                 <div key={r.l} className="slh-control" data-reveal><h3 className="sl-h3">{r.l}</h3><p className="sl-p">{r.d}</p></div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 9b — Questions */}
+        <section id="faq" className="sl-section slh-faq" aria-labelledby="faq-h">
+          <div className="sl-wrap slh-faq-grid">
+            <div data-reveal>
+              <p className="sl-eyebrow">Questions</p>
+              <h2 id="faq-h" className="slh-h2">What owners ask before they connect their books.</h2>
+            </div>
+            <div className="slh-faq-list" data-reveal>
+              {FAQ.map((f) => (
+                <details key={f.q} className="slh-qa">
+                  <summary><span>{f.q}</span><i aria-hidden /></summary>
+                  <p className="sl-p">{f.a}</p>
+                </details>
               ))}
             </div>
           </div>
