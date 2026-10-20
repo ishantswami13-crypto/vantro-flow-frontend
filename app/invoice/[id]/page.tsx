@@ -142,7 +142,7 @@ export default function InvoiceViewPage() {
               {/* Business details */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-sm">
+                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
                     {(biz.business_name || "V").charAt(0).toUpperCase()}
                   </div>
                   <span className="text-white font-bold text-base tracking-tight">
@@ -160,7 +160,7 @@ export default function InvoiceViewPage() {
               {/* Invoice meta */}
               <div className="text-right">
                 <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-1">Invoice</p>
-                <p className="text-white font-black text-xl font-mono">{invoice.invoice_number || `INV-${id?.slice(0,8)}`}</p>
+                <p className="text-white font-semibold text-xl font-mono">{invoice.invoice_number || `INV-${id?.slice(0,8)}`}</p>
 
                 {/* Status pill */}
                 <div className="mt-2 flex justify-end">
@@ -215,7 +215,7 @@ export default function InvoiceViewPage() {
               {/* Quick stats */}
               <div className="text-right ml-4">
                 <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Amount Due</p>
-                <p className="text-3xl font-black text-gray-900 tracking-tight">{fmtINR(invoice.invoice_amount)}</p>
+                <p className="text-3xl font-semibold text-gray-900 tracking-tight">{fmtINR(invoice.invoice_amount)}</p>
                 {invoice.payment_link && !isPaid && (
                   <a href={invoice.payment_link} target="_blank" rel="noopener noreferrer"
                     className="no-print inline-block mt-2 px-4 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-all">
@@ -312,8 +312,8 @@ export default function InvoiceViewPage() {
                   </div>
                 )}
                 <div className="flex justify-between items-center py-3 border-t-2 border-gray-900">
-                  <span className="font-black text-gray-900 text-base">Total</span>
-                  <span className="font-black text-gray-900 text-xl">{fmtINR(invoice.invoice_amount)}</span>
+                  <span className="font-semibold text-gray-900 text-base">Total</span>
+                  <span className="font-semibold text-gray-900 text-xl">{fmtINR(invoice.invoice_amount)}</span>
                 </div>
               </div>
             </div>

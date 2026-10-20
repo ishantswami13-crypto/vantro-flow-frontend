@@ -116,7 +116,7 @@ export default function BillingPage() {
         const rzp = new window.Razorpay({
           key, amount: order.amount, currency: order.currency, order_id: order.id,
           name: "Starlane",
-          description: `${planId.charAt(0).toUpperCase() + planId.slice(1)} Plan — ${billing}`,
+          description: `${planId.charAt(0).toUpperCase() + planId.slice(1)} plan, billed ${billing === "annual" ? "yearly" : "monthly"}`,
           prefill: { email: user?.email || "", contact: user?.phone || "", name: user?.business_name || "" },
           theme: { color: "var(--accent)" },
           handler: async (response: any) => {

@@ -35,18 +35,6 @@ export default function OgImage() {
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <span
-            style={{
-              fontSize: 21,
-              fontWeight: 700,
-              color: "#6B7280",
-              letterSpacing: 4,
-              marginBottom: 22,
-            }}
-          >
-            AI BUSINESSOS
-          </span>
-
           <div
             style={{
               fontSize: 66,
@@ -69,16 +57,16 @@ export default function OgImage() {
               maxWidth: 940,
             }}
           >
-            Starlane helps businesses connect data, understand operations, and run
-            evidence-based, approval-gated workflows across finance, sales,
-            purchases, inventory, customers, suppliers, and operations.
+            Starlane connects to the systems your business already runs on, shows
+            what needs a decision and the evidence behind it, and carries out
+            only what you approve.
           </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ display: "flex", width: 8, height: 8, borderRadius: 4, background: "#0A0A0A" }} />
           <span style={{ fontSize: 20, color: "#6B7280" }}>
-            Pilot program now open for selected businesses
+            Now onboarding a small number of companies
           </span>
         </div>
       </div>

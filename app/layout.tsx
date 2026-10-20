@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     template: "%s | Starlane",
   },
   description:
-    "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
+    "Starlane connects to the systems your business already runs on, shows what needs a decision and the evidence behind it, and carries out only what you approve.",
   keywords: [
     "business automation India", "MSME automation software", "collections automation India",
     "WhatsApp business automation", "invoice automation India", "Hinglish WhatsApp reminders",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     siteName: "Starlane",
     title: "Starlane — The operating layer every modern business runs on",
     description:
-      "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
+      "Starlane connects to the systems your business already runs on, shows what needs a decision and the evidence behind it, and carries out only what you approve.",
     images: [
       {
         url: "/opengraph-image",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Starlane — The operating layer every modern business runs on",
     description:
-      "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
+      "Starlane connects to the systems your business already runs on, shows what needs a decision and the evidence behind it, and carries out only what you approve.",
     images: ["/opengraph-image"],
     creator: "@ishantswami13",
   },
@@ -114,7 +114,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web",
               description:
-                "Starlane is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+                "Starlane connects to the systems your business already runs on, shows what needs a decision and the evidence behind it, and carries out only what you approve.",
               url: APP_URL,
               inLanguage: ["en", "hi"],
               audience: {
