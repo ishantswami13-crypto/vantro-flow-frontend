@@ -14,6 +14,9 @@ import { HeroCards } from "@/components/marketing/landing/HeroCards";
 import { BusinessGraph } from "@/components/marketing/landing/BusinessGraph";
 import { Morning } from "@/components/marketing/landing/Morning";
 import { CountUp } from "@/components/marketing/landing/CountUp";
+import { ApproveLoop } from "@/components/marketing/landing/ApproveLoop";
+import { BridgeDiagram } from "@/components/marketing/landing/BridgeDiagram";
+import { DashboardThumb, ReportThumb, RuleThumb } from "@/components/marketing/landing/ProblemViz";
 import { BridgeViz, WatchViz, MissionsViz, SimulateViz, MemoryViz, PreparedViz } from "@/components/marketing/landing/SurfaceVisuals";
 
 // Starlane — public landing. A dark, cinematic frame around light working
@@ -112,6 +115,14 @@ const CONNECT_ICONS: Record<string, React.ReactNode> = {
   "Cloud software": <path d="M20 46h26a10 10 0 0 0 0-20 14 14 0 0 0-27-3A11 11 0 0 0 20 46z" />,
 };
 
+const CONTROL_ICONS: Record<string, React.ReactNode> = {
+  Evidence: <><path d="M7 5h13l5 5v17H7z" /><path d="M11 14h10M11 18h10M11 22h6" /></>,
+  Permissions: <><rect x="7" y="14" width="18" height="13" rx="2" /><path d="M11 14V10a5 5 0 0 1 10 0v4M16 19v3" /></>,
+  Approvals: <><circle cx="16" cy="16" r="11" /><path d="M11 16.5l3.5 3.5L21 13" /></>,
+  "Audit trail": <><path d="M8 6v20M8 9h4M8 16h4M8 23h4" /><path d="M15 9h10M15 16h10M15 23h7" /></>,
+  Limits: <><path d="M16 4l10 4v8c0 6-4.5 10-10 12C10.5 26 6 22 6 16V8z" /><path d="M12 16h8" /></>,
+};
+
 export default function LandingPage() {
   return (
     <div className="sl sl-home">
@@ -169,9 +180,9 @@ export default function LandingPage() {
             <p className="sl-eyebrow" data-reveal>The problem</p>
             <h2 id="problem-h" className="slh-h2 slh-statement-h" data-reveal>You have the data. You still have to decide.</h2>
             <div className="slh-statement-lines">
-              <p data-reveal><span>Dashboards</span> show what already happened.</p>
-              <p data-reveal><span>Reports</span> arrive after it mattered.</p>
-              <p data-reveal><span>Automations</span> do exactly what they were told, whether or not it still makes sense.</p>
+              <div className="slh-problem" data-reveal><DashboardThumb /><p><span>Dashboards</span> show what already happened.</p></div>
+              <div className="slh-problem" data-reveal><ReportThumb /><p><span>Reports</span> arrive after it mattered.</p></div>
+              <div className="slh-problem" data-reveal><RuleThumb /><p><span>Automations</span> do exactly what they were told, whether or not it still makes sense.</p></div>
               <p className="slh-statement-last">{SCRUB.map((w, i) => <span key={i} className="slh-scrub">{w}</span>)}</p>
             </div>
           </div>
@@ -208,6 +219,20 @@ export default function LandingPage() {
               </ol>
             </div>
             <div className="slh-light-card" data-reveal><DecisionTrace /></div>
+          </div>
+        </section>
+
+        {/* 5b — From approval to paid */}
+        <section className="sl-dark slh-section slh-loop" aria-labelledby="loop-h">
+          <div className="slh-glow slh-glow-2" aria-hidden />
+          <div className="sl-wrap">
+            <div className="slh-center-head" data-reveal>
+              <p className="sl-eyebrow">From approval to paid</p>
+              <h2 id="loop-h" className="slh-h2">One tap from you. The rest is checked against your books.</h2>
+              <p className="sl-p">You read the reminder in full and approve it. It goes out once, where WhatsApp is set up. When the payment lands in Tally, Starlane sees it on the next sync and records what actually worked.</p>
+            </div>
+            <div data-reveal><ApproveLoop /></div>
+            <p className="sl-product-caption">Illustration on the fictional demo company. External messages are off by default and nothing is sent without your approval.</p>
           </div>
         </section>
 
@@ -311,6 +336,7 @@ export default function LandingPage() {
               <h2 id="connect-h" className="slh-h2">Connected the way each system allows, and no further.</h2>
               <p className="sl-p">Every connection states what Starlane receives before you grant it. Nothing is connected without your consent, and nothing is scraped.</p>
             </div>
+            <div data-reveal><BridgeDiagram /></div>
             <div className="slh-connect-grid">
               {CONNECTIONS.map((c) => (
                 <article key={c.kind} className={`slh-c${c.state === "Available" ? "" : " slh-c-later"}`} data-reveal>
@@ -343,7 +369,7 @@ export default function LandingPage() {
             </ul>
             <div className="slh-controls">
               {CONTROLS.map((r) => (
-                <div key={r.l} className="slh-control" data-reveal><h3 className="sl-h3">{r.l}</h3><p className="sl-p">{r.d}</p></div>
+                <div key={r.l} className="slh-control" data-reveal><svg className="slh-control-i" viewBox="0 0 32 32" aria-hidden>{CONTROL_ICONS[r.l]}</svg><h3 className="sl-h3">{r.l}</h3><p className="sl-p">{r.d}</p></div>
               ))}
             </div>
           </div>
@@ -385,6 +411,9 @@ export default function LandingPage() {
               <Link href="/access" className="sl-btn sl-btn-outline slh-btn-lg">Request a pilot</Link>
             </div>
             <Link href="/access/status" className="sl-link-arrow slh-final-status">Check on an application</Link>
+          </div>
+          <div className="sl-wrap slh-final-shot" aria-hidden>
+            <Image src="/product/bridge-desktop.webp" width={2880} height={1800} sizes="(max-width: 767px) 100vw, 1180px" alt="" />
           </div>
         </section>
       </main>
