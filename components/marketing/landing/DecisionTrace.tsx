@@ -129,7 +129,7 @@ export function DecisionTrace() {
             <span className={`sl-dot ${on(4) ? "ok" : ""}`} aria-hidden />
             {on(4) ? "Approved by the owner" : "Waiting for a person"}
           </p>
-          <p className="sl-trace-note">Nothing is sent until someone approves. The message text is frozen at proposal and shown in full.</p>
+          <p className="sl-trace-note">Nothing is sent until someone approves. The message text is fixed when it is proposed and shown in full.</p>
         </section>
 
         {/* 6 — Verification */}
