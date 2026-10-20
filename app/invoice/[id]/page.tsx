@@ -199,10 +199,10 @@ export default function InvoiceViewPage() {
                 <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2">Bill To</p>
                 <p className="font-bold text-gray-800 text-base">{invoice.customer_name}</p>
                 {invoice.customer_phone && (
-                  <p className="text-gray-500 text-xs mt-1">📞 {invoice.customer_phone}</p>
+                  <p className="text-gray-500 text-xs mt-1">Phone {invoice.customer_phone}</p>
                 )}
                 {invoice.customer_email && (
-                  <p className="text-gray-500 text-xs">✉ {invoice.customer_email}</p>
+                  <p className="text-gray-500 text-xs">{invoice.customer_email}</p>
                 )}
                 {invoice.customer_address && (
                   <p className="text-gray-500 text-xs mt-1">{invoice.customer_address}</p>
@@ -363,7 +363,7 @@ export default function InvoiceViewPage() {
                 </p>
                 {isPaid && invoice.payment_date && (
                   <p className="text-xs text-green-600 font-semibold mt-1">
-                    ✅ Paid on {fmtDate(invoice.payment_date)}
+                    Paid on {fmtDate(invoice.payment_date)}
                   </p>
                 )}
               </div>

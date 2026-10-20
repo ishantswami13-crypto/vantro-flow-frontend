@@ -237,7 +237,7 @@ export default function SuppliersPage() {
             <div className="w-full max-w-5xl max-h-[88vh] overflow-hidden rounded-2xl bg-surface border border-border shadow-2xl">
               <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-border">
                 <div className="min-w-0">
-                  <p className="text-lg font-black text-primary truncate">{selectedSupplier.name}</p>
+                  <p className="text-lg font-semibold text-primary truncate">{selectedSupplier.name}</p>
                   <p className="text-xs text-muted mt-1">
                     {selectedSupplier.gstin || "GSTIN not saved"}{selectedSupplier.phone ? ` · ${selectedSupplier.phone}` : ""}
                   </p>
@@ -256,15 +256,15 @@ export default function SuppliersPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="rounded-xl bg-surface-2/70 p-4">
                     <p className="section-label mb-2">Bills</p>
-                    <p className="text-xl font-black text-primary">{selectedSupplier.purchase_count || selectedSupplier.purchases?.length || 0}</p>
+                    <p className="text-xl font-semibold text-primary">{selectedSupplier.purchase_count || selectedSupplier.purchases?.length || 0}</p>
                   </div>
                   <div className="rounded-xl bg-surface-2/70 p-4">
                     <p className="section-label mb-2">Bought in total</p>
-                    <p className="text-xl font-black text-primary">{fmtINR(Number(selectedSupplier.total_payable || 0))}</p>
+                    <p className="text-xl font-semibold text-primary">{fmtINR(Number(selectedSupplier.total_payable || 0))}</p>
                   </div>
                   <div className="rounded-xl bg-surface-2/70 p-4">
                     <p className="section-label mb-2">Pending</p>
-                    <p className="text-xl font-black text-warning">{fmtINR(Number(selectedSupplier.outstanding_amount || 0))}</p>
+                    <p className="text-xl font-semibold text-warning">{fmtINR(Number(selectedSupplier.outstanding_amount || 0))}</p>
                   </div>
                   <div className="rounded-xl bg-surface-2/70 p-4">
                     <p className="section-label mb-2">Last bill</p>

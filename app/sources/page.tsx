@@ -293,10 +293,10 @@ export default function SourcesPage() {
                     ))}
                   </ul>
                 ) : (
-                  <QuietLine>Everything available is connected. New connectors appear here as they are built.</QuietLine>
+                  <QuietLine>Everything available is connected. New connections appear here as they become available.</QuietLine>
                 )}
                 {notBuilt.length > 0 && (
-                  <Group title="Not built yet" hint="A CSV export from any of these works today.">
+                  <Group title="Not available yet" hint="A CSV export from any of these works today.">
                     <ul className="rf-list">
                       {notBuilt.map((c) => (
                         <li key={c.id}>

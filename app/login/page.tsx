@@ -131,7 +131,7 @@ export default function LoginPage() {
         {!handedOff && step === "email" && (
           <form className="auth-form" onSubmit={handleEmailNext} noValidate>
             <div className="field">
-              <label htmlFor="email">Work Email</label>
+              <label htmlFor="email">Work email</label>
               <div style={{position:"relative"}}>
                 <input id="email" type="email" autoFocus autoComplete="email" placeholder="you@company.com"
                   value={form.email}

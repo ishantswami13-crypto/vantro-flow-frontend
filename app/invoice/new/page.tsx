@@ -52,7 +52,7 @@ function StepBar({ current }: { current: number }) {
             {/* Node */}
             <div className="flex flex-col items-center shrink-0">
               <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all"
                 style={{
                   background: done   ? "var(--positive)"
                             : active ? "var(--inverse)"
@@ -187,7 +187,7 @@ export default function NewInvoicePage() {
             <div className="w-16 h-16 rounded-2xl bg-success/15 border border-success/30 flex items-center justify-center mx-auto mb-5">
               <FiCheck size={28} className="text-success" />
             </div>
-            <h1 className="text-2xl font-black text-primary mb-2">Invoice created</h1>
+            <h1 className="text-2xl font-medium text-primary mb-2">Invoice created</h1>
             <p className="text-secondary text-sm mb-1">
               <span className="font-mono font-bold text-accent">{success.invoice_number}</span>
             </p>
@@ -234,7 +234,7 @@ export default function NewInvoicePage() {
         <FiArrowLeft size={15} />
       </button>
       <div>
-        <h1 className="text-lg font-black text-primary leading-none">New invoice</h1>
+        <h1 className="text-lg font-semibold text-primary leading-none">New invoice</h1>
         <p className="text-xs text-muted mt-0.5">
           {autoEnabled ? "Reminders are on: saving sends the payment link on WhatsApp when delivery is active" : "Reminders are off, so saving sends nothing to the customer"}
         </p>
@@ -342,7 +342,7 @@ export default function NewInvoicePage() {
           <button
             type="submit"
             disabled={!customerName.trim()}
-            className="w-full py-4 rounded-xl btn-primary font-black text-base disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
+            className="w-full py-4 rounded-xl btn-primary font-semibold text-base disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
             Next: add items <FiArrowRight size={16} />
           </button>
         </form>
@@ -433,7 +433,7 @@ export default function NewInvoicePage() {
               </button>
               <div className="text-right">
                 <p className="text-2xs text-muted">Total</p>
-                <p className="text-2xl font-black text-primary">{fmtINR(total)}</p>
+                <p className="text-2xl font-medium text-primary">{fmtINR(total)}</p>
               </div>
             </div>
           </div>
@@ -459,8 +459,8 @@ export default function NewInvoicePage() {
           <button
             type="submit"
             disabled={!hasValidItems}
-            className="w-full py-4 rounded-xl btn-primary font-black text-base disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
-            Review Invoice <FiArrowRight size={16} />
+            className="w-full py-4 rounded-xl btn-primary font-semibold text-base disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
+            Next: review <FiArrowRight size={16} />
           </button>
         </form>
       </div>
@@ -481,7 +481,7 @@ export default function NewInvoicePage() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-2xs text-muted uppercase tracking-wider mb-0.5">Billed to</p>
-                <p className="text-base font-black text-primary">{customerName}</p>
+                <p className="text-base font-semibold text-primary">{customerName}</p>
                 {customerPhone && <p className="text-xs text-secondary mt-0.5">{customerPhone}</p>}
                 {customerEmail && <p className="text-xs text-muted">{customerEmail}</p>}
               </div>
@@ -514,7 +514,7 @@ export default function NewInvoicePage() {
             {/* Total */}
             <div className="pt-3 border-t border-border flex items-center justify-between">
               <p className="text-sm font-bold text-secondary">Total amount</p>
-              <p className="text-3xl font-black text-primary">{fmtINR(total)}</p>
+              <p className="text-3xl font-medium text-primary">{fmtINR(total)}</p>
             </div>
 
             {notes && (
@@ -549,7 +549,7 @@ export default function NewInvoicePage() {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full py-4 rounded-xl btn-primary font-black text-base disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
+            className="w-full py-4 rounded-xl btn-primary font-semibold text-base disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
             {loading ? (
               <><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Creating invoice…</>
             ) : (

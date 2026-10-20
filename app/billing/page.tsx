@@ -157,7 +157,7 @@ export default function BillingPage() {
         {successPlan && (
           <div className="px-4 py-3 rounded-xl bg-success/10 border border-success/30 text-sm text-success font-semibold flex items-center gap-2">
             <FiCheck size={15} />
-            You're now on <span className="capitalize font-black">{successPlan}</span>.
+            You're now on <span className="capitalize font-semibold">{successPlan}</span>.
           </div>
         )}
 
@@ -166,7 +166,7 @@ export default function BillingPage() {
           <div className="rounded-2xl border border-border bg-surface p-6">
             <div className="flex items-start gap-4">
               <div>
-                <h1 className="text-lg font-black text-primary mb-1">
+                <h1 className="text-lg font-semibold text-primary mb-1">
                   You're on the Free plan.
                 </h1>
                 <p className="text-sm text-secondary leading-relaxed">
@@ -182,7 +182,7 @@ export default function BillingPage() {
                 <FiZap size={18} className="text-success" />
               </div>
               <div>
-                <p className="text-sm font-black text-primary">
+                <p className="text-sm font-semibold text-primary">
                   {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} plan, active
                 </p>
                 <p className="text-xs text-muted">Thank you for building with Starlane.</p>
@@ -207,7 +207,7 @@ export default function BillingPage() {
                 ].join(" ")}>
                 {b.charAt(0).toUpperCase() + b.slice(1)}
                 {b === "annual" && (
-                  <span className="text-2xs font-black bg-success text-white px-1.5 py-0.5 rounded-full">
+                  <span className="text-2xs font-semibold bg-success text-white px-1.5 py-0.5 rounded-full">
                     −20%
                   </span>
                 )}
@@ -234,17 +234,17 @@ export default function BillingPage() {
                 <div key={plan.id} className="relative rounded-2xl bg-[#F5F4F0] p-7 flex flex-col shadow-2xl md:-mt-3 md:mb-3">
                   {plan.badge && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-2xs font-black tracking-widest uppercase text-white bg-black shadow-lg">
-                        ★ {plan.badge}
+                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-2xs font-medium text-white bg-black shadow-lg">
+                        {plan.badge}
                       </span>
                     </div>
                   )}
 
                   <div className="mb-6">
                     <p className="text-2xs font-bold tracking-[0.12em] uppercase text-black/40 mb-2">{plan.name}</p>
-                    <p className="text-base font-black text-black mb-4 leading-tight">{plan.tagline}</p>
+                    <p className="text-base font-semibold text-black mb-4 leading-tight">{plan.tagline}</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-black text-black tracking-tight">
+                      <span className="text-4xl font-medium text-black tracking-tight">
                         ₹{price.toLocaleString("en-IN")}
                       </span>
                       <span className="text-black/50 text-sm ml-1">/mo</span>
@@ -273,11 +273,11 @@ export default function BillingPage() {
                   <button
                     onClick={() => !isCurrent && handleUpgrade(plan.id)}
                     disabled={isCurrent || !!loading}
-                    className="w-full py-3.5 rounded-xl text-sm font-black text-white bg-black hover:bg-black/85 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                    className="w-full py-3.5 rounded-xl text-sm font-semibold text-white bg-black hover:bg-black/85 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                     {loading === plan.id
                       ? <><span className="w-4 h-4 border-2 border-border border-t-white rounded-full animate-spin" /> Processing...</>
                       : isCurrent
-                      ? "✓ Current Plan"
+                      ? "Current plan"
                       : <>{plan.cta} <FiArrowRight size={14} /></>
                     }
                   </button>
@@ -302,12 +302,12 @@ export default function BillingPage() {
 
                 {plan.badge && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-2xs font-black tracking-widest uppercase ${
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-2xs font-medium ${
                       isPro
                         ? "text-accent bg-accent/10 border border-accent/30"
                         : "text-muted bg-surface-3 border border-border"
                     }`}>
-                      {isPro ? "⚡ " : ""}{plan.badge}
+                      {plan.badge}
                     </span>
                   </div>
                 )}
@@ -319,9 +319,9 @@ export default function BillingPage() {
 
                 <div className="mb-6">
                   <p className="text-2xs font-bold tracking-[0.12em] uppercase text-muted mb-2">{plan.name}</p>
-                  <p className="text-base font-black text-primary mb-4 leading-tight">{plan.tagline}</p>
+                  <p className="text-base font-semibold text-primary mb-4 leading-tight">{plan.tagline}</p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-primary tracking-tight">
+                    <span className="text-4xl font-medium text-primary tracking-tight">
                       ₹{price.toLocaleString("en-IN")}
                     </span>
                     <span className="text-muted text-sm ml-1">/mo</span>
@@ -359,7 +359,7 @@ export default function BillingPage() {
                   {loading === plan.id
                     ? <><span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" /> Processing...</>
                     : isCurrent
-                    ? "✓ Current Plan"
+                    ? "Current plan"
                     : <>{plan.cta} <FiArrowRight size={14} /></>
                   }
                 </button>
@@ -387,7 +387,7 @@ export default function BillingPage() {
 
         {/* ── FAQ ─────────────────────────────────────────────── */}
         <div className="space-y-2">
-          <p className="text-xs font-bold text-muted uppercase tracking-wider mb-4">Common Questions</p>
+          <p className="text-xs font-bold text-muted uppercase tracking-wider mb-4">Common questions</p>
           {FAQS.map(({ q, a }, i) => (
             <div key={i} className="rounded-xl border border-border bg-surface-1 overflow-hidden">
               <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
@@ -425,7 +425,7 @@ export default function BillingPage() {
         {/* ── BILLING HISTORY ─────────────────────────────────── */}
         <div className="rounded-2xl border border-border bg-surface-1 overflow-hidden">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <p className="text-sm font-bold text-primary">Invoice History</p>
+            <p className="text-sm font-bold text-primary">Invoice history</p>
             <FiCalendar size={14} className="text-muted" />
           </div>
           <div className="divide-y divide-border/60">

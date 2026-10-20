@@ -191,7 +191,7 @@ function KnowledgeRow({ k, onForget }: { k: KnowledgeItem; onForget?: () => void
     <div role="row" className="wk-row mem-k-row" style={{ gridTemplateColumns: K_COLS }}>
       <div role="cell" className="min-w-0">
         <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: quarantined ? "var(--ink-3)" : "var(--ink)", maxWidth: "68ch" }}>{k.statement}</p>
-        {quarantined && <div style={{ marginTop: 4 }}><StatusChip tone="critical" title="It reads like an instruction to Starlane, so it is not used.">Quarantined, not used</StatusChip></div>}
+        {quarantined && <div style={{ marginTop: 4 }}><StatusChip tone="critical" title="It reads like an instruction to Starlane, so it is not used.">Set aside, not used</StatusChip></div>}
       </div>
       <div role="cell" className="min-w-0 mem-k-cell">
         <div className={k.authority === "engine" && k.sample_count != null ? "num-quiet" : undefined} style={{ fontSize: 12.5, color: "var(--ink)" }}>{basis.main}</div>

@@ -249,7 +249,7 @@ function Verification({ detail, onVerify, busy }: { detail: DecisionDetail; onVe
         <Pill tone={c.status === "MET" || c.status === "ON_TRACK" ? "good" : c.status === "NOT_MET" || c.status === "OFF_TRACK" || c.status === "ABORTED" ? "bad" : "neutral"}>
           {c.status.charAt(0) + c.status.slice(1).replace(/_/g, " ").toLowerCase()}
         </Pill>
-        <span>{c.mode === "SHADOW" ? "Shadow contract" : "Live contract"} · started {formatDate(c.activated_at)}{v ? ` · checked ${relTime(v.checkedAt)}` : ""}</span>
+        <span>{c.mode === "SHADOW" ? "Tracked in shadow mode" : "Tracked live"} · started {formatDate(c.activated_at)}{v ? ` · checked ${relTime(v.checkedAt)}` : ""}</span>
       </div>
       <p className={m.prose} style={{ marginTop: 8 }}>{v?.reason || "Not checked yet. The first comparison with the forecast happens when its horizon has passed."}</p>
       {v && (

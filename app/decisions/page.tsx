@@ -25,7 +25,7 @@ const DETECTOR_WORDS: Record<string, string> = {
 function deadlineText(d: DecisionListItem): { text: string; tone?: "bad" | "warn" } | null {
   const days = daysUntil(d.deadline || d.window?.latestSafeAt || null);
   if (days == null) return null;
-  if (days < 0) return { text: `Window closed ${-days} day${days === -1 ? "" : "s"} ago`, tone: "bad" };
+  if (days < 0) return { text: `Deadline passed ${-days} day${days === -1 ? "" : "s"} ago`, tone: "bad" };
   if (days === 0) return { text: "Decide today", tone: "bad" };
   if (days <= 7) return { text: `Decide within ${days} day${days === 1 ? "" : "s"}`, tone: "warn" };
   return { text: `Decide by ${formatDate(d.deadline)}` };

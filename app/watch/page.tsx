@@ -105,7 +105,7 @@ function WatchPageInner() {
   const subtitle = loading && !watches ? "Loading what Starlane is watching…"
     : failed && !watches ? "What Starlane watches for you, checked every 15 minutes."
     : !hasAny ? "Tell Starlane what to keep an eye on. It checks every 15 minutes and tells you when something is met."
-    : `Watching ${formatCount(list.length)} condition${list.length === 1 ? "" : "s"} for you. ${triggered === 0 ? "None are triggered." : `${formatCount(triggered)} ${triggered === 1 ? "is" : "are"} triggered.`}`;
+    : `Watching ${formatCount(list.length)} condition${list.length === 1 ? "" : "s"} for you. ${triggered === 0 ? "None is met right now." : `${formatCount(triggered)} ${triggered === 1 ? "is" : "are"} met right now.`}`;
 
   const newWatchButton = (
     <button type="button" onClick={() => setShowModal(true)} className="ui-btn ui-btn-primary">
@@ -139,7 +139,7 @@ function WatchPageInner() {
                 onChange={(k) => setTab(k as TabKey)}
                 items={[
                   { key: "active", label: "Active", count: counts.active },
-                  { key: "changed", label: "Has triggered", count: counts.changed },
+                  { key: "changed", label: "Met", count: counts.changed },
                   { key: "paused", label: "Paused", count: counts.paused },
                   { key: "all", label: "All", count: counts.all },
                 ]}
@@ -147,7 +147,7 @@ function WatchPageInner() {
               <div style={{ marginTop: 12 }}>
                 {filtered.length === 0 ? (
                   <QuietLine>
-                    {tab === "changed" ? "Nothing has triggered yet. A watch appears here once it has been met."
+                    {tab === "changed" ? "No watch has been met yet. A watch moves here the first time its condition is met."
                       : tab === "paused" ? "No paused watches. A paused watch is not checked until you resume it."
                       : "No active watches. Resume a paused watch or create a new one."}
                   </QuietLine>
