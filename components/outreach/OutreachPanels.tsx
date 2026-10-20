@@ -73,7 +73,7 @@ export function OutreachControl({ status, onChange }: { status: OutreachStatus |
   const [stopping, setStopping] = useState(false);
   const stopAll = async () => {
     setStopping(true); setError(null);
-    try { await outreachApi.stopAll("STOP ALL OUTBOUND pressed"); onChange(); } catch (err) { setError(`Stop did not go through. ${humaneError(err, NETWORK_ERROR)} Press it again.`); } finally { setStopping(false); }
+    try { await outreachApi.stopAll("STOP ALL OUTBOUND pressed"); onChange(); } catch (err) { setError(`Outbound may still be running. ${humaneError(err, NETWORK_ERROR)} Press Stop all outbound again.`); } finally { setStopping(false); }
   };
 
   const headTone: StatusTone = !status ? "unknown" : status.globalStop.stopped || status.engine.status === "STOPPED_AUTOMATICALLY" ? "critical" : running ? "positive" : "neutral";
@@ -219,7 +219,7 @@ export function AccountsPanel({ onChange }: { onChange: () => void }) {
       right={
         <div className="flex flex-wrap" style={{ gap: 8 }}>
           <Button variant="secondary" size="sm" onClick={connectGmail} disabled={busy || (data ? !data.gmailOAuthConfigured || !data.credentialsKeyConfigured : true)}
-            title={data && !data.gmailOAuthConfigured ? "Gmail is not configured on the backend yet" : data && !data.credentialsKeyConfigured ? "The backend has no key for storing mailbox credentials yet" : undefined}>
+            title={data && !data.gmailOAuthConfigured ? "Gmail sign-in isn't set up for Starlane yet" : data && !data.credentialsKeyConfigured ? "Starlane can't store mailbox sign-ins safely yet" : undefined}>
             Connect Gmail
           </Button>
           <Button variant="ghost" size="sm" onClick={() => act(() => outreachApi.addSink())} disabled={busy}>Add shadow sink</Button>
@@ -227,7 +227,7 @@ export function AccountsPanel({ onChange }: { onChange: () => void }) {
       }
     >
       <Panel pad={false}>
-        {data && !data.gmailOAuthConfigured && <Empty>Gmail cannot be connected until the backend has its Google sign-in settings.</Empty>}
+        {data && !data.gmailOAuthConfigured && <Empty>Gmail can be connected once Google sign-in is set up for Starlane.</Empty>}
         {data?.accounts.length === 0 && <Empty>No sending account yet.</Empty>}
         {!data && !error && <Empty>Loading…</Empty>}
         {data?.accounts.map((a, i) => (
@@ -291,7 +291,7 @@ export function CampaignsPanel({ campaigns, accounts, onChange }: { campaigns: C
       const d = await outreachApi.drafts(selected);
       drafted = d.drafted; excluded = d.excluded.length; blocked = d.blockedByValidation;
     }
-    setNote(`Imported ${imp.created} new, ${imp.merged} already known, ${imp.rejected} rejected. ${drafted} draft(s) ready for review, ${blocked} blocked by validation, ${excluded} not eligible.${rejected.length ? ` Rejected: ${rejected.slice(0, 3).join("; ")}` : ""}${problems.length ? ` ${problems.join(" ")}` : ""}`);
+    setNote(`Imported ${imp.created} new, ${imp.merged} already known, ${imp.rejected} rejected. ${drafted} ${drafted === 1 ? "draft" : "drafts"} ready for review, ${blocked} blocked by validation, ${excluded} not eligible.${rejected.length ? ` Rejected: ${rejected.slice(0, 3).join("; ")}` : ""}${problems.length ? ` ${problems.join(" ")}` : ""}`);
     setCsv("");
   });
 
@@ -409,7 +409,7 @@ export function ReviewPanel({ refreshKey, onChange }: { refreshKey: number; onCh
 
 const REPLY_LABEL: Record<string, string> = {
   MEETING: "Wants to meet", INTERESTED: "Interested", QUESTION: "Asked a question", ROUTED_TO_OTHER_PERSON: "Pointed to someone else", NOT_NOW: "Not now",
-  DECLINED: "Declined", OPT_OUT: "Opted out", AUTO_REPLY: "Auto-reply", OTHER: "Needs a read",
+  DECLINED: "Declined", OPT_OUT: "Opted out", AUTO_REPLY: "Auto-reply", OTHER: "Read it yourself",
 };
 
 export function RepliesPanel({ refreshKey }: { refreshKey: number }) {
@@ -464,8 +464,8 @@ export function OutreachBody() {
   if (notReady) {
     return (
       <Panel>
-        <div style={{ fontSize: 14, color: "var(--ink)" }}>Outreach is not set up on this server yet</div>
-        <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55 }}>The outbound tables are not on this database, so nothing can be queued or sent.</p>
+        <div style={{ fontSize: 14, color: "var(--ink)" }}>Outreach isn't set up yet</div>
+        <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55 }}>Nothing can be queued or sent until it is.</p>
       </Panel>
     );
   }

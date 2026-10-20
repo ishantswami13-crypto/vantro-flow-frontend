@@ -87,7 +87,7 @@ export function ObjectivesPanel() {
         meta={list.length ? formatCount(list.length) : undefined}
         right={list.length > 0 ? <button type="button" className="hover-dim" style={{ fontSize: 12, color: "var(--ink-2)" }} onClick={reevaluate} disabled={busy}>{busy ? "Checking…" : "Check again"}</button> : undefined}
       />
-      <p className="meta" style={{ margin: "-2px 0 10px" }}>A target the business is steering towards, checked against the ledger and forecast forward.</p>
+      <p className="meta" style={{ margin: "-2px 0 10px" }}>A target your business is steering towards, checked against your books and projected forward.</p>
 
       {objectives.loading && !objectives.data && <SkeletonRows rows={2} height={56} />}
       {objectives.error && !objectives.data ? <QuietError onRetry={objectives.reload} /> : null}
@@ -113,7 +113,7 @@ export function ObjectivesPanel() {
             </select>
             <button type="submit" className="ui-btn ui-btn-secondary" disabled={busy}>{busy ? "Checking…" : "Set objective"}</button>
           </form>
-          <p className="meta" style={{ margin: "12px 0 0" }}>Acting within policy without approval is not offered. Every reminder waits for a person.</p>
+          <p className="meta" style={{ margin: "12px 0 0" }}>Starlane never sends a reminder on its own here. Every one waits for your approval.</p>
         </div>
       )}
 

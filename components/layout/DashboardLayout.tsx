@@ -224,7 +224,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
         {/* Push notification permission banner */}
         {showNotifBanner && (
           <div className="px-5 flex items-center justify-between gap-3 shrink-0" style={{ height: 40, background: "var(--surface)", borderBottom: "1px solid var(--line)", fontSize: 12.5 }}>
-            <span style={{ color: "var(--body)" }}>Get a notification the moment a payment lands.</span>
+            <span style={{ color: "var(--body)" }}>Get a notification when a customer pays through a Starlane payment link.</span>
             <div className="flex gap-1 shrink-0">
               <button onClick={handleEnableNotifications} className="ui-btn ui-btn-primary ui-btn-sm">Enable</button>
               <button onClick={() => setShowNotifBanner(false)} className="ui-btn ui-btn-ghost ui-btn-sm">Later</button>
