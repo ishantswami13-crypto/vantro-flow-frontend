@@ -31,7 +31,7 @@ export function DecisionEvidenceDrawer({ d, onClose }: { d: Decision; onClose: (
       titleSize={18}
       subtitle={d.title}
       onClose={onClose}
-      footer="Conclusion → analysis → evidence → source record. Every figure on the decision traces back to here."
+      footer="Read it from the conclusion, through the analysis and evidence, down to the source record. Every figure on the decision traces back to here."
     >
       <div className={css.stats}>
         <span><b>{d.evidence.length}</b> item{d.evidence.length === 1 ? "" : "s"}</span>

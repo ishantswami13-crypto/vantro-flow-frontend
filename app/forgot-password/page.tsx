@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
       setCountdown(30);
       setTimeout(() => inputs.current[0]?.focus(), 150);
     } catch {
-      setError("Network error. Please try again.");
+      setError("Couldn't reach Starlane. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
       setCountdown(30);
       setTimeout(() => inputs.current[0]?.focus(), 100);
     } catch {
-      setError("Could not resend. Try again.");
+      setError("The code wasn't resent. Check your connection and try again.");
     } finally {
       setResending(false);
     }
@@ -98,9 +98,9 @@ export default function ForgotPasswordPage() {
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
     const code = otp.join("");
-    if (code.length < 6) { setError("Enter the 6-digit OTP"); return; }
-    if (newPass.length < 8) { setError("Password must be at least 8 characters"); return; }
-    if (newPass !== confirm) { setError("Passwords do not match"); return; }
+    if (code.length < 6) { setError("Enter all 6 digits of the code."); return; }
+    if (newPass.length < 8) { setError("Use at least 8 characters for the new password."); return; }
+    if (newPass !== confirm) { setError("The two passwords don't match yet."); return; }
 
     setLoading(true); setError("");
     try {
@@ -110,10 +110,10 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email, otp: code, new_password: newPass }),
       });
       const d = await res.json();
-      if (!d.success) throw new Error(d.error || "Reset failed");
+      if (!d.success) throw new Error(d.error || "That code didn't work or has expired. Request a new one and try again.");
       setStep("done");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Invalid OTP or it expired. Try again.");
+      setError(err instanceof TypeError || !(err instanceof Error) ? "Couldn't reach Starlane. Check your connection and try again." : err.message);
       setOtp(["", "", "", "", "", ""]);
       setTimeout(() => inputs.current[0]?.focus(), 100);
     } finally {
@@ -142,9 +142,9 @@ export default function ForgotPasswordPage() {
               <div className="w-16 h-16 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center mx-auto">
                 <FiCheckCircle size={28} className="text-success" />
               </div>
-              <h1 className="text-xl text-primary" style={{fontFamily:"var(--font-display)", fontWeight:400}}>Password reset!</h1>
+              <h1 className="text-xl text-primary" style={{fontFamily:"var(--font-display)", fontWeight:400}}>Password changed</h1>
               <p className="text-sm text-secondary leading-relaxed">
-                Your password has been updated. Sign in with your new password.
+                Sign in with your new password.
               </p>
               <button
                 onClick={() => router.push("/login")}
@@ -161,7 +161,7 @@ export default function ForgotPasswordPage() {
               <div className="mb-6">
                 <h1 className="text-xl text-primary" style={{fontFamily:"var(--font-display)", fontWeight:400}}>Forgot password?</h1>
                 <p className="text-sm text-secondary mt-1">
-                  Enter your email — we&apos;ll send a reset OTP.
+                  Enter your email and we&apos;ll send a 6-digit code to reset it.
                 </p>
               </div>
 
@@ -191,7 +191,7 @@ export default function ForgotPasswordPage() {
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-lg btn-primary font-bold text-sm transition-all disabled:opacity-40">
                   {loading
                     ? <><div className="w-4 h-4 border-2 border-border border-t-white rounded-full animate-spin" /> Sending…</>
-                    : <>Send OTP <FiArrowRight size={14} /></>}
+                    : <>Send code <FiArrowRight size={14} /></>}
                 </button>
               </form>
             </>
@@ -203,9 +203,9 @@ export default function ForgotPasswordPage() {
               <div className="mb-6">
                 <h1 className="text-xl text-primary" style={{fontFamily:"var(--font-display)", fontWeight:400}}>Reset password</h1>
                 <p className="text-sm text-secondary mt-1">
-                  We sent a 6-digit OTP to{" "}
-                  <span className="font-semibold text-primary">{maskedEmail}</span>.
-                  Check your inbox and spam folder.
+                  If an account uses{" "}
+                  <span className="font-semibold text-primary">{maskedEmail}</span>,
+                  a 6-digit code is on its way. Check your inbox and spam folder.
                 </p>
               </div>
 
@@ -218,7 +218,7 @@ export default function ForgotPasswordPage() {
               <form onSubmit={handleReset} className="space-y-5">
                 {/* OTP boxes */}
                 <div>
-                  <label className="text-xs font-semibold text-secondary uppercase tracking-wider block mb-3">6-Digit OTP</label>
+                  <label className="text-xs font-semibold text-secondary uppercase tracking-wider block mb-3">6-digit code</label>
                   <div className="flex justify-between gap-2" onPaste={handlePaste}>
                     {otp.map((digit, i) => (
                       <input
@@ -244,7 +244,7 @@ export default function ForgotPasswordPage() {
                         className="text-xs text-accent hover:underline flex items-center gap-1 ml-auto disabled:opacity-50">
                         {resending
                           ? <><FiRefreshCw size={11} className="animate-spin" /> Sending…</>
-                          : "Resend OTP"}
+                          : "Resend code"}
                       </button>
                     )}
                   </div>
@@ -252,12 +252,12 @@ export default function ForgotPasswordPage() {
 
                 {/* New Password */}
                 <div>
-                  <label className="text-xs font-semibold text-secondary uppercase tracking-wider block mb-1.5">New Password</label>
+                  <label className="text-xs font-semibold text-secondary uppercase tracking-wider block mb-1.5">New password</label>
                   <div className="relative">
                     <FiLock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
                     <input
                       type={showPass ? "text" : "password"}
-                      placeholder="Min 8 characters"
+                      placeholder="At least 8 characters"
                       value={newPass}
                       onChange={e => { setNewPass(e.target.value); setError(""); }}
                       required minLength={8}
@@ -275,7 +275,7 @@ export default function ForgotPasswordPage() {
 
                 {/* Confirm Password */}
                 <div>
-                  <label className="text-xs font-semibold text-secondary uppercase tracking-wider block mb-1.5">Confirm Password</label>
+                  <label className="text-xs font-semibold text-secondary uppercase tracking-wider block mb-1.5">Confirm password</label>
                   <div className="relative">
                     <FiLock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
                     <input
@@ -295,7 +295,7 @@ export default function ForgotPasswordPage() {
                     <p className="text-2xs text-danger mt-1">Passwords do not match</p>
                   )}
                   {confirm.length > 0 && confirm === newPass && newPass.length >= 8 && (
-                    <p className="text-2xs text-success mt-1">✓ Passwords match</p>
+                    <p className="text-2xs text-success mt-1">Passwords match</p>
                   )}
                 </div>
 
@@ -304,7 +304,7 @@ export default function ForgotPasswordPage() {
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-lg btn-primary font-bold text-sm transition-all disabled:opacity-40">
                   {loading
                     ? <><div className="w-4 h-4 border-2 border-border border-t-white rounded-full animate-spin" /> Resetting…</>
-                    : <>Reset Password <FiArrowRight size={14} /></>}
+                    : <>Reset password <FiArrowRight size={14} /></>}
                 </button>
 
                 <button type="button"
@@ -328,7 +328,6 @@ export default function ForgotPasswordPage() {
 
         <p className="mt-6 text-center text-xs text-muted">
           <Link href="/" className="hover:text-secondary transition-colors">Starlane</Link>
-          {" "}— Collections OS for Indian MSMEs
         </p>
       </div>
     </div>

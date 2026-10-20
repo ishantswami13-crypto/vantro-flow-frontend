@@ -230,9 +230,10 @@ export default function CollectionsPage() {
       const user = (() => { try { return JSON.parse(localStorage.getItem("vantro_user") || "{}"); } catch { return {}; } })();
       const text = generateWhatsAppPaymentLink({
         upiId: user.upi_id || "demo@upi",
-        payeeName: user.business_name || "Demo",
+        // This text reaches a customer: never fall back to a placeholder business name.
+        payeeName: user.business_name || "Hamara",
         amount: c.outstanding,
-        note: `Invoice from ${user.business_name || "Demo"}`,
+        note: user.business_name ? `Invoice from ${user.business_name}` : "Invoice payment",
         customerPhone: c.contact,
         customerName: c.name.split(" ")[0],
       });

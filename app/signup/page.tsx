@@ -61,24 +61,24 @@ function OTPStep({ preToken, userEmail, userPhone, onVerified }: {
       const d = await r.json();
       // Stays locked on success: the page is moving to onboarding.
       if (d.success) onVerified(d.token, d.user, d.csrf_token);
-      else { verifying.current = false; setError(d.error||"Wrong OTP"); setOtp(["","","","","",""]); inputs.current[0]?.focus(); }
-    } catch { verifying.current = false; setError("Network error. Please try again."); }
+      else { verifying.current = false; setError(d.error||"That code didn't work. Check the digits or ask for a new code."); setOtp(["","","","","",""]); inputs.current[0]?.focus(); }
+    } catch { verifying.current = false; setError("Couldn't reach Starlane. Check your connection and try again."); }
     finally { setLoading(false); }
   }
 
   async function handleResend() {
     setResending(true); setError(""); setResent(false);
     try { await fetch(`${BASE}/api/auth/resend-otp`,{method:"POST",headers:{Authorization:`Bearer ${preToken}`}, credentials:"include"}); setResent(true); setCountdown(30); setOtp(["","","","","",""]); inputs.current[0]?.focus(); }
-    catch { setError("Could not resend."); }
+    catch { setError("The code wasn't resent. Check your connection and try again."); }
     finally { setResending(false); }
   }
 
   return (
     <div>
       <div className="step-head">
-        <div className="step-num">Step 3 of 3</div>
+        <div className="step-num">Last step</div>
         <h2>Check your phone</h2>
-        <p>6-digit code sent to{maskedPhone&&<> <strong style={{color:"#fff"}}>{maskedPhone}</strong></>}{maskedPhone&&maskedEmail&&" and"}{maskedEmail&&<> <strong style={{color:"#fff"}}>{maskedEmail}</strong></>}</p>
+        <p>We sent a 6-digit code to{maskedPhone&&<> <strong style={{color:"#fff"}}>{maskedPhone}</strong></>}{maskedPhone&&maskedEmail&&" and"}{maskedEmail&&<> <strong style={{color:"#fff"}}>{maskedEmail}</strong></>}</p>
       </div>
       <div style={{display:"flex",justifyContent:"center",gap:"10px",marginBottom:"24px"}} onPaste={handlePaste}>
         {otp.map((d,i)=>(
@@ -124,23 +124,23 @@ function SignupForm() {
 
   function goStep2(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name.trim()||!form.email.trim()||!form.business_name.trim()) { setError("Please fill all fields"); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { setError("Enter a valid email"); return; }
+    if (!form.name.trim()||!form.email.trim()||!form.business_name.trim()) { setError("Fill in your name, company and work email to continue."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { setError("That email doesn't look complete. Check it and try again."); return; }
     setError(""); setStep(2);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setError("");
-    if (form.password.length < 8) { setError("Password must be at least 8 characters"); return; }
-    if (form.password !== form.confirm_password) { setError("Passwords do not match"); return; }
+    if (form.password.length < 8) { setError("Use at least 8 characters for your password."); return; }
+    if (form.password !== form.confirm_password) { setError("The two passwords don't match yet."); return; }
     setLoading(true);
     try {
       const res = await fetch(`${BASE}/api/auth/signup`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ email:form.email, phone:form.phone, business_name:form.business_name, password:form.password, ...(referredBy?{referred_by:referredBy}:{}) }) });
       const data = await res.json();
-      if (!res.ok||!data.success) throw new Error(data.error||"Signup failed");
+      if (!res.ok||!data.success) throw new Error(data.error||"Your account wasn't created. Try again in a moment.");
       if (data.needs_otp) { setPreToken(data.pre_token); setVerifiedUser({email:data.user.email,phone:data.user.phone}); setOtpStep(true); }
       else { await saveAuth(data.token,data.user,true,data.csrf_token); posthog.identify(data.user.id,{email:data.user.email,plan:data.user.plan}); router.push("/onboarding"); }
-    } catch (err: unknown) { setError(err instanceof Error?err.message:"Signup failed"); }
+    } catch (err: unknown) { setError(err instanceof TypeError||!(err instanceof Error)?"Couldn't reach Starlane. Check your connection and try again.":err.message); }
     finally { setLoading(false); }
   }
 
@@ -175,7 +175,7 @@ function SignupForm() {
       </div>
 
       {error&&<div style={{marginBottom:"16px",padding:"12px 16px",borderRadius:"6px",background:"rgba(255,80,80,.08)",border:"1px solid rgba(255,80,80,.2)",fontSize:"13px",color:"rgba(255,100,100,.9)",fontFamily:"'JetBrains Mono',monospace"}}>{error}</div>}
-      {referredBy&&step===1&&<div style={{marginBottom:"16px",padding:"12px 16px",borderRadius:"6px",background:"rgba(16,217,138,.08)",border:"1px solid rgba(16,217,138,.2)",fontSize:"12px",color:"#10D98A"}}>🎉 You were invited — join free</div>}
+      {referredBy&&step===1&&<div style={{marginBottom:"16px",padding:"12px 16px",borderRadius:"6px",background:"rgba(16,217,138,.08)",border:"1px solid rgba(16,217,138,.2)",fontSize:"12px",color:"#10D98A"}}>You were invited. Your account is free to start.</div>}
 
       {/* Step 1 */}
       {step===1&&(
@@ -183,7 +183,7 @@ function SignupForm() {
           <div className="step-head">
             <div className="step-num">Step 1 of 2</div>
             <h2>Create your<br/>free account.</h2>
-            <p>No credit card required. Up and running in 8 minutes.</p>
+            <p>No credit card required.</p>
           </div>
           <div className="form-grid" style={{display:"flex",flexDirection:"column",gap:"14px"}}>
             <div className="row-2">
@@ -204,11 +204,11 @@ function SignupForm() {
             </button>
           </div>
           <div className="trust">
-            <div className="trust-item">Free forever plan</div>
+            <div className="trust-item">Free plan</div>
             <div className="trust-item">No credit card</div>
             <div className="trust-item">Cancel anytime</div>
           </div>
-          <div className="auth-foot" style={{marginTop:"24px"}}>Already have an account? <Link href="/login">Log in</Link></div>
+          <div className="auth-foot" style={{marginTop:"24px"}}>Already have an account? <Link href="/login">Sign in</Link></div>
         </form>
       )}
 
@@ -223,7 +223,7 @@ function SignupForm() {
           <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
             {/* Phone */}
             <div className="field">
-              <label>Phone (WhatsApp — OTP sent here)</label>
+              <label>WhatsApp number (your sign-up code goes here)</label>
               <div style={{display:"flex"}}>
                 <span style={{display:"flex",alignItems:"center",padding:"0 14px",background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.1)",borderRight:"none",borderRadius:"6px 0 0 6px",fontSize:"13px",fontFamily:"'JetBrains Mono',monospace",color:"rgba(255,255,255,.66)",flexShrink:0}}>+91</span>
                 <FocusInput type="tel" placeholder="9876543210" value={form.phone} onChange={set("phone")} required maxLength={10} pattern="\d{10}" autoComplete="tel" style={{borderRadius:"0 6px 6px 0"} as React.CSSProperties}/>
@@ -233,7 +233,7 @@ function SignupForm() {
             <div className="field">
               <label>Password</label>
               <div style={{position:"relative"}}>
-                <FocusInput type={showPassword?"text":"password"} placeholder="Min 8 characters" value={form.password} onChange={set("password")} required minLength={8} style={{paddingRight:"44px"} as React.CSSProperties}/>
+                <FocusInput type={showPassword?"text":"password"} placeholder="At least 8 characters" value={form.password} onChange={set("password")} required minLength={8} style={{paddingRight:"44px"} as React.CSSProperties}/>
                 <button type="button" onClick={()=>setShowPassword(v=>!v)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.55)"}} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>
               </div>
               {form.password.length>0&&form.password.length<8&&<p style={{fontSize:"10px",marginTop:"4px",color:"rgba(255,80,80,.8)",fontFamily:"'JetBrains Mono',monospace"}}>At least 8 characters</p>}
@@ -246,7 +246,7 @@ function SignupForm() {
                 <button type="button" onClick={()=>setShowConfirm(v=>!v)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.55)"}} aria-label={showConfirm?"Hide password":"Show password"}>{showConfirm?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>
               </div>
               {form.confirm_password.length>0&&form.password!==form.confirm_password&&<p style={{fontSize:"10px",marginTop:"4px",color:"rgba(255,80,80,.8)",fontFamily:"'JetBrains Mono',monospace"}}>Passwords do not match</p>}
-              {form.confirm_password.length>0&&form.password===form.confirm_password&&form.password.length>=8&&<p style={{fontSize:"10px",marginTop:"4px",color:"#10D98A",fontFamily:"'JetBrains Mono',monospace"}}>✓ Looks good</p>}
+              {form.confirm_password.length>0&&form.password===form.confirm_password&&form.password.length>=8&&<p style={{fontSize:"10px",marginTop:"4px",color:"#10D98A",fontFamily:"'JetBrains Mono',monospace"}}>Passwords match</p>}
             </div>
             <div className="btn-row">
               <button type="button" className="btn-back" onClick={()=>{setStep(1);setError("");}}>Back</button>
@@ -271,7 +271,7 @@ export default function SignupPage() {
         <Link href="/" style={{display:"flex",alignItems:"center",textDecoration:"none",color:"#fff"}}>
           <span className="brand-wm">Starlane</span>
         </Link>
-        <div className="topbar-right">Already have an account? <Link href="/login">Log in</Link></div>
+        <div className="topbar-right">Already have an account? <Link href="/login">Sign in</Link></div>
       </header>
       <main className="center fade-once">
         <Suspense fallback={null}><SignupForm/></Suspense>

@@ -249,7 +249,7 @@ function AutomationTab() {
   return (
     <div className="flex flex-col" style={{ gap: 12, maxWidth: 640 }}>
       <p style={P}>
-        Automations in Starlane are workflows you deploy from a proposal on <Link style={A} href="/prepared">Prepared</Link>. Each one starts in shadow mode,
+        Automations in Starlane are workflows you turn on from a proposal on <Link style={A} href="/prepared">Prepared</Link>. Each one starts in shadow mode,
         never sends a message on its own, and has an action budget per run.
       </p>
       <p style={P}>

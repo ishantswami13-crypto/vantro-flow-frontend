@@ -110,7 +110,7 @@ export default function BillingPage() {
     setLoading(planId);
     try {
       const loaded = await loadRazorpay();
-      if (!loaded) throw new Error("Failed to load payment gateway. Check your connection.");
+      if (!loaded) throw new Error("Razorpay checkout didn't open. Check your connection and try again.");
       const { order, key } = await api.billing.createOrder({ plan: planId, period: billing });
       await new Promise<void>((resolve, reject) => {
         const rzp = new window.Razorpay({
@@ -137,7 +137,7 @@ export default function BillingPage() {
         rzp.open();
       });
     } catch (e: any) {
-      if (e?.message !== "Payment cancelled") alert(e?.message || "Payment failed. Please try again.");
+      if (e?.message !== "Payment cancelled") alert(e instanceof TypeError ? "Couldn't reach Starlane. Check your connection and try again." : e?.message || "The payment didn't go through. Try again.");
     } finally {
       setLoading(null);
     }
@@ -161,9 +161,9 @@ export default function BillingPage() {
           </div>
         )}
 
-        {/* ── HEADER — pain framing for free, status for paid ───── */}
+        {/* ── HEADER — plan status. Being on Free is not an error, so it is never red. */}
         {isFree ? (
-          <div className="rounded-2xl border border-danger/25 bg-danger/5 p-6">
+          <div className="rounded-2xl border border-border bg-surface p-6">
             <div className="flex items-start gap-4">
               <div>
                 <h1 className="text-lg font-black text-primary mb-1">
@@ -183,13 +183,13 @@ export default function BillingPage() {
               </div>
               <div>
                 <p className="text-sm font-black text-primary">
-                  {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} Plan — Active
+                  {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} plan, active
                 </p>
                 <p className="text-xs text-muted">Thank you for building with Starlane.</p>
               </div>
             </div>
             <button className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-secondary hover:text-primary hover:border-border transition-all">
-              Manage Payment
+              Manage payment
             </button>
           </div>
         )}
@@ -216,7 +216,7 @@ export default function BillingPage() {
           </div>
           {billing === "annual" && (
             <p className="text-xs text-success font-semibold">
-              Save up to ₹{annualSave(4999, 3999)}/year — 2 months free
+              Save up to ₹{annualSave(4999, 3999)} a year, about 2 months free
             </p>
           )}
         </div>
@@ -376,7 +376,7 @@ export default function BillingPage() {
           {[
             { icon: FiShield, text: "256-bit encrypted" },
             { icon: FiCheck,  text: "Cancel anytime, no lock-in" },
-                        { icon: FiMessageSquare, text: "Pay via Razorpay — Indian UPI accepted" },
+                        { icon: FiMessageSquare, text: "Pay through Razorpay with UPI, card or netbanking" },
           ].map(({ icon: Icon, text }) => (
             <span key={text} className="flex items-center gap-1.5">
               <Icon size={12} className="text-success" />
@@ -412,7 +412,7 @@ export default function BillingPage() {
             </div>
             <div>
               <p className="text-sm font-bold text-primary">Larger organizations</p>
-              <p className="text-xs text-muted">Several businesses or custom sources — talk to us</p>
+              <p className="text-xs text-muted">Several businesses or custom sources? Talk to us.</p>
             </div>
           </div>
           <a href="mailto:ishantswami13@gmail.com?subject=Starlane Enterprise Enquiry"

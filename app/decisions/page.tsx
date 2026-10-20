@@ -15,6 +15,13 @@ import { formatDate, formatCount } from "@/lib/format";
 
 const STALE_AFTER_MS = 30 * 60 * 1000;
 
+// The backend names each analysis by an id; people read what it looked at.
+const DETECTOR_WORDS: Record<string, string> = {
+  receivables: "who owes you",
+  process: "how invoices turn into cash",
+  supply_chain: "supplier and stock risk",
+};
+
 function deadlineText(d: DecisionListItem): { text: string; tone?: "bad" | "warn" } | null {
   const days = daysUntil(d.deadline || d.window?.latestSafeAt || null);
   if (days == null) return null;
@@ -118,7 +125,7 @@ export default function DecisionsPage() {
         {discover.isError && <RetryLine error={humaneError(discover.error, "Starlane couldn't refresh your decisions just now. Try again in a moment.")} onRetry={() => discover.mutate()} />}
         {lastRun && lastRun.degraded.length > 0 && (
           <Notice tone="warn" title="Part of the analysis didn't run">
-            {lastRun.degraded.map((d) => d.detector).join(", ")} could not be checked this time. Decisions from the other sources are shown.
+            Starlane couldn&apos;t check {lastRun.degraded.map((d) => DETECTOR_WORDS[d.detector] || d.detector.replace(/_/g, " ")).join(" or ")} this time. The other decisions are still shown.
           </Notice>
         )}
 

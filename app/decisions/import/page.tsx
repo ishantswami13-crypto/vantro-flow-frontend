@@ -294,7 +294,7 @@ export default function ImportPage() {
                       </select>
                       {prop && prop.header === chosen && (
                         <Pill tone={prop.verdict === "CONFIRMED" ? "good" : "warn"} title={prop.reason}>
-                          {prop.verdict === "CONFIRMED" ? "Matched" : "Please check"}
+                          {prop.verdict === "CONFIRMED" ? "Matched" : "Check this"}
                         </Pill>
                       )}
                       {isDate && (
@@ -345,7 +345,7 @@ export default function ImportPage() {
 
             {questions.length > 0 && (
               <section className="mb-10 rounded-xl p-5" style={{ background: "rgb(var(--tk-warning) / 0.07)", border: "1px solid rgb(var(--tk-warning) / 0.24)" }}>
-                <SectionLabel>Please confirm</SectionLabel>
+                <SectionLabel>Confirm before importing</SectionLabel>
                 <ul className="space-y-3">
                   {questions.map((q) => (
                     <li key={q.key}>

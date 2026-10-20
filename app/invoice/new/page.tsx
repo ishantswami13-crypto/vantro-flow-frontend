@@ -134,7 +134,7 @@ export default function NewInvoicePage() {
   const goStep2 = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!customerName.trim()) { setError("Customer name is required"); return; }
+    if (!customerName.trim()) { setError("Enter the customer's name."); return; }
     setStep(2);
   };
 
@@ -142,7 +142,7 @@ export default function NewInvoicePage() {
   const goStep3 = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!hasValidItems) { setError("Add at least one item with name and rate"); return; }
+    if (!hasValidItems) { setError("Add at least one item with a name and a rate."); return; }
     setStep(3);
   };
 
@@ -168,10 +168,11 @@ export default function NewInvoicePage() {
         }),
       });
       const d = await res.json();
-      if (!res.ok || !d.success) throw new Error(d.error || "Failed to create invoice");
+      if (!res.ok || !d.success) throw new Error(d.error || "The invoice couldn't be saved. Check the items and try again.");
       setSuccess({ invoice_number: d.invoice_number, invoice_id: d.invoice?.id });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      // A network failure surfaces as a TypeError ("Failed to fetch"): never show it raw.
+      setError(err instanceof TypeError || !(err instanceof Error) ? "Couldn't reach Starlane. Check your connection and try again." : err.message);
     } finally {
       setLoading(false);
     }
@@ -186,21 +187,21 @@ export default function NewInvoicePage() {
             <div className="w-16 h-16 rounded-2xl bg-success/15 border border-success/30 flex items-center justify-center mx-auto mb-5">
               <FiCheck size={28} className="text-success" />
             </div>
-            <h1 className="text-2xl font-black text-primary mb-2">Invoice Created!</h1>
+            <h1 className="text-2xl font-black text-primary mb-2">Invoice created</h1>
             <p className="text-secondary text-sm mb-1">
               <span className="font-mono font-bold text-accent">{success.invoice_number}</span>
             </p>
             <p className="text-muted text-xs mb-8">
               {autoEnabled && customerPhone
-                ? "WhatsApp with payment link sent automatically."
-                : "Invoice saved. Go to Collections to send a reminder."}
+                ? "If WhatsApp delivery is active in Settings, the customer gets the payment link now."
+                : "Saved. Send a reminder from Collections when you're ready."}
             </p>
             <div className="flex flex-col gap-3">
               {success.invoice_id && (
                 <button
                   onClick={() => router.push(`/invoice/${success.invoice_id}`)}
                   className="w-full py-3 rounded-xl bg-surface-2 border border-accent/30 text-accent font-bold text-sm hover:bg-accent hover:text-white transition-all flex items-center justify-center gap-2">
-                  👁 View &amp; Print Invoice
+                  View and print invoice
                 </button>
               )}
               <button
@@ -210,7 +211,7 @@ export default function NewInvoicePage() {
                   setNotes(""); setItems([{ id: uid(), name: "", qty: "1", unit: "unit", rate: "" }]);
                 }}
                 className="w-full py-3 rounded-xl btn-primary font-bold text-sm shadow-sm">
-                Create Another Invoice
+                Create another invoice
               </button>
               <button
                 onClick={() => router.push("/collections")}
@@ -233,9 +234,9 @@ export default function NewInvoicePage() {
         <FiArrowLeft size={15} />
       </button>
       <div>
-        <h1 className="text-lg font-black text-primary leading-none">New Invoice</h1>
+        <h1 className="text-lg font-black text-primary leading-none">New invoice</h1>
         <p className="text-xs text-muted mt-0.5">
-          {autoEnabled ? "WhatsApp auto-sends to customer on save" : "Enable automation in Settings to auto-send"}
+          {autoEnabled ? "Reminders are on: saving sends the payment link on WhatsApp when delivery is active" : "Reminders are off, so saving sends nothing to the customer"}
         </p>
       </div>
       {autoEnabled && (
@@ -259,7 +260,7 @@ export default function NewInvoicePage() {
               <FiUser size={12} /> Who are you billing?
             </p>
             <div>
-              <label className="text-2xs font-medium text-muted uppercase tracking-wider block mb-1.5">Customer / Business Name *</label>
+              <label className="text-2xs font-medium text-muted uppercase tracking-wider block mb-1.5">Customer or business name (required)</label>
               <input
                 autoFocus
                 value={customerName}
@@ -272,7 +273,7 @@ export default function NewInvoicePage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-2xs font-medium text-muted uppercase tracking-wider block mb-1.5">
-                  <FiPhone size={10} className="inline mr-1" />WhatsApp / Phone
+                  <FiPhone size={10} className="inline mr-1" />WhatsApp or phone
                 </label>
                 <input
                   value={customerPhone}
@@ -303,7 +304,7 @@ export default function NewInvoicePage() {
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-2xs font-medium text-muted uppercase tracking-wider block mb-1.5">Invoice Date *</label>
+                  <label className="text-2xs font-medium text-muted uppercase tracking-wider block mb-1.5">Invoice date (required)</label>
                   <input
                     type="date"
                     value={invoiceDate}
@@ -313,7 +314,7 @@ export default function NewInvoicePage() {
                   />
                 </div>
                 <div>
-                  <label className="text-2xs font-medium text-muted uppercase tracking-wider block mb-1.5">Due Date</label>
+                  <label className="text-2xs font-medium text-muted uppercase tracking-wider block mb-1.5">Due date</label>
                   <input
                     type="date"
                     value={dueDate}
@@ -333,7 +334,7 @@ export default function NewInvoicePage() {
             <div className="flex items-start gap-2.5 px-4 py-3 bg-success/8 border border-success/20 rounded-xl">
               <FiMessageSquare size={14} className="text-success shrink-0 mt-0.5" />
               <p className="text-xs text-success/90 leading-relaxed">
-                WhatsApp will be sent to <span className="font-bold">{customerPhone}</span> automatically on save.
+                On save, the payment link goes to <span className="font-bold">{customerPhone}</span> on WhatsApp, if delivery is active.
               </p>
             </div>
           )}
@@ -342,7 +343,7 @@ export default function NewInvoicePage() {
             type="submit"
             disabled={!customerName.trim()}
             className="w-full py-4 rounded-xl btn-primary font-black text-base disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
-            Next — Add Items <FiArrowRight size={16} />
+            Next: add items <FiArrowRight size={16} />
           </button>
         </form>
       </div>
@@ -365,7 +366,7 @@ export default function NewInvoicePage() {
             <div className="space-y-3">
               {/* Column headers */}
               <div className="grid gap-2 text-2xs font-bold text-muted uppercase tracking-wider" style={{ gridTemplateColumns: "1fr 60px 80px 80px 32px" }}>
-                <span>Item / Service</span>
+                <span>Item or service</span>
                 <span>Qty</span>
                 <span>Unit</span>
                 <span className="text-right">Rate (₹)</span>
@@ -446,7 +447,7 @@ export default function NewInvoicePage() {
               value={notes}
               onChange={e => setNotes(e.target.value)}
               rows={3}
-              placeholder="Payment terms, bank details, thank you note..."
+              placeholder="Payment terms, bank details, a thank-you note…"
               className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none"
             />
           </div>
@@ -479,13 +480,13 @@ export default function NewInvoicePage() {
             {/* Invoice header */}
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-2xs text-muted uppercase tracking-wider mb-0.5">Billing To</p>
+                <p className="text-2xs text-muted uppercase tracking-wider mb-0.5">Billed to</p>
                 <p className="text-base font-black text-primary">{customerName}</p>
                 {customerPhone && <p className="text-xs text-secondary mt-0.5">{customerPhone}</p>}
                 {customerEmail && <p className="text-xs text-muted">{customerEmail}</p>}
               </div>
               <div className="text-right">
-                <p className="text-2xs text-muted uppercase tracking-wider mb-0.5">Invoice Date</p>
+                <p className="text-2xs text-muted uppercase tracking-wider mb-0.5">Invoice date</p>
                 <p className="text-sm font-bold text-primary">{invoiceDate}</p>
                 {dueDate && (
                   <>
@@ -512,7 +513,7 @@ export default function NewInvoicePage() {
 
             {/* Total */}
             <div className="pt-3 border-t border-border flex items-center justify-between">
-              <p className="text-sm font-bold text-secondary">Total Amount</p>
+              <p className="text-sm font-bold text-secondary">Total amount</p>
               <p className="text-3xl font-black text-primary">{fmtINR(total)}</p>
             </div>
 
@@ -529,14 +530,14 @@ export default function NewInvoicePage() {
             <div className="flex items-start gap-2.5 px-4 py-3 bg-success/8 border border-success/20 rounded-xl">
               <FiMessageSquare size={14} className="text-success shrink-0 mt-0.5" />
               <p className="text-xs text-success/90 leading-relaxed">
-                WhatsApp will be sent to <span className="font-bold">{customerPhone}</span> with a payment link automatically.
+                The payment link goes to <span className="font-bold">{customerPhone}</span> on WhatsApp, if delivery is active.
               </p>
             </div>
           ) : !customerPhone ? (
             <div className="flex items-start gap-2.5 px-4 py-3 bg-surface-3 border border-border rounded-xl">
               <FiPhone size={14} className="text-muted shrink-0 mt-0.5" />
               <p className="text-xs text-muted leading-relaxed">
-                No phone number added — WhatsApp reminder can be sent manually from Collections.
+                No phone number, so nothing is sent. You can send a reminder yourself from Collections.
               </p>
             </div>
           ) : null}
@@ -550,14 +551,14 @@ export default function NewInvoicePage() {
             disabled={loading}
             className="w-full py-4 rounded-xl btn-primary font-black text-base disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 shadow-sm">
             {loading ? (
-              <><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Creating Invoice…</>
+              <><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Creating invoice…</>
             ) : (
-              <><FiCheck size={17} /> Confirm &amp; Create — {fmtINR(total)}</>
+              <><FiCheck size={17} /> Create invoice for {fmtINR(total)}</>
             )}
           </button>
 
           <p className="text-center text-2xs text-muted pb-2">
-            Invoice number is auto-generated · Editable from Collections
+            The invoice number is added for you
           </p>
         </div>
       </div>

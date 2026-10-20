@@ -27,11 +27,11 @@ export function WorkflowsPanel() {
     <div className="flex flex-col" style={{ gap: 32 }}>
       <section>
         <SectionTitle>Workflows running{data ? <span className="wk-count">{list.length}</span> : null}</SectionTitle>
-        <p className="meta" style={{ margin: "-4px 0 10px", maxWidth: 680, lineHeight: 1.55 }}>Level 3 records in shadow; level 4 prepares and waits for your approval. Full autonomy is not offered.</p>
+        <p className="meta" style={{ margin: "-4px 0 10px", maxWidth: 680, lineHeight: 1.55 }}>In shadow, a workflow only records what it would do. With approval, it prepares each step and waits for you. No workflow acts fully on its own.</p>
         {loading && <div role="status" aria-busy="true" aria-label="Loading workflows" style={{ padding: "14px 0", borderTop: "1px solid var(--line)" }}><div className="skeleton" style={{ height: 11, width: "36%" }} /><div className="skeleton" style={{ height: 9, width: "58%", marginTop: 9 }} /></div>}
         {!loading && !!error && <ErrorState title="Workflows didn't load" message={humaneError(error, NETWORK_ERROR)} onRetry={reload} />}
         {!loading && !error && list.length === 0 && (
-          <p className="wk-empty">No workflow is deployed. Proposals from Scan wait in Prepared; deploy one there, or describe one below.</p>
+          <p className="wk-empty">No workflow is running. Ones Scan proposes wait in Prepared for you to turn on, or you can describe one below.</p>
         )}
         {list.length > 0 && (
           <div style={{ borderTop: "1px solid var(--line)" }}>
@@ -167,7 +167,7 @@ function WorkflowRow({ w, onChange }: { w: Workflow; onChange: () => void }) {
         open={confirmRetire}
         onClose={() => setConfirmRetire(false)}
         title="Retire this workflow?"
-        description={`${w.name} stops running for good. Items it already prepared stay where they are. You can deploy a new workflow later.`}
+        description={`${w.name} stops running for good. Items it already prepared stay where they are. You can turn on a new workflow later.`}
         footer={<>
           <Button variant="ghost" size="sm" onClick={() => setConfirmRetire(false)}>Keep it</Button>
           <Button variant="danger" size="sm" disabled={busy} onClick={() => { setConfirmRetire(false); act(() => osApi.transition(w.id, "retire")); }}>Retire workflow</Button>
@@ -212,7 +212,7 @@ function FromSentence({ onCreated }: { onCreated: () => void }) {
       {err && <div style={{ marginTop: 8 }}><Note tone="critical">{err}</Note></div>}
       {ok && (
         <div style={{ marginTop: 10, fontSize: 12.5, color: "var(--body)" }}>
-          <Note tone="positive">Proposed. It is waiting in Prepared for you to deploy.</Note>
+          <Note tone="positive">Proposed. It is waiting in Prepared for you to turn on.</Note>
           <ul style={{ margin: "6px 0 0", paddingLeft: 18, lineHeight: 1.6 }}>{[...ok.understood, ...ok.notes].map((l) => <li key={l}>{l}</li>)}</ul>
         </div>
       )}

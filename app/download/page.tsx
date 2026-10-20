@@ -28,7 +28,7 @@ export default function DownloadPage() {
         if (status === 200 && body.artifacts) setState({ loading: false, data: { company: body.company, name: body.name, expiresAt: body.expiresAt, artifacts: body.artifacts } });
         else setState({ loading: false, error: body.error || "This link is not valid." });
       })
-      .catch(() => setState({ loading: false, error: "Could not reach Starlane. Check your connection and try again." }));
+      .catch(() => setState({ loading: false, error: "Couldn't reach Starlane. Check your connection and try again." }));
   }, []);
 
   const download = async (a: Artifact) => {
@@ -91,7 +91,7 @@ export default function DownloadPage() {
                   <span className="sl-eyebrow" style={{ marginBottom: 10 }}>Step 2, if you use TallyPrime</span>
                   <p className="sl-h3">Install Starlane for Windows on the computer that runs Tally</p>
                   <p className="sl-p" style={{ marginTop: 8 }}>
-                    Sign in, choose TallyPrime, and the app finds Tally on that computer and keeps your books in sync — including when its window is closed. It only reads from Tally.
+                    Sign in, choose TallyPrime, and the app finds Tally on that computer and keeps your books in sync, even when its window is closed. It only reads from Tally.
                   </p>
                   <div className="sl-hero-ctas" style={{ marginTop: 16 }}>
                     <button className="sl-btn sl-btn-solid" onClick={() => download(windowsApp)} disabled={busy === windowsApp.id} aria-busy={busy === windowsApp.id}>
@@ -123,7 +123,7 @@ export default function DownloadPage() {
                     <ol className="sl-reasons" style={{ marginTop: 12 }}>
                       <li>In TallyPrime, enable the XML server: F1 › Settings › Connectivity, port 9000.</li>
                       <li>In Starlane, open Sources › Tally › Connect. You get a one-time pairing code that expires in 10 minutes, with the exact command to run.</li>
-                      <li>Run that command in the folder where you saved the bridge. It pairs this computer with its own revocable credential — your password never leaves Starlane.</li>
+                      <li>Run that command in the folder where you saved the bridge. It pairs this computer with its own credential, which you can revoke. Your password never leaves Starlane.</li>
                       <li>Leave <span className="sl-num">node tally-sync.mjs --watch</span> running to sync every 30 minutes.</li>
                     </ol>
                   </details>

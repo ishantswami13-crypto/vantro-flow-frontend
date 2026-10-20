@@ -24,19 +24,25 @@ import { api } from "@/lib/api";
 
 const SS_KEY = "vantro_onboarding_draft";
 
+// The backend's own sentence when it sent one; never raw network text.
+function say(err: unknown, fallback: string): string {
+  if (err instanceof TypeError) return "Couldn't reach Starlane. Check your connection and try again.";
+  return err instanceof Error && err.message ? err.message : fallback;
+}
+
 type Role = "Founder/CEO" | "Finance" | "Operations" | "Sales" | "Procurement" | "Technology" | "Other";
 const ROLES: Role[] = ["Founder/CEO", "Finance", "Operations", "Sales", "Procurement", "Technology", "Other"];
 
 const COUNTRIES = ["India", "United States", "United Kingdom", "United Arab Emirates", "Singapore", "Other"];
 
 const PRIORITIES = [
-  { key: "cash", label: "Cash & liquidity" },
-  { key: "receivables", label: "Customers & receivables" },
-  { key: "revenue", label: "Sales & revenue" },
+  { key: "cash", label: "Cash in hand" },
+  { key: "receivables", label: "Who owes you" },
+  { key: "revenue", label: "Sales" },
   { key: "inventory", label: "Inventory" },
-  { key: "suppliers", label: "Suppliers & procurement" },
+  { key: "suppliers", label: "Suppliers and buying" },
   { key: "risk", label: "Operational risk" },
-  { key: "world", label: "External / world risk" },
+  { key: "world", label: "Events outside your business" },
   { key: "forecasting", label: "Forecasting" },
 ];
 
@@ -152,13 +158,13 @@ export default function OnboardingPage() {
   async function submitStage1(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!companyName.trim()) { setError("Company name is required"); return; }
-    if (!country.trim()) { setError("Country is required"); return; }
+    if (!companyName.trim()) { setError("Enter your company's name to continue."); return; }
+    if (!country.trim()) { setError("Choose your country to continue."); return; }
     setLoading(true);
     try {
       await api.onboarding.saveBusiness({ company_name: companyName.trim(), company_website: companyWebsite.trim() || undefined, country, job_role: role || undefined });
       setStage(2);
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Could not save — try again"); }
+    } catch (err: unknown) { setError(say(err, "That wasn't saved. Try again.")); }
     finally { setLoading(false); }
   }
 
@@ -167,7 +173,7 @@ export default function OnboardingPage() {
     try {
       await api.onboarding.savePriorities(letDecide ? [] : priorities);
       setStage(3);
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Could not save — try again"); }
+    } catch (err: unknown) { setError(say(err, "That wasn't saved. Try again.")); }
     finally { setLoading(false); }
   }
 
@@ -190,7 +196,7 @@ export default function OnboardingPage() {
           }
         } catch { /* keep polling silently */ }
       }, 4000);
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Could not start enrollment"); }
+    } catch (err: unknown) { setError(say(err, "No pairing code was created. Try again.")); }
     finally { setEnrolling(false); }
   }
 
@@ -206,7 +212,7 @@ export default function OnboardingPage() {
         setBusinessState(res.businessState);
       } catch { setBusinessState(null); }
       finally { setStateLoading(false); }
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : "Could not finish — try again"); }
+    } catch (err: unknown) { setError(say(err, "Setup didn't finish. Try again.")); }
     finally { setLoading(false); }
   }
 
@@ -318,7 +324,7 @@ export default function OnboardingPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: enrollment ? 14 : 0 }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600 }}>Tally</div>
-                    <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Connect your Tally install via the local connector</div>
+                    <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Read your Tally books through the Starlane bridge on the computer that runs Tally</div>
                   </div>
                   {!enrollment && (
                     <button type="button" className="btn-back" disabled={enrolling} onClick={startTallyEnrollment} style={{ whiteSpace: "nowrap" }}>
@@ -330,7 +336,7 @@ export default function OnboardingPage() {
                   <div>
                     <p style={{ fontSize: 12.5, color: "rgba(255,255,255,.6)", marginBottom: 8 }}>
                       On the computer that runs TallyPrime (Node.js 18+),{" "}
-                      <button type="button" onClick={() => api.connectors.downloadBridge("tally").catch(() => setError("Could not download the bridge — try again"))}
+                      <button type="button" onClick={() => api.connectors.downloadBridge("tally").catch(() => setError("The bridge didn't download. Try again."))}
                         style={{ background: "none", border: "none", padding: 0, color: "#fff", textDecoration: "underline", cursor: "pointer", font: "inherit" }}>download the Starlane bridge</button>, then run this in the same folder:
                     </p>
                     <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12.5, padding: "10px 12px", background: "rgba(255,255,255,.05)", borderRadius: 6, marginBottom: 10, overflowX: "auto", whiteSpace: "nowrap" }}>
@@ -341,7 +347,7 @@ export default function OnboardingPage() {
                     </p>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
                       {deviceConnected ? (
-                        <><FiCheck size={14} style={{ color: "#10D98A" }} /> <span style={{ color: "#10D98A" }}>Paired — this computer will sync automatically</span></>
+                        <><FiCheck size={14} style={{ color: "#10D98A" }} /> <span style={{ color: "#10D98A" }}>Paired. This computer now syncs on its own.</span></>
                       ) : (
                         <><FiLoader size={13} className="spin" style={{ color: "rgba(255,255,255,.4)" }} /> <span style={{ color: "rgba(255,255,255,.4)" }}>Waiting for the bridge to pair…</span></>
                       )}
@@ -353,8 +359,8 @@ export default function OnboardingPage() {
               {/* CSV / Excel import — real, wired to /api/import/excel */}
               <div style={{ border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>File import (CSV / Excel)</div>
-                  <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Import customers, sales or purchase records from a spreadsheet</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>Import a file (CSV or Excel)</div>
+                  <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Customers, sales or purchase records from a spreadsheet</div>
                 </div>
                 <Link href="/collections?import=1" className="btn-back" style={{ whiteSpace: "nowrap", textDecoration: "none", display: "inline-block" }}>Import</Link>
               </div>
@@ -374,7 +380,7 @@ export default function OnboardingPage() {
           <div>
             <div className="auth-head">
               <h1>{stateLoading ? "Your business is coming into focus." : "Here's what deserves your attention."}</h1>
-              <p>{stateLoading ? "Reading what we know so far." : "Ranked from real data in your account — nothing here is a guess."}</p>
+              <p>{stateLoading ? "Reading what we know so far." : "Ranked from the data in your account. Nothing here is a guess."}</p>
             </div>
 
             {stateLoading && (

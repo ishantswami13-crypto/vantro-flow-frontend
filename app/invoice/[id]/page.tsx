@@ -42,7 +42,7 @@ export default function InvoiceViewPage() {
     if (!id) return;
     api.invoices.get(id as string)
       .then(d => { setInvoice(d.invoice); setBiz(d.business); })
-      .catch(e => setError(e.message || "Invoice not found"))
+      .catch(e => setError(e instanceof TypeError ? "Couldn't reach Starlane. Check your connection and try again." : "It may have been deleted, or the link may be incomplete."))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -51,7 +51,7 @@ export default function InvoiceViewPage() {
     if (navigator.share) {
       navigator.share({ title: `Invoice ${invoice?.invoice_number}`, url }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(url).then(() => alert("Link copied!"));
+      navigator.clipboard.writeText(url).then(() => alert("Link copied"));
     }
   };
 
@@ -81,9 +81,9 @@ export default function InvoiceViewPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <p className="text-red-500 font-semibold mb-2">Invoice not found</p>
+          <p className="text-red-500 font-semibold mb-2">This invoice didn't open</p>
           <p className="text-gray-400 text-sm mb-4">{error}</p>
-          <button onClick={() => router.push("/collections")} className="text-blue-600 text-sm underline">← Back to Collections</button>
+          <button onClick={() => router.push("/collections")} className="text-blue-600 text-sm underline">Back to Collections</button>
         </div>
       </div>
     );

@@ -6,6 +6,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { C, Pill } from "@/components/decisions/ui";
 import { DecisionApiError } from "@/lib/decisions";
+import { humaneError } from "@/components/scan/humaneError";
 
 export function Panel({ title, subtitle, right, children }: { title: string; subtitle?: React.ReactNode; right?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -57,8 +58,9 @@ export function ErrorLine({ error }: { error: string | null }) {
   return <p className="text-[12.5px] mt-2" role="alert" style={{ color: C.bad }}>{error}</p>;
 }
 
+// Raw exception text never reaches the person; humaneError picks the sentence.
 export function errorText(err: unknown): string {
-  return err instanceof Error ? err.message : "Something went wrong.";
+  return humaneError(err, "That didn't go through. Try again in a moment.");
 }
 
 /**

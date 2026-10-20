@@ -39,7 +39,7 @@ export default function PrivacyPage() {
           </Link>
           <div className="nav-links"><Link href="/#features">Features</Link><Link href="/#pricing">Pricing</Link><Link href="/#faq">FAQ</Link></div>
           <div className="nav-cta">
-            <Link className="nav-login" href="/login">Log in</Link>
+            <Link className="nav-login" href="/login">Sign in</Link>
             <Link className="btn btn-primary" href="/signup">Start free</Link>
           </div>
         </div>

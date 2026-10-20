@@ -24,7 +24,7 @@ const THEME_BOOT = `try{var t=localStorage.getItem("starlane_theme");document.do
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Starlane | AI BusinessOS",
+    default: "Starlane",
     template: "%s | Starlane",
   },
   description:

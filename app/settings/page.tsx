@@ -213,7 +213,7 @@ function SettingsPageInner() {
     setAddingRule(true);
     try {
       const user = getUser();
-      const r = await api.dunning.create({ ...newRule, user_id: user?.id, enabled: true, name: `Day ${newRule.trigger_day} — ${newRule.tone}` });
+      const r = await api.dunning.create({ ...newRule, user_id: user?.id, enabled: true, name: `Day ${newRule.trigger_day}, ${newRule.tone}` });
       setRules(prev => [...prev, r.rule].sort((a, b) => a.trigger_day - b.trigger_day));
       setShowAddRule(false);
       setNewRule({ trigger_day: 3, tone: "gentle", action: "whatsapp" });

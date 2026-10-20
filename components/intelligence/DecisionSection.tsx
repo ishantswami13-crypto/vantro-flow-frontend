@@ -172,7 +172,7 @@ function ActionRow({ action, rank, dominant, onApprove, execState, execResult }:
               </div>
               <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)]" style={{ gap: "6px 16px", margin: 0, fontSize: 12.5 }}>
                 <dt style={{ color: "var(--ink-3)" }}>Purchase order</dt><dd className="num" style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>#{execResult.purchaseOrder.id}</dd>
-                <dt style={{ color: "var(--ink-3)" }}>Status</dt><dd style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>Draft, demo adapter</dd>
+                <dt style={{ color: "var(--ink-3)" }}>Status</dt><dd style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>Draft, through a test connection</dd>
                 <dt style={{ color: "var(--ink-3)" }}>Supplier</dt><dd style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>{execResult.purchaseOrder.supplier_name}</dd>
                 <dt style={{ color: "var(--ink-3)" }}>Related action</dt><dd className="truncate num" style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>{execResult.purchaseOrder.related_ai_action_id.slice(0, 8)}</dd>
                 <dt style={{ color: "var(--ink-3)" }}>Time</dt><dd className="num" style={{ margin: 0, textAlign: "right", color: "var(--ink)" }}>{formatDateTime(execResult.purchaseOrder.created_at)}</dd>

@@ -355,7 +355,7 @@ export default function InventoryPage() {
             {tab === "products" && (
               products.length === 0 ? (
                 <div className={s.panel}>
-                  <EmptyState icon={<IconBox size={17} />} title="No products yet" message="Add your first product to track stock, or scan purchase bills and they'll build your stock history."
+                  <EmptyState icon={<IconBox size={17} />} title="No products yet" message="Add your first product to track its stock. Products and their history also come in from Tally once it's connected in Sources."
                     action={<Button variant="primary" icon={<IconPlus size={14} />} onClick={openAdd}>Add product</Button>} />
                 </div>
               ) : (
@@ -429,13 +429,13 @@ export default function InventoryPage() {
                         `${row.source === "purchase" ? "+" : "−"}${formatQuantity(row.quantity, row.unit)}`,
                         row.source === "purchase" ? "Bought" : "Sold",
                       ))
-                    : <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--ink-2)" }}>No item history yet. Scan purchase bills and sales invoices with item rows to build it.</p>}
+                    : <p style={{ margin: "8px 0 0", fontSize: 13, color: "var(--ink-2)" }}>No item history yet. It builds up as purchase bills and sales invoices with item rows come in from your books.</p>}
                 </Panel>
 
                 <div className={s.panel}>
                   {intelligenceRows.length > 0
                     ? <GridTable label="Stock details" columns={insightCols} rows={intelligenceRows.slice(0, 20)} rowKey={r => r.productName} />
-                    : <EmptyState title="No stock details yet" message="Add products or scan bills and invoices to fill this in." />}
+                    : <EmptyState title="No stock details yet" message="Add products, or connect Tally in Sources, to fill this in." />}
                 </div>
               </>
             )}

@@ -28,7 +28,7 @@ export default function AccessStatusPage() {
       if (status === 200 && body.application) setState({ loading: false, app: body.application });
       else setState({ loading: false, error: status === 404 ? "This status link isn’t valid. Use the exact link from your application." : body.error || "Could not load your status." });
     } catch {
-      setState({ loading: false, error: "Could not reach Starlane. Check your connection and try again." });
+      setState({ loading: false, error: "Couldn't reach Starlane. Check your connection and try again." });
     }
   }, []);
 

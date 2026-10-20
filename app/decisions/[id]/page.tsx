@@ -30,9 +30,9 @@ function headline(o: DecisionOption, kind: string): { label: string; interval: I
 function errorText(err: unknown): { title: string; detail?: string } {
   if (err instanceof DecisionApiError) {
     const b = err.body as { blockedBy?: { reason: string }[]; checks?: { check: string; ok: boolean; detail?: string }[]; compensated?: { intent: string }[] };
-    if (err.status === 423) return { title: "Stopped by a kill switch", detail: (b.blockedBy || []).map((x) => x.reason).join(" ") };
+    if (err.status === 423) return { title: "A stop switch in Control blocked this", detail: (b.blockedBy || []).map((x) => x.reason).join(" ") };
     if (err.status === 409 && b.checks) return { title: err.message, detail: b.checks.filter((c) => !c.ok).map((c) => c.detail || c.check).join(" · ") };
-    if (err.status === 502) return { title: "The action didn't complete", detail: b.compensated?.length ? `Undone: ${b.compensated.map((c) => c.intent.replace(/_/g, " ").toLowerCase()).join(", ")}. Nothing is left half-done.` : "Nothing was changed. Try again in a moment." };
+    if (err.status === 502) return { title: "The action didn't complete", detail: b.compensated?.length ? `Starlane undid what had started (${b.compensated.map((c) => (INTENT_WORDS[c.intent] || c.intent.replace(/_/g, " ")).toLowerCase()).join(", ")}), so nothing is left half-done.` : "Nothing was changed. Try again in a moment." };
   }
   return { title: humaneError(err, "That didn't go through. Try again in a moment.") };
 }
@@ -56,14 +56,14 @@ function stepsOf(o?: DecisionOption | null): string[] {
 
 function reversibilityWord(r?: string): string | null {
   if (!r) return null;
-  if (r === "IRREVERSIBLE") return "Cannot be undone";
-  if (r === "REVERSIBLE") return "Reversible";
+  if (r === "IRREVERSIBLE") return "Can't be undone";
+  if (r === "REVERSIBLE") return "Can be undone";
   return r.charAt(0) + r.slice(1).replace(/_/g, " ").toLowerCase();
 }
 
 /** The second outcome column, by decision kind: only when the engine returned it. */
 function secondMetric(d: Decision): { label: string; get: (o: DecisionOption) => number | null | undefined } | null {
-  if (d.options.some((o) => o.futures.probFullRecovery90 != null)) return { label: "Paid in 90d", get: (o) => o.futures.probFullRecovery90 };
+  if (d.options.some((o) => o.futures.probFullRecovery90 != null)) return { label: "Paid within 90 days", get: (o) => o.futures.probFullRecovery90 };
   if (d.options.some((o) => o.futures.stockoutProbability != null)) return { label: "Stockout chance", get: (o) => o.futures.stockoutProbability };
   return null;
 }
