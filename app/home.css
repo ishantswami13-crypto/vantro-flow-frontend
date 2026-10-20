@@ -384,6 +384,51 @@
   .sl-home .slh-scrub { animation: none !important; color: var(--sl-ink); }
 }
 
+
+/* ── Third pass ───────────────────────────────────────────────── */
+/* Hero parallax: the floating cards drift against the pointer. */
+.slh-cards { transform: translate3d(calc(var(--px, 0) * -18px), calc(var(--py, 0) * -12px), 200px); transition: transform .6s var(--sl-ease); }
+
+/* A day with Starlane: a timeline whose spine fills as you scroll. */
+.slm { list-style: none; margin: 0; padding: 0; position: relative; }
+.slm::before, .slm::after { content: ""; position: absolute; left: 86px; top: 10px; bottom: 10px; width: 1px; background: var(--sl-line); }
+.slm::after { background: linear-gradient(to bottom, #f4dcb5, #F5F3EE); transform-origin: top; transform: scaleY(1); box-shadow: 0 0 12px #f4dcb5aa; }
+@supports (animation-timeline: view()) {
+  .sl-home .slm::after { animation: slm-fill linear both; animation-timeline: view(); animation-range: cover 15% cover 70%; }
+}
+@keyframes slm-fill { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.slm-item { display: grid; grid-template-columns: 64px minmax(0, 1fr) minmax(0, 340px); gap: 0 clamp(32px, 5vw, 72px); padding: 34px 0; position: relative; align-items: start; }
+.slm-item + .slm-item { border-top: 1px solid #ffffff0c; }
+.slm-item::before { content: ""; position: absolute; left: 81px; top: 42px; width: 11px; height: 11px; border-radius: 50%; background: #0F0E0D; border: 1.5px solid #f4dcb5; z-index: 1; box-shadow: 0 0 0 5px #0F0E0D; }
+.slm-time { font-size: 13px; color: var(--sl-ink-faint); padding-top: 6px; }
+.slm-copy { padding-left: 24px; }
+.slm-h { font-family: var(--sl-serif); font-weight: 300; font-size: clamp(22px, 2.2vw, 30px); line-height: 1.2; letter-spacing: -0.015em; margin: 0 0 10px; color: var(--sl-ink); }
+.slm-copy .sl-p { margin: 0; max-width: 520px; }
+.slm-ui { margin: 0; border: 1px solid #ffffff14; border-radius: 14px; padding: 6px 16px; background: linear-gradient(180deg, #ffffff0a, #ffffff03); }
+.slm-ui > div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; font-size: 13px; }
+.slm-ui > div + div { border-top: 1px solid #ffffff0f; }
+.slm-ui dt { color: var(--sl-ink-faint); }
+.slm-ui dd { margin: 0; color: var(--sl-ink); }
+
+/* Built for Indian businesses. */
+.slh-india { background: var(--sl-bg-sunk); }
+.slh-india-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.slh-india-tile { border: 1px solid var(--sl-line); border-radius: 18px; padding: 26px 24px 28px; background: var(--sl-bg-raised); position: relative; overflow: hidden; }
+.slh-india-k { display: block; font-family: var(--sl-serif); font-weight: 300; font-size: clamp(34px, 3.2vw, 48px); letter-spacing: -0.03em; line-height: 1; margin-bottom: 56px; color: var(--sl-ink); }
+.slh-india-tile::before { content: ""; position: absolute; right: -40px; top: -40px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, #f4dcb5 0%, transparent 70%); opacity: .5; }
+.slh-india-tile .sl-h3 { margin: 0 0 8px; }
+.slh-india-tile .sl-p { margin: 0; font-size: 14px; }
+
+@media (max-width: 1080px) { .slh-india-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 860px) {
+  .slm::before, .slm::after { left: 5px; }
+  .slm-item { grid-template-columns: minmax(0, 1fr); padding: 26px 0 26px 30px; row-gap: 12px; }
+  .slm-item::before { left: 0; top: 30px; }
+  .slm-copy { padding-left: 0; }
+  .slm-time { padding-top: 0; }
+}
+@media (max-width: 560px) { .slh-india-grid { grid-template-columns: minmax(0, 1fr); } }
+
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 1080px) {
   .slh-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }

@@ -12,13 +12,15 @@ import { StarField } from "@/components/marketing/landing/StarField";
 import { Reveal } from "@/components/marketing/landing/Reveal";
 import { HeroCards } from "@/components/marketing/landing/HeroCards";
 import { BusinessGraph } from "@/components/marketing/landing/BusinessGraph";
+import { Morning } from "@/components/marketing/landing/Morning";
+import { CountUp } from "@/components/marketing/landing/CountUp";
 import { BridgeViz, WatchViz, MissionsViz, SimulateViz, MemoryViz, PreparedViz } from "@/components/marketing/landing/SurfaceVisuals";
 
-// Starlane — public landing. A dark, cinematic frame (hero, decision, Scan,
-// controls, access) around light working sections (problem, surfaces, how it
-// thinks, connections), one argument throughout:
-//   hero + real product, what it works with, problem, one decision end to end,
-//   surfaces, Scan, how it thinks, connection, trust and control, access.
+// Starlane — public landing. A dark, cinematic frame around light working
+// sections, one argument throughout: hero + real product, what it works with,
+// the problem, one picture of the business, one decision end to end, the
+// surfaces, a day with Starlane, how it thinks, Scan, built for Indian
+// businesses, connection, trust and control, questions, access.
 // Everything shown is either the real product, the real connector list, or
 // sample data that is labelled as such. No logos, testimonials or metrics.
 
@@ -88,12 +90,19 @@ const FAQ = [
   { q: "How do we get started?", a: "Starlane is onboarding a small number of companies at a time, starting with businesses that run on TallyPrime or can export their books. Request a pilot and you will see straight away whether your systems are supported." },
 ];
 
+const INDIA = [
+  { k: "₹1,28,500", h: "Lakh and crore, the way you read them", b: "Every amount is grouped the Indian way, in rupees, from your own books. No converting 128,500 in your head." },
+  { k: "Tally", h: "Keep TallyPrime. Starlane reads it.", b: "Nothing to migrate and no new accounting software. A read-only bridge on the Tally computer is the whole setup." },
+  { k: "WhatsApp", h: "Reminders where your customers already reply", b: "Starlane drafts the message in the right tone. You read it in full and approve it; nothing is sent without you." },
+  { k: "Windows", h: "Runs on the PC already in your office", b: "A desktop app for Windows 10 and 11, and the same Starlane in any browser, so the owner can check in from anywhere." },
+];
+
 const SOURCES = ["TallyPrime", "CSV exports", "Excel workbooks", "Bank statements", "ECB reference rates", "USGS earthquake feed", "WhatsApp drafts, sent only on approval", "Purchase history", "Stock and products"];
 
 const PROMISES = [
-  { n: "0", l: "messages sent without a person approving them" },
-  { n: "1", l: "run, at most, for every action you approve" },
-  { n: "100%", l: "of figures open to the rows behind them" },
+  { n: 0, s: "", l: "messages sent without a person approving them" },
+  { n: 1, s: "", l: "run, at most, for every action you approve" },
+  { n: 100, s: "%", l: "of figures open to the rows behind them" },
 ];
 
 const CONNECT_ICONS: Record<string, React.ReactNode> = {
@@ -168,7 +177,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 3b — One picture of the business */}
+        {/* 4 — One picture of the business */}
         <section className="sl-dark slh-section slh-graph" aria-labelledby="graph-h">
           <div className="sl-wrap">
             <div className="sl-split-head" data-reveal>
@@ -183,7 +192,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 4 — One decision, end to end */}
+        {/* 5 — One decision, end to end */}
         <section className="sl-dark slh-section slh-decision" aria-labelledby="decision-h">
           <div className="slh-glow" aria-hidden />
           <div className="sl-wrap slh-split">
@@ -202,7 +211,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 5 — The surfaces */}
+        {/* 6 — The surfaces */}
         <section id="product" className="sl-section slh-surfaces" aria-labelledby="product-h">
           <div className="sl-wrap">
             <div className="sl-split-head" data-reveal>
@@ -229,7 +238,30 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 6 — Scan */}
+        {/* 7 — A day with Starlane */}
+        <section className="sl-dark slh-section slh-morning" aria-labelledby="morning-h">
+          <div className="sl-wrap">
+            <div className="sl-split-head" data-reveal>
+              <div>
+                <p className="sl-eyebrow">A day with Starlane</p>
+                <h2 id="morning-h" className="slh-h2">Less time in spreadsheets. More of the day back.</h2>
+              </div>
+              <p className="sl-p">One illustrative day for the demo company: a few minutes of decisions in the morning, and the books checked for what happened after.</p>
+            </div>
+            <Morning />
+          </div>
+        </section>
+
+        {/* 8 — How Starlane thinks */}
+        <section id="how" className="sl-section" aria-labelledby="how-h">
+          <div className="sl-wrap">
+            <p className="sl-eyebrow" data-reveal>How it works</p>
+            <h2 id="how-h" className="slh-h2" style={{ maxWidth: 820, marginBottom: 56 }} data-reveal>From the rows in your books to an outcome you can check.</h2>
+            <div data-reveal><HowItThinks /></div>
+          </div>
+        </section>
+
+        {/* 9 — Scan */}
         <section id="ask" className="sl-dark slh-section" aria-labelledby="ask-h">
           <div className="sl-wrap sl-ask-split">
             <div data-reveal>
@@ -250,16 +282,29 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 7 — How Starlane thinks */}
-        <section id="how" className="sl-section" aria-labelledby="how-h">
+        {/* 10 — Built for Indian businesses */}
+        <section className="sl-section slh-india" aria-labelledby="india-h">
           <div className="sl-wrap">
-            <p className="sl-eyebrow" data-reveal>How it works</p>
-            <h2 id="how-h" className="slh-h2" style={{ maxWidth: 820, marginBottom: 56 }} data-reveal>From the rows in your books to an outcome you can check.</h2>
-            <div data-reveal><HowItThinks /></div>
+            <div className="sl-split-head" data-reveal>
+              <div>
+                <p className="sl-eyebrow">For Indian businesses</p>
+                <h2 id="india-h" className="slh-h2">Built for how Indian businesses actually run.</h2>
+              </div>
+              <p className="sl-p">Not a Western finance suite with a rupee symbol added. Starlane starts from TallyPrime, WhatsApp and the owner who makes the call.</p>
+            </div>
+            <ul className="slh-india-grid">
+              {INDIA.map((x) => (
+                <li key={x.h} className="slh-india-tile" data-reveal>
+                  <span className="slh-india-k" aria-hidden>{x.k}</span>
+                  <h3 className="sl-h3">{x.h}</h3>
+                  <p className="sl-p">{x.b}</p>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
-        {/* 8 — Connection */}
+        {/* 11 — Connection */}
         <section id="connect" className="sl-section slh-connect" aria-labelledby="connect-h">
           <div className="sl-wrap">
             <div className="sl-split-head" data-reveal>
@@ -284,7 +329,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 9 — Trust and control */}
+        {/* 12 — Trust and control */}
         <section id="trust" className="sl-dark slh-section slh-trust" aria-labelledby="trust-h">
           <div className="sl-wrap">
             <div className="sl-split-head" data-reveal>
@@ -293,7 +338,7 @@ export default function LandingPage() {
             </div>
             <ul className="slh-promises">
               {PROMISES.map((p) => (
-                <li key={p.l} data-reveal><span className="slh-promise-n">{p.n}</span><span className="slh-promise-l">{p.l}</span></li>
+                <li key={p.l} data-reveal><span className="slh-promise-n"><CountUp to={p.n} suffix={p.s} /></span><span className="slh-promise-l">{p.l}</span></li>
               ))}
             </ul>
             <div className="slh-controls">
@@ -304,7 +349,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 9b — Questions */}
+        {/* 13 — Questions */}
         <section id="faq" className="sl-section slh-faq" aria-labelledby="faq-h">
           <div className="sl-wrap slh-faq-grid">
             <div data-reveal>
@@ -322,7 +367,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 10 — Access */}
+        {/* 14 — Access */}
         <section className="sl-dark slh-final" aria-labelledby="access-h">
           <div className="slh-sky" aria-hidden>
             <StarField density={0.7} horizon={0.6} />

@@ -35,7 +35,15 @@ export function Reveal() {
       card.style.setProperty("--my", `${e.clientY - r.top}px`);
     };
     root.addEventListener("pointermove", spot, { passive: true });
-    return () => { io.disconnect(); root.removeEventListener("pointermove", spot); };
+    // Hero cards drift a little against the pointer.
+    const hero = root.querySelector<HTMLElement>(".slh-hero");
+    const drift = (e: PointerEvent) => {
+      if (!hero) return;
+      hero.style.setProperty("--px", ((e.clientX / window.innerWidth) * 2 - 1).toFixed(3));
+      hero.style.setProperty("--py", ((e.clientY / window.innerHeight) * 2 - 1).toFixed(3));
+    };
+    hero?.addEventListener("pointermove", drift, { passive: true });
+    return () => { io.disconnect(); root.removeEventListener("pointermove", spot); hero?.removeEventListener("pointermove", drift); };
   }, []);
   return null;
 }
