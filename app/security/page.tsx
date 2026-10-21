@@ -11,16 +11,16 @@ export const metadata: Metadata = {
 // achieved (certifications, audits, uptime commitments) is said to be absent,
 // not implied.
 const CONTROLS: Array<[string, string]> = [
-  ["Approval before action", "Actions wait for a person. Opening an approval link never approves anything; you confirm on the page."],
-  ["Runs at most once", "What you approve is frozen when it is proposed. Each approved action is claimed once and runs once."],
-  ["Evidence", "Every recommendation shows the records, rule and assumptions behind it. Observed, calculated, assumed and simulated figures are labelled apart."],
-  ["Audit trail", "Decisions are recorded with who made them, when, what was proposed and what followed."],
-  ["Read-only connections", "Starlane reads your systems. Each Bridge device has its own credentials, which you can revoke."],
-  ["External messages off by default", "Nothing is sent to a customer or supplier until messaging is explicitly enabled, and then only after approval."],
-  ["No silent changes to records", "Starlane never marks a payment received, changes an amount or deletes a record on its own."],
-  ["Scoped to your company", "Every request is tied to the signed-in account, and data is read only within that company’s scope."],
-  ["Passwords", "Never stored in plain text. Hashed with bcrypt."],
-  ["Transport", "HTTPS only, with HTTP Strict Transport Security on the web app and the API."],
+  ["Approval queue", "Proposed actions wait for a person, and higher-risk action types always require approval. Opening an approval link changes nothing; you confirm with a button on the page."],
+  ["Runs at most once", "Each approved action is claimed atomically and runs at most once. The message text you approve is the text that is sent."],
+  ["Evidence", "Figures are labelled as fact, calculated, assumption or estimate, with the records they came from. Simulations show a low to high range and the assumptions behind it."],
+  ["Audit trail", "Decisions are logged with who made them, when, and the values before and after."],
+  ["Read-only connections", "TallyPrime is read through export only. Each Bridge device has its own credential, which you can revoke."],
+  ["Outbound messaging off by default", "Nothing is sent to customers or suppliers until messaging is explicitly enabled for the account."],
+  ["Limits on AI agents", "AI agents are blocked from marking payments received, changing amounts or deleting records."],
+  ["Account scoping", "Every request is scoped to the signed-in account. One account is one business."],
+  ["Passwords and sign-in", "Passwords are hashed with bcrypt. Sign-in is rate-limited."],
+  ["Transport and headers", "HTTPS with HTTP Strict Transport Security, standard security headers, and a content security policy on the web app."],
 ];
 
 export default function SecurityPage() {
@@ -43,8 +43,8 @@ export default function SecurityPage() {
           <h2 id="claims-h" className="sl-h3" style={{ fontSize: 24, fontWeight: 400, margin: 0 }}>What Starlane does not claim</h2>
           <p className="sl-p" style={{ marginTop: 14, maxWidth: 640 }}>
             Starlane does not hold SOC 2, ISO 27001 or other third-party certifications, and does not claim compliance
-            with frameworks it has not been assessed against. During a pilot we take your team through the controls above
-            and how they are built.
+            with frameworks it has not been assessed against. It does not yet support multi-user organisations or single
+            sign-on. During a pilot we take your team through the controls above and how they are built.
           </p>
         </section>
 

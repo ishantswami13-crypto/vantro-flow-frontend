@@ -17,15 +17,15 @@ export function useNavScroll(ref: React.RefObject<HTMLElement | null>) {
 
 // Public navigation. Wordmark left, four destinations centred, sign in and one
 // call to action right. Transparent at the top of the page; a quiet surface and
-// hairline once the page scrolls. tone="dark" for pages that open on a dark hero.
+// hairline once the page scrolls.
 const LINKS: Array<[string, string]> = [
   ["/product", "Product"],
   ["/integrations", "Integrations"],
   ["/#how", "How it works"],
-  ["/security", "Trust"],
+  ["/security", "Security"],
 ];
 
-export function Nav({ tone = "light" }: { tone?: "light" | "dark" }) {
+export function Nav() {
   const navRef = useRef<HTMLElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const path = usePathname();
@@ -41,15 +41,15 @@ export function Nav({ tone = "light" }: { tone?: "light" | "dark" }) {
 
   return (
     <>
-      <nav aria-label="Main navigation" className={`sl-nav${tone === "dark" ? " sl-nav-dark" : ""}`} ref={navRef}>
-        <Link href="/" aria-label="Starlane home" className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={24} />Starlane</Link>
+      <nav aria-label="Main navigation" className="sl-nav" ref={navRef}>
+        <Link href="/" aria-label="Starlane home" className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={22} />Starlane</Link>
         <div className="sl-navlinks">
           <div className="sl-navmid">
             {LINKS.map(([href, label]) => (
-              <Link key={href} href={href} aria-current={cur(href)} className="hidden md:inline">{label}</Link>
+              <Link key={href} href={href} aria-current={cur(href)} className="hidden lg:inline">{label}</Link>
             ))}
           </div>
-          <Link href="/login" className="hidden md:inline">Sign in</Link>
+          <Link href="/login" className="hidden lg:inline">Sign in</Link>
           <Link href="/access" className="sl-btn sl-btn-solid">Request a pilot</Link>
           <button
             type="button"
@@ -63,7 +63,7 @@ export function Nav({ tone = "light" }: { tone?: "light" | "dark" }) {
           </button>
         </div>
       </nav>
-      <div id="sl-mobile-menu" className={`sl-mobile-menu${menuOpen ? " open" : ""}${tone === "dark" ? " sl-nav-dark" : ""}`}>
+      <div id="sl-mobile-menu" className={`sl-mobile-menu${menuOpen ? " open" : ""}`}>
         {LINKS.map(([href, label]) => <Link key={href} href={href} onClick={close}>{label}</Link>)}
         <Link href="/login" onClick={close}>Sign in</Link>
       </div>
