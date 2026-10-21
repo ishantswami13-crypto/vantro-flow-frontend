@@ -14,7 +14,7 @@ export function useNavScroll(ref: React.RefObject<HTMLElement | null>) {
   }, [ref]);
 }
 
-// Section 01 — navigation. Wordmark left, a handful of anchors, one CTA.
+// Section 01 — navigation. Wordmark left, anchors centred, sign in and one CTA right.
 export function Nav() {
   const navRef = useRef<HTMLElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -32,13 +32,15 @@ export function Nav() {
       <nav aria-label="Main navigation" className="sl-nav" ref={navRef}>
         <Link href="/" aria-label="Starlane home" className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={26} />Starlane</Link>
         <div className="sl-navlinks">
-          <Link href="/product" className="hidden md:inline">Features</Link>
-          <Link href="/product/bridge" className="hidden md:inline">The Bridge</Link>
-          <Link href="/product/scan" className="hidden md:inline">Scan</Link>
-          <Link href="/#how" className="hidden md:inline">How it works</Link>
-          <Link href="/#trust" className="hidden md:inline">Trust</Link>
+          <div className="sl-navmid">
+            <Link href="/product" className="hidden md:inline">Features</Link>
+            <Link href="/product/bridge" className="hidden md:inline">The Bridge</Link>
+            <Link href="/integrations" className="hidden md:inline">Integrations</Link>
+            <Link href="/#how" className="hidden md:inline">How it works</Link>
+            <Link href="/#trust" className="hidden md:inline">Trust</Link>
+          </div>
           <Link href="/login" className="hidden md:inline">Sign in</Link>
-          <a href="/download/windows" className="sl-btn sl-btn-solid">Download</a>
+          <Link href="/access" className="sl-btn sl-btn-solid">Request a pilot</Link>
           <button
             type="button"
             className="sl-nav-toggle"
@@ -54,11 +56,11 @@ export function Nav() {
       <div id="sl-mobile-menu" className={`sl-mobile-menu${menuOpen ? " open" : ""}`}>
         <Link href="/product" onClick={close}>Features</Link>
         <Link href="/product/bridge" onClick={close}>The Bridge</Link>
-        <Link href="/product/scan" onClick={close}>Scan</Link>
+        <Link href="/integrations" onClick={close}>Integrations</Link>
         <Link href="/#how" onClick={close}>How it works</Link>
         <Link href="/#trust" onClick={close}>Trust</Link>
         <Link href="/login" onClick={close}>Sign in</Link>
-        <Link href="/access" onClick={close}>Request a pilot</Link>
+        <a href="/download/windows" onClick={close}>Download for Windows</a>
       </div>
     </>
   );

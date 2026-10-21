@@ -17,6 +17,7 @@ import { PhoneRow } from "@/components/marketing/landing/PhoneRow";
 import { ProductTour } from "@/components/marketing/landing/ProductTour";
 import { ApproveLoop } from "@/components/marketing/landing/ApproveLoop";
 import { IntegrationHub } from "@/components/marketing/landing/IntegrationHub";
+import { BrandMark } from "@/components/marketing/landing/BrandMarks";
 import { SystemsThumb, DashboardThumb, RuleThumb } from "@/components/marketing/landing/ProblemViz";
 import { BridgeViz, WatchViz, MissionsViz, SimulateViz, MemoryViz, PreparedViz } from "@/components/marketing/landing/SurfaceVisuals";
 
@@ -59,6 +60,12 @@ const VIZ: Record<string, { el: React.ReactNode; span: string }> = {
 
 const HEADLINE = "The intelligence layer for your business.".split(" ");
 const SCRUB = "So the questions every leadership team asks stay open: what changed, what matters, and what should we do about it?".split(" ");
+
+// Only systems that work in the product today; see IntegrationHub.
+const WORKS = [
+  { n: "TallyPrime", mark: "tally" }, { n: "Excel", mark: "excel" }, { n: "Google Sheets", mark: "googlesheets" },
+  { n: "CSV" }, { n: "Bank statements" }, { n: "Gmail", mark: "gmail" }, { n: "ECB rates" }, { n: "USGS" },
+];
 
 const CAPABILITIES = ["Understand what is happening", "Detect what changed", "Surface risks and opportunities", "Recommend what to do next", "Simulate the outcome", "Act through your tools", "Verify the result", "Remember what worked"];
 
@@ -112,28 +119,33 @@ export default function LandingPage() {
         <header className="sl-dark slh-hero">
           <div className="slh-sky" aria-hidden>
             <StarField />
-            <div className="slh-horizon" />
+            <div className="slh-planet" />
             <div className="slh-grain" />
           </div>
           <div className="sl-wrap slh-hero-copy">
-            <span className="slh-pill"><i />Now onboarding a small number of companies</span>
+            <span className="slh-pill"><i />Now onboarding a select group of companies</span>
             <h1 className="slh-display slh-words" aria-label="The intelligence layer for your business.">
               {HEADLINE.map((w, i) => <span key={i} aria-hidden style={{ animationDelay: `${0.12 + i * 0.07}s` }}>{w}</span>)}
             </h1>
             <p className="slh-lede">
-              Starlane connects your systems, operational data and outside signals into one continuously updated
-              understanding of the company. It finds what matters, shows the evidence, simulates the options and, once
-              you approve, acts through your existing tools and verifies what happened.
+              Starlane connects your systems, operational data and outside signals into{" "}
+              <b>one continuously updated understanding of the company. It finds what matters,</b>{" "}
+              shows the evidence, simulates the options and, once you approve, acts through your existing tools.
             </p>
             <div className="slh-ctas">
-              <Link href="/access" className="sl-btn sl-btn-solid slh-btn-lg">Request a pilot</Link>
-              <a href="#how" className="sl-btn sl-btn-outline slh-btn-lg">See how it works</a>
+              <Link href="/access" className="sl-btn sl-btn-solid slh-btn-lg">Request a pilot <span aria-hidden>→</span></Link>
+              <a href="#how" className="sl-btn sl-btn-outline slh-btn-lg slh-btn-play"><i aria-hidden /><span>See how it works</span></a>
+            </div>
+            <div className="slh-works">
+              <p>Works today with</p>
+              <ul>
+                {WORKS.map((w) => <li key={w.n}>{w.mark ? <BrandMark id={w.mark} size={17} /> : null}{w.n}</li>)}
+              </ul>
             </div>
           </div>
           <div className="sl-wrap slh-shot-wrap">
-            <figure className="slh-shot slh-shot-console">
-              <div className="slh-shot-bar"><span /><span /><span /><em>Today · Starlane</em></div>
-              <HeroConsole />
+            <figure className="slh-device">
+              <div className="slh-device-screen"><HeroConsole /></div>
             </figure>
             <p className="slh-shot-cap">Illustration on a fictional company. The real product, captured on a test company, appears further down.</p>
           </div>
@@ -355,16 +367,17 @@ export default function LandingPage() {
         </section>
 
         {/* 11 — Integrations, with honest statuses */}
-        <section id="connect" className="sl-section slh-connect" aria-labelledby="connect-h">
-          <div className="sl-wrap">
-            <div className="sl-split-head" data-reveal>
-              <div>
-                <p className="sl-eyebrow">Integrations</p>
-                <h2 id="connect-h" className="slh-h2">Works with the software you already run.</h2>
-              </div>
-              <p className="sl-p">Starlane connects the way each system allows and no further: read-only unless an action needs to write, nothing connected without consent, and nothing scraped. This is exactly where each connection stands today.</p>
+        <section id="connect" className="sl-dark slh-section slh-connect" aria-labelledby="connect-h">
+          <div className="slh-sky" aria-hidden>
+            <div className="slh-planet slh-planet-sm" />
+          </div>
+          <div className="sl-wrap slh-connect-inner">
+            <div className="slh-center-head" data-reveal>
+              <p className="sl-eyebrow">Integrations</p>
+              <h2 id="connect-h" className="slh-display slh-connect-h">Connect to the systems your business already runs on.</h2>
+              <p className="slh-lede">Read-only unless an action needs to write, nothing connected without consent, nothing scraped. Every connection below says exactly where it stands today.</p>
             </div>
-            <IntegrationHub />
+            <IntegrationHub limit={4} />
           </div>
         </section>
 

@@ -84,6 +84,10 @@
 .sl-navlinks > a:not(.sl-btn) { align-content: center; min-height: 44px; }
 .sl-navlinks a:hover { color: var(--sl-ink); }
 .sl-nav-toggle { display: none; }
+.sl-navmid { display: flex; align-items: center; gap: clamp(16px, 2.4vw, 34px); position: absolute; left: 50%; transform: translateX(-50%); }
+.sl-navmid a { font-size: 13.5px; color: var(--sl-ink-soft); min-height: 44px; align-content: center; }
+.sl-navmid a:hover { color: var(--sl-ink); }
+@media (max-width: 1080px) { .sl-navmid { position: static; transform: none; } }
 .sl-mobile-menu { display: none; flex-direction: column; padding: 4px var(--sl-gutter) 16px; background: var(--sl-bg-raised); border-bottom: 1px solid var(--sl-line); position: sticky; top: 80px; z-index: 49; }
 .sl-mobile-menu a { padding: 13px 4px; font-size: 15px; border-bottom: 1px solid var(--sl-line); }
 .sl-mobile-menu a:last-child { border-bottom: none; }
