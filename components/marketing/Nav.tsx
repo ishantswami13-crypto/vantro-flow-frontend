@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import StarlaneMark from "@/components/brand/StarlaneMark";
 import { useEffect, useRef, useState } from "react";
 
@@ -18,6 +19,8 @@ export function useNavScroll(ref: React.RefObject<HTMLElement | null>) {
 export function Nav() {
   const navRef = useRef<HTMLElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const path = usePathname();
+  const cur = (href: string) => (path === href ? "page" : undefined);
   useNavScroll(navRef);
   useEffect(() => {
     const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { setMenuOpen(false); navRef.current?.querySelector<HTMLButtonElement>("button")?.focus(); } };
@@ -33,9 +36,9 @@ export function Nav() {
         <Link href="/" aria-label="Starlane home" className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={26} />Starlane</Link>
         <div className="sl-navlinks">
           <div className="sl-navmid">
-            <Link href="/product" className="hidden md:inline">Features</Link>
-            <Link href="/product/bridge" className="hidden md:inline">The Bridge</Link>
-            <Link href="/integrations" className="hidden md:inline">Integrations</Link>
+            <Link href="/product" aria-current={cur("/product")} className="hidden md:inline">Features</Link>
+            <Link href="/product/bridge" aria-current={cur("/product/bridge")} className="hidden md:inline">The Bridge</Link>
+            <Link href="/integrations" aria-current={cur("/integrations")} className="hidden md:inline">Integrations</Link>
             <Link href="/#how" className="hidden md:inline">How it works</Link>
             <Link href="/#trust" className="hidden md:inline">Trust</Link>
           </div>

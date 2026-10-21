@@ -52,7 +52,7 @@ export const CATEGORIES: Category[] = [
     { n: "Microsoft Dynamics", s: "custom", mark: "dynamics" },
   ] },
   { k: "Banking", id: "banking", icon: G.bank, items: [
-    { n: "Bank statements", s: "live", glyph: "bank" },
+    { n: "Bank statement import", s: "live", glyph: "bank" },
     { n: "Live bank feeds", s: "planned", glyph: "link" },
     { n: "Open Banking (PSD2)", s: "custom", glyph: "shield" },
   ] },
@@ -109,8 +109,10 @@ function Glyph({ g }: { g: React.ReactNode }) {
   return <svg viewBox="0 0 24 24" width="18" height="18" className="sli-glyph" aria-hidden>{g}</svg>;
 }
 
-export function IntegrationHub({ limit }: { limit?: number }) {
+export function IntegrationHub({ limit = 4 }: { limit?: number }) {
   const [q, setQ] = useState("");
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const toggle = (id: string) => setOpen((o) => ({ ...o, [id]: !o[id] }));
   const [tab, setTab] = useState<"all" | State>("all");
 
   const cats = useMemo(() => {
@@ -143,14 +145,17 @@ export function IntegrationHub({ limit }: { limit?: number }) {
 
       <ul className="sli-grid">
         {cats.map((c) => {
-          const shown = limit && !filtered ? c.items.slice(0, limit) : c.items;
           const full = CATEGORIES.find((x) => x.id === c.id)!.items.length;
+          const expanded = filtered || open[c.id];
+          const shown = expanded ? c.items : c.items.slice(0, limit);
+          const more = !filtered && full > limit;
           return (
-            <li key={c.id} id={`int-${c.id}`} className="sli-cat">
-              <div className="sli-head">
+            <li key={c.id} id={`int-${c.id}`} className={`sli-cat${expanded ? " open" : ""}`}>
+              <button type="button" className="sli-head" onClick={() => toggle(c.id)} aria-expanded={!!expanded} disabled={!more}>
                 <span className="sli-icon"><Glyph g={c.icon} /></span>
                 <span className="sli-title"><b>{c.k}</b><em>{full} integration{full === 1 ? "" : "s"}</em></span>
-              </div>
+                <svg className="sli-chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden><path d="M9 6l6 6-6 6" /></svg>
+              </button>
               <ul className="sli-items">
                 {shown.map((i) => (
                   <li key={i.n} className={`sli-item ${i.s}`}>
@@ -160,9 +165,9 @@ export function IntegrationHub({ limit }: { limit?: number }) {
                   </li>
                 ))}
               </ul>
-              {limit && !filtered && (
-                <Link href={`/integrations#int-${c.id}`} className="sli-all">View all {full}<span aria-hidden>→</span></Link>
-              )}
+              {!filtered && (more
+                ? <button type="button" className="sli-all" onClick={() => toggle(c.id)}>{expanded ? "Show less" : `View all ${full}`}<span aria-hidden>{expanded ? "↑" : "→"}</span></button>
+                : <span className="sli-all sli-all-static">View all {full}<span aria-hidden>→</span></span>)}
             </li>
           );
         })}

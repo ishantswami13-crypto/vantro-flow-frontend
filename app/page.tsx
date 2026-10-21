@@ -369,15 +369,16 @@ export default function LandingPage() {
         {/* 11 — Integrations, with honest statuses */}
         <section id="connect" className="sl-dark slh-section slh-connect" aria-labelledby="connect-h">
           <div className="slh-sky" aria-hidden>
-            <div className="slh-planet slh-planet-sm" />
+            <StarField density={0.5} />
+            <div className="slh-planet slh-planet-int" />
           </div>
           <div className="sl-wrap slh-connect-inner">
             <div className="slh-center-head" data-reveal>
               <p className="sl-eyebrow">Integrations</p>
-              <h2 id="connect-h" className="slh-display slh-connect-h">Connect to the systems your business already runs on.</h2>
-              <p className="slh-lede">Read-only unless an action needs to write, nothing connected without consent, nothing scraped. Every connection below says exactly where it stands today.</p>
+              <h2 id="connect-h" className="slh-display slh-connect-h">Connect to the systems <br className="sl-br" />your business already runs on.</h2>
+              <p className="slh-lede">Starlane connects your systems, operational data and outside signals into one continuously updated understanding of your business. Bring your tools, and we’ll handle the rest.</p>
             </div>
-            <IntegrationHub limit={4} />
+            <IntegrationHub />
           </div>
         </section>
 

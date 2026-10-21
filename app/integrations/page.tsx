@@ -22,14 +22,14 @@ export default function IntegrationsPage() {
       <main id="main" className="sl-dark slh-intpage">
         <div className="slh-sky" aria-hidden>
           <StarField density={0.6} />
-          <div className="slh-planet" />
+          <div className="slh-planet slh-planet-int" />
           <div className="slh-grain" />
         </div>
         <div className="sl-wrap slh-connect-inner">
           <div className="slh-center-head">
             <p className="sl-eyebrow">Integrations</p>
-            <h1 className="slh-display slh-connect-h">Connect to the systems your business already runs on.</h1>
-            <p className="slh-lede">Starlane connects your systems, operational data and outside signals into one continuously updated understanding of your business. Bring your tools; anything not built yet is marked as such.</p>
+            <h1 className="slh-display slh-connect-h">Connect to the systems <br className="sl-br" />your business already runs on.</h1>
+            <p className="slh-lede">Starlane connects your systems, operational data and outside signals into one continuously updated understanding of your business. Bring your tools, and we’ll handle the rest.</p>
           </div>
           <IntegrationHub />
           <div className="slh-ctas"><Link href="/access" className="sl-btn sl-btn-solid slh-btn-lg">Request a pilot <span aria-hidden>→</span></Link></div>
