@@ -1,7 +1,7 @@
 // "One continuously updated model of the business", drawn as a graph.
 // Sources feed the picture from the left; customers it is owed by sit on the
 // right, coloured by how overdue they are; the supplier and stock it depends
-// on sit above and below. Data visibly flows in along the source edges.
+// on sit above and below. Data flows in slowly along the source edges.
 // Fictional company (Halden Supply Co.), same figures as the hero console.
 
 type Node = { id: string; x: number; y: number; label: string; sub?: string; kind: "core" | "source" | "customer" | "supplier" | "signal"; tone?: "ok" | "warn" | "bad" };
@@ -35,8 +35,8 @@ export function BusinessGraph() {
       <svg viewBox="-70 0 1150 580" className="slg-svg" aria-hidden>
         <defs>
           <radialGradient id="slg-core" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#f4dcb5" stopOpacity=".55" />
-            <stop offset="100%" stopColor="#f4dcb5" stopOpacity="0" />
+            <stop offset="0%" className="slg-core-glow" stopOpacity=".14" />
+            <stop offset="100%" className="slg-core-glow" stopOpacity="0" />
           </radialGradient>
         </defs>
         <circle cx="500" cy="290" r="150" fill="url(#slg-core)" />
@@ -65,7 +65,6 @@ export function BusinessGraph() {
               </>
             ) : (
               <>
-                {n.tone === "bad" && <circle r="13" className="slg-pulse" />}
                 <circle r="7" className="slg-dot" />
                 <text x={n.x > 500 ? 16 : -16} y="-2" textAnchor={n.x > 500 ? "start" : "end"} className="slg-t">{n.label}</text>
                 {n.sub && <text x={n.x > 500 ? 16 : -16} y="15" textAnchor={n.x > 500 ? "start" : "end"} className="slg-sub">{n.sub}</text>}

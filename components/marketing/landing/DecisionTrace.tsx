@@ -19,7 +19,7 @@ const STEP_MS = 1900;
 const HOLD_MS = 5200;
 
 // Cents shown only when present, and then always two digits.
-const inr = (n: number) => `$${n.toLocaleString("en-US", Number.isInteger(n) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const usd = (n: number) => `$${n.toLocaleString("en-US", Number.isInteger(n) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export function DecisionTrace() {
   const [stage, setStage] = useState(0);
@@ -79,7 +79,7 @@ export function DecisionTrace() {
       <div className="sl-trace-grid">
         {/* 1 — Sources */}
         <section className={`sl-trace-cell ${on(0) ? "on" : ""}`} aria-label="Sources">
-          <h4>Sources</h4>
+          <h3>Sources</h3>
           <dl className="sl-kv">
             <div><dt>Accounting system</dt><dd>5 transactions</dd></div>
             <div><dt>Sales</dt><dd className="sl-num">2</dd></div>
@@ -91,18 +91,18 @@ export function DecisionTrace() {
 
         {/* 2 — State */}
         <section className={`sl-trace-cell ${on(1) ? "on" : ""}`} aria-label="State">
-          <h4>Current state</h4>
+          <h3>Current state</h3>
           <dl className="sl-kv">
-            <div><dt>Open receivables</dt><dd className="sl-num">{inr(153500.5)}</dd></div>
-            <div><dt>Brightwater Retail</dt><dd className="sl-num">{inr(128500.5)}</dd></div>
-            <div><dt>Harbor &amp; Pine <span className="sl-muted">(after {inr(20000)} received)</span></dt><dd className="sl-num">{inr(25000)}</dd></div>
-            <div><dt>Owed to Meridian Components</dt><dd className="sl-num">{inr(37000)}</dd></div>
+            <div><dt>Open receivables</dt><dd className="sl-num">{usd(153500.5)}</dd></div>
+            <div><dt>Brightwater Retail</dt><dd className="sl-num">{usd(128500.5)}</dd></div>
+            <div><dt>Harbor &amp; Pine <span className="sl-muted">(after {usd(20000)} received)</span></dt><dd className="sl-num">{usd(25000)}</dd></div>
+            <div><dt>Owed to Meridian Components</dt><dd className="sl-num">{usd(37000)}</dd></div>
           </dl>
         </section>
 
         {/* 3 — Paths */}
         <section className={`sl-trace-cell sl-trace-wide ${on(2) ? "on" : ""}`} aria-label="Paths">
-          <h4>Options for Brightwater Retail, {inr(128500.5)} open</h4>
+          <h3>Options for Brightwater Retail, {usd(128500.5)} open</h3>
           <ol className="sl-paths">
             <li className={on(3) ? "chosen" : ""}><span className="sl-rank">1</span>Firm reminder by email<span className="sl-why">20 days overdue sits in the 8–30 day band</span></li>
             <li><span className="sl-rank">2</span>Account owner call<span className="sl-why">reserved for 36–89 days</span></li>
@@ -112,9 +112,9 @@ export function DecisionTrace() {
 
         {/* 4 — Evidence */}
         <section className={`sl-trace-cell sl-trace-wide ${on(3) ? "on" : ""}`} aria-label="Evidence">
-          <h4>Evidence</h4>
+          <h3>Evidence</h3>
           <dl className="sl-kv sl-kv-2col">
-            <div><dt><span className="sl-tag">Observed</span> Invoice INV-1043</dt><dd className="sl-num">{inr(128500.5)}</dd></div>
+            <div><dt><span className="sl-tag">Observed</span> Invoice INV-1043</dt><dd className="sl-num">{usd(128500.5)}</dd></div>
             <div><dt><span className="sl-tag">Observed</span> Receipts from party</dt><dd className="sl-num">none</dd></div>
             <div><dt><span className="sl-tag sl-tag-assume">Assumption</span> Payment terms</dt><dd className="sl-num">30 days</dd></div>
             <div><dt><span className="sl-tag">Calculated</span> Days overdue</dt><dd className="sl-num">20</dd></div>
@@ -124,7 +124,7 @@ export function DecisionTrace() {
 
         {/* 5 — Approval */}
         <section className={`sl-trace-cell ${on(4) ? "on" : ""}`} aria-label="Approval">
-          <h4>Approval</h4>
+          <h3>Approval</h3>
           <p className="sl-trace-state">
             <span className={`sl-dot ${on(4) ? "ok" : ""}`} aria-hidden />
             {on(4) ? "Approved by the account owner" : "Waiting for a person"}
@@ -134,9 +134,9 @@ export function DecisionTrace() {
 
         {/* 6 — Verification */}
         <section className={`sl-trace-cell ${on(5) ? "on" : ""}`} aria-label="Verification">
-          <h4>Verification</h4>
+          <h3>Verification</h3>
           <p className="sl-trace-state"><span className={`sl-dot ${on(5) ? "wait" : ""}`} aria-hidden />Checking each sync for a payment</p>
-          <p className="sl-trace-note">The outcome — paid, partly paid, or not — is recorded against this decision and informs the next one.</p>
+          <p className="sl-trace-note">The outcome, paid, partly paid or not, is recorded against this decision and informs the next one.</p>
         </section>
       </div>
 

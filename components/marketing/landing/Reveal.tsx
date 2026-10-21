@@ -1,11 +1,10 @@
 "use client";
 import { useEffect } from "react";
 
-// Scroll reveal for the landing page. Everything marked data-reveal is fully
+// Scroll reveal for the public pages. Everything marked data-reveal is fully
 // visible without JavaScript; only once this runs does the page opt in (the
-// "sl-js" class) to fading each block up as it enters the viewport. Skipped
-// entirely with prefers-reduced-motion. Also drives the pointer spotlight on
-// the landing cards.
+// "sl-js" class) to a short opacity fade as each block enters the viewport.
+// Skipped entirely with prefers-reduced-motion.
 export function Reveal() {
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(".sl-home");
@@ -19,31 +18,14 @@ export function Reveal() {
       for (const e of entries) {
         if (e.isIntersecting) { e.target.setAttribute("data-in", ""); io.unobserve(e.target); }
       }
-    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.12 });
+    }, { rootMargin: "0px 0px -6% 0px", threshold: 0.08 });
     // Anything already on screen is shown at once, so the first paint never blanks.
     for (const el of els) {
       if (el.getBoundingClientRect().top < window.innerHeight) el.setAttribute("data-in", "");
       else io.observe(el);
     }
     root.classList.add("sl-js");
-    // Cards light up under the pointer.
-    const spot = (e: PointerEvent) => {
-      const card = (e.target as Element | null)?.closest<HTMLElement>(".slh-b-link, .slh-c, .slh-control");
-      if (!card) return;
-      const r = card.getBoundingClientRect();
-      card.style.setProperty("--mx", `${e.clientX - r.left}px`);
-      card.style.setProperty("--my", `${e.clientY - r.top}px`);
-    };
-    root.addEventListener("pointermove", spot, { passive: true });
-    // Hero cards drift a little against the pointer.
-    const hero = root.querySelector<HTMLElement>(".slh-hero");
-    const drift = (e: PointerEvent) => {
-      if (!hero) return;
-      hero.style.setProperty("--px", ((e.clientX / window.innerWidth) * 2 - 1).toFixed(3));
-      hero.style.setProperty("--py", ((e.clientY / window.innerHeight) * 2 - 1).toFixed(3));
-    };
-    hero?.addEventListener("pointermove", drift, { passive: true });
-    return () => { io.disconnect(); root.removeEventListener("pointermove", spot); hero?.removeEventListener("pointermove", drift); };
+    return () => io.disconnect();
   }, []);
   return null;
 }

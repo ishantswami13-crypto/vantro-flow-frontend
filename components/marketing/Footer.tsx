@@ -7,10 +7,10 @@ export function Footer() {
       <div className="sl-footer-grid">
         <div>
           <span className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={26} />Starlane</span>
-          <p className="sl-p" style={{ marginTop: 14, maxWidth: 280 }}>Decision and execution intelligence for operating companies.</p>
+          <p className="sl-p" style={{ marginTop: 14, maxWidth: 280 }}>The intelligence layer for your business.</p>
         </div>
         <div className="sl-footer-col">
-          <h3>Features</h3>
+          <h3>Product</h3>
           <Link href="/product/bridge">The Bridge</Link>
           <Link href="/product/scan">Scan</Link>
           <Link href="/product/watch">Watch</Link>
@@ -20,10 +20,11 @@ export function Footer() {
           <Link href="/product/prepared">Prepared</Link>
         </div>
         <div className="sl-footer-col">
-          <h3>Company</h3>
+          <h3>Starlane</h3>
+          <Link href="/integrations">Integrations</Link>
           <Link href="/security">Security</Link>
-          <Link href="/#trust">Evidence &amp; controls</Link>
-          <Link href="/access">Get Starlane</Link>
+          <Link href="/access">Request a pilot</Link>
+          <a href="/download/windows">Download for Windows</a>
           <Link href="/login">Sign in</Link>
         </div>
         <div className="sl-footer-col">

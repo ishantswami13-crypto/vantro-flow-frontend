@@ -6,22 +6,24 @@
  */
 
 .sl {
-  --sl-bg:        #FAFAF9;
-  --sl-bg-raised: #FFFFFF;
-  --sl-bg-sunk:   #F0F0EE;
-  --sl-ink:       #0F0E0D;
-  --sl-ink-soft:  #46443F;
-  --sl-ink-faint: #6E6C67;   /* 4.9:1 on --sl-bg */
-  --sl-line:      #E3E2DE;
-  --sl-line-2:    #D2D0CA;
-  --sl-accent:    #0F0E0D;
-  --sl-accent-2:  #46443F;
-  --sl-ok:        #2F6B4F;
+  /* Ivory, not white; warm black, not #000. Contrast on --sl-bg:
+     ink 16.9:1, ink-soft 7.2:1, ink-faint 5.0:1. */
+  --sl-bg:        #F5F3EE;
+  --sl-bg-raised: #FBFAF7;
+  --sl-bg-sunk:   #ECE9E2;
+  --sl-ink:       #161513;
+  --sl-ink-soft:  #4F4C46;
+  --sl-ink-faint: #67635C;
+  --sl-line:      #E1DDD4;
+  --sl-line-2:    #CFCAC0;
+  --sl-accent:    #161513;
+  --sl-accent-2:  #4F4C46;
+  --sl-ok:        #2E7451;
   --sl-warn:      #8A5A12;
   --sl-danger:    #A23B3B;
 
   --sl-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
-  --sl-sans:  'Space Grotesk', 'Geist', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --sl-sans:  'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --sl-mono:  'IBM Plex Mono', ui-monospace, monospace;
 
   --sl-gutter: clamp(20px, 4.5vw, 64px);
@@ -52,12 +54,6 @@
 
 .sl .sl-wrap { max-width: 1240px; margin: 0 auto; padding-left: var(--sl-gutter); padding-right: var(--sl-gutter); }
 
-.sl::before {
-  content: ""; position: absolute; inset: 0 0 auto; height: 900px;
-  background-image: radial-gradient(circle, var(--sl-line-2) 1px, transparent 1px);
-  background-size: 28px 28px; opacity: 0.12; pointer-events: none; z-index: 0;
-  mask-image: linear-gradient(to bottom, black, black 30%, transparent 75%);
-}
 .sl > * { position: relative; z-index: 1; }
 
 /* ── Type ─────────────────────────────────────────────────────── */
@@ -73,12 +69,11 @@
 /* ── Nav ─────────────────────────────────────────────────────── */
 .sl-nav {
   position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between;
-  padding: 18px var(--sl-gutter); background: rgba(250, 250, 249, 0.86);
-  backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border-bottom: 1px solid transparent; transition: border-color 0.3s ease;
+  padding: 16px var(--sl-gutter); background: transparent;
+  border-bottom: 1px solid transparent; transition: background-color 0.3s ease, border-color 0.3s ease;
 }
-.sl-nav.on { border-bottom-color: var(--sl-line); }
-.sl-wordmark { font-family: var(--sl-serif); font-weight: 500; font-size: 21px; letter-spacing: -0.01em; }
+.sl-nav.on { background: rgba(245, 243, 238, 0.88); border-bottom-color: var(--sl-line); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.sl-wordmark { font-family: var(--sl-serif); font-weight: 500; font-size: 20px; letter-spacing: -0.01em; font-variation-settings: "opsz" 36; }
 .sl-navlinks { display: flex; align-items: center; gap: clamp(16px, 2.4vw, 32px); }
 .sl-navlinks a { font-size: 13.5px; color: var(--sl-ink-soft); transition: color 0.15s ease; }
 .sl-navlinks > a:not(.sl-btn) { align-content: center; min-height: 44px; }
@@ -88,7 +83,11 @@
 .sl-navmid a { font-size: 13.5px; color: var(--sl-ink-soft); min-height: 44px; align-content: center; }
 .sl-navmid a:hover { color: var(--sl-ink); }
 @media (max-width: 1080px) { .sl-navmid { position: static; transform: none; } }
-.sl-mobile-menu { display: none; flex-direction: column; padding: 4px var(--sl-gutter) 16px; background: var(--sl-bg-raised); border-bottom: 1px solid var(--sl-line); position: sticky; top: 80px; z-index: 49; }
+.sl-mobile-menu { display: none; flex-direction: column; padding: 4px var(--sl-gutter) 20px; background: var(--sl-bg-raised); border-bottom: 1px solid var(--sl-line); position: sticky; top: 74px; z-index: 49; }
+.sl-burger { position: relative; display: block; width: 16px; height: 10px; }
+.sl-burger i { position: absolute; left: 0; right: 0; height: 1.5px; background: currentColor; border-radius: 1px; transition: transform .2s ease, top .2s ease; }
+.sl-burger i:first-child { top: 1px; } .sl-burger i:last-child { top: 7.5px; }
+.sl-burger.x i:first-child { top: 4.25px; transform: rotate(45deg); } .sl-burger.x i:last-child { top: 4.25px; transform: rotate(-45deg); }
 .sl-mobile-menu a { padding: 13px 4px; font-size: 15px; border-bottom: 1px solid var(--sl-line); }
 .sl-mobile-menu a:last-child { border-bottom: none; }
 
@@ -138,7 +137,7 @@
 .sl-trace-cell.on { opacity: 1; transform: none; }
 .sl-trace-wide { grid-column: 1 / -1; }
 .sl-trace-cell:nth-last-child(-n+2) { border-bottom: none; }
-.sl-trace-cell h4 { font-size: 12px; font-weight: 600; color: var(--sl-ink-faint); margin: 0 0 10px; }
+.sl-trace-cell :is(h3, h4) { font-size: 12px; font-weight: 600; color: var(--sl-ink-faint); margin: 0 0 10px; }
 .sl-kv { margin: 0; display: grid; gap: 6px; }
 .sl-kv > div { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; font-size: 12.5px; }
 .sl-kv dt { color: var(--sl-ink-soft); min-width: 0; }
@@ -276,9 +275,10 @@
 }
 @media (max-width: 767px) {
   .sl-nav { padding-block: 14px; }
-  .sl-nav .sl-btn { height: 42px; padding-inline: 14px; font-size: 12.5px; }
-  .sl-nav-toggle { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border: 1px solid var(--sl-line-2); border-radius: 50%; background: transparent; }
-  .sl-mobile-menu.open { display: flex; top: 70px; }
+  .sl-nav .sl-btn { height: 44px; padding-inline: 14px; font-size: 13px; }
+  .sl-navlinks { gap: 10px; }
+  .sl-nav-toggle { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--sl-line-2); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
+  .sl-mobile-menu.open { display: flex; top: 74px; }
   .sl-trace-grid { grid-template-columns: 1fr; }
   .sl-kv-2col { grid-template-columns: 1fr; }
   .sl-trace-cell:nth-child(odd):not(.sl-trace-wide) { border-right: none; }
@@ -300,7 +300,7 @@
 }
 
 /* Cookie consent, matched to the public surface without changing consent. */
-html:has(.sl) [aria-label="Cookie consent"] > div { background: #fffffe !important; border: 1px solid #d2d0ca !important; border-radius: 8px; box-shadow: 0 12px 36px #0f0e0d20 !important; }
+html:has(.sl) [aria-label="Cookie consent"] > div { background: #fbfaf7 !important; border: 1px solid #cfcac0 !important; border-radius: 8px; box-shadow: 0 12px 36px #0f0e0d20 !important; }
 html:has(.sl) [aria-label="Cookie consent"] p,
 html:has(.sl) [aria-label="Cookie consent"] a,
 html:has(.sl) [aria-label="Cookie consent"] button { color: #46443f !important; }
