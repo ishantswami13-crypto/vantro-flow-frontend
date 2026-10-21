@@ -27,7 +27,7 @@ export function BridgeDiagram() {
           </table>
         </div>
         <div className="slb-stand" />
-        <p className="slb-label">The office PC that runs Tally</p>
+        <p className="slb-label">Accounting software on your own computer, TallyPrime here</p>
       </div>
 
       <div className="slb-pipe">
@@ -53,7 +53,7 @@ export function BridgeDiagram() {
           <li><i /><span>Zoho Books</span><em>not built yet</em></li>
         </ul>
         <div className="slb-stat">
-          <div><p className="sl-num">0</p><span>writes to Tally</span></div>
+          <div><p className="sl-num">0</p><span>writes to your books</span></div>
           <div><p>Any time</p><span>revoke it from Starlane</span></div>
         </div>
       </div>

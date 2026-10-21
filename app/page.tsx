@@ -24,7 +24,7 @@ import { BridgeViz, WatchViz, MissionsViz, SimulateViz, MemoryViz, PreparedViz }
 // Starlane — public landing. A dark, cinematic frame around light working
 // sections, one argument throughout: hero + real product, what it works with,
 // the problem, one picture of the business, one decision end to end, the
-// surfaces, a day with Starlane, how it thinks, Scan, built for Indian
+// surfaces, a day with Starlane, how it thinks, Scan, built for every
 // businesses, connection, trust and control, questions, access.
 // Everything shown is either the real product, the real connector list, or
 // sample data that is labelled as such. No logos, testimonials or metrics.
@@ -33,7 +33,7 @@ const SURFACES = [
   { name: "The Bridge", href: "/product/bridge", body: "What you are owed, what is overdue and the few things that need a decision — from your own books." },
   { name: "Scan", href: "/product/scan", body: "Look into any customer or invoice and see why it matters, with the evidence." },
   { name: "Watch", href: "/product/watch", body: "Invoices slipping, promises missed, syncs failing — raised once, closed when resolved." },
-  { name: "Missions", href: "/product/missions", body: "“Collect ₹1.2 lakh in 14 days” — proposed step by step, measured against your books." },
+  { name: "Missions", href: "/product/missions", body: "“Collect ₹1,20,000 in 14 days” — proposed step by step, measured against your books." },
   { name: "Simulate", href: "/product/simulate", body: "Likely collections, with every assumption visible and yours to change." },
   { name: "Memory", href: "/product/memory", body: "How each customer really pays, where Starlane learned it, and your say on it." },
   { name: "Prepared", href: "/product/prepared", body: "The next 24 hours, 7 days and 30 days, worked out ahead." },
@@ -88,21 +88,21 @@ const SCRUB = "None of them answers the question an owner faces every morning: w
 
 const FAQ = [
   { q: "Will Starlane message my customers on its own?", a: "No. External messages are off by default and stay off until they are explicitly enabled. Even then, every reminder waits for a person to approve it, the text is shown in full before you do, and each approved action runs at most once." },
-  { q: "What does it need from TallyPrime?", a: "A small bridge program on the computer that runs Tally reads vouchers and stock through Tally’s local export port and sends them to Starlane. It is read-only, paired with a one-time code, and you can revoke it from Starlane at any time." },
-  { q: "We don’t use Tally. Can we still use Starlane?", a: "Yes, if your system can export invoices as CSV or Excel. Identical files are recognised and never imported twice. Connections to QuickBooks, Zoho Books, Xero and others through their official APIs are not built yet, so tell us what you use when you apply." },
+  { q: "Which systems does it connect to today?", a: "Any system that can export invoices as CSV or Excel, bank statements, and TallyPrime through a small read-only bridge program on the computer that runs it. Identical files are recognised and never imported twice. Connections to QuickBooks, Zoho Books, Xero and others through their official APIs are not built yet, so tell us what you use when you apply." },
+  { q: "Is Starlane only for small businesses?", a: "No. Decisions with evidence, approvals before anything goes out, and an audit trail of what happened matter as much to a finance team in a large company as to an owner running one. Starlane is onboarding a small number of companies at a time, of any size, whose systems it can connect today." },
   { q: "Can it change my books?", a: "No. Starlane never marks a payment received, changes an amount or deletes records on its own, and Scan cannot change records at all. It reads your books and checks them again to see what actually happened after an action." },
   { q: "Is there a Mac app?", a: "Not yet. The desktop app runs on Windows 10 and 11, 64-bit, and Starlane also runs in the browser." },
-  { q: "How do we get started?", a: "Starlane is onboarding a small number of companies at a time, starting with businesses that run on TallyPrime or can export their books. Request a pilot and you will see straight away whether your systems are supported." },
+  { q: "How do we get started?", a: "Starlane is onboarding a small number of companies at a time, starting with businesses whose systems it can connect today or that can export their books. Request a pilot and you will see straight away whether your systems are supported." },
 ];
 
-const INDIA = [
-  { k: "₹1,28,500", h: "Lakh and crore, the way you read them", b: "Every amount is grouped the Indian way, in rupees, from your own books. No converting 128,500 in your head." },
-  { k: "Tally", h: "Keep TallyPrime. Starlane reads it.", b: "Nothing to migrate and no new accounting software. A read-only bridge on the Tally computer is the whole setup." },
-  { k: "WhatsApp", h: "Reminders where your customers already reply", b: "Starlane drafts the message in the right tone. You read it in full and approve it; nothing is sent without you." },
-  { k: "Windows", h: "Runs on the PC already in your office", b: "A desktop app for Windows 10 and 11, and the same Starlane in any browser, so the owner can check in from anywhere." },
+const EVERY = [
+  { k: "Any size", h: "From one owner to a whole finance team", b: "The person who makes the call and the people who run collections see the same picture, the same evidence and the same record of what was decided." },
+  { k: "Your data", h: "Starts from the records you already keep", b: "Accounting software, spreadsheets and bank statements. Nothing to migrate: Starlane reads what you have and never changes your books." },
+  { k: "The world", h: "Outside signals, matched to your business", b: "Public feeds such as ECB exchange rates and USGS earthquakes are matched against your own suppliers and currencies, wherever they are." },
+  { k: "Anywhere", h: "On the desk, in the browser, in your pocket", b: "A desktop app for Windows 10 and 11, the same Starlane in any browser, and a phone app in testing, so the decision can find you." },
 ];
 
-const SOURCES = ["TallyPrime", "CSV exports", "Excel workbooks", "Bank statements", "ECB reference rates", "USGS earthquake feed", "WhatsApp drafts, sent only on approval", "Purchase history", "Stock and products"];
+const SOURCES = ["CSV exports", "Excel workbooks", "Bank statements", "TallyPrime", "ECB reference rates", "USGS earthquake feed", "WhatsApp drafts, sent only on approval", "Purchase history", "Stock and products"];
 
 const PROMISES = [
   { n: 0, s: "", l: "messages sent without a person approving them" },
@@ -213,7 +213,7 @@ export default function LandingPage() {
               <p className="sl-eyebrow">One decision, end to end</p>
               <h2 id="decision-h" className="slh-h2">From five vouchers to one approved reminder, with every step on the record.</h2>
               <ol className="slh-steps">
-                <li><b>Sources</b><span>Rows arrive from TallyPrime and become one picture.</span></li>
+                <li><b>Sources</b><span>Rows arrive from your systems and become one picture.</span></li>
                 <li><b>Options</b><span>Real choices are ranked by explicit rules, not a model’s taste.</span></li>
                 <li><b>Evidence</b><span>Observed, calculated and assumed are labelled apart.</span></li>
                 <li><b>Approval</b><span>Nothing goes out until a person says yes.</span></li>
@@ -231,7 +231,7 @@ export default function LandingPage() {
             <div className="slh-center-head" data-reveal>
               <p className="sl-eyebrow">From approval to paid</p>
               <h2 id="loop-h" className="slh-h2">One tap from you. The rest is checked against your books.</h2>
-              <p className="sl-p">You read the reminder in full and approve it. It goes out once, where WhatsApp is set up. When the payment lands in Tally, Starlane sees it on the next sync and records what actually worked.</p>
+              <p className="sl-p">You read the reminder in full and approve it. It goes out once, on the channel you have set up. When the payment lands in your books, Starlane sees it on the next sync and records what actually worked.</p>
             </div>
             <div data-reveal><ApproveLoop /></div>
             <p className="sl-product-caption">Illustration on the fictional demo company. External messages are off by default and nothing is sent without your approval.</p>
@@ -323,18 +323,18 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 10 — Built for Indian businesses */}
+        {/* 10 — Built for every business */}
         <section className="sl-section slh-india" aria-labelledby="india-h">
           <div className="sl-wrap">
             <div className="sl-split-head" data-reveal>
               <div>
-                <p className="sl-eyebrow">For Indian businesses</p>
-                <h2 id="india-h" className="slh-h2">Built for how Indian businesses actually run.</h2>
+                <p className="sl-eyebrow">For every business</p>
+                <h2 id="india-h" className="slh-h2">Built for every business that runs on its books.</h2>
               </div>
-              <p className="sl-p">Not a Western finance suite with a rupee symbol added. Starlane starts from TallyPrime, WhatsApp and the owner who makes the call.</p>
+              <p className="sl-p">Owner-led companies and enterprises, in any industry and any country, face the same question every morning. Starlane answers it from the records they already keep.</p>
             </div>
             <ul className="slh-india-grid">
-              {INDIA.map((x) => (
+              {EVERY.map((x) => (
                 <li key={x.h} className="slh-india-tile" data-reveal>
                   <span className="slh-india-k" aria-hidden>{x.k}</span>
                   <h3 className="sl-h3">{x.h}</h3>
@@ -433,7 +433,7 @@ export default function LandingPage() {
           <div className="sl-wrap slh-final-copy">
             <h2 id="access-h" className="slh-display slh-final-h" data-reveal>Starlane is onboarding a small number of companies at a time.</h2>
             <p className="slh-lede" data-reveal>
-              We start with businesses that run on TallyPrime or can export their books, and are ready to connect real data.
+              We start with businesses of any size whose systems we can connect today, or that can export their books, and are ready to connect real data.
               Tell us about yours; you will see straight away whether your systems are supported.
             </p>
             <div className="slh-ctas" data-reveal>

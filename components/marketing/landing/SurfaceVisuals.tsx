@@ -46,7 +46,7 @@ export function WatchViz() {
 export function MissionsViz() {
   return (
     <div className="slv" aria-hidden>
-      <p className="slv-mission">Collect ₹1.2 lakh from Mehta Hardware</p>
+      <p className="slv-mission">Collect ₹1,20,000 from Mehta Hardware</p>
       <div className="slv-progress"><span style={{ width: "33%" }} /></div>
       <p className="slv-meta"><span className="sl-num">₹40,000</span> of <span className="sl-num">₹1,20,000</span> · 14 days left</p>
       <ol className="slv-steps">
