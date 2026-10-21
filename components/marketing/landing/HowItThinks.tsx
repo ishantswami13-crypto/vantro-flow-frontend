@@ -18,7 +18,7 @@ const STAGES = [
     key: "state",
     label: "State",
     head: "Everything is normalized into one business state.",
-    body: "Vouchers become invoices, purchases, payments and stock movements. Every row keeps where it came from. Re-importing the same data changes nothing.",
+    body: "Transactions become invoices, purchases, payments and stock movements. Every row keeps where it came from. Re-importing the same data changes nothing.",
     today: "Receivables, payables, bank movements, products and stock, customers and suppliers — with provenance and idempotent imports.",
   },
   {

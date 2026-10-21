@@ -1,31 +1,31 @@
-// "A morning with Starlane": one illustrative day for the demo company, told
+// "A day with Starlane": one illustrative day for a fictional company, told
 // as a timeline whose spine fills as you scroll. Figures match the product
 // screenshot and the rest of the page; the section caption says it is a demo.
 
 const MOMENTS = [
   {
-    t: "08:00",
-    h: "The Bridge opens on what changed overnight.",
-    b: "Your books synced before you sat down. Two reminders are waiting for you, and Joshi Tiles has slipped past 90 days.",
-    ui: [["Books synced", "07:52"], ["Waiting for you", "2"], ["New in Watch", "7"]],
+    t: "07:00",
+    h: "Know what changed overnight.",
+    b: "Every connected system synced before the day started. Four changes made the list, out of thousands of rows, and each one links to the records behind it.",
+    ui: [["Systems synced", "06:58"], ["Changes worth your time", "4"], ["Needs a decision", "2"]],
   },
   {
-    t: "08:04",
-    h: "You approve one reminder, word for word.",
-    b: "The firm reminder to Mehta Hardware is shown in full, with the evidence behind it. You approve it, and it runs once, only on the channel you have set up.",
-    ui: [["Mehta Hardware", "₹1,28,500"], ["Overdue", "45 days"], ["Tone", "Firm"]],
+    t: "08:15",
+    h: "Approve one action, with the evidence in front of you.",
+    b: "The escalation for Brightwater Retail is shown with its options, evidence and simulated range. The account owner approves it, and it runs once, through the channel you set up.",
+    ui: [["Brightwater Retail", "$184,200"], ["Overdue", "47 days"], ["Simulated, 30 days", "$96k–$141k"]],
   },
   {
-    t: "11:40",
+    t: "13:40",
     h: "A payment lands in your books, and Starlane notices.",
-    b: "₹40,000 from Mehta Hardware arrives in your books. The next sync picks it up, records it against the reminder you approved, and moves the mission forward.",
-    ui: [["Received", "₹40,000"], ["Mission", "₹40,000 of ₹1,20,000"], ["Outcome", "Partly paid"]],
+    b: "$60,000 from Harbor & Pine arrives in the accounting system. The next sync records it against the action you approved and moves the mission forward.",
+    ui: [["Received", "$60,000"], ["Mission", "$60,000 of $120,000"], ["Outcome", "Partly paid"]],
   },
   {
-    t: "18:30",
+    t: "18:00",
     h: "Tomorrow is already worked out.",
-    b: "Prepared lines up the next 24 hours, 7 days and 30 days, so tomorrow starts with a short list instead of a spreadsheet.",
-    ui: [["Next 24 hours", "2 to approve"], ["Next 7 days", "5 falling due"], ["Next 30 days", "₹2.1L likely in"]],
+    b: "Prepared lines up the next 24 hours, 7 days and 30 days, so the next meeting starts from a short list instead of a spreadsheet.",
+    ui: [["Next 24 hours", "2 to approve"], ["Next 7 days", "5 falling due"], ["Next 30 days", "$410k likely in"]],
   },
 ];
 

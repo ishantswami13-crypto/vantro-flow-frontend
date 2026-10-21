@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from "react";
 
 // Hero visual: one decision, traced end to end the way Starlane records it.
 //
-// Every figure is computed from the sample day book bundled with the real
-// Starlane Tally bridge (tally-connector/sample-daybook.xml): two sales, one
-// receipt, one purchase, one payment. The one number that is not in the data
-// — days overdue — is shown as what it is: an assumption (30-day terms).
+// Every figure is computed from five sample transactions on a fictional
+// company: two sales, one receipt, one purchase, one payment. The one number
+// that is not in the data — days overdue — is shown as what it is: an
+// assumption (30-day terms).
 // The evidence block mirrors the structure the collections agent writes to
 // ai_actions.reason_json.
 //
@@ -18,8 +18,8 @@ const STAGES = ["Sources", "State", "Paths", "Evidence", "Approval", "Verificati
 const STEP_MS = 1900;
 const HOLD_MS = 5200;
 
-// Indian grouping; paise shown only when present, and then always two digits.
-const inr = (n: number) => `₹${n.toLocaleString("en-IN", Number.isInteger(n) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+// Cents shown only when present, and then always two digits.
+const inr = (n: number) => `$${n.toLocaleString("en-US", Number.isInteger(n) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export function DecisionTrace() {
   const [stage, setStage] = useState(0);
@@ -81,7 +81,7 @@ export function DecisionTrace() {
         <section className={`sl-trace-cell ${on(0) ? "on" : ""}`} aria-label="Sources">
           <h4>Sources</h4>
           <dl className="sl-kv">
-            <div><dt>TallyPrime bridge</dt><dd>5 vouchers</dd></div>
+            <div><dt>Accounting system</dt><dd>5 transactions</dd></div>
             <div><dt>Sales</dt><dd className="sl-num">2</dd></div>
             <div><dt>Receipts</dt><dd className="sl-num">1</dd></div>
             <div><dt>Purchases</dt><dd className="sl-num">1</dd></div>
@@ -94,18 +94,18 @@ export function DecisionTrace() {
           <h4>Current state</h4>
           <dl className="sl-kv">
             <div><dt>Open receivables</dt><dd className="sl-num">{inr(153500.5)}</dd></div>
-            <div><dt>Gupta &amp; Sons</dt><dd className="sl-num">{inr(128500.5)}</dd></div>
-            <div><dt>Sharma Traders <span className="sl-muted">(after {inr(20000)} received)</span></dt><dd className="sl-num">{inr(25000)}</dd></div>
-            <div><dt>Owed to Metro Wholesale</dt><dd className="sl-num">{inr(37000)}</dd></div>
+            <div><dt>Brightwater Retail</dt><dd className="sl-num">{inr(128500.5)}</dd></div>
+            <div><dt>Harbor &amp; Pine <span className="sl-muted">(after {inr(20000)} received)</span></dt><dd className="sl-num">{inr(25000)}</dd></div>
+            <div><dt>Owed to Meridian Components</dt><dd className="sl-num">{inr(37000)}</dd></div>
           </dl>
         </section>
 
         {/* 3 — Paths */}
         <section className={`sl-trace-cell sl-trace-wide ${on(2) ? "on" : ""}`} aria-label="Paths">
-          <h4>Options for Gupta &amp; Sons, {inr(128500.5)} open</h4>
+          <h4>Options for Brightwater Retail, {inr(128500.5)} open</h4>
           <ol className="sl-paths">
-            <li className={on(3) ? "chosen" : ""}><span className="sl-rank">1</span>Firm reminder on WhatsApp<span className="sl-why">20 days overdue sits in the 8–30 day band</span></li>
-            <li><span className="sl-rank">2</span>Owner call<span className="sl-why">reserved for 36–89 days</span></li>
+            <li className={on(3) ? "chosen" : ""}><span className="sl-rank">1</span>Firm reminder by email<span className="sl-why">20 days overdue sits in the 8–30 day band</span></li>
+            <li><span className="sl-rank">2</span>Account owner call<span className="sl-why">reserved for 36–89 days</span></li>
             <li className="out"><span className="sl-rank">–</span>Wait for promised date<span className="sl-why">no promise on record</span></li>
           </ol>
         </section>
@@ -114,7 +114,7 @@ export function DecisionTrace() {
         <section className={`sl-trace-cell sl-trace-wide ${on(3) ? "on" : ""}`} aria-label="Evidence">
           <h4>Evidence</h4>
           <dl className="sl-kv sl-kv-2col">
-            <div><dt><span className="sl-tag">Observed</span> Invoice S/1043</dt><dd className="sl-num">{inr(128500.5)}</dd></div>
+            <div><dt><span className="sl-tag">Observed</span> Invoice INV-1043</dt><dd className="sl-num">{inr(128500.5)}</dd></div>
             <div><dt><span className="sl-tag">Observed</span> Receipts from party</dt><dd className="sl-num">none</dd></div>
             <div><dt><span className="sl-tag sl-tag-assume">Assumption</span> Payment terms</dt><dd className="sl-num">30 days</dd></div>
             <div><dt><span className="sl-tag">Calculated</span> Days overdue</dt><dd className="sl-num">20</dd></div>
@@ -127,7 +127,7 @@ export function DecisionTrace() {
           <h4>Approval</h4>
           <p className="sl-trace-state">
             <span className={`sl-dot ${on(4) ? "ok" : ""}`} aria-hidden />
-            {on(4) ? "Approved by the owner" : "Waiting for a person"}
+            {on(4) ? "Approved by the account owner" : "Waiting for a person"}
           </p>
           <p className="sl-trace-note">Nothing is sent until someone approves. The message text is frozen at proposal and shown in full.</p>
         </section>
@@ -135,13 +135,13 @@ export function DecisionTrace() {
         {/* 6 — Verification */}
         <section className={`sl-trace-cell ${on(5) ? "on" : ""}`} aria-label="Verification">
           <h4>Verification</h4>
-          <p className="sl-trace-state"><span className={`sl-dot ${on(5) ? "wait" : ""}`} aria-hidden />Checking each Tally sync for a receipt</p>
+          <p className="sl-trace-state"><span className={`sl-dot ${on(5) ? "wait" : ""}`} aria-hidden />Checking each sync for a payment</p>
           <p className="sl-trace-note">The outcome — paid, partly paid, or not — is recorded against this decision and informs the next one.</p>
         </section>
       </div>
 
       <p className="sl-trace-caption">
-        Sample data: the day book bundled with the Starlane Tally bridge. Figures are computed from its vouchers; payment terms are an assumption, labelled as one.
+        Sample data on a fictional company. Figures are computed from its five transactions; payment terms are an assumption, labelled as one.
       </p>
     </div>
   );

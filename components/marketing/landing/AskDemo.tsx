@@ -14,19 +14,19 @@ import { useEffect, useRef, useState } from "react";
 //  - rows arrive 70 ms apart and bars grow from the baseline over 600 ms with
 //    ease-out: the eye reads rank before value (pre-attentive length);
 //  - figures count up over the same 600 ms in tabular numerals, inside a box
-//    sized for the final string, so Indian-grouping commas never shift;
+//    sized for the final string, so thousands separators never shift;
 //  - pause on hover/focus and an explicit control (WCAG 2.2.2); with
 //    prefers-reduced-motion the finished conversation is shown, still.
 
 const Q1 = "Who owes me the most right now?";
-const Q2 = "Mark Mehta Hardware's invoice as paid";
+const Q2 = "Mark Brightwater Retail's invoice as paid";
 const ROWS = [
-  { name: "Mehta Hardware", amount: 128500, days: 45 },
-  { name: "Kapoor & Co", amount: 64000, days: 12 },
-  { name: "Sharma Traders", amount: 25000, days: 9 },
+  { name: "Brightwater Retail", amount: 128500, days: 45 },
+  { name: "Harbor & Pine", amount: 64000, days: 12 },
+  { name: "Okafor Distribution", amount: 25000, days: 9 },
 ];
 const TOTAL = ROWS.reduce((a, r) => a + r.amount, 0);
-const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
+const inr = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
 type Phase = "q1" | "think1" | "a1" | "q2" | "think2" | "a2";
 const TYPE_MS = 38;
@@ -122,7 +122,7 @@ export function AskDemo() {
 
         {at >= 2 ? (
           <div className="sl-ask-a sl-ask-in">
-            <p className="sl-ask-sentence">Mehta Hardware owes the most — <CountUp to={128500} run={animate && at === 2} />, 45 days overdue. Together these three owe <CountUp to={TOTAL} run={animate && at === 2} />.</p>
+            <p className="sl-ask-sentence">Brightwater Retail owes the most — <CountUp to={128500} run={animate && at === 2} />, 45 days overdue. Together these three owe <CountUp to={TOTAL} run={animate && at === 2} />.</p>
             <ol className="sl-ask-rows">
               {ROWS.map((r, i) => (
                 <li key={r.name} className="sl-ask-row" style={{ animationDelay: animate && at === 2 ? `${120 + i * 70}ms` : "0ms" }}>

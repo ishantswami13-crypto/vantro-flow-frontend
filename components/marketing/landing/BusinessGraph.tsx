@@ -1,37 +1,37 @@
-// "One picture of your business": the demo company's books drawn as a graph.
+// "One continuously updated model of the business", drawn as a graph.
 // Sources feed the picture from the left; customers it is owed by sit on the
 // right, coloured by how overdue they are; the supplier and stock it depends
 // on sit above and below. Data visibly flows in along the source edges.
-// Same fictional demo company and figures as the product screenshot.
+// Fictional company (Halden Supply Co.), same figures as the hero console.
 
 type Node = { id: string; x: number; y: number; label: string; sub?: string; kind: "core" | "source" | "customer" | "supplier" | "signal"; tone?: "ok" | "warn" | "bad" };
 
 const NODES: Node[] = [
-  { id: "core", x: 500, y: 290, label: "Your business", sub: "Arora Hardware Traders · demo", kind: "core" },
-  { id: "tally", x: 120, y: 150, label: "TallyPrime", sub: "vouchers, stock", kind: "source" },
-  { id: "bank", x: 95, y: 300, label: "Bank statement", sub: "movements", kind: "source" },
-  { id: "csv", x: 140, y: 450, label: "CSV / Excel", sub: "invoice exports", kind: "source" },
-  { id: "mehta", x: 820, y: 105, label: "Mehta Hardware", sub: "₹1,28,500 · 45 days", kind: "customer", tone: "bad" },
-  { id: "sharma", x: 895, y: 225, label: "Sharma Builders", sub: "₹86,000 · 38 days", kind: "customer", tone: "bad" },
-  { id: "rao", x: 900, y: 355, label: "Rao Steel", sub: "₹74,000 · 19 days", kind: "customer", tone: "warn" },
-  { id: "joshi", x: 830, y: 470, label: "Joshi Tiles", sub: "₹23,500 · 96 days", kind: "customer", tone: "bad" },
-  { id: "bansal", x: 690, y: 525, label: "Bansal Paints", sub: "₹52,000 · 6 days", kind: "customer", tone: "warn" },
-  { id: "metro", x: 430, y: 70, label: "Metro Wholesale", sub: "supplier", kind: "supplier" },
-  { id: "stock", x: 330, y: 520, label: "Products and stock", sub: "coverage by item", kind: "supplier" },
+  { id: "core", x: 500, y: 290, label: "Your business", sub: "Halden Supply Co. · fictional", kind: "core" },
+  { id: "acct", x: 120, y: 150, label: "Accounting / ERP", sub: "invoices, payments, stock", kind: "source" },
+  { id: "bank", x: 95, y: 300, label: "Bank statements", sub: "movements", kind: "source" },
+  { id: "csv", x: 140, y: 450, label: "Spreadsheets", sub: "exports from any system", kind: "source" },
+  { id: "bw", x: 820, y: 105, label: "Brightwater Retail", sub: "$184,200 · 47 days", kind: "customer", tone: "bad" },
+  { id: "ks", x: 895, y: 225, label: "Kessler Industrial", sub: "$92,000 · 34 days", kind: "customer", tone: "bad" },
+  { id: "hp", x: 900, y: 355, label: "Harbor & Pine", sub: "$60,000 · 38 days", kind: "customer", tone: "warn" },
+  { id: "ok", x: 830, y: 470, label: "Okafor Distribution", sub: "$25,000 · 96 days", kind: "customer", tone: "bad" },
+  { id: "lh", x: 690, y: 525, label: "Lumen Health Group", sub: "$41,500 · 6 days", kind: "customer", tone: "warn" },
+  { id: "mer", x: 430, y: 70, label: "Meridian Components", sub: "supplier · invoices in EUR", kind: "supplier" },
+  { id: "stock", x: 330, y: 520, label: "Products and stock", sub: "cover by item", kind: "supplier" },
   { id: "ecb", x: 640, y: 40, label: "ECB rates", sub: "public feed", kind: "signal" },
 ];
 
 const EDGES: Array<[string, string, "in" | "out" | "dep"]> = [
-  ["tally", "core", "in"], ["bank", "core", "in"], ["csv", "core", "in"],
-  ["core", "mehta", "out"], ["core", "sharma", "out"], ["core", "rao", "out"], ["core", "joshi", "out"], ["core", "bansal", "out"],
-  ["core", "metro", "dep"], ["metro", "stock", "dep"], ["core", "stock", "dep"], ["ecb", "metro", "dep"],
+  ["acct", "core", "in"], ["bank", "core", "in"], ["csv", "core", "in"],
+  ["core", "bw", "out"], ["core", "ks", "out"], ["core", "hp", "out"], ["core", "ok", "out"], ["core", "lh", "out"],
+  ["core", "mer", "dep"], ["mer", "stock", "dep"], ["core", "stock", "dep"], ["ecb", "mer", "dep"],
 ];
 
 const at = (id: string) => NODES.find((n) => n.id === id)!;
 
 export function BusinessGraph() {
   return (
-    <div className="slg" role="img" aria-label="Illustration: the demo company's books drawn as one picture. TallyPrime, bank statements and CSV exports feed it; five customers who owe it money are coloured by how overdue they are; a supplier, its stock and an exchange-rate feed it depends on are linked in.">
+    <div className="slg" role="img" aria-label="Illustration: a fictional company drawn as one model. Accounting, bank statements and spreadsheets feed it; five customers who owe it money are coloured by how overdue they are; a supplier invoicing in euros, its stock and the exchange-rate feed it depends on are linked in.">
       <svg viewBox="-70 0 1150 580" className="slg-svg" aria-hidden>
         <defs>
           <radialGradient id="slg-core" cx="50%" cy="50%" r="50%">

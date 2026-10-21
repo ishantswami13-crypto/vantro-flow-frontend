@@ -1,14 +1,25 @@
-// Tiny pictures for the problem statement: a dashboard that only looks back,
-// a report that arrives late, and an automation firing at the wrong invoice.
+// Tiny pictures for the problem statement: the same company split across
+// systems that never meet, a dashboard that only looks back, a report that
+// arrives late, and an automation firing at the wrong invoice.
 // Decorative; the sentence under each one carries the meaning.
+
+const SYSTEMS = ["Accounting", "CRM", "Bank", "Inventory", "Email", "Sheets"];
+
+export function SystemsThumb() {
+  return (
+    <div className="slp slp-sys" aria-hidden>
+      {SYSTEMS.map((n, i) => <span key={n} className={`slp-sys-${i}`}>{n}</span>)}
+    </div>
+  );
+}
 
 export function DashboardThumb() {
   const bars = [38, 52, 44, 61, 57, 70, 48];
   return (
     <div className="slp slp-dash" aria-hidden>
-      <p className="slp-k">Sales, last month</p>
+      <p className="slp-k">Revenue, last quarter</p>
       <div className="slp-bars">{bars.map((h, i) => <span key={i} style={{ height: `${h}%` }} />)}</div>
-      <p className="slp-foot"><span>1 Sept</span><span>30 Sept</span></p>
+      <p className="slp-foot"><span>Jul</span><span>Sep</span></p>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 // Small, still illustrations of each product surface for the landing bento.
-// Every figure and name is from the same fictional demo company the product
-// screenshot and the Scan demo use; the section caption says so.
+// Every figure and name is from the same fictional company the hero and the
+// Scan demo use; the section caption says so.
 
 export function BridgeViz() {
   const bands = [
@@ -13,12 +13,12 @@ export function BridgeViz() {
   return (
     <div className="slv slv-bridge" aria-hidden>
       <p className="slv-kicker">Today</p>
-      <p className="slv-big">You are owed <span className="sl-num">₹5,61,000</span>.<br /><span className="sl-num">₹3,79,000</span> of it is overdue.</p>
+      <p className="slv-big">You are owed <span className="sl-num">$561,000</span>.<br /><span className="sl-num">$379,000</span> of it is overdue.</p>
       <div className="slv-stack">
         {bands.map((b, i) => <span key={b.l} style={{ flexBasis: `${(b.v / 561000) * 100}%` }} className={`slv-seg slv-seg-${i}`} />)}
       </div>
       <ul className="slv-legend">
-        {bands.map((b, i) => <li key={b.l}><i className={`slv-seg-${i}`} />{b.l}<span className="sl-num">₹{b.v.toLocaleString("en-IN")}</span></li>)}
+        {bands.map((b, i) => <li key={b.l}><i className={`slv-seg-${i}`} />{b.l}<span className="sl-num">${b.v.toLocaleString("en-US")}</span></li>)}
       </ul>
       <div className="slv-approve">
         <span className="slv-pill">2 reminders waiting for approval</span>
@@ -30,9 +30,9 @@ export function BridgeViz() {
 
 export function WatchViz() {
   const items = [
-    { t: "Joshi Tiles · S/152 is more than 90 days overdue", s: "Raised", c: "warn" },
-    { t: "Mehta Hardware · S/101 is more than 30 days overdue", s: "Raised", c: "warn" },
-    { t: "TallyPrime sync failed at 09:12", s: "Closed", c: "ok" },
+    { t: "Okafor Distribution · INV-1152 is more than 90 days overdue", s: "Raised", c: "warn" },
+    { t: "Brightwater Retail · INV-1101 is more than 30 days overdue", s: "Raised", c: "warn" },
+    { t: "Accounting sync failed at 09:12", s: "Closed", c: "ok" },
   ];
   return (
     <ul className="slv slv-list" aria-hidden>
@@ -46,13 +46,13 @@ export function WatchViz() {
 export function MissionsViz() {
   return (
     <div className="slv" aria-hidden>
-      <p className="slv-mission">Collect ₹1,20,000 from Mehta Hardware</p>
-      <div className="slv-progress"><span style={{ width: "33%" }} /></div>
-      <p className="slv-meta"><span className="sl-num">₹40,000</span> of <span className="sl-num">₹1,20,000</span> · 14 days left</p>
+      <p className="slv-mission">Collect $120,000 from Harbor &amp; Pine</p>
+      <div className="slv-progress"><span style={{ width: "50%" }} /></div>
+      <p className="slv-meta"><span className="sl-num">$60,000</span> of <span className="sl-num">$120,000</span> · 14 days left</p>
       <ol className="slv-steps">
         <li className="done">Polite reminder, approved and sent</li>
         <li className="done">Firm reminder, approved and sent</li>
-        <li>Owner call, proposed for day 10</li>
+        <li>Account owner call, proposed for day 10</li>
       </ol>
     </div>
   );
@@ -76,7 +76,7 @@ export function SimulateViz() {
         <circle cx={x(7)} cy={y(66)} r="3.5" className="slv-end" />
       </svg>
       <div className="slv-assume">
-        <span>Assumes</span><span className="slv-chip">Mehta Hardware pays in 30 days</span><span className="slv-chip">No new sales</span>
+        <span>Assumes</span><span className="slv-chip">Brightwater Retail pays in 30 days</span><span className="slv-chip">No new sales</span>
       </div>
     </div>
   );
@@ -84,9 +84,9 @@ export function SimulateViz() {
 
 export function MemoryViz() {
   const rows = [
-    { n: "Mehta Hardware", p: "LLOLLLOLLLLO", note: "pays about 9 days late" },
-    { n: "Bansal Paints", p: "OOOOLOOOOOOO", note: "pays on time" },
-    { n: "Sharma Builders", p: "LLLLPLLLPLLL", note: "pays in parts after a firm reminder" },
+    { n: "Brightwater Retail", p: "LLOLLLOLLLLO", note: "pays about 11 days late" },
+    { n: "Lumen Health Group", p: "OOOOLOOOOOOO", note: "pays on time" },
+    { n: "Harbor & Pine", p: "LLLLPLLLPLLL", note: "pays in parts after a firm reminder" },
   ];
   return (
     <ul className="slv slv-memory" aria-hidden>
@@ -105,7 +105,7 @@ export function PreparedViz() {
   const cols = [
     { h: "Next 24 hours", n: 2, d: "reminders to approve" },
     { h: "Next 7 days", n: 5, d: "invoices falling due" },
-    { h: "Next 30 days", n: "₹2.1L", d: "likely to come in" },
+    { h: "Next 30 days", n: "$410k", d: "likely to come in" },
   ];
   return (
     <div className="slv slv-prepared" aria-hidden>
