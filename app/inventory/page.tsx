@@ -355,7 +355,7 @@ export default function InventoryPage() {
             {tab === "products" && (
               products.length === 0 ? (
                 <div className={s.panel}>
-                  <EmptyState icon={<IconBox size={17} />} title="No products yet" message="Add your first product to track its stock. Products and their history also come in from Tally once it's connected in Sources."
+                  <EmptyState icon={<IconBox size={17} />} title="No products yet" message="Add your first product to track its stock. Products and their history also come in from your books once they're connected in Sources."
                     action={<Button variant="primary" icon={<IconPlus size={14} />} onClick={openAdd}>Add product</Button>} />
                 </div>
               ) : (
@@ -435,7 +435,7 @@ export default function InventoryPage() {
                 <div className={s.panel}>
                   {intelligenceRows.length > 0
                     ? <GridTable label="Stock details" columns={insightCols} rows={intelligenceRows.slice(0, 20)} rowKey={r => r.productName} />
-                    : <EmptyState title="No stock details yet" message="Add products, or connect Tally in Sources, to fill this in." />}
+                    : <EmptyState title="No stock details yet" message="Add products, or connect your books in Sources, to fill this in." />}
                 </div>
               </>
             )}
