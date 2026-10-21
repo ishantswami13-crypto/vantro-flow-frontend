@@ -37,9 +37,9 @@ export default function PrivacyPage() {
           <Link href="/" className="brand" style={{display:"flex",alignItems:"center",gap:"9px",textDecoration:"none"}}>
             <StarlaneMark/> <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13.5px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
           </Link>
-          <div className="nav-links"><Link href="/#features">Features</Link><Link href="/#pricing">Pricing</Link><Link href="/#faq">FAQ</Link></div>
+          <div className="nav-links"><Link href="/product">Product guide</Link><Link href="/#how">How it works</Link><Link href="/access">Request a pilot</Link></div>
           <div className="nav-cta">
-            <Link className="nav-login" href="/login">Log in</Link>
+            <Link className="nav-login" href="/login">Sign in</Link>
             <Link className="btn btn-primary" href="/signup">Start free</Link>
           </div>
         </div>
@@ -124,10 +124,10 @@ export default function PrivacyPage() {
               <Link href="/" className="brand" style={{display:"flex",alignItems:"center",gap:"9px",textDecoration:"none"}}>
                 <StarlaneMark/> <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
               </Link>
-              <p>Starlane — the AI business control room for Indian founders.</p>
+              <p>The operating layer every modern business runs on.</p>
               <p className="foot-made">Made in India &middot; Data stays in India</p>
             </div>
-            <div className="foot-col"><h4>Product</h4><Link href="/#features">Features</Link><Link href="/#pricing">Pricing</Link><Link href="/#faq">FAQ</Link></div>
+            <div className="foot-col"><h4>Product</h4><Link href="/product">Product guide</Link><Link href="/#how">How it works</Link><Link href="/access">Request a pilot</Link></div>
             <div className="foot-col"><h4>Contact</h4><a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a></div>
           </div>
           <div className="wm">STARLANE</div>

@@ -24,7 +24,7 @@ function loadScript(src: string): Promise<void> {
     const s = document.createElement("script");
     s.src = src; s.async = true;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error("Could not load sign-in. Check your connection."));
+    s.onerror = () => reject(new Error("This sign-in option didn't load. Check your connection and try again."));
     document.head.appendChild(s);
   });
 }
@@ -68,7 +68,7 @@ export function SignInOptions({ onSession, onError, disabled }: { onSession: (s:
         callback: async ({ credential }: { credential: string }) => {
           setBusy("google");
           try { onSessionRef.current(await api.auth.oauth("google", { credential })); }
-          catch (e) { onErrorRef.current(e instanceof Error ? e.message : "Google sign-in failed."); }
+          catch (e) { onErrorRef.current(e instanceof Error && !(e instanceof TypeError) ? e.message : "Google sign-in didn't finish. Try again."); }
           finally { setBusy(""); }
         },
       });
@@ -88,20 +88,20 @@ export function SignInOptions({ onSession, onError, disabled }: { onSession: (s:
       const name = n ? [n.firstName, n.lastName].filter(Boolean).join(" ") : undefined;
       onSession(await api.auth.oauth("apple", { credential: r.authorization.id_token, name }));
     } catch (e: any) {
-      if (e?.error !== "popup_closed_by_user") onError(e instanceof Error ? e.message : "Apple sign-in did not finish.");
+      if (e?.error !== "popup_closed_by_user") onError(e instanceof Error && !(e instanceof TypeError) ? e.message : "Apple sign-in didn't finish. Try again.");
     } finally { setBusy(""); }
   };
 
   const sendCode = async (ev: React.FormEvent) => {
     ev.preventDefault(); setBusy("phone"); setNote("");
     try { const r = await api.auth.phoneStart(phone); setCodeSent(true); setNote(r.message); }
-    catch (e) { onError(e instanceof Error ? e.message : "The code could not be sent."); }
+    catch (e) { onError(e instanceof Error && !(e instanceof TypeError) ? e.message : "The code wasn't sent. Check the number and try again."); }
     finally { setBusy(""); }
   };
   const verifyCode = async (ev: React.FormEvent) => {
     ev.preventDefault(); setBusy("phone");
     try { onSession(await api.auth.phoneVerify(phone, code)); }
-    catch (e) { onError(e instanceof Error ? e.message : "That code did not work."); }
+    catch (e) { onError(e instanceof Error && !(e instanceof TypeError) ? e.message : "That code didn't work. Check the digits or ask for a new one."); }
     finally { setBusy(""); }
   };
 

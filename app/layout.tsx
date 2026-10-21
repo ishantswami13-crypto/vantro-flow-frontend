@@ -24,17 +24,15 @@ const THEME_BOOT = `try{var t=localStorage.getItem("starlane_theme");document.do
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: "Starlane | AI BusinessOS",
+    default: "Starlane",
     template: "%s | Starlane",
   },
   description:
-    "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
+    "Starlane connects to the systems your business already runs on, shows what needs a decision and the evidence behind it, and carries out only what you approve.",
   keywords: [
-    "business automation India", "MSME automation software", "collections automation India",
-    "WhatsApp business automation", "invoice automation India", "Hinglish WhatsApp reminders",
-    "Tally ERP sync", "cash flow automation India", "Indian business OS",
-    "autopilot business software", "distributor automation India", "vyapar alternative",
-    "receivables management India", "B2B collections India",
+    "business operating layer", "decision software for business", "receivables management",
+    "collections automation", "cash flow forecasting", "approval-gated automation",
+    "accounting system integration", "enterprise operations software", "evidence-based decisions",
   ],
   authors: [{ name: "Starlane", url: APP_URL }],
   creator: "Starlane",
@@ -42,12 +40,12 @@ export const metadata: Metadata = {
 
   openGraph: {
     type: "website",
-    locale: "en_IN",
+    locale: "en_US",
     url: APP_URL,
     siteName: "Starlane",
     title: "Starlane — The operating layer every modern business runs on",
     description:
-      "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
+      "Starlane connects to the systems your business already runs on, shows what needs a decision and the evidence behind it, and carries out only what you approve.",
     images: [
       {
         url: "/opengraph-image",
@@ -62,7 +60,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Starlane — The operating layer every modern business runs on",
     description:
-      "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
+      "Starlane connects to the systems your business already runs on, shows what needs a decision and the evidence behind it, and carries out only what you approve.",
     images: ["/opengraph-image"],
     creator: "@ishantswami13",
   },
@@ -103,7 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en-IN" data-theme="light" className={`${geist.variable} ${fraunces.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
-        {/* Structured data — Indian SaaS product */}
+        {/* Structured data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -114,12 +112,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               applicationCategory: "BusinessApplication",
               operatingSystem: "Web",
               description:
-                "Starlane is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
+                "Starlane connects to the systems your business already runs on, shows what needs a decision and the evidence behind it, and carries out only what you approve.",
               url: APP_URL,
-              inLanguage: ["en", "hi"],
+              inLanguage: ["en"],
               audience: {
                 "@type": "Audience",
-                audienceType: "Indian MSMEs, distributors, traders, manufacturers",
+                audienceType: "Businesses of every size, from small firms to enterprises",
               },
             }),
           }}

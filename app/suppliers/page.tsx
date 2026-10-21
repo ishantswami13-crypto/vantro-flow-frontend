@@ -68,6 +68,7 @@ export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
   const loadSuppliers = async () => {
@@ -78,10 +79,12 @@ export default function SuppliersPage() {
     }
 
     setLoading(true);
+    setLoadFailed(false);
     try {
       const data = await api.suppliers.list(user.id);
       if (data.success) setSuppliers(data.suppliers || []);
     } catch (err) {
+      setLoadFailed(true);
       console.error("Failed to load suppliers:", err);
     } finally {
       setLoading(false);
@@ -111,7 +114,7 @@ export default function SuppliersPage() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
             <h2 className="text-[26px] leading-[1.15]" style={{ color: "var(--ink)", fontWeight: 500, letterSpacing: "-0.01em" }}>Suppliers</h2>
-            <p className="text-sm text-secondary mt-1">Payables generated from your purchase bills</p>
+            <p className="text-sm text-secondary mt-1">What you owe each supplier, from your purchase bills.</p>
           </div>
           <button onClick={loadSuppliers} className="px-4 py-2 rounded-xl border border-border text-secondary text-xs font-bold hover:text-primary hover:border-border-2 transition-colors">
             Refresh
@@ -120,24 +123,24 @@ export default function SuppliersPage() {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="card-metric p-5">
-            <p className="section-label mb-3">Total Suppliers</p>
+            <p className="section-label mb-3">Suppliers</p>
             <p className="metric-lg text-primary">{suppliers.length}</p>
-            <p className="text-2xs text-muted mt-1">{activeSuppliers} with dues</p>
+            <p className="text-2xs text-muted mt-1">{activeSuppliers} still to be paid</p>
           </div>
           <div className="card-metric p-5">
-            <p className="section-label mb-3">We Need To Pay</p>
+            <p className="section-label mb-3">You owe</p>
             <p className="metric-lg text-warning">{fmtINR(totalPayable)}</p>
-            <p className="text-2xs text-muted mt-1">from purchases</p>
+            <p className="text-2xs text-muted mt-1">across all suppliers</p>
           </div>
           <div className="card-metric p-5">
-            <p className="section-label mb-3">Purchase Bills</p>
+            <p className="section-label mb-3">Purchase bills</p>
             <p className="metric-lg text-accent">{suppliers.reduce((s, x) => s + Number(x.purchase_count || 0), 0)}</p>
             <p className="text-2xs text-muted mt-1">linked automatically</p>
           </div>
           <div className="card-metric p-5">
-            <p className="section-label mb-3">Auto Added</p>
+            <p className="section-label mb-3">Added automatically</p>
             <p className="metric-lg text-success">{suppliers.filter((s) => s.inferred_from_purchases).length}</p>
-            <p className="text-2xs text-muted mt-1">from old purchases</p>
+            <p className="text-2xs text-muted mt-1">found in past purchases</p>
           </div>
         </div>
 
@@ -146,18 +149,18 @@ export default function SuppliersPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search supplier, phone, GSTIN..."
+            placeholder="Search supplier, phone or GSTIN"
             className="w-full bg-surface-2 border border-border rounded-xl pl-9 pr-3 py-3 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent/50"
           />
         </div>
 
         {loading ? (
-          <div className="card-premium p-10 text-center text-sm text-muted">Loading suppliers...</div>
+          <div className="card-premium p-10 text-center text-sm text-muted">Loading suppliers…</div>
         ) : filtered.length === 0 ? (
           <div className="card-premium p-10 text-center">
             <FiTruck size={34} className="mx-auto mb-3 text-muted opacity-40" />
-            <p className="text-sm font-bold text-primary">No suppliers yet</p>
-            <p className="text-xs text-muted mt-1">Add or scan a purchase bill and the supplier will appear here.</p>
+            <p className="text-sm font-bold text-primary">{loadFailed ? "Couldn't load your suppliers" : search ? "No suppliers match" : "No suppliers yet"}</p>
+            <p className="text-xs text-muted mt-1">{loadFailed ? "Couldn't reach Starlane. Check your connection and press Refresh." : search ? `Nothing matches “${search}”.` : "Suppliers appear here once purchase bills come in from your books."}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -234,7 +237,7 @@ export default function SuppliersPage() {
             <div className="w-full max-w-5xl max-h-[88vh] overflow-hidden rounded-2xl bg-surface border border-border shadow-2xl">
               <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-border">
                 <div className="min-w-0">
-                  <p className="text-lg font-black text-primary truncate">{selectedSupplier.name}</p>
+                  <p className="text-lg font-semibold text-primary truncate">{selectedSupplier.name}</p>
                   <p className="text-xs text-muted mt-1">
                     {selectedSupplier.gstin || "GSTIN not saved"}{selectedSupplier.phone ? ` · ${selectedSupplier.phone}` : ""}
                   </p>
@@ -252,19 +255,19 @@ export default function SuppliersPage() {
               <div className="p-5 overflow-y-auto max-h-[calc(88vh-73px)] space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="rounded-xl bg-surface-2/70 p-4">
-                    <p className="section-label mb-2">Total Bills</p>
-                    <p className="text-xl font-black text-primary">{selectedSupplier.purchase_count || selectedSupplier.purchases?.length || 0}</p>
+                    <p className="section-label mb-2">Bills</p>
+                    <p className="text-xl font-semibold text-primary">{selectedSupplier.purchase_count || selectedSupplier.purchases?.length || 0}</p>
                   </div>
                   <div className="rounded-xl bg-surface-2/70 p-4">
-                    <p className="section-label mb-2">Total Purchase</p>
-                    <p className="text-xl font-black text-primary">{fmtINR(Number(selectedSupplier.total_payable || 0))}</p>
+                    <p className="section-label mb-2">Bought in total</p>
+                    <p className="text-xl font-semibold text-primary">{fmtINR(Number(selectedSupplier.total_payable || 0))}</p>
                   </div>
                   <div className="rounded-xl bg-surface-2/70 p-4">
                     <p className="section-label mb-2">Pending</p>
-                    <p className="text-xl font-black text-warning">{fmtINR(Number(selectedSupplier.outstanding_amount || 0))}</p>
+                    <p className="text-xl font-semibold text-warning">{fmtINR(Number(selectedSupplier.outstanding_amount || 0))}</p>
                   </div>
                   <div className="rounded-xl bg-surface-2/70 p-4">
-                    <p className="section-label mb-2">Last Bill</p>
+                    <p className="section-label mb-2">Last bill</p>
                     <p className="text-sm font-bold text-primary">{fmtDate(selectedSupplier.last_purchase_date)}</p>
                   </div>
                 </div>
@@ -272,8 +275,8 @@ export default function SuppliersPage() {
                 {(selectedSupplier.purchases || []).length === 0 ? (
                   <div className="rounded-xl border border-border bg-surface-2/50 p-8 text-center">
                     <FiFileText size={28} className="mx-auto text-muted opacity-50 mb-3" />
-                    <p className="text-sm font-bold text-primary">No bill rows saved yet</p>
-                    <p className="text-xs text-muted mt-1">Future scanned/manual purchases will show item, quantity, rate, GST and pending amount here.</p>
+                    <p className="text-sm font-bold text-primary">No bills from this supplier yet</p>
+                    <p className="text-xs text-muted mt-1">When a purchase bill comes in from your books, its items, rates, GST and amount still to pay show here.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -286,7 +289,7 @@ export default function SuppliersPage() {
                         <div key={String(purchase.id)} className="rounded-xl border border-border bg-surface-2/45 overflow-hidden">
                           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 p-4 border-b border-border">
                             <div>
-                              <p className="text-2xs text-muted">Bill No.</p>
+                              <p className="text-2xs text-muted">Bill no.</p>
                               <p className="text-sm font-bold text-primary">{purchase.bill_number || `#${purchase.id}`}</p>
                             </div>
                             <div>

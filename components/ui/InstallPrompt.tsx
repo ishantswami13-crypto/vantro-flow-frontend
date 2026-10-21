@@ -52,7 +52,7 @@ export default function InstallPrompt() {
           <LogoMark size={36} className="shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-primary">Install Starlane</p>
-            <p className="text-xs text-muted mt-0.5">Add to home screen for instant access, offline support &amp; push notifications.</p>
+            <p className="text-xs text-muted mt-0.5">Add Starlane to your home screen to open it in one tap.</p>
             <div className="flex gap-2 mt-3">
               <button onClick={install}
                 className="ui-btn ui-btn-primary ui-btn-sm">

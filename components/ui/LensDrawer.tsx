@@ -113,7 +113,7 @@ export function LensDrawer({
           </div>
         ))}
         {sections.length === 0 && (
-          <p style={{ fontSize: 12.5, color: "var(--ink-3)" }}>No further detail is available for this entity yet.</p>
+          <p style={{ fontSize: 12.5, color: "var(--ink-3)" }}>Starlane has no more detail on this record yet.</p>
         )}
       </div>
     </Drawer>

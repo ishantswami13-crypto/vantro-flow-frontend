@@ -10,7 +10,7 @@ import { loadManifest } from "@/lib/desktopRelease";
 export const dynamic = "force-dynamic";
 
 function notPublished() {
-  return new Response("Starlane for Windows is not published yet. Please try again later.\n", {
+  return new Response("Starlane for Windows isn't published yet. Check back soon.\n", {
     status: 503,
     headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "Retry-After": "600" },
   });

@@ -63,10 +63,10 @@ function ProposalCard({ w, onChange }: { w: Workflow; onChange: () => void }) {
       why={w.objective}
       stake={s ? amount(s.amountTriggered) : undefined}
       stakeNote={s ? `covered in ${s.lookbackDays} days of replays` : undefined}
-      action={<button type="button" className="ui-btn ui-btn-secondary ui-btn-sm" disabled={busy} onClick={() => act(() => osApi.deploy(w.id, "SHADOW"))}>Deploy in shadow</button>}
+      action={<button type="button" className="ui-btn ui-btn-secondary ui-btn-sm" disabled={busy} onClick={() => act(() => osApi.deploy(w.id, "SHADOW"))}>Turn on in shadow</button>}
       actions={
         <>
-          <RowLink disabled={busy} onClick={() => act(() => osApi.deploy(w.id, "WITH_APPROVAL"))}>Deploy with my approval</RowLink>
+          <RowLink disabled={busy} onClick={() => act(() => osApi.deploy(w.id, "WITH_APPROVAL"))}>Turn on with my approval</RowLink>
           <RowLink disabled={busy} onClick={() => act(() => osApi.transition(w.id, "reject"))}>Reject</RowLink>
         </>
       }

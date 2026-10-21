@@ -146,7 +146,7 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
       try { data = JSON.parse(raw); } catch { data = null; }
     }
     if (res.ok && raw && data === null) {
-      const err = new Error(`The server sent an unreadable response (HTTP ${res.status}).`);
+      const err = new Error("Starlane couldn't finish that just now. Try again in a moment.");
       (err as any).status = res.status;
       throw err;
     }
@@ -177,12 +177,14 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
         clearClientCookie(SESSION_COOKIE);
         window.location.href = '/login';
       }
-      throw new Error(data?.error || 'Session expired. Please log in again.');
+      throw new Error(data?.error || 'Your session ended. Sign in again to continue.');
     }
     if (!res.ok) {
-      const errorMsg = data?.error || (res.status >= 500 ? `The server had a problem (HTTP ${res.status}).` : `Request failed (HTTP ${res.status}).`);
+      const errorMsg = data?.error || (res.status >= 500 ? "Starlane couldn't finish that just now. Try again in a moment." : "Starlane couldn't do that. Refresh the page and try again.");
       const requestId = res.headers.get('x-request-id') || data?.requestId || 'unknown';
-      const errorObj = new Error(`${errorMsg} (Error ID: ${requestId})`);
+      // The person reads one plain sentence; the request id travels on the
+      // error (and in the client-errors report below) for support, not in the text.
+      const errorObj = new Error(errorMsg);
       (errorObj as any).requestId = requestId;
       (errorObj as any).status = res.status;
       (errorObj as any).code = data?.code;
@@ -207,7 +209,7 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
     }
     return data;
   } catch (err: unknown) {
-    if (err instanceof Error && err.name === 'AbortError') throw new Error('Request timed out — please check your connection');
+    if (err instanceof Error && err.name === 'AbortError') throw new Error('The request timed out. Check your connection and try again.');
     throw err;
   } finally {
     clearTimeout(timer);
@@ -224,7 +226,7 @@ async function signInCall<T>(path: string, body?: unknown): Promise<T> {
   let data: any = null;
   try { data = await res.json(); } catch { /* not JSON */ }
   if (!res.ok) {
-    const err = new Error(data?.error || `Sign-in failed (HTTP ${res.status}).`);
+    const err = new Error(data?.error || "Sign-in didn't finish. Try again in a moment.");
     (err as any).status = res.status; (err as any).code = data?.code;
     throw err;
   }
@@ -548,7 +550,7 @@ export const api = {
     /** Downloads the bridge program as a file (authenticated). */
     async downloadBridge(id: string): Promise<{ filename: string; sha256: string | null }> {
       const res = await fetch(`${API_BASE}/api/connectors/${id}/bridge`, { headers: authHeaders(), credentials: 'include' });
-      if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      if (!res.ok) throw Object.assign(new Error("The download didn't start. Try again in a moment."), { status: res.status });
       const filename = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') || '')?.[1] || 'tally-sync.mjs';
       const href = URL.createObjectURL(await res.blob());
       const a = document.createElement('a');

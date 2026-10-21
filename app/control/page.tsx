@@ -230,7 +230,7 @@ function PermissionsTab() {
         <PolicyTable />
       </Section>
       {ctl && (
-        <Section title="Enforced now" hint="Set for this business and enforced by the backend, outside any model." right={<Link href="/control/decisions" className="ui-btn ui-btn-ghost ui-btn-sm" style={{ marginRight: -10 }}>Change in Decisions</Link>}>
+        <Section title="Enforced now" hint="Set for this business. Fixed rules in Starlane enforce it, never an AI model." right={<Link href="/control/decisions" className="ui-btn ui-btn-ghost ui-btn-sm" style={{ marginRight: -10 }}>Change in Decisions</Link>}>
           <dl className={c.facts}>
             <div><dt>Autonomy ceiling</dt><dd className="num">{ctl.autonomyCeiling}</dd></div>
             <div><dt>Pilot mode</dt><dd>{ctl.pilotMode === "SHADOW" ? "Shadow, nothing is changed" : "Live, approved decisions run"}</dd></div>
@@ -249,7 +249,7 @@ function AutomationTab() {
   return (
     <div className="flex flex-col" style={{ gap: 12, maxWidth: 640 }}>
       <p style={P}>
-        Automations in Starlane are workflows you deploy from a proposal on <Link style={A} href="/prepared">Prepared</Link>. Each one starts in shadow mode,
+        Automations in Starlane are workflows you turn on from a proposal on <Link style={A} href="/prepared">Prepared</Link>. Each one starts in shadow mode,
         never sends a message on its own, and has an action budget per run.
       </p>
       <p style={P}>

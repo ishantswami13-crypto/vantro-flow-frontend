@@ -13,7 +13,7 @@ import { IconScan } from "@/components/v32/icons";
 import { StatusChip, toneForStatus, type StatusTone } from "@/components/ui/Badge";
 import { EvidenceSetDrawer } from "@/components/v32/EvidenceSetDrawer";
 import { listThreads, type ScanThread } from "@/lib/scanStore";
-import { personFirstName, businessName, plain, SectionHead, QuietLine, QuietError, OFFLINE_LINE } from "@/components/os/bridge/kit";
+import { personFirstName, businessName, plain, SectionHead, QuietLine, QuietError } from "@/components/os/bridge/kit";
 import css from "@/components/os/bridge/bridge.module.css";
 import { decisionsApi, daysUntil, STATUS_LABEL, BAND_LABEL, type DecisionListItem } from "@/lib/decisions";
 import type { BridgeView, WatchEvent, FeatureAction, Mission } from "../../packages/contracts/src/features";
@@ -162,7 +162,7 @@ export default function BridgePage() {
           {data && <HeaderMeta data={data} />}
         </PageHeader>
 
-        {failed && !data && <QuietError message={`The Bridge didn't load. ${OFFLINE_LINE}`} onRetry={load} />}
+        {failed && !data && <QuietError message="The Bridge didn't load. Check your connection and try again." onRetry={load} />}
 
         {loading && !data && !failed && <BridgeSkeleton />}
 
@@ -451,7 +451,7 @@ function deadlineOf(d: DecisionListItem): { text: string; now: boolean } | null 
   const date = d.deadline || d.window?.latestSafeAt || null;
   const days = daysUntil(date);
   if (days == null) return null;
-  if (days < 0) return { text: `Window closed ${plural(-days, "day")} ago`, now: true };
+  if (days < 0) return { text: `Deadline passed ${plural(-days, "day")} ago`, now: true };
   if (days === 0) return { text: "Decide today", now: true };
   if (days <= 7) return { text: `Decide within ${plural(days, "day")}`, now: days <= 3 };
   return { text: `Decide by ${formatDate(date)}`, now: false };

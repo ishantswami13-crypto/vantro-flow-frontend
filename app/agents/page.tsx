@@ -49,7 +49,7 @@ export default function AgentsPage() {
         {!loading && !!error && <ErrorState title="Agents didn't load" message={humaneError(error, NETWORK_ERROR)} onRetry={reload} />}
 
         {data && tab === "running" && (
-          agents.length === 0 ? <p className="wk-empty">No agent is registered for this workspace. Agents appear once the backend registers them; nothing runs in the meantime.</p> : (
+          agents.length === 0 ? <p className="wk-empty">No agent is registered for this workspace. Agents appear here once they are set up for your business. Until then, nothing runs.</p> : (
             <>
               <WorkforceStrip agents={agents} missions={missions.data ? allMissions : null} />
               <section aria-label="Agents">
@@ -82,7 +82,7 @@ export default function AgentsPage() {
                   <div key={n.name} role="row" className="wk-row" style={{ gridTemplateColumns: PLANNED_COLS, alignItems: "start" }}>
                     <div role="cell" className="wk-title">{n.name}</div>
                     <div role="cell" className="wk-sub" style={{ lineHeight: 1.55 }}>{n.reason}</div>
-                    <div role="cell" className="mt-1.5 md:mt-0"><StatusChip tone="unknown">Not built</StatusChip></div>
+                    <div role="cell" className="mt-1.5 md:mt-0"><StatusChip tone="unknown">Not available yet</StatusChip></div>
                   </div>
                 ))}
               </div>

@@ -4,7 +4,7 @@ import { GuideSidebar } from "@/components/marketing/product/Guide";
 
 export const metadata: Metadata = {
   title: { default: "Product guide — Starlane", template: "%s — Starlane" },
-  description: "Everything in Starlane, page by page: the Bridge, the owner briefing, decisions with evidence, agents, Watch, Discover, Simulate, sources, control, and the desktop and mobile apps — each with its real status.",
+  description: "Everything in Starlane, page by page: the Bridge, Scan, Watch, Simulate, Prepared, Missions, Memory, sources, control, and the desktop and mobile apps, each with its real status.",
 };
 
 export default function ProductLayout({ children }: { children: React.ReactNode }) {

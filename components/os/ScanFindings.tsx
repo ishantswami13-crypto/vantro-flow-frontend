@@ -121,7 +121,7 @@ function ProcessPanel({ scan }: { scan: ScanResult }) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 16 }}>
         {p.bottleneck && <p style={P}><span style={{ color: "var(--ink)" }}>Where it slows down.</span> {p.bottleneck.why}</p>}
-        {p.documentedVsActual && <p style={P}><span style={{ color: "var(--ink)" }}>Stated against real.</span> {p.documentedVsActual.documented.label}. {p.documentedVsActual.actual.label}.</p>}
+        {p.documentedVsActual && <p style={P}><span style={{ color: "var(--ink)" }}>On paper against in practice.</span> {p.documentedVsActual.documented.label}. {p.documentedVsActual.actual.label}.</p>}
         {p.manualWork && <p style={META}>{p.manualWork.humanEffort.assumption}</p>}
         {p.notObservable && p.notObservable.length > 0 && (
           <p style={META}>Can&rsquo;t see from this data: {p.notObservable.map((n) => n.what.toLowerCase()).join("; ")}.</p>

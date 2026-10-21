@@ -56,7 +56,7 @@ export function EvidenceDrawer({
       eyebrow={<span className="section-label" style={{ margin: 0 }}>Evidence</span>}
       titleSize={18}
       subtitle={record}
-      footer="Conclusion → analysis → evidence → source record. Every figure in Starlane can be traced back to here."
+      footer="Read it from the conclusion, through the analysis and evidence, down to the source record. Every figure in Starlane traces back to here."
     >
       <p className={css.intro}>
         Facts were read directly from your records or the external event. Assumptions are planning parameters. Forecasts are projections, not observations.

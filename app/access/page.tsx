@@ -27,12 +27,12 @@ const EMPTY: ApplicationInput = {
 function stepErrors(step: number, v: ApplicationInput): Record<string, string> {
   const e: Record<string, string> = {};
   if (step === 0) {
-    if (v.name.trim().length < 2) e.name = "Name is required";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email.trim())) e.email = "Enter a valid work email";
-    if (v.company.trim().length < 2) e.company = "Company is required";
-    if (v.role.trim().length < 2) e.role = "Role is required";
+    if (v.name.trim().length < 2) e.name = "Enter your name";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email.trim())) e.email = "Enter your full work email";
+    if (v.company.trim().length < 2) e.company = "Enter your company's name";
+    if (v.role.trim().length < 2) e.role = "Enter your role";
     if (!v.companySize) e.companySize = "Choose a company size";
-    if (v.industry.trim().length < 2) e.industry = "Industry is required";
+    if (v.industry.trim().length < 2) e.industry = "Enter your industry";
     if (!v.country) e.country = "Choose a country";
   }
   if (step === 1) {
@@ -40,8 +40,8 @@ function stepErrors(step: number, v: ApplicationInput): Record<string, string> {
     if (v.willConnectSystems === null) e.willConnectSystems = "Choose yes or no";
   }
   if (step === 2) {
-    if (v.problem.trim().length < 20) e.problem = "A sentence or two, please (at least 20 characters)";
-    if (v.desiredOutcome.trim().length < 10) e.desiredOutcome = "At least 10 characters";
+    if (v.problem.trim().length < 20) e.problem = "A sentence or two (at least 20 characters)";
+    if (v.desiredOutcome.trim().length < 10) e.desiredOutcome = "A few words more (at least 10 characters)";
   }
   return e;
 }
@@ -99,16 +99,16 @@ export default function RequestAccessPage() {
       if (status === 400 && body.fields) {
         setErrors(body.fields);
         setStep(Math.min(...Object.keys(body.fields).map(fieldStep)));
-        setSubmitError(body.error || "Please correct the highlighted fields");
+        setSubmitError(body.error || "A few answers need a second look. They're marked below.");
       } else if (status === 429) {
-        setSubmitError(body.error || "Too many applications from this network. Please try again later.");
+        setSubmitError(body.error || "Too many applications came from this network. Try again later.");
       } else if (!body.success) {
-        setSubmitError(body.error || "Something went wrong. Please try again.");
+        setSubmitError(body.error || "Your application wasn't sent. Try again in a moment.");
       } else {
         setResult(body);
       }
     } catch {
-      setSubmitError("Could not reach Starlane. Check your connection and try again.");
+      setSubmitError("Couldn't reach Starlane. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -131,7 +131,7 @@ export default function RequestAccessPage() {
         <p className="sl-p" style={{ marginTop: 12 }}>
           {step === 0 && "Starlane is onboarding a small number of companies at a time. This takes about three minutes."}
           {step === 1 && "This decides what Starlane can connect to on day one. We tell you straight away if something isn't supported yet."}
-          {step === 2 && "Be specific — the more concrete the problem, the better we can tell whether Starlane will help."}
+          {step === 2 && "Be specific. The more concrete the problem, the better we can tell whether Starlane will help."}
         </p>
 
         <ol className="sl-steps" aria-label="Progress">
@@ -190,7 +190,7 @@ export default function RequestAccessPage() {
                 {catalog === null && !catalogError && (
                   <div className="sl-choices" aria-busy="true">{[0, 1, 2, 3].map((i) => <div key={i} className="sl-skeleton" style={{ height: 46 }} />)}</div>
                 )}
-                {catalogError && <p className="sl-alert" style={{ marginBottom: 12 }}>The systems list could not be loaded. Describe what you use below instead.</p>}
+                {catalogError && <p className="sl-alert" style={{ marginBottom: 12 }}>The list of systems didn't load. Describe what you use below instead.</p>}
                 {grouped.map((g) => (
                   <div key={g.cat} style={{ marginBottom: 16 }}>
                     <p className="sl-hint" style={{ fontSize: 12, marginBottom: 6, color: "var(--sl-ink-faint)" }}>{CATEGORY_LABEL[g.cat] || g.cat}</p>
@@ -280,7 +280,7 @@ function Result({ result, headingRef }: { result: SubmitResult; headingRef: Reac
           <span className={`sl-badge ${TIER_TONE[el.tier]}`}>{el.label}</span>
           <ul className="sl-reasons">{el.reasons.map((r) => <li key={r}>{r}</li>)}</ul>
           <p className="sl-hint" style={{ fontSize: 12, marginTop: 16, color: "var(--sl-ink-faint)" }}>
-            Assessed by fixed, published rules ({el.rules_version}) — not by an AI. {result.downloadToken ? "" : "A person reviews every application before access is granted."}
+            Assessed by fixed, published rules ({el.rules_version}), not by an AI. {result.downloadToken ? "" : "A person reviews every application before access is granted."}
           </p>
         </div>
       )}
@@ -295,7 +295,7 @@ function Result({ result, headingRef }: { result: SubmitResult; headingRef: Reac
       {statusHref && (
         <div style={{ marginTop: 28 }}>
           <p className="sl-p">
-            Keep this private link to check your status at any time{result.emailed ? " — we also emailed it to you." : ". We could not email it, so bookmark it now."}
+            Keep this private link to check your status at any time{result.emailed ? ". We also emailed it to you." : ". We couldn't email it, so bookmark it now."}
           </p>
           <div className="sl-hero-ctas" style={{ marginTop: 16 }}>
             <Link className={`sl-btn ${result.downloadToken ? "sl-btn-outline" : "sl-btn-solid"}`} href={statusHref}>Open my status page</Link>
@@ -305,7 +305,7 @@ function Result({ result, headingRef }: { result: SubmitResult; headingRef: Reac
 
       {result.duplicate && (
         <p className="sl-p" style={{ marginTop: 20 }}>
-          Your first application is still active — use the status link you received with it. For privacy, this page does not show another application’s status.
+          Your first application is still active. Use the status link you received with it. For privacy, this page does not show another application’s status.
         </p>
       )}
     </div>

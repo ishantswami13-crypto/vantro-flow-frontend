@@ -132,7 +132,7 @@ export default function DecisionControlsPage() {
         @media (min-width: 760px) { .sw-row { grid-template-columns: minmax(0, 1fr) 96px 84px; } }
       `}</style>
       <ControlPage>
-        <ControlHeader active="decisions" subtitle="Pilot mode and stop switches, enforced by the backend outside any model." />
+        <ControlHeader active="decisions" subtitle="Pilot mode and stop switches. Fixed rules in Starlane enforce them, never an AI model." />
 
         {q.isLoading && <SkeletonRows rows={4} height={56} />}
         {q.isError && <ErrorState title="Couldn't load decision controls" message={OFFLINE} onRetry={() => q.refetch()} />}

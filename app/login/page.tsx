@@ -48,7 +48,7 @@ export default function LoginPage() {
       window.location.href = link;
     } catch (err: unknown) {
       setSignedInAs(null);
-      setError(err instanceof Error ? err.message : "Could not reach the app. Sign in again.");
+      setError(err instanceof TypeError || !(err instanceof Error) ? "Couldn't reach Starlane. Check your connection and sign in again." : err.message);
     } finally { setLoading(false); }
   };
 
@@ -70,7 +70,7 @@ export default function LoginPage() {
 
   const handleEmailNext = (ev: React.FormEvent) => {
     ev.preventDefault();
-    if (!validateEmail(form.email)) { setError("Enter a valid email address"); return; }
+    if (!validateEmail(form.email)) { setError("That email doesn't look complete. Check it and try again."); return; }
     setError(""); setStep("password");
   };
 
@@ -82,7 +82,7 @@ export default function LoginPage() {
       else { localStorage.removeItem("vantro_saved_email"); localStorage.removeItem("vantro_remember"); }
       await finishSignIn(data, rememberMe);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Invalid email or password");
+      setError(err instanceof TypeError ? "Couldn't reach Starlane. Check your connection and try again." : err instanceof Error ? err.message : "That email and password don't match. Check them and try again.");
     } finally { setLoading(false); }
   };
 
@@ -131,7 +131,7 @@ export default function LoginPage() {
         {!handedOff && step === "email" && (
           <form className="auth-form" onSubmit={handleEmailNext} noValidate>
             <div className="field">
-              <label htmlFor="email">Work Email</label>
+              <label htmlFor="email">Work email</label>
               <div style={{position:"relative"}}>
                 <input id="email" type="email" autoFocus autoComplete="email" placeholder="you@company.com"
                   value={form.email}

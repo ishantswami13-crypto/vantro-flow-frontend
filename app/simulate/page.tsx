@@ -279,7 +279,7 @@ function ScenarioResult({ result, invoice, mode }: { result: SimulateScenarioRes
               <th scope="col">As things are<span className={lab.sub}>Today</span></th>
               <th scope="col" className={lab.focus}>This what-if<span className={lab.sub}>{mode === "earlier" ? "Collected" : "Stays unpaid"}</span></th>
               {cases && <th scope="col">Best case<span className={lab.sub}>Reasonable</span></th>}
-              {cases && <th scope="col">Stress<span className={lab.sub}>Worst bounded</span></th>}
+              {cases && <th scope="col">Stress<span className={lab.sub}>Worst likely</span></th>}
             </tr>
           </thead>
           <tbody>

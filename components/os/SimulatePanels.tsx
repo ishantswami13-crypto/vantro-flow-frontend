@@ -181,10 +181,11 @@ function ReplayCard({ w }: { w: Workflow }) {
             <RFig value={formatCount(sim.episodes)} label={`Would have fired, ${sim.perMonth} a month`} />
             <RFig value={amount(sim.amountTriggered)} label="Amount it covered" />
             <RFig value={formatCount(sim.paidWithinWindowWithoutAction)} label={`Paid anyway in 7 days (${pct(sim.baselineRate)})`} />
-            <RFig value={`${sim.humanHoursPerMonth}h`} label="Checking time saved a month, estimate" />
+            <RFig value={`${sim.humanHoursPerMonth}h`} label="Hours of checking saved a month, estimated" />
           </div>
           <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--ink-3)", lineHeight: 1.55 }}>
-            {sim.replays} weekly replays over {sim.lookbackDays} days. Future data: {sim.leakage}.
+            {sim.replays} weekly replays over {sim.lookbackDays} days.{" "}
+            {/^none/i.test(sim.leakage) ? "Each replay used only what was known that week." : `Future data: ${sim.leakage}.`}
           </p>
           {sim.cannotSay && <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--ink-2)", lineHeight: 1.55 }}><span style={{ color: "var(--ink)", fontWeight: 500 }}>Limit:</span> {sim.cannotSay}</p>}
           {sim.sample.length > 0 && (

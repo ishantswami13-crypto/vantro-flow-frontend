@@ -110,13 +110,13 @@ export default function BillingPage() {
     setLoading(planId);
     try {
       const loaded = await loadRazorpay();
-      if (!loaded) throw new Error("Failed to load payment gateway. Check your connection.");
+      if (!loaded) throw new Error("Razorpay checkout didn't open. Check your connection and try again.");
       const { order, key } = await api.billing.createOrder({ plan: planId, period: billing });
       await new Promise<void>((resolve, reject) => {
         const rzp = new window.Razorpay({
           key, amount: order.amount, currency: order.currency, order_id: order.id,
           name: "Starlane",
-          description: `${planId.charAt(0).toUpperCase() + planId.slice(1)} Plan — ${billing}`,
+          description: `${planId.charAt(0).toUpperCase() + planId.slice(1)} plan, billed ${billing === "annual" ? "yearly" : "monthly"}`,
           prefill: { email: user?.email || "", contact: user?.phone || "", name: user?.business_name || "" },
           theme: { color: "var(--accent)" },
           handler: async (response: any) => {
@@ -137,7 +137,7 @@ export default function BillingPage() {
         rzp.open();
       });
     } catch (e: any) {
-      if (e?.message !== "Payment cancelled") alert(e?.message || "Payment failed. Please try again.");
+      if (e?.message !== "Payment cancelled") alert(e instanceof TypeError ? "Couldn't reach Starlane. Check your connection and try again." : e?.message || "The payment didn't go through. Try again.");
     } finally {
       setLoading(null);
     }
@@ -157,16 +157,16 @@ export default function BillingPage() {
         {successPlan && (
           <div className="px-4 py-3 rounded-xl bg-success/10 border border-success/30 text-sm text-success font-semibold flex items-center gap-2">
             <FiCheck size={15} />
-            You're now on <span className="capitalize font-black">{successPlan}</span>.
+            You're now on <span className="capitalize font-semibold">{successPlan}</span>.
           </div>
         )}
 
-        {/* ── HEADER — pain framing for free, status for paid ───── */}
+        {/* ── HEADER — plan status. Being on Free is not an error, so it is never red. */}
         {isFree ? (
-          <div className="rounded-2xl border border-danger/25 bg-danger/5 p-6">
+          <div className="rounded-2xl border border-border bg-surface p-6">
             <div className="flex items-start gap-4">
               <div>
-                <h1 className="text-lg font-black text-primary mb-1">
+                <h1 className="text-lg font-semibold text-primary mb-1">
                   You're on the Free plan.
                 </h1>
                 <p className="text-sm text-secondary leading-relaxed">
@@ -182,14 +182,14 @@ export default function BillingPage() {
                 <FiZap size={18} className="text-success" />
               </div>
               <div>
-                <p className="text-sm font-black text-primary">
-                  {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} Plan — Active
+                <p className="text-sm font-semibold text-primary">
+                  {currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} plan, active
                 </p>
                 <p className="text-xs text-muted">Thank you for building with Starlane.</p>
               </div>
             </div>
             <button className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-secondary hover:text-primary hover:border-border transition-all">
-              Manage Payment
+              Manage payment
             </button>
           </div>
         )}
@@ -207,7 +207,7 @@ export default function BillingPage() {
                 ].join(" ")}>
                 {b.charAt(0).toUpperCase() + b.slice(1)}
                 {b === "annual" && (
-                  <span className="text-2xs font-black bg-success text-white px-1.5 py-0.5 rounded-full">
+                  <span className="text-2xs font-semibold bg-success text-white px-1.5 py-0.5 rounded-full">
                     −20%
                   </span>
                 )}
@@ -216,7 +216,7 @@ export default function BillingPage() {
           </div>
           {billing === "annual" && (
             <p className="text-xs text-success font-semibold">
-              Save up to ₹{annualSave(4999, 3999)}/year — 2 months free
+              Save up to ₹{annualSave(4999, 3999)} a year, about 2 months free
             </p>
           )}
         </div>
@@ -234,17 +234,17 @@ export default function BillingPage() {
                 <div key={plan.id} className="relative rounded-2xl bg-[#F5F4F0] p-7 flex flex-col shadow-2xl md:-mt-3 md:mb-3">
                   {plan.badge && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-2xs font-black tracking-widest uppercase text-white bg-black shadow-lg">
-                        ★ {plan.badge}
+                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-2xs font-medium text-white bg-black shadow-lg">
+                        {plan.badge}
                       </span>
                     </div>
                   )}
 
                   <div className="mb-6">
                     <p className="text-2xs font-bold tracking-[0.12em] uppercase text-black/40 mb-2">{plan.name}</p>
-                    <p className="text-base font-black text-black mb-4 leading-tight">{plan.tagline}</p>
+                    <p className="text-base font-semibold text-black mb-4 leading-tight">{plan.tagline}</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-black text-black tracking-tight">
+                      <span className="text-4xl font-medium text-black tracking-tight">
                         ₹{price.toLocaleString("en-IN")}
                       </span>
                       <span className="text-black/50 text-sm ml-1">/mo</span>
@@ -273,11 +273,11 @@ export default function BillingPage() {
                   <button
                     onClick={() => !isCurrent && handleUpgrade(plan.id)}
                     disabled={isCurrent || !!loading}
-                    className="w-full py-3.5 rounded-xl text-sm font-black text-white bg-black hover:bg-black/85 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                    className="w-full py-3.5 rounded-xl text-sm font-semibold text-white bg-black hover:bg-black/85 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                     {loading === plan.id
                       ? <><span className="w-4 h-4 border-2 border-border border-t-white rounded-full animate-spin" /> Processing...</>
                       : isCurrent
-                      ? "✓ Current Plan"
+                      ? "Current plan"
                       : <>{plan.cta} <FiArrowRight size={14} /></>
                     }
                   </button>
@@ -302,12 +302,12 @@ export default function BillingPage() {
 
                 {plan.badge && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-2xs font-black tracking-widest uppercase ${
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-2xs font-medium ${
                       isPro
                         ? "text-accent bg-accent/10 border border-accent/30"
                         : "text-muted bg-surface-3 border border-border"
                     }`}>
-                      {isPro ? "⚡ " : ""}{plan.badge}
+                      {plan.badge}
                     </span>
                   </div>
                 )}
@@ -319,9 +319,9 @@ export default function BillingPage() {
 
                 <div className="mb-6">
                   <p className="text-2xs font-bold tracking-[0.12em] uppercase text-muted mb-2">{plan.name}</p>
-                  <p className="text-base font-black text-primary mb-4 leading-tight">{plan.tagline}</p>
+                  <p className="text-base font-semibold text-primary mb-4 leading-tight">{plan.tagline}</p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-primary tracking-tight">
+                    <span className="text-4xl font-medium text-primary tracking-tight">
                       ₹{price.toLocaleString("en-IN")}
                     </span>
                     <span className="text-muted text-sm ml-1">/mo</span>
@@ -359,7 +359,7 @@ export default function BillingPage() {
                   {loading === plan.id
                     ? <><span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" /> Processing...</>
                     : isCurrent
-                    ? "✓ Current Plan"
+                    ? "Current plan"
                     : <>{plan.cta} <FiArrowRight size={14} /></>
                   }
                 </button>
@@ -376,7 +376,7 @@ export default function BillingPage() {
           {[
             { icon: FiShield, text: "256-bit encrypted" },
             { icon: FiCheck,  text: "Cancel anytime, no lock-in" },
-                        { icon: FiMessageSquare, text: "Pay via Razorpay — Indian UPI accepted" },
+                        { icon: FiMessageSquare, text: "Pay through Razorpay with UPI, card or netbanking" },
           ].map(({ icon: Icon, text }) => (
             <span key={text} className="flex items-center gap-1.5">
               <Icon size={12} className="text-success" />
@@ -387,7 +387,7 @@ export default function BillingPage() {
 
         {/* ── FAQ ─────────────────────────────────────────────── */}
         <div className="space-y-2">
-          <p className="text-xs font-bold text-muted uppercase tracking-wider mb-4">Common Questions</p>
+          <p className="text-xs font-bold text-muted uppercase tracking-wider mb-4">Common questions</p>
           {FAQS.map(({ q, a }, i) => (
             <div key={i} className="rounded-xl border border-border bg-surface-1 overflow-hidden">
               <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
@@ -412,7 +412,7 @@ export default function BillingPage() {
             </div>
             <div>
               <p className="text-sm font-bold text-primary">Larger organizations</p>
-              <p className="text-xs text-muted">Several businesses or custom sources — talk to us</p>
+              <p className="text-xs text-muted">Several businesses or custom sources? Talk to us.</p>
             </div>
           </div>
           <a href="mailto:ishantswami13@gmail.com?subject=Starlane Enterprise Enquiry"
@@ -425,7 +425,7 @@ export default function BillingPage() {
         {/* ── BILLING HISTORY ─────────────────────────────────── */}
         <div className="rounded-2xl border border-border bg-surface-1 overflow-hidden">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <p className="text-sm font-bold text-primary">Invoice History</p>
+            <p className="text-sm font-bold text-primary">Invoice history</p>
             <FiCalendar size={14} className="text-muted" />
           </div>
           <div className="divide-y divide-border/60">

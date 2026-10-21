@@ -42,7 +42,7 @@ export default function InvoiceViewPage() {
     if (!id) return;
     api.invoices.get(id as string)
       .then(d => { setInvoice(d.invoice); setBiz(d.business); })
-      .catch(e => setError(e.message || "Invoice not found"))
+      .catch(e => setError(e instanceof TypeError ? "Couldn't reach Starlane. Check your connection and try again." : "It may have been deleted, or the link may be incomplete."))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -51,7 +51,7 @@ export default function InvoiceViewPage() {
     if (navigator.share) {
       navigator.share({ title: `Invoice ${invoice?.invoice_number}`, url }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(url).then(() => alert("Link copied!"));
+      navigator.clipboard.writeText(url).then(() => alert("Link copied"));
     }
   };
 
@@ -81,9 +81,9 @@ export default function InvoiceViewPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <p className="text-red-500 font-semibold mb-2">Invoice not found</p>
+          <p className="text-red-500 font-semibold mb-2">This invoice didn't open</p>
           <p className="text-gray-400 text-sm mb-4">{error}</p>
-          <button onClick={() => router.push("/collections")} className="text-blue-600 text-sm underline">← Back to Collections</button>
+          <button onClick={() => router.push("/collections")} className="text-blue-600 text-sm underline">Back to Collections</button>
         </div>
       </div>
     );
@@ -142,7 +142,7 @@ export default function InvoiceViewPage() {
               {/* Business details */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-sm">
+                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
                     {(biz.business_name || "V").charAt(0).toUpperCase()}
                   </div>
                   <span className="text-white font-bold text-base tracking-tight">
@@ -160,7 +160,7 @@ export default function InvoiceViewPage() {
               {/* Invoice meta */}
               <div className="text-right">
                 <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-1">Invoice</p>
-                <p className="text-white font-black text-xl font-mono">{invoice.invoice_number || `INV-${id?.slice(0,8)}`}</p>
+                <p className="text-white font-semibold text-xl font-mono">{invoice.invoice_number || `INV-${id?.slice(0,8)}`}</p>
 
                 {/* Status pill */}
                 <div className="mt-2 flex justify-end">
@@ -199,10 +199,10 @@ export default function InvoiceViewPage() {
                 <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2">Bill To</p>
                 <p className="font-bold text-gray-800 text-base">{invoice.customer_name}</p>
                 {invoice.customer_phone && (
-                  <p className="text-gray-500 text-xs mt-1">📞 {invoice.customer_phone}</p>
+                  <p className="text-gray-500 text-xs mt-1">Phone {invoice.customer_phone}</p>
                 )}
                 {invoice.customer_email && (
-                  <p className="text-gray-500 text-xs">✉ {invoice.customer_email}</p>
+                  <p className="text-gray-500 text-xs">{invoice.customer_email}</p>
                 )}
                 {invoice.customer_address && (
                   <p className="text-gray-500 text-xs mt-1">{invoice.customer_address}</p>
@@ -215,7 +215,7 @@ export default function InvoiceViewPage() {
               {/* Quick stats */}
               <div className="text-right ml-4">
                 <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Amount Due</p>
-                <p className="text-3xl font-black text-gray-900 tracking-tight">{fmtINR(invoice.invoice_amount)}</p>
+                <p className="text-3xl font-semibold text-gray-900 tracking-tight">{fmtINR(invoice.invoice_amount)}</p>
                 {invoice.payment_link && !isPaid && (
                   <a href={invoice.payment_link} target="_blank" rel="noopener noreferrer"
                     className="no-print inline-block mt-2 px-4 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-all">
@@ -312,8 +312,8 @@ export default function InvoiceViewPage() {
                   </div>
                 )}
                 <div className="flex justify-between items-center py-3 border-t-2 border-gray-900">
-                  <span className="font-black text-gray-900 text-base">Total</span>
-                  <span className="font-black text-gray-900 text-xl">{fmtINR(invoice.invoice_amount)}</span>
+                  <span className="font-semibold text-gray-900 text-base">Total</span>
+                  <span className="font-semibold text-gray-900 text-xl">{fmtINR(invoice.invoice_amount)}</span>
                 </div>
               </div>
             </div>
@@ -363,7 +363,7 @@ export default function InvoiceViewPage() {
                 </p>
                 {isPaid && invoice.payment_date && (
                   <p className="text-xs text-green-600 font-semibold mt-1">
-                    ✅ Paid on {fmtDate(invoice.payment_date)}
+                    Paid on {fmtDate(invoice.payment_date)}
                   </p>
                 )}
               </div>

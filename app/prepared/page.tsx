@@ -44,7 +44,7 @@ const TABS: { key: TabKey; label: string }[] = [
 
 const EMPTY_COPY: Record<TabKey, string> = {
   needs_you: "Nothing is waiting on you. Decisions, prepared actions and reminders appear here when something material changes and there is still time to act.",
-  for_you: "Nothing is flagged for you. Triggered watches, opportunities and forecast risk appear here.",
+  for_you: "Nothing is flagged for you. Watches that are met, opportunities and cash forecast risks appear here.",
   upcoming: "Nothing is scheduled. Work prepared ahead of a known date will appear here.",
   completed: "No completed items yet. Actions you approve appear here.",
   dismissed: "Nothing dismissed. Actions you reject appear here.",
@@ -73,7 +73,7 @@ const OPEN_LABEL: Record<string, string> = {
 const TRIGGER_LABEL: Record<string, string> = {
   FLAG_BAD_DEBT: "Likely bad debt",
   CONTACT_CUSTOMER: "Reminder",
-  watch_triggered: "Watch triggered",
+  watch_triggered: "Watch met",
   forecast_risk: "Cash forecast risk",
   opportunity_detected: "Opportunity",
 };
