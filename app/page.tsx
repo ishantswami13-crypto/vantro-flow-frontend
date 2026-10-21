@@ -14,6 +14,7 @@ import { HeroCards } from "@/components/marketing/landing/HeroCards";
 import { BusinessGraph } from "@/components/marketing/landing/BusinessGraph";
 import { Morning } from "@/components/marketing/landing/Morning";
 import { CountUp } from "@/components/marketing/landing/CountUp";
+import { ProductTour } from "@/components/marketing/landing/ProductTour";
 import { ApproveLoop } from "@/components/marketing/landing/ApproveLoop";
 import { BridgeDiagram } from "@/components/marketing/landing/BridgeDiagram";
 import { DashboardThumb, ReportThumb, RuleThumb } from "@/components/marketing/landing/ProblemViz";
@@ -260,6 +261,20 @@ export default function LandingPage() {
             <div className="sl-hero-ctas">
               <Link href="/product" className="sl-link-arrow">All seven features, each with its real status</Link>
             </div>
+          </div>
+        </section>
+
+        {/* 6b — The real screens */}
+        <section className="sl-dark slh-section slh-tour" aria-labelledby="tour-h">
+          <div className="slh-glow slh-glow-2" aria-hidden />
+          <div className="sl-wrap">
+            <div className="slh-center-head" data-reveal>
+              <p className="sl-eyebrow">The real product</p>
+              <h2 id="tour-h" className="slh-h2">One overdue invoice, through six screens.</h2>
+              <p className="sl-p">Not mock-ups. These are screens from the Starlane app, following Mehta Hardware’s invoice from the alert to the approved reminder and what Starlane learned.</p>
+            </div>
+            <div data-reveal><ProductTour /></div>
+            <p className="sl-product-caption">Captured from the Starlane app on a test company’s books (Gupta Traders, test data). External messages were switched off.</p>
           </div>
         </section>
 
