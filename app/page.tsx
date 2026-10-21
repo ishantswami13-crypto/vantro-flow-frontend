@@ -1,210 +1,247 @@
 import "./landing.css";
-import "./home.css";
+import "./start.css";
 import Link from "next/link";
 import { Nav } from "@/components/marketing/Nav";
 import { Footer } from "@/components/marketing/Footer";
-import { TodaySurface, DecisionSurface } from "@/components/marketing/landing/ProductSurfaces";
-import { GROUPS, groupItems } from "@/components/marketing/landing/integrationsData";
+import { HeroStage } from "@/components/marketing/home/HeroStage";
+import { SystemsPlate, StatePlate, EvidenceStack } from "@/components/marketing/home/Plates";
+import { WatchRoom, SimulationRoom, VerificationRecord } from "@/components/marketing/home/Rooms";
+import { Glyph } from "@/components/marketing/home/Glyph";
+import { InView, MotionGate } from "@/components/marketing/home/InView";
+import { CATEGORIES, type Item } from "@/components/marketing/landing/integrationsData";
 
-// Starlane, public homepage. Seven sections: what Starlane is, with the
-// product; the problem; how it works; one decision in full; integrations;
-// control and deployment; access. Light is the working surface; dark is kept
-// for the product in depth and the close. Product surfaces use a fictional
-// company and say so. Integration statuses come from the same list as
-// /integrations, which mirrors the backend connector registry. No logos,
-// testimonials, certifications or metrics.
+// Starlane, public homepage. Ten frames that tell one story on one fictional
+// company (Halden Supply Co.): the systems, the business as a record, what
+// changed, the evidence, the options, and what happened afterwards. Dark
+// sections are product rooms; light sections are the editorial argument.
+// Every product figure is illustrative and labelled so. Every capability
+// shown exists in the product; integration statuses come from the registry.
 
-const SYSTEMS = [
-  { k: "Accounting and ERP", has: "Invoices, payments, terms, orders", gap: "Which overdue balance is about to matter" },
-  { k: "Banking", has: "Movements and balances", gap: "Whether expected cash actually arrived" },
-  { k: "CRM", has: "Accounts, contacts, pipeline", gap: "Which customer is quietly ordering less" },
-  { k: "Inventory", has: "Stock, cover, open orders", gap: "Which shortage reaches which customer order" },
-  { k: "Communication", has: "Promises, disputes, approvals", gap: "Who committed to what, and whether it happened" },
-  { k: "External signals", has: "Exchange rates, public events", gap: "Which part of the business they touch" },
+const CAPTION = "Illustrative workflow · Fictional company · Halden Supply Co";
+
+const BAND: Array<{ k: string; ids: string[] }> = [
+  { k: "Finance", ids: ["accounting", "banking"] },
+  { k: "ERP", ids: ["erp"] },
+  { k: "CRM", ids: ["crm"] },
+  { k: "Commerce", ids: ["commerce", "payments"] },
+  { k: "Data", ids: ["spreadsheets", "inventory", "databases"] },
+  { k: "Communication", ids: ["communication", "support"] },
+  { k: "External", ids: ["world"] },
 ];
+const bandItems = (ids: string[]): Item[] => CATEGORIES.filter((c) => ids.includes(c.id)).flatMap((c) => c.items);
+const COUNT = (s: string) => CATEGORIES.reduce((n, c) => n + c.items.filter((i) => i.s === s).length, 0);
 
-const LOOP = [
-  { k: "Signal", h: "Know what changed", b: "Each sync is compared with the last. Material changes are raised; the rest stays quiet." },
-  { k: "Context", h: "Connect it to the business", b: "Customers, suppliers, products, invoices and payments are held as one model, linked by what happened between them." },
-  { k: "Evidence", h: "See the basis", b: "Figures are labelled as fact, calculated, assumption or estimate, with the records they came from." },
-  { k: "Decision", h: "Compare before committing", b: "Real options are ranked by explicit rules and simulated as ranges. A person decides." },
-  { k: "Action", h: "Act with control", b: "Proposed actions wait for approval. The message you approve is the message sent, once." },
-  { k: "Verification", h: "Check the result", b: "Afterwards, Starlane checks the books for what actually happened, and records the outcome." },
-];
-
-// Verified against the product and backend; see /security.
 const CONTROLS = [
-  { k: "Approval queue", b: "Proposed actions wait for a person, and higher-risk action types always require approval. Opening an approval link changes nothing." },
-  { k: "Runs at most once", b: "Each approved action is claimed atomically and runs at most once. The message text you approve is the text sent." },
-  { k: "Evidence on record", b: "Figures keep their basis (fact, calculated, assumption or estimate) and the records behind them." },
-  { k: "Audit trail", b: "Decisions are logged with who made them, when, and the values before and after." },
-  { k: "Read-only connections", b: "TallyPrime is read through export only. Each Bridge device has its own credential, which you can revoke." },
-  { k: "Outbound messaging off by default", b: "Nothing is sent to customers or suppliers until messaging is explicitly enabled. AI agents are blocked from marking payments received, changing amounts or deleting records." },
+  { g: "gate", k: "Approval queue", b: "Proposed actions wait for a person. Higher-risk types always require approval." },
+  { g: "once", k: "Runs at most once", b: "Each approved action is claimed once. The text you approve is the text sent." },
+  { g: "evidence", k: "Evidence on record", b: "Every figure keeps its basis and the source records behind it." },
+  { g: "audit", k: "Audit trail", b: "Who decided, when, and the values before and after, in an append-only log." },
+  { g: "readonly", k: "Read-only connections", b: "TallyPrime is read through export only, with a revocable credential per device." },
+  { g: "signal", k: "Messaging off by default", b: "Nothing reaches a customer or supplier until outbound messaging is enabled." },
 ];
 
-const DEPLOY = [
-  { k: "Your systems stay", b: "Starlane sits alongside them. Nothing is migrated or replaced." },
-  { k: "Where it runs", b: "In the browser, and as a Windows 10 and 11 desktop app for pilots. A phone app is in testing." },
-  { k: "Scope", b: "Every request is scoped to the signed-in account, and each business’s data stays within its own account." },
-  { k: "Leaving", b: "Revoke the bridge credentials and the connection stops." },
-];
+function Index({ n, k }: { n: string; k: string }) {
+  return <p className="f-index"><span>S/{n}</span>{k}</p>;
+}
 
 export default function LandingPage() {
   return (
-    <div className="sl sl-home">
+    <div className="sl sl-start">
+      <MotionGate />
       <a className="sl-skip" href="#main">Skip to content</a>
-      <Nav />
+      <Nav tone="dark" />
       <main id="main">
-        {/* 01 — What Starlane is, and the product */}
-        <header className="st-hero">
-          <div className="st-wrap st-grid">
-            <div className="st-hero-copy">
-              <h1 className="st-display">The intelligence layer for your business.</h1>
-              <p className="st-lead">
-                Starlane brings the systems, signals and operating context of a company into one continuously updated
-                view, so teams can see what changed, decide what matters and act with evidence.
+        {/* 01 · Hero */}
+        <header className="f f-dark f-hero">
+          <div className="f-wrap f-grid">
+            <div className="f-hero-copy">
+              <h1 className="f-display">The intelligence layer for your business.</h1>
+              <p className="f-lead">
+                Starlane reads the systems your company already runs, keeps one living model of the business, and
+                shows what changed, what it means and what to do, with the evidence behind it.
               </p>
-              <div className="st-actions">
-                <Link href="/access" className="sl-btn sl-btn-solid st-btn">Request a pilot</Link>
-                <a href="#product" className="st-textlink">Explore the product<span aria-hidden>→</span></a>
+              <div className="f-actions">
+                <Link href="/access" className="sl-btn sl-btn-solid">Request a pilot</Link>
+                <a href="#how" className="f-link">See how it works<span aria-hidden>→</span></a>
               </div>
-              <p className="st-meta st-hero-meta">Private pilots · Selected organizations</p>
+              <ul className="f-facts">
+                <li><Glyph name="readonly" />Read-only connections</li>
+                <li><Glyph name="evidence" />Every figure sourced</li>
+                <li><Glyph name="gate" />A person approves</li>
+              </ul>
+              <p className="f-meta">Private pilots with selected organizations</p>
             </div>
-            <div className="st-hero-shot">
-              <TodaySurface />
-              <p className="st-cap">Illustration on a fictional company. Figures are examples.</p>
+            <div className="f-hero-stage">
+              <HeroStage />
             </div>
           </div>
+          <div className="f-wrap"><p className="f-cap f-hero-cap">{CAPTION}</p></div>
         </header>
 
-        {/* 02 — The problem */}
-        <section className="st-section" aria-labelledby="problem-h">
-          <div className="st-wrap st-grid">
-            <div className="st-col-head">
-              <p className="st-meta">The problem</p>
-              <h2 id="problem-h" className="st-h2">Your company already knows what happened. The knowledge is spread across systems.</h2>
-              <p className="st-body">Each system answers its own questions well. The questions that matter sit between them, and connecting them is left to people, reports and memory.</p>
+        {/* 02 · Fragmented systems */}
+        <section id="how" className="f f-light" aria-labelledby="f2-h">
+          <div className="f-wrap f-grid">
+            <div className="f-side">
+              <Index n="02" k="Fragmented systems" />
+              <h2 id="f2-h" className="f-h2">Your company already knows what happened.</h2>
+              <p className="f-lede">The questions that matter sit between your systems.</p>
+              <p className="f-body">Accounting knows the balance. Your team knows the promise. The bank knows whether the money arrived. Nobody connects them until it is late.</p>
+              <p className="f-note"><span className="f-key f-key-solid" />Live today <span className="f-key f-key-dash" />Planned or custom</p>
             </div>
-            <div className="st-col-body">
-              <table className="st-table st-sys">
-                <caption className="sl-sr">What each system holds, and what it cannot tell you on its own</caption>
-                <thead><tr><th scope="col">System</th><th scope="col">Holds</th><th scope="col">Can’t tell you alone</th></tr></thead>
-                <tbody>
-                  {SYSTEMS.map((s) => (
-                    <tr key={s.k}><th scope="row">{s.k}</th><td data-label="Holds">{s.has}</td><td data-label="Can’t tell you alone">{s.gap}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <div className="f-main"><SystemsPlate /></div>
           </div>
         </section>
 
-        {/* 03 — How it works: the operating model */}
-        <section id="how" className="st-section st-stone" aria-labelledby="how-h">
-          <div className="st-wrap">
-            <div className="st-head">
-              <p className="st-meta">How Starlane works</p>
-              <h2 id="how-h" className="st-h2">One operating model, from signal to verified outcome.</h2>
-            </div>
-            <ol className="st-loop">
-              {LOOP.map((s, i) => (
-                <li key={s.k}>
-                  <p className="st-loop-k"><span>{String(i + 1).padStart(2, "0")}</span>{s.k}</p>
-                  <h3>{s.h}</h3>
-                  <p>{s.b}</p>
-                </li>
-              ))}
-            </ol>
-            <p className="st-loop-foot">
-              Sources connect read-only: a local bridge for TallyPrime, file imports from any system, and public feeds.
-              <Link href="/product" className="st-textlink">How each part works<span aria-hidden>→</span></Link>
-            </p>
-          </div>
-        </section>
-
-        {/* 04 — One decision, in full */}
-        <section id="product" className="st-section st-ink" aria-labelledby="product-h">
-          <div className="st-wrap">
-            <div className="st-head st-head-split">
+        {/* 03 · The business as a record */}
+        <section className="f f-slab" aria-labelledby="f3-h">
+          <div className="f-wrap">
+            <div className="f-head f-head-split">
               <div>
-                <p className="st-meta">The product</p>
-                <h2 id="product-h" className="st-h2">One decision, with everything behind it.</h2>
+                <Index n="03" k="One model" />
+                <h2 id="f3-h" className="f-h2">One model of the business.</h2>
               </div>
-              <p className="st-body">The overdue balance from this morning’s view, opened. The evidence, the options, the exact action and who must approve it, on one screen.</p>
-            </div>
-            <DecisionSurface />
-            <p className="st-cap">Illustration on the same fictional company.</p>
-          </div>
-        </section>
-
-        {/* 05 — Integrations */}
-        <section id="connect" className="st-section" aria-labelledby="connect-h">
-          <div className="st-wrap st-grid">
-            <div className="st-col-head">
-              <p className="st-meta">Integrations</p>
-              <h2 id="connect-h" className="st-h2">Works with the systems your business already runs on.</h2>
-              <p className="st-body">Every connection carries its real status. Live works today. Planned is on the roadmap. Custom is built for your pilot on the connector framework.</p>
-              <p className="st-after"><Link href="/integrations" className="st-textlink">See every integration and its status<span aria-hidden>→</span></Link></p>
-            </div>
-            <div className="st-col-body">
-              <table className="st-table st-int">
-                <caption className="sl-sr">Integrations by category: live today, and planned or custom</caption>
-                <thead><tr><th scope="col">Category</th><th scope="col">Connects today</th><th scope="col">Planned, or custom for a pilot</th></tr></thead>
-                <tbody>
-                  {GROUPS.map((g) => {
-                    const items = groupItems(g.ids);
-                    const live = items.filter((i) => i.s === "live").map((i) => i.n);
-                    const next = items.filter((i) => i.s !== "live").map((i) => i.n);
-                    return (
-                      <tr key={g.k}>
-                        <th scope="row">{g.k}</th>
-                        <td data-label="Connects today">{live.length ? live.join(", ") : <span className="st-none">None yet</span>}</td>
-                        <td data-label="Planned, or custom for a pilot">{next.join(", ")}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        {/* 06 — Control and deployment */}
-        <section id="trust" className="st-section st-trust" aria-labelledby="trust-h">
-          <div className="st-wrap st-grid">
-            <div className="st-col-head">
-              <p className="st-meta">Control</p>
-              <h2 id="trust-h" className="st-h2">Designed for decisions that matter.</h2>
-              <p className="st-body">Starlane recommends. People decide. Decisions are recorded.</p>
-              <p className="st-after"><Link href="/security" className="st-textlink">Security and control<span aria-hidden>→</span></Link></p>
-            </div>
-            <div className="st-col-body">
-              <dl className="st-rows">
-                {CONTROLS.map((c) => <div key={c.k}><dt>{c.k}</dt><dd>{c.b}</dd></div>)}
-              </dl>
-              <h3 className="st-h3 st-sub">Deployment</h3>
-              <dl className="st-rows">
-                {DEPLOY.map((c) => <div key={c.k}><dt>{c.k}</dt><dd>{c.b}</dd></div>)}
-              </dl>
-              <p className="st-fine">Starlane does not hold SOC 2, ISO 27001 or other third-party certifications, and does not claim them.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* 07 — Access */}
-        <section className="st-section st-ink st-close" aria-labelledby="access-h">
-          <div className="st-wrap st-grid">
-            <div className="st-col-head">
-              <h2 id="access-h" className="st-h2">Bring Starlane into your organization.</h2>
-              <div className="st-actions">
-                <Link href="/access" className="sl-btn sl-btn-solid st-btn">Request a pilot</Link>
-                <Link href="/integrations" className="st-textlink">See integrations<span aria-hidden>→</span></Link>
+              <div>
+                <p className="f-lede">Every customer, invoice, payment, promise and order, on one record that stays current.</p>
+                <p className="f-body">Starlane links entities by what actually happened between them, updates the record as each system syncs, and marks changes where they occur.</p>
               </div>
             </div>
-            <ol className="st-col-body st-pilot">
-              <li><span>01</span><b>Tell us what you run</b><p>We confirm which of your systems connect today and what a pilot would need.</p></li>
+            <StatePlate />
+          </div>
+        </section>
+
+        {/* 04 · Know what changed */}
+        <section id="product" className="f f-dark" aria-labelledby="f4-h">
+          <div className="f-wrap">
+            <div className="f-head f-head-split">
+              <div>
+                <Index n="04" k="Know what changed" />
+                <h2 id="f4-h" className="f-h2">07:42. Four things changed.</h2>
+              </div>
+              <p className="f-body">Only material changes are raised, each with its exposure and the records behind it. The rest stays quiet.</p>
+            </div>
+          </div>
+          <div className="f-bleed"><WatchRoom /></div>
+        </section>
+
+        {/* 05 · Evidence */}
+        <section className="f f-light" aria-labelledby="f5-h">
+          <div className="f-wrap f-grid">
+            <div className="f-side">
+              <Index n="05" k="Evidence" />
+              <h2 id="f5-h" className="f-h2">Every figure shows its work.</h2>
+              <p className="f-lede">Fact, calculation, assumption or estimate, and always the record it came from.</p>
+              <p className="f-body">Open any decision and its reasoning comes apart into layers you can check, from the invoices it started with to the check that will follow it.</p>
+              <dl className="f-tags">
+                <div><dt><i className="tag tag-fact">Fact</i></dt><dd>Read from a system</dd></div>
+                <div><dt><i className="tag tag-calc">Calculated</i></dt><dd>Derived from facts</dd></div>
+                <div><dt><i className="tag tag-asm">Assumption</i></dt><dd>Stated, and yours to change</dd></div>
+                <div><dt><i className="tag tag-est">Estimate</i></dt><dd>A simulated range</dd></div>
+              </dl>
+            </div>
+            <div className="f-main"><EvidenceStack /></div>
+          </div>
+        </section>
+
+        {/* 06 · Simulation */}
+        <section className="f f-dark f-room" aria-labelledby="f6-h">
+          <div className="f-wrap f-grid">
+            <div className="f-side">
+              <Index n="06" k="Simulate" />
+              <h2 id="f6-h" className="f-h2">Compare before committing.</h2>
+              <p className="f-body">Real options are simulated as ranges against this customer’s own history, and ranked by rules you can read. A person decides.</p>
+              <dl className="s6-dec">
+                <div><dt>Decision</dt><dd>Escalate Brightwater Retail</dd></div>
+                <div><dt>Owed</dt><dd className="num">$184,200 · 47 days</dd></div>
+                <div><dt>Horizon</dt><dd>30 days</dd></div>
+              </dl>
+            </div>
+            <div className="f-main"><SimulationRoom /></div>
+          </div>
+        </section>
+
+        {/* 07 · Action, then verification */}
+        <section className="f f-slab f-verify" aria-labelledby="f7-h">
+          <div className="f-wrap">
+            <div className="f-head f-head-split">
+              <div>
+                <Index n="07" k="Verify" />
+                <h2 id="f7-h" className="f-h2">It checks what happened next.</h2>
+              </div>
+              <p className="f-lede">Most software stops at the recommendation. Starlane watches the books afterwards.</p>
+            </div>
+            <VerificationRecord />
+            <p className="f-cap">{CAPTION} · Outbound messaging and outcome checks are off by default.</p>
+          </div>
+        </section>
+
+        {/* 08 · Integrations */}
+        <section className="f f-light" aria-labelledby="f8-h">
+          <div className="f-wrap">
+            <div className="f-head f-head-split">
+              <div>
+                <Index n="08" k="Integrations" />
+                <h2 id="f8-h" className="f-h2">Works with the systems you already run.</h2>
+              </div>
+              <div>
+                <p className="f-body">Every connection carries its real status: {COUNT("live")} live today, {COUNT("planned")} planned, {COUNT("custom")} that can be built for a pilot on the connector framework. External feeds are switched on per pilot.</p>
+                <p className="f-after"><Link href="/integrations" className="f-link">See every integration<span aria-hidden>→</span></Link></p>
+              </div>
+            </div>
+            <InView className="i8">
+              {BAND.map((b) => (
+                <div key={b.k} className="i8-col">
+                  <h3 className="i8-k">{b.k}</h3>
+                  <ul>
+                    {bandItems(b.ids).map((i) => (
+                      <li key={i.n} className={`i8-${i.s}`}><i aria-hidden />{i.n}<span className="sl-sr"> ({i.s})</span></li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </InView>
+            <ul className="i8-legend">
+              <li className="i8-live"><i aria-hidden />Live</li>
+              <li className="i8-planned"><i aria-hidden />Planned</li>
+              <li className="i8-custom"><i aria-hidden />Custom, can be built for a pilot</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* 09 · Control */}
+        <section id="trust" className="f f-dark f-room f-control" aria-labelledby="f9-h">
+          <div className="f-wrap f-grid">
+            <div className="f-side">
+              <Index n="09" k="Control" />
+              <h2 id="f9-h" className="f-statement">Built for control.</h2>
+              <p className="f-body">Starlane recommends. People decide. Every decision is recorded.</p>
+              <p className="f-after"><Link href="/security" className="f-link">Security and control<span aria-hidden>→</span></Link></p>
+            </div>
+            <div className="f-main">
+              <InView as="ul" className="c9">
+                {CONTROLS.map((c, i) => (
+                  <li key={c.k} style={{ "--n": i } as React.CSSProperties}><Glyph name={c.g} size={20} /><h3>{c.k}</h3><p>{c.b}</p></li>
+                ))}
+              </InView>
+              <p className="c9-foot">Scope: every request is limited to the signed-in account. Starlane holds no third-party security certifications and claims none.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 10 · Close */}
+        <section className="f f-dark f-close" aria-labelledby="f10-h">
+          <div className="f-close-bg" aria-hidden />
+          <div className="f-wrap">
+            <div className="f-close-copy">
+              <h2 id="f10-h" className="f-display f-display-close">Bring Starlane into your organization.</h2>
+              <div className="f-actions">
+                <Link href="/access" className="sl-btn sl-btn-solid">Request a pilot</Link>
+                <Link href="/integrations" className="f-link">See integrations<span aria-hidden>→</span></Link>
+              </div>
+            </div>
+            <ol className="f-steps">
+              <li><span>01</span><b>Tell us what you run</b><p>We confirm which of your systems connect today and what a pilot needs.</p></li>
               <li><span>02</span><b>Connect read-only</b><p>Nothing in your systems changes. Messaging stays off unless you enable it.</p></li>
-              <li><span>03</span><b>Review with your team</b><p>Work through real changes and decisions on your own data, with evidence.</p></li>
+              <li><span>03</span><b>Review with your team</b><p>Work through real changes and decisions on your own data, with the evidence.</p></li>
             </ol>
           </div>
         </section>

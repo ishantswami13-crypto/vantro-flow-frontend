@@ -25,7 +25,7 @@ const LINKS: Array<[string, string]> = [
   ["/security", "Security"],
 ];
 
-export function Nav() {
+export function Nav({ tone = "light" }: { tone?: "light" | "dark" }) {
   const navRef = useRef<HTMLElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const path = usePathname();
@@ -41,7 +41,7 @@ export function Nav() {
 
   return (
     <>
-      <nav aria-label="Main navigation" className="sl-nav" ref={navRef}>
+      <nav aria-label="Main navigation" className={`sl-nav${tone === "dark" ? " sl-nav-dark" : ""}`} ref={navRef}>
         <Link href="/" aria-label="Starlane home" className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={22} />Starlane</Link>
         <div className="sl-navlinks">
           <div className="sl-navmid">
@@ -63,7 +63,7 @@ export function Nav() {
           </button>
         </div>
       </nav>
-      <div id="sl-mobile-menu" className={`sl-mobile-menu${menuOpen ? " open" : ""}`}>
+      <div id="sl-mobile-menu" className={`sl-mobile-menu${menuOpen ? " open" : ""}${tone === "dark" ? " sl-menu-dark" : ""}`}>
         {LINKS.map(([href, label]) => <Link key={href} href={href} onClick={close}>{label}</Link>)}
         <Link href="/login" onClick={close}>Sign in</Link>
       </div>

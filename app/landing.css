@@ -91,6 +91,12 @@
 .sl-mobile-menu a { padding: 13px 4px; font-size: 15px; border-bottom: 1px solid var(--sl-line); }
 .sl-mobile-menu a:last-child { border-bottom: none; }
 
+.sl-nav-dark { --sl-ink: #E8E9EB; --sl-ink-soft: #A3A9B2; --sl-bg-raised: #0B0D10; --sl-line: #272D35; --sl-line-2: #39404A; color: #E8E9EB; }
+.sl-nav-dark.on { background: rgba(11, 13, 16, 0.86); border-bottom-color: #22272E; }
+.sl-nav-dark .sl-wordmark { color: #E8E9EB; }
+.sl-menu-dark { --sl-ink: #E8E9EB; --sl-line: #272D35; background: #111419; color: #E8E9EB; }
+.sl-nav-dark .sl-btn.sl-btn-solid:hover { background: #FFFFFF; border-color: #FFFFFF; }
+
 /* ── Buttons & links ──────────────────────────────────────────── */
 .sl-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
