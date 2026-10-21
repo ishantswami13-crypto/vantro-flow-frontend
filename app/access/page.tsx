@@ -18,7 +18,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 const STEPS = ["Company", "Systems", "Goals"] as const;
 
 const EMPTY: ApplicationInput = {
-  name: "", email: "", company: "", website: "", role: "", companySize: "", industry: "", country: "IN",
+  name: "", email: "", company: "", website: "", role: "", companySize: "", industry: "", country: "",
   systems: [], otherSystems: "", willConnectSystems: null, problem: "", desiredOutcome: "", notes: "", companyFax: "",
 };
 
@@ -176,7 +176,8 @@ export default function RequestAccessPage() {
                 <div className="sl-field">
                   <label htmlFor="f-country">Country</label>
                   <select className="sl-select" value={v.country} onChange={(e) => set("country", e.target.value)} {...aria("country")}>
-                    {COUNTRIES.map((c) => <option key={c} value={c}>{regionNames?.of(c) || c}</option>)}
+                    <option value="">Choose…</option>
+                    {COUNTRIES.map((c) => ({ c, n: regionNames?.of(c) || c })).sort((a, b) => a.n.localeCompare(b.n)).map(({ c, n }) => <option key={c} value={c}>{n}</option>)}
                   </select>{err("country")}
                 </div>
               </div>

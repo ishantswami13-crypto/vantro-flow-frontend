@@ -1,16 +1,18 @@
 import Link from "next/link";
 import StarlaneMark from "@/components/brand/StarlaneMark";
 
-export function Footer() {
+// Public footer. tone="dark" continues a dark closing section into the footer.
+export function Footer({ tone = "light" }: { tone?: "light" | "dark" }) {
   return (
-    <footer className="sl-wrap" style={{ paddingTop: 64, paddingBottom: 32 }}>
+    <footer className={`sl-foot${tone === "dark" ? " sl-foot-dark" : ""}`}>
+      <div className="sl-wrap" style={{ paddingTop: 64, paddingBottom: 32 }}>
       <div className="sl-footer-grid">
         <div>
-          <span className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={26} />Starlane</span>
-          <p className="sl-p" style={{ marginTop: 14, maxWidth: 280 }}>Decision and execution intelligence for operating companies.</p>
+          <span className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={22} />Starlane</span>
+          <p className="sl-p" style={{ marginTop: 14, maxWidth: 280 }}>The intelligence layer for your business.</p>
         </div>
         <div className="sl-footer-col">
-          <h3>Features</h3>
+          <h3>Product</h3>
           <Link href="/product/bridge">The Bridge</Link>
           <Link href="/product/scan">Scan</Link>
           <Link href="/product/watch">Watch</Link>
@@ -20,10 +22,11 @@ export function Footer() {
           <Link href="/product/prepared">Prepared</Link>
         </div>
         <div className="sl-footer-col">
-          <h3>Company</h3>
+          <h3>Starlane</h3>
+          <Link href="/integrations">Integrations</Link>
           <Link href="/security">Security</Link>
-          <Link href="/#trust">Evidence &amp; controls</Link>
-          <Link href="/access">Get Starlane</Link>
+          <Link href="/access">Request a pilot</Link>
+          <a href="/download/windows">Download for Windows</a>
           <Link href="/login">Sign in</Link>
         </div>
         <div className="sl-footer-col">
@@ -34,6 +37,7 @@ export function Footer() {
       </div>
       <div style={{ paddingTop: 28, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <span style={{ fontSize: 12.5, color: "var(--sl-ink-faint)" }}>© {new Date().getFullYear()} Vantro Technologies</span>
+      </div>
       </div>
     </footer>
   );

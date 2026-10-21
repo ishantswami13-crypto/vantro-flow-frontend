@@ -29,7 +29,7 @@ export function GuideSidebar() {
         </div>
       ))}
       <div className="sl-guide-cta">
-        <Link href="/access" className="sl-btn sl-btn-solid">Get Starlane</Link>
+        <Link href="/access" className="sl-btn sl-btn-solid">Request a pilot</Link>
       </div>
     </nav>
   );
