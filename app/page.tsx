@@ -14,6 +14,8 @@ import { HeroCards } from "@/components/marketing/landing/HeroCards";
 import { BusinessGraph } from "@/components/marketing/landing/BusinessGraph";
 import { Morning } from "@/components/marketing/landing/Morning";
 import { CountUp } from "@/components/marketing/landing/CountUp";
+import { PhoneRow } from "@/components/marketing/landing/PhoneRow";
+import { ProductTour } from "@/components/marketing/landing/ProductTour";
 import { ApproveLoop } from "@/components/marketing/landing/ApproveLoop";
 import { BridgeDiagram } from "@/components/marketing/landing/BridgeDiagram";
 import { DashboardThumb, ReportThumb, RuleThumb } from "@/components/marketing/landing/ProblemViz";
@@ -263,6 +265,20 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* 6b — The real screens */}
+        <section className="sl-dark slh-section slh-tour" aria-labelledby="tour-h">
+          <div className="slh-glow slh-glow-2" aria-hidden />
+          <div className="sl-wrap">
+            <div className="slh-center-head" data-reveal>
+              <p className="sl-eyebrow">The real product</p>
+              <h2 id="tour-h" className="slh-h2">One overdue invoice, through six screens.</h2>
+              <p className="sl-p">Not mock-ups. These are screens from the Starlane app, following Mehta Hardware’s invoice from the alert to the approved reminder and what Starlane learned.</p>
+            </div>
+            <div data-reveal><ProductTour /></div>
+            <p className="sl-product-caption">Captured from the Starlane app on a test company’s books (Gupta Traders, test data). External messages were switched off.</p>
+          </div>
+        </section>
+
         {/* 7 — A day with Starlane */}
         <section className="sl-dark slh-section slh-morning" aria-labelledby="morning-h">
           <div className="sl-wrap">
@@ -326,6 +342,20 @@ export default function LandingPage() {
                 </li>
               ))}
             </ul>
+          </div>
+        </section>
+
+        {/* 10b — On the phone */}
+        <section className="sl-dark slh-section slh-phones" aria-labelledby="phones-h">
+          <div className="slh-glow slh-glow-2" aria-hidden />
+          <div className="sl-wrap">
+            <div className="slh-center-head" data-reveal>
+              <p className="sl-eyebrow">On your phone</p>
+              <h2 id="phones-h" className="slh-h2">The decision finds you, wherever you are.</h2>
+              <p className="sl-p">The same Bridge, alerts and approvals in your pocket, so a reminder never waits for you to get back to the office. The phone app is in testing; until it is published, Starlane runs in your phone’s browser.</p>
+            </div>
+            <PhoneRow />
+            <p className="sl-product-caption" style={{ textAlign: "center" }}>Real screens from the Starlane phone app in testing, on a test company’s books.</p>
           </div>
         </section>
 
