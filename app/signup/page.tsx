@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, Suspense, useRef, useEffect } from "react";
+import "../atlas.css";
+import { useState, Suspense, useRef, useEffect, Fragment } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FiEye, FiEyeOff, FiRefreshCw, FiCheckCircle, FiArrowRight } from "react-icons/fi";
-import { saveAuth } from "@/lib/api";
+import { saveAuth, api } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import { INDUSTRY_OPTIONS } from "@/lib/businessTypes";
 
@@ -12,7 +13,7 @@ const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-pro
 
 const businessTypes = [{ value: "", label: "Select type" }, ...INDUSTRY_OPTIONS];
 
-const iBase = { background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Geist', 'Plus Jakarta Sans',system-ui", fontSize:"15px", color:"#F5F4F0", outline:"none", width:"100%", transition:"border-color .2s,background .2s", WebkitAppearance:"none" as const };
+const iBase = { background:"rgba(255,255,255,.05)", borderWidth:"1px", borderStyle:"solid", borderColor:"rgba(255,255,255,.12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Geist', 'Plus Jakarta Sans',system-ui", fontSize:"15px", color:"#F5F4F0", outline:"none", width:"100%", transition:"border-color .2s,background .2s", WebkitAppearance:"none" as const };
 const iFocus = { ...iBase, borderColor:"rgba(255,255,255,.34)", background:"rgba(255,255,255,.08)" };
 
 function FocusInput(p: React.InputHTMLAttributes<HTMLInputElement>) {
@@ -32,6 +33,7 @@ function OTPStep({ preToken, userEmail, userPhone, onVerified }: {
   const [resent, setResent] = useState(false);
   const [countdown, setCountdown] = useState(30);
   const inputs = useRef<(HTMLInputElement|null)[]>([]);
+  const verifying = useRef(false);
 
   useEffect(() => { if (countdown <= 0) return; const t = setTimeout(() => setCountdown(c=>c-1), 1000); return () => clearTimeout(t); }, [countdown]);
 
@@ -49,13 +51,18 @@ function OTPStep({ preToken, userEmail, userPhone, onVerified }: {
 
   async function handleVerify(code?: string) {
     const fc = code ?? otp.join(""); if (fc.length < 6) return;
+    // The sixth digit auto-submits; a click on Verify right after must not
+    // send the same (now used) code a second time.
+    if (verifying.current) return;
+    verifying.current = true;
     setLoading(true); setError("");
     try {
       const r = await fetch(`${BASE}/api/auth/verify-otp`, { method:"POST", headers:{"Content-Type":"application/json",Authorization:`Bearer ${preToken}`}, credentials:"include", body:JSON.stringify({otp:fc}) });
       const d = await r.json();
+      // Stays locked on success: the page is moving to onboarding.
       if (d.success) onVerified(d.token, d.user, d.csrf_token);
-      else { setError(d.error||"Wrong OTP"); setOtp(["","","","","",""]); inputs.current[0]?.focus(); }
-    } catch { setError("Network error. Please try again."); }
+      else { verifying.current = false; setError(d.error||"Wrong OTP"); setOtp(["","","","","",""]); inputs.current[0]?.focus(); }
+    } catch { verifying.current = false; setError("Network error. Please try again."); }
     finally { setLoading(false); }
   }
 
@@ -139,6 +146,10 @@ function SignupForm() {
 
   const handleOTPVerified = async (token: string, user: any, csrfToken?: string|null) => {
     await saveAuth(token,user,true,csrfToken);
+    // Signup only creates the account; the owner's name and business type
+    // asked for on step 1 are saved to the profile here. Best effort: a
+    // failure leaves them blank in Settings, never blocks the signup.
+    await api.settings.update({ owner_name: form.name.trim(), ...(form.business_type ? { industry: form.business_type } : {}) }).catch(() => {});
     posthog.identify(user.id,{email:user.email,name:user.business_name,plan:user.plan});
     posthog.capture("user_signed_up",{business_type:form.business_type});
     // New signups go through onboarding — /onboarding itself checks
@@ -156,10 +167,10 @@ function SignupForm() {
       {/* Progress dots */}
       <div className="progress">
         {[1,2].map(n=>(
-          <>
-            <div key={`d${n}`} className={`p-dot${step>=n?" active":""}${step>n?" done":""}`}/>
-            {n<2&&<div key={`l${n}`} className="p-line"/>}
-          </>
+          <Fragment key={n}>
+            <div className={`p-dot${step>=n?" active":""}${step>n?" done":""}`}/>
+            {n<2&&<div className="p-line"/>}
+          </Fragment>
         ))}
       </div>
 

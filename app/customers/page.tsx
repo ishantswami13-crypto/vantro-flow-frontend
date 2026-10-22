@@ -1,11 +1,23 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+
+// Customers: everyone you sell to, built from your books and invoices
+// (GET /api/khata), with the balance each one carries, their risk tier when
+// scoring is on, and the customers the portfolio view says need attention.
+
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { api, authHeaders, getToken, getUser, type CustomerPortfolioResponse } from "@/lib/api";
-import { FiBook, FiMessageSquare, FiPhone, FiSearch, FiUser, FiUsers, FiAlertTriangle } from "react-icons/fi";
+import { api, authHeaders, getUser, type CustomerPortfolioResponse } from "@/lib/api";
+import { inrWhole, formatDate, formatCount } from "@/lib/format";
+import { PageHeader, SearchField, SkeletonRows, Chevron } from "@/components/v32/ui";
+import { IconRefresh, IconUsers } from "@/components/v32/icons";
+import { StatusChip, type StatusTone } from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { useToast } from "@/components/ui/Toast";
 import { LensDrawer, type LensSection } from "@/components/ui/LensDrawer";
+import { MorePage, FigureRow, GridTable, RowMenu, Panel, OFFLINE_TEXT, plain, moreStyles as s, type Column } from "@/components/more/ui";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -19,45 +31,50 @@ type Customer = {
   entry_count: number;
 };
 
-const fmtINR = (n: number) =>
-  n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${Math.round(n).toLocaleString("en-IN")}`;
+type Score = { score: number; tier: string; overdue_amount: number; health_label?: string | null };
 
-const fmtDate = (value?: string | null) => {
-  if (!value) return "No activity";
-  return new Date(value).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+const TIER: Record<string, { label: string; tone: StatusTone }> = {
+  HIGH_RISK: { label: "High risk", tone: "critical" },
+  MEDIUM: { label: "Medium risk", tone: "attention" },
+  LOW: { label: "Low risk", tone: "neutral" },
+};
+
+const HEALTH: Record<string, { label: string; tone: StatusTone }> = {
+  DORMANT: { label: "Dormant", tone: "neutral" },
+  AT_RISK: { label: "At risk", tone: "critical" },
+  WATCH: { label: "Watch", tone: "attention" },
+  GROWING: { label: "Growing", tone: "positive" },
+  HEALTHY: { label: "Healthy", tone: "positive" },
 };
 
 export default function CustomersPage() {
+  const notify = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [scoreMap, setScoreMap] = useState<Record<string, { score: number; tier: string; overdue_amount: number; health_label?: string | null }>>({});
+  const [error, setError] = useState(false);
+  const [scoreMap, setScoreMap] = useState<Record<string, Score>>({});
   const [portfolio, setPortfolio] = useState<CustomerPortfolioResponse | null>(null);
   const [lensCustomer, setLensCustomer] = useState<Customer | null>(null);
-  // Real invoice, if any, this Lens customer maps to — used to pre-fill the
-  // Simulate flow honestly (Simulate V1). Stays null (button omitted) when
-  // this customer has no matching real open invoice, rather than opening an
-  // empty simulate form pretending it's contextual.
+  // Real open invoice, if any, this Lens customer maps to: pre-fills Simulate
+  // honestly. Stays null (button omitted) when there is no matching invoice.
   const [lensSimInvoiceId, setLensSimInvoiceId] = useState<string | null>(null);
   const router = useRouter();
 
-  const loadCustomers = async () => {
+  const loadCustomers = useCallback(async () => {
     setLoading(true);
-    setError("");
+    setError(false);
     try {
-      const res = await fetch(`${API}/api/khata`, {
-        headers: authHeaders(), credentials: "include",
-      });
+      const res = await fetch(`${API}/api/khata`, { headers: authHeaders(), credentials: "include" });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "Could not load customers");
+      if (!res.ok || !data.success) throw new Error("load failed");
       setCustomers(data.customers || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load customers");
+    } catch {
+      setError(true);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadCustomers();
@@ -65,20 +82,15 @@ export default function CustomersPage() {
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (!d?.scores) return;
-        const map: Record<string, any> = {};
-        d.scores.forEach((s: any) => { map[s.customer_name] = s; });
+        const map: Record<string, Score> = {};
+        d.scores.forEach((sc: Score & { customer_name: string }) => { map[sc.customer_name] = sc; });
         setScoreMap(map);
       }).catch(() => {});
-    // Phase 10 — portfolio-level concentration + attention-ranked list.
-    // Fails silently (stays null) when the feature flag is off or the request
-    // errors — this section is purely additive and never blocks the base page.
+    // Portfolio concentration + attention list. Stays null when the feature
+    // flag is off or the request fails: purely additive.
     api.customers.portfolio().then(setPortfolio).catch(() => {});
-  }, []);
+  }, [loadCustomers]);
 
-  // When a Lens customer is opened, look up whether they have a real open
-  // invoice to pre-fill Simulate with (matched by customer_name — the same
-  // key the khata/customer_scores views use, since invoices don't carry a
-  // customer FK on this schema).
   useEffect(() => {
     if (!lensCustomer) { setLensSimInvoiceId(null); return; }
     const user = getUser();
@@ -94,259 +106,167 @@ export default function CustomersPage() {
     return () => { cancelled = true; };
   }, [lensCustomer]);
 
-  const HEALTH_LABEL_TEXT: Record<string, string> = {
-    DORMANT: "Dormant", AT_RISK: "At Risk", WATCH: "Watch", GROWING: "Growing", HEALTHY: "Healthy",
-  };
-  const HEALTH_LABEL_COLOR: Record<string, string> = {
-    DORMANT: "#8B8FA3", AT_RISK: "#F5424D", WATCH: "#F5A524", GROWING: "#10D98A", HEALTHY: "#3B82F6",
-  };
-  const attentionList = (portfolio?.customers || [])
-    .filter(c => c.healthLabel !== "HEALTHY")
-    .slice(0, 5);
+  const attentionList = (portfolio?.customers || []).filter(c => c.healthLabel !== "HEALTHY").slice(0, 5);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return customers;
-    return customers.filter((customer) =>
-      [customer.customer_name, customer.customer_phone].some((value) =>
-        String(value || "").toLowerCase().includes(q)
-      )
-    );
+    const list = q
+      ? customers.filter(c => [c.customer_name, c.customer_phone].some(v => String(v || "").toLowerCase().includes(q)))
+      : customers;
+    return [...list].sort((a, b) => Number(b.balance || 0) - Number(a.balance || 0));
   }, [customers, search]);
 
   const totalReceivable = customers.reduce((sum, c) => sum + (Number(c.balance) > 0 ? Number(c.balance) : 0), 0);
   const totalAdvance = customers.reduce((sum, c) => sum + (Number(c.balance) < 0 ? Math.abs(Number(c.balance)) : 0), 0);
-  const activeCustomers = customers.filter((c) => Number(c.balance) > 0).length;
+  const withDues = customers.filter(c => Number(c.balance) > 0).length;
 
   const whatsappStatement = (customer: Customer) => {
     const balance = Number(customer.balance || 0);
     const message = balance > 0
-      ? `Namaste ${customer.customer_name} ji, aapka hamare yahan ${fmtINR(balance)} baaki hai. Kripya payment update karein.`
+      ? `Namaste ${customer.customer_name} ji, aapka hamare yahan ${inrWhole(balance)} baaki hai. Kripya payment update karein.`
       : balance < 0
-        ? `Namaste ${customer.customer_name} ji, aapka ${fmtINR(Math.abs(balance))} advance hamare paas hai.`
+        ? `Namaste ${customer.customer_name} ji, aapka ${inrWhole(Math.abs(balance))} advance hamare paas hai.`
         : `Namaste ${customer.customer_name} ji, aapka account clear hai.`;
 
     if (customer.customer_phone) {
       window.open(`https://wa.me/91${customer.customer_phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`, "_blank");
       return;
     }
-    navigator.clipboard.writeText(message);
+    navigator.clipboard.writeText(message).then(() => notify("No phone on file, so the statement was copied"));
   };
+
+  const balanceCell = (c: Customer) => {
+    const b = Number(c.balance || 0);
+    if (b > 0) return <span className={s.amount}>{inrWhole(b)}</span>;
+    if (b < 0) return <span className={s.amount} style={{ color: "var(--positive)" }} title="Advance held for this customer">{inrWhole(Math.abs(b))} adv.</span>;
+    return <span className={s.muted}>Settled</span>;
+  };
+
+  const columns: Column<Customer>[] = [
+    {
+      key: "name", header: "Customer", width: "minmax(0, 1.6fr)",
+      render: c => (
+        <div className="min-w-0">
+          <button type="button" className={`${s.name} ${s.nameBtn}`} onClick={() => setLensCustomer(c)} title={c.customer_name}>{c.customer_name}</button>
+          <div className={s.sub}><span>{[c.customer_phone, `${formatCount(Number(c.entry_count || 0))} entries`].filter(Boolean).join(" · ")}</span></div>
+        </div>
+      ),
+    },
+    { key: "given", header: "Billed", width: "128px", align: "right", hide: "md", render: c => <span>{inrWhole(Number(c.total_debit || 0))}</span> },
+    { key: "paid", header: "Paid", width: "128px", align: "right", hide: "md", render: c => <span>{inrWhole(Number(c.total_credit || 0))}</span> },
+    { key: "balance", header: "Balance", width: "136px", widthSm: "auto", align: "right", render: balanceCell },
+    {
+      key: "risk", header: "Risk", width: "120px", hide: "sm",
+      render: c => {
+        const r = scoreMap[c.customer_name];
+        const t = r && TIER[r.tier];
+        return t ? <StatusChip tone={t.tone} className="chip-quiet" title={`Risk score ${r.score} of 100`}>{t.label}</StatusChip> : <StatusChip tone="unknown">Not scored</StatusChip>;
+      },
+    },
+    { key: "last", header: "Last activity", width: "110px", hide: "sm", render: c => <span>{c.last_entry ? formatDate(c.last_entry) : <span className={s.muted}>None yet</span>}</span> },
+    {
+      key: "actions", header: <span className="sr-only">Actions</span>, width: "40px", align: "right",
+      render: c => (
+        <RowMenu label={`Actions for ${c.customer_name}`} items={[
+          { label: "Open details", onSelect: () => setLensCustomer(c) },
+          ...(c.customer_phone ? [{ label: "Call", href: `tel:${c.customer_phone}` }] : []),
+          { label: c.customer_phone ? "Send statement on WhatsApp" : "Copy statement", onSelect: () => whatsappStatement(c) },
+        ]} />
+      ),
+    },
+  ];
+
+  const figures = [
+    { label: "Customers", value: formatCount(customers.length), note: `${formatCount(withDues)} with a balance due` },
+    { label: "To collect", value: inrWhole(totalReceivable), note: "Owed to you across all customers" },
+    { label: "Advances held", value: inrWhole(totalAdvance), note: "Paid ahead, to adjust or return" },
+    ...(portfolio?.enabled && portfolio.customers.length > 0
+      ? [{ label: "Top 3 share of sales", value: `${portfolio.top3SharePct}%`, note: `Top customer ${portfolio.top1SharePct}%, last ${portfolio.windowDays || 90} days` }]
+      : []),
+  ];
 
   return (
     <DashboardLayout pageTitle="Customers">
-      <div className="space-y-5 page-enter">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-          <div>
-            <h2 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Customers</h2>
-            <p className="text-sm text-secondary mt-1">Auto-added from Sales, Invoices and Khata</p>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={loadCustomers} className="px-4 py-2 rounded-xl bg-surface-2 text-secondary text-xs font-bold border border-border">
-              Refresh
-            </button>
-            <Link href="/khata" className="px-4 py-2 rounded-xl btn-primary text-xs font-bold">
-              Open Khata
-            </Link>
-          </div>
-        </div>
+      <MorePage>
+        <PageHeader
+          title="Customers"
+          subtitle="Everyone you sell to, from your connected books and invoices."
+          right={
+            <>
+              <button type="button" className="icon-btn" aria-label="Refresh customers" title="Refresh" onClick={loadCustomers}><IconRefresh size={15} /></button>
+            </>
+          }
+        />
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="card-metric p-5">
-            <p className="section-label mb-3">Total Customers</p>
-            <p className="metric-lg text-primary">{customers.length}</p>
-            <p className="text-2xs text-muted mt-1">{activeCustomers} with dues</p>
-          </div>
-          <div className="card-metric p-5">
-            <p className="section-label mb-3">We Need To Collect</p>
-            <p className="metric-lg text-danger">{fmtINR(totalReceivable)}</p>
-            <p className="text-2xs text-muted mt-1">lena hai</p>
-          </div>
-          <div className="card-metric p-5">
-            <p className="section-label mb-3">Customer Advance</p>
-            <p className="metric-lg text-success">{fmtINR(totalAdvance)}</p>
-            <p className="text-2xs text-muted mt-1">dena / adjust karna hai</p>
-          </div>
-          <div className="card-metric p-5">
-            <p className="section-label mb-3">Ledger Entries</p>
-            <p className="metric-lg text-accent">{customers.reduce((s, c) => s + Number(c.entry_count || 0), 0)}</p>
-            <p className="text-2xs text-muted mt-1">linked automatically</p>
-          </div>
-        </div>
+        {loading && customers.length === 0 && (
+          <div className={s.panel}><SkeletonRows rows={6} height={50} /></div>
+        )}
 
-        <div className="relative">
-          <FiSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search customer or phone..."
-            className="w-full bg-surface-2 border border-border rounded-xl pl-9 pr-3 py-3 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent/50"
-          />
-        </div>
+        {!loading && error && (
+          <div className={s.panel}><ErrorState title="Couldn't load your customers" message={OFFLINE_TEXT} onRetry={loadCustomers} /></div>
+        )}
 
-        {portfolio?.enabled && portfolio.customers.length > 0 && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="card-metric p-4">
-                <p className="section-label mb-2">Top Customer Share</p>
-                <p className="metric-lg text-primary">{portfolio.top1SharePct}%</p>
-                <p className="text-2xs text-muted mt-1">of trailing-90d revenue</p>
-              </div>
-              <div className="card-metric p-4">
-                <p className="section-label mb-2">Top 3 Concentration</p>
-                <p className="metric-lg text-primary">{portfolio.top3SharePct}%</p>
-                <p className="text-2xs text-muted mt-1">of trailing-90d revenue</p>
-              </div>
-              <div className="card-metric p-4">
-                <p className="section-label mb-2">Top 5 Concentration</p>
-                <p className="metric-lg text-primary">{portfolio.top5SharePct}%</p>
-                <p className="text-2xs text-muted mt-1">of trailing-90d revenue</p>
-              </div>
-              <div className="card-metric p-4">
-                <p className="section-label mb-2">Needs Attention</p>
-                <p className="metric-lg text-danger">{attentionList.length}</p>
-                <p className="text-2xs text-muted mt-1">{portfolio.concentrationRiskCount} concentration risk</p>
-              </div>
+        {!loading && !error && customers.length === 0 && (
+          <div className={s.panel}>
+            <EmptyState
+              icon={<IconUsers size={17} />}
+              title="No customers yet"
+              message="Customers appear here on their own once your books are connected or you raise an invoice."
+              action={<Button variant="secondary" onClick={() => router.push("/sources/connect")}>Connect a source</Button>}
+            />
+          </div>
+        )}
+
+        {customers.length > 0 && !error && (
+          <>
+            <FigureRow items={figures} lead={1} />
+
+            {portfolio?.enabled && attentionList.length > 0 && (
+              <Panel title="Needs attention" sub="From the last 90 days of sales and payments" flush>
+                <div style={{ borderTop: "1px solid var(--line)" }}>
+                  {attentionList.map(c => {
+                    const h = HEALTH[c.healthLabel] || { label: c.healthLabel, tone: "neutral" as StatusTone };
+                    const match = customers.find(x => x.customer_name === c.customerName);
+                    const body = (
+                      <>
+                        <div className="min-w-0">
+                          <div className="flex items-center" style={{ gap: 10 }}>
+                            <span className={s.name}>{c.customerName}</span>
+                            <StatusChip tone={h.tone} className="chip-quiet">{h.label}</StatusChip>
+                          </div>
+                          <div className={s.sub} style={{ color: "var(--ink-2)", fontSize: 12.5 }}><span>{plain(c.healthEvidence[0] || c.evidence[0])}</span></div>
+                        </div>
+                        {match && (
+                          <span className="flex items-center shrink-0" style={{ gap: 8, fontSize: 12.5, color: "var(--ink-2)" }}>
+                            View customer<Chevron />
+                          </span>
+                        )}
+                      </>
+                    );
+                    const lead = h.tone === "critical" ? s.attnLead : "";
+                    return match
+                      ? <button key={c.customerId || c.customerName} type="button" className={`${s.attnRow} ${s.attnLink} ${lead}`} onClick={() => setLensCustomer(match)}>{body}</button>
+                      : <div key={c.customerId || c.customerName} className={`${s.attnRow} ${lead}`}>{body}</div>;
+                  })}
+                </div>
+              </Panel>
+            )}
+
+            <div className={s.toolbar}>
+              <SearchField id="customer-search" value={search} onChange={setSearch} placeholder="Search customer or phone" />
+              <span style={{ fontSize: 12, color: "var(--ink-3)" }}>Largest balance first</span>
             </div>
 
-            {attentionList.length > 0 && (
-              <div className="card-premium p-4">
-                <h3 className="text-2xs font-bold text-secondary uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                  <FiAlertTriangle size={12} /> Customers Needing Attention
-                </h3>
-                <div className="space-y-2">
-                  {attentionList.map((c) => (
-                    <div key={c.customerId || c.customerName} className="flex items-start justify-between gap-3 rounded-xl bg-surface-2/70 p-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-bold text-primary truncate">{c.customerName}</p>
-                          <span
-                            className="text-[10px] font-semibold rounded-full px-2 py-0.5 shrink-0"
-                            style={{ color: HEALTH_LABEL_COLOR[c.healthLabel], background: `${HEALTH_LABEL_COLOR[c.healthLabel]}18`, border: `1px solid ${HEALTH_LABEL_COLOR[c.healthLabel]}40` }}
-                          >
-                            {HEALTH_LABEL_TEXT[c.healthLabel] || c.healthLabel}
-                          </span>
-                        </div>
-                        <p className="text-2xs text-muted mt-1">{c.healthEvidence[0] || c.evidence[0]}</p>
-                      </div>
-                      <p className="text-2xs text-muted shrink-0">Attention {c.attentionScore}/100</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+            <div className={s.panel}>
+              {filtered.length > 0 ? (
+                <GridTable label="Customers" columns={columns} rows={filtered} rowKey={c => c.customer_name} onRowClick={setLensCustomer} />
+              ) : (
+                <EmptyState title="No customers match" message={`Nothing matches “${search}”.`} action={<Button variant="secondary" size="sm" onClick={() => setSearch("")}>Clear search</Button>} />
+              )}
+            </div>
+          </>
         )}
-
-        {loading ? (
-          <div className="card-premium p-10 text-center text-sm text-muted">Loading customers...</div>
-        ) : error ? (
-          <div className="card-premium p-10 text-center text-sm text-danger">{error}</div>
-        ) : filtered.length === 0 ? (
-          <div className="card-premium p-10 text-center">
-            <FiUsers size={34} className="mx-auto mb-3 text-muted opacity-40" />
-            <p className="text-sm font-bold text-primary">No customers yet</p>
-            <p className="text-xs text-muted mt-1">Scan a sale invoice, create an invoice, or add a Khata entry.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {filtered.map((customer) => {
-              const balance = Number(customer.balance || 0);
-              return (
-                <div key={customer.customer_name} className="card-premium p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-accent/12 border border-accent/25 text-accent flex items-center justify-center shrink-0">
-                        <FiUser size={16} />
-                      </div>
-                      <div className="min-w-0">
-                        <button
-                          type="button"
-                          onClick={() => setLensCustomer(customer)}
-                          className="font-bold text-primary truncate text-left hover:underline"
-                        >
-                          {customer.customer_name}
-                        </button>
-                        <p className="text-2xs text-muted">{customer.entry_count || 0} entries · {fmtDate(customer.last_entry)}</p>
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className={balance > 0 ? "metric-value text-danger" : balance < 0 ? "metric-value text-success" : "metric-value text-muted"}>
-                        {fmtINR(Math.abs(balance))}
-                      </p>
-                      <p className="text-2xs text-muted">{balance > 0 ? "lena hai" : balance < 0 ? "advance" : "clear"}</p>
-                      {scoreMap[customer.customer_name] && (() => {
-                        const risk = scoreMap[customer.customer_name];
-                        const tierColor = risk.tier === "HIGH_RISK" ? "#F5424D" : risk.tier === "MEDIUM" ? "#F5A524" : "#10D98A";
-                        const tierLabel = risk.tier === "HIGH_RISK" ? "High Risk" : risk.tier === "MEDIUM" ? "Medium" : "Low Risk";
-                        const HEALTH_LABEL_TEXT: Record<string, string> = {
-                          DORMANT: "Dormant", AT_RISK: "At Risk", WATCH: "Watch", GROWING: "Growing", HEALTHY: "Healthy",
-                        };
-                        const HEALTH_LABEL_COLOR: Record<string, string> = {
-                          DORMANT: "#8B8FA3", AT_RISK: "#F5424D", WATCH: "#F5A524", GROWING: "#10D98A", HEALTHY: "#3B82F6",
-                        };
-                        const health = risk.health_label;
-                        return (
-                          <div className="flex flex-col items-end gap-1 mt-1">
-                            <span className="inline-block text-[10px] font-semibold rounded-full px-2 py-0.5"
-                              style={{ color: tierColor, background: `${tierColor}18`, border: `1px solid ${tierColor}40` }}>
-                              {tierLabel} · {risk.score}
-                            </span>
-                            {health && HEALTH_LABEL_TEXT[health] && (
-                              <span className="inline-block text-[10px] font-semibold rounded-full px-2 py-0.5"
-                                style={{ color: HEALTH_LABEL_COLOR[health], background: `${HEALTH_LABEL_COLOR[health]}18`, border: `1px solid ${HEALTH_LABEL_COLOR[health]}40` }}>
-                                {HEALTH_LABEL_TEXT[health]}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 mt-4">
-                    <div className="rounded-xl bg-surface-2/70 p-3">
-                      <p className="text-2xs text-muted">Given</p>
-                      <p className="text-sm font-bold text-primary">{fmtINR(Number(customer.total_debit || 0))}</p>
-                    </div>
-                    <div className="rounded-xl bg-surface-2/70 p-3">
-                      <p className="text-2xs text-muted">Paid</p>
-                      <p className="text-sm font-bold text-primary">{fmtINR(Number(customer.total_credit || 0))}</p>
-                    </div>
-                    <div className="rounded-xl bg-surface-2/70 p-3">
-                      <p className="text-2xs text-muted">Last</p>
-                      <p className="text-sm font-bold text-primary truncate">{fmtDate(customer.last_entry)}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    <Link
-                      href={`/khata?customer=${encodeURIComponent(customer.customer_name)}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-2xs font-semibold rounded-lg bg-accent/10 text-accent border border-accent/20"
-                    >
-                      <FiBook size={11} /> Khata
-                    </Link>
-                    {customer.customer_phone && (
-                      <a
-                        href={`tel:${customer.customer_phone}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-2xs font-semibold rounded-lg bg-surface-2 text-secondary border border-border"
-                      >
-                        <FiPhone size={11} /> Call
-                      </a>
-                    )}
-                    <button
-                      onClick={() => whatsappStatement(customer)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-2xs font-semibold rounded-lg bg-success/10 text-success border border-success/20"
-                    >
-                      <FiMessageSquare size={11} /> WhatsApp
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      </MorePage>
 
       {lensCustomer && (() => {
         const risk = scoreMap[lensCustomer.customer_name];
@@ -355,43 +275,35 @@ export default function CustomersPage() {
           {
             label: "Ledger",
             rows: [
-              { label: "Given", value: fmtINR(Number(lensCustomer.total_debit || 0)) },
-              { label: "Paid", value: fmtINR(Number(lensCustomer.total_credit || 0)) },
-              { label: "Balance", value: `${balance > 0 ? "-" : balance < 0 ? "+" : ""}${fmtINR(Math.abs(balance))}` },
-              { label: "Ledger entries", value: String(lensCustomer.entry_count || 0) },
-              { label: "Last activity", value: fmtDate(lensCustomer.last_entry) },
+              { label: "Billed", value: inrWhole(Number(lensCustomer.total_debit || 0)) },
+              { label: "Paid", value: inrWhole(Number(lensCustomer.total_credit || 0)) },
+              { label: "Balance", value: balance > 0 ? `${inrWhole(balance)} due` : balance < 0 ? `${inrWhole(Math.abs(balance))} advance` : "Settled" },
+              { label: "Ledger entries", value: formatCount(Number(lensCustomer.entry_count || 0)) },
+              { label: "Last activity", value: lensCustomer.last_entry ? formatDate(lensCustomer.last_entry) : "None yet" },
             ],
           },
           ...(risk
             ? [{
                 label: "Risk",
                 rows: [
-                  { label: "Collection score", value: String(risk.score) },
-                  { label: "Tier", value: risk.tier === "HIGH_RISK" ? "High Risk" : risk.tier === "MEDIUM" ? "Medium" : "Low Risk" },
-                  ...(risk.health_label ? [{ label: "Health", value: risk.health_label }] : []),
-                  { label: "Overdue amount", value: fmtINR(Number(risk.overdue_amount || 0)) },
+                  { label: "Risk score", value: `${risk.score} of 100` },
+                  { label: "Tier", value: TIER[risk.tier]?.label || risk.tier },
+                  ...(risk.health_label ? [{ label: "Health", value: HEALTH[risk.health_label]?.label || risk.health_label }] : []),
+                  { label: "Overdue amount", value: inrWhole(Number(risk.overdue_amount || 0)) },
                 ],
               }]
             : []),
-          {
-            label: "Contact",
-            rows: [
-              { label: "Phone", value: lensCustomer.customer_phone || "Not on file" },
-            ],
-          },
+          { label: "Contact", rows: [{ label: "Phone", value: lensCustomer.customer_phone || "Not on file" }] },
         ];
         return (
           <LensDrawer
             entityType="Customer"
             name={lensCustomer.customer_name}
-            statusLabel={balance > 0 ? "Balance owed" : balance < 0 ? "Advance on account" : "Account clear"}
+            statusLabel={balance > 0 ? "Balance owed" : balance < 0 ? "Advance on account" : "Account settled"}
             sections={sections}
             actions={[
-              { label: "Open Khata", onClick: () => { window.location.href = `/khata?customer=${encodeURIComponent(lensCustomer.customer_name)}`; } },
               { label: "WhatsApp", onClick: () => whatsappStatement(lensCustomer) },
-              // Simulate: only offered when a real open invoice for this
-              // customer was found (lensSimInvoiceId) — otherwise omitted,
-              // matching the dead-button audit's honesty requirement.
+              // Simulate: only when a real open invoice for this customer exists.
               ...(lensSimInvoiceId
                 ? [{ label: "Simulate", onClick: () => router.push(`/simulate?invoiceId=${encodeURIComponent(lensSimInvoiceId)}`) }]
                 : []),

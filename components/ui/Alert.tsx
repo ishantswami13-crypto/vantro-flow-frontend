@@ -1,5 +1,5 @@
 import React from "react";
-import { FiAlertTriangle, FiCheckCircle, FiInfo, FiXCircle } from "react-icons/fi";
+import { IconAlert, IconCheck, IconInfo } from "@/components/v32/icons";
 
 type AlertVariant = "info" | "success" | "warning" | "danger";
 
@@ -10,38 +10,30 @@ interface AlertProps {
   className?: string;
 }
 
-const CFG: Record<AlertVariant, { bg: string; border: string; icon: React.ReactNode; titleColor: string }> = {
-  info:    {
-    bg: "bg-accent-dim",    border: "border-accent/30",
-    icon: <FiInfo className="text-accent" size={15} />,          titleColor: "text-accent",
-  },
-  success: {
-    bg: "bg-success-dim",  border: "border-success/30",
-    icon: <FiCheckCircle className="text-success" size={15} />,  titleColor: "text-success",
-  },
-  warning: {
-    bg: "bg-warning-dim",  border: "border-warning/30",
-    icon: <FiAlertTriangle className="text-warning" size={15} />, titleColor: "text-warning",
-  },
-  danger:  {
-    bg: "bg-danger-dim",   border: "border-danger/30",
-    icon: <FiXCircle className="text-danger" size={15} />,       titleColor: "text-danger",
-  },
+// A quiet inline notice: surface panel, a toned icon and title, body in the
+// secondary ink. Tone comes from the status tokens, never a glow or a bar.
+const CFG: Record<AlertVariant, { tk: string; color: string; Icon: typeof IconInfo }> = {
+  info:    { tk: "--tk-info",     color: "var(--info)",     Icon: IconInfo },
+  success: { tk: "--tk-positive", color: "var(--positive)", Icon: IconCheck },
+  warning: { tk: "--tk-warning",  color: "var(--warning)",  Icon: IconAlert },
+  danger:  { tk: "--tk-critical", color: "var(--critical)", Icon: IconAlert },
 };
 
 export function Alert({ variant = "info", title, children, className = "" }: AlertProps) {
   const c = CFG[variant];
   return (
-    <div className={[
-      "flex gap-3 p-4 rounded-xl border relative overflow-hidden",
-      c.bg, c.border, className,
-    ].join(" ")}>
-      {/* Accent line */}
-      <div className={["absolute left-0 top-0 bottom-0 w-0.5", `bg-${variant === "info" ? "accent" : variant}`].join(" ")} />
-      <span className="shrink-0 mt-0.5">{c.icon}</span>
-      <div className="flex flex-col gap-0.5 min-w-0">
-        {title && <p className={["text-sm font-bold", c.titleColor].join(" ")}>{title}</p>}
-        <p className="text-sm text-secondary leading-relaxed">{children}</p>
+    <div
+      role={variant === "danger" || variant === "warning" ? "alert" : "status"}
+      className={["flex", className].join(" ")}
+      style={{
+        gap: 12, padding: "12px 16px", borderRadius: "var(--radius-md)",
+        background: `rgb(var(${c.tk}) / 0.07)`, border: `1px solid rgb(var(${c.tk}) / 0.22)`,
+      }}
+    >
+      <span className="shrink-0" style={{ color: c.color, marginTop: 1 }}><c.Icon size={15} /></span>
+      <div className="flex flex-col min-w-0" style={{ gap: 2 }}>
+        {title && <p style={{ margin: 0, fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>{title}</p>}
+        <div style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55 }}>{children}</div>
       </div>
     </div>
   );

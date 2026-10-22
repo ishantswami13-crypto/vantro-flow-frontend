@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 
+// Replaces the root layout when it fails, so no stylesheet is guaranteed:
+// the dark-theme token values are written out here on purpose.
 export default function GlobalError({
   error,
   reset,
@@ -13,23 +15,21 @@ export default function GlobalError({
     console.error('[Starlane Global Error]', error);
   }, [error]);
 
-  const errorId = error.requestId || 'UNKNOWN';
-
   return (
     <html lang="en">
-      <body>
-        <div style={{ minHeight: '100vh', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ padding: '2rem', maxWidth: '600px', width: '100%', textAlign: 'center' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#F2F2F2' }}>A critical error occurred</h1>
-            <p style={{ marginBottom: '2rem', color: '#888888' }}>We've been notified. Please try reloading the page.</p>
-            <div style={{ background: '#161616', border: '1px solid #222222', padding: '1rem', borderRadius: '0.5rem', fontFamily: 'monospace', marginBottom: '2rem', color: '#888888' }}>
-              Error ID: <span style={{ color: '#F2F2F2', fontWeight: 'bold' }}>{errorId}</span>
-            </div>
+      <body style={{ margin: 0, background: '#0D0D0C', fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ maxWidth: 440, width: '100%', textAlign: 'center' }}>
+            <h1 style={{ fontSize: 20, fontWeight: 500, margin: '0 0 8px', color: '#EDECE8' }}>Starlane couldn&apos;t load</h1>
+            <p style={{ margin: '0 0 24px', fontSize: 14, lineHeight: 1.55, color: '#9E9D97' }}>Something failed while starting the app. Reloading usually fixes it.</p>
+            {error.requestId && (
+              <p style={{ margin: '0 0 24px', fontSize: 12.5, color: '#7C7B75' }}>Reference {error.requestId}</p>
+            )}
             <button
               onClick={reset}
-              style={{ padding: '0.75rem 1.5rem', background: '#191917', color: 'white', borderRadius: '0.75rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+              style={{ height: 36, padding: '0 16px', background: '#EDECE8', color: '#0D0D0C', borderRadius: 8, fontSize: 14, fontWeight: 500, border: 'none', cursor: 'pointer' }}
             >
-              Reload application
+              Reload
             </button>
           </div>
         </div>

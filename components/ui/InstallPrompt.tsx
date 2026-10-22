@@ -47,19 +47,19 @@ export default function InstallPrompt() {
 
   return (
     <div className="fixed bottom-20 lg:bottom-6 left-4 right-4 lg:left-auto lg:right-6 lg:w-80 z-50 animate-slide-up">
-      <div className="card-premium p-4 border border-accent/30 shadow-2xl">
+      <div className="p-4 rounded-xl" style={{ background: "var(--elevated)", border: "1px solid var(--line)", boxShadow: "var(--shadow-lg)" }}>
         <div className="flex items-start gap-3">
           <LogoMark size={36} className="shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-primary">Install Starlane App</p>
+            <p className="text-sm font-medium text-primary">Install Starlane</p>
             <p className="text-xs text-muted mt-0.5">Add to home screen for instant access, offline support &amp; push notifications.</p>
             <div className="flex gap-2 mt-3">
               <button onClick={install}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-white/90 transition-all shadow-sm">
-                <FiDownload size={11} /> Install Free
+                className="ui-btn ui-btn-primary ui-btn-sm">
+                <FiDownload size={12} /> Install
               </button>
               <button onClick={dismiss}
-                className="px-3 py-1.5 rounded-lg bg-surface-2 border border-border text-xs text-secondary hover:text-primary transition-all">
+                className="ui-btn ui-btn-ghost ui-btn-sm">
                 Later
               </button>
             </div>

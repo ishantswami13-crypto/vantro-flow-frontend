@@ -9,10 +9,10 @@ import { DecisionApiError } from "@/lib/decisions";
 
 export function Panel({ title, subtitle, right, children }: { title: string; subtitle?: React.ReactNode; right?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg fade-once" style={{ background: "#FFFFFF", border: `1px solid ${C.card}`, padding: "20px 22px" }}>
+    <section className="rounded-lg fade-once" style={{ background: "var(--surface)", border: `1px solid ${C.card}`, padding: "20px 22px" }}>
       <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
         <div style={{ minWidth: 0 }}>
-          <h2 style={{ color: C.ink, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 17, letterSpacing: "-0.2px", margin: 0 }}>{title}</h2>
+          <h2 style={{ color: C.ink, fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 17, letterSpacing: "-0.2px", margin: 0 }}>{title}</h2>
           {subtitle && <p className="text-[12.5px] mt-1 leading-[1.55]" style={{ color: C.muted }}>{subtitle}</p>}
         </div>
         {right}
@@ -34,9 +34,9 @@ export function Btn({ children, onClick, primary, danger, disabled, type = "butt
         fontWeight: 400,
         cursor: disabled ? "default" : "pointer",
         opacity: disabled ? 0.4 : 1,
-        color: primary ? "#F7F7F4" : danger ? C.bad : C.body,
-        background: primary ? "#191917" : "transparent",
-        border: `1px solid ${primary ? "#191917" : danger ? "rgba(166,79,75,0.35)" : "rgba(25,25,23,0.14)"}`,
+        color: primary ? "var(--bg)" : danger ? C.bad : C.body,
+        background: primary ? "var(--ink)" : "transparent",
+        border: `1px solid ${primary ? "var(--ink)" : danger ? "rgb(var(--tk-critical) / 0.35)" : "rgb(var(--tk-ink) / 0.14)"}`,
       }}
     >
       {children}

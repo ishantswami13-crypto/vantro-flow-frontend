@@ -1,4 +1,5 @@
 "use client";
+import "../atlas.css";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -39,7 +40,7 @@ const PRIORITIES = [
   { key: "forecasting", label: "Forecasting" },
 ];
 
-const iBase: React.CSSProperties = { background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 7, padding: "13px 16px", fontFamily: "'Geist', 'Plus Jakarta Sans',system-ui", fontSize: 15, color: "#F5F4F0", outline: "none", width: "100%", transition: "border-color .2s,background .2s" };
+const iBase: React.CSSProperties = { background: "rgba(255,255,255,.05)", borderWidth: 1, borderStyle: "solid", borderColor: "rgba(255,255,255,.12)", borderRadius: 7, padding: "13px 16px", fontFamily: "'Geist', 'Plus Jakarta Sans',system-ui", fontSize: 15, color: "#F5F4F0", outline: "none", width: "100%", transition: "border-color .2s,background .2s" };
 const iFocus: React.CSSProperties = { ...iBase, borderColor: "rgba(255,255,255,.34)", background: "rgba(255,255,255,.08)" };
 
 function FocusInput(p: React.InputHTMLAttributes<HTMLInputElement>) {

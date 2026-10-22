@@ -1,124 +1,177 @@
 "use client";
-import Link from "next/link";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { LoadingState } from "@/components/ui/LoadingState";
+import { SkeletonRows, SearchField } from "@/components/v32/ui";
+import { StatusChip, toneForStatus } from "@/components/ui/Badge";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { ControlSubnav } from "@/components/control/ControlSubnav";
+import Button from "@/components/ui/Button";
+import { ControlHeader, ControlPage } from "@/components/control/ControlSubnav";
+import { OFFLINE } from "@/components/connectors/health";
+import { formatDate, formatDateTime, formatTime } from "@/lib/format";
+import { controlStyles as cs } from "@/components/control/Authority";
 import { api, type AuditEvent } from "@/lib/api";
 
-// A real, chronological, per-user audit trail — sourced from audit_logs, a
-// table that already existed and was already being written to on every
-// financial change (see audit.service.js on the backend), but had no read
-// path anywhere in the product until this page. Nothing here is invented:
-// no severity coloring, no synthetic categorization beyond what the raw
-// action/entity_type fields already say.
-//
-// Column layout per STARLANE_FRONTEND_HANDOFF.md §17 (audit_row):
-// grid-template-columns: 90px 150px 2fr 140px 160px 1fr = Time/Actor/
-// Action/Object/Source/Result. Decision steps (from decision_events) carry
-// actor, agent/model and result; ledger rows (audit_logs) do not, and those
-// cells render an honest "—" rather than fabricated values.
-function humanizeAction(action: string): string {
-  return action.replace(/_/g, " ").toLowerCase().replace(/^./, c => c.toUpperCase());
-}
+// Control > Audit log. A real, chronological, per-business trail from
+// GET /api/audit: audit_logs (financial changes, written by
+// audit.service.js) merged with decision_events (who acted, through which
+// agent and model, and the result). Ledger rows carry no actor or result,
+// and those cells read "—" rather than an invented value. Older pages load
+// through the route's `before` cursor (50 per page).
 
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-}
+const PAGE = 50;
+type SourceFilter = "all" | "decision" | "ledger";
 
-const GRID_COLS = "90px 150px 2fr 140px 160px 1fr";
+const humanize = (s: string) => s.replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase());
 
-function AuditHeaderRow() {
-  return (
-    <div
-      style={{
-        display: "grid", gridTemplateColumns: GRID_COLS, gap: 12, padding: "10px 4px",
-        borderBottom: "1px solid #EBEAE6", fontSize: 11, fontWeight: 600, color: "#8A8A86",
-        letterSpacing: 0,
-      }}
-    >
-      <span>Time</span>
-      <span>Actor</span>
-      <span>Action</span>
-      <span>Object</span>
-      <span>Source</span>
-      <span>Result</span>
-    </div>
-  );
-}
-
-function AuditRow({ event }: { event: AuditEvent }) {
-  return (
-    <div
-      className="row-hover"
-      style={{
-        display: "grid", gridTemplateColumns: GRID_COLS, gap: 12, padding: "12px 4px",
-        borderBottom: "1px solid #EBEAE6", alignItems: "start",
-      }}
-    >
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>{formatTime(event.created_at)}</span>
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>{event.actor || "—"}</span>
-      <span className="text-sm font-medium" style={{ color: "#191917" }}>
-        {humanizeAction(event.action)}
-        {event.title && <span className="block text-2xs font-normal" style={{ color: "#63635F" }}>{event.title}</span>}
-      </span>
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>
-        {event.source === "decision" && event.entity_id
-          ? <Link className="underline" href={`/decisions/${event.entity_id}`}>Decision</Link>
-          : event.entity_type ? `${event.entity_type}${event.entity_id ? ` · ${event.entity_id.slice(0, 8)}…` : ""}` : "—"}
-      </span>
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>{event.source === "decision" ? (event.model || "Starlane") : "Ledger"}</span>
-      <span className="text-2xs" style={{ color: "#8A8A86" }}>{event.result ? humanizeAction(event.result) : "—"}</span>
-    </div>
-  );
+function objectLabel(e: AuditEvent): React.ReactNode {
+  if (e.source === "decision" && e.entity_id) {
+    return <Link className="hover-dim" style={{ color: "var(--ink)" }} href={`/decisions/${e.entity_id}`} title="Open this decision">Decision <span className="num" style={{ fontSize: 11.5, color: "var(--ink-3)" }}>{e.entity_id.slice(0, 8)}</span></Link>;
+  }
+  if (!e.entity_type) return "—";
+  return <>{humanize(e.entity_type)}{e.entity_id ? <span className="num" style={{ fontSize: 11.5, color: "var(--ink-3)" }}> {e.entity_id.slice(0, 8)}</span> : null}</>;
 }
 
 export default function AuditPage() {
-  const { data, isLoading, isError, refetch } = useQuery<{ success: boolean; events: AuditEvent[] }>({
+  const [query, setQuery] = useState("");
+  const [source, setSource] = useState<SourceFilter>("all");
+
+  const q = useInfiniteQuery({
     queryKey: ["control-audit"],
-    queryFn: () => api.audit.list(),
+    queryFn: ({ pageParam }) => api.audit.list(pageParam || undefined),
+    initialPageParam: "" as string,
+    getNextPageParam: (last) => (last.events.length >= PAGE ? last.events[last.events.length - 1]?.created_at : undefined),
     staleTime: 15_000,
   });
 
+  const all = useMemo(() => {
+    const seen = new Set<string>();
+    return (q.data?.pages || []).flatMap((p) => p.events).filter((e) => {
+      const k = `${e.source || "ledger"}:${e.id}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }, [q.data]);
+
+  const rows = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return all.filter((e) => {
+      if (source !== "all" && (e.source || "ledger") !== source) return false;
+      if (!needle) return true;
+      return [e.action, e.title, e.actor, e.entity_type, e.model, e.result].some((v) => v && String(v).toLowerCase().replace(/_/g, " ").includes(needle));
+    });
+  }, [all, query, source]);
+
+  // Rows arrive newest first; group them under one line per day.
+  const days = useMemo(() => {
+    const out: { day: string; rows: AuditEvent[] }[] = [];
+    for (const e of rows) {
+      const d = formatDate(e.created_at);
+      if (out.length && out[out.length - 1].day === d) out[out.length - 1].rows.push(e);
+      else out.push({ day: d, rows: [e] });
+    }
+    return out;
+  }, [rows]);
+
+  const FILTERS: { key: SourceFilter; label: string }[] = [
+    { key: "all", label: "All" }, { key: "decision", label: "Decisions" }, { key: "ledger", label: "Ledger" },
+  ];
+
   return (
-    <DashboardLayout pageTitle="Audit">
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
-        <div>
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
-            Control
-          </h1>
-          <p className="text-[13.5px] mt-2 max-w-[640px]" style={{ color: "#63635F" }}>
-            A chronological record of every decision step and financial change: who acted, through which agent, and what happened.
-          </p>
+    <DashboardLayout pageTitle="Audit log">
+      <style>{`
+        .au-grid { display: grid; column-gap: 16px; align-items: baseline; grid-template-columns: minmax(0, 1fr) auto; }
+        .au-head { display: none; }
+        .au-row { padding: 9px 0; min-height: 40px; font-size: 13px; }
+        .au-desk { display: none; }
+        .au-mobile { font-size: 12px; color: var(--ink-3); margin-top: 3px; }
+        .au-text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+        @media (min-width: 900px) {
+          .au-grid { grid-template-columns: 84px minmax(0, 1fr) 140px 160px 104px; }
+          .au-head { display: grid; }
+          .au-desk { display: block; }
+          .au-mobile { display: none; }
+          .au-grid .au-src { display: none; }
+        }
+        @media (min-width: 1200px) {
+          .au-grid { grid-template-columns: 84px minmax(0, 2fr) 150px 170px 150px 104px; }
+          .au-grid .au-src { display: block; }
+        }
+        .seg { display: inline-flex; padding: 2px; border-radius: 8px; background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+        .seg button { height: 26px; padding: 0 10px; font-size: 12.5px; border-radius: 6px; color: var(--ink-2); background: none; border: none; cursor: pointer; transition: color var(--dur-instant) var(--ease); }
+        .seg button:hover { color: var(--ink); }
+        .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line-card); }
+      `}</style>
+      <ControlPage>
+        <ControlHeader active="audit" subtitle="Every decision step and financial change: who acted, through which agent, and what happened." />
+
+        <div className="flex items-center flex-wrap" style={{ gap: 12 }}>
+          <div style={{ flex: "1 1 260px", maxWidth: 360 }}>
+            <SearchField id="audit-search" value={query} onChange={setQuery} placeholder="Filter by action, actor or result" />
+          </div>
+          <div className="seg" role="group" aria-label="Source">
+            {FILTERS.map((f) => (
+              <button key={f.key} type="button" aria-pressed={source === f.key} onClick={() => setSource(f.key)}>{f.label}</button>
+            ))}
+          </div>
+          {q.data && <span style={{ fontSize: 12, color: "var(--ink-3)", marginLeft: "auto" }} className="tabular-nums">{rows.length} of {all.length} loaded</span>}
         </div>
 
-        <ControlSubnav active="audit" />
+        <div className="fade-once">
+          {q.isLoading && <SkeletonRows rows={6} height={46} />}
+          {q.isError && <ErrorState title="Couldn't load the audit log" message={OFFLINE} onRetry={() => q.refetch()} />}
 
-        <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
-          {isLoading && <LoadingState label="Loading audit trail" rows={4} />}
-
-          {isError && (
-            <ErrorState title="Couldn't load the audit trail" message="Check your connection and try again." onRetry={() => refetch()} />
+          {q.data && all.length === 0 && (
+            <p className="ops-list" style={{ margin: 0, padding: "12px 0", fontSize: 13, color: "var(--ink-2)", borderBottom: "1px solid var(--line)" }}>No audit events yet. Decision steps and financial changes appear here as they happen.</p>
           )}
-
-          {!isLoading && !isError && (data?.events.length ?? 0) === 0 && (
-            <EmptyState
-              title="No audit events yet"
-              message="Decision steps and financial changes will appear here as they happen."
-            />
-          )}
-
-          {!isLoading && !isError && (data?.events.length ?? 0) > 0 && (
-            <div>
-              <AuditHeaderRow />
-              {data!.events.map(e => <AuditRow key={e.id} event={e} />)}
+          {q.data && all.length > 0 && rows.length === 0 && (
+            <div className="ops-list flex items-center justify-between flex-wrap" style={{ gap: 12, padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
+              <p style={{ margin: 0, fontSize: 13, color: "var(--ink-2)" }}>No events match. Try a different word, or show all sources.</p>
+              <Button variant="ghost" size="sm" onClick={() => { setQuery(""); setSource("all"); }}>Clear filters</Button>
             </div>
           )}
+
+          {rows.length > 0 && (
+            <div role="table" aria-label="Audit log">
+              <div role="row" className="au-grid au-head ops-head">
+                <span role="columnheader">Time</span><span role="columnheader">Action</span><span role="columnheader">Actor</span>
+                <span role="columnheader">Object</span><span role="columnheader" className="au-src">Source</span><span role="columnheader">Result</span>
+              </div>
+              {days.map((g) => (
+                <div key={g.day} role="rowgroup">
+                  <div role="row" className={cs.day}><span role="cell" style={{ fontWeight: 600, color: "var(--ink)" }}>{g.day}</span><span role="cell">{g.rows.length} event{g.rows.length === 1 ? "" : "s"}</span></div>
+                  {g.rows.map((e) => (
+                    <div role="row" key={`${e.source}:${e.id}`} className="au-grid au-row ops-row">
+                      <span role="cell" className="au-desk num-quiet" style={{ color: "var(--ink-2)", fontSize: 12.5 }} title={formatDateTime(e.created_at)}>{formatTime(e.created_at)}</span>
+                      <span role="cell" className="min-w-0">
+                        <span className="au-text" title={e.title ? `${humanize(e.action)} · ${e.title}` : undefined}>
+                          <span style={{ color: "var(--ink)", fontWeight: 500 }}>{humanize(e.action)}</span>
+                          {e.title && <span style={{ color: "var(--ink-2)" }}> · {e.title}</span>}
+                        </span>
+                        <span className="au-mobile block">{formatTime(e.created_at)}{e.actor ? ` · ${e.actor}` : ""}</span>
+                      </span>
+                      <span role="cell" className="au-desk truncate" style={{ color: e.actor ? "var(--ink)" : "var(--ink-3)" }}>{e.actor || "—"}</span>
+                      <span role="cell" className="au-desk truncate" style={{ color: "var(--body)" }}>{objectLabel(e)}</span>
+                      <span role="cell" className={`au-desk au-src truncate ${e.source === "decision" && e.model ? "num" : ""}`} style={{ color: "var(--ink-2)", fontSize: e.source === "decision" && e.model ? 12 : 13 }}>{e.source === "decision" ? (e.model || "Starlane") : "Ledger"}</span>
+                      <span role="cell">{e.result ? <StatusChip tone={toneForStatus(e.result)}>{humanize(e.result)}</StatusChip> : <span className="au-desk" style={{ color: "var(--ink-3)" }}>—</span>}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {q.hasNextPage && (
+            <div style={{ marginTop: 16 }}>
+              <Button variant="secondary" size="sm" loading={q.isFetchingNextPage} onClick={() => q.fetchNextPage()}>Load older events</Button>
+            </div>
+          )}
+          {q.isFetchNextPageError && <p role="alert" style={{ fontSize: 12.5, color: "var(--critical)", marginTop: 10 }}>Older events didn&apos;t load. {OFFLINE}</p>}
         </div>
-      </div>
+      </ControlPage>
     </DashboardLayout>
   );
 }

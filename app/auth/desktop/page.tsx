@@ -6,6 +6,7 @@
 // without a code the signed-in app just asked for.
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import StarlaneMark from "@/components/brand/StarlaneMark";
 import { useRouter } from "next/navigation";
 import { api, saveAuth } from "@/lib/api";
 
@@ -40,15 +41,19 @@ export default function DesktopSignInPage() {
   }, [router]);
 
   return (
-    <main style={{ display: "grid", placeItems: "center", minHeight: "100vh", padding: 24 }}>
-      <div style={{ display: "grid", gap: 12, maxWidth: 380, textAlign: "center" }}>
+    <main style={{ display: "grid", placeItems: "center", minHeight: "100vh", padding: 24, background: "var(--bg)" }}>
+      <div className="fade-once" style={{ display: "grid", justifyItems: "center", gap: 14, maxWidth: 380, textAlign: "center" }}>
+        <StarlaneMark size={36} />
         {error ? (
           <>
-            <p role="alert">{error}</p>
-            <p><Link href="/login" style={{ textDecoration: "underline" }}>Sign in</Link></p>
+            <p role="alert" style={{ margin: 0, fontSize: 15, color: "var(--ink)" }}>{error}</p>
+            <Link href="/login" className="ui-btn ui-btn-primary">Sign in again</Link>
           </>
         ) : (
-          <p role="status" aria-live="polite">Opening Starlane…</p>
+          <p role="status" aria-live="polite" className="flex items-center gap-2" style={{ margin: 0, fontSize: 14, color: "var(--ink-2)" }}>
+            <span aria-hidden="true" className="w-3.5 h-3.5 border-[1.5px] border-current border-t-transparent rounded-full animate-spin" />
+            Opening Starlane…
+          </p>
         )}
       </div>
     </main>

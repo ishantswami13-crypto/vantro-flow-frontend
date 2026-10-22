@@ -1,49 +1,74 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Alert } from "@/components/ui/Alert";
-import { Badge } from "@/components/ui/Badge";
-import { FiTrendingDown, FiDollarSign, FiAlertTriangle, FiPhone, FiUpload, FiArrowRight } from "react-icons/fi";
+// Cash forecast: three scenarios from real collections and purchases
+// (GET /api/cash-forecast), and the V2 view that sets observed bank movement
+// beside the deterministic prediction (GET /api/intelligence/forecast/v2).
+
+import { Fragment, useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
   ResponsiveContainer, ComposedChart, Area, Line,
-  XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
+  XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ReferenceArea,
 } from "recharts";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Alert } from "@/components/ui/Alert";
 import { api, getUser } from "@/lib/api";
 import type { ForecastV2Response } from "@/lib/api";
-import Link from "next/link";
+import { inrWhole, inrShort, formatDate, formatDateTime, formatCount } from "@/lib/format";
+import { PageHeader, Subnav } from "@/components/v32/ui";
+import { IconChart, IconInfo } from "@/components/v32/icons";
+import Button from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { MorePage, FigureRow, GridTable, Segmented, Panel, Field, OFFLINE_TEXT, moreStyles as s, type Column } from "@/components/more/ui";
 
-function fmt(v: number) {
-  return v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : `₹${(v / 1000).toFixed(0)}K`;
-}
+type Point = { date: string; optimistic: number; expected: number; pessimistic: number };
+type Impact = { name: string; amount: number; days_overdue: number; priority_score?: number };
+type TipEntry = { dataKey: string; name: string; value: number; color: string };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const AXIS = { fill: "var(--ink-3)", fontSize: 11 };
+// Runway is reported as 999 when cash never runs out inside the model.
+const NEVER = 999;
+
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: TipEntry[]; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-surface-1 border border-border rounded-lg px-3 py-2.5 shadow-card text-xs min-w-[150px]">
-      <p className="text-secondary font-medium mb-2">{label}</p>
-      {payload.map((p: any) => (
-        <div key={p.dataKey} className="flex items-center justify-between gap-4 mb-1">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.color }} />
-            <span className="text-secondary">{p.name}</span>
-          </div>
-          <span className="metric-value font-semibold" style={{ color: p.color }}>{fmt(p.value)}</span>
+    <div className={s.tooltip}>
+      <div style={{ color: "var(--ink)", marginBottom: 2 }}>{label}</div>
+      {payload.filter(p => p.value != null).map(p => (
+        <div key={p.dataKey} className={s.tooltipRow}>
+          <span className="flex items-center" style={{ gap: 6 }}>
+            <span aria-hidden="true" style={{ width: 8, height: 2, background: p.color, display: "inline-block" }} />{p.name}
+          </span>
+          <b>{inrWhole(p.value)}</b>
         </div>
       ))}
     </div>
   );
-};
+}
 
-function SkeletonCard() {
+function ChartSkeleton() {
   return (
-    <div className="card-metric p-5 animate-pulse">
-      <div className="h-3 w-24 bg-surface-3 rounded mb-4" />
-      <div className="h-8 w-20 bg-surface-3 rounded mb-2" />
-      <div className="h-2.5 w-16 bg-surface-3 rounded" />
+    <div className={s.panel} aria-busy="true" aria-label="Loading forecast">
+      <div className="skeleton" style={{ height: 10, width: 160, marginBottom: 8 }} />
+      <div className="skeleton" style={{ height: 10, width: 280, maxWidth: "80%", marginBottom: 20 }} />
+      <div className="skeleton" style={{ height: 260, borderRadius: 6 }} />
     </div>
   );
 }
+
+/** A figure that is a sentence, not a number ("Not set"): quiet sans, never mono. */
+const wordFigure = (text: string) => <span style={{ fontFamily: "var(--font-sans)", fontSize: 15, lineHeight: "24px", letterSpacing: 0, color: "var(--ink-2)" }}>{text}</span>;
+
+// Neutral lines: the case you pick reads in ink, the other two recede.
+// Colour is kept for the one thing that matters, cash running out.
+const SERIES = [
+  { key: "optimistic", label: "Optimistic", dash: "" },
+  { key: "expected", label: "Expected", dash: "" },
+  { key: "pessimistic", label: "Pessimistic", dash: "4 3" },
+] as const;
+type SeriesKey = (typeof SERIES)[number]["key"];
 
 export default function ForecastPage() {
   const [mode, setMode]         = useState<"classic" | "v2">("classic");
@@ -52,27 +77,30 @@ export default function ForecastPage() {
   const [v2Loading, setV2Loading] = useState(false);
   const [v2Error, setV2Error]   = useState(false);
   const [range, setRange]       = useState<30 | 60 | 90>(30);
+  const [focus, setFocus]       = useState<SeriesKey>("expected");
   const [loading, setLoading]   = useState(true);
-  const [chartData, setChartData] = useState<{ date: string; optimistic: number; expected: number; pessimistic: number }[]>([]);
-  const [kpis, setKpis]         = useState({ cashStart: 0, burnRate: 0, avgCollections: 0, runwayDays: 0 });
-  const [topImpact, setTopImpact] = useState<{ name: string; amount: number; days_overdue: number; priority_score?: number }[]>([]);
+  const [loadError, setLoadError] = useState(false);
+  const [chartData, setChartData] = useState<Point[]>([]);
+  const [kpis, setKpis]         = useState({ cashStart: 0, burnRate: 0, avgCollections: 0, runwayDays: 0, collectionsBasis: "history" as string });
+  const [topImpact, setTopImpact] = useState<Impact[]>([]);
   const [noData, setNoData]     = useState(false);
-  const [openingCash, setOpeningCash] = useState(() => {
-    if (typeof window !== "undefined") return localStorage.getItem("vantro_opening_cash") || "";
-    return "";
-  });
+  // Read after mount: reading storage during render made the server and
+  // client disagree about the header button once cash had been saved.
+  const [openingCash, setOpeningCash] = useState("");
+  const [cashReady, setCashReady] = useState(false);
+  useEffect(() => {
+    try { setOpeningCash(localStorage.getItem("vantro_opening_cash") || ""); } catch { /* storage blocked */ }
+    setCashReady(true);
+  }, []);
   const [cashInput, setCashInput] = useState("");
   const [showCashInput, setShowCashInput] = useState(false);
 
   const loadForecast = useCallback(async (days: 30 | 60 | 90, cash?: string) => {
     const user = getUser();
-    if (!user?.id) {
-      setNoData(true);
-      setLoading(false);
-      return;
-    }
+    if (!user?.id) { setNoData(true); setLoading(false); return; }
     const currentCash = cash !== undefined ? cash : openingCash;
     setLoading(true);
+    setLoadError(false);
     try {
       let usedForecastTopImpact = false;
       const [forecastRes, invoicesRes] = await Promise.allSettled([
@@ -81,67 +109,57 @@ export default function ForecastPage() {
       ]);
 
       if (forecastRes.status === "fulfilled") {
-        const f = forecastRes.value;
-        const s = f.scenarios;
-        if (Array.isArray((f as any).topOutstanding)) {
+        const f = forecastRes.value as typeof forecastRes.value & { topOutstanding?: { name?: string; customer_name?: string; amount?: number; outstanding_amount?: number; days_overdue?: number; priority_score?: number }[] };
+        const sc = f.scenarios;
+        if (Array.isArray(f.topOutstanding)) {
           usedForecastTopImpact = true;
-          setTopImpact((f as any).topOutstanding.slice(0, 5).map((inv: any) => ({
-            name: inv.name || inv.customer_name,
+          setTopImpact(f.topOutstanding.slice(0, 5).map(inv => ({
+            name: inv.name || inv.customer_name || "",
             amount: inv.amount || inv.outstanding_amount || 0,
             days_overdue: inv.days_overdue || 0,
             priority_score: inv.priority_score,
           })));
         }
-
-        // Build chart data: align by day index across scenarios
-        const optCurve  = s?.optimistic?.curve  || [];
-        const expCurve  = s?.expected?.curve    || [];
-        const pesCurve  = s?.pessimistic?.curve || [];
+        const optCurve = sc?.optimistic?.curve || [];
+        const expCurve = sc?.expected?.curve || [];
+        const pesCurve = sc?.pessimistic?.curve || [];
         const maxLen = Math.max(optCurve.length, expCurve.length, pesCurve.length);
-
         if (maxLen === 0) {
           setNoData(true);
         } else {
           setNoData(false);
           const now = new Date();
-          const merged = Array.from({ length: maxLen }, (_, i) => {
+          setChartData(Array.from({ length: maxLen }, (_, i) => {
             const d = new Date(now);
             d.setDate(now.getDate() + (optCurve[i]?.day ?? i));
-            const label = `${d.getDate()} ${d.toLocaleString("en-IN", { month: "short" })}`;
             return {
-              date:        label,
-              optimistic:  Math.max(0, Math.round(optCurve[i]?.cash  ?? 0)),
-              expected:    Math.max(0, Math.round(expCurve[i]?.cash  ?? 0)),
+              date: formatDate(d),
+              optimistic:  Math.max(0, Math.round(optCurve[i]?.cash ?? 0)),
+              expected:    Math.max(0, Math.round(expCurve[i]?.cash ?? 0)),
               pessimistic: Math.max(0, Math.round(pesCurve[i]?.cash ?? 0)),
             };
-          });
-          setChartData(merged);
+          }));
           setKpis({
             cashStart:      f.cashStart || 0,
             burnRate:       f.burnRate || 0,
             avgCollections: f.avgDailyCollections || 0,
-            runwayDays:     s?.pessimistic?.runwayDays ?? s?.expected?.runwayDays ?? 0,
+            collectionsBasis: f.collectionsBasis || "history",
+            runwayDays:     sc?.pessimistic?.runwayDays ?? sc?.expected?.runwayDays ?? 0,
           });
         }
       } else {
-        setNoData(true);
+        setLoadError(true);
       }
 
       if (invoicesRes.status === "fulfilled" && !usedForecastTopImpact) {
-        const overdue = (invoicesRes.value.invoices || [])
-          .filter((inv: any) => inv.payment_status === "Pending" && inv.days_overdue > 0)
-          .sort((a: any, b: any) => (b.invoice_amount - a.invoice_amount))
+        setTopImpact((invoicesRes.value.invoices || [])
+          .filter(inv => inv.payment_status === "Pending" && inv.days_overdue > 0)
+          .sort((a, b) => b.invoice_amount - a.invoice_amount)
           .slice(0, 5)
-          .map((inv: any) => ({
-            name:           inv.customer_name,
-            amount:         inv.invoice_amount,
-            days_overdue:   inv.days_overdue,
-            priority_score: inv.priority_score,
-          }));
-        setTopImpact(overdue);
+          .map(inv => ({ name: inv.customer_name, amount: inv.invoice_amount, days_overdue: inv.days_overdue, priority_score: inv.priority_score })));
       }
     } catch {
-      setNoData(true);
+      setLoadError(true);
       setChartData([]);
       setTopImpact([]);
     } finally {
@@ -149,7 +167,7 @@ export default function ForecastPage() {
     }
   }, [openingCash]);
 
-  useEffect(() => { if (mode === "classic") loadForecast(range); }, [range, loadForecast, mode]);
+  useEffect(() => { if (mode === "classic" && cashReady) loadForecast(range); }, [range, loadForecast, mode, cashReady]);
 
   const loadForecastV2 = useCallback(async (horizon: 7 | 14 | 30) => {
     const user = getUser();
@@ -157,8 +175,7 @@ export default function ForecastPage() {
     setV2Loading(true);
     setV2Error(false);
     try {
-      const res = await api.forecastV2(user.id, horizon);
-      setV2(res);
+      setV2(await api.forecastV2(user.id, horizon));
     } catch {
       setV2Error(true);
       setV2(null);
@@ -169,369 +186,250 @@ export default function ForecastPage() {
 
   useEffect(() => { if (mode === "v2") loadForecastV2(v2Horizon); }, [mode, v2Horizon, loadForecastV2]);
 
-  // Safety watchdog — the forecast skeleton must never persist forever, even if a
-  // request hangs at the network layer below the API client's own timeout.
+  // Safety watchdog: the skeleton must never persist, even if a request hangs
+  // below the API client's own timeout.
   useEffect(() => {
     if (!loading) return;
     const t = setTimeout(() => {
       setLoading(false);
-      setChartData(prev => {
-        if (prev.length === 0) setNoData(true);
-        return prev;
-      });
+      setChartData(prev => { if (prev.length === 0) setLoadError(true); return prev; });
     }, 15000);
     return () => clearTimeout(t);
   }, [loading]);
 
-  const isRunwayDanger = kpis.runwayDays > 0 && kpis.runwayDays < 15;
+  // Without cash in hand the model starts from zero, so its runway means nothing.
+  const runwayKnown = !!openingCash && kpis.runwayDays > 0;
+  const runwayNever = kpis.runwayDays >= NEVER;
+  const isRunwayDanger = runwayKnown && !runwayNever && kpis.runwayDays < 15;
 
   const saveCash = () => {
     const val = cashInput.trim();
-    localStorage.setItem("vantro_opening_cash", val);
+    try { localStorage.setItem("vantro_opening_cash", val); } catch { /* storage blocked: still used for this visit */ }
     setOpeningCash(val);
     setShowCashInput(false);
     setCashInput("");
     loadForecast(range, val);
   };
 
-  return (
-    <DashboardLayout pageTitle="Cash Flow Forecast">
-      <div className="space-y-6 page-enter">
+  const impactCols: Column<Impact>[] = [
+    { key: "name", header: "Customer", width: "minmax(0, 1.6fr)", render: c => <div className={s.name} title={c.name}>{c.name}</div> },
+    { key: "late", header: "Days late", width: "96px", align: "right", hide: "sm", render: c => c.days_overdue > 0 ? <span>{formatCount(c.days_overdue)}</span> : <span style={{ fontFamily: "var(--font-sans)", color: "var(--ink-3)" }}>Not yet due</span> },
+    { key: "amount", header: "Amount", width: "130px", widthSm: "auto", align: "right", render: c => <span className={s.amount}>{inrWhole(c.amount)}</span> },
+    { key: "go", header: <span className="sr-only">Action</span>, width: "120px", widthSm: "auto", align: "right", render: () => <span className={s.hoverAction}><Link href="/collections" className="ui-btn ui-btn-ghost ui-btn-sm">Collect</Link></span> },
+  ];
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-          <div>
-            <h2 className="text-2xl font-black text-primary tracking-tight">Cash Flow Forecast</h2>
-            <p className="text-sm text-secondary mt-0.5">3-scenario projection based on your real purchases &amp; collections</p>
+  // The first day the highlighted case reaches zero (the curve is clamped
+  // at zero), only when cash in hand is known; otherwise zero means nothing.
+  const focusLabel = SERIES.find(x => x.key === focus)!.label;
+  const zeroAt = openingCash ? chartData.findIndex((p, i) => i > 0 && p[focus] <= 0) : -1;
+  const runsOut = zeroAt > 0 ? { date: chartData[zeroAt].date } : null;
+
+  const runwayValue = !runwayKnown ? wordFigure("Not known yet") : runwayNever ? wordFigure("Holds") : `${formatCount(kpis.runwayDays)} days`;
+
+  return (
+    <DashboardLayout pageTitle="Cash forecast">
+      <MorePage>
+        <PageHeader
+          title="Cash forecast"
+          subtitle="Where your cash is heading, from your real collections and purchases."
+          right={mode === "classic" ? <Button variant="primary" onClick={() => { setCashInput(openingCash); setShowCashInput(true); }}>{openingCash ? "Update cash in hand" : "Set cash in hand"}</Button> : undefined}
+        >
+          <div style={{ marginTop: 18 }}>
+            <Subnav label="Forecast view" active={mode} onChange={k => setMode(k as "classic" | "v2")} items={[
+              { key: "classic", label: "Scenarios" },
+              { key: "v2", label: "Observed and predicted" },
+            ]} />
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex gap-1 p-1 bg-surface-2 border border-border rounded-xl">
-              {([{ k: "classic", label: "Classic" }, { k: "v2", label: "V2" }] as const).map(({ k, label }) => (
-                <button key={k} onClick={() => setMode(k)}
-                  className={["px-4 py-1.5 text-2xs font-bold rounded-lg transition-all",
-                    mode === k ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
-                  ].join(" ")}>
-                  {label}
-                </button>
-              ))}
-            </div>
-            {mode === "classic" ? (
-              <div className="flex gap-1 p-1 bg-surface-2 border border-border rounded-xl">
-                {([30, 60, 90] as const).map(r => (
-                  <button key={r} onClick={() => setRange(r)}
-                    className={["px-5 py-2 text-xs font-bold rounded-lg transition-all",
-                      range === r ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
-                    ].join(" ")}>
-                    {r}d
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="flex gap-1 p-1 bg-surface-2 border border-border rounded-xl">
-                {([7, 14, 30] as const).map(r => (
-                  <button key={r} onClick={() => setV2Horizon(r)}
-                    className={["px-5 py-2 text-xs font-bold rounded-lg transition-all",
-                      v2Horizon === r ? "bg-gray-900 text-white" : "text-secondary hover:text-primary",
-                    ].join(" ")}>
-                    {r}d
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        </PageHeader>
 
         {mode === "classic" && <>
-        {/* Danger alert */}
-        {!loading && isRunwayDanger && (
-          <Alert variant="danger" title={`Cash Runway: ${kpis.runwayDays} Days — Action Required`}>
-            Pessimistic scenario shows cash exhaustion in {kpis.runwayDays} days at {fmt(kpis.burnRate)}/day burn.
-            Focus on collecting from your top outstanding customers this week.
-          </Alert>
-        )}
+          {!loading && isRunwayDanger && (
+            <Alert variant="danger" title={`Cash could run out in ${kpis.runwayDays} days`}>
+              In the pessimistic case, cash runs out in {kpis.runwayDays} days at {inrWhole(kpis.burnRate)} a day of spending. Collecting from the customers below moves that date out fastest.
+            </Alert>
+          )}
 
-        {/* Opening Cash input prompt */}
-        {!loading && !openingCash && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
-            style={{ background: "rgba(0,102,255,0.08)", border: "1px solid rgba(0,102,255,0.2)" }}>
-            <FiDollarSign size={15} style={{ color: "#0066FF", flexShrink: 0 }} />
-            <p className="text-sm flex-1" style={{ color: "#191917" }}>
-              Set your current cash balance to get an accurate forecast
-            </p>
-            {showCashInput ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm" style={{ color: "#8A8A86" }}>₹</span>
-                <input
-                  type="number"
-                  value={cashInput}
-                  onChange={e => setCashInput(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && saveCash()}
-                  placeholder="e.g. 50000"
-                  autoFocus
-                  className="w-28 px-2 py-1 text-sm rounded-lg outline-none"
-                  style={{ background: "#FFFFFF", border: "1px solid #E5E5E1", color: "#191917" }}
-                />
-                <button onClick={saveCash}
-                  className="px-3 py-1 rounded-lg text-xs font-semibold"
-                  style={{ background: "#0066FF", color: "#fff" }}>Save</button>
-              </div>
-            ) : (
-              <button onClick={() => setShowCashInput(true)}
-                className="px-3 py-1 rounded-lg text-xs font-semibold"
-                style={{ background: "#0066FF", color: "#fff" }}>Set Cash</button>
-            )}
-          </div>
-        )}
+          {!loading && !openingCash && !noData && !loadError && (
+            <div className={s.notice}>
+              <IconInfo size={15} />
+              <span style={{ flex: 1, minWidth: 220 }}>Add the cash you have today. Without it the forecast starts from zero and the runway can&apos;t be worked out.</span>
+            </div>
+          )}
 
-        {/* KPI row */}
-        {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {[0,1,2,3].map(i => <SkeletonCard key={i} />)}
-          </div>
-        ) : !noData ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 stagger-children">
-            {[
-              { label: "Opening Cash",         value: openingCash ? fmt(kpis.cashStart) : "Set →", sub: openingCash ? "tap to update" : "not set yet", icon: FiDollarSign,    color: "#0066FF", clickable: true },
-              { label: "Daily Burn Rate",       value: fmt(kpis.burnRate),       sub: "from your purchases",    icon: FiTrendingDown,  color: "#F5424D", clickable: false },
-              { label: "Avg Daily Collections", value: fmt(kpis.avgCollections), sub: "based on history",       icon: FiDollarSign,    color: "#10D98A", clickable: false },
-              { label: "Cash Runway",           value: kpis.runwayDays > 0 ? `${kpis.runwayDays}d` : "—", sub: "pessimistic case", icon: FiAlertTriangle, color: kpis.runwayDays < 15 ? "#F5424D" : "#F5A524", clickable: false },
-            ].map(({ label, value, sub, icon: Icon, color, clickable }) => (
-              <div key={label} className="card-metric p-5"
-                onClick={() => clickable && setShowCashInput(true)}
-                style={{ cursor: clickable ? "pointer" : "default" }}>
-                <div className="flex items-start justify-between mb-3">
-                  <p className="section-label">{label}</p>
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
-                    <Icon size={15} style={{ color }} />
+          {loading && <ChartSkeleton />}
+
+          {!loading && loadError && (
+            <div className={s.panel}><ErrorState title="Couldn't load the forecast" message={OFFLINE_TEXT} onRetry={() => loadForecast(range)} /></div>
+          )}
+
+          {!loading && !loadError && noData && (
+            <div className={s.panel}>
+              <EmptyState
+                icon={<IconChart size={17} />}
+                title="Not enough data for a forecast yet"
+                message="Upload your invoices and mark a few payments as received. The forecast needs some real collections to project from."
+                action={<Link href="/collections?import=1" className="ui-btn ui-btn-primary">Import invoices</Link>}
+              />
+            </div>
+          )}
+
+          {!loading && !loadError && !noData && chartData.length > 0 && (
+            <>
+              <FigureRow items={[
+                { label: "Cash in hand", value: openingCash ? inrWhole(kpis.cashStart) : wordFigure("Not set"), note: openingCash ? "As you entered it" : "Set it to see your runway" },
+                { label: "Spending a day", value: inrWhole(kpis.burnRate), note: "From your purchases" },
+                { label: "Collections a day", value: inrWhole(kpis.avgCollections), note: kpis.collectionsBasis === "assumed" ? "Assumed: no payments recorded yet" : kpis.collectionsBasis === "bank" ? "From bank credits, last 30 days" : "Average from paid invoices" },
+                { label: "Runway", value: runwayValue, note: !openingCash ? "Needs cash in hand" : runwayNever ? "Cash doesn't run out in any case" : "Pessimistic case", tone: isRunwayDanger ? "var(--critical)" : undefined },
+              ]} />
+
+              <Panel
+                title={`Cash balance, next ${range} days`}
+                sub={kpis.collectionsBasis === "assumed" ? "Three cases from an assumed collection rate until payments are recorded. Pick the one to read in full." : "Three cases from your actual collection rate. Pick the one to read in full."}
+                right={<Segmented label="Forecast range" value={range} onChange={setRange} options={[{ key: 30, label: "30 days" }, { key: 60, label: "60 days" }, { key: 90, label: "90 days" }]} />}
+                flush
+              >
+                <div className={s.legend} style={{ padding: "2px 0 6px" }}>
+                  <div className={s.segmented} role="group" aria-label="Case to highlight">
+                    {SERIES.map(x => (
+                      <button key={x.key} type="button" aria-pressed={focus === x.key} onClick={() => setFocus(x.key)} className="flex items-center">
+                        <span className={s.legendSwatch} style={{ color: focus === x.key ? "var(--ink)" : "var(--ink-3)", borderTopStyle: x.dash ? "dashed" : "solid" }} />
+                        {x.label}
+                      </button>
+                    ))}
                   </div>
+                  {runsOut && (
+                    <span className="flex items-center" style={{ gap: 6, color: "var(--ink)" }}>
+                      <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 2, background: "rgb(var(--tk-critical) / 0.14)", boxShadow: "inset 0 0 0 1px rgb(var(--tk-critical) / 0.35)", display: "inline-block" }} />
+                      Cash runs out {runsOut.date} in the {focusLabel.toLowerCase()} case
+                    </span>
+                  )}
                 </div>
-                <p className="metric-lg" style={{ color }}>{value}</p>
-                <p className="text-2xs text-muted mt-1">{sub}</p>
-              </div>
-            ))}
-          </div>
-        ) : null}
+                <div className={s.chartWrap}>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <ComposedChart data={chartData} margin={{ top: 12, right: 12, left: 4, bottom: 0 }}>
+                      <CartesianGrid stroke="var(--line)" vertical={false} />
+                      <XAxis dataKey="date" tick={AXIS} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+                      <YAxis tickFormatter={inrShort} tick={AXIS} axisLine={false} tickLine={false} width={60} />
+                      <Tooltip content={<ChartTooltip />} cursor={{ stroke: "var(--line-strong)", strokeWidth: 1 }} />
+                      {runsOut && <ReferenceArea x1={runsOut.date} x2={chartData[chartData.length - 1].date} fill="var(--critical)" fillOpacity={0.07} stroke="none" ifOverflow="extendDomain" />}
+                      {runsOut && <ReferenceLine x={runsOut.date} stroke="var(--critical)" strokeDasharray="3 3" strokeWidth={1} />}
+                      <ReferenceLine y={0} stroke="var(--ink-2)" strokeWidth={1} label={{ value: "Zero cash", position: "insideBottomRight", fill: "var(--ink-3)", fontSize: 11, dy: -4 }} />
+                      {SERIES.filter(x => x.key !== focus).map(x => (
+                        <Line key={x.key} type="monotone" dataKey={x.key} name={x.label} stroke="var(--ink-3)" strokeOpacity={0.75} strokeWidth={1.25} strokeDasharray={x.dash || undefined} dot={false} activeDot={{ r: 2.5, fill: "var(--ink-3)" }} isAnimationActive={false} />
+                      ))}
+                      <Area key={focus} type="monotone" dataKey={focus} name={focusLabel} stroke="var(--ink)" strokeWidth={2} strokeDasharray={SERIES.find(x => x.key === focus)?.dash || undefined} fill="var(--ink)" fillOpacity={0.05} dot={false} activeDot={{ r: 3.5, fill: "var(--ink)" }} isAnimationActive={false} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </Panel>
+            </>
+          )}
 
-        {/* No data state */}
-        {!loading && noData && (
-          <div className="card-premium p-10 flex flex-col items-center text-center">
-            <div className="w-14 h-14 bg-accent-dim border border-accent/20 rounded-2xl flex items-center justify-center mb-4">
-              <FiUpload size={24} className="text-accent" />
-            </div>
-            <p className="text-sm font-bold text-primary mb-1">Not enough data for a forecast</p>
-            <p className="text-xs text-muted mb-4 max-w-xs">
-              Upload your invoices and mark some payments as received — the forecast model needs at least a few data points to project scenarios.
-            </p>
-            <Link href="/collections" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-semibold hover:bg-gray-800 transition-all shadow-sm">
-              <FiUpload size={13} /> Upload Invoices <FiArrowRight size={12} />
-            </Link>
-          </div>
-        )}
-
-        {/* Chart */}
-        {!loading && !noData && chartData.length > 0 && (
-          <div className="card-premium p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-              <div>
-                <p className="text-sm font-bold text-primary">Cash Balance — Next {range} Days</p>
-                <p className="text-xs text-secondary mt-0.5">Three scenarios based on your actual collection rate</p>
-              </div>
-              <div className="flex items-center gap-5 text-2xs">
-                {[
-                  { label: "Optimistic",  color: "#10D98A", dash: false },
-                  { label: "Expected",    color: "#0066FF", dash: false },
-                  { label: "Pessimistic", color: "#F5424D", dash: true  },
-                ].map(({ label, color, dash }) => (
-                  <span key={label} className="flex items-center gap-1.5 text-secondary">
-                    <span className="w-5 inline-block" style={{ height: "2px", background: dash ? `repeating-linear-gradient(90deg, ${color} 0, ${color} 4px, transparent 4px, transparent 8px)` : color }} />
-                    {label}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gradOpt"  x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor="#10D98A" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="#10D98A" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="gradExp"  x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor="#0066FF" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#0066FF" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" vertical={false} />
-                <XAxis dataKey="date" tick={{ fill: "#8A8A86", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis tickFormatter={fmt} tick={{ fill: "#8A8A86", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
-                <Tooltip content={<CustomTooltip />} />
-                <ReferenceLine y={0} stroke="#F5424D" strokeDasharray="4 2" strokeWidth={1}
-                  label={{ value: "Zero Cash", fill: "#F5424D", fontSize: 9, position: "insideTopLeft" }} />
-                <Area type="monotone" dataKey="optimistic"  name="Optimistic"  stroke="#10D98A" strokeWidth={2}   fill="url(#gradOpt)" dot={false} />
-                <Area type="monotone" dataKey="expected"    name="Expected"    stroke="#0066FF" strokeWidth={2.5} fill="url(#gradExp)" dot={false} />
-                <Line type="monotone" dataKey="pessimistic" name="Pessimistic" stroke="#F5424D" strokeWidth={2}   strokeDasharray="5 3" dot={false} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* Top impact customers */}
-        {!loading && topImpact.length > 0 && (
-          <div className="card-premium overflow-hidden">
-            <div className="px-5 py-4 border-b border-border">
-              <p className="text-sm font-bold text-primary">Top Outstanding — Highest Cash Impact</p>
-              <p className="text-xs text-secondary mt-0.5">Collecting these improves your runway fastest</p>
-            </div>
-            <table className="w-full text-sm table-premium">
-              <thead>
-                <tr className="border-b border-border bg-surface-2/40">
-                  <th className="text-left px-5 py-3 section-label w-8">#</th>
-                  <th className="text-left px-4 py-3 section-label">Customer</th>
-                  <th className="text-right px-4 py-3 section-label">Amount</th>
-                  <th className="text-right px-4 py-3 section-label hidden sm:table-cell">Days Overdue</th>
-                  <th className="px-4 py-3 section-label hidden md:table-cell">Priority</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {topImpact.map((c, i) => (
-                  <tr key={c.name}>
-                    <td className="px-5 py-3.5 text-xs text-muted font-mono">{i + 1}</td>
-                    <td className="px-4 py-3.5 text-xs font-semibold text-primary">{c.name}</td>
-                    <td className="px-4 py-3.5 text-right">
-                      <span className="metric-value text-sm text-accent">
-                        {c.amount >= 100000 ? `₹${(c.amount/100000).toFixed(1)}L` : `₹${c.amount.toLocaleString("en-IN")}`}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 text-right hidden sm:table-cell">
-                      <Badge variant={c.days_overdue > 45 ? "danger" : c.days_overdue > 30 ? "warning" : "default"}>{c.days_overdue}d</Badge>
-                    </td>
-                    <td className="px-4 py-3.5 hidden md:table-cell">
-                      {c.priority_score != null && (
-                        <div className="flex items-center gap-2">
-                          <div className="score-bar-track">
-                            <div className="score-bar-fill" style={{ width: `${c.priority_score}%`, background: c.priority_score >= 70 ? "#10D98A" : "#F5A524" }} />
-                          </div>
-                          <span className="text-xs metric-value" style={{ color: c.priority_score >= 70 ? "#10D98A" : "#F5A524" }}>{c.priority_score}%</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <Link href="/collections" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-2xs font-semibold rounded-lg bg-accent-dim text-accent border border-accent/25 hover:bg-accent hover:text-white transition-all">
-                        <FiPhone size={11} /> Call
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Loading skeleton for chart */}
-        {loading && (
-          <div className="card-premium p-6 animate-pulse">
-            <div className="h-4 w-48 bg-surface-3 rounded mb-2" />
-            <div className="h-3 w-64 bg-surface-3 rounded mb-6" />
-            <div className="bg-surface-3 rounded-xl h-[300px]" />
-          </div>
-        )}
+          {!loading && !loadError && topImpact.length > 0 && (
+            <Panel title="Collect these first" sub="The largest overdue amounts. Each one collected extends your runway the most." flush>
+              <GridTable label="Largest overdue amounts" columns={impactCols} rows={topImpact} rowKey={(c, i) => `${c.name}-${i}`} />
+            </Panel>
+          )}
         </>}
 
         {mode === "v2" && (
-          <div className="space-y-6">
-            {v2Loading && (
-              <div className="card-premium p-6 animate-pulse">
-                <div className="h-4 w-48 bg-surface-3 rounded mb-2" />
-                <div className="h-3 w-64 bg-surface-3 rounded mb-6" />
-                <div className="bg-surface-3 rounded-xl h-[300px]" />
-              </div>
-            )}
+          <>
+            {v2Loading && <ChartSkeleton />}
 
             {!v2Loading && (v2Error || !v2) && (
-              <div className="card-premium p-10 flex flex-col items-center text-center">
-                <p className="text-sm font-bold text-primary mb-1">Forecast V2 unavailable</p>
-                <p className="text-xs text-muted">Could not load the V2 forecast. Try the Classic view.</p>
-              </div>
+              <div className={s.panel}><ErrorState title="Couldn't load this view" message={`${OFFLINE_TEXT} The Scenarios view may still work.`} onRetry={() => loadForecastV2(v2Horizon)} /></div>
             )}
 
             {!v2Loading && v2 && v2.insufficientData && (
-              <div className="card-premium p-10 flex flex-col items-center text-center">
-                <div className="w-14 h-14 bg-accent-dim border border-accent/20 rounded-2xl flex items-center justify-center mb-4">
-                  <FiUpload size={24} className="text-accent" />
-                </div>
-                <p className="text-sm font-bold text-primary mb-1">Not enough data for a V2 forecast</p>
-                <p className="text-xs text-muted mb-4 max-w-xs">{v2.insufficientDataReason}</p>
+              <div className={s.panel}>
+                <EmptyState icon={<IconChart size={17} />} title="Not enough bank data yet" message={v2.insufficientDataReason || "This view needs some real bank transactions to compare against."} />
               </div>
             )}
 
             {!v2Loading && v2 && !v2.insufficientData && (
               <>
-                <div className="card-premium p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
-                    <div>
-                      <p className="text-sm font-bold text-primary">Net Daily Cash Change — Observed (last 30d) vs Predicted (next {v2.horizon_days}d)</p>
-                      <p className="text-xs text-secondary mt-0.5">Observed = real bank transactions. Predicted = same deterministic model as Classic, at a finer horizon.</p>
-                    </div>
-                    <Badge variant="default">{v2.model_metadata.name} v{v2.model_metadata.version}</Badge>
-                  </div>
-
-                  <ResponsiveContainer width="100%" height={280}>
-                    <ComposedChart
-                      data={[
-                        ...v2.observed.map(o => ({ label: o.date, observed: o.net_change })),
-                        ...v2.predicted.map((p, i) => ({
-                          label: `Day +${p.day}`,
-                          predicted: p.cash,
-                          low: v2.uncertainty_interval.low_curve[i]?.cash,
-                          high: v2.uncertainty_interval.high_curve[i]?.cash,
-                        })),
-                      ]}
-                      margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" vertical={false} />
-                      <XAxis dataKey="label" tick={{ fill: "#8A8A86", fontSize: 9 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                      <YAxis tickFormatter={fmt} tick={{ fill: "#8A8A86", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Line type="monotone" dataKey="observed" name="Observed" stroke="#8A8A86" strokeWidth={2} dot={false} connectNulls />
-                      <Line type="monotone" dataKey="predicted" name="Predicted" stroke="#0066FF" strokeWidth={2.5} dot={false} connectNulls />
-                      <Line type="monotone" dataKey="low" name="Uncertainty (low)" stroke="#F5424D" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
-                      <Line type="monotone" dataKey="high" name="Uncertainty (high)" stroke="#10D98A" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-
-                  <p className="text-2xs text-muted mt-3">{v2.uncertainty_interval.note}</p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="card-metric p-5">
-                    <p className="section-label mb-2">Data Freshness</p>
-                    <p className="text-sm text-primary font-semibold">{v2.data_freshness ? new Date(v2.data_freshness).toLocaleString("en-IN") : "No bank transactions yet"}</p>
-                  </div>
-                  <div className="card-metric p-5">
-                    <p className="section-label mb-2">Generated At</p>
-                    <p className="text-sm text-primary font-semibold">{new Date(v2.generated_at).toLocaleString("en-IN")}</p>
-                  </div>
-                </div>
-
-                {v2.models.length > 0 && (
-                  <div className="card-premium p-5">
-                    <p className="text-sm font-bold text-primary mb-2">Naive Baseline Comparison</p>
-                    {v2.models.map(m => (
-                      <p key={m.name} className="text-xs text-secondary">
-                        {m.name} v{m.version}: predicted daily net change {fmt(m.daily_net_change_prediction)}
-                        {m.interval ? ` (range ${fmt(m.interval.low)} to ${fmt(m.interval.high)})` : ""}
-                      </p>
+                <Panel
+                  title={`Observed last 30 days, predicted next ${v2.horizon_days}`}
+                  sub="Observed is daily net change from real bank transactions. Predicted is the same model as Scenarios, at a finer step."
+                  right={<Segmented label="Prediction horizon" value={v2Horizon} onChange={setV2Horizon} options={[{ key: 7, label: "7 days" }, { key: 14, label: "14 days" }, { key: 30, label: "30 days" }]} />}
+                  flush
+                >
+                  <div className={s.legend} style={{ padding: "2px 0 4px" }}>
+                    {[
+                      { label: "Observed", color: "var(--ink-3)", dash: false },
+                      { label: "Predicted", color: "var(--ink)", dash: false },
+                      { label: "Low and high range", color: "var(--ink-2)", dash: true },
+                    ].map(x => (
+                      <span key={x.label} style={{ color: x.color }} className="flex items-center">
+                        <span className={s.legendSwatch} style={{ borderTopStyle: x.dash ? "dashed" : "solid" }} />
+                        <span style={{ color: "var(--ink-2)" }}>{x.label}</span>
+                      </span>
                     ))}
                   </div>
-                )}
+                  <div className={s.chartWrap}>
+                    <ResponsiveContainer width="100%" height={280}>
+                      <ComposedChart
+                        data={[
+                          ...v2.observed.map(o => ({ label: formatDate(o.date), observed: o.net_change })),
+                          ...v2.predicted.map((p, i) => ({
+                            label: `Day +${p.day}`,
+                            predicted: p.cash,
+                            low: v2.uncertainty_interval.low_curve[i]?.cash,
+                            high: v2.uncertainty_interval.high_curve[i]?.cash,
+                          })),
+                        ]}
+                        margin={{ top: 8, right: 12, left: 4, bottom: 0 }}
+                      >
+                        <CartesianGrid stroke="var(--line)" vertical={false} />
+                        <XAxis dataKey="label" tick={AXIS} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+                        <YAxis tickFormatter={inrShort} tick={AXIS} axisLine={false} tickLine={false} width={60} />
+                        <Tooltip content={<ChartTooltip />} cursor={{ stroke: "var(--line-strong)", strokeWidth: 1 }} />
+                        <ReferenceLine y={0} stroke="var(--line-strong)" />
+                        <Line type="monotone" dataKey="observed" name="Observed" stroke="var(--ink-3)" strokeWidth={1.5} dot={false} connectNulls isAnimationActive={false} />
+                        <Line type="monotone" dataKey="predicted" name="Predicted" stroke="var(--ink)" strokeWidth={1.75} dot={false} connectNulls isAnimationActive={false} />
+                        <Line type="monotone" dataKey="low" name="Low" stroke="var(--ink-2)" strokeDasharray="4 3" strokeWidth={1} dot={false} connectNulls isAnimationActive={false} />
+                        <Line type="monotone" dataKey="high" name="High" stroke="var(--ink-2)" strokeDasharray="4 3" strokeWidth={1} dot={false} connectNulls isAnimationActive={false} />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p style={{ margin: 0, padding: "8px 0 0", fontSize: 12, color: "var(--ink-3)" }}>{v2.uncertainty_interval.note}</p>
+                </Panel>
+
+                <Panel title="About this forecast">
+                  <dl className={s.kv}>
+                    <dt>Model</dt><dd>{v2.model_metadata.name} v{v2.model_metadata.version}</dd>
+                    <dt>Bank data up to</dt><dd>{v2.data_freshness ? formatDateTime(v2.data_freshness) : "No bank transactions yet"}</dd>
+                    <dt>Generated</dt><dd>{formatDateTime(v2.generated_at)}</dd>
+                    {v2.models.map(m => (
+                      <Fragment key={m.name}>
+                        <dt>Baseline: {m.name} v{m.version}</dt>
+                        <dd>{inrWhole(m.daily_net_change_prediction)} a day{m.interval ? ` (${inrWhole(m.interval.low)} to ${inrWhole(m.interval.high)})` : ""}</dd>
+                      </Fragment>
+                    ))}
+                  </dl>
+                </Panel>
               </>
             )}
-          </div>
+          </>
         )}
+      </MorePage>
 
-      </div>
+      <Modal
+        open={showCashInput}
+        onClose={() => setShowCashInput(false)}
+        title="Cash in hand today"
+        description="Bank balance plus cash. Saved on this device and used as the starting point for every case."
+        width={400}
+        footer={<>
+          <Button variant="ghost" onClick={() => setShowCashInput(false)}>Cancel</Button>
+          <Button variant="primary" onClick={saveCash} disabled={!cashInput.trim()}>Save</Button>
+        </>}
+      >
+        <Field label="Amount (₹)" htmlFor="cash-in-hand">
+          <input id="cash-in-hand" className="ui-input tabular" type="number" inputMode="decimal" value={cashInput} onChange={e => setCashInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && cashInput.trim() && saveCash()} placeholder="500000" />
+        </Field>
+      </Modal>
     </DashboardLayout>
   );
 }

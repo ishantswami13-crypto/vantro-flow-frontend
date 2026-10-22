@@ -15,11 +15,9 @@ export default function Error({
     console.error('[Starlane Error]', error);
   }, [error]);
 
-  const errorId = error.requestId || 'UNKNOWN';
-
   return (
-    <div className="min-h-screen" style={{ background: "#080808" }}>
-      <ErrorFallback errorId={errorId} retryAction={reset} />
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+      <ErrorFallback errorId={error.requestId} retryAction={reset} />
     </div>
   );
 }

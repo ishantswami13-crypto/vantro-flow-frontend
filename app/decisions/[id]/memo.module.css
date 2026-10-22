@@ -1,0 +1,90 @@
+/* Decision detail: an executive memo. Constrained measure, few boxes,
+   hairline tables, one recommendation rule. Tokens only. */
+
+.memo { max-width: 840px; width: 100%; }
+.memo > section { margin-top: 36px; }
+
+.metaRow { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; margin-top: 20px; font-size: 12px; color: var(--ink-3); }
+.title { margin: 8px 0 0; font-family: var(--font-display); font-weight: 400; font-size: 29px; line-height: 1.22; letter-spacing: -0.015em; color: var(--ink); max-width: 680px; text-wrap: balance; }
+.lede { margin: 10px 0 0; font-size: 14px; line-height: 1.6; color: var(--body); max-width: 68ch; }
+.note { margin: 8px 0 0; font-size: 12px; line-height: 1.55; color: var(--ink-3); max-width: 68ch; }
+
+/* Key facts: four figures on hairlines. */
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 24px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.fact { padding: 14px 16px 14px 0; min-width: 0; }
+.fact + .fact { padding-left: 16px; border-left: 1px solid var(--line); }
+.factValue { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 19px; font-weight: 500; line-height: 26px; letter-spacing: -0.025em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.factWord { font-size: 16px; font-weight: 500; line-height: 26px; color: var(--ink); }
+.factNone { font-size: 13px; line-height: 26px; color: var(--ink-3); }
+.factLabel { margin-top: 2px; font-size: 12px; color: var(--ink-2); }
+
+/* Recommendation: strong text on a thin ink rule, not a banner. */
+.rec { padding: 2px 0 2px 20px; box-shadow: inset 2px 0 0 var(--ink); }
+.recLabel { margin: 0; font-size: 18px; font-weight: 500; line-height: 1.4; color: var(--ink); }
+.recWhy { margin: 6px 0 0; font-size: 14px; line-height: 1.6; color: var(--body); max-width: 68ch; }
+.recFacts { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; font-size: 12.5px; color: var(--ink-3); }
+.recFacts b { font-weight: 400; color: var(--ink); }
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.actionNote { margin: 10px 0 0; font-size: 12px; line-height: 1.55; color: var(--ink-3); max-width: 68ch; }
+
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+.list { margin: 0; padding: 0; list-style: none; }
+.list li { position: relative; padding: 3px 0 3px 14px; font-size: 13.5px; line-height: 1.55; color: var(--body); }
+.list li::before { content: ""; position: absolute; left: 0; top: 13px; width: 6px; height: 1px; background: var(--ink-3); }
+.prose { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--body); }
+
+/* Options: one comparison table, "Do nothing" at equal weight. */
+.table { border-top: 1px solid var(--line); }
+.thead, .trow { display: grid; grid-template-columns: minmax(0, 1fr) 140px 92px 56px 68px 60px; column-gap: 14px; align-items: start; }
+.thead { padding: 0 0 9px; border-bottom: 1px solid var(--line-strong); font-size: 12px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
+.table { border-top: 0; }
+.trow { padding: 14px 0; border-bottom: 1px solid var(--line); }
+/* The recommended option: a faint wash and an ink rule, columns unmoved. */
+.trowRec { margin: 0 -12px; padding-left: 12px; padding-right: 12px; background: rgb(var(--tk-ink) / 0.03); box-shadow: inset 2px 0 0 var(--ink); }
+.r { text-align: right; }
+.cellNum { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 500; letter-spacing: -0.015em; color: var(--ink); text-align: right; line-height: 20px; }
+.optName { font-size: 14px; font-weight: 500; line-height: 20px; color: var(--ink); }
+.optTag { margin-left: 8px; font-size: 11.5px; font-weight: 400; color: var(--ink-3); }
+.optTagOn { color: var(--ink); font-weight: 500; }
+.optSub { margin-top: 2px; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+.optMeta { margin-top: 4px; font-size: 11.5px; line-height: 1.5; color: var(--ink-3); }
+.invalid { color: var(--critical); }
+.dim { opacity: 0.6; }
+.cellLabel { display: none; }
+.tfoot { margin: 8px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--ink-3); }
+
+/* Compact tables (verification, stress, evidence). */
+.mini { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.mini th { padding: 7px 12px 7px 0; border-bottom: 1px solid var(--line); text-align: left; font-size: 11.5px; font-weight: 500; color: var(--ink-2); }
+.mini td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); color: var(--body); vertical-align: top; }
+.mini th:last-child, .mini td:last-child { padding-right: 0; }
+.mini .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; color: var(--ink); white-space: nowrap; }
+
+.evKind { width: 96px; font-size: 12px; color: var(--ink-2); }
+.textLink { background: none; border: 0; padding: 0; font-size: 12.5px; color: var(--ink-2); cursor: pointer; transition: color var(--dur-instant) var(--ease); }
+.textLink:hover { color: var(--ink); }
+
+.rows { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.rows > li { padding: 10px 0; border-bottom: 1px solid var(--line); }
+
+details.fold > summary { list-style: none; cursor: pointer; font-size: 12.5px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::before { content: ""; width: 5px; height: 5px; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; transform: rotate(-45deg); transition: transform var(--dur-instant) var(--ease); }
+details.fold[open] > summary::before { transform: rotate(45deg); }
+details.fold > summary:hover { color: var(--ink); }
+
+@media (max-width: 767px) {
+  .title { font-size: 22px; }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fact + .fact { padding-left: 0; border-left: 0; }
+  .fact:nth-child(even) { padding-left: 12px; border-left: 1px solid var(--line); }
+  .fact:nth-child(n + 3) { border-top: 1px solid var(--line); }
+  .two { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .thead { display: none; }
+  .trow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); row-gap: 8px; }
+  .trowRec { margin: 0 -10px; padding-left: 10px; padding-right: 10px; }
+  .trow > :first-child, .trow > :nth-child(2) { grid-column: 1 / -1; }
+  .cellNum { text-align: left; }
+  .cellLabel { display: block; font-family: var(--font-sans); font-size: 11px; color: var(--ink-3); }
+  .r { text-align: left; }
+}

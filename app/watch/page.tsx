@@ -3,70 +3,26 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { api, Watch, WatchConditionConfig } from "@/lib/api";
-import { WatchBrief, ObjectivesPanel } from "@/components/os/WatchPanels";
-import { Button } from "@/components/v32/ui";
+import { api, Watch } from "@/lib/api";
+import { formatDateTime, formatRelative, formatCount, inrWhole } from "@/lib/format";
+import type { WatchEvent } from "../../packages/contracts/src/features";
+import { PageHeader, Subnav, SkeletonRows } from "@/components/v32/ui";
 import { IconPlus } from "@/components/v32/icons";
+import { StatusChip } from "@/components/ui/Badge";
+import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/Toast";
+import { QuietError, QuietLine } from "@/components/os/bridge/kit";
+import { thresholdParts, watchStatus, METRIC_OPTIONS } from "@/components/os/watch/conditions";
+import { NewWatchModal } from "@/components/os/watch/NewWatchModal";
+import WatchEvents from "@/components/features/WatchEvents";
+import { WatchBrief, ObjectivesPanel } from "@/components/os/WatchPanels";
 
-// Watch — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
-//
-// Previously a fully honest empty shell (see git history) because nothing
-// in the stack persisted a user-defined watch condition. That's no longer
-// true: migrations/046_watches.sql + lib/routes/watches.js on the backend
-// now give this page a real create/list/pause/resume/delete + evaluate-now
-// API, plus a 15-min cron that keeps last_evaluated_at/last_triggered_at
-// fresh. This page keeps the exact V32 visual shell (subnav, watch_row
-// grid `2.2fr 2fr 1fr 1fr`, pulse on non-nominal status) and wires it to
-// that real data instead of a static empty state.
+// Watch: the conditions a person asked Starlane to keep an eye on
+// (lib/routes/watches.js: create, list, pause, resume, delete, check now,
+// plus a 15-minute cron), what Watch raised from the books
+// (GET /api/client/watch), the morning brief and objectives.
 
-type TabKey = "active" | "changed" | "paused" | "history";
-
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "active", label: "Active" },
-  { key: "changed", label: "Changed" },
-  { key: "paused", label: "Paused" },
-  { key: "history", label: "History" },
-];
-
-const METRIC_OPTIONS: { value: Watch["metric_key"]; label: string; needsEntity?: boolean }[] = [
-  { value: "receivables_overdue_amount", label: "Overdue receivables amount" },
-  { value: "cash_forecast_runway_days", label: "Cash forecast runway (days)" },
-  { value: "customer_exposure_amount", label: "Customer exposure amount", needsEntity: true },
-];
-
-const OPERATOR_OPTIONS: { value: WatchConditionConfig["operator"]; label: string }[] = [
-  { value: "gt", label: "is greater than" },
-  { value: "gte", label: "is at least" },
-  { value: "lt", label: "is less than" },
-  { value: "lte", label: "is at most" },
-  { value: "eq", label: "equals" },
-];
-
-function conditionLabel(w: Watch): string {
-  const metric = METRIC_OPTIONS.find((m) => m.value === w.metric_key)?.label || w.metric_key;
-  const op = OPERATOR_OPTIONS.find((o) => o.value === w.condition_config?.operator)?.label || w.condition_config?.operator;
-  const threshold = w.condition_config?.threshold;
-  const suffix = w.metric_key === "customer_exposure_amount" && w.condition_config?.entity_name
-    ? ` (${w.condition_config.entity_name})`
-    : "";
-  return `${metric} ${op} ${threshold}${suffix}`;
-}
-
-function statusOf(w: Watch): { label: string; color: string } {
-  if (w.status === "paused") return { label: "Paused", color: "#63635F" };
-  if (w.last_triggered_at && w.last_evaluated_at && w.last_triggered_at === w.last_evaluated_at) {
-    return { label: "Triggered", color: "#A64F4B" };
-  }
-  // Triggered at some earlier check, clear at the latest one.
-  if (w.last_triggered_at) return { label: "Clear now, triggered before", color: "#9B742B" };
-  return { label: w.last_evaluated_at ? "Clear" : "Not checked yet", color: w.last_evaluated_at ? "#477054" : "#8A8A86" };
-}
-
-function formatChecked(w: Watch): string {
-  if (!w.last_evaluated_at) return "Never";
-  const d = new Date(w.last_evaluated_at);
-  return d.toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-}
+type TabKey = "active" | "changed" | "paused" | "all";
 
 // useSearchParams requires a Suspense boundary during static prerendering.
 export default function WatchPage() {
@@ -80,17 +36,17 @@ export default function WatchPage() {
 function WatchPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const notify = useToast();
   const [tab, setTab] = useState<TabKey>("active");
   const [watches, setWatches] = useState<Watch[] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  // A failed pause/delete/check is shown above the list; it never hides the list.
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Watch | null>(null);
+  const [events, setEvents] = useState<WatchEvent[] | null>(null);
 
-  // Prefill from the Lens drawer's "Watch" action (see
-  // components/ui/LensDrawer.tsx) — ?prefill_metric=...&prefill_entity=...
+  // Prefill from the Lens drawer's "Watch" action: ?prefill_metric=...&prefill_entity=...
   const prefillMetric = searchParams.get("prefill_metric");
   const prefillEntity = searchParams.get("prefill_entity");
 
@@ -105,394 +61,216 @@ function WatchPageInner() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError(null);
+    setFailed(false);
     try {
       const res = await api.watches.list();
       setWatches(res.watches);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load watches");
+    } catch {
+      setFailed(true);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
 
-  async function handlePauseResume(w: Watch) {
+  async function run(w: Watch, what: string, fn: () => Promise<unknown>, done?: string) {
     setBusyId(w.id);
     try {
-      await api.watches.update(w.id, { status: w.status === "paused" ? "active" : "paused" });
+      await fn();
       await load();
-    } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Update failed");
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  async function handleDelete(w: Watch) {
-    if (!window.confirm(`Delete the watch "${w.name}"? This cannot be undone.`)) return;
-    setBusyId(w.id); setActionError(null);
-    try {
-      await api.watches.remove(w.id);
-      await load();
-    } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Delete failed");
-    } finally {
-      setBusyId(null);
-    }
-  }
-
-  async function handleEvaluate(w: Watch) {
-    setBusyId(w.id);
-    try {
-      await api.watches.evaluate(w.id);
-      await load();
-    } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Evaluate failed");
+      if (done) notify(done, "positive");
+    } catch {
+      notify(`Couldn't ${what}. Check your connection and try again.`, "critical");
     } finally {
       setBusyId(null);
     }
   }
 
   const list = watches || [];
+  const counts = {
+    active: list.filter((w) => w.status === "active").length,
+    changed: list.filter((w) => w.status === "active" && w.last_triggered_at).length,
+    paused: list.filter((w) => w.status === "paused").length,
+    all: list.length,
+  };
   const filtered =
     tab === "active" ? list.filter((w) => w.status === "active") :
     tab === "paused" ? list.filter((w) => w.status === "paused") :
     tab === "changed" ? list.filter((w) => w.status === "active" && w.last_triggered_at) :
-    list; // history: everything, most-recently-evaluated context still per-row
-  const triggeredCount = list.filter((w) => statusOf(w).label === "Triggered").length;
+    list;
+  const triggered = list.filter((w) => watchStatus(w).label === "Triggered").length;
+  const hasAny = list.length > 0;
+
+  const subtitle = loading && !watches ? "Loading what Starlane is watching…"
+    : failed && !watches ? "What Starlane watches for you, checked every 15 minutes."
+    : !hasAny ? "Tell Starlane what to keep an eye on. It checks every 15 minutes and tells you when something is met."
+    : `Watching ${formatCount(list.length)} condition${list.length === 1 ? "" : "s"} for you. ${triggered === 0 ? "None are triggered." : `${formatCount(triggered)} ${triggered === 1 ? "is" : "are"} triggered.`}`;
+
+  const newWatchButton = (
+    <button type="button" onClick={() => setShowModal(true)} className="ui-btn ui-btn-primary">
+      <IconPlus size={14} />New watch
+    </button>
+  );
 
   return (
     <DashboardLayout pageTitle="Watch">
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
-            Watch
-          </h1>
-          <Button primary small onClick={() => setShowModal(true)}><IconPlus size={13} />New watch</Button>
-        </div>
+      <div className="w-full page-stack" style={{ maxWidth: 1180 }}>
+        {/* One primary action: in the header once there are watches, in the empty state before. */}
+        <PageHeader title="Watch" subtitle={subtitle} right={hasAny ? newWatchButton : undefined} />
 
-        <div style={{ fontSize: 13.5, color: "#63635F", marginTop: -16 }}>
-          {loading
-            ? "Loading what Starlane is watching…"
-            : list.length === 0
-              ? "Starlane is not watching any of your own conditions yet."
-              : `Starlane is watching ${list.length} condition${list.length === 1 ? "" : "s"} for you. ${triggeredCount === 0 ? "None need a look." : `${triggeredCount} need${triggeredCount === 1 ? "s" : ""} a look.`}`}
-        </div>
-
-        <nav
-          aria-label="Secondary"
-          style={{ display: "flex", alignItems: "center", gap: 22, borderBottom: "1px solid #EBEAE6", marginBottom: 4 }}
-        >
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className="hover-dim"
-              style={{
-                padding: "8px 2px",
-                fontSize: 13,
-                fontWeight: t.key === tab ? 500 : 400,
-                color: t.key === tab ? "#191917" : "#63635F",
-                background: "none",
-                border: "none",
-                borderBottomColor: t.key === tab ? "var(--accent)" : "transparent",
-                borderBottomWidth: 2,
-                borderBottomStyle: "solid",
-                cursor: "pointer",
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
-
-        <div
-          style={{
-            boxSizing: "border-box",
-            background: "#FFFFFF",
-            border: "1px solid rgba(25,25,23,0.10)",
-            borderRadius: 8,
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            className="watch-grid watch-head"
-            style={{
-              padding: "10px 14px",
-              background: "#F3F2EE",
-              fontSize: 11,
-              letterSpacing: 0.5,
-              color: "#63635F",
-            }}
-          >
-            <span>Watching</span>
-            <span>Condition</span>
-            <span>Status</span>
-            <span style={{ textAlign: "right" }}>Last checked</span>
-          </div>
-
-          {actionError && (
-            <div role="alert" style={{ padding: "10px 14px", color: "#A64F4B", fontSize: 13 }}>
-              {actionError}
-            </div>
-          )}
-          {error && (
-            <div role="alert" style={{ padding: "16px 14px", color: "#A64F4B", fontSize: 13 }}>
-              {error}
-            </div>
-          )}
-
-          {!error && loading && (
-            <div style={{ padding: "40px 24px", textAlign: "center", color: "#63635F", fontSize: 13.5 }}>
-              Loading…
-            </div>
-          )}
-
-          {!error && !loading && filtered.length === 0 && (
-            <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
-              <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, color: "#191917", marginBottom: 6 }}>
-                {tab === "active" && "No active watch conditions"}
-                {tab === "changed" && "No status changes to show"}
-                {tab === "paused" && "No paused watches"}
-                {tab === "history" && "No watch history yet"}
+        <section aria-label="Watch conditions">
+          {failed && !watches ? (
+            <QuietError onRetry={load} />
+          ) : loading && !watches ? (
+            <SkeletonRows rows={4} height={46} />
+          ) : !hasAny ? (
+            <div style={{ borderTop: "1px solid var(--line)", paddingTop: 16 }}>
+              <p className="prose-measure" style={{ margin: 0, fontSize: 13.5 }}>
+                Nothing is being watched yet. Pick a figure, such as overdue receivables or one customer&apos;s exposure, and a threshold; Starlane checks it against your live data and raises it when it&apos;s met.
               </p>
-              <p className="v32-body max-w-md mx-auto" style={{ color: "#63635F" }}>
-                {tab === "active" && 'Create one with "New watch" to have Starlane re-evaluate a condition against live data every 15 minutes, or check it on demand.'}
-                {tab === "changed" && "This lists watches whose status just moved into a triggered state."}
-                {tab === "paused" && "Paused watches stop being evaluated by the 15-minute cron until resumed."}
-                {tab === "history" && "Once watches exist and are evaluated, their trigger history will show here."}
-              </p>
+              <div style={{ marginTop: 14 }}>{newWatchButton}</div>
             </div>
-          )}
-
-          {!error && !loading && filtered.map((w) => {
-            const s = statusOf(w);
-            return (
-              <div
-                key={w.id}
-                className="card-in row-hover group watch-grid"
-                style={{
-                  padding: "16px 14px",
-                  minHeight: 52,
-                  boxSizing: "border-box",
-                  borderBottom: "1px solid rgba(25,25,23,0.06)",
-                  alignItems: "center",
-                }}
-              >
-                <span style={{ fontSize: 13.5, color: "#191917" }}>{w.name}</span>
-                <span style={{ fontSize: 12.5, color: "#63635F" }}>{conditionLabel(w)}</span>
-                <span style={{ fontSize: 12.5, color: s.color }}>
-                  {s.label}
-                </span>
-                <span style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}>
-                  <span className="watch-row-actions flex items-center" style={{ gap: 10 }}>
-                  <button
-                    onClick={() => handleEvaluate(w)}
-                    disabled={busyId === w.id}
-                    className="hover-dim"
-                    style={{ fontSize: 11.5, background: "none", border: "none", color: "#63635F", cursor: "pointer" }}
-                    title="Evaluate now"
-                  >
-                    Check now
-                  </button>
-                  <button
-                    onClick={() => handlePauseResume(w)}
-                    disabled={busyId === w.id}
-                    className="hover-dim"
-                    style={{ fontSize: 11.5, background: "none", border: "none", color: "#63635F", cursor: "pointer" }}
-                  >
-                    {w.status === "paused" ? "Resume" : "Pause"}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(w)}
-                    disabled={busyId === w.id}
-                    className="hover-dim"
-                    style={{ fontSize: 11.5, background: "none", border: "none", color: "#A64F4B", cursor: "pointer" }}
-                  >
-                    Delete
-                  </button>
-                  </span>
-                  <span style={{ color: "#63635F", fontSize: 12 }}>{formatChecked(w)}</span>
-                </span>
+          ) : (
+            <>
+              <Subnav
+                label="Watch conditions"
+                active={tab}
+                onChange={(k) => setTab(k as TabKey)}
+                items={[
+                  { key: "active", label: "Active", count: counts.active },
+                  { key: "changed", label: "Has triggered", count: counts.changed },
+                  { key: "paused", label: "Paused", count: counts.paused },
+                  { key: "all", label: "All", count: counts.all },
+                ]}
+              />
+              <div style={{ marginTop: 12 }}>
+                {filtered.length === 0 ? (
+                  <QuietLine>
+                    {tab === "changed" ? "Nothing has triggered yet. A watch appears here once it has been met."
+                      : tab === "paused" ? "No paused watches. A paused watch is not checked until you resume it."
+                      : "No active watches. Resume a paused watch or create a new one."}
+                  </QuietLine>
+                ) : (
+                  <ConditionsTable rows={filtered} events={events} busyId={busyId}
+                    onCheck={(w) => run(w, "check this watch", () => api.watches.evaluate(w.id), "Checked just now")}
+                    onToggle={(w) => run(w, w.status === "paused" ? "resume this watch" : "pause this watch",
+                      () => api.watches.update(w.id, { status: w.status === "paused" ? "active" : "paused" }),
+                      w.status === "paused" ? "Watch resumed" : "Watch paused")}
+                    onDelete={(w) => setConfirmDelete(w)}
+                  />
+                )}
               </div>
-            );
-          })}
-        </div>
+            </>
+          )}
+        </section>
 
-        <WatchBrief />
-        <ObjectivesPanel />
+        <WatchEvents onActive={setEvents} />
+
+        <div className="rf-cols-2" style={{ alignItems: "start" }}>
+          <WatchBrief />
+          <ObjectivesPanel />
+        </div>
       </div>
 
-      {showModal && (
-        <NewWatchModal
-          prefillMetric={prefillMetric}
-          prefillEntity={prefillEntity}
-          onClose={() => setShowModal(false)}
-          onCreated={() => {
-            setShowModal(false);
-            load();
-          }}
-        />
-      )}
+      <NewWatchModal
+        key={showModal ? "open" : "closed"}
+        open={showModal}
+        prefillMetric={prefillMetric}
+        prefillEntity={prefillEntity}
+        onClose={() => setShowModal(false)}
+        onCreated={() => { setShowModal(false); notify("Watch created", "positive"); load(); }}
+      />
+
+      <Modal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        title="Delete this watch?"
+        description={confirmDelete ? `“${confirmDelete.name}” stops being checked and its history is removed. This can't be undone.` : undefined}
+        footer={
+          <>
+            <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setConfirmDelete(null)}>Cancel</button>
+            <button type="button" className="ui-btn ui-btn-danger" onClick={() => {
+              const w = confirmDelete; setConfirmDelete(null);
+              if (w) run(w, "delete this watch", () => api.watches.remove(w.id), "Watch deleted");
+            }}>Delete</button>
+          </>
+        }
+      />
     </DashboardLayout>
   );
 }
 
-function NewWatchModal({
-  onClose,
-  onCreated,
-  prefillMetric,
-  prefillEntity,
-}: {
-  onClose: () => void;
-  onCreated: () => void;
-  prefillMetric?: string | null;
-  prefillEntity?: string | null;
+/** The value a triggered watch found, from its open "Condition met" event
+ *  on Watch (evidence fact "Value found", stored as a number or as the
+ *  evaluation's `{ value, detail }`). Nothing else is a current value, so a
+ *  watch without an open event shows none. */
+function valueFound(w: Watch, events: WatchEvent[] | null): number | null {
+  const e = (events || []).find((x) => x.kind === "watch_triggered" && x.entity?.type === "watch" && String(x.entity.id) === String(w.id));
+  const raw = e?.evidence?.facts?.find((f) => /value found/i.test(f.label))?.value as unknown;
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+  if (raw && typeof raw === "object" && typeof (raw as { value?: unknown }).value === "number") return (raw as { value: number }).value;
+  return null;
+}
+
+/** A metric value as a mono figure, with "days" kept in the sans. */
+function MetricFigure({ w, n }: { w: Watch; n: number }) {
+  const days = METRIC_OPTIONS.find((m) => m.value === w.metric_key)?.unit === "days";
+  return <><span className="num">{days ? formatCount(n) : inrWhole(n)}</span>{days && <span className="rf-watch-unit"> days</span>}</>;
+}
+
+function ConditionsTable({ rows, events, busyId, onCheck, onToggle, onDelete }: {
+  rows: Watch[]; events: WatchEvent[] | null; busyId: string | null;
+  onCheck: (w: Watch) => void; onToggle: (w: Watch) => void; onDelete: (w: Watch) => void;
 }) {
-  const initialMetric =
-    (METRIC_OPTIONS.find((m) => m.value === prefillMetric)?.value as Watch["metric_key"] | undefined) ||
-    "receivables_overdue_amount";
-  const [name, setName] = useState(prefillEntity ? `Watch: ${prefillEntity}` : "");
-  const [metricKey, setMetricKey] = useState<Watch["metric_key"]>(initialMetric);
-  const [operator, setOperator] = useState<WatchConditionConfig["operator"]>("gte");
-  const [threshold, setThreshold] = useState("");
-  const [entityName, setEntityName] = useState(prefillEntity || "");
-  const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-
-  const needsEntity = METRIC_OPTIONS.find((m) => m.value === metricKey)?.needsEntity;
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setFormError(null);
-    const thresholdNum = Number(threshold);
-    if (!name.trim()) return setFormError("Name is required");
-    // Number("") is 0, so an empty box would silently become a threshold of 0.
-    if (!threshold.trim()) return setFormError("Enter a threshold");
-    if (Number.isNaN(thresholdNum)) return setFormError("Threshold must be a number");
-    if (needsEntity && !entityName.trim()) return setFormError("Customer name is required for this metric");
-
-    setSaving(true);
-    try {
-      const condition_config: WatchConditionConfig = { operator, threshold: thresholdNum };
-      if (needsEntity) condition_config.entity_name = entityName.trim();
-      await api.watches.create({ name: name.trim(), metric_key: metricKey, condition_config });
-      onCreated();
-    } catch (e) {
-      setFormError(e instanceof Error ? e.message : "Failed to create watch");
-    } finally {
-      setSaving(false);
-    }
-  }
-
   return (
-    <div
-      style={{
-        position: "fixed", inset: 0, background: "rgba(20,20,18,0.28)",
-        display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
-      }}
-      onClick={onClose}
-    >
-      <form
-        onSubmit={handleSubmit}
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "#FFFFFF", border: "1px solid #E5E4DF", borderRadius: 10, padding: 24, width: 420, maxWidth: "calc(100vw - 32px)",
-          display: "flex", flexDirection: "column", gap: 14,
-          boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
-        }}
-      >
-        <h2 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 20, color: "#191917" }}>
-          New watch
-        </h2>
-
-        <label style={{ fontSize: 12, color: "#63635F" }}>
-          Name
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder='e.g. "Overdue receivables above ₹50k"'
-            style={inputStyle}
-          />
-        </label>
-
-        <label style={{ fontSize: 12, color: "#63635F" }}>
-          Metric
-          <select value={metricKey} onChange={(e) => setMetricKey(e.target.value as Watch["metric_key"])} style={inputStyle}>
-            {METRIC_OPTIONS.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
-        </label>
-
-        {needsEntity && (
-          <label style={{ fontSize: 12, color: "#63635F" }}>
-            Customer name
-            <input value={entityName} onChange={(e) => setEntityName(e.target.value)} placeholder="Customer name" style={inputStyle} />
-          </label>
-        )}
-
-        <div style={{ display: "flex", gap: 10 }}>
-          <label style={{ fontSize: 12, color: "#63635F", flex: 1 }}>
-            Operator
-            <select value={operator} onChange={(e) => setOperator(e.target.value as WatchConditionConfig["operator"])} style={inputStyle}>
-              {OPERATOR_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </label>
-          <label style={{ fontSize: 12, color: "#63635F", flex: 1 }}>
-            Threshold
-            <input
-              type="number"
-              value={threshold}
-              onChange={(e) => setThreshold(e.target.value)}
-              placeholder="0"
-              style={inputStyle}
-            />
-          </label>
-        </div>
-
-        {formError && <div style={{ color: "#A64F4B", fontSize: 12 }}>{formError}</div>}
-
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 6 }}>
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn-secondary-v32"
-            style={{ padding: "8px 14px", fontSize: 13, borderRadius: 6 }}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="btn-primary-v32"
-            style={{ padding: "8px 14px", fontSize: 13, borderRadius: 6 }}
-          >
-            {saving ? "Creating…" : "Create watch"}
-          </button>
-        </div>
-      </form>
+    <div role="table" aria-label="Watch conditions">
+      <div role="row" className="rf-head rf-watch-head">
+        <span role="columnheader">Watching</span>
+        <span role="columnheader" style={{ textAlign: "right" }}>Threshold</span>
+        <span role="columnheader" style={{ textAlign: "right" }} title="The value Starlane found when the condition was last met">Value when met</span>
+        <span role="columnheader">Status</span>
+        <span role="columnheader" style={{ textAlign: "right" }}>Last met</span>
+        <span role="columnheader"><span className="sr-only">Actions</span></span>
+      </div>
+      <div role="rowgroup" className="rf-list rf-watch">
+        {rows.map((w) => {
+          const s = watchStatus(w);
+          const busy = busyId === w.id;
+          const t = thresholdParts(w);
+          const found = valueFound(w, events);
+          return (
+            <div key={w.id} role="row" className="rf-row rf-hover" style={{ opacity: busy ? 0.6 : 1, borderBottom: "1px solid var(--line)" }}>
+              <span role="cell" className="min-w-0">
+                <span className="rf-title line-clamp-2" style={{ fontWeight: 500, overflowWrap: "anywhere" }} title={w.name}>{w.name}</span>
+                <span className="rf-kind block truncate" title={t.who || undefined}>{t.metric}{t.who ? ` · ${t.who}` : ""}</span>
+                <span className="rf-mob">
+                  <span>{t.op} <span className="num" style={{ color: "var(--ink-2)" }}>{t.value}</span>{t.unit && ` ${t.unit}`}</span>
+                  {found != null && <span style={{ color: "var(--ink)" }}>Found <MetricFigure w={w} n={found} /></span>}
+                </span>
+              </span>
+              <span role="cell" className="rf-desk rf-watch-threshold">
+                <span className="rf-watch-op">{t.op}</span> <span className="num">{t.value}</span>{t.unit && <span className="rf-watch-unit"> {t.unit}</span>}
+              </span>
+              <span role="cell" className="rf-desk rf-watch-value">
+                {found != null ? <MetricFigure w={w} n={found} /> : <span className="rf-watch-none">—</span>}
+              </span>
+              <span role="cell" className="flex flex-wrap rf-watch-status">
+                <StatusChip tone={s.tone}>{s.label}</StatusChip>
+                {w.last_evaluated_at && <span className="rf-watch-checked" title={formatDateTime(w.last_evaluated_at)}>Checked {formatRelative(w.last_evaluated_at)}</span>}
+              </span>
+              <span role="cell" className="rf-time rf-desk" style={{ color: w.last_triggered_at ? "var(--ink-2)" : undefined }} title={w.last_triggered_at ? formatDateTime(w.last_triggered_at) : undefined}>
+                {w.last_triggered_at ? formatRelative(w.last_triggered_at) : "Never"}
+              </span>
+              <span role="cell" className="rf-actions rf-reveal" style={{ gap: 0 }}>
+                <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" disabled={busy || w.status === "paused"} onClick={() => onCheck(w)}>Check now</button>
+                <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" disabled={busy} onClick={() => onToggle(w)}>{w.status === "paused" ? "Resume" : "Pause"}</button>
+                <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" style={{ color: "var(--critical)" }} disabled={busy} onClick={() => onDelete(w)} aria-label={`Delete ${w.name}`}>Delete</button>
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  display: "block",
-  width: "100%",
-  marginTop: 4,
-  padding: "8px 10px",
-  fontSize: 13,
-  color: "#191917",
-  background: "#FFFFFF",
-  border: "1px solid rgba(25,25,23,0.12)",
-  borderRadius: 6,
-  boxSizing: "border-box",
-};

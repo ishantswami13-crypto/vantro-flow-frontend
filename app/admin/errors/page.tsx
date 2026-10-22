@@ -1,6 +1,16 @@
 "use client";
-import { useEffect, useState } from 'react';
-import { request } from '@/lib/api';
+import { useCallback, useEffect, useState } from "react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { PageHeader, Figure, SkeletonRows } from "@/components/v32/ui";
+import { StatusChip, toneForStatus } from "@/components/ui/Badge";
+import { ErrorState } from "@/components/ui/ErrorState";
+import Button from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
+import { request } from "@/lib/api";
+import { formatCount, formatDateTime } from "@/lib/format";
+
+// Error intelligence for admins: today's counts (GET /api/admin/error-summary)
+// and the latest error events (GET /api/admin/error-events), each resolvable.
 
 interface ErrorEvent {
   id: string;
@@ -13,75 +23,90 @@ interface ErrorEvent {
 }
 
 interface ErrorSummary {
-  totalErrors: number;
-  criticalErrors: number;
+  totalErrors: number | null;
+  criticalErrors: number | null;
 }
 
-export default function AdminErrorsDashboard() {
-  // Typed rather than inferred: useState([]) infers never[], so every later
-  // setEvents call is a type error and the rows have to be cast to any to read
-  // a field. Naming the shape once removes both.
-  const [events, setEvents] = useState<ErrorEvent[]>([]);
-  const [summary, setSummary] = useState<ErrorSummary>({ totalErrors: 0, criticalErrors: 0 });
+const OFFLINE = "Couldn't reach Starlane. Check your connection and try again.";
 
-  useEffect(() => {
-    request<{ summary: ErrorSummary }>('/api/admin/error-summary')
-      .then(res => setSummary(res.summary)).catch(() => {});
-    request<{ data: ErrorEvent[] }>('/api/admin/error-events')
-      .then(res => setEvents(res.data)).catch(() => {});
+export default function AdminErrorsDashboard() {
+  const notify = useToast();
+  const [events, setEvents] = useState<ErrorEvent[] | null>(null);
+  const [summary, setSummary] = useState<ErrorSummary | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [resolving, setResolving] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    setFailed(false); setEvents(null);
+    request<{ summary: ErrorSummary }>("/api/admin/error-summary")
+      .then(res => setSummary(res.summary)).catch(() => setSummary(null));
+    request<{ data: ErrorEvent[] }>("/api/admin/error-events")
+      .then(res => setEvents(res.data || [])).catch(() => setFailed(true));
   }, []);
+  useEffect(() => { load(); }, [load]);
 
   const resolve = async (id: string) => {
-    await request(`/api/admin/error-events/${id}/resolve`, { method: 'PATCH' });
-    setEvents(events.map(e => e.id === id ? { ...e, resolved_at: new Date().toISOString() } : e));
+    setResolving(id);
+    try {
+      await request(`/api/admin/error-events/${id}/resolve`, { method: "PATCH" });
+      setEvents(prev => (prev || []).map(e => e.id === id ? { ...e, resolved_at: new Date().toISOString() } : e));
+    } catch {
+      notify(`That error wasn't marked resolved. ${OFFLINE}`, "critical");
+    } finally { setResolving(null); }
   };
 
-  return (
-    <div className="p-8 bg-bg text-primary min-h-screen">
-      <h1 className="text-2xl font-bold mb-6 text-primary">Error Intelligence Dashboard</h1>
-      <div className="flex gap-4 mb-8">
-        <div className="card-premium p-6 w-64">
-          <div className="section-label">Total Errors Today</div>
-          <div className="text-3xl font-bold mt-2 text-primary metric-value">{summary.totalErrors}</div>
-        </div>
-        <div className="card-premium p-6 w-64 border-danger/30">
-          <div className="section-label">Critical Errors</div>
-          <div className="text-3xl font-bold mt-2 text-danger metric-value">{summary.criticalErrors}</div>
-        </div>
-      </div>
+  const fig = (n: number | null | undefined) => (n == null ? "—" : formatCount(n));
 
-      <div className="card-premium overflow-hidden">
-        <table className="min-w-full table-premium">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="px-6 py-3 text-left section-label">Error ID</th>
-              <th className="px-6 py-3 text-left section-label">Type &amp; Severity</th>
-              <th className="px-6 py-3 text-left section-label">Route</th>
-              <th className="px-6 py-3 text-left section-label">Time</th>
-              <th className="px-6 py-3 text-right section-label">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.map(evt => (
-              <tr key={evt.id} className={evt.resolved_at ? 'opacity-50' : ''}>
-                <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-secondary">{evt.error_id}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-bold text-primary">{evt.type}</div>
-                  <div className="text-2xs uppercase px-2 py-1 bg-danger-dim text-danger rounded-full inline-block mt-1">{evt.severity}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">{evt.route}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">{new Date(evt.created_at).toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                  {!evt.resolved_at && (
-                    <button onClick={() => resolve(evt.id)} className="text-accent hover:text-accent-hover font-medium">Resolve</button>
-                  )}
-                  {evt.resolved_at && <span className="text-muted">Resolved</span>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  return (
+    <DashboardLayout pageTitle="Errors">
+      <style>{`
+        .err-row { display: grid; align-items: center; gap: 4px 16px; padding: 9px 0; min-height: 42px;
+          grid-template-columns: minmax(0, 1fr) auto; font-size: 13px; }
+        .err-head { display: none; }
+        .err-desk { display: none; }
+        @media (min-width: 900px) {
+          .err-row { grid-template-columns: 110px minmax(0, 1fr) 96px minmax(0, 1fr) 132px 92px; }
+          .err-head { display: grid; min-height: 0; padding-top: 0; padding-bottom: 8px; font-size: 11px; }
+          .err-desk { display: block; }
+          .err-mob { display: none !important; }
+        }
+      `}</style>
+      <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 32 }}>
+        <PageHeader title="Errors" subtitle="The latest errors in production, newest first." />
+
+        <div className="ops-figures" style={{ ["--n" as string]: 4 } as React.CSSProperties}>
+          <Figure value={fig(summary?.totalErrors)} label="Errors today" />
+          <Figure value={fig(summary?.criticalErrors)} label="Critical today" tone={summary?.criticalErrors ? "var(--critical)" : undefined} />
+        </div>
+
+        <div>
+          {failed && <ErrorState title="Couldn't load error events" message={OFFLINE} onRetry={load} />}
+          {!failed && events === null && <SkeletonRows rows={5} />}
+          {events && events.length === 0 && <p className="ops-list" style={{ margin: 0, padding: "12px 0", fontSize: 13, color: "var(--ink-2)", borderBottom: "1px solid var(--line)" }}>No errors recorded. Errors captured in production appear here.</p>}
+          {events && events.length > 0 && (
+            <div>
+              <div className="err-row err-head ops-head" aria-hidden="true"><span>Error</span><span>Type</span><span>Severity</span><span>Route</span><span>Time</span><span /></div>
+              {events.map(evt => (
+                <div key={evt.id} className="err-row ops-row" style={{ opacity: evt.resolved_at ? 0.6 : 1 }}>
+                  <span className="min-w-0">
+                    <span className="block truncate num" style={{ color: "var(--ink-2)", fontSize: 12 }}>{evt.error_id}</span>
+                    <span className="err-mob block truncate" style={{ fontSize: 12, color: "var(--ink-3)" }}>{evt.type} · {evt.route} · {formatDateTime(evt.created_at)}</span>
+                  </span>
+                  <span className="err-desk min-w-0 truncate" style={{ color: "var(--ink)" }}>{evt.type}</span>
+                  <span className="err-desk"><StatusChip tone={toneForStatus(evt.severity)}>{evt.severity.replace(/^./, c => c.toUpperCase())}</StatusChip></span>
+                  <span className="err-desk truncate num" style={{ color: "var(--ink-2)", fontSize: 12 }} title={evt.route}>{evt.route}</span>
+                  <span className="err-desk tabular-nums" style={{ color: "var(--ink-2)", fontSize: 12.5 }}>{formatDateTime(evt.created_at)}</span>
+                  <span style={{ textAlign: "right" }}>
+                    {evt.resolved_at
+                      ? <StatusChip tone="positive">Resolved</StatusChip>
+                      : <Button variant="ghost" size="sm" loading={resolving === evt.id} onClick={() => resolve(evt.id)}>Resolve</Button>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

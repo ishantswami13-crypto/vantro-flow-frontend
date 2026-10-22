@@ -1,85 +1,61 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { AutomationProposals, ReminderApprovals, DecisionsNeedingYou } from "@/components/os/PreparedPanels";
 import { OutreachSummary } from "@/components/outreach/OutreachPanels";
 import { api, getUser, type PreparedCard, type PreparedResponse } from "@/lib/api";
-import { PageHeader, EmptyLine, ErrorBanner, SkeletonRows } from "@/components/v32/ui";
+import { PageHeader, Subnav, SkeletonRows } from "@/components/v32/ui";
+import { IconChevronDown } from "@/components/v32/icons";
+import { formatDate, formatRelative } from "@/lib/format";
+import { EmptyNote, FactList, ItemCard, PageBody, RetryLine, RowLink, RowList, SectionHead, amount, cleanTitle, humaneError, prettyDates, sentence } from "@/components/os/prepared/kit";
 
 // Prepared — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16, Priority 6.
 //
-// This is real, read-only curation over primitives that now exist and are
-// real: pending ai_actions (Control), triggered watches (Watch), real
-// BOUNDED_OPPORTUNITY chains (Opportunity Engine), and forecast risk from
-// the persisted predictions table (Forecast V2). It is deliberately NOT a
-// "trigger generates a draft work product" pipeline — that capability was
-// re-confirmed absent from this codebase during this priority and remains
-// out of scope. See lib/routes/prepared.js on the backend for the full
-// honesty rationale and exactly which real source backs each tab.
+// Real, read-only curation over primitives that exist: pending ai_actions
+// (Control), triggered watches (Watch), real BOUNDED_OPPORTUNITY chains
+// (Opportunity Engine), and forecast risk from the persisted predictions
+// table (Forecast V2). It is deliberately NOT a "trigger generates a draft
+// work product" pipeline. See lib/routes/prepared.js on the backend for
+// which real source backs each tab.
 //
-// needs_you = real pending ai_actions awaiting a decision.
+// needs_you = real pending ai_actions awaiting a decision (plus the decision,
+//   reminder and workflow queues that live with Prepared).
 // for_you = real triggered watches + real opportunities + real forecast risk.
 // completed = real decided ai_actions (status='approved').
 // dismissed = real decided ai_actions (status='rejected').
-// upcoming = honest empty — no real backing exists for "work scheduled
-//   ahead of a known future event" anywhere in this codebase.
+// upcoming = honest empty: nothing in the backend schedules work ahead of a
+//   known future event yet.
 //
 // No fabricated preparedness score, no fabricated reasoning: every
-// summary/evidence field on a card traces to a real DB row or a real
-// deterministic computation already used by another connected page.
+// summary/evidence field on a card traces to a real DB row.
 
-type TabKey = "for_you" | "needs_you" | "upcoming" | "completed" | "dismissed";
+type TabKey = "needs_you" | "for_you" | "upcoming" | "completed" | "dismissed";
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: "for_you", label: "For you" },
   { key: "needs_you", label: "Needs you" },
+  { key: "for_you", label: "For you" },
   { key: "upcoming", label: "Upcoming" },
   { key: "completed", label: "Completed" },
   { key: "dismissed", label: "Dismissed" },
 ];
 
-const EMPTY_COPY: Record<TabKey, { title: string; body: string }> = {
-  for_you: {
-    title: "Nothing Starlane has flagged for you right now",
-    body: "Triggered watches, detected opportunities and forecast risk for your business appear here. There isn't any right now.",
-  },
-  needs_you: {
-    title: "Nothing is waiting on a decision",
-    body: "Prepared actions waiting for your approval appear here, the same queue Control tracks. There are none right now.",
-  },
-  upcoming: {
-    title: "Nothing scheduled to be prepared",
-    body: "Work Starlane prepares ahead of a known date will appear here.",
-  },
-  completed: {
-    title: "No completed items",
-    body: "Actions you approve appear here. None have been approved yet.",
-  },
-  dismissed: {
-    title: "Nothing dismissed",
-    body: "Actions you dismiss appear here. None have been rejected yet.",
-  },
+const EMPTY_COPY: Record<TabKey, string> = {
+  needs_you: "Nothing is waiting on you. Decisions, prepared actions and reminders appear here when something material changes and there is still time to act.",
+  for_you: "Nothing is flagged for you. Triggered watches, opportunities and forecast risk appear here.",
+  upcoming: "Nothing is scheduled. Work prepared ahead of a known date will appear here.",
+  completed: "No completed items yet. Actions you approve appear here.",
+  dismissed: "Nothing dismissed. Actions you reject appear here.",
 };
-
-function formatTimestamp(ts: string | null): string {
-  if (!ts) return "";
-  try {
-    return new Date(ts).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  } catch {
-    return ts;
-  }
-}
 
 // Only ai_actions-backed cards have a real decide pathway (PATCH
 // /api/ai-actions/:id, the same one Bridge's Lens drawer and
 // Control/Approvals already use). Cards from watches, predictions, or the
-// opportunity engine have no real approve/reject/dismiss endpoint behind
-// them — their primary action can only honestly be "open the real page
-// that explains them," and they get no dismiss button at all rather than
-// one that pretends to dismiss something the backend can't persist.
+// opportunity engine have no approve/reject/dismiss endpoint behind them, so
+// their one action opens the page that explains them, and they get no
+// dismiss button rather than one that pretends to dismiss something.
 const SOURCE_LABEL: Record<string, string> = {
   ai_actions: "Prepared action",
   watches: "From a watch",
@@ -87,109 +63,158 @@ const SOURCE_LABEL: Record<string, string> = {
   opportunityPropagation: "From an opportunity",
 };
 
+// Where a card without its own decide pathway opens.
+const OPEN_LABEL: Record<string, string> = {
+  watches: "Watch",
+  predictions: "forecast",
+  opportunityPropagation: "opportunity",
+};
+
+const TRIGGER_LABEL: Record<string, string> = {
+  FLAG_BAD_DEBT: "Likely bad debt",
+  CONTACT_CUSTOMER: "Reminder",
+  watch_triggered: "Watch triggered",
+  forecast_risk: "Cash forecast risk",
+  opportunity_detected: "Opportunity",
+};
+
 function targetPathForCard(card: PreparedCard): string {
   // Opens Approvals with this action already selected.
   if (card.source === "ai_actions") return `/control/approvals?id=${encodeURIComponent(card.id)}`;
   if (card.source === "watches") return "/watch";
   if (card.source === "predictions") return "/forecast";
-  if (card.source === "opportunityPropagation") return "/discover";
+  if (card.source === "opportunityPropagation") return "/intelligence";
   return "/control/approvals";
 }
 
-function PreparedCardView({
-  card, busy, onApprove, onReject, onOpen,
-}: {
-  card: PreparedCard;
-  busy: boolean;
-  onApprove: () => void;
-  onReject: () => void;
-  onOpen: () => void;
+type Facts = Record<string, unknown>;
+function factsOf(card: PreparedCard): Facts | null {
+  const ev = card.evidence as { facts?: Facts } | null;
+  return ev && typeof ev === "object" && !Array.isArray(ev) && ev.facts && typeof ev.facts === "object" ? ev.facts : null;
+}
+const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v)) ? Number(v) : null);
+
+/** Backend detail lines, with ISO dates and raw forecast numbers shown the way people read them. */
+function readableDetail(detail: string | null): string | null {
+  if (!detail) return null;
+  const m = detail.match(/^Point estimate (-?[\d.]+), range \[(-?[\d.]+), (-?[\d.]+)\]\.?$/);
+  const money = (v: number) => (v < 0 ? `−${amount(-v)}` : amount(v));
+  if (m) return `Expected ${money(Number(m[1]))}, with a range from ${money(Number(m[2]))} to ${money(Number(m[3]))}.`;
+  return prettyDates(detail);
+}
+
+const FACT_LABEL: Record<string, string> = {
+  invoice_amount_open: "Open on the invoice",
+  days_overdue: "Days overdue today",
+  days_overdue_when_prepared: "Days overdue when prepared",
+  due_date: "Due",
+  last_reminder_sent: "Last reminder",
+  payment_status: "Status in your books",
+};
+
+function factRows(f: Facts): { label: string; value: string }[] {
+  return Object.keys(FACT_LABEL).filter((k) => f[k] != null && f[k] !== "").map((k) => {
+    const v = f[k];
+    const value = k === "invoice_amount_open" ? amount(num(v)) : k === "due_date" || k === "last_reminder_sent" ? formatDate(String(v)) : k === "payment_status" ? sentence(String(v)) : String(v);
+    return { label: FACT_LABEL[k], value };
+  });
+}
+
+function PreparedCardView({ card, busy, onApprove, onReject, onOpen }: {
+  card: PreparedCard; busy: boolean; onApprove: () => void; onReject: () => void; onOpen: () => void;
 }) {
+  const [showEvidence, setShowEvidence] = useState(false);
   const isAiAction = card.source === "ai_actions";
   const isPending = card.status === "pending" || !card.status;
-  const primaryIsApprove = isAiAction && isPending;
-  const secondaryEnabled = isAiAction && isPending;
-  const when = formatTimestamp(card.timestamp);
+  const canDecide = isAiAction && isPending;
+  const facts = factsOf(card);
+  const owed = facts ? num(facts.invoice_amount_open) : null;
+  const overdue = facts ? num(facts.days_overdue) : null;
+  const rows = facts ? factRows(facts) : [];
+  const when = formatRelative(card.timestamp);
+  const label = TRIGGER_LABEL[card.trigger] || sentence(card.trigger);
 
+  const urgent = isPending && card.priority === "high";
   return (
-    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 18 }}>
-      <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--accent)", marginBottom: 8 }}>
-        {card.trigger.replace(/_/g, " ")}{when ? `, ${when}` : ""}
-      </div>
-      <div style={{ fontSize: 14.5, color: "#191917", marginBottom: 10, lineHeight: 1.5 }}>{card.summary}</div>
-      {card.detail ? <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: 6 }}>{card.detail}</div> : null}
-      <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: 14 }}>Source: {SOURCE_LABEL[card.source] || "Starlane"}</div>
-      {primaryIsApprove && card.approve_does && <div style={{ fontSize: 12, color: "#63635F", marginBottom: 12 }}>{card.approve_does}</div>}
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <button
-          type="button"
-          className={primaryIsApprove ? "btn-primary-v32" : "btn-secondary-v32"}
-          onClick={primaryIsApprove ? onApprove : onOpen}
-          disabled={busy}
-          style={{ padding: "8px 14px", borderRadius: 6, fontSize: 12.5, opacity: busy ? 0.4 : 1 }}
-          title={card.approve_does}
-        >
-          {primaryIsApprove ? (busy ? "Approving…" : "Approve") : "Open"}
-        </button>
-        {primaryIsApprove && (
-          <button type="button" className="btn-secondary-v32" onClick={onOpen} style={{ padding: "8px 14px", borderRadius: 6, fontSize: 12.5 }}>
-            Review
-          </button>
-        )}
-        {secondaryEnabled && (
-          <button type="button" className="hover-dim" onClick={onReject} disabled={busy} style={{ padding: "8px 10px", border: "none", background: "none", color: "#63635F", fontSize: 12.5, marginLeft: "auto", cursor: "pointer" }}>
-            {card.secondary}
-          </button>
-        )}
-      </div>
-    </div>
+    <ItemCard
+      quiet={!isPending}
+      attention={urgent}
+      category={label}
+      meta={[SOURCE_LABEL[card.source] || "Starlane", when].filter(Boolean).join(" · ")}
+      title={cleanTitle(card.summary)}
+      why={readableDetail(card.detail)}
+      stake={owed != null ? amount(owed) : undefined}
+      stakeNote={owed != null ? (overdue != null && overdue > 0 ? `${overdue} days overdue` : "open on the invoice") : undefined}
+      action={
+        canDecide ? (
+          <button type="button" className="ui-btn ui-btn-secondary ui-btn-sm" onClick={onApprove} disabled={busy} title={card.approve_does}>{busy ? "Approving…" : "Approve"}</button>
+        ) : (
+          <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" onClick={onOpen}>{card.source === "ai_actions" ? "Open in Approvals" : `Open ${OPEN_LABEL[card.source] || "source"}`}</button>
+        )
+      }
+      actions={canDecide || rows.length > 0 ? (
+        <>
+          {canDecide && <RowLink onClick={onOpen}>Open in Approvals</RowLink>}
+          {rows.length > 0 && (
+            <RowLink expanded={showEvidence} onClick={() => setShowEvidence((v) => !v)}>
+              <span style={{ display: "inline-flex", transform: showEvidence ? "rotate(180deg)" : undefined, transition: "transform 160ms var(--ease)" }}><IconChevronDown size={13} /></span>
+              {showEvidence ? "Hide evidence" : "View evidence"}
+            </RowLink>
+          )}
+          {canDecide && <RowLink onClick={onReject} disabled={busy}>{card.secondary || "Reject"}</RowLink>}
+        </>
+      ) : undefined}
+    >
+      {(canDecide && card.approve_does) || showEvidence ? (
+        <>
+          {canDecide && card.approve_does && (
+            <p style={{ margin: 0, fontSize: 12, color: "var(--ink-3)", lineHeight: 1.55 }}>
+              {/^approv/i.test(card.approve_does) ? null : <span>If you approve: </span>}{card.approve_does}
+            </p>
+          )}
+          {showEvidence && (
+            <div style={{ marginTop: canDecide && card.approve_does ? 10 : 0, maxWidth: 480 }}>
+              <FactList rows={rows} />
+            </div>
+          )}
+        </>
+      ) : null}
+    </ItemCard>
   );
 }
+
+const emptyResponse = (): PreparedResponse => ({
+  for_you: [], needs_you: [], upcoming: [], completed: [], dismissed: [],
+  counts: { for_you: 0, needs_you: 0, upcoming: 0, completed: 0, dismissed: 0 },
+  generatedAt: "", sourcesChecked: {},
+});
 
 export default function PreparedPage() {
   const router = useRouter();
   const [tab, setTab] = useState<TabKey>("needs_you");
   const [data, setData] = useState<PreparedResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // Counts reported by the queues that load on their own (null until loaded).
+  const [decisionsN, setDecisionsN] = useState<number | null>(null);
+  const [remindersN, setRemindersN] = useState<number | null>(null);
+  const [proposalsN, setProposalsN] = useState<number | null>(null);
 
-  const emptyResponse = (): PreparedResponse => ({
-    for_you: [], needs_you: [], upcoming: [], completed: [], dismissed: [],
-    counts: { for_you: 0, needs_you: 0, upcoming: 0, completed: 0, dismissed: 0 },
-    generatedAt: "", sourcesChecked: {},
-  });
-
-  const load = () => {
+  const load = useCallback(async () => {
     const user = getUser();
-    if (!user?.id) {
-      setData(emptyResponse());
-      return;
+    if (!user?.id) { setData(emptyResponse()); return; }
+    try {
+      const res = await api.intelligence.prepared(user.id);
+      setData(res);
+      setError(null);
+    } catch (e) {
+      setError(e);
+      setData((d) => d ?? emptyResponse());
     }
-    return api.intelligence.prepared(user.id)
-      .then((res) => { setData(res); setError(null); })
-      .catch(() => {
-        setError("Couldn't reach Starlane's intelligence backend.");
-        setData(emptyResponse());
-      });
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-    const user = getUser();
-    if (!user?.id) {
-      setData(emptyResponse());
-      return;
-    }
-    api.intelligence.prepared(user.id)
-      .then((res) => { if (!cancelled) setData(res); })
-      .catch(() => {
-        if (cancelled) return;
-        setError("Couldn't reach Starlane's intelligence backend.");
-        setData(emptyResponse());
-      });
-    return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => { void load(); }, [load]);
 
   async function decide(card: PreparedCard, status: "approved" | "rejected") {
     setActionError(null);
@@ -198,84 +223,80 @@ export default function PreparedPage() {
       await api.aiActions.updateStatus(card.id, status);
       await load();
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : `Couldn't ${status === "approved" ? "approve" : "reject"} this — try again.`);
+      setActionError(humaneError(e, `Couldn't ${status === "approved" ? "approve" : "reject"} this just now. Try again in a moment.`));
     } finally {
       setBusyId(null);
     }
   }
 
   const counts = data?.counts ?? { for_you: 0, needs_you: 0, upcoming: 0, completed: 0, dismissed: 0 };
+  const loaded = data !== null && !error;
   const cards: PreparedCard[] = data ? data[tab] : [];
-  const copy = EMPTY_COPY[tab];
+  const tabCount = (k: TabKey): number | null => {
+    if (!loaded) return null;
+    if (k === "needs_you") return counts.needs_you + (decisionsN ?? 0) + (remindersN ?? 0);
+    if (k === "for_you") return counts.for_you + (proposalsN ?? 0);
+    return counts[k];
+  };
+
+  const sideQueuesEmpty = tab === "needs_you" ? decisionsN === 0 && remindersN === 0 : tab === "for_you" ? proposalsN === 0 : true;
+  const showEmpty = loaded && cards.length === 0 && sideQueuesEmpty;
 
   return (
     <DashboardLayout pageTitle="Prepared">
-      <PageHeader
-        title="Prepared"
-        subtitle="Decisions waiting on you, with what is at stake"
-        right={
-          /* Control › Approvals lists every decision waiting on the owner;
-             this page only shows the prepared subset. */
-          <Link href="/control/approvals" className="hover-dim" style={{ fontSize: 12.5, color: "#63635F" }}>All approvals</Link>
-        }
-      />
+      <PageBody>
+        <PageHeader
+          title="Prepared"
+          subtitle="Decisions and prepared work waiting on you, with what is at stake."
+          right={
+            /* Control › Approvals lists every decision waiting on the owner;
+               this page shows the prepared subset. */
+            <Link href="/control/approvals" className="ui-btn ui-btn-ghost ui-btn-sm">All approvals</Link>
+          }
+        />
 
-      <div role="tablist" aria-label="Prepared" className="flex items-baseline overflow-x-auto" style={{ gap: 26, borderBottom: "1px solid rgba(25,25,23,0.08)" }}>
-        {TABS.map((t) => {
-          const on = t.key === tab;
-          return (
-            <button
-              key={t.key}
-              type="button"
-              role="tab"
-              aria-selected={on}
-              onClick={() => setTab(t.key)}
-              className={on ? "" : "hover-dim"}
-              style={{ fontSize: 13.5, color: on ? "#191917" : "#63635F", paddingBottom: 8, marginBottom: -1, whiteSpace: "nowrap", background: "none", borderBottom: `2px solid ${on ? "var(--accent)" : "transparent"}` }}
-            >
-              {t.label} <span style={{ color: on ? "#63635F" : "#B9B8B2", fontSize: 12 }}>{data ? counts[t.key] : ""}</span>
-            </button>
-          );
-        })}
-      </div>
+        <Subnav
+          label="Prepared"
+          active={tab}
+          onChange={(k) => setTab(k as TabKey)}
+          items={TABS.map((t) => ({ key: t.key, label: t.label, count: tabCount(t.key) }))}
+        />
 
-      {actionError && <ErrorBanner>{actionError}</ErrorBanner>}
+        {actionError && <RetryLine error={actionError} />}
+        {error ? <RetryLine error={error} onRetry={() => { setError(null); void load(); }} /> : null}
 
-      {error ? (
-        <ErrorBanner>{error}</ErrorBanner>
-      ) : data === null ? (
-        <SkeletonRows rows={3} />
-      ) : cards.length === 0 ? (
-        <EmptyLine title={copy.title} body={copy.body} />
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {cards.map((card) => (
-            <PreparedCardView
-              key={card.id}
-              card={card}
-              busy={busyId === card.id}
-              onApprove={() => decide(card, "approved")}
-              onReject={() => decide(card, "rejected")}
-              onOpen={() => router.push(targetPathForCard(card))}
-            />
-          ))}
+        {/* The queues that live with Prepared load once and stay mounted, so
+            the tab counts are right before a tab is opened. */}
+        <div hidden={tab !== "needs_you"} className="empty:hidden"><DecisionsNeedingYou onCount={setDecisionsN} /></div>
+
+        {data === null ? (
+          <SkeletonRows rows={3} />
+        ) : cards.length > 0 ? (
+          <section aria-label={tab === "needs_you" ? "Prepared actions" : TABS.find((t) => t.key === tab)?.label}>
+            {tab === "needs_you" && <SectionHead title="Prepared actions" count={cards.length} hint="Each decision is recorded in the same approval queue as Control." />}
+            <RowList>
+              {cards.map((card) => (
+                <PreparedCardView
+                  key={card.id}
+                  card={card}
+                  busy={busyId === card.id}
+                  onApprove={() => decide(card, "approved")}
+                  onReject={() => decide(card, "rejected")}
+                  onOpen={() => router.push(targetPathForCard(card))}
+                />
+              ))}
+            </RowList>
+          </section>
+        ) : null}
+
+        <div hidden={tab !== "needs_you"} className="empty:hidden"><ReminderApprovals onCount={setRemindersN} /></div>
+        <div hidden={tab !== "for_you"}>
+          <AutomationProposals onCount={setProposalsN} />
+          <div style={{ marginTop: 24 }}><OutreachSummary context="prepared" /></div>
         </div>
-      )}
 
-      {/* The decision, reminder and workflow queues that live with Prepared,
-          shown under the tab they belong to. */}
-      {tab === "needs_you" && (
-        <>
-          <DecisionsNeedingYou />
-          <ReminderApprovals />
-        </>
-      )}
-      {tab === "for_you" && (
-        <>
-          <AutomationProposals />
-          <OutreachSummary context="prepared" />
-        </>
-      )}
+        {showEmpty && !error && <EmptyNote>{EMPTY_COPY[tab]}</EmptyNote>}
+      </PageBody>
     </DashboardLayout>
   );
 }

@@ -78,7 +78,6 @@ export const outreachApi = {
   addSink: () => call<ProviderAccount>('POST', '/providers', { provider: 'sink' }),
   gmailConnectUrl: (dailyMax = 40) => call<{ url: string }>('GET', `/providers/gmail/connect-url?dailyMax=${dailyMax}`),
   providerAction: (id: string, action: 'pause' | 'resume') => call<ProviderAccount>('POST', `/providers/${id}/${action}`),
-  campaigns: () => call<{ campaigns: CampaignRow[] }>('GET', '/campaigns'),
   createCampaign: (input: Record<string, unknown>) => call<CampaignRow>('POST', '/campaigns', input),
   campaignAction: (id: string, action: 'start' | 'pause' | 'resume' | 'stop') => call<{ id: string; status: string }>('POST', `/campaigns/${id}/${action}`),
   importTargets: (rows: TargetRow[]) => call<ImportResult>('POST', '/targets/import', { rows, source: 'outreach-page' }),
@@ -88,7 +87,6 @@ export const outreachApi = {
   review: (id: string, decision: 'APPROVE' | 'REJECT') => call<{ id: string; review_status: string }>('POST', `/messages/${id}/review`, { decision }),
   replies: () => call<{ replies: Reply[] }>('GET', '/replies'),
   replyHandled: (id: string) => call<{ handled: boolean }>('POST', `/replies/${id}/handled`),
-  jobs: (status?: string) => call<{ jobs: Job[] }>('GET', `/jobs${status ? `?status=${status}` : ''}`),
 };
 
 // CSV → import rows. Columns (header row required, any order):

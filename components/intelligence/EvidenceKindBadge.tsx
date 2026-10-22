@@ -28,7 +28,7 @@ export function EvidenceKindBadge({ kind }: { kind: EvidenceKind }) {
 }
 
 export function ConfidenceBadge({ level }: { level: "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN" }) {
-  if (level === "UNKNOWN") return <Badge variant="muted">Confidence unknown</Badge>;
+  if (level === "UNKNOWN") return <Badge variant="muted">Confidence not known yet</Badge>;
   const variant = level === "HIGH" ? "success" : level === "MEDIUM" ? "warning" : "danger";
   return <Badge variant={variant}>{level.charAt(0)}{level.slice(1).toLowerCase()} confidence</Badge>;
 }

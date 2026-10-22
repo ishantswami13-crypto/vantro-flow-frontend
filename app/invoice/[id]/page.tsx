@@ -111,7 +111,7 @@ export default function InvoiceViewPage() {
       `}</style>
 
       {/* Action bar — hidden when printing */}
-      <div className="no-print bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+      <div className="no-print bg-surface border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm">
         <button onClick={() => router.back()}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors">
           <FiArrowLeft size={14} /> Back
@@ -134,7 +134,7 @@ export default function InvoiceViewPage() {
 
       {/* Invoice document */}
       <div className="max-w-3xl mx-auto my-8 print-shadow" style={{ filter: "drop-shadow(0 4px 32px rgba(0,0,0,0.10))" }}>
-        <div className="bg-white overflow-hidden rounded-xl">
+        <div className="bg-surface overflow-hidden rounded-xl">
 
           {/* Header band */}
           <div className="bg-[#0A0F1E] px-8 py-7">
@@ -248,7 +248,7 @@ export default function InvoiceViewPage() {
                 </thead>
                 <tbody>
                   {items.map((item, i) => (
-                    <tr key={i} className={`border-b ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                    <tr key={i} className={`border-b ${i % 2 === 0 ? "bg-surface" : "bg-gray-50/50"}`}>
                       <td className="py-3 text-gray-400 text-xs">{i + 1}</td>
                       <td className="py-3 text-gray-800 font-medium">{item.name}</td>
                       {hasHsn && <td className="py-3 text-gray-400 text-xs font-mono">{item.hsn || "—"}</td>}

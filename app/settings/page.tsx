@@ -2,98 +2,76 @@
 
 import { IdentityAvatar } from "@/components/identity/IdentityAvatar";
 import { IdentityPicker } from "@/components/identity/IdentityPicker";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card } from "@/components/ui/Card";
-import { Input, Select } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { Alert } from "@/components/ui/Alert";
-import { Badge } from "@/components/ui/Badge";
-import {
-  FiUser, FiBriefcase, FiSliders, FiLink, FiCreditCard,
-  FiLogOut, FiCheck, FiRefreshCw, FiCpu,
-  FiCheckCircle, FiZap, FiTrash2,
-  FiMessageSquare, FiPhone,
-  FiToggleLeft, FiToggleRight, FiPlus, FiSend,
-  FiAlertCircle, FiCopy, FiInfo,
-} from "react-icons/fi";
-import { api, getUser, clearAuth, type DunningRule, type DeliveryLine, type DeliveryStatus, authHeaders } from "@/lib/api";
+import { StatusChip, type StatusTone } from "@/components/ui/Badge";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/Toast";
+import { PageHeader, SkeletonRows } from "@/components/v32/ui";
+import { IconWhatsApp, IconLogout, IconTrash, IconPlus, IconSun, IconMoon } from "@/components/v32/icons";
+import { Panel, Group, Fields, Field, Prefixed, Segmented, Switch, SaveBar, SettingsStyles } from "@/components/settings/SettingsUI";
+import { api, getUser, clearAuth, type DunningRule, type DeliveryLine, type DeliveryStatus } from "@/lib/api";
 import { INDUSTRY_OPTIONS, setBusinessType } from "@/lib/businessTypes";
+import { getTheme, setTheme, THEME_EVENT, type Theme } from "@/lib/theme";
+import { formatCount } from "@/lib/format";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
+const OFFLINE = "Couldn't reach Starlane. Check your connection and try again.";
+const NOT_SAVED = "Your changes weren't saved. Check your connection and try again.";
 
-type Tab = "profile" | "business" | "voice" | "preferences" | "integrations" | "automation" | "billing";
+type Tab = "profile" | "business" | "preferences" | "integrations" | "automation" | "billing";
 
-const TABS: { key: Tab; label: string; icon: React.ElementType; badge?: string }[] = [
-  { key: "profile",      label: "Profile",       icon: FiUser },
-  { key: "business",     label: "Business",      icon: FiBriefcase },
-  { key: "voice",        label: "AI Voice",      icon: FiCpu, badge: "AI" },
-  { key: "preferences",  label: "Preferences",   icon: FiSliders },
-  { key: "integrations", label: "Integrations",  icon: FiLink },
-  { key: "automation",   label: "Automation",    icon: FiZap, badge: "NEW" },
-  { key: "billing",      label: "Billing",       icon: FiCreditCard },
+const TABS: { key: Tab; label: string }[] = [
+  { key: "profile",      label: "Profile" },
+  { key: "business",     label: "Business" },
+  { key: "preferences",  label: "Preferences" },
+  { key: "integrations", label: "Delivery" },
+  { key: "automation",   label: "Reminder rules" },
+  { key: "billing",      label: "Billing" },
 ];
+// Older links (?tab=integrations, ?tab=automation) keep working.
+const TAB_KEYS = new Set<Tab>(TABS.map(t => t.key));
 
-const industryOptions  = INDUSTRY_OPTIONS;
-const languageOptions  = [
-  { value: "hinglish", label: "Hinglish (Hindi + English)" },
+const languageOptions = [
+  { value: "hinglish", label: "Hinglish (Hindi and English)" },
   { value: "english",  label: "English" },
   { value: "hindi",    label: "Hindi" },
-];
-const voiceStyleOptions = [
-  { value: "casual_hinglish", label: "Casual Hinglish — 'Bhai', 'yaar', short & direct" },
-  { value: "formal_hindi",    label: "Formal Hindi — 'Aap', respectful, full sentences" },
-  { value: "direct_english",  label: "Direct English — professional, no-nonsense" },
-  { value: "friendly_urdu",   label: "Friendly Urdu-Hindi mix — warm, relationship-first" },
-  { value: "regional_hindi",  label: "Regional Hinglish — local dialect, city-specific" },
-];
-const TONE_COLORS: Record<string, string> = {
-  gentle: "#10D98A", firm: "#F5A524", urgent: "#F5424D",
-};
-const TONE_LABELS: Record<string, string> = {
-  gentle: "🤝 Gentle", firm: "📢 Firm", urgent: "🚨 Urgent",
-};
-const employeeOptions = [
-  { value: "1-5", label: "1–5 employees" }, { value: "6-20", label: "6–20 employees" },
-  { value: "21-50", label: "21–50 employees" }, { value: "51-200", label: "51–200 employees" },
-  { value: "200+", label: "200+ employees" },
 ];
 const CITIES = [
   "Mumbai","Delhi","Bangalore","Chennai","Hyderabad","Pune","Ahmedabad","Kolkata",
   "Surat","Jaipur","Lucknow","Kanpur","Nagpur","Indore","Bhopal","Patna",
   "Ludhiana","Agra","Nashik","Vadodara","Other",
 ];
-const timezoneOptions = [{ value: "Asia/Kolkata", label: "IST — Asia/Kolkata (UTC+5:30)" }];
 
-const WEBHOOK_URL    = `${BASE}/api/payments/webhook`;
-const WA_WEBHOOK_URL = `${BASE}/api/webhooks/whatsapp-inbound`;
+// Reminder tone in the shared status language.
+const TONE: Record<string, { label: string; tone: StatusTone }> = {
+  gentle: { label: "Gentle", tone: "positive" },
+  firm: { label: "Firm", tone: "attention" },
+  urgent: { label: "Urgent", tone: "critical" },
+};
+const ACTION_LABEL: Record<string, string> = { whatsapp: "WhatsApp", call: "Call", email: "Email" };
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-      className="flex items-center gap-1 px-2 py-1 rounded-lg bg-surface-2 border border-border text-xs text-secondary hover:text-accent transition-all">
-      {copied ? <FiCheck size={11} className="text-success" /> : <FiCopy size={11} />}
-      {copied ? "Copied" : "Copy"}
-    </button>
-  );
+/** Delivery line status: unknown (not loaded) is never shown as active. */
+function DeliveryChip({ line }: { line?: DeliveryLine }) {
+  if (!line) return <StatusChip tone="unknown">Not known yet</StatusChip>;
+  return line.active ? <StatusChip tone="positive">Active</StatusChip> : <StatusChip tone="attention">Not active</StatusChip>;
 }
-
-const TAB_KEYS = new Set(TABS.map(t => t.key));
 
 function SettingsPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const notify = useToast();
   const requestedTab = searchParams.get("tab");
   const initialTab: Tab = requestedTab && TAB_KEYS.has(requestedTab as Tab) ? (requestedTab as Tab) : "profile";
   const [tab, setTabState] = useState<Tab>(initialTab);
-  // Keep the URL in sync so Settings sections (Profile, Preferences, ...)
-  // are real deep-linkable destinations — e.g. from the sidebar account
-  // menu — rather than only reachable by clicking a tab after landing here.
+  // Keep the URL in sync so each section is a real deep-linkable destination.
   const setTab = (t: Tab) => {
     setTabState(t);
+    setError(""); setSaved(false);
     router.replace(`${pathname}?tab=${t}`, { scroll: false });
   };
   const [saved, setSaved]   = useState(false);
@@ -102,90 +80,104 @@ function SettingsPageInner() {
 
   // Form state
   const [profile, setProfile]   = useState({ full_name: "", email: "", phone: "", current_password: "", password: "" });
+  const [loaded, setLoaded] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [delivery, setDelivery] = useState<DeliveryStatus | null>(null);
-  const [business, setBusiness] = useState({ business_name: "", gstin: "", industry: "trading", team_size: "6-20", business_address: "", city: "", upi_id: "", invoice_prefix: "INV" });
+  const [business, setBusiness] = useState({ business_name: "", gstin: "", industry: "trading", business_address: "", city: "", upi_id: "", invoice_prefix: "INV" });
   const [prefs, setPrefs]       = useState({ language: "hinglish", contact_time: "" });
+  const [theme, setThemeState]  = useState<Theme>("dark");
 
-  // Voice profile
-  const [voice, setVoice] = useState({ owner_name: "", city: "", voice_style: "casual_hinglish", ai_persona: "" });
-  const [samples, setSamples]         = useState(["", "", ""]);
-  const [extracting, setExtracting]   = useState(false);
-  const [extractResult, setExtractResult] = useState<{ style_description: string; sample_phrase: string } | null>(null);
-  const [voiceActive, setVoiceActive] = useState(false);
 
-  // ── Integrations state (test WhatsApp only — rest is Starlane-managed) ──
+  // Delivery test (WhatsApp only; the rest is Starlane-managed)
   const [testLoading, setTestLoading]     = useState(false);
   const [testResult, setTestResult]       = useState<{ ok: boolean; msg: string } | null>(null);
 
-  // ── Automation state ────────────────────────────────────
+  // Reminder rules
   const [autoEnabled, setAutoEnabled]     = useState(false);
   const [autoToggling, setAutoToggling]   = useState(false);
   const [rules, setRules]                 = useState<DunningRule[]>([]);
   const [rulesLoading, setRulesLoading]   = useState(false);
+  const [rulesFailed, setRulesFailed]     = useState(false);
   const [newRule, setNewRule]             = useState({ trigger_day: 3, tone: "gentle", action: "whatsapp" });
   const [addingRule, setAddingRule]       = useState(false);
   const [showAddRule, setShowAddRule]     = useState(false);
+  const [deleteRule, setDeleteRule]       = useState<DunningRule | null>(null);
 
   useEffect(() => {
+    setThemeState(getTheme());
+    const on = () => setThemeState(getTheme());
+    window.addEventListener(THEME_EVENT, on);
+    return () => window.removeEventListener(THEME_EVENT, on);
+  }, []);
+
+  const loadSettings = useCallback(() => {
+    setLoadFailed(false);
     const user = getUser();
     if (user) {
       setProfile(p => ({ ...p, email: user.email || "", phone: user.phone || "" }));
       setBusiness(b => ({ ...b, business_name: user.business_name || "", gstin: user.gstin || "" }));
     }
-    api.settings.get().then(({ settings }: any) => {
-      if (settings.industry)          { setBusiness(b => ({ ...b, industry: settings.industry })); setBusinessType(settings.industry); }
-      if (settings.business_address)  setBusiness(b => ({ ...b, business_address: settings.business_address }));
-      if (settings.city)              setBusiness(b => ({ ...b, city: settings.city }));
-      if (settings.upi_id)            setBusiness(b => ({ ...b, upi_id: settings.upi_id }));
-      if (settings.invoice_prefix)    setBusiness(b => ({ ...b, invoice_prefix: settings.invoice_prefix }));
-      if (settings.language)          setPrefs(p => ({ ...p, language: settings.language }));
-      if (settings.contact_time)      setPrefs(p => ({ ...p, contact_time: settings.contact_time }));
-      if (settings.owner_name)        setProfile(p => ({ ...p, full_name: settings.owner_name }));
-      if (settings.owner_name || settings.ai_persona) {
-        setVoice({ owner_name: settings.owner_name || "", city: settings.city || "", voice_style: settings.voice_style || "casual_hinglish", ai_persona: settings.ai_persona || "" });
-        setVoiceActive(!!(settings.owner_name && settings.ai_persona));
-      }
+    api.settings.get().then(({ settings: raw }) => {
+      const bag = (raw || {}) as unknown as Record<string, unknown>;
+      // Read a saved text value; anything that isn't a non-empty string is "not set".
+      const str = (k: string): string => (typeof bag[k] === "string" ? (bag[k] as string) : "");
+      const settings = { automation_enabled: raw?.automation_enabled };
+      const industry = str("industry"), address = str("business_address"), city = str("city"), upi = str("upi_id"), prefix = str("invoice_prefix");
+      const language = str("language"), contactTime = str("contact_time"), ownerName = str("owner_name"), phone = str("phone");
+      if (industry)    { setBusiness(b => ({ ...b, industry })); setBusinessType(industry); }
+      if (address)     setBusiness(b => ({ ...b, business_address: address }));
+      if (city)        setBusiness(b => ({ ...b, city }));
+      if (upi)         setBusiness(b => ({ ...b, upi_id: upi }));
+      if (prefix)      setBusiness(b => ({ ...b, invoice_prefix: prefix }));
+      if (language)    setPrefs(p => ({ ...p, language }));
+      if (contactTime) setPrefs(p => ({ ...p, contact_time: contactTime }));
+      if (ownerName)   setProfile(p => ({ ...p, full_name: ownerName }));
+      if (phone)       setProfile(p => ({ ...p, phone: p.phone || phone }));
       if (settings.automation_enabled !== undefined) setAutoEnabled(!!settings.automation_enabled);
+      setLoaded(true);
     }).catch(() => setLoadFailed(true));
     api.settings.deliveryStatus().then(setDelivery).catch(() => setDelivery(null));
   }, []);
+  useEffect(() => { loadSettings(); }, [loadSettings]);
 
-  // Load dunning rules when automation tab opens
-  useEffect(() => {
-    if (tab !== "automation") return;
+  // Load reminder rules when that section opens
+  const loadRules = useCallback(() => {
     const user = getUser();
     if (!user?.id) return;
-    setRulesLoading(true);
-    api.dunning.list(user.id).then(d => setRules(d.rules || [])).catch(() => {}).finally(() => setRulesLoading(false));
-  }, [tab]);
+    setRulesLoading(true); setRulesFailed(false);
+    api.dunning.list(user.id).then(d => setRules(d.rules || [])).catch(() => setRulesFailed(true)).finally(() => setRulesLoading(false));
+  }, []);
+  useEffect(() => { if (tab === "automation") loadRules(); }, [tab, loadRules]);
 
-  const showSaved = () => { setSaved(true); setTimeout(() => setSaved(false), 2500); };
+  const showSaved = () => { setSaved(true); notify("Saved", "positive"); setTimeout(() => setSaved(false), 4000); };
 
   const save = async (body: Record<string, unknown>) => {
     // Saving after a failed load would overwrite real values with blank defaults.
-    if (loadFailed) { setError("Your saved settings could not be loaded, so nothing was saved. Reload the page and try again."); return; }
+    if (loadFailed) { setError("Your saved settings couldn't be loaded, so nothing was saved. Try again once they load."); return false; }
     setSaving(true); setError(""); setSaved(false);
-    try { await api.settings.update(body as any); showSaved(); }
-    catch (e: any) { setError(e.message || "Save failed"); }
+    try { await api.settings.update(body as Parameters<typeof api.settings.update>[0]); showSaved(); return true; }
+    catch { setError(NOT_SAVED); return false; }
     finally { setSaving(false); }
   };
 
-  // Full name is the owner's name (owner_name); the business name lives on the
-  // Business tab. A password change goes to its own route and needs the
-  // current password.
-  const handleProfileSave  = async (e: React.FormEvent) => {
+  // Full name is the owner's name (owner_name); the business name lives in
+  // Business. A password change goes to its own route and needs the current
+  // password.
+  const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (profile.password && !profile.current_password) { setError("Enter your current password to set a new one."); return; }
     if (profile.password && profile.password.length < 8) { setError("The new password must be at least 8 characters."); return; }
-    await save({ owner_name: profile.full_name, phone: profile.phone });
-    if (profile.password) {
+    const ok = await save({ owner_name: profile.full_name, phone: profile.phone });
+    if (ok && profile.password) {
       setSaving(true);
       try {
         await api.settings.changePassword(profile.current_password, profile.password);
         setProfile(p => ({ ...p, current_password: "", password: "" }));
         showSaved();
-      } catch (err: any) { setError(err.message || "Password was not changed"); }
+      } catch (err) {
+        const m = err instanceof Error ? err.message : "";
+        setError(/current|incorrect|invalid|wrong/i.test(m) ? "Your current password didn't match, so the password wasn't changed." : "Your password wasn't changed. Check your connection and try again.");
+      }
       finally { setSaving(false); }
     }
   };
@@ -195,40 +187,25 @@ function SettingsPageInner() {
     try { const ex = JSON.parse(localStorage.getItem("vantro_biz_flags") || "{}"); localStorage.setItem("vantro_biz_flags", JSON.stringify({ ...ex, industry_override: business.industry })); } catch {}
     save({ business_name: business.business_name, gstin: business.gstin, industry: business.industry, business_address: business.business_address, city: business.city, upi_id: business.upi_id, invoice_prefix: business.invoice_prefix });
   };
-  const handlePrefsSave    = (e: React.FormEvent) => { e.preventDefault(); save({ language: prefs.language, contact_time: prefs.contact_time }); };
-  const handleVoiceSave    = async (e: React.FormEvent) => { e.preventDefault(); await save({ owner_name: voice.owner_name, city: voice.city, voice_style: voice.voice_style, ai_persona: voice.ai_persona }); setVoiceActive(!!(voice.owner_name && voice.ai_persona)); };
-  const clearVoice         = async () => { setVoice({ owner_name: "", city: "", voice_style: "casual_hinglish", ai_persona: "" }); setSamples(["", "", ""]); setExtractResult(null); setVoiceActive(false); await save({ owner_name: "", city: "", voice_style: "", ai_persona: "" }); };
+  const handlePrefsSave = (e: React.FormEvent) => { e.preventDefault(); save({ language: prefs.language, contact_time: prefs.contact_time }); };
 
-  const handleExtractVoice = async () => {
-    const validSamples = samples.filter(s => s.trim().length > 5);
-    if (!validSamples.length) return;
-    setExtracting(true);
-    try {
-      const r = await fetch(`${BASE}/api/ai/extract-voice`, { method: "POST", headers: { ...authHeaders(), "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ samples: validSamples }) });
-      const data = await r.json();
-      if (data.success) { setExtractResult({ style_description: data.style_description, sample_phrase: data.sample_phrase }); setVoice(v => ({ ...v, ai_persona: data.style_description || v.ai_persona, voice_style: data.detected_style || v.voice_style })); setVoiceActive(true); }
-    } catch { /* noop */ }
-    finally { setExtracting(false); }
-  };
-
-  // ── Integration handlers ────────────────────────────────
   const handleTestWhatsApp = async () => {
     setTestLoading(true); setTestResult(null);
     try {
       const r = await api.settings.testWhatsApp();
-      setTestResult({ ok: true, msg: r.message });
-    } catch (e: any) {
-      setTestResult({ ok: false, msg: e.message || "Test failed" });
+      setTestResult({ ok: true, msg: r.message || "Test message sent." });
+    } catch {
+      setTestResult({ ok: false, msg: delivery?.whatsapp.reason ? `The test message wasn't sent: ${delivery.whatsapp.reason.replace(/\.$/, "")}.` : `The test message wasn't sent. ${OFFLINE}` });
     } finally { setTestLoading(false); }
   };
 
-  // ── Automation handlers ─────────────────────────────────
   const handleToggleAutomation = async () => {
     setAutoToggling(true);
     try {
       const r = await api.settings.toggleAutomation(!autoEnabled);
       setAutoEnabled(r.automation_enabled);
-    } catch { /* noop */ }
+      notify(r.automation_enabled ? "Reminders turned on" : "Reminders paused", "positive");
+    } catch { notify(`Reminders weren't changed. ${OFFLINE}`, "critical"); }
     finally { setAutoToggling(false); }
   };
 
@@ -240,7 +217,8 @@ function SettingsPageInner() {
       setRules(prev => [...prev, r.rule].sort((a, b) => a.trigger_day - b.trigger_day));
       setShowAddRule(false);
       setNewRule({ trigger_day: 3, tone: "gentle", action: "whatsapp" });
-    } catch { /* noop */ }
+      notify("Rule added", "positive");
+    } catch { notify(`The rule wasn't added. ${OFFLINE}`, "critical"); }
     finally { setAddingRule(false); }
   };
 
@@ -248,557 +226,352 @@ function SettingsPageInner() {
     try {
       await api.dunning.update(rule.id, { enabled: !rule.enabled });
       setRules(prev => prev.map(r => r.id === rule.id ? { ...r, enabled: !r.enabled } : r));
-    } catch { /* noop */ }
+    } catch { notify(`The rule wasn't changed. ${OFFLINE}`, "critical"); }
   };
 
   const handleDeleteRule = async (id: string) => {
-    if (!window.confirm("Delete this reminder rule?")) return;
     try {
       await api.dunning.delete(id);
       setRules(prev => prev.filter(r => r.id !== id));
-    } catch { /* noop */ }
+      setDeleteRule(null);
+      notify("Rule deleted", "neutral");
+    } catch { notify(`The rule wasn't deleted. ${OFFLINE}`, "critical"); }
   };
 
   const handleLogout = () => { clearAuth(); document.cookie = "vantro_token=; path=/; max-age=0"; window.location.href = "/login"; };
   const initials = (profile.full_name || profile.email || "?").charAt(0).toUpperCase();
 
+  // A section that edits saved values waits for them; a failed load says so
+  // and disables saving rather than showing blanks that look real.
+  const gate = (node: React.ReactNode) => {
+    if (loadFailed) return <ErrorState title="Couldn't load your settings" message={OFFLINE} onRetry={loadSettings} />;
+    if (!loaded) return <SkeletonRows rows={4} height={52} />;
+    return node;
+  };
+  const bar = (label: string) => <SaveBar saving={saving} saved={saved} error={error} label={label} disabled={loadFailed} />;
+
   return (
     <DashboardLayout pageTitle="Settings">
-      <div className="space-y-4">
-        <div>
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>Settings</h1>
-          <p style={{ fontSize: 13.5, color: "#63635F", marginTop: 4 }}>Manage your account, integrations, and automation.</p>
-        </div>
+      <SettingsStyles />
+      <div style={{ maxWidth: 952, display: "flex", flexDirection: "column", gap: 32 }}>
+        <PageHeader title="Settings" subtitle="Your account, your business and how Starlane works for you." />
 
-        {saved && <Alert variant="success" title="Saved">Your changes have been saved successfully.</Alert>}
-        {error && <Alert variant="danger" title="Error">{error}</Alert>}
-
-        <div className="flex flex-col lg:flex-row gap-5">
-          {/* Tab nav */}
-          <nav className="lg:w-52 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0 shrink-0">
-            {TABS.map(({ key, label, icon: Icon }) => (
-              <button key={key} onClick={() => setTab(key)}
-                className={["flex items-center gap-2.5 px-3 py-2 rounded-[7px] text-[13px] whitespace-nowrap transition-all", tab === key ? "bg-[rgba(25,25,23,0.06)] text-primary" : "text-secondary hover:text-primary hover:bg-[rgba(25,25,23,0.04)]"].join(" ")}>
-                <Icon size={15} className="shrink-0" />
-                <span className="flex-1 text-left">{label}</span>
-                {key === "voice" && voiceActive && <span className="text-[11px]" style={{ color: "#477054" }}>On</span>}
-                {key === "automation" && autoEnabled && <span className="text-[11px]" style={{ color: "#477054" }}>On</span>}
+        <div className="set-layout">
+          <nav aria-label="Settings sections" className="set-nav">
+            {TABS.map(({ key, label }) => (
+              <button key={key} type="button" onClick={() => setTab(key)} aria-current={tab === key ? "page" : undefined}>
+                <span>{label}</span>
+                {key === "automation" && autoEnabled && <span className="set-on">On</span>}
               </button>
             ))}
           </nav>
 
-          <div className="flex-1 min-w-0 space-y-4">
+          <div className="min-w-0 fade-once set-stack" key={tab}>
 
-            {/* ── Profile ──────────────────────────────────── */}
-            {tab === "profile" && (
-              <Card>
-                <h3 className="text-sm font-semibold text-primary mb-5">User Profile</h3>
-                <form onSubmit={handleProfileSave} className="space-y-4 max-w-lg">
-                  <div className="flex items-center gap-4 pb-4 border-b border-border">
-                    <IdentityAvatar name={initials} size={56} initial />
-                    <div>
-                      <p className="text-sm font-semibold text-primary">{profile.full_name || "—"}</p>
-                      <p className="text-xs text-secondary">{profile.email}</p>
+            {/* Profile */}
+            {tab === "profile" && gate(
+              <>
+                <form onSubmit={handleProfileSave}>
+                  <Panel id="sec-profile" title="Profile" description="Your name and how Starlane reaches you." footer={bar("Save profile")}>
+                    <div className="flex items-center" style={{ gap: 12, marginBottom: 20 }}>
+                      <IdentityAvatar name={initials} size={36} initial />
+                      <div className="min-w-0">
+                        <div style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>{profile.full_name || "Your name"}</div>
+                        <div className="truncate" style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{profile.email}</div>
+                      </div>
                     </div>
-                    <div className="ml-auto hidden sm:block">
-                      <IdentityPicker />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input label="Full Name" type="text" value={profile.full_name} onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))} />
-                    <Input label="Phone" type="tel" prefix="+91" value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} />
-                  </div>
-                  <Input label="Email" type="email" value={profile.email} readOnly />
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input label="Current Password" type="password" autoComplete="current-password" placeholder="Needed only to change it" value={profile.current_password} onChange={e => setProfile(p => ({ ...p, current_password: e.target.value }))} />
-                    <Input label="New Password" type="password" autoComplete="new-password" placeholder="Leave blank to keep current" value={profile.password} onChange={e => setProfile(p => ({ ...p, password: e.target.value }))} />
-                  </div>
-                  <Button type="submit" icon={<FiCheck size={14} />} loading={saving}>Save Profile</Button>
+                    <Fields>
+                      <Field label="Full name" htmlFor="full_name">
+                        <input id="full_name" className="ui-input" type="text" autoComplete="name" value={profile.full_name} onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))} />
+                      </Field>
+                      <Field label="Phone" htmlFor="phone">
+                        <Prefixed prefix="+91">
+                          <input id="phone" className="ui-input tabular-nums" type="tel" autoComplete="tel-national" value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} />
+                        </Prefixed>
+                      </Field>
+                      <Field label="Email" htmlFor="email" hint="Your sign-in email can't be changed here." wide>
+                        <input id="email" className="ui-input" type="email" value={profile.email} readOnly />
+                      </Field>
+                    </Fields>
+                    <Group title="Password" hint="Leave both blank to keep your current password.">
+                      <Fields>
+                        <Field label="Current password" htmlFor="current_password">
+                          <input id="current_password" className="ui-input" type="password" autoComplete="current-password" value={profile.current_password} onChange={e => setProfile(p => ({ ...p, current_password: e.target.value }))} />
+                        </Field>
+                        <Field label="New password" htmlFor="new_password" hint="At least 8 characters.">
+                          <input id="new_password" className="ui-input" type="password" autoComplete="new-password" value={profile.password} onChange={e => setProfile(p => ({ ...p, password: e.target.value }))} />
+                        </Field>
+                      </Fields>
+                    </Group>
+                  </Panel>
                 </form>
-                <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
-                  <div><p className="text-xs font-semibold text-secondary">Sign out of Starlane</p><p className="text-2xs text-muted">You can log back in anytime</p></div>
-                  <button onClick={handleLogout} className="btn-secondary-v32 flex items-center gap-1.5" style={{ padding: "6px 12px", fontSize: 12 }}>
-                    <FiLogOut size={12} /> Sign out
-                  </button>
-                </div>
-              </Card>
+                <Panel id="sec-session" title="Session">
+                  <div className="set-list">
+                    <div className="set-row">
+                      <div className="flex-1 min-w-0">
+                        <div style={{ fontSize: 13.5, color: "var(--ink)" }}>Sign out</div>
+                        <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 2 }}>Ends your session in this browser.</div>
+                      </div>
+                      <Button variant="secondary" size="sm" onClick={handleLogout} icon={<IconLogout size={14} />}>Sign out</Button>
+                    </div>
+                  </div>
+                </Panel>
+              </>
             )}
 
-            {/* ── Business ──────────────────────────────────── */}
-            {tab === "business" && (
-              <Card>
-                <h3 className="text-sm font-semibold text-primary mb-5">Business Information</h3>
-                <form onSubmit={handleBusinessSave} className="space-y-4 max-w-lg">
-                  <Input label="Business / Company Name" type="text" value={business.business_name} onChange={e => setBusiness(b => ({ ...b, business_name: e.target.value }))} />
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input label="GSTIN" type="text" placeholder="22AAAAA0000A1Z5" value={business.gstin} onChange={e => setBusiness(b => ({ ...b, gstin: e.target.value.toUpperCase() }))} />
-                    <Select label="Industry" options={industryOptions} value={business.industry} onChange={e => setBusiness(b => ({ ...b, industry: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Business Address</label>
-                    <textarea value={business.business_address} onChange={e => setBusiness(b => ({ ...b, business_address: e.target.value }))} placeholder="Shop No. 12, Gandhi Nagar, Delhi - 110031" rows={2}
-                      className="w-full bg-white border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">City</label>
-                      <select value={business.city} onChange={e => setBusiness(b => ({ ...b, city: e.target.value }))}
-                        className="w-full bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
-                        <option value="">Select city</option>
+            {/* Business */}
+            {tab === "business" && gate(
+              <form onSubmit={handleBusinessSave}>
+                <Panel id="sec-business" title="Business" description="Shown on your invoices and used to tailor what Starlane looks for." footer={bar("Save business details")}>
+                  <Fields>
+                    <Field label="Business name" htmlFor="business_name" wide>
+                      <input id="business_name" className="ui-input" type="text" autoComplete="organization" value={business.business_name} onChange={e => setBusiness(b => ({ ...b, business_name: e.target.value }))} />
+                    </Field>
+                    <Field label="GSTIN" htmlFor="gstin">
+                      <input id="gstin" className="ui-input tabular-nums" type="text" placeholder="22AAAAA0000A1Z5" value={business.gstin} onChange={e => setBusiness(b => ({ ...b, gstin: e.target.value.toUpperCase() }))} />
+                    </Field>
+                    <Field label="Industry" htmlFor="industry">
+                      <select id="industry" className="ui-input" value={business.industry} onChange={e => setBusiness(b => ({ ...b, industry: e.target.value }))}>
+                        {INDUSTRY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    </Field>
+                    <Field label="Address" htmlFor="business_address" wide>
+                      <textarea id="business_address" className="ui-input" rows={2} style={{ resize: "vertical" }} placeholder="Shop 12, Gandhi Nagar, Delhi 110031" value={business.business_address} onChange={e => setBusiness(b => ({ ...b, business_address: e.target.value }))} />
+                    </Field>
+                    <Field label="City" htmlFor="city">
+                      <select id="city" className="ui-input" value={business.city} onChange={e => setBusiness(b => ({ ...b, city: e.target.value }))}>
+                        <option value="">Select a city</option>
                         {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
-                    </div>
-                    <Select label="Team Size" options={employeeOptions} value={business.team_size} onChange={e => setBusiness(b => ({ ...b, team_size: e.target.value }))} />
-                  </div>
-                  <div className="pt-2 border-t border-border">
-                    <p className="text-xs font-semibold text-secondary mb-3">Invoice Settings</p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Invoice Prefix</label>
-                        <input value={business.invoice_prefix} onChange={e => setBusiness(b => ({ ...b, invoice_prefix: e.target.value.toUpperCase() }))} placeholder="INV" maxLength={6}
-                          className="w-full bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors font-mono" />
-                        <p className="text-2xs text-muted mt-1">Bills will be INV-2025-0001</p>
-                      </div>
-                      <Input label="UPI ID (for invoices)" type="text" placeholder="yourname@upi" value={business.upi_id} onChange={e => setBusiness(b => ({ ...b, upi_id: e.target.value }))} />
-                    </div>
-                  </div>
-                  <Button type="submit" icon={<FiCheck size={14} />} loading={saving}>Save Business Info</Button>
-                </form>
-              </Card>
+                    </Field>
+                  </Fields>
+                  <Group title="Invoices">
+                    <Fields>
+                      <Field label="Invoice prefix" htmlFor="invoice_prefix" hint={`Bills are numbered ${business.invoice_prefix || "INV"}-${new Date().getFullYear()}-0001.`}>
+                        <input id="invoice_prefix" className="ui-input" maxLength={6} placeholder="INV" value={business.invoice_prefix} onChange={e => setBusiness(b => ({ ...b, invoice_prefix: e.target.value.toUpperCase() }))} />
+                      </Field>
+                      <Field label="UPI ID" htmlFor="upi_id" hint="Printed on invoices for quick payment.">
+                        <input id="upi_id" className="ui-input" type="text" placeholder="yourname@upi" value={business.upi_id} onChange={e => setBusiness(b => ({ ...b, upi_id: e.target.value }))} />
+                      </Field>
+                    </Fields>
+                  </Group>
+                </Panel>
+              </form>
             )}
 
-            {/* ── AI Voice ──────────────────────────────────── */}
-            {tab === "voice" && (
-              <div className="space-y-4">
-                <div className="card-premium p-5 relative overflow-hidden">
-                  <div className="absolute -top-6 -right-6 w-32 h-32 bg-accent/5 rounded-full blur-3xl" />
-                  <div className="relative flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-button-accent shrink-0"><FiCpu size={16} className="text-white" /></div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-bold text-primary">AI Voice Profile</p>
-                        {voiceActive && <span className="flex items-center gap-1 text-2xs font-bold text-success bg-success-dim border border-success/20 px-2 py-0.5 rounded-full"><FiCheckCircle size={10} /> Active</span>}
-                      </div>
-                      <p className="text-xs text-secondary leading-relaxed">Train AI to sound exactly like you — your voice, your Hinglish, your style.</p>
-                    </div>
-                  </div>
-                </div>
-                <Card>
-                  <h3 className="text-sm font-semibold text-primary mb-4 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-accent text-white text-2xs font-black flex items-center justify-center">1</span>Your Identity</h3>
-                  <div className="space-y-4 max-w-lg">
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input label="Your First Name" type="text" placeholder="e.g. Rajesh" value={voice.owner_name} onChange={e => setVoice(v => ({ ...v, owner_name: e.target.value }))} />
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-medium text-secondary uppercase tracking-wider">Business City</label>
-                        <select value={voice.city} onChange={e => setVoice(v => ({ ...v, city: e.target.value }))} className="bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
-                          <option value="">Select city</option>
-                          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Communication Style</label>
-                      <div className="space-y-2">
-                        {voiceStyleOptions.map(opt => (
-                          <label key={opt.value} className={["flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all", voice.voice_style === opt.value ? "border-accent/40 bg-accent-dim" : "border-border bg-surface-2 hover:border-border/70"].join(" ")}>
-                            <input type="radio" name="voice_style" value={opt.value} checked={voice.voice_style === opt.value} onChange={e => setVoice(v => ({ ...v, voice_style: e.target.value }))} className="accent-accent" />
-                            <span className="text-sm text-secondary">{opt.label}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-                <Card>
-                  <h3 className="text-sm font-semibold text-primary mb-1 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-accent text-white text-2xs font-black flex items-center justify-center">2</span>Paste Your Real Messages</h3>
-                  <p className="text-xs text-muted mb-4 ml-7">Copy 2-3 WhatsApp messages you've actually sent. AI learns your exact style.</p>
-                  <div className="space-y-3 max-w-lg">
-                    {samples.map((s, i) => (
-                      <div key={i}>
-                        <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1">Message {i + 1} {i === 0 ? "(required)" : "(optional)"}</label>
-                        <textarea value={s} onChange={e => setSamples(prev => prev.map((v, j) => j === i ? e.target.value : v))} rows={2}
-                          placeholder={i === 0 ? 'e.g. Ramesh bhai, aapka ₹45,000 pending hai. Aaj possible hai kya?' : 'Paste another message...'}
-                          className="w-full bg-white border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
-                      </div>
-                    ))}
-                    <button onClick={handleExtractVoice} disabled={extracting || !samples[0].trim()}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent-dim border border-accent/30 text-accent text-sm font-bold hover:bg-accent hover:text-white transition-all disabled:opacity-50">
-                      {extracting ? <><FiRefreshCw size={13} className="animate-spin" /> Analyzing...</> : <><FiZap size={13} /> Train AI on My Voice</>}
-                    </button>
-                    {extractResult && (
-                      <div className="p-4 bg-success/5 border border-success/20 rounded-xl">
-                        <div className="flex items-center gap-2 mb-2"><FiCheckCircle size={13} className="text-success" /><p className="text-xs font-bold text-success">Voice Extracted!</p></div>
-                        <p className="text-sm text-secondary leading-relaxed mb-2">{extractResult.style_description}</p>
-                        {extractResult.sample_phrase && <div className="mt-2 p-2.5 bg-surface-2 rounded-lg border border-border"><p className="text-2xs text-muted mb-1">Sample in your style:</p><p className="text-xs text-secondary italic">"{extractResult.sample_phrase}"</p></div>}
-                      </div>
-                    )}
-                  </div>
-                </Card>
-                <Card>
-                  <h3 className="text-sm font-semibold text-primary mb-1 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-accent text-white text-2xs font-black flex items-center justify-center">3</span>Describe Your Style (optional)</h3>
-                  <p className="text-xs text-muted mb-4 ml-7">Tell AI how you talk — auto-filled from step 2, or write it yourself.</p>
-                  <div className="max-w-lg">
-                    <textarea value={voice.ai_persona} onChange={e => setVoice(v => ({ ...v, ai_persona: e.target.value }))}
-                      placeholder="e.g. I talk in casual Hinglish. I use 'bhai' often. I keep messages short and to the point."
-                      rows={4} className="w-full bg-white border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
-                  </div>
-                </Card>
-                <form onSubmit={handleVoiceSave} className="flex items-center gap-3">
-                  <Button type="submit" icon={<FiCheck size={14} />} loading={saving}>Save Voice Profile</Button>
-                  {voiceActive && <button type="button" onClick={clearVoice} className="flex items-center gap-1.5 text-sm text-muted hover:text-danger transition-colors"><FiTrash2 size={13} /> Reset Voice</button>}
-                </form>
-              </div>
-            )}
-
-            {/* ── Preferences ──────────────────────────────── */}
+            {/* Preferences */}
             {tab === "preferences" && (
-              <Card>
-                <h3 className="text-sm font-semibold text-primary mb-5">Preferences</h3>
-                <form onSubmit={handlePrefsSave} className="space-y-4 max-w-lg">
-                  <Select label="Message Language" options={languageOptions} value={prefs.language} onChange={e => setPrefs(p => ({ ...p, language: e.target.value }))} />
-                  <Select label="Time Zone" options={timezoneOptions} value="Asia/Kolkata" onChange={() => {}} />
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-secondary uppercase tracking-wider">Best Time to Call Customers</label>
-                    <input type="time" value={prefs.contact_time} onChange={e => setPrefs(p => ({ ...p, contact_time: e.target.value }))}
-                      className="bg-surface-2 border border-border rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent" />
+              <>
+                <Panel id="sec-appearance" title="Appearance" description="Applies straight away, on this device only.">
+                  <div className="set-list">
+                  <div className="set-row">
+                    <div className="flex-1 min-w-0">
+                      <div style={{ fontSize: 13.5, color: "var(--ink)" }}>Theme</div>
+                      <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 2 }}>Light is the default.</div>
+                    </div>
+                    <Segmented<Theme>
+                      label="Theme"
+                      value={theme}
+                      onChange={(t) => { setTheme(t); setThemeState(t); }}
+                      options={[
+                        { value: "light", label: <><IconSun size={13} /> Light</> },
+                        { value: "dark", label: <><IconMoon size={13} /> Dark</> },
+                      ]}
+                    />
                   </div>
-                  <Button type="submit" icon={<FiCheck size={14} />} loading={saving}>Save Preferences</Button>
-                </form>
-              </Card>
+                  <div className="set-row" style={{ alignItems: "flex-start" }}>
+                    <div className="flex-1 min-w-0">
+                      <div style={{ fontSize: 13.5, color: "var(--ink)" }}>Accent</div>
+                      <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 2 }}>Used sparingly: focus rings, selection and the active tab.</div>
+                    </div>
+                    <IdentityPicker dark={theme === "dark"} />
+                  </div>
+                  </div>
+                </Panel>
+
+                {gate(
+                  <form onSubmit={handlePrefsSave}>
+                    <Panel id="sec-prefs" title="Messages and calls" description="How reminders are written and when Starlane suggests calling." footer={bar("Save preferences")}>
+                      <Fields>
+                        <Field label="Message language" htmlFor="language">
+                          <select id="language" className="ui-input" value={prefs.language} onChange={e => setPrefs(p => ({ ...p, language: e.target.value }))}>
+                            {languageOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                        </Field>
+                        <Field label="Best time to call customers" htmlFor="contact_time">
+                          <input id="contact_time" className="ui-input tabular-nums" type="time" value={prefs.contact_time} onChange={e => setPrefs(p => ({ ...p, contact_time: e.target.value }))} />
+                        </Field>
+                        <Field label="Time zone" htmlFor="tz" hint="Starlane runs on India Standard Time." wide>
+                          <input id="tz" className="ui-input" value="IST, Asia/Kolkata (UTC+5:30)" readOnly />
+                        </Field>
+                      </Fields>
+                    </Panel>
+                  </form>
+                )}
+              </>
             )}
 
-            {/* ── INTEGRATIONS — Starlane AutoPilot ────────── */}
+            {/* Delivery */}
             {tab === "integrations" && (
-              <div className="space-y-5">
-
-                {/* AutoPilot Hero */}
-                <div className="relative overflow-hidden rounded-2xl p-6"
-                  style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)" }}>
-                  <div className="absolute -top-8 -right-8 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-cta/5 rounded-full blur-3xl pointer-events-none" />
-                  <div className="relative flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-xl"
-                      style={{ background: "#191917", color: "#F7F7F4" }}>
-                      ⚡
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-base font-black text-primary">Starlane AutoPilot</p>
-                        <DeliveryBadge line={delivery ? { active: delivery.whatsapp.active && delivery.dunning.active, reason: null } : undefined} />
-                      </div>
-                      <p className="text-sm text-secondary leading-relaxed">
-                        WhatsApp reminders, payment links and the daily reminder run. Each line below shows whether it is actually working on this account.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status rows */}
-                <Card>
-                  <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">What Starlane Manages For You</p>
-                  <div className="space-y-4">
-                    {/* WhatsApp */}
-                    <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
-                      <div className="w-10 h-10 rounded-xl bg-[#25D366]/10 border border-[#25D366]/25 flex items-center justify-center shrink-0">
-                        <FiMessageSquare size={16} className="text-[#25D366]" />
-                      </div>
+              <>
+                <Panel id="sec-delivery" title="Delivery" description="What carries reminders and payment links, and whether each line actually works on this account today.">
+                  <div className="set-list">
+                  {[
+                    { key: "wa", title: "WhatsApp reminders", line: delivery?.whatsapp, hint: "Sent from Starlane's verified WhatsApp number" },
+                    { key: "pay", title: "Payment links", line: delivery?.paymentLinks, hint: "UPI, card and netbanking through Razorpay" },
+                    { key: "dun", title: "Daily reminder run", line: delivery?.dunning, hint: "Runs every day at 9 am IST and follows your reminder rules" },
+                    { key: "push", title: "Payment received alerts", line: delivery?.push, hint: "A push notification when a customer pays" },
+                  ].map((r) => (
+                    <div key={r.key} className="set-row">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-primary">WhatsApp Reminders</p>
-                        <p className="text-2xs text-muted">{delivery?.whatsapp.reason || "Sent from Starlane's verified WhatsApp number"}</p>
+                        <div style={{ fontSize: 13.5, color: "var(--ink)" }}>{r.title}</div>
+                        <div style={{ fontSize: 12.5, color: r.line && !r.line.active && r.line.reason ? "var(--ink-2)" : "var(--ink-3)", marginTop: 2 }}>{r.line?.reason || r.hint}</div>
                       </div>
-                      <DeliveryBadge line={delivery?.whatsapp} />
+                      <DeliveryChip line={r.line} />
                     </div>
-
-                    {/* Razorpay */}
-                    <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
-                      <div className="w-10 h-10 rounded-xl bg-surface-3 border border-border flex items-center justify-center shrink-0">
-                        <FiCreditCard size={16} className="text-secondary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-primary">Payment Links (Razorpay)</p>
-                        <p className="text-2xs text-muted">{delivery?.paymentLinks.reason || "UPI, card and netbanking through Razorpay"}</p>
-                      </div>
-                      <DeliveryBadge line={delivery?.paymentLinks} />
-                    </div>
-
-                    {/* Daily Dunning */}
-                    <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
-                      <div className="w-10 h-10 rounded-xl bg-cta-dim border border-cta/20 flex items-center justify-center shrink-0">
-                        <FiZap size={16} className="text-cta" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-primary">Daily Auto-Dunning</p>
-                        <p className="text-2xs text-muted">{delivery?.dunning.reason || "Runs daily at 9 AM IST and follows your reminder rules"}</p>
-                      </div>
-                      <DeliveryBadge line={delivery?.dunning} />
-                    </div>
-
-                    {/* Push Notifications */}
-                    <div className="flex items-center gap-4 p-4 bg-surface-2 rounded-xl border border-border">
-                      <div className="w-10 h-10 rounded-xl bg-accent-dim border border-accent/20 flex items-center justify-center shrink-0">
-                        <FiPhone size={16} className="text-accent" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-primary">Payment Received Alerts</p>
-                        <p className="text-2xs text-muted">{delivery?.push.reason || "A push notification when a customer pays"}</p>
-                      </div>
-                      <DeliveryBadge line={delivery?.push} />
-                    </div>
+                  ))}
                   </div>
-                </Card>
+                </Panel>
 
-                {/* Test WhatsApp */}
-                <Card>
-                  <p className="text-sm font-bold text-primary mb-1">Test WhatsApp Delivery</p>
-                  <p className="text-2xs text-muted mb-4">Apne registered number pe ek test message bhejo to confirm karein sab theek hai.</p>
-                  <div className="flex gap-2 items-center flex-wrap">
-                    <button onClick={handleTestWhatsApp} disabled={testLoading}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-60"
-                      style={{ background: "linear-gradient(135deg, #25D366, #1da851)", color: "#fff", boxShadow: "0 2px 12px rgba(37,211,102,0.3)" }}>
-                      {testLoading ? <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FiSend size={13} />}
-                      {testLoading ? "Sending..." : "Send Test WhatsApp"}
-                    </button>
-                    {testResult && (
-                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium ${testResult.ok ? "bg-success/10 text-success border border-success/20" : "bg-danger/10 text-danger border border-danger/20"}`}>
-                        {testResult.ok ? <FiCheckCircle size={12} /> : <FiAlertCircle size={12} />} {testResult.msg}
-                      </div>
-                    )}
-                  </div>
-                </Card>
-
-                {/* How it works */}
-                <div className="p-4 bg-accent/5 border border-accent/20 rounded-xl flex gap-3">
-                  <FiInfo size={14} className="text-accent shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs font-semibold text-accent mb-1.5">What the automation does once sending is on</p>
-                    <ul className="text-2xs text-secondary space-y-1">
-                      <li>A new invoice sends the customer a WhatsApp message with a payment link</li>
-                      <li>Every day at 9 AM IST, overdue invoices get a reminder according to your rules</li>
-                      <li>When the customer pays, the invoice closes and you are notified</li>
-                      <li>The customer gets a thank-you message</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ── AUTOMATION ───────────────────────────────── */}
-            {tab === "automation" && (
-              <div className="space-y-5">
-
-                {/* Master toggle */}
-                <Card>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-bold text-primary">Collections Automation</p>
-                      <p className="text-xs text-secondary mt-0.5">
-                        {!autoEnabled ? "Paused. No reminders will go out until you turn this on." : delivery && !delivery.whatsapp.active ? `On, but nothing is sent yet: ${delivery.whatsapp.reason}.` : "On. Reminders go out every day at 9 AM IST."}
-                      </p>
-                    </div>
-                    <button onClick={handleToggleAutomation} disabled={autoToggling}
-                      className={["flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border", autoEnabled ? "bg-success text-white border-success hover:opacity-90" : "bg-surface-2 text-secondary border-border hover:border-accent/40 hover:text-primary"].join(" ")}>
-                      {autoToggling
-                        ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        : autoEnabled ? <FiToggleRight size={18} /> : <FiToggleLeft size={18} />
-                      }
-                      {autoEnabled ? "Enabled" : "Disabled"}
-                    </button>
-                  </div>
-                </Card>
-
-                {/* How the automation loop works */}
-                <div className="card-premium p-5">
-                  <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-4">The Automation Loop</p>
-                  <div className="relative">
-                    {/* Timeline line */}
-                    <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
-                    <div className="space-y-4">
-                      {[
-                        { icon: "📄", label: "Invoice Created", desc: "Customer gets WhatsApp: Invoice raised, pay by [date]", color: "#0066FF", always: true },
-                        { icon: "🔔", label: "Your Dunning Rules", desc: "Reminders go out at Day 3, 7, 15... with payment link", color: "#F5A524", always: false },
-                        { icon: "💰", label: "Customer Pays", desc: "Invoice auto-closed → Thank you WhatsApp → Push notification", color: "#10D98A", always: true },
-                        { icon: "📊", label: "Daily Briefing (8 AM)", desc: "You get a WhatsApp summary of outstanding collections", color: "#9B6DFF", always: true },
-                      ].map(({ icon, label, desc, color, always }) => (
-                        <div key={label} className="relative flex gap-4 pl-10">
-                          <div className="absolute left-0 w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
-                            {icon}
-                          </div>
-                          <div className="flex-1 pb-2">
-                            <div className="flex items-center gap-2">
-                              <p className="text-xs font-bold text-primary">{label}</p>
-                              {always && <span className="text-2xs px-1.5 py-0.5 rounded-full bg-surface-2 border border-border text-muted">Always on</span>}
-                            </div>
-                            <p className="text-2xs text-muted mt-0.5">{desc}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dunning Rules */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <p className="text-sm font-bold text-primary">Reminder Rules</p>
-                      <p className="text-2xs text-muted">Set when and how reminders go out. Cron fires daily at 9 AM IST.</p>
-                    </div>
-                    <button onClick={() => setShowAddRule(v => !v)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all shadow-sm">
-                      <FiPlus size={12} /> Add Rule
-                    </button>
-                  </div>
-
-                  {/* Add rule form */}
-                  {showAddRule && (
-                    <div className="mb-4 p-4 bg-white border border-border-input rounded-md space-y-4">
-                      <p className="text-xs font-semibold text-primary">New Reminder Rule</p>
-                      <div className="grid grid-cols-3 gap-3">
-                        <div>
-                          <label className="text-2xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Trigger (days overdue)</label>
-                          <input type="number" min={1} max={90} value={newRule.trigger_day}
-                            onChange={e => setNewRule(r => ({ ...r, trigger_day: Number(e.target.value) }))}
-                            className="w-full bg-surface border border-border rounded-lg text-sm text-primary px-3 py-2 focus:outline-none focus:border-accent font-mono" />
-                        </div>
-                        <div>
-                          <label className="text-2xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Tone</label>
-                          <div className="flex gap-1">
-                            {(["gentle", "firm", "urgent"] as const).map(t => (
-                              <button key={t} type="button" onClick={() => setNewRule(r => ({ ...r, tone: t }))}
-                                className="flex-1 py-2 rounded-lg text-2xs font-bold border transition-all"
-                                style={newRule.tone === t ? { background: `${TONE_COLORS[t]}20`, borderColor: `${TONE_COLORS[t]}60`, color: TONE_COLORS[t] } : { background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--secondary)" }}>
-                                {t}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-2xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Action</label>
-                          <div className="flex gap-1">
-                            {(["whatsapp", "call"] as const).map(a => (
-                              <button key={a} type="button" onClick={() => setNewRule(r => ({ ...r, action: a }))}
-                                className={["flex-1 py-2 rounded-lg text-2xs font-bold border transition-all", newRule.action === a ? "bg-accent-dim border-accent/50 text-accent" : "bg-surface border-border text-secondary"].join(" ")}>
-                                {a === "whatsapp" ? "📱 WA" : "📞 Call"}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-3 bg-surface border border-border rounded-lg">
-                        <p className="text-2xs text-muted">
-                          Preview: <span className="text-secondary font-medium">When an invoice is <span className="text-primary font-bold">{newRule.trigger_day} days</span> overdue, send a <span style={{ color: TONE_COLORS[newRule.tone] }} className="font-bold">{newRule.tone}</span> {newRule.action === "whatsapp" ? "WhatsApp" : "call"} with a payment link.</span>
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={handleAddRule} disabled={addingRule}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all disabled:opacity-60 shadow-sm">
-                          {addingRule ? <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" /> : <FiCheck size={12} />}
-                          Save Rule
-                        </button>
-                        <button onClick={() => setShowAddRule(false)} className="px-4 py-2 rounded-xl text-xs text-secondary hover:text-primary transition-colors">Cancel</button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Rules list */}
-                  {rulesLoading ? (
-                    <div className="space-y-2">
-                      {[1, 2, 3].map(i => <div key={i} className="h-16 bg-surface-2 rounded-xl animate-pulse" />)}
-                    </div>
-                  ) : rules.length === 0 ? (
-                    <div className="text-center py-10 border-2 border-dashed border-border rounded-xl">
-                      <FiZap size={24} className="mx-auto mb-2 text-muted opacity-50" />
-                      <p className="text-sm text-secondary">No automation rules yet</p>
-                      <p className="text-2xs text-muted mt-1">Add a rule to start auto-sending reminders</p>
-                      <button onClick={() => setShowAddRule(true)} className="mt-3 text-xs text-accent hover:underline">Add your first rule →</button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {/* Visual timeline */}
-                      <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-4">
-                        <div className="shrink-0 text-2xs text-muted px-2">Day 0</div>
-                        {rules.map((rule, i) => (
-                          <div key={rule.id} className="flex items-center gap-2 shrink-0">
-                            <div className="w-12 h-px bg-border" />
-                            <div className="flex flex-col items-center">
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-2xs font-black border-2"
-                                style={{ background: rule.enabled ? `${TONE_COLORS[rule.tone]}20` : "var(--surface-2)", borderColor: rule.enabled ? TONE_COLORS[rule.tone] : "var(--border)", color: rule.enabled ? TONE_COLORS[rule.tone] : "var(--muted)" }}>
-                                {rule.trigger_day}
-                              </div>
-                              <span className="text-2xs text-muted mt-0.5">{rule.action === "whatsapp" ? "📱" : "📞"}</span>
-                            </div>
-                          </div>
-                        ))}
-                        <div className="shrink-0 flex items-center gap-2">
-                          <div className="w-12 h-px bg-border" />
-                          <span className="text-sm text-muted">→</span>
-                        </div>
-                      </div>
-
-                      {/* Rule cards */}
-                      {rules.map(rule => (
-                        <div key={rule.id} className={["flex items-center gap-4 p-4 rounded-xl border transition-all", rule.enabled ? "bg-surface border-border" : "bg-surface-2/50 border-border/50 opacity-60"].join(" ")}>
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black border"
-                            style={{ background: `${TONE_COLORS[rule.tone]}15`, borderColor: `${TONE_COLORS[rule.tone]}30`, color: TONE_COLORS[rule.tone] }}>
-                            {rule.trigger_day}d
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-bold text-primary">Day {rule.trigger_day} overdue</span>
-                              <span className="text-2xs font-bold px-2 py-0.5 rounded-full border" style={{ background: `${TONE_COLORS[rule.tone]}15`, borderColor: `${TONE_COLORS[rule.tone]}30`, color: TONE_COLORS[rule.tone] }}>
-                                {TONE_LABELS[rule.tone]}
-                              </span>
-                              <span className="text-2xs text-muted">{rule.action === "whatsapp" ? "📱 WhatsApp" : "📞 Call"} with payment link</span>
-                            </div>
-                            {rule.sent != null && <p className="text-2xs text-muted mt-0.5">{rule.sent} reminders sent</p>}
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <button onClick={() => handleToggleRule(rule)}
-                              className={["px-3 py-1.5 rounded-lg text-2xs font-bold border transition-all", rule.enabled ? "bg-success-dim text-success border-success/30 hover:opacity-80" : "bg-surface border-border text-muted hover:text-secondary"].join(" ")}>
-                              {rule.enabled ? "On" : "Off"}
-                            </button>
-                            <button aria-label="Delete" onClick={() => handleDeleteRule(rule.id)} className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-all">
-                              <FiTrash2 size={13} />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Recommended setup */}
-                <div className="p-4 bg-accent/5 border border-accent/20 rounded-xl">
-                  <p className="text-xs font-bold text-accent mb-2">⚡ Recommended Setup for Indian MSMEs</p>
-                  <div className="space-y-1">
+                <Panel id="sec-test" title="Test WhatsApp delivery" description="Sends one test message to your registered number."
+                  footer={
+                    <>
+                      {testResult && <span role="status" style={{ fontSize: 12.5, color: testResult.ok ? "var(--positive)" : "var(--critical)", marginRight: "auto", lineHeight: 1.5 }}>{testResult.msg}</span>}
+                      <Button variant="secondary" loading={testLoading} onClick={handleTestWhatsApp} icon={<IconWhatsApp size={14} />}>Send a test message</Button>
+                    </>
+                  }
+                >
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 8 }}>
                     {[
-                      { day: 3,  tone: "gentle",  desc: "Gentle reminder — most customers pay here" },
-                      { day: 7,  tone: "firm",    desc: "Firm follow-up — payment link prominent" },
-                      { day: 15, tone: "urgent",  desc: "Urgent notice — this is your last soft ask" },
-                      { day: 30, tone: "urgent",  desc: "Final notice — consider legal action" },
-                    ].map(({ day, tone, desc }) => (
-                      <div key={day} className="flex items-center gap-2 text-2xs text-secondary">
-                        <span className="w-12 font-bold text-primary">Day {day}</span>
-                        <span className="font-bold" style={{ color: TONE_COLORS[tone] }}>{tone}</span>
-                        <span className="text-muted">— {desc}</span>
-                      </div>
+                      "A new invoice sends the customer a WhatsApp message with a payment link.",
+                      "Every day at 9 am IST, overdue invoices get a reminder according to your rules.",
+                      "When the customer pays, the invoice closes and you are notified.",
+                    ].map((t) => (
+                      <li key={t} className="flex" style={{ gap: 10, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55 }}>
+                        <span aria-hidden="true" style={{ width: 4, height: 4, borderRadius: 2, background: "var(--ink-3)", marginTop: 8, flexShrink: 0 }} />{t}
+                      </li>
                     ))}
-                  </div>
-                </div>
-              </div>
+                  </ul>
+                  <p style={{ margin: "12px 0 0", fontSize: 12, color: "var(--ink-3)" }}>This is what happens once sending is on. Nothing above is sent while a line shows Not active.</p>
+                </Panel>
+              </>
             )}
 
-            {/* ── Billing ──────────────────────────────────── */}
+            {/* Reminder rules */}
+            {tab === "automation" && (
+              <>
+                <Panel id="sec-auto" title="Collections reminders" description="Reminders go out once a day at 9 am IST, following the rules below.">
+                  <div className="set-list">
+                  <div className="set-row">
+                    <div className="flex-1 min-w-0">
+                      <div style={{ fontSize: 13.5, color: "var(--ink)" }}>{autoEnabled ? "On" : "Paused"}</div>
+                      <div style={{ fontSize: 12.5, color: autoEnabled && delivery && !delivery.whatsapp.active ? "var(--warning)" : "var(--ink-3)", marginTop: 2 }}>
+                        {!loaded && !loadFailed ? "Checking…"
+                          : !autoEnabled ? "No reminders go out until you turn this on."
+                          : delivery && !delivery.whatsapp.active ? `On, but nothing is sent yet: ${delivery.whatsapp.reason || "WhatsApp delivery is not active"}.`
+                          : "Reminders go out every day at 9 am IST."}
+                      </div>
+                    </div>
+                    <Switch checked={autoEnabled} onChange={handleToggleAutomation} disabled={autoToggling || !loaded} label="Collections reminders" />
+                  </div>
+                  </div>
+                </Panel>
+
+                <Panel id="sec-rules" title="Reminder rules" description="When an invoice is this many days overdue, Starlane prepares this kind of reminder with a payment link.">
+                  {rulesLoading && <SkeletonRows rows={3} height={52} />}
+                  {!rulesLoading && rulesFailed && <ErrorState title="Couldn't load your rules" message={OFFLINE} onRetry={loadRules} />}
+                  {!rulesLoading && !rulesFailed && rules.length === 0 && !showAddRule && (
+                    <div className="set-list"><div className="set-row">
+                      <p className="flex-1 min-w-0" style={{ margin: 0, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.55 }}>No reminder rules yet. A common start: gentle at day 3, firm at day 7, urgent at day 15.</p>
+                      <Button variant="secondary" size="sm" icon={<IconPlus size={13} />} onClick={() => setShowAddRule(true)}>Add your first rule</Button>
+                    </div></div>
+                  )}
+                  {!rulesLoading && !rulesFailed && rules.length > 0 && (
+                    <div className="set-list">
+                      {rules.map(rule => {
+                        const t = TONE[rule.tone] || { label: rule.tone, tone: "neutral" as StatusTone };
+                        return (
+                          <div key={rule.id} className="set-row" style={{ opacity: rule.enabled ? 1 : 0.6 }}>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
+                                <span style={{ fontSize: 13.5, color: "var(--ink)" }}>Day <span className="num">{rule.trigger_day}</span></span>
+                                <StatusChip tone={t.tone}>{t.label}</StatusChip>
+                              </div>
+                              <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 3 }}>
+                                {ACTION_LABEL[rule.action] || rule.action} with payment link
+                                {rule.sent != null && <span className="tabular-nums"> · {formatCount(rule.sent)} sent</span>}
+                              </div>
+                            </div>
+                            <Switch checked={rule.enabled} onChange={() => handleToggleRule(rule)} label={`Day ${rule.trigger_day} rule ${rule.enabled ? "on" : "off"}`} />
+                            <button type="button" className="icon-btn" aria-label={`Delete the day ${rule.trigger_day} rule`} onClick={() => setDeleteRule(rule)}>
+                              <IconTrash size={14} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {showAddRule && (
+                    <div style={{ padding: "16px 0", borderBottom: "1px solid var(--line)", borderTop: rules.length ? "none" : "1px solid var(--line)" }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)", marginBottom: 12 }}>New rule</div>
+                      <div className="flex flex-wrap items-end" style={{ gap: 16 }}>
+                        <Field label="Days overdue" htmlFor="trigger_day">
+                          <input id="trigger_day" className="ui-input tabular-nums" style={{ width: 96 }} type="number" min={1} max={90} value={newRule.trigger_day}
+                            onChange={e => setNewRule(r => ({ ...r, trigger_day: Number(e.target.value) }))} />
+                        </Field>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          <span style={{ fontSize: 12, color: "var(--ink-2)" }}>Tone</span>
+                          <Segmented label="Tone" value={newRule.tone} onChange={(v) => setNewRule(r => ({ ...r, tone: v }))}
+                            options={[{ value: "gentle", label: "Gentle" }, { value: "firm", label: "Firm" }, { value: "urgent", label: "Urgent" }]} />
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          <span style={{ fontSize: 12, color: "var(--ink-2)" }}>Channel</span>
+                          <Segmented label="Channel" value={newRule.action} onChange={(v) => setNewRule(r => ({ ...r, action: v }))}
+                            options={[{ value: "whatsapp", label: "WhatsApp" }, { value: "call", label: "Call" }]} />
+                        </div>
+                      </div>
+                      <p style={{ margin: "14px 0 0", fontSize: 12.5, color: "var(--ink-2)" }}>
+                        When an invoice is <span className="tabular-nums" style={{ color: "var(--ink)" }}>{newRule.trigger_day} days</span> overdue, prepare a {TONE[newRule.tone]?.label.toLowerCase()} {newRule.action === "whatsapp" ? "WhatsApp message" : "call"} with a payment link.
+                      </p>
+                      <div className="flex justify-end" style={{ gap: 8, marginTop: 14 }}>
+                        <Button variant="ghost" onClick={() => setShowAddRule(false)}>Cancel</Button>
+                        <Button variant="primary" loading={addingRule} onClick={handleAddRule}>Save rule</Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {!showAddRule && !rulesLoading && !rulesFailed && rules.length > 0 && (
+                    <div style={{ marginTop: 14 }}>
+                      <Button variant="secondary" size="sm" icon={<IconPlus size={13} />} onClick={() => setShowAddRule(true)}>Add rule</Button>
+                    </div>
+                  )}
+                </Panel>
+              </>
+            )}
+
+            {/* Billing */}
             {tab === "billing" && (
-              <Card>
-                <h3 className="text-sm font-semibold text-primary mb-4">Billing & Plan</h3>
-                <p className="text-sm text-secondary mb-4">Manage your subscription, upgrade your plan, and view invoice history.</p>
-                <Button onClick={() => window.location.href = "/billing"} icon={<FiCreditCard size={14} />}>Go to Billing Page</Button>
-              </Card>
+              <Panel id="sec-billing" title="Billing and plan" description="Your subscription, plan changes and invoice history live on the Billing page.">
+                <Link href="/billing" className="ui-btn ui-btn-secondary">Open Billing</Link>
+              </Panel>
             )}
           </div>
         </div>
       </div>
+
+      <Modal
+        open={!!deleteRule}
+        onClose={() => setDeleteRule(null)}
+        title={`Delete the day ${deleteRule?.trigger_day ?? ""} rule?`}
+        description="Reminders from this rule stop. Reminders already sent are not affected."
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setDeleteRule(null)}>Cancel</Button>
+            <Button variant="danger" onClick={() => deleteRule && handleDeleteRule(deleteRule.id)}>Delete rule</Button>
+          </>
+        }
+      />
     </DashboardLayout>
   );
 }
@@ -808,21 +581,5 @@ export default function SettingsPage() {
     <Suspense fallback={null}>
       <SettingsPageInner />
     </Suspense>
-  );
-}
-
-// A status badge driven by /api/settings/delivery-status. Unknown (not loaded)
-// is shown as unknown, never as active.
-function DeliveryBadge({ line }: { line?: DeliveryLine }) {
-  const state = !line ? "unknown" : line.active ? "on" : "off";
-  const styles = {
-    on: { background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" },
-    off: { background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.3)", color: "#B7791F" },
-    unknown: { background: "rgba(128,128,128,0.08)", border: "1px solid rgba(128,128,128,0.2)", color: "#8A8A85" },
-  }[state];
-  return (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shrink-0" style={styles}>
-      {state === "on" ? <><FiCheckCircle size={11} /> Active</> : state === "off" ? "Not active" : "Unknown"}
-    </div>
   );
 }

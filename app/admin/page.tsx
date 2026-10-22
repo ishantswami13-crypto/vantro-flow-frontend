@@ -1,10 +1,20 @@
 "use client";
 import { authHeaders, isLoggedIn } from "@/lib/api";
 
-import { useState, useEffect } from "react";
-import { FiZap, FiUsers, FiTrendingUp, FiDatabase, FiDollarSign, FiRefreshCw } from "react-icons/fi";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { PageHeader, Figure, SkeletonRows } from "@/components/v32/ui";
+import { IconRefresh } from "@/components/v32/icons";
+import { StatusChip } from "@/components/ui/Badge";
+import { ErrorState } from "@/components/ui/ErrorState";
+import Button from "@/components/ui/Button";
+import { formatCount, formatDateTime, formatRelative, inrWhole } from "@/lib/format";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
+
+// Founder analytics (GET /api/admin/stats, ADMIN_EMAILS on the backend).
+// Private; the backend refuses anyone else.
 
 interface AdminStats {
   total_users: number;
@@ -18,109 +28,115 @@ interface AdminStats {
   recent_signups: { email: string; business: string; plan: string; joined: string }[];
 }
 
-export default function AdminPage() {
-  const [stats, setStats]   = useState<AdminStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState("");
+type Failure = "signed_out" | "forbidden" | "offline";
+const FAILURE: Record<Failure, { title: string; message: string }> = {
+  signed_out: { title: "You're signed out", message: "Sign in with an admin account to see these numbers." },
+  forbidden: { title: "Admins only", message: "These numbers are limited to Starlane admins. Your account isn't on the admin list." },
+  offline: { title: "Couldn't load admin stats", message: "Couldn't reach Starlane. Check your connection and try again." },
+};
 
-  const load = async () => {
-    setLoading(true); setError("");
-    if (!isLoggedIn()) { setError("Not logged in"); setLoading(false); return; }
+export default function AdminPage() {
+  const [stats, setStats]     = useState<AdminStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [failure, setFailure] = useState<Failure | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true); setFailure(null);
+    if (!isLoggedIn()) { setFailure("signed_out"); setLoading(false); return; }
     try {
       const res = await fetch(`${BASE}/api/admin/stats`, {
         headers: { ...authHeaders() }, credentials: "include",
       });
+      if (res.status === 401) { setFailure("signed_out"); return; }
+      if (res.status === 403) { setFailure("forbidden"); return; }
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok || !data.stats) throw new Error("bad response");
       setStats(data.stats);
-    } catch (err: any) {
-      setError(err.message || "Failed to load stats");
+    } catch {
+      setFailure("offline");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
-  const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  const figures = stats ? [
+    { label: "Users", value: formatCount(stats.total_users) },
+    { label: "Signed up today", value: formatCount(stats.signups_today) },
+    { label: "Signed up in 7 days", value: formatCount(stats.signups_last_7d) },
+    { label: "Monthly recurring revenue", value: inrWhole(stats.mrr_inr) },
+  ] : [];
+  const secondary = stats ? [
+    { label: "Paid users", value: formatCount(stats.paid_users) },
+    { label: "Free users", value: formatCount(stats.free_users) },
+    { label: "Users with data", value: formatCount(stats.users_with_data) },
+    { label: "Invoices", value: formatCount(stats.total_invoices) },
+  ] : [];
 
   return (
-    <div className="min-h-screen bg-bg p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-accent rounded-md flex items-center justify-center">
-            <FiZap size={16} className="text-white" />
-          </div>
-          <div>
-            <h1 className="font-bold text-primary text-lg">Starlane Admin</h1>
-            <p className="text-xs text-muted">Founder analytics — private</p>
-          </div>
-        </div>
-        <button onClick={load} disabled={loading}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-surface-2 text-secondary border border-border hover:bg-surface-3 transition-all disabled:opacity-50">
-          <FiRefreshCw size={12} className={loading ? "animate-spin" : ""} />
-          Refresh
-        </button>
-      </div>
+    <DashboardLayout pageTitle="Admin">
+      <style>{`
+        .adm-row { display: grid; align-items: center; gap: 4px 16px; padding: 10px 0; min-height: 48px;
+          grid-template-columns: minmax(0, 1fr) auto; }
+        .adm-head { display: none; }
+        @media (min-width: 760px) {
+          .adm-row { grid-template-columns: minmax(0, 1fr) 120px 140px; }
+          .adm-head { display: grid; min-height: 0; padding: 0 0 8px; }
+        }
+        .adm-sub { display: flex; flex-wrap: wrap; gap: 6px 28px; margin-top: 16px; font-size: 12.5px; color: var(--ink-3); }
+        .adm-sub b { font-weight: 400; color: var(--ink); font-family: var(--font-mono); font-size: 12.5px; margin-left: 6px; }
+      `}</style>
+      <div style={{ maxWidth: 1180, display: "flex", flexDirection: "column", gap: 32 }}>
+        <PageHeader
+          title="Admin"
+          subtitle="Founder analytics. Private to Starlane admins."
+          right={
+            <div className="flex items-center" style={{ gap: 8 }}>
+              <Link href="/admin/access" className="ui-btn ui-btn-ghost">Access review</Link>
+              <Link href="/admin/errors" className="ui-btn ui-btn-ghost">Errors</Link>
+              <Button variant="secondary" onClick={load} loading={loading} icon={<IconRefresh size={14} />}>Refresh stats</Button>
+            </div>
+          }
+        />
 
-      {error && (
-        <div className="mb-6 px-4 py-3 bg-danger-dim border border-danger/30 rounded-lg text-sm text-danger">
-          {error} — Make sure your email is in the ADMIN_EMAILS Railway env var.
-        </div>
-      )}
+        {failure && <ErrorState title={FAILURE[failure].title} message={FAILURE[failure].message} onRetry={failure === "offline" ? load : undefined} />}
+        {loading && !stats && !failure && <SkeletonRows rows={4} />}
 
-      {loading && !stats && (
-        <div className="text-center py-16 text-sm text-muted animate-pulse">Loading stats...</div>
-      )}
-
-      {stats && (
-        <div className="space-y-6">
-          {/* Key metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { label: "Total Users",      value: stats.total_users,      icon: FiUsers,      color: "#0066FF" },
-              { label: "Signups Today",    value: stats.signups_today,    icon: FiTrendingUp, color: "#10D98A" },
-              { label: "Signups (7d)",     value: stats.signups_last_7d,  icon: FiTrendingUp, color: "#F5A524" },
-              { label: "Paid Users",       value: stats.paid_users,       icon: FiDollarSign, color: "#10D98A" },
-              { label: "Free Users",       value: stats.free_users,       icon: FiUsers,      color: "#8899AA" },
-              { label: "With Data",        value: stats.users_with_data,  icon: FiDatabase,   color: "#9B6DFF" },
-              { label: "Total Invoices",   value: stats.total_invoices,   icon: FiDatabase,   color: "#0066FF" },
-              { label: "MRR (₹)",          value: `₹${stats.mrr_inr.toLocaleString("en-IN")}`, icon: FiDollarSign, color: "#10D98A" },
-            ].map(m => (
-              <div key={m.label} className="bg-surface border border-border rounded-xl p-4">
-                <p className="text-xs text-muted mb-1">{m.label}</p>
-                <p className="text-2xl font-black" style={{ color: m.color }}>{m.value}</p>
+        {stats && (
+          <>
+            <div className="fade-once">
+              <div className="ops-figures">
+                {figures.map((m) => <Figure key={m.label} value={m.value} label={m.label} />)}
               </div>
-            ))}
-          </div>
+              <dl className="adm-sub" style={{ margin: "16px 0 0" }}>
+                {secondary.map((m) => <div key={m.label} className="flex items-baseline"><dt>{m.label}</dt><dd style={{ margin: 0 }}><b>{m.value}</b></dd></div>)}
+              </dl>
+            </div>
 
-          {/* Recent signups */}
-          <div className="bg-surface border border-border rounded-xl overflow-hidden">
-            <div className="px-5 py-3 border-b border-border">
-              <p className="text-sm font-bold text-primary">Recent Signups</p>
-            </div>
-            <div className="divide-y divide-border/50">
-              {stats.recent_signups.length === 0 && (
-                <div className="px-5 py-6 text-sm text-muted text-center">No signups yet.</div>
-              )}
-              {stats.recent_signups.map((u, i) => (
-                <div key={i} className="flex items-center justify-between px-5 py-3 hover:bg-surface-2/50 transition-colors">
-                  <div>
-                    <p className="text-sm font-medium text-primary">{u.business || "—"}</p>
-                    <p className="text-xs text-muted">{u.email}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${u.plan !== "free" ? "bg-success-dim text-success" : "bg-surface-2 text-muted"}`}>
-                      {u.plan}
-                    </span>
-                    <p className="text-2xs text-muted mt-1">{fmtDate(u.joined)}</p>
-                  </div>
+            <section>
+              <h2 className="section-label">Recent signups</h2>
+              {stats.recent_signups.length === 0 ? (
+                <p className="ops-list" style={{ margin: 0, padding: "12px 0", fontSize: 13, color: "var(--ink-2)", borderBottom: "1px solid var(--line)" }}>No signups yet. New accounts appear here as they are created.</p>
+              ) : (
+                <div>
+                  <div className="adm-row adm-head ops-head" aria-hidden="true"><span>Business</span><span>Plan</span><span style={{ textAlign: "right" }}>Joined</span></div>
+                  {stats.recent_signups.map((u, i) => (
+                    <div key={`${u.email}-${i}`} className="adm-row ops-row">
+                      <div className="min-w-0">
+                        <div className="truncate" style={{ fontSize: 13.5, color: "var(--ink)" }}>{u.business || <span style={{ color: "var(--ink-3)" }}>No business name</span>}</div>
+                        <div className="truncate" style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{u.email}</div>
+                      </div>
+                      <div><StatusChip tone={u.plan !== "free" ? "positive" : "neutral"}>{u.plan.replace(/^./, (c) => c.toUpperCase())}</StatusChip></div>
+                      <div className="hidden md:block tabular-nums" style={{ fontSize: 12.5, color: "var(--ink-2)", textAlign: "right" }} title={formatDateTime(u.joined)}>{formatRelative(u.joined).replace(/^./, (c) => c.toUpperCase())}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+              )}
+            </section>
+          </>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

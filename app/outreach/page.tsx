@@ -3,23 +3,22 @@
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { OutreachBody } from "@/components/outreach/OutreachPanels";
+import { PageColumn } from "@/components/os/missions/ui";
+import { PageHeader } from "@/components/v32/ui";
 
-// Outreach: review the campaign, press START, and Starlane handles sending,
+// Outreach: review the campaign, press Start, and Starlane handles sending,
 // pacing, bounces, opt-outs and follow-ups within policy. Everything here is
 // read from /api/outreach; the backend decides what may be sent and when.
 export default function OutreachPage() {
   return (
     <DashboardLayout pageTitle="Outreach">
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
-        <div>
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>Outreach</h1>
-          <p style={{ margin: "6px 0 0", fontSize: 13.5, color: "#63635F" }}>
-            Review the campaign, press START. Starlane sends within your limits and stops the moment you say so. It is also listed in{" "}
-            <Link href="/missions" className="underline">Missions</Link>.
-          </p>
-        </div>
+      <PageColumn gap={24}>
+        <PageHeader
+          title="Outreach"
+          subtitle={<>Review the campaign, then press Start. Starlane sends within your limits and stops the moment you say so. It is also listed in <Link href="/missions" className="underline">Missions</Link>.</>}
+        />
         <OutreachBody />
-      </div>
+      </PageColumn>
     </DashboardLayout>
   );
 }

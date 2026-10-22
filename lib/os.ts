@@ -275,31 +275,6 @@ export interface Mission {
   updatedAt: string | null;
 }
 
-export interface TodayLine { key: string; tone: 'attention' | 'positive' | 'neutral'; text: string; href?: string }
-export interface OsToday {
-  lines: TodayLine[];
-  counts: Record<string, number | null>;
-  pilotMode: 'SHADOW' | 'LIVE';
-  generatedAt: string;
-}
-
-export interface FunnelStep { key: string; label: string; at: string | null }
-export interface Funnel {
-  steps: FunnelStep[];
-  reached: number;
-  metrics: {
-    minutesToFirstFinding: number | null;
-    minutesToFirstDecisionOpened: number | null;
-    decisionsDiscovered: number | null;
-    decisionsApproved: number | null;
-    humanAcceptance: number | null;
-    falsePositiveRate: number | null;
-    actionsPrepared: number | null;
-    outcomesVerified: number;
-    activeDaysLast28: number | null;
-  };
-}
-
 export interface AgentInfo {
   key: string;
   name: string;
@@ -352,7 +327,6 @@ export type SalesWhatIf = {
 export const osApi = {
   salesWhatIf: (changePct: number, days: number) => call<SalesWhatIf>('GET', `/what-if/sales?changePct=${encodeURIComponent(changePct)}&days=${encodeURIComponent(days)}`),
   bridge: () => call<BridgeOverview>('GET', '/bridge'),
-  knowledge: () => call<{ knowledge: KnowledgeItem[] }>('GET', '/knowledge'),
   teach: (input: { statement: string; kind: string; scope?: { type: string; name?: string } }) => call<{ knowledge: KnowledgeItem; note: string }>('POST', '/knowledge', input),
   retireKnowledge: (id: string) => call<{ knowledge: KnowledgeItem }>('POST', `/knowledge/${id}/retire`),
 
@@ -380,8 +354,6 @@ export const osApi = {
   memory: () => call<MemoryResponse>('GET', '/memory'),
 
   missions: () => call<{ missions: Mission[]; byState: Record<string, number> }>('GET', '/missions'),
-  today: () => call<OsToday>('GET', '/today'),
-  funnel: () => call<Funnel>('GET', '/funnel'),
   agents: () => call<{ agents: AgentInfo[]; notBuilt: { name: string; reason: string }[] }>('GET', '/agents'),
 };
 

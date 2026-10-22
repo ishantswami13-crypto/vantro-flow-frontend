@@ -1,37 +1,54 @@
 "use client";
 
-import Link from "next/link";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { useParams } from "next/navigation";
-import { FiUsers } from "react-icons/fi";
+// Agent run detail. The backend keeps a run count and the last run time per
+// agent (GET /api/os/agents), but no per-run record that a run id could
+// resolve to: no step trace and no proposed-action card per run. So this
+// page says that plainly and points to what does exist, rather than
+// fabricating progress steps or "agent is thinking" activity.
 
-// Agent run detail — STARLANE_FRONTEND_HANDOFF.md §1/§13.
-//
-// New route this turn. There is no real run-tracking system anywhere in
-// the backend (no agent_run table, no execution trace, no proposed-action
-// records — agent_registry is metadata-only, see app/agents/page.tsx), so
-// no run id can ever resolve to a real run today. This route honestly
-// reports "no run data" for any id/runId combination rather than
-// fabricating a progress-step trace or a proposed-action card.
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { osApi } from "@/lib/os";
+import { useLoad } from "@/components/os/shared";
+import { PageColumn, BackLink } from "@/components/os/missions/ui";
+import { PageHeader, Figure } from "@/components/v32/ui";
+import { StatusChip } from "@/components/ui/Badge";
+import { formatRelative, formatCount } from "@/lib/format";
+import { agentStatus } from "@/components/agents/shared";
+
 export default function AgentRunDetail() {
   const params = useParams<{ id: string; runId: string }>();
   const id = params?.id ? decodeURIComponent(params.id) : "";
-  const runId = params?.runId ? decodeURIComponent(params.runId) : "";
+  const { data } = useLoad(() => osApi.agents());
+  const a = data?.agents.find((x) => x.key === id);
+  const back = a ? `/agents/${encodeURIComponent(a.key)}` : "/agents";
 
   return (
     <DashboardLayout pageTitle="Agent run">
-      <div className="max-w-xl mx-auto mt-16 text-center px-4 fade-once">
-        <FiUsers size={28} className="mx-auto mb-4" style={{ color: "#8A8A86" }} />
-        <h1 className="mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 22, color: "#191917" }}>No run data</h1>
-        <p className="v32-body">
-          {id && runId ? `No run "${runId}" exists for agent "${id}". ` : ""}
-          Starlane doesn&apos;t track agent runs yet. Once agents can actually run, this page will show its
-          progress step by step, the proposed action with its evidence, and where it stands.
-        </p>
-        <Link href="/agents" style={{ color: "#191917", fontSize: 13, fontWeight: 500, display: "inline-block", marginTop: 16 }}>
-          ← Back to Agents
-        </Link>
-      </div>
+      <PageColumn gap={16}>
+        <BackLink href={back}>{a ? a.name : "Agents"}</BackLink>
+        <div className="flex flex-col" style={{ maxWidth: 840, gap: 32 }}>
+          <PageHeader title="Run details aren't recorded" subtitle="Starlane counts each agent's runs, but does not keep a step-by-step log of a single run yet." />
+          {a && (
+            <section aria-label="Activity" className="grid grid-cols-2 md:grid-cols-4" style={{ gap: 20, paddingTop: 18, borderTop: "1px solid var(--line)" }}>
+              <div className="min-w-0"><div style={{ fontSize: 14, color: "var(--ink)", paddingTop: 2 }}>{a.name}</div><div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 6 }}>Agent</div></div>
+              <div className="min-w-0"><div style={{ paddingTop: 3 }}><StatusChip tone={agentStatus(a).tone}>{agentStatus(a).label}</StatusChip></div><div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 6 }}>Status</div></div>
+              <Figure value={formatCount(a.runs)} label="Runs recorded" />
+              <Figure value={a.lastRunAt ? formatRelative(a.lastRunAt) : "Not yet"} label="Last run" />
+            </section>
+          )}
+          <section>
+            <p className="prose-measure" style={{ margin: 0, fontSize: 13.5 }}>
+              When run logs exist, this page will show each step, the action it proposed with its evidence, and where it stands. Until then, an agent&apos;s work is visible through the missions it is assigned to and the approvals waiting for you.
+            </p>
+            <div className="flex flex-wrap" style={{ gap: 8, marginTop: 16 }}>
+              <Link href={back} className="ui-btn ui-btn-secondary">{a ? `Open ${a.name}` : "All agents"}</Link>
+              <Link href="/missions" className="ui-btn ui-btn-ghost">View missions</Link>
+            </div>
+          </section>
+        </div>
+      </PageColumn>
     </DashboardLayout>
   );
 }

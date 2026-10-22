@@ -1,27 +1,20 @@
-// Shared formatting helpers for the supply-chain intelligence screens.
-// No calculation happens here — this file only formats numbers the backend
-// already computed (see lib/domain/intelligence/supplyChainImpact.js).
+// Formatting for the supply-chain intelligence screens. Money and dates come
+// from lib/format (the one formatter for the web app); this file only keeps
+// the enum and confidence wording these screens share. No calculation
+// happens here: every number was computed by the backend
+// (lib/domain/intelligence/supplyChainImpact.js).
+import { inrWhole, formatDate as fmtDate, formatDateTime as fmtDateTime } from "@/lib/format";
+
 export function formatINR(value: number | null | undefined): string {
-  if (value == null) return "—";
-  return `₹${value.toLocaleString("en-IN")}`;
+  return inrWhole(value);
 }
 
 export function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-  } catch {
-    return iso;
-  }
+  return fmtDate(iso);
 }
 
 export function formatDateTime(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return iso;
-  }
+  return fmtDateTime(iso);
 }
 
 export function confidenceFromScore(value: number | null | undefined): "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN" {
@@ -40,5 +33,6 @@ export function humanizeCode(code: string | null | undefined): string {
 }
 
 export function confidenceLabel(value: number | null | undefined): string {
-  return humanizeCode(confidenceFromScore(value));
+  const c = confidenceFromScore(value);
+  return c === "UNKNOWN" ? "Not known yet" : humanizeCode(c);
 }

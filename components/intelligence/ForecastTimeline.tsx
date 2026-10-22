@@ -1,28 +1,30 @@
 import React from "react";
+import { StatusChip } from "@/components/ui/Badge";
 import type { IntelligencePrediction, ImpactComponent } from "@/lib/api";
 
-// "If nothing changes" — a plain horizon timeline rather than a chart,
-// because the underlying data is 3 discrete deterministic checkpoints
-// (7/14/30 days), not a continuous series. A line chart across 3 points
-// would imply more precision than the model actually provides.
+// "If nothing changes": a plain horizon strip rather than a chart, because
+// the data is 3 discrete deterministic checkpoints (7/14/30 days), not a
+// continuous series. A line across 3 points would imply more precision than
+// the model provides.
+function Cell({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="min-w-0" style={{ padding: "12px 0" }}>
+      <div className="tabular-nums" style={{ fontSize: 12, color: "var(--ink-3)", marginBottom: 6 }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+
 function HorizonPoint({ label, willStockOut, dataQuality }: { label: string; willStockOut: boolean | null; dataQuality: string }) {
   const insufficient = dataQuality !== "sufficient" || willStockOut === null;
   return (
-    <div className="min-w-0">
-      <p className="text-2xs text-muted mb-2">{label}</p>
-      <div className={[
-        "rounded-xl border px-2 py-3 text-center whitespace-nowrap",
-        insufficient ? "border-border bg-surface-2" : willStockOut ? "border-danger/30 bg-danger-dim" : "border-success/30 bg-success-dim",
-      ].join(" ")}>
-        {insufficient ? (
-          <span className="text-2xs text-muted">Insufficient data</span>
-        ) : willStockOut ? (
-          <span className="text-xs font-bold text-danger">Stocked out</span>
-        ) : (
-          <span className="text-xs font-bold text-success">Coverage holds</span>
-        )}
-      </div>
-    </div>
+    <Cell label={label}>
+      {insufficient
+        ? <StatusChip tone="unknown">Not enough data</StatusChip>
+        : willStockOut
+          ? <StatusChip tone="critical">Stocked out</StatusChip>
+          : <StatusChip tone="positive">Coverage holds</StatusChip>}
+    </Cell>
   );
 }
 
@@ -31,15 +33,12 @@ export function ForecastTimeline({ predictions, component }: { predictions: Inte
 
   return (
     <div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="min-w-0">
-          <p className="text-2xs text-muted mb-2">Today</p>
-          <div className="rounded-xl border border-border bg-surface-2 px-2 py-3 text-center whitespace-nowrap">
-            <span className="text-xs font-bold text-primary">
-              {component.coverage.sufficientData ? `${component.coverage.coverageDays}d of stock` : "—"}
-            </span>
-          </div>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4" style={{ columnGap: 24, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+        <Cell label="Today">
+          <span className="tabular-nums" style={{ fontSize: 13, color: "var(--ink)" }}>
+            {component.coverage.sufficientData ? `${component.coverage.coverageDays} days of stock` : "Not known yet"}
+          </span>
+        </Cell>
         {byHorizon.map((p, i) => (
           <HorizonPoint
             key={i}
@@ -49,8 +48,8 @@ export function ForecastTimeline({ predictions, component }: { predictions: Inte
           />
         ))}
       </div>
-      <p className="text-2xs text-muted mt-2">
-        "Stocked out" means below safety stock. Based on current inventory, average daily demand, and safety stock — see evidence for the underlying figures. This is a forecast, not an observation.
+      <p className="meta" style={{ margin: "10px 0 0", lineHeight: 1.55, maxWidth: "68ch" }}>
+        &ldquo;Stocked out&rdquo; means below safety stock. Based on current inventory, average daily demand and safety stock; the sources hold the underlying figures. This is a forecast, not an observation.
       </p>
     </div>
   );

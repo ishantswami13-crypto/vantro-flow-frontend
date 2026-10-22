@@ -5,53 +5,50 @@
 
 import React from "react";
 import type { Interval, HealthDimension } from "@/lib/decisions";
-import { money, BAND_LABEL } from "@/lib/decisions";
+import { BAND_LABEL } from "@/lib/decisions";
+import { inrWhole } from "@/lib/format";
+import { V } from "@/components/v32/ui";
+import { StatusChip, type StatusTone } from "@/components/ui/Badge";
 
-// Version 32 tokens (STARLANE_FRONTEND_HANDOFF.md §3).
+// Older call sites read colours through C. Every entry is a design token
+// from app/tokens.css (via V), so there is no second palette.
 export const C = {
-  ink: "#191917",
-  body: "#43433F",
-  muted: "#63635F",
-  faint: "#6E6E6A", // 4.5:1 on the page background (was #8A8A86, 3.1:1)
-  line: "#EBEAE6",
-  card: "rgba(25,25,23,0.10)",
-  wash: "#F3F2EE",
-  good: "#477054",
-  warn: "#9B742B",
-  bad: "#A64F4B",
-  accent: "var(--accent, #696D86)",
+  ink: V.ink,
+  body: V.body,
+  muted: V.secondary,
+  faint: V.tertiary,
+  line: V.divider,
+  card: V.card,
+  wash: V.surface2,
+  good: V.positive,
+  warn: V.warning,
+  bad: V.critical,
+  accent: V.accent,
 };
 
-export function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-[10.5px] uppercase mb-3" style={{ color: C.muted, fontWeight: 500, letterSpacing: 0 }}>
-      {children}
-    </p>
-  );
+function rangeMoney(v: number, currency?: string) {
+  return !currency || currency === "INR" ? inrWhole(v) : `${currency} ${Math.round(v).toLocaleString("en-IN")}`;
+}
+
+/** Section label: very small, muted, wide-tracked caps (the shared .section-label). */
+export function SectionLabel({ children, id }: { children: React.ReactNode; id?: string }) {
+  return <h2 id={id} className="section-label">{children}</h2>;
 }
 
 type Tone = "neutral" | "good" | "warn" | "bad" | "accent";
-// Outlined tag pills, as on the Missions and Memory boards: coloured text
-// and border on white, radius 20px. Never a filled colour block.
+// Pills draw the one shared status chip (components/ui/Badge.tsx).
+const CHIP_TONE: Record<Tone, StatusTone> = { neutral: "neutral", good: "positive", warn: "attention", bad: "critical", accent: "info" };
+// Notice tints, from the status tokens.
 const TONE: Record<Tone, { fg: string; bg: string; bd: string }> = {
-  neutral: { fg: C.muted, bg: "transparent", bd: "rgba(25,25,23,0.14)" },
-  good: { fg: C.good, bg: "transparent", bd: "rgba(71,112,84,0.45)" },
-  warn: { fg: C.warn, bg: "transparent", bd: "rgba(155,116,43,0.45)" },
-  bad: { fg: C.bad, bg: "transparent", bd: "rgba(166,79,75,0.45)" },
-  accent: { fg: C.accent, bg: "transparent", bd: "rgba(var(--accent-rgb, 105, 109, 134), 0.5)" },
+  neutral: { fg: C.ink, bg: V.surface2, bd: V.divider },
+  good: { fg: C.good, bg: "rgb(var(--tk-positive) / 0.07)", bd: "rgb(var(--tk-positive) / 0.22)" },
+  warn: { fg: C.warn, bg: "rgb(var(--tk-warning) / 0.07)", bd: "rgb(var(--tk-warning) / 0.24)" },
+  bad: { fg: C.bad, bg: "rgb(var(--tk-critical) / 0.07)", bd: "rgb(var(--tk-critical) / 0.22)" },
+  accent: { fg: C.ink, bg: "rgba(var(--accent-rgb), 0.07)", bd: "rgba(var(--accent-rgb), 0.24)" },
 };
 
 export function Pill({ tone = "neutral", children, title }: { tone?: Tone; children: React.ReactNode; title?: string }) {
-  const t = TONE[tone];
-  return (
-    <span
-      title={title}
-      className="inline-flex items-center gap-1 text-[11px] px-[9px] py-[1px] rounded-[20px] whitespace-nowrap"
-      style={{ color: t.fg, background: t.bg, border: `1px solid ${t.bd}`, fontWeight: 400, letterSpacing: "0.2px" }}
-    >
-      {children}
-    </span>
-  );
+  return <StatusChip tone={CHIP_TONE[tone]} title={title} className="whitespace-nowrap">{children}</StatusChip>;
 }
 
 export function bandTone(band?: string | null): Tone {
@@ -73,9 +70,11 @@ export function ConfidencePill({ band, score }: { band?: string | null; score?: 
 export function Stat({ label, value, sub, tone }: { label: string; value: React.ReactNode; sub?: React.ReactNode; tone?: "bad" | "warn" | "good" }) {
   return (
     <div className="min-w-0">
-      <p className="text-[12px]" style={{ color: C.faint }}>{label}</p>
-      <p className="text-[22px] leading-tight mt-1 tabular-nums" style={{ color: tone ? C[tone] : C.ink, fontWeight: 400, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", letterSpacing: "-0.01em" }}>{value}</p>
-      {sub && <p className="text-[12px] mt-1" style={{ color: C.muted }}>{sub}</p>}
+      {typeof value === "string" && !/\d/.test(value)
+        ? <p style={{ margin: 0, fontSize: 14, lineHeight: "22px", color: C.faint }}>{value}</p>
+        : <p className="num" style={{ margin: 0, fontSize: 18, lineHeight: "22px", color: tone ? C[tone] : C.ink }}>{value}</p>}
+      <p style={{ margin: "4px 0 0", fontSize: 12, color: C.muted }}>{label}</p>
+      {sub && <p style={{ margin: "1px 0 0", fontSize: 11.5, color: C.faint }}>{sub}</p>}
     </div>
   );
 }
@@ -84,24 +83,29 @@ export function Stat({ label, value, sub, tone }: { label: string; value: React.
  * A p10–p90 range with the expected value marked, on a shared scale so
  * several options can be compared at a glance.
  */
-export function RangeBar({ interval, max, currency, highlight }: { interval?: Interval | null; max: number; currency?: string; highlight?: boolean }) {
-  if (!interval || !(max > 0)) return <span className="text-[12px]" style={{ color: C.faint }}>No forecast</span>;
+export function RangeBar({ interval, max, currency, highlight, compact }: { interval?: Interval | null; max: number; currency?: string; highlight?: boolean; compact?: boolean }) {
+  if (!interval || !(max > 0)) return <span style={{ fontSize: 12, color: C.faint }}>No forecast</span>;
   const x = (v: number) => `${Math.max(0, Math.min(100, (v / max) * 100))}%`;
   const width = Math.max(1.5, ((interval.p90 - interval.p10) / max) * 100);
   return (
-    <div className="w-full">
-      <div className="relative h-[8px] rounded-full" style={{ background: "#F0F0EC" }}>
-        <div
-          className={`absolute top-0 h-full rounded-full ${highlight ? "id-gradient" : ""}`}
-          style={{ left: x(interval.p10), width: `${width}%`, background: highlight ? undefined : "#CFCFD8", opacity: highlight ? 0.9 : 1 }}
-        />
-        <div className="absolute" style={{ left: x(interval.mean), top: -3, width: 2, height: 14, background: C.ink, borderRadius: 1 }} />
+    <div className="w-full" title={`80% range ${rangeMoney(interval.p10, currency)} to ${rangeMoney(interval.p90, currency)}, expected ${rangeMoney(interval.mean, currency)}`}>
+      <div className="relative" style={{ height: 4, borderRadius: 2, background: "rgb(var(--tk-ink) / 0.05)" }}>
+        <div className="absolute top-0 h-full" style={{ left: x(interval.p10), width: `${width}%`, borderRadius: 2, background: highlight ? "rgb(var(--tk-ink) / 0.42)" : "rgb(var(--tk-ink) / 0.16)" }} />
+        <div className="absolute" style={{ left: x(interval.mean), top: -3, width: 1.5, height: 10, background: C.ink }} />
       </div>
-      <div className="flex justify-between text-[11px] mt-1 tabular-nums" style={{ color: C.faint }}>
-        <span>{money(interval.p10, currency)}</span>
-        <span style={{ color: C.ink, fontWeight: 500 }}>{money(interval.mean, currency)} expected</span>
-        <span>{money(interval.p90, currency)}</span>
-      </div>
+      {!compact && (
+        <div className="flex justify-between num" style={{ fontSize: 11, marginTop: 4, color: C.faint }}>
+          <span>{rangeMoney(interval.p10, currency)}</span>
+          <span style={{ color: C.ink }}>{rangeMoney(interval.mean, currency)} expected</span>
+          <span>{rangeMoney(interval.p90, currency)}</span>
+        </div>
+      )}
+      {compact && (
+        <div className="flex justify-between num" style={{ fontSize: 10.5, marginTop: 3, color: C.faint }}>
+          <span>{rangeMoney(interval.p10, currency)}</span>
+          <span>{rangeMoney(interval.p90, currency)}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -150,10 +154,11 @@ export function Skeleton({ rows = 3 }: { rows?: number }) {
 
 export function Notice({ tone = "neutral", title, children }: { tone?: Tone; title: string; children?: React.ReactNode }) {
   const t = TONE[tone];
+  const rule = tone === "neutral" || tone === "accent" ? "var(--line-strong)" : t.fg;
   return (
-    <div className="rounded-xl px-4 py-3" style={{ background: t.bg, border: `1px solid ${t.bd}` }} role={tone === "bad" ? "alert" : undefined}>
-      <p className="text-[13px]" style={{ color: t.fg, fontWeight: 500 }}>{title}</p>
-      {children && <div className="text-[12px] mt-1 leading-[1.55]" style={{ color: C.body }}>{children}</div>}
+    <div style={{ padding: "2px 0 2px 12px", borderLeft: `2px solid ${rule}` }} role={tone === "bad" ? "alert" : tone === "good" ? "status" : undefined}>
+      <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: tone === "neutral" || tone === "accent" ? C.ink : t.fg, fontWeight: 500 }}>{title}</p>
+      {children && <div style={{ fontSize: 12.5, marginTop: 2, lineHeight: 1.55, color: C.body }}>{children}</div>}
     </div>
   );
 }
