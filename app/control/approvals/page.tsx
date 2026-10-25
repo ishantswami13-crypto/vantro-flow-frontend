@@ -28,7 +28,7 @@ function priorityLabel(priority: RankedAction["priority"]): string {
 
 function priorityColor(priority: RankedAction["priority"]): string {
   if (priority === "urgent" || priority === "high") return "#A64F4B";
-  return "#8A8A86";
+  return "#6E6E69";
 }
 
 function actorLabel(action: RankedAction): string {
@@ -64,7 +64,7 @@ function ApprovalRow({
           {priorityLabel(action.priority)}
         </span>
       </div>
-      <div className="text-2xs" style={{ color: "#8A8A86" }}>
+      <div className="text-2xs" style={{ color: "#6E6E69" }}>
         {actorLabel(action)} · {formatDateTime(action.created_at)}
       </div>
     </button>
@@ -121,7 +121,7 @@ export default function ControlApprovalsPage() {
     <DashboardLayout pageTitle="Approvals">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
         <div className="fade-once">
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
+          <h1 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
             Control
           </h1>
           <p className="text-[13.5px] mt-2 max-w-[640px]" style={{ color: "#63635F" }}>
@@ -169,7 +169,7 @@ export default function ControlApprovalsPage() {
             }}
           >
             {!selected && (
-              <p className="text-[13px] text-center" style={{ color: "#8A8A86", maxWidth: 260 }}>
+              <p className="text-[13px] text-center" style={{ color: "#6E6E69", maxWidth: 260 }}>
                 Select an item from the queue to see its details here.
               </p>
             )}
@@ -189,23 +189,23 @@ export default function ControlApprovalsPage() {
 
                 {selected.recommended_message && (
                   <div style={{ padding: 12, borderRadius: 8, background: "#F7F7F5", border: "1px solid #EBEAE6" }}>
-                    <div className="text-2xs" style={{ color: "#8A8A86", marginBottom: 4 }}>Recommended message</div>
+                    <div className="text-2xs" style={{ color: "#6E6E69", marginBottom: 4 }}>Recommended message</div>
                     <p className="text-sm" style={{ color: "#43433F" }}>{selected.recommended_message}</p>
                   </div>
                 )}
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <div className="text-2xs" style={{ color: "#8A8A86" }}>
+                  <div className="text-2xs" style={{ color: "#6E6E69" }}>
                     Actor: <span style={{ color: "#43433F" }}>{actorLabel(selected)}</span>
                   </div>
-                  <div className="text-2xs" style={{ color: "#8A8A86" }}>
+                  <div className="text-2xs" style={{ color: "#6E6E69" }}>
                     Action type: <span style={{ color: "#43433F" }}>{selected.action_type}</span>
                   </div>
-                  <div className="text-2xs" style={{ color: "#8A8A86" }}>
+                  <div className="text-2xs" style={{ color: "#6E6E69" }}>
                     Created: <span style={{ color: "#43433F" }}>{formatDateTime(selected.created_at)}</span>
                   </div>
                   {selected.risk_level && (
-                    <div className="text-2xs" style={{ color: "#8A8A86" }}>
+                    <div className="text-2xs" style={{ color: "#6E6E69" }}>
                       Risk: <span style={{ color: "#43433F" }}>{selected.risk_level}</span>
                     </div>
                   )}

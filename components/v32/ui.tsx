@@ -13,7 +13,7 @@ import { IconSearch, IconSparkle } from "./icons";
 export const V = {
   ink: "#191917",
   secondary: "#63635F",
-  tertiary: "#8A8A86",
+  tertiary: "#6E6E69",
   body: "#43433F",
   divider: "#EBEAE6",
   hairline: "#E5E4DF",
@@ -25,12 +25,13 @@ export const V = {
   rowSubtle: "rgba(25,25,23,0.06)",
   surface2: "#F3F2EE",
   positive: "#477054",
-  warning: "#9B742B",
+  warning: "#8C6826",
   critical: "#A64F4B",
   neutralDot: "rgba(25,25,23,0.25)",
   accent: "var(--accent, #696D86)",
-  serif: "'Fraunces', Georgia, serif",
+  serif: "'Newsreader', Georgia, serif",
   mono: "'Plus Jakarta Sans', system-ui, sans-serif",
+  meta: "'IBM Plex Mono', ui-monospace, monospace",
 };
 
 /** Page title row: Fraunces 26px, an optional one-line subtitle and a right slot. */
@@ -44,8 +45,8 @@ export function PageHeader({ title, subtitle, right, children }: {
     <div className="fade-once">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 26, color: V.ink }}>{title}</h1>
-          {subtitle && <div style={{ fontSize: 13.5, color: V.secondary, marginTop: 4 }}>{subtitle}</div>}
+          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 34, lineHeight: 1.08, letterSpacing: "-0.02em", color: V.ink }}>{title}</h1>
+          {subtitle && <div style={{ fontSize: 14, color: V.secondary, marginTop: 8 }}>{subtitle}</div>}
         </div>
         {right && <div className="flex items-center gap-4 shrink-0">{right}</div>}
       </div>
@@ -71,13 +72,13 @@ export function Subnav({ items, active, onChange, label = "Secondary" }: {
         const on = it.key === active;
         const style: React.CSSProperties = {
           padding: "8px 2px", fontSize: 13, fontWeight: on ? 500 : 400, whiteSpace: "nowrap",
-          color: on ? V.ink : V.secondary, borderBottom: `2px solid ${on ? V.accent : "transparent"}`,
+          color: on ? V.ink : V.secondary, borderBottom: `1.5px solid ${on ? V.ink : "transparent"}`,
           marginBottom: -1, background: "none",
         };
         const content = (
           <>
             {it.label}
-            {it.count != null && <span style={{ fontSize: 11, color: V.tertiary, marginLeft: 3 }}>{it.count}</span>}
+            {it.count != null && <span style={{ fontFamily: V.meta, fontSize: 10.5, color: V.tertiary, marginLeft: 5 }}>{it.count}</span>}
           </>
         );
         if (it.href) {
@@ -96,15 +97,15 @@ export function Subnav({ items, active, onChange, label = "Secondary" }: {
 /** Uppercase section label (10.5–11px, letter-spacing 1px). */
 export function Label({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={className} style={{ fontSize: 12, color: V.tertiary, ...style }}>
+    <div className={className} style={{ fontFamily: V.meta, fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: V.tertiary, ...style }}>
       {children}
     </div>
   );
 }
 
 /** Quiet serif section heading ("What changed", "Needs you"). */
-export function SectionTitle({ children, size = 16, className = "" }: { children: React.ReactNode; size?: number; className?: string }) {
-  return <h2 className={className} style={{ fontFamily: V.serif, fontWeight: 400, fontSize: size, color: V.ink, margin: "0 0 6px", letterSpacing: "-0.1px" }}>{children}</h2>;
+export function SectionTitle({ children, size = 20, className = "" }: { children: React.ReactNode; size?: number; className?: string }) {
+  return <h2 className={className} style={{ fontFamily: V.serif, fontWeight: 400, fontSize: size, color: V.ink, margin: "0 0 8px", letterSpacing: "-0.012em", lineHeight: 1.2 }}>{children}</h2>;
 }
 
 export function Dot({ color, size = 6, className = "" }: { color: string; size?: number; className?: string }) {
@@ -149,7 +150,7 @@ export function Chevron({ size = 14 }: { size?: number }) {
 /** White card: 1px rgba(25,25,23,0.10) border, 8px radius, no shadow. */
 export function Card({ children, className = "", style, lift = false }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; lift?: boolean }) {
   return (
-    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 8, ...style }}>
+    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 6, boxShadow: "0 1px 2px rgba(18,20,24,0.04)", ...style }}>
       {children}
     </div>
   );
@@ -169,7 +170,7 @@ export function Button({ children, onClick, primary, disabled, type = "button", 
 }) {
   const cls = `${disabled ? "" : primary ? "btn-primary-v32" : "btn-secondary-v32"} inline-flex items-center justify-center gap-1.5 whitespace-nowrap ${className}`;
   const style: React.CSSProperties = {
-    padding: small ? "6px 12px" : "9px 14px", borderRadius: 6, fontSize: small ? 12 : 13, fontWeight: 400,
+    padding: small ? "6px 12px" : "9px 14px", borderRadius: 4, fontSize: small ? 12 : 13, fontWeight: 400,
     background: primary ? "#191917" : "transparent", color: primary ? "#F7F7F4" : V.body,
     border: `1px solid ${primary ? "#191917" : V.button}`, opacity: disabled ? 0.4 : 1, cursor: disabled ? "default" : "pointer",
   };
@@ -180,7 +181,7 @@ export function Button({ children, onClick, primary, disabled, type = "button", 
 /** Table header row (§12): surface-2, 11px uppercase, letter-spacing 0.5px. */
 export function TableHead({ columns, template, className = "" }: { columns: React.ReactNode[]; template: string; className?: string }) {
   return (
-    <div className={`hidden md:grid ${className}`} style={{ gridTemplateColumns: template, padding: "10px 14px", background: V.surface2, fontSize: 11, letterSpacing: 0, color: V.secondary }}>
+    <div className={`hidden md:grid ${className}`} style={{ gridTemplateColumns: template, padding: "10px 14px", background: V.surface2, fontFamily: V.meta, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: V.secondary }}>
       {columns.map((c, i) => <span key={i} style={{ textAlign: i === columns.length - 1 ? "right" : undefined }}>{c}</span>)}
     </div>
   );
@@ -190,7 +191,7 @@ export function TableHead({ columns, template, className = "" }: { columns: Reac
 export function RailSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <Label style={{ fontSize: 10.5, marginBottom: 8 }}>{label}</Label>
+      <Label style={{ marginBottom: 10 }}>{label}</Label>
       <div>{children}</div>
     </div>
   );
@@ -209,7 +210,7 @@ export function EntityRow({ type, name, relevance, metric, href, onClick }: {
   const inner = (
     <>
       <div className="flex-1 min-w-0">
-        <div style={{ fontSize: 10.5, letterSpacing: "0.6px", color: V.tertiary }}>{type}</div>
+        <div style={{ fontFamily: V.meta, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: V.tertiary }}>{type}</div>
         <div style={{ fontSize: 13.5, color: V.ink }}>{name}</div>
         {relevance && <div style={{ fontSize: 12, color: V.secondary }}>{relevance}</div>}
       </div>
@@ -270,6 +271,21 @@ export function ErrorBanner({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** An amount in its own currency: Indian grouping and ₹ for INR, the
+ *  international form for every other ISO code. Units that are not
+ *  currencies (days, %) are appended as written. */
+export function formatAmount(value: number, unit?: string | null): string {
+  if (!Number.isFinite(value)) return "";
+  if (unit === "INR") return `₹${Math.round(value).toLocaleString("en-IN")}`;
+  if (unit && /^[A-Z]{3}$/.test(unit)) {
+    try { return new Intl.NumberFormat("en-US", { style: "currency", currency: unit, maximumFractionDigits: 0 }).format(value); } catch { /* unknown code */ }
+    return `${unit} ${Math.round(value).toLocaleString("en-US")}`;
+  }
+  if (unit === "%") return `${value}%`;
+  if (unit && /days?/i.test(unit)) return `${value} ${value === 1 ? "day" : "days"}`;
+  return value.toLocaleString("en-US");
+}
+
 /** Relative time in the design's voice: "3m ago", "2h ago". */
 export function ago(iso: string | null | undefined): string {
   if (!iso) return "";
@@ -289,8 +305,8 @@ export function clockTime(iso: string | null | undefined): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   const today = new Date();
-  if (d.toDateString() === today.toDateString()) return d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  if (d.toDateString() === today.toDateString()) return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
 /** Icon tile: a soft square that gives a row a visual anchor. `tone` tints it
@@ -301,7 +317,7 @@ export function IconTile({ children, tone, size = 34 }: { children: React.ReactN
     : tone === "positive" ? { bg: "rgba(71,112,84,0.10)", fg: V.positive }
     : { bg: "#FFFFFF", fg: V.body };
   return (
-    <span aria-hidden="true" className="shrink-0 inline-flex items-center justify-center" style={{ width: size, height: size, borderRadius: 9, background: t.bg, color: t.fg, boxShadow: tone ? undefined : `inset 0 0 0 1px ${V.card}` }}>
+    <span aria-hidden="true" className="shrink-0 inline-flex items-center justify-center" style={{ width: size, height: size, borderRadius: 4, background: t.bg, color: t.fg, boxShadow: tone ? undefined : `inset 0 0 0 1px ${V.card}` }}>
       {children}
     </span>
   );
@@ -311,8 +327,8 @@ export function IconTile({ children, tone, size = 34 }: { children: React.ReactN
 export function Figure({ value, label, tone }: { value: React.ReactNode; label: React.ReactNode; tone?: string }) {
   return (
     <div className="min-w-0">
-      <div className="figure-in" style={{ fontFamily: V.serif, fontSize: 30, lineHeight: 1.05, color: tone || V.ink, fontVariantNumeric: "tabular-nums" }}>{value}</div>
-      <div style={{ fontSize: 12.5, color: V.secondary, marginTop: 4 }}>{label}</div>
+      <div className="figure-in" style={{ fontFamily: V.mono, fontWeight: 500, fontSize: 38, lineHeight: 1, letterSpacing: "-0.035em", color: tone || V.ink, fontVariantNumeric: "tabular-nums" }}>{value}</div>
+      <div style={{ fontFamily: V.meta, fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: V.secondary, marginTop: 10 }}>{label}</div>
     </div>
   );
 }

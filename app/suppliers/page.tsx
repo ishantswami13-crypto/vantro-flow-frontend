@@ -186,7 +186,7 @@ export default function SuppliersPage() {
                       <p className={outstanding > 0 ? "metric-value text-warning" : "metric-value text-success"}>
                         {fmtINR(outstanding)}
                       </p>
-                      <p className="text-2xs text-muted">{outstanding > 0 ? "dena hai" : "clear"}</p>
+                      <p className="text-2xs text-muted">{outstanding > 0 ? "you owe" : "clear"}</p>
                     </div>
                   </div>
 

@@ -67,7 +67,7 @@ export default function MissionPage() {
                 <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: GRAPHITE }}>Mission · Collections</span>
                 <span style={{ fontSize: 12, fontWeight: 600, color, background: "#F1F0EC", borderRadius: 999, padding: "3px 9px" }}>{label}</span>
               </div>
-              <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 30, fontWeight: 400, color: "#191917", margin: "10px 0 0" }}>{m.title}</h1>
+              <h1 style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 30, fontWeight: 400, color: "#191917", margin: "10px 0 0" }}>{m.title}</h1>
               <p className="v32-body" style={{ color: GRAPHITE, maxWidth: "70ch", marginTop: 8 }}>{m.objective}</p>
               {m.outcome ? <p style={{ margin: "8px 0 0", color }}>{m.outcome.text} Collected {inr(m.outcome.collected)} of {inr(m.outcome.target)}.</p> : null}
             </div>

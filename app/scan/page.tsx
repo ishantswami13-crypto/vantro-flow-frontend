@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { IconTile } from "@/components/v32/ui";
-import { IconPlus, IconUpload, IconLink, IconSparkle, IconRupee, IconMissions, IconSimulate, IconHistory } from "@/components/v32/icons";
+import { IconPlus, IconUpload, IconLink, IconSparkle, IconRanked, IconMissions, IconSimulate, IconHistory } from "@/components/v32/icons";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ScanFindings } from "@/components/os/ScanFindings";
 import { ScanComposer, businessNameFromStorage } from "@/components/scan/ScanComposer";
@@ -77,7 +77,7 @@ export default function ScanPage() {
     <DashboardLayout pageTitle="Scan">
       <div className="scan-stage" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: showFindings ? "flex-start" : "center", minHeight: showFindings ? undefined : "calc(100vh - 190px)", padding: showFindings ? "32px 0 8px" : "24px 0", boxSizing: "border-box" }}>
         <div className="fade-once" style={{ width: 720, maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <h1 className="scan-greeting" style={{ margin: "0 0 26px 0", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, color: "#191917", textAlign: "center" }}>
+          <h1 className="scan-greeting" style={{ margin: "0 0 26px 0", fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, color: "#191917", textAlign: "center" }}>
             {getGreeting()}, {ownerName}
           </h1>
 
@@ -122,7 +122,7 @@ export default function ScanPage() {
                     <IconTile size={32}>{w.icon}</IconTile>
                     <span className="flex flex-col min-w-0">
                       <span style={{ fontSize: 13, color: "#191917" }}>{w.title}</span>
-                      <span style={{ fontSize: 11.5, color: "#8A8A86", marginTop: 2 }}>{w.hint}</span>
+                      <span style={{ fontSize: 11.5, color: "#6E6E69", marginTop: 2 }}>{w.hint}</span>
                     </span>
                   </>
                 );
@@ -134,7 +134,7 @@ export default function ScanPage() {
           )}
 
           {error && <p role="alert" style={{ fontSize: 12.5, color: "#A64F4B", marginTop: 14 }}>{error}</p>}
-          <div className="flex items-center justify-center" style={{ gap: 14, marginTop: 20, fontSize: 11.5, color: "#8A8A86" }}>
+          <div className="flex items-center justify-center" style={{ gap: 14, marginTop: 20, fontSize: 11.5, color: "#6E6E69" }}>
             <span>Starlane answers only from your connected data.</span>
             {hasHistory && (
               <Link href="/scan/history" className="inline-flex items-center hover:text-[#191917]" style={{ gap: 5, color: "#63635F" }}>
@@ -160,7 +160,7 @@ function MenuItem({ icon, title, hint, onClick }: { icon: React.ReactNode; title
       <span className="scan-menu-icon">{icon}</span>
       <span className="flex flex-col text-left min-w-0">
         <span style={{ fontSize: 13, color: "#191917" }}>{title}</span>
-        <span style={{ fontSize: 11.5, color: "#8A8A86" }}>{hint}</span>
+        <span style={{ fontSize: 11.5, color: "#6E6E69" }}>{hint}</span>
       </span>
     </button>
   );
@@ -171,7 +171,7 @@ function MenuItem({ icon, title, hint, onClick }: { icon: React.ReactNode; title
 // the product cannot keep.
 type Workflow = { title: string; hint: string; icon: React.ReactNode } & ({ ask: string } | { href: string });
 const WORKFLOWS: Workflow[] = [
-  { title: "Who owes us the most?", hint: "Ranked from your invoices", icon: <IconRupee size={15} />, ask: "Who owes us the most?" },
+  { title: "Who owes us the most?", hint: "Ranked from your invoices", icon: <IconRanked size={15} />, ask: "Who owes us the most?" },
   { title: "Chase overdue invoices", hint: "Start a collections mission", icon: <IconMissions size={15} />, href: "/missions/new" },
   { title: "Forecast cash", hint: "Simulate the next weeks", icon: <IconSimulate size={15} />, href: "/simulate" },
   { title: "Import invoices", hint: "From a sheet or Tally export", icon: <IconUpload size={15} />, href: "/decisions/import" },

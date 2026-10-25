@@ -200,9 +200,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         aria-current={active ? "page" : undefined}
         className={`flex items-center ${active ? "" : "hover-fade"}`}
         style={{
-          gap: 10, padding: "8px 8px", borderRadius: 7, fontSize: 13, lineHeight: "16px",
-          background: active ? "rgba(255,255,255,0.09)" : "transparent",
-          color: active ? "#F5F4F0" : "#9A9993",
+          position: "relative", gap: 11, padding: "8px 10px", borderRadius: 4, fontSize: 13.5, lineHeight: "16px",
+          background: active ? "rgba(255,255,255,0.06)" : "transparent",
+          boxShadow: active ? "inset 2px 0 0 #E8E9EB" : undefined,
+          color: active ? "#E8E9EB" : "#9AA0A8",
         }}
       >
         <Icon size={16} />
@@ -230,12 +231,13 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           "lg:translate-x-0 lg:static lg:z-30",
           open ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
-        style={{ width: 264, flexShrink: 0, boxSizing: "border-box", background: "#141412", borderRight: "1px solid rgba(255,255,255,0.06)", padding: "22px 16px" }}
+        style={{ width: 248, flexShrink: 0, boxSizing: "border-box", background: "#0B0D10", borderRight: "1px solid #1C2127", padding: "20px 14px" }}
       >
         {/* Wordmark, notifications, search */}
         <div className="flex items-center justify-between shrink-0" style={{ padding: "4px 8px 22px 8px" }}>
-          <Link href="/bridge" onClick={onClose} aria-label="Starlane — The Bridge" className="flex items-baseline" style={{ color: "#F5F4F0" }}>
-            <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 20, fontWeight: 400, letterSpacing: "-0.3px", color: "#F5F4F0" }}>Starlane</span>
+          <Link href="/bridge" onClick={onClose} aria-label="Starlane — The Bridge" className="flex items-center" style={{ gap: 9, color: "#E8E9EB" }}>
+            <span aria-hidden="true" className="inline-flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 4, background: "#E8E9EB", color: "#0B0D10", fontFamily: "'Newsreader', Georgia, serif", fontSize: 15, lineHeight: 1 }}>S</span>
+            <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em", color: "#E8E9EB" }}>Starlane</span>
           </Link>
           <div className="flex items-center" style={{ gap: 4 }}>
             {/* The dot is the pending follow-up count, so the bell opens them. */}
@@ -245,7 +247,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               aria-label={pendingCount ? `${pendingCount} pending follow-up${pendingCount === 1 ? "" : "s"}` : "Follow-ups"}
               title={pendingCount ? `${pendingCount} pending follow-up${pendingCount === 1 ? "" : "s"}` : "Follow-ups"}
               className="hover-fade relative flex items-center justify-center"
-              style={{ width: 26, height: 26, borderRadius: 6, color: "#8A8A86" }}
+              style={{ width: 26, height: 26, borderRadius: 6, color: "#868D97" }}
             >
               <IconBell size={15} />
               {pendingCount !== null && pendingCount > 0 && (
@@ -257,11 +259,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               aria-label="Search Starlane (Ctrl+K)"
               title="Search (Ctrl+K)"
               className="hover-fade flex items-center justify-center"
-              style={{ width: 26, height: 26, borderRadius: 6, color: "#8A8A86" }}
+              style={{ width: 26, height: 26, borderRadius: 6, color: "#868D97" }}
             >
               <IconSearch size={14} />
             </button>
-            <button aria-label="Close menu" onClick={onClose} className="lg:hidden hover-fade flex items-center justify-center" style={{ width: 26, height: 26, borderRadius: 6, color: "#8A8A86" }}>
+            <button aria-label="Close menu" onClick={onClose} className="lg:hidden hover-fade flex items-center justify-center" style={{ width: 26, height: 26, borderRadius: 6, color: "#868D97" }}>
               <FiX size={14} />
             </button>
           </div>
@@ -281,9 +283,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               aria-expanded={moreOpen}
               className={`flex items-center w-full text-left ${isMoreActive ? "" : "hover-fade"}`}
               style={{
-                gap: 10, padding: "8px 8px", borderRadius: 7, fontSize: 13, lineHeight: "16px",
-                background: isMoreActive || moreOpen ? "rgba(255,255,255,0.09)" : "transparent",
-                color: isMoreActive || moreOpen ? "#F5F4F0" : "#9A9993",
+                gap: 11, padding: "8px 10px", borderRadius: 4, fontSize: 13.5, lineHeight: "16px",
+                background: isMoreActive || moreOpen ? "rgba(255,255,255,0.06)" : "transparent",
+                boxShadow: isMoreActive ? "inset 2px 0 0 #E8E9EB" : undefined,
+                color: isMoreActive || moreOpen ? "#E8E9EB" : "#9AA0A8",
               }}
             >
               <IconMore size={16} />
@@ -293,7 +296,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
           {recent.length > 0 && (
             <nav aria-label="Recent conversations" className="flex flex-col" style={{ gap: 1, marginTop: 22 }}>
-              <p style={{ padding: "0 8px 6px", fontSize: 11.5, color: "#63635F" }}>Recent</p>
+              <p style={{ padding: "0 10px 8px", fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "#868D97" }}>Recent</p>
               {recent.map(t => {
                 const active = pathname === `/scan/${t.id}`;
                 return (
@@ -304,7 +307,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     aria-current={active ? "page" : undefined}
                     title={t.title}
                     className={`truncate ${active ? "" : "hover-fade"}`}
-                    style={{ display: "block", padding: "6px 8px", borderRadius: 7, fontSize: 12.5, color: active ? "#F5F4F0" : "#8A8A86", background: active ? "rgba(255,255,255,0.09)" : "transparent" }}
+                    style={{ display: "block", padding: "6px 10px", borderRadius: 4, fontSize: 12.5, color: active ? "#E8E9EB" : "#868D97", background: active ? "rgba(255,255,255,0.06)" : "transparent" }}
                   >
                     {t.title}
                   </Link>
@@ -318,19 +321,19 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               ref={moreRef}
               className="fixed z-40 overflow-hidden pop-in"
               style={{
-                left: typeof window !== "undefined" && window.innerWidth < 600 ? 12 : 252,
+                left: typeof window !== "undefined" && window.innerWidth < 600 ? 12 : 236,
                 top: Math.max(12, (moreBtnRef.current?.getBoundingClientRect().top ?? 0) - 120),
                 width: 272,
                 maxHeight: "72vh",
-                background: "#1B1B18",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 10,
+                background: "#111419",
+                border: "1px solid #272D35",
+                borderRadius: 6,
                 boxShadow: "0 12px 32px rgba(0,0,0,0.35)",
               }}
             >
               <div className="overflow-y-auto" style={{ maxHeight: "72vh", padding: 8 }}>
                 <div style={{ marginBottom: 10 }}>
-                  <p style={{ padding: "4px 8px", fontSize: 10.5, letterSpacing: 0, color: "#63635F" }}>Workspace</p>
+                  <p style={{ padding: "4px 8px", fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "#868D97" }}>Workspace</p>
                   {V32_WORKSPACE_NAV_ITEMS.map(({ href, label, icon: Icon }) => {
                     const active = isActive(href) || (href === "/prepared" && pathname.startsWith("/decisions"));
                     return (
@@ -339,7 +342,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                         href={href}
                         onClick={() => { setMoreOpen(false); onClose(); }}
                         className={`flex items-center ${active ? "" : "hover-fade"}`}
-                        style={{ height: 32, padding: "0 8px", gap: 9, borderRadius: 6, fontSize: 13, background: active ? "rgba(255,255,255,0.09)" : "transparent", color: active ? "#F5F4F0" : "#B9B8B2" }}
+                        style={{ height: 32, padding: "0 8px", gap: 9, borderRadius: 6, fontSize: 13, background: active ? "rgba(255,255,255,0.09)" : "transparent", color: active ? "#F5F4F0" : "#A3A9B2" }}
                       >
                         <Icon size={15} />
                         <span className="flex-1 truncate">{label}</span>
@@ -352,7 +355,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                   if (visibleItems.length === 0) return null;
                   return (
                     <div key={label} style={{ marginBottom: 10 }}>
-                      <p style={{ padding: "4px 8px", fontSize: 10.5, letterSpacing: 0, color: "#63635F" }}>{label}</p>
+                      <p style={{ padding: "4px 8px", fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "#868D97" }}>{label}</p>
                       {visibleItems.map(({ href, label: itemLabel, badge }) => {
                         const active = isActive(href);
                         const liveBadge = badge === "live" && pendingCount !== null && pendingCount > 0 ? String(pendingCount) : null;
@@ -362,10 +365,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                             href={href}
                             onClick={() => { setMoreOpen(false); onClose(); }}
                             className={`flex items-center ${active ? "" : "hover-fade"}`}
-                            style={{ height: 32, padding: "0 8px", gap: 8, borderRadius: 6, fontSize: 13, background: active ? "rgba(255,255,255,0.09)" : "transparent", color: active ? "#F5F4F0" : "#B9B8B2" }}
+                            style={{ height: 32, padding: "0 8px", gap: 8, borderRadius: 6, fontSize: 13, background: active ? "rgba(255,255,255,0.09)" : "transparent", color: active ? "#F5F4F0" : "#A3A9B2" }}
                           >
                             <span className="flex-1 truncate">{itemLabel}</span>
-                            {liveBadge && <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#8A8A86" }}>{liveBadge}</span>}
+                            {liveBadge && <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#868D97" }}>{liveBadge}</span>}
                           </Link>
                         );
                       })}
@@ -373,7 +376,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                   );
                 })}
                 {isAdmin && (
-                  <Link href="/admin" onClick={() => { setMoreOpen(false); onClose(); }} className="hover-fade flex items-center" style={{ height: 32, padding: "0 8px", borderRadius: 6, fontSize: 13, color: "#B9B8B2" }}>
+                  <Link href="/admin" onClick={() => { setMoreOpen(false); onClose(); }} className="hover-fade flex items-center" style={{ height: 32, padding: "0 8px", borderRadius: 6, fontSize: 13, color: "#A3A9B2" }}>
                     Admin
                   </Link>
                 )}
@@ -391,7 +394,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             style={{ gap: 10, padding: "10px 8px 4px 8px", borderTop: "1px solid rgba(255,255,255,0.08)", marginTop: 8, borderRadius: 0 }}
           >
             <IdentityAvatar name={userName} size={26} />
-            <span className="truncate" style={{ fontSize: 13, color: "#B9B8B2" }}>{userName}</span>
+            <span className="truncate" style={{ fontSize: 13, color: "#A3A9B2" }}>{userName}</span>
           </button>
 
           {accountOpen && (
@@ -405,14 +408,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 { href: "/settings?tab=profile", label: "Profile", Icon: FiUser },
                 { href: "/settings?tab=preferences", label: "Preferences", Icon: FiSliders },
               ].map(({ href, label, Icon }) => (
-                <Link key={href} href={href} onClick={onClose} className="hover-fade flex items-center" style={{ gap: 8, height: 36, padding: "0 12px", fontSize: 13, color: "#B9B8B2" }}>
+                <Link key={href} href={href} onClick={onClose} className="hover-fade flex items-center" style={{ gap: 8, height: 36, padding: "0 12px", fontSize: 13, color: "#A3A9B2" }}>
                   <Icon size={13} /> {label}
                 </Link>
               ))}
-              <button onClick={() => { setAccountOpen(false); setShortcutsOpen(true); }} className="hover-fade flex items-center w-full" style={{ gap: 8, height: 36, padding: "0 12px", fontSize: 13, color: "#B9B8B2" }}>
+              <button onClick={() => { setAccountOpen(false); setShortcutsOpen(true); }} className="hover-fade flex items-center w-full" style={{ gap: 8, height: 36, padding: "0 12px", fontSize: 13, color: "#A3A9B2" }}>
                 <FiCommand size={13} /> Keyboard shortcuts
               </button>
-              <button onClick={handleLogout} className="hover-fade flex items-center w-full" style={{ gap: 8, height: 36, padding: "0 12px", fontSize: 13, color: "#B9B8B2", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <button onClick={handleLogout} className="hover-fade flex items-center w-full" style={{ gap: 8, height: 36, padding: "0 12px", fontSize: 13, color: "#A3A9B2", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                 <FiLogOut size={13} /> Sign out
               </button>
             </div>
@@ -433,7 +436,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           >
             <div className="flex items-center justify-between px-4" style={{ height: "48px", borderBottom: "1px solid #EDEDE9" }}>
               <p className="text-sm font-medium" style={{ color: "#171717" }}>Keyboard shortcuts</p>
-              <button onClick={() => setShortcutsOpen(false)} aria-label="Close" style={{ color: "#8A8A86" }}><FiX size={16} /></button>
+              <button onClick={() => setShortcutsOpen(false)} aria-label="Close" style={{ color: "#868D97" }}><FiX size={16} /></button>
             </div>
             <div className="p-4 space-y-2.5">
               {[
@@ -444,7 +447,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               ].map(s => (
                 <div key={s.keys} className="flex items-center justify-between">
                   <span className="text-sm" style={{ color: "#686868" }}>{s.desc}</span>
-                  <kbd className="text-[11px] px-1.5 py-0.5 rounded font-mono" style={{ color: "#8A8A86", background: "#F2F2EE" }}>{s.keys}</kbd>
+                  <kbd className="text-[11px] px-1.5 py-0.5 rounded font-mono" style={{ color: "#6E6E69", background: "#F2F2EE" }}>{s.keys}</kbd>
                 </div>
               ))}
             </div>

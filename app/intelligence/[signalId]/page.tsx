@@ -48,7 +48,7 @@ function Breadcrumb({ router, title }: { router: ReturnType<typeof useRouter>; t
       type="button"
       onClick={() => router.push("/intelligence")}
       className="block text-left text-[12px] mb-2 hover:underline"
-      style={{ color: "#8A8A86" }}
+      style={{ color: "#6E6E69" }}
     >
       Intelligence / {title}
     </button>
@@ -64,7 +64,7 @@ function Turn({ label, className = "", children }: { label: string; className?: 
         <span
           aria-hidden="true"
           className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px]"
-          style={{ background: "#191917", color: "#F5F4F0", fontFamily: "'Fraunces', Georgia, serif" }}
+          style={{ background: "#191917", color: "#F5F4F0", fontFamily: "'Newsreader', Georgia, serif" }}
         >
           S
         </span>
@@ -78,9 +78,9 @@ function Turn({ label, className = "", children }: { label: string; className?: 
 function Fact({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "danger" }) {
   return (
     <div className="px-4 py-3.5 [&:not(:last-child)]:border-r border-b sm:border-b-0" style={{ borderColor: "#EBEAE6" }}>
-      <dt className="text-[11.5px]" style={{ color: "#8A8A86" }}>{label}</dt>
+      <dt className="text-[11.5px]" style={{ color: "#6E6E69" }}>{label}</dt>
       <dd className="text-[19px] leading-tight mt-1" style={{ color: tone === "danger" ? "#A64F4B" : "#191917", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>{value}</dd>
-      {sub && <dd className="text-[11px] mt-0.5 truncate" style={{ color: "#8A8A86" }}>{sub}</dd>}
+      {sub && <dd className="text-[11px] mt-0.5 truncate" style={{ color: "#6E6E69" }}>{sub}</dd>}
     </div>
   );
 }
@@ -167,7 +167,7 @@ export default function SignalImpactPage() {
             type="button"
             onClick={() => router.push("/intelligence")}
             className="inline-flex items-center gap-1.5 text-[12px] mb-4 focus-ring rounded"
-            style={{ color: "#8A8A86" }}
+            style={{ color: "#6E6E69" }}
           >
             <FiArrowLeft size={12} /> Back to Intelligence
           </button>
@@ -274,7 +274,7 @@ export default function SignalImpactPage() {
                           style={{ border: `1px solid ${selected ? "#191917" : "#E5E4DF"}`, color: "#191917", background: selected ? "#FFFFFF" : "transparent" }}
                         >
                           <span className="font-medium">{c.component.name}</span>
-                          <span className="ml-2" style={{ color: "#8A8A86", fontVariantNumeric: "tabular-nums" }}>{formatINR(c.revenueExposure.totalRevenueExposure)}</span>
+                          <span className="ml-2" style={{ color: "#6E6E69", fontVariantNumeric: "tabular-nums" }}>{formatINR(c.revenueExposure.totalRevenueExposure)}</span>
                         </button>
                       );
                     })}
@@ -282,7 +282,7 @@ export default function SignalImpactPage() {
                 )}
                 <CausalChain impact={impact} component={primaryComponent} citations={citations} onCite={onCite} />
                 {impact.signal.rule_explanation && (
-                  <p className="text-[12.5px] mt-5 pl-9 italic" style={{ color: "#8A8A86" }}>Rule applied: {impact.signal.rule_explanation}</p>
+                  <p className="text-[12.5px] mt-5 pl-9 italic" style={{ color: "#6E6E69" }}>Rule applied: {impact.signal.rule_explanation}</p>
                 )}
               </div>
             </details>
@@ -292,7 +292,7 @@ export default function SignalImpactPage() {
                 rows on every page view. */}
             {!actions && !predictions && (
               <div className="mt-10">
-                <p className="text-[12px] mb-2.5" style={{ color: "#8A8A86" }}>Next step</p>
+                <p className="text-[12px] mb-2.5" style={{ color: "#6E6E69" }}>Next step</p>
                 <button
                   type="button"
                   onClick={() => analyzeMutation.mutate()}
@@ -304,7 +304,7 @@ export default function SignalImpactPage() {
                     <span className="block text-[14.5px] font-medium" style={{ color: "#191917" }}>
                       {analyzeMutation.isPending ? "Forecasting and ranking options…" : "Forecast this and recommend what to do"}
                     </span>
-                    <span className="block text-[12.5px] mt-0.5" style={{ color: "#8A8A86" }}>
+                    <span className="block text-[12.5px] mt-0.5" style={{ color: "#6E6E69" }}>
                       Runs Starlane's deterministic forecast and ranks interventions for {components.length > 1 ? "each part" : primaryComponent.component.name}.
                     </span>
                   </span>

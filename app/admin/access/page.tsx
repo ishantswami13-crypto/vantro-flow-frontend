@@ -21,7 +21,7 @@ const NEXT: Record<Status, Status[]> = {
 };
 const VERB: Record<Status, string> = { submitted: "Submit", reviewing: "Start review", approved: "Approve", waitlisted: "Waitlist", rejected: "Reject", expired: "Expire access" };
 const TIER_COLOR = { ready: "#477054", review: "#8A5A12", unsupported: "#A64F4B", waitlist: "#63635F" } as const;
-const INK = "#191917", SOFT = "#63635F", FAINT = "#8A8A86", LINE = "#EBEAE6";
+const INK = "#191917", SOFT = "#63635F", FAINT = "#6E6E69", LINE = "#EBEAE6";
 const fmt = (d: string) => new Date(d).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 export default function AccessReviewPage() {
@@ -125,7 +125,7 @@ export default function AccessReviewPage() {
             <section aria-label={`Application from ${selected.company}`} style={{ background: "#fff", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 20, display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 16, overflowWrap: "anywhere" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                 <div>
-                  <h2 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 21, color: INK }}>{selected.company}</h2>
+                  <h2 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 21, color: INK }}>{selected.company}</h2>
                   <p style={{ margin: "4px 0 0", fontSize: 12.5, color: SOFT }}>{selected.name} · {selected.role} · <a href={`mailto:${selected.email}`} style={{ color: SOFT }}>{selected.email}</a>{selected.website ? <> · <a href={selected.website} target="_blank" rel="noopener noreferrer" style={{ color: SOFT }}>{selected.website.replace(/^https?:\/\//, "")}</a></> : null}</p>
                 </div>
                 <button type="button" onClick={() => setSelected(null)} aria-label="Close" style={{ background: "none", border: "none", fontSize: 20, color: SOFT, cursor: "pointer" }}>×</button>

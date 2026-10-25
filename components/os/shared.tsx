@@ -9,10 +9,10 @@ import { DecisionApiError } from "@/lib/decisions";
 
 export function Panel({ title, subtitle, right, children }: { title: string; subtitle?: React.ReactNode; right?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg fade-once" style={{ background: "#FFFFFF", border: `1px solid ${C.card}`, padding: "20px 22px" }}>
+    <section className="fade-once" style={{ background: "#FFFFFF", border: `1px solid ${C.card}`, borderRadius: 6, boxShadow: "0 1px 2px rgba(18,20,24,0.04)", padding: "22px 24px" }}>
       <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
         <div style={{ minWidth: 0 }}>
-          <h2 style={{ color: C.ink, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 17, letterSpacing: "-0.2px", margin: 0 }}>{title}</h2>
+          <h2 style={{ color: C.ink, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 20, letterSpacing: "-0.012em", margin: 0 }}>{title}</h2>
           {subtitle && <p className="text-[12.5px] mt-1 leading-[1.55]" style={{ color: C.muted }}>{subtitle}</p>}
         </div>
         {right}
@@ -29,7 +29,7 @@ export function Btn({ children, onClick, primary, danger, disabled, type = "butt
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`text-[12.5px] rounded-md px-3 py-[6px] whitespace-nowrap ${disabled ? "" : primary ? "btn-primary-v32" : "btn-secondary-v32"}`}
+      className={`text-[12.5px] rounded-[4px] px-3 py-[6px] whitespace-nowrap ${disabled ? "" : primary ? "btn-primary-v32" : "btn-secondary-v32"}`}
       style={{
         fontWeight: 400,
         cursor: disabled ? "default" : "pointer",

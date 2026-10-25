@@ -14,17 +14,13 @@ import { TodaySummary } from "@/components/os/TodaySummary";
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
 const EXP_CATS = ["transport","fuel","salary","material","rent","electricity","maintenance","marketing","misc"];
-const CAT_EMOJI: Record<string,string> = {
-  transport:"🚚", fuel:"⛽", salary:"👷", material:"📦", rent:"🏠",
-  electricity:"💡", maintenance:"🔧", marketing:"📣", misc:"💸",
-};
 
 function fmtINR(n: number, short = false) {
   if (short && n >= 100000) return "₹" + (n/100000).toFixed(1) + "L";
   if (short && n >= 1000)   return "₹" + (n/1000).toFixed(0) + "K";
   return "₹" + Number(n).toLocaleString("en-IN");
 }
-// Local calendar date (IST for Indian users), not the UTC date.
+// Local calendar date in the browser's time zone, not the UTC date.
 function localIso(dt: Date) { return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`; }
 function todayStr() { return localIso(new Date()); }
 // Older order rows hold items as a JSON string; never let that crash the page.
@@ -39,12 +35,12 @@ function fmtDateFull(d: string) {
   const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
   const isYday    = d === localIso(yesterday);
   const label     = isToday ? "Today" : isYday ? "Yesterday" : "";
-  const weekday   = dt.toLocaleDateString("en-IN", { weekday: "long" });
-  const dayMonth  = dt.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  const weekday   = dt.toLocaleDateString("en-GB", { weekday: "long" });
+  const dayMonth  = dt.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
   return { label, weekday, dayMonth };
 }
 function fmtTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" });
+  return new Date(iso).toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit" });
 }
 function addDays(d: string, n: number) {
   const dt = new Date(d + "T00:00:00");
@@ -170,14 +166,14 @@ export default function TodayPage() {
           </button>
 
           {/* Date display — click to open native picker */}
-          <button onClick={() => dateInputRef.current?.showPicker?.() || dateInputRef.current?.click()}
-            className="relative flex items-center gap-3 px-4 py-2.5 rounded-xl bg-surface-2 border border-border hover:border-accent/40 transition-all group">
+          <label onClick={(e) => { e.preventDefault(); try { dateInputRef.current?.showPicker?.(); } catch { dateInputRef.current?.focus(); } }}
+            className="relative cursor-pointer flex items-center gap-3 px-4 py-2.5 rounded-xl bg-surface-2 border border-border hover:border-accent/40 transition-all group">
             <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
               <FiCalendar size={14} className="text-accent" />
             </div>
             <div className="text-left">
-              {label && <p className="text-2xs font-bold text-accent uppercase tracking-wider leading-none mb-0.5">{label} · {weekday}</p>}
-              {!label && <p className="text-2xs font-bold text-muted uppercase tracking-wider leading-none mb-0.5">{weekday}</p>}
+              {label && <p className="meta text-primary uppercase tracking-wider leading-none mb-0.5">{label} · {weekday}</p>}
+              {!label && <p className="meta text-muted uppercase tracking-wider leading-none mb-0.5">{weekday}</p>}
               <p className="text-sm font-bold text-primary leading-none">{dayMonth}</p>
             </div>
             <FiChevronDown size={12} className="text-muted group-hover:text-secondary transition-colors ml-1" />
@@ -185,8 +181,8 @@ export default function TodayPage() {
             <input ref={dateInputRef} type="date" value={date}
               onChange={e => changeDate(e.target.value)}
               className="absolute inset-0 opacity-0 w-full cursor-pointer"
-              style={{ colorScheme:"dark" }} />
-          </button>
+              aria-label="Pick a date" style={{ colorScheme:"light" }} />
+          </label>
 
           {/* Next day — disabled if today */}
           <button aria-label="Next" onClick={() => changeDate(addDays(date,1))}
@@ -235,7 +231,7 @@ export default function TodayPage() {
             <p style={{ fontSize: 11, letterSpacing: "1px", textTransform: "uppercase", color: "#63635F", marginBottom: 4 }}>
               Net money {isProfit ? "in" : "out"} {isToday ? "today" : "on this day"}
             </p>
-            <p style={{ fontSize: 12, color: "#8A8A86", marginBottom: 10 }}>
+            <p style={{ fontSize: 12, color: "#6E6E69", marginBottom: 10 }}>
               Sales booked and payments received, minus expenses and purchases. This is not profit: it has no cost of goods.
             </p>
             <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 34, color: isProfit ? "#477054" : "#A64F4B", marginBottom: 18, lineHeight: 1 }}>
@@ -260,7 +256,7 @@ export default function TodayPage() {
           <div className="flex items-center flex-wrap mb-5" style={{ gap: 10, fontSize: 13, color: "#43433F" }}>
             {[
               { label: "delivered", value: s?.orders_by_status?.delivered || 0, color: "#477054" },
-              { label: "pending", value: (s?.orders_by_status?.new || 0) + (s?.orders_by_status?.confirmed || 0) + (s?.orders_by_status?.dispatched || 0), color: "#9B742B" },
+              { label: "pending", value: (s?.orders_by_status?.new || 0) + (s?.orders_by_status?.confirmed || 0) + (s?.orders_by_status?.dispatched || 0), color: "#8C6826" },
               { label: "calls", value: s?.calls_made || 0, color: "var(--accent)" },
               { label: "cancelled", value: s?.orders_by_status?.cancelled || 0, color: "#A64F4B" },
             ].map((stat, i) => (
@@ -287,7 +283,7 @@ export default function TodayPage() {
           {tab==="overview" && (
             <div className="space-y-4">
               <div className="card-premium p-4">
-                <p className="text-2xs font-bold text-muted uppercase tracking-wider mb-3">Money in, by source</p>
+                <p className="meta text-muted uppercase tracking-wider mb-3">Money in, by source</p>
                 <div className="space-y-3">
                   {[
                     { icon: FiShoppingBag, label:"Orders booked",       color:"#0066FF", value: s?.income?.orders   || 0 },
@@ -315,11 +311,11 @@ export default function TodayPage() {
 
               {expenses > 0 && s?.expenses?.by_category && (
                 <div className="card-premium p-4">
-                  <p className="text-2xs font-bold text-muted uppercase tracking-wider mb-3">Expense Breakdown</p>
+                  <p className="meta text-muted uppercase tracking-wider mb-3">Expense breakdown</p>
                   <div className="space-y-2">
                     {Object.entries(s.expenses.by_category as Record<string,number>).map(([cat, amt]) => (
                       <div key={cat} className="flex items-center justify-between">
-                        <span className="text-sm text-secondary">{CAT_EMOJI[cat]||"💸"} {cat.charAt(0).toUpperCase()+cat.slice(1)}</span>
+                        <span className="text-sm text-secondary"><span className="sq" aria-hidden="true" style={{ color: "#A64F4B", marginRight: 8, verticalAlign: "middle" }} />{cat.charAt(0).toUpperCase()+cat.slice(1)}</span>
                         <span className="font-semibold text-danger text-sm">-{fmtINR(amt as number)}</span>
                       </div>
                     ))}
@@ -340,7 +336,7 @@ export default function TodayPage() {
 
               {(summary?.paid_invoices||[]).length > 0 && (
                 <div className="card-premium p-4 border-success/20 bg-success/5">
-                  <p className="text-2xs font-bold text-success uppercase tracking-wider mb-3">🎉 Invoices Collected Today</p>
+                  <p className="meta text-success uppercase tracking-wider mb-3">Invoices collected today</p>
                   <div className="space-y-2">
                     {summary.paid_invoices.map((inv: any) => (
                       <div key={inv.id} className="flex items-center justify-between">
@@ -459,9 +455,7 @@ export default function TodayPage() {
                   </div>
                   {(summary?.expenses||[]).map((exp: any) => (
                     <div key={exp.id} className="card-premium p-4 flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-danger/10 border border-danger/20 flex items-center justify-center shrink-0 text-lg">
-                        {CAT_EMOJI[exp.category]||"💸"}
-                      </div>
+                      <span className="sq shrink-0" aria-hidden="true" style={{ color: "#A64F4B" }} />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-primary text-sm">{exp.description}</p>
                         <div className="flex items-center gap-2 mt-0.5">
@@ -495,23 +489,23 @@ export default function TodayPage() {
             </div>
             <form onSubmit={addExpense} className="space-y-3">
               <div>
-                <label className="text-2xs text-muted font-semibold block mb-1.5 uppercase tracking-wider">Kya tha? *</label>
+                <label className="meta text-muted block mb-1.5 uppercase tracking-wider">What was it? *</label>
                 <input required value={expForm.description} onChange={e => setExpForm(f=>({...f, description:e.target.value}))}
                   className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent"
                   placeholder="Petrol, driver salary, material…" autoFocus />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-2xs text-muted font-semibold block mb-1.5 uppercase tracking-wider">Amount (₹) *</label>
+                  <label className="meta text-muted block mb-1.5 uppercase tracking-wider">Amount (₹) *</label>
                   <input required type="number" value={expForm.amount} onChange={e => setExpForm(f=>({...f, amount:e.target.value}))}
                     className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent"
                     placeholder="500" min="0" />
                 </div>
                 <div>
-                  <label className="text-2xs text-muted font-semibold block mb-1.5 uppercase tracking-wider">Category</label>
+                  <label className="meta text-muted block mb-1.5 uppercase tracking-wider">Category</label>
                   <select value={expForm.category} onChange={e => setExpForm(f=>({...f, category:e.target.value}))}
                     className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent">
-                    {EXP_CATS.map(c => <option key={c} value={c}>{CAT_EMOJI[c]} {c}</option>)}
+                    {EXP_CATS.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
@@ -539,19 +533,19 @@ export default function TodayPage() {
             </div>
             <form onSubmit={addSale} className="space-y-3">
               <div>
-                <label className="text-2xs text-muted font-semibold block mb-1.5 uppercase tracking-wider">Customer Name *</label>
+                <label className="meta text-muted block mb-1.5 uppercase tracking-wider">Customer name *</label>
                 <input required value={saleForm.customer_name} onChange={e => setSaleForm(f=>({...f, customer_name:e.target.value}))}
                   className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent"
-                  placeholder="Ramesh ji, Patel Traders…" autoFocus />
+                  placeholder="Customer name" autoFocus />
               </div>
               <div>
-                <label className="text-2xs text-muted font-semibold block mb-1.5 uppercase tracking-wider">Amount (₹) *</label>
+                <label className="meta text-muted block mb-1.5 uppercase tracking-wider">Amount (₹) *</label>
                 <input required type="number" value={saleForm.amount} onChange={e => setSaleForm(f=>({...f, amount:e.target.value}))}
                   className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent"
                   placeholder="15000" min="0" />
               </div>
               <div>
-                <label className="text-2xs text-muted font-semibold block mb-1.5 uppercase tracking-wider">Kya becha</label>
+                <label className="meta text-muted block mb-1.5 uppercase tracking-wider">Kya becha</label>
                 <input value={saleForm.description} onChange={e => setSaleForm(f=>({...f, description:e.target.value}))}
                   className="w-full bg-surface-2 border border-border rounded-xl text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent"
                   placeholder="5 truck bajri, 2 bag cement, cloth…" />

@@ -723,12 +723,12 @@
   --font-body: 'Geist', 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 .atlas-page.auth-page .brand-wm {
-  font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: 20px;
+  font-family: 'Newsreader', Georgia, serif; font-weight: 400; font-size: 20px;
   letter-spacing: -0.3px; text-transform: none; color: #F5F4F0;
 }
 .atlas-page.auth-page .auth-head h1,
 .atlas-page.auth-page .step-head h2 {
-  font-family: 'Fraunces', Georgia, serif; font-weight: 400;
+  font-family: 'Newsreader', Georgia, serif; font-weight: 400;
   letter-spacing: -0.01em;
 }
 .atlas-page.auth-page .field input,

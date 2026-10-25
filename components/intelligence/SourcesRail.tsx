@@ -9,7 +9,7 @@ import type { IntelligenceEvidenceItem } from "@/lib/api";
 export function SourcesRail({ evidence, highlighted }: { evidence: IntelligenceEvidenceItem[]; highlighted: number | null }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase mb-3" style={{ color: "#8A8A86", letterSpacing: "0.08em" }}>
+      <p className="text-[11px] font-semibold uppercase mb-3" style={{ color: "#6E6E69", letterSpacing: "0.08em" }}>
         Sources · {evidence.length}
       </p>
       <ol className="space-y-1.5">
@@ -35,7 +35,7 @@ export function SourcesRail({ evidence, highlighted }: { evidence: IntelligenceE
                   <p className="text-[12px] leading-snug mt-0.5" style={{ color: "#63635F" }}>{item.detail}</p>
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     <EvidenceKindBadge kind={item.kind} />
-                    <span className="text-[11px]" style={{ color: "#8A8A86" }}>
+                    <span className="text-[11px]" style={{ color: "#6E6E69" }}>
                       {item.confidence === "UNKNOWN" ? "Confidence unknown" : `${humanizeCode(item.confidence)} confidence`}
                       {item.timestamp ? ` · ${formatDateTime(item.timestamp)}` : ""}
                     </span>

@@ -40,6 +40,7 @@ export const IconArrowUp = (p: P) => <Svg {...p} strokeWidth={1.8}><line x1="12"
 export const IconUpload = (p: P) => <Svg {...p}><path d="M12 15V4" /><polyline points="7,9 12,4 17,9" /><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" /></Svg>;
 export const IconLink = (p: P) => <Svg {...p}><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></Svg>;
 export const IconRupee = (p: P) => <Svg {...p}><path d="M6 4h12M6 9h12" /><path d="M9 4c4.2 0 6.5 1.8 6.5 5s-2.3 5-6.5 5H7l8.5 7" /></Svg>;
+export const IconRanked = (p: P) => <Svg {...p}><line x1="5" y1="6" x2="19" y2="6" /><line x1="5" y1="12" x2="15" y2="12" /><line x1="5" y1="18" x2="10" y2="18" /></Svg>;
 export const IconPromise = (p: P) => <Svg {...p}><path d="M4 12l4 4 4-4" /><path d="M8 16V8a4 4 0 0 1 8 0" /><path d="M14 18h6" /></Svg>;
 export const IconSync = (p: P) => <Svg {...p}><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8" /><polyline points="4,3 4,8 9,8" /><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16" /><polyline points="20,21 20,16 15,16" /></Svg>;
 export const IconSparkle = (p: P) => <Svg {...p}><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" /></Svg>;

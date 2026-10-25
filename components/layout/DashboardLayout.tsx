@@ -171,7 +171,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
             all-caps terminal-style alert. Truthful, low-key, sentence case. */}
         {isDemo && (
           <div className="flex items-center justify-between gap-3 px-4 py-1.5 shrink-0" style={{ background: "#F7F7F4", borderBottom: "1px solid #EBEAE6" }}>
-            <span className="text-xs flex items-center gap-1.5" style={{ color: "#8A8A86" }}>
+            <span className="text-xs flex items-center gap-1.5" style={{ color: "#6E6E69" }}>
               <FiInfo size={11} />
               Simulated demonstration — sample data, not your business
             </span>
@@ -183,7 +183,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
                 Sign up to save real data →
               </Link>
               <button onClick={() => { exitDemoMode(); window.location.href = "/login"; }}
-                className="text-xs transition-colors" style={{ color: "#8A8A86" }}>
+                className="text-xs transition-colors" style={{ color: "#6E6E69" }}>
                 Exit
               </button>
             </div>

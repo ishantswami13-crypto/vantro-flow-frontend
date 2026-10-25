@@ -22,8 +22,8 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
       >
         <FiMenu size={17} />
       </button>
-      <Link href="/bridge" style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 18, color: "#191917", letterSpacing: "-0.3px" }}>Starlane</Link>
-      {pageTitle && <span className="truncate" style={{ fontSize: 13, color: "#8A8A86" }}>{pageTitle}</span>}
+      <Link href="/bridge" style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 18, color: "#191917", letterSpacing: "-0.3px" }}>Starlane</Link>
+      {pageTitle && <span className="truncate" style={{ fontSize: 13, color: "#6E6E69" }}>{pageTitle}</span>}
     </header>
   );
 }

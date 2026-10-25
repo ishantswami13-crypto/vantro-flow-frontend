@@ -172,7 +172,7 @@ export default function DiscoverPage() {
         title="Discover"
         subtitle="Things Starlane found that may be worth your attention."
         right={latest ? (
-          <span style={{ fontSize: 12, color: "#8A8A86" }}>Last signal {relativeTime(latest)}</span>
+          <span style={{ fontSize: 12, color: "#6E6E69" }}>Last signal {relativeTime(latest)}</span>
         ) : undefined}
       />
 
@@ -286,7 +286,7 @@ function DiscoveryRow({
             <EvMark onClick={onOpenEvidence} />
           </div>
         )}
-        <div className="flex items-center flex-wrap" style={{ gap: 8, fontSize: 11.5, color: "#8A8A86" }}>
+        <div className="flex items-center flex-wrap" style={{ gap: 8, fontSize: 11.5, color: "#6E6E69" }}>
           <span>{signal.impact_status ? signal.impact_status.replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase()) : signal.status.toLowerCase()}</span>
           <Sep />
           <span>{relativeTime(signal.last_updated_at || signal.first_detected_at)}</span>
@@ -316,9 +316,9 @@ function OpportunityRow({
         </div>
         <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
           {opportunity.materiality != null && <><Mono size={13}>+{opportunity.materiality}% demand</Mono><Sep /></>}
-          <span style={{ fontSize: 11.5, color: "#8A8A86" }}>Bounded opportunity</span>
+          <span style={{ fontSize: 11.5, color: "#6E6E69" }}>Bounded opportunity</span>
           <Sep />
-          <span style={{ fontSize: 11.5, color: "#8A8A86" }}>{relativeTime(opportunity.timestamp)}</span>
+          <span style={{ fontSize: 11.5, color: "#6E6E69" }}>{relativeTime(opportunity.timestamp)}</span>
         </div>
       </div>
     </div>

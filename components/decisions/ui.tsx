@@ -12,19 +12,19 @@ export const C = {
   ink: "#191917",
   body: "#43433F",
   muted: "#63635F",
-  faint: "#6E6E6A", // 4.5:1 on the page background (was #8A8A86, 3.1:1)
+  faint: "#6E6E6A", // 4.5:1 on the page background (was #6E6E69, 3.1:1)
   line: "#EBEAE6",
   card: "rgba(25,25,23,0.10)",
   wash: "#F3F2EE",
   good: "#477054",
-  warn: "#9B742B",
+  warn: "#8C6826",
   bad: "#A64F4B",
   accent: "var(--accent, #696D86)",
 };
 
 export function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10.5px] uppercase mb-3" style={{ color: C.muted, fontWeight: 500, letterSpacing: 0 }}>
+    <p className="uppercase mb-3" style={{ color: C.muted, fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 10.5, fontWeight: 400, letterSpacing: "0.08em" }}>
       {children}
     </p>
   );
@@ -46,8 +46,8 @@ export function Pill({ tone = "neutral", children, title }: { tone?: Tone; child
   return (
     <span
       title={title}
-      className="inline-flex items-center gap-1 text-[11px] px-[9px] py-[1px] rounded-[20px] whitespace-nowrap"
-      style={{ color: t.fg, background: t.bg, border: `1px solid ${t.bd}`, fontWeight: 400, letterSpacing: "0.2px" }}
+      className="inline-flex items-center gap-1 px-[6px] rounded-[2px] whitespace-nowrap"
+      style={{ color: t.fg, background: t.bg, border: `1px solid ${t.bd}`, fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 9.5, lineHeight: "16px", fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" }}
     >
       {children}
     </span>
@@ -73,8 +73,8 @@ export function ConfidencePill({ band, score }: { band?: string | null; score?: 
 export function Stat({ label, value, sub, tone }: { label: string; value: React.ReactNode; sub?: React.ReactNode; tone?: "bad" | "warn" | "good" }) {
   return (
     <div className="min-w-0">
-      <p className="text-[12px]" style={{ color: C.faint }}>{label}</p>
-      <p className="text-[22px] leading-tight mt-1 tabular-nums" style={{ color: tone ? C[tone] : C.ink, fontWeight: 400, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", letterSpacing: "-0.01em" }}>{value}</p>
+      <p style={{ color: C.faint, fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" }}>{label}</p>
+      <p className="leading-tight mt-2 tabular-nums" style={{ color: tone ? C[tone] : C.ink, fontSize: 26, fontWeight: 500, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", letterSpacing: "-0.03em" }}>{value}</p>
       {sub && <p className="text-[12px] mt-1" style={{ color: C.muted }}>{sub}</p>}
     </div>
   );
@@ -88,19 +88,24 @@ export function RangeBar({ interval, max, currency, highlight }: { interval?: In
   if (!interval || !(max > 0)) return <span className="text-[12px]" style={{ color: C.faint }}>No forecast</span>;
   const x = (v: number) => `${Math.max(0, Math.min(100, (v / max) * 100))}%`;
   const width = Math.max(1.5, ((interval.p90 - interval.p10) / max) * 100);
+  const tone = highlight ? C.ink : "#8C939C";
+  // One shared axis (0 to the largest p90 across options), so bars compare
+  // across cards: the band is the 80% range, the tick the expected value.
   return (
     <div className="w-full">
-      <div className="relative h-[8px] rounded-full" style={{ background: "#F0F0EC" }}>
-        <div
-          className={`absolute top-0 h-full rounded-full ${highlight ? "id-gradient" : ""}`}
-          style={{ left: x(interval.p10), width: `${width}%`, background: highlight ? undefined : "#CFCFD8", opacity: highlight ? 0.9 : 1 }}
-        />
-        <div className="absolute" style={{ left: x(interval.mean), top: -3, width: 2, height: 14, background: C.ink, borderRadius: 1 }} />
+      <div className="relative h-[14px]">
+        <div className="absolute left-0 right-0" style={{ top: 6, height: 1, background: "rgba(25,25,23,0.14)" }} />
+        <div className="absolute" style={{ left: x(interval.p10), width: `${width}%`, top: 3, height: 7, background: tone, opacity: highlight ? 0.9 : 0.55 }} />
+        <div className="absolute" style={{ left: x(interval.mean), top: -2, width: 2, height: 18, marginLeft: -1, background: C.ink, boxShadow: "0 0 0 1.5px #FFFFFF" }} />
       </div>
-      <div className="flex justify-between text-[11px] mt-1 tabular-nums" style={{ color: C.faint }}>
-        <span>{money(interval.p10, currency)}</span>
-        <span style={{ color: C.ink, fontWeight: 500 }}>{money(interval.mean, currency)} expected</span>
-        <span>{money(interval.p90, currency)}</span>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mt-2 tabular-nums">
+        <span className="text-[12.5px]" style={{ color: C.ink }}>
+          <span style={{ fontWeight: 500 }}>{money(interval.mean, currency)}</span> expected
+          <span style={{ color: C.faint }}> · range {money(interval.p10, currency)} to {money(interval.p90, currency)}</span>
+        </span>
+        <span style={{ fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase", color: C.faint }}>
+          Axis 0 to {money(max, currency)}
+        </span>
       </div>
     </div>
   );

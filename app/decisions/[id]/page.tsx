@@ -57,8 +57,8 @@ function OptionCard({ o, d, max, recommended, selected, canChoose, onChoose, bus
   const h = headline(o, d.kind);
   return (
     <div
-      className="rounded-2xl p-5"
-      style={{ background: "#FFFFFF", border: `1px solid ${selected ? C.accent : recommended ? "#CFD0E8" : C.line}`, boxShadow: recommended ? "0 1px 0 rgba(92,95,158,0.06)" : undefined, opacity: o.valid ? 1 : 0.7 }}
+      className="p-5"
+      style={{ background: "#FFFFFF", borderRadius: 6, border: `1px solid ${selected ? C.accent : C.line}`, boxShadow: recommended ? `inset 2px 0 0 ${C.ink}, 0 1px 2px rgba(25,25,23,0.04)` : "0 1px 2px rgba(25,25,23,0.04)", opacity: o.valid ? 1 : 0.7 }}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
@@ -178,7 +178,7 @@ function WhatIf({ d }: { d: Decision }) {
         <label className="text-[13px]" style={{ color: C.body }} htmlFor="speed">
           Customer pays at <span className="tabular-nums" style={{ fontWeight: 500 }}>{speed.toFixed(2)}×</span> their usual speed
         </label>
-        <input id="speed" type="range" min={0.5} max={1.5} step={0.05} value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className="w-48" />
+        <input id="speed" type="range" min={0.5} max={1.5} step={0.05} value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className="w-48" style={{ accentColor: "#191917" }} />
         <Button size="sm" variant="secondary" loading={sim.isPending} onClick={() => sim.mutate()}>Simulate</Button>
       </div>
       {sim.isError && <p className="text-[12px] mt-2" style={{ color: C.bad }}>{errorText(sim.error).title}</p>}
@@ -246,7 +246,7 @@ function Verification({ detail, onVerify, busy }: { detail: DecisionDetail; onVe
   return (
     <section className="mt-10">
       <SectionLabel>What actually happened</SectionLabel>
-      <div className="rounded-2xl p-5" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+      <div className="rounded-md p-5" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
         <div className="flex flex-wrap items-center gap-2">
           <Pill tone={c.status === "MET" || c.status === "ON_TRACK" ? "good" : c.status === "NOT_MET" || c.status === "OFF_TRACK" || c.status === "ABORTED" ? "bad" : "neutral"}>
             {c.status.replace(/_/g, " ").toLowerCase()}
@@ -440,7 +440,7 @@ export default function DecisionDetailPage() {
 
         {/* Recommendation */}
         {rec && (
-          <section className="mt-10 rounded-2xl p-5" style={{ background: "#F7F7FB", border: "1px solid #E2E3F1" }}>
+          <section className="mt-10 rounded-md p-5" style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", boxShadow: "inset 2px 0 0 #191917, 0 1px 2px rgba(25,25,23,0.04)" }}>
             <SectionLabel>{rec.informationFirst ? "Find out first" : "Starlane suggests"}</SectionLabel>
             <p className="text-[18px]" style={{ color: C.ink, fontWeight: 500 }}>{rec.label}</p>
             {rec.why && <p className="text-[14px] mt-2 leading-[1.55] max-w-[760px]" style={{ color: C.body }}>{rec.why}</p>}
@@ -471,7 +471,7 @@ export default function DecisionDetailPage() {
               </details>
             )}
             {canChoose && !rec.informationFirst && recOption && recOption.valid !== false && (
-              <div className="mt-5 pt-4" style={{ borderTop: "1px solid #E2E3F1" }}>
+              <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(25,25,23,0.08)" }}>
                 <p className="text-[13px] max-w-[760px]" style={{ color: C.body }}>
                   <span style={{ fontWeight: 500 }}>Handle it</span> approves &ldquo;{rec.label}&rdquo; and starts a mission.{" "}
                   {recOption.isDoNothing
@@ -525,7 +525,7 @@ export default function DecisionDetailPage() {
 
         {/* Next step */}
         {!canChoose || d.status === "SELECTED" ? (
-          <section className="mt-10 rounded-2xl p-5" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+          <section className="mt-10 rounded-md p-5" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
             <SectionLabel>Next step</SectionLabel>
             {d.status === "SELECTED" && chosen && (
               <>
@@ -688,7 +688,7 @@ export default function DecisionDetailPage() {
             <input
               value={obs}
               onChange={(e) => setObs(e.target.value)}
-              placeholder="Something Starlane can't see, e.g. “They said payment is coming after Diwali”"
+              placeholder="Something Starlane can't see, e.g. “They said payment is coming after the holidays”"
               className="flex-1 min-w-[240px] rounded-lg px-3 py-2 text-[13px]"
               style={{ border: `1px solid ${C.line}`, background: "#FFFFFF" }}
               maxLength={2000}
@@ -705,7 +705,7 @@ export default function DecisionDetailPage() {
             <ol className="mt-3 space-y-1.5">
               {detail.events.map((e) => (
                 <li key={e.id} className="text-[12px] flex gap-3" style={{ color: C.body }}>
-                  <span className="tabular-nums shrink-0" style={{ color: C.faint }}>{new Date(e.at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                  <span className="tabular-nums shrink-0" style={{ color: C.faint }}>{new Date(e.at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
                   <span>{e.type.replace(/_/g, " ").toLowerCase()} · {e.actor.type === "agent" ? `Starlane (${e.actor.agentVersion || e.actor.id})` : "You"}</span>
                 </li>
               ))}

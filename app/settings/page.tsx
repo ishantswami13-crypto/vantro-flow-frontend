@@ -266,7 +266,7 @@ function SettingsPageInner() {
     <DashboardLayout pageTitle="Settings">
       <div className="space-y-4">
         <div>
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>Settings</h1>
+          <h1 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>Settings</h1>
           <p style={{ fontSize: 13.5, color: "#63635F", marginTop: 4 }}>Manage your account, integrations, and automation.</p>
         </div>
 
@@ -306,7 +306,7 @@ function SettingsPageInner() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Input label="Full Name" type="text" value={profile.full_name} onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))} />
-                    <Input label="Phone" type="tel" prefix="+91" value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} />
+                    <Input label="Phone" type="tel" placeholder="With country code, e.g. +44 20 7946 0000" value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} />
                   </div>
                   <Input label="Email" type="email" value={profile.email} readOnly />
                   <div className="grid grid-cols-2 gap-4">

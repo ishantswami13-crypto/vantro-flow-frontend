@@ -419,7 +419,7 @@ export const decisionsApi = {
 
 export function money(value: number | null | undefined, currency = 'INR'): string {
   if (value == null || !Number.isFinite(value)) return '—';
-  if (currency !== 'INR') return `${currency} ${Math.round(value).toLocaleString('en-IN')}`;
+  if (currency !== 'INR') return `${value < 0 ? '−' : ''}${currency} ${Math.round(Math.abs(value)).toLocaleString('en-US')}`;
   const abs = Math.abs(value);
   const sign = value < 0 ? '−' : '';
   if (abs >= 1e7) return `${sign}₹${(abs / 1e7).toFixed(2)}Cr`;
@@ -436,7 +436,7 @@ export function shortDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso.length === 10 ? `${iso}T00:00:00` : iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
 export function relTime(iso: string | null | undefined): string {

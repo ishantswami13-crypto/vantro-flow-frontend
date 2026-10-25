@@ -190,7 +190,7 @@ export default function DunningPage() {
                         background:   rule.enabled ? `${ACTION_COLOR[rule.action as ActionType]}15` : "#F2F2EF",
                         borderColor:  rule.enabled ? `${ACTION_COLOR[rule.action as ActionType]}40` : "#E5E5E1",
                       }}>
-                      <p className="text-xs font-black" style={{ color: rule.enabled ? ACTION_COLOR[rule.action as ActionType] : "#8A8A86" }}>
+                      <p className="text-xs font-black" style={{ color: rule.enabled ? ACTION_COLOR[rule.action as ActionType] : "#6E6E69" }}>
                         D+{rule.trigger_day}
                       </p>
                       <p className="text-2xs text-muted">days</p>

@@ -26,10 +26,14 @@ import { PageHeader, Subnav } from "@/components/v32/ui";
 // today (named invoice hypotheticals), not the broader one that was never
 // built.
 
-const fmt = (n: number | null | undefined) => {
+// Amounts follow the ledger's currency. With no currency on record the
+// ledger is the older INR-only one, so lakh formatting stays for it.
+const fmtIn = (currency: string | null) => (n: number | null | undefined) => {
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
   const abs = Math.abs(n);
-  const sign = n < 0 ? "-" : "";
+  const sign = n < 0 ? "−" : "";
+  if (currency === "") return `${sign}${Math.round(abs).toLocaleString("en-US")}`;
+  if (currency && currency !== "INR") return `${sign}${currency} ${Math.round(abs).toLocaleString("en-US")}`;
   return abs >= 100000 ? `${sign}₹${(abs / 100000).toFixed(1)}L` : `${sign}₹${Math.round(abs).toLocaleString("en-IN")}`;
 };
 
@@ -47,6 +51,10 @@ function SimulatePageInner() {
   const [userId, setUserId] = useState<string | null>(null);
   const [invoices, setInvoices] = useState<ScenarioInvoice[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(true);
+  // One currency across the open invoices means the totals are in it too;
+  // with several, totals show as plain numbers rather than a wrong symbol.
+  const currencies = Array.from(new Set(invoices.map((i) => i.currency).filter(Boolean)));
+  const fmt = fmtIn(currencies.length === 1 ? (currencies[0] as string) : currencies.length > 1 ? "" : null);
   const [invoicesError, setInvoicesError] = useState("");
 
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>("");
@@ -141,7 +149,7 @@ function SimulatePageInner() {
                   >
                     {invoices.map((inv) => (
                       <option key={inv.id} value={inv.id}>
-                        {inv.customer_name || "Unknown customer"} · {fmt(inv.invoice_amount)}
+                        {inv.customer_name || "Unknown customer"} · {fmtIn(inv.currency)(inv.invoice_amount)}
                         {inv.days_overdue != null ? ` · ${inv.days_overdue}d overdue` : ""}
                       </option>
                     ))}
@@ -167,8 +175,8 @@ function SimulatePageInner() {
                   </button>
                 </div>
                 {selectedInvoice && (
-                  <p style={{ fontSize: 12, color: "#8A8A86", marginTop: 10 }}>
-                    Invoice amount {fmt(selectedInvoice.invoice_amount)} {selectedInvoice.currency || ""}, from your ledger.
+                  <p style={{ fontSize: 12, color: "#6E6E69", marginTop: 10 }}>
+                    Invoice amount {fmtIn(selectedInvoice.currency)(selectedInvoice.invoice_amount)}, from your ledger.
                   </p>
                 )}
                 {runError && <p style={{ fontSize: 12, color: "#A64F4B", marginTop: 8 }}>{runError}</p>}
@@ -184,7 +192,7 @@ function SimulatePageInner() {
                 <SimCard label="Cash" value={fmt(result.simulated.projected_state.cashImpactDelta)} color={tone(result.simulated.projected_state.cashImpactDelta)} note={result.simulated.projected_state.narrative} />
                 <SimCard label="Overdue vs today" value={fmt(result.delta.delta)} color={result.delta.direction === "IMPROVEMENT_VS_BASELINE" ? "#477054" : result.delta.direction === "WORSE_VS_BASELINE" ? "#A64F4B" : "#191917"} note={result.delta.note} />
               </div>
-              <p style={{ fontSize: 12.5, color: "#8A8A86" }}>
+              <p style={{ fontSize: 12.5, color: "#6E6E69" }}>
                 Currency: {result.fx.reason}
               </p>
             </>

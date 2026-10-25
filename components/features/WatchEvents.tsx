@@ -17,7 +17,7 @@ const RULE = "rgba(25,25,23,0.10)";
 
 function show(v: unknown, unit?: string) {
   if (v === null || v === undefined || v === "") return "—";
-  if (typeof v === "number") return unit === "INR" ? `₹${Math.round(v).toLocaleString("en-IN")}` : v.toLocaleString("en-IN");
+  if (typeof v === "number") return unit === "INR" ? `₹${Math.round(v).toLocaleString("en-IN")}` : v.toLocaleString("en-US");
   return String(v);
 }
 

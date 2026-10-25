@@ -97,7 +97,7 @@ export default function ScanThreadPage() {
                 placeholder="Ask a follow-up"
               />
               {error && <p role="alert" style={{ fontSize: 12.5, color: "#A64F4B", margin: "10px 4px 0" }}>{error}</p>}
-              <p style={{ fontSize: 11.5, color: "#8A8A86", margin: "10px 0 0", textAlign: "center" }}>
+              <p style={{ fontSize: 11.5, color: "#6E6E69", margin: "10px 0 0", textAlign: "center" }}>
                 Starlane answers only from your connected data. This conversation is kept on this device.
               </p>
             </div>
@@ -147,7 +147,7 @@ function Turn({ turn }: { turn: ScanTurn }) {
 
         {actions.length > 0 && (
           <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 12, background: "rgba(255,255,255,0.6)", border: "1px solid rgba(25,25,23,0.07)" }}>
-            <div style={{ fontSize: 11, color: "#8A8A86", marginBottom: 6 }}>Suggested next steps</div>
+            <div style={{ fontSize: 11, color: "#6E6E69", marginBottom: 6 }}>Suggested next steps</div>
             {actions.map((a, i) => (
               <p key={i} style={{ fontSize: 13, color: "#43433F", margin: i ? "4px 0 0" : 0, lineHeight: 1.5 }}>{a}</p>
             ))}

@@ -118,7 +118,7 @@ export function Drawer({ titleId, title, onClose, onBack, children, breadcrumb, 
                 ref={headingRef}
                 tabIndex={-1}
                 className="outline-none"
-                style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: titleSize, color: "#191917", margin: 0, lineHeight: 1.25 }}
+                style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: titleSize, color: "#191917", margin: 0, lineHeight: 1.25 }}
               >
                 {title}
               </h2>

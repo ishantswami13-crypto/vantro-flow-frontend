@@ -10,8 +10,8 @@ const config: Config = {
     extend: {
       colors: {
         // ---- Starlane V32 design tokens (see STARLANE_FRONTEND_HANDOFF.md §3) ----
-        bg:            "#F7F7F4",
-        "sidebar-bg":  "#141412",
+        bg:            "#F3F1EB",
+        "sidebar-bg":  "#0B0D10",
         surface:       "#FFFFFF",
         "surface-1":   "#FFFFFF",
         // §17.1: two near-identical hexes (#F3F2EE / #F3F2EF) appear in source for
@@ -21,7 +21,7 @@ const config: Config = {
         "surface-3":   "#EDEDE9",
         "text-primary":   "#191917",
         "text-secondary": "#63635F",
-        "text-tertiary":  "#8A8A86",
+        "text-tertiary":  "#6E6E69",
         "text-body":      "#43433F",
         border:        "#EBEAE6", // border-divider — most common separator
         "border-2":    "#D7D6D0", // border-strong
@@ -42,7 +42,7 @@ const config: Config = {
         "cta-dim":   "rgba(25,25,23,0.06)",
         primary:   "#191917",
         secondary: "#63635F",
-        muted:     "#8A8A86",
+        muted:     "#6E6E69",
         // §17.1 reconciliation: handoff flags positive #477054 vs #1FB870, and
         // critical #A64F4B vs #E8462B, as two-hex inconsistencies to resolve to one
         // value each. Chosen: #477054 (positive) and #A64F4B (critical) — these are
@@ -54,7 +54,7 @@ const config: Config = {
         // to match that specific historical usage intentionally.
         success:   "#477054",
         "success-alt": "#1FB870",
-        warning:   "#9B742B",
+        warning:   "#8C6826",
         danger:    "#A64F4B",
         "danger-alt":  "#E8462B",
         info:      "#566C82",
@@ -79,7 +79,7 @@ const config: Config = {
       fontFamily: {
         sans: ["Plus Jakarta Sans", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
         mono: ["IBM Plex Mono", "Menlo", "monospace"],
-        serif: ["Fraunces", "Georgia", "serif"],
+        serif: ["Newsreader", "Georgia", "serif"],
       },
       borderRadius: {
         // Starlane V32 radius scale (handoff §3) — Tailwind's default `sm/DEFAULT/md/...`

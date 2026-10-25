@@ -14,7 +14,7 @@ const inr = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
 function show(v: unknown, unit?: string) {
   if (v === null || v === undefined || v === "") return "—";
   if (typeof v === "boolean") return v ? "Yes" : "No";
-  if (typeof v === "number") return unit === "INR" ? inr(v) : `${v.toLocaleString("en-IN")}${unit && unit !== "INR" ? ` ${unit}` : ""}`;
+  if (typeof v === "number") return unit === "INR" ? inr(v) : `${v.toLocaleString("en-US")}${unit && unit !== "INR" ? ` ${unit}` : ""}`;
   return String(v);
 }
 
@@ -74,7 +74,7 @@ export default function ScanLookup() {
       {error ? <p role="alert" style={{ color: "#A23B3B", margin: 0 }}>{error}</p> : null}
       {scan ? (
         <article style={{ background: "#fff", border: `1px solid ${RULE}`, borderRadius: 8, padding: "16px 18px", display: "grid", gap: 10 }}>
-          <h3 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 21 }}>{invoice ? invoice.headline : scan.headline}</h3>
+          <h3 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 21 }}>{invoice ? invoice.headline : scan.headline}</h3>
           <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 4 }}>{scan.why.map((w, i) => <li key={i}>{w}</li>)}</ul>
           {scan.nextStep ? <p style={{ margin: 0, fontSize: 13.5, color: GRAPHITE }}>Next step: {scan.nextStep.stage.replace(/_/g, " ").toLowerCase()}. {scan.nextStep.text}</p> : null}
           <dl style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto auto", gap: "6px 12px", margin: 0, fontSize: 13.5 }}>

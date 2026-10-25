@@ -128,7 +128,7 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 shrink-0" style={{ padding: "14px 16px", borderBottom: "1px solid #EBEAE6" }}>
-          <IconSearch size={15} style={{ color: "#8A8A86" }} />
+          <IconSearch size={15} style={{ color: "#6E6E69" }} />
           <input
             ref={inputRef}
             value={query}
@@ -145,10 +145,10 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
         </div>
         <div ref={listRef} id="command-palette-results" role="listbox" className="overflow-y-auto" style={{ padding: "4px 8px 8px" }}>
           {flat.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#8A8A86", padding: "28px 0", textAlign: "center" }}>No results</p>
+            <p style={{ fontSize: 13, color: "#6E6E69", padding: "28px 0", textAlign: "center" }}>No results</p>
           ) : groups.map(g => (
             <div key={g.label}>
-              <div style={{ padding: "10px 14px 4px 14px", fontSize: 10.5, letterSpacing: 0, color: "#8A8A86" }}>{g.label}</div>
+              <div style={{ padding: "10px 14px 4px 14px", fontSize: 10.5, letterSpacing: 0, color: "#6E6E69" }}>{g.label}</div>
               {g.rows.map(r => {
                 index += 1;
                 const i = index;
@@ -167,7 +167,7 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
                   >
                     {r.icon}
                     <span className="shrink-0" style={{ fontSize: 13.5, color: "#191917" }}>{r.title}</span>
-                    {r.context && <span className="truncate flex-1" style={{ fontSize: 12, color: "#8A8A86" }}>{r.context}</span>}
+                    {r.context && <span className="truncate flex-1" style={{ fontSize: 12, color: "#6E6E69" }}>{r.context}</span>}
                     {!r.context && <span className="flex-1" />}
                     {r.shortcut
                       ? <kbd style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>{r.shortcut}</kbd>

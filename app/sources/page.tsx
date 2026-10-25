@@ -30,7 +30,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "reconciliation", label: "Reconciliation" },
 ];
 
-const INK = "#191917", SOFT = "#63635F", FAINT = "#8A8A86", LINE = "#EBEAE6", WARN = "#A64F4B";
+const INK = "#191917", SOFT = "#63635F", FAINT = "#6E6E69", LINE = "#EBEAE6", WARN = "#A64F4B";
 
 function timeAgo(iso: string | null): string {
   if (!iso) return "";
@@ -49,9 +49,9 @@ function timeAgo(iso: string | null): string {
 const STATUS: Record<ConnectorHealth, { label: string; color: string }> = {
   healthy: { label: "Healthy", color: "#477054" },
   syncing: { label: "Syncing", color: "#477054" },
-  connected: { label: "Paired, not synced yet", color: "#9B742B" },
-  delayed: { label: "Sync delayed", color: "#9B742B" },
-  stale: { label: "Sync overdue", color: "#9B742B" },
+  connected: { label: "Paired, not synced yet", color: "#8C6826" },
+  delayed: { label: "Sync delayed", color: "#8C6826" },
+  stale: { label: "Sync overdue", color: "#8C6826" },
   error: { label: "Needs attention", color: "#A64F4B" },
   disconnected: { label: "Disconnected", color: "rgba(25,25,23,0.25)" },
   pairing: { label: "Waiting for pairing", color: "rgba(25,25,23,0.25)" },
@@ -183,7 +183,7 @@ export default function SourcesPage() {
           title="Sources"
           subtitle="Where Starlane gets its data"
           right={connectors ? (
-            <span style={{ fontSize: 12, color: connected.length && !allHealthy ? "#9B742B" : FAINT }}>
+            <span style={{ fontSize: 12, color: connected.length && !allHealthy ? "#8C6826" : FAINT }}>
               {!connected.length ? "Nothing connected yet" : `${allHealthy ? "All current" : "Needs a look"}${lastSync ? ` · Last sync ${timeAgo(lastSync)}` : ""}`}
             </span>
           ) : undefined}

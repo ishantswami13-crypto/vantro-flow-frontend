@@ -76,7 +76,7 @@ const TURNING_POINT_RULES: { match: string; outcome: string; color: string }[] =
   { match: "default", outcome: "Defaulted", color: "#A64F4B" },
   { match: "write_off", outcome: "Written off", color: "#A64F4B" },
   { match: "paid", outcome: "Paid", color: "#477054" },
-  { match: "cancel", outcome: "Cancelled", color: "#8A8A86" },
+  { match: "cancel", outcome: "Cancelled", color: "#6E6E69" },
 ];
 
 function humanize(action: string): string {

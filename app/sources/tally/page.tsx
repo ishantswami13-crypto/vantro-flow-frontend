@@ -68,7 +68,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 }
 
 function Quiet({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 12.5, color: "#8A8A86", lineHeight: 1.6, paddingTop: 4 }}>{children}</div>;
+  return <div style={{ fontSize: 12.5, color: "#6E6E69", lineHeight: 1.6, paddingTop: 4 }}>{children}</div>;
 }
 
 export default function SourcesTallyPage() {
@@ -96,7 +96,7 @@ export default function SourcesTallyPage() {
   const status = h && h !== "not_connected" && h !== "unavailable"
     ? (h === "healthy" || h === "syncing" ? { label: h === "syncing" ? "Syncing" : "Healthy", color: "#477054" }
       : h === "error" ? { label: "Needs attention", color: "#A64F4B" }
-        : h === "delayed" || h === "stale" || h === "connected" ? { label: h === "connected" ? "Paired, not synced yet" : "Sync delayed", color: "#9B742B" }
+        : h === "delayed" || h === "stale" || h === "connected" ? { label: h === "connected" ? "Paired, not synced yet" : "Sync delayed", color: "#8C6826" }
           : { label: "Not connected", color: "rgba(25,25,23,0.25)" })
     : !tally ? { label: "Not connected", color: "rgba(25,25,23,0.25)" }
     : tally.status === "CONNECTED" ? { label: "Healthy", color: "#477054" }
@@ -113,7 +113,7 @@ export default function SourcesTallyPage() {
         <div>
           <div className="flex items-center" style={{ gap: 10, marginBottom: 4 }}>
             <IconSources size={18} style={{ color: "#43433F" }} />
-            <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 22, color: "#191917" }}>Tally</h1>
+            <h1 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 22, color: "#191917" }}>Tally</h1>
           </div>
           <div className="flex items-center" style={{ gap: 6, fontSize: 12.5, color: "#63635F" }}>
             Accounting / ERP <Sep /> <StatusDot label={loading ? "Checking…" : status.label} color={status.color} />

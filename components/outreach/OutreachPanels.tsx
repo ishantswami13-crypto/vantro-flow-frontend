@@ -70,7 +70,7 @@ export function OutreachControl({ status, onChange }: { status: OutreachStatus |
           ].map(([k, v]) => (
             <div key={String(k)}>
               <div className="text-[11px]" style={{ color: C.faint }}>{k}</div>
-              <div className="text-[20px]" style={{ color: C.ink, fontFamily: "'Fraunces', Georgia, serif" }}>{v}</div>
+              <div className="text-[20px]" style={{ color: C.ink, fontFamily: "'Newsreader', Georgia, serif" }}>{v}</div>
             </div>
           ))}
         </div>

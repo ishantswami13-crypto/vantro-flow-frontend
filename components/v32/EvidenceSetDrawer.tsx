@@ -13,7 +13,7 @@ const SOURCE: Record<string, string> = { invoices: "Invoices in Starlane", payme
 
 export function showValue(v: unknown, unit?: string): string {
   if (v === null || v === undefined || v === "") return "—";
-  if (typeof v === "number") return unit === "INR" ? `₹${Math.round(v).toLocaleString("en-IN")}` : v.toLocaleString("en-IN");
+  if (typeof v === "number") return unit === "INR" ? `₹${Math.round(v).toLocaleString("en-IN")}` : v.toLocaleString("en-US");
   if (Array.isArray(v)) return v.join(", ");
   return String(v);
 }
@@ -25,7 +25,7 @@ function Row({ label, value, mono, note }: { label: string; value: React.ReactNo
         <span style={{ fontSize: 12.5, color: "#63635F" }}>{label}</span>
         <span className="text-right" style={{ fontSize: 13, color: "#191917", fontFamily: mono ? "'Plus Jakarta Sans', system-ui, sans-serif" : undefined }}>{value}</span>
       </div>
-      {note && <div style={{ fontSize: 11.5, color: "#8A8A86", marginTop: 2 }}>{note}</div>}
+      {note && <div style={{ fontSize: 11.5, color: "#6E6E69", marginTop: 2 }}>{note}</div>}
     </div>
   );
 }
@@ -47,7 +47,7 @@ export function EvidenceSetDrawer({ title, record, evidence, onClose, children }
   children?: React.ReactNode;
 }) {
   const facts: EvidenceItem[] = evidence?.facts || [];
-  const when = evidence?.computedAt ? new Date(evidence.computedAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : null;
+  const when = evidence?.computedAt ? new Date(evidence.computedAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : null;
   return (
     <Drawer
       titleId="evidence-set-drawer-title"
