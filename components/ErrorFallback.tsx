@@ -28,7 +28,7 @@ export function ErrorFallback({ errorId, retryAction }: { errorId: string, retry
         <a href="/bridge"
           className="px-5 py-2 rounded-xl text-sm font-medium transition-colors"
           style={{ background: "#161616", border: "1px solid #222222", color: "#888888" }}>
-          Back to The Bridge
+          Back to Home
         </a>
       </div>
     </div>

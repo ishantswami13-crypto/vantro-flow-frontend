@@ -65,11 +65,11 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
       .map(r => ({ key: `p:${r.href}`, href: r.href, title: r.label, context: r.context, icon: <span style={{ width: 16, display: "inline-block" }} /> }));
     if (pageRows.length) out.push({ label: "Work", rows: pageRows });
     const actions: Row[] = [
-      { key: "a:ask", href: "/scan", title: "Ask Starlane", context: "Open Scan", icon: <IconScan {...ICON} />, shortcut: "↵" },
-      { key: "a:watch", href: "/watch?new=1", title: "New Watch", icon: <IconPlus {...ICON} /> },
-      { key: "a:mission", href: "/missions/new", title: "New Mission", icon: <IconMissions {...ICON} /> },
-      { key: "a:sim", href: "/simulate", title: "Simulate", context: "Run a new scenario", icon: <IconSimulate {...ICON} /> },
-      { key: "a:watchlist", href: "/watch", title: "Watch", context: "What Starlane is watching", icon: <IconWatch {...ICON} /> },
+      { key: "a:ask", href: "/scan", title: "Ask Starlane", context: "Open the Assistant", icon: <IconScan {...ICON} />, shortcut: "↵" },
+      { key: "a:watch", href: "/watch?new=1", title: "New monitor", icon: <IconPlus {...ICON} /> },
+      { key: "a:mission", href: "/missions/new", title: "New task", icon: <IconMissions {...ICON} /> },
+      { key: "a:sim", href: "/simulate", title: "Scenarios", context: "Run a new what-if", icon: <IconSimulate {...ICON} /> },
+      { key: "a:watchlist", href: "/watch", title: "Monitors", context: "What Starlane is watching", icon: <IconWatch {...ICON} /> },
     ].filter(a => hit(a.title));
     if (actions.length) out.push({ label: "Actions", rows: actions });
     return out;

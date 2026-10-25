@@ -169,13 +169,13 @@ function WatchPageInner() {
   const triggeredCount = list.filter((w) => statusOf(w).label === "Triggered").length;
 
   return (
-    <DashboardLayout pageTitle="Watch">
+    <DashboardLayout pageTitle="Monitors">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
-            Watch
+          <h1 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 34, letterSpacing: "-0.02em", color: "#191917" }}>
+            Monitors
           </h1>
-          <Button primary small onClick={() => setShowModal(true)}><IconPlus size={13} />New watch</Button>
+          <Button primary small onClick={() => setShowModal(true)}><IconPlus size={13} />New monitor</Button>
         </div>
 
         <div style={{ fontSize: 13.5, color: "#63635F", marginTop: -16 }}>

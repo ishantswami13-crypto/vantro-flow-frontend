@@ -67,7 +67,7 @@ const EMPTY_COPY: Record<TabKey, { title: string; body: string }> = {
 function formatTimestamp(ts: string | null): string {
   if (!ts) return "";
   try {
-    return new Date(ts).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    return new Date(ts).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   } catch {
     return ts;
   }
@@ -112,11 +112,11 @@ function PreparedCardView({
   const when = formatTimestamp(card.timestamp);
 
   return (
-    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 18 }}>
-      <div style={{ fontSize: 11, letterSpacing: 0, color: "var(--accent)", marginBottom: 8 }}>
+    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.09)", borderRadius: 6, boxShadow: "0 1px 2px rgba(25,25,23,0.04)", padding: "18px 20px" }}>
+      <div className="meta" style={{ fontSize: 10, color: "#6E6E69", marginBottom: 8 }}>
         {card.trigger.replace(/_/g, " ")}{when ? `, ${when}` : ""}
       </div>
-      <div style={{ fontSize: 14.5, color: "#191917", marginBottom: 10, lineHeight: 1.5 }}>{card.summary}</div>
+      <div style={{ fontSize: 15, fontWeight: 500, color: "#191917", marginBottom: 8, lineHeight: 1.45 }}>{card.summary}</div>
       {card.detail ? <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: 6 }}>{card.detail}</div> : null}
       <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: 14 }}>Source: {SOURCE_LABEL[card.source] || "Starlane"}</div>
       {primaryIsApprove && card.approve_does && <div style={{ fontSize: 12, color: "#63635F", marginBottom: 12 }}>{card.approve_does}</div>}
@@ -209,9 +209,9 @@ export default function PreparedPage() {
   const copy = EMPTY_COPY[tab];
 
   return (
-    <DashboardLayout pageTitle="Prepared">
+    <DashboardLayout pageTitle="Approvals">
       <PageHeader
-        title="Prepared"
+        title="Approvals"
         subtitle="Decisions waiting on you, with what is at stake"
         right={
           /* Control › Approvals lists every decision waiting on the owner;

@@ -57,7 +57,7 @@ export default function ScanThreadPage() {
   };
 
   return (
-    <DashboardLayout pageTitle="Scan">
+    <DashboardLayout pageTitle="Assistant">
       <div style={{ width: 760, maxWidth: "100%", margin: "0 auto", display: "flex", flexDirection: "column", minHeight: "calc(100vh - 150px)" }}>
         <div className="flex items-center justify-between" style={{ padding: "4px 0 18px" }}>
           <Link href="/scan" className="scan-tool" style={{ marginLeft: -9 }}><IconPlus size={14} /> New conversation</Link>

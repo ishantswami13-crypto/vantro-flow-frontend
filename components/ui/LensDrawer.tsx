@@ -63,7 +63,7 @@ export function LensDrawer({
   // this never claims a capability that doesn't exist for them yet.
   const defaultWatchAction: LensAction | null = entityType === "Customer"
     ? {
-        label: "Watch",
+        label: "Monitor",
         onClick: () => router.push(`/watch?prefill_metric=customer_exposure_amount&prefill_entity=${encodeURIComponent(name)}`),
       }
     : null;

@@ -66,7 +66,7 @@ export default function NewMissionPage() {
   const owed = sim?.facts[0]?.value as number | undefined;
   const blocked = busy || !preview || !!preview.errors.length;
   return (
-    <DashboardLayout pageTitle="New mission">
+    <DashboardLayout pageTitle="New task">
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "32px 24px 48px", display: "grid", gap: 20 }}>
         <div>
           <Link href="/missions" style={{ fontSize: 13, color: GRAPHITE }}>‹ Missions</Link>

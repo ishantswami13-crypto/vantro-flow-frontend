@@ -55,7 +55,7 @@ export default function MissionPage() {
   const blockers = Array.isArray(p?.blockers) ? p!.blockers : [];
   const [label, color] = m ? STATUS[m.status] || [m.status, GRAPHITE] : ["", GRAPHITE];
   return (
-    <DashboardLayout pageTitle="Mission">
+    <DashboardLayout pageTitle="Task">
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "32px 24px 48px", display: "grid", gap: 20 }}>
         <Link href="/missions" style={{ fontSize: 13, color: GRAPHITE }}>‹ Missions</Link>
         {error && !m ? <p role="alert" style={{ color: "#A23B3B" }}>{error}</p> : null}

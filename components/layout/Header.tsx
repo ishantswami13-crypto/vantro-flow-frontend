@@ -12,7 +12,7 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
   return (
     <header
       className="lg:hidden relative flex items-center gap-3 px-4 shrink-0 z-10"
-      style={{ height: 52, background: "#F7F7F4", borderBottom: "1px solid #EBEAE6" }}
+      style={{ height: 52, background: "#ECEAE3", borderBottom: "1px solid rgba(25,25,23,0.08)" }}
     >
       <button
         onClick={onMenuToggle}
@@ -23,7 +23,7 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
         <FiMenu size={17} />
       </button>
       <Link href="/bridge" style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 18, color: "#191917", letterSpacing: "-0.3px" }}>Starlane</Link>
-      {pageTitle && <span className="truncate" style={{ fontSize: 13, color: "#6E6E69" }}>{pageTitle}</span>}
+      {pageTitle && <span className="truncate" style={{ fontSize: 13, color: "#5E5E59" }}>{pageTitle}</span>}
     </header>
   );
 }

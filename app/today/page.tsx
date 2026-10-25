@@ -157,7 +157,7 @@ export default function TodayPage() {
       <TodayDecisionsCard />
 
       {/* ── PREMIUM DATE NAVIGATOR ──────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-5 gap-3">
+      <div className="flex flex-wrap items-center justify-between mb-5 gap-3">
         <div className="flex items-center gap-2">
           {/* Prev day */}
           <button aria-label="Previous" onClick={() => changeDate(addDays(date,-1))}

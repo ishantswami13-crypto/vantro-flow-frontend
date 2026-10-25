@@ -116,8 +116,8 @@ function SimulatePageInner() {
     n == null || n === 0 ? "#191917" : (n < 0) === goodWhenNegative ? "#477054" : "#A64F4B";
 
   return (
-    <DashboardLayout pageTitle="Simulate">
-      <PageHeader title="Simulate" subtitle="Try a what-if against your own open invoices" />
+    <DashboardLayout pageTitle="Scenarios">
+      <PageHeader title="Scenarios" subtitle="Try a what-if against your own open invoices" />
       <Subnav
         active={tab}
         onChange={(k) => setTab(k as "new" | "sales" | "replays")}

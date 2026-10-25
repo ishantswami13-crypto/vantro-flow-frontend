@@ -46,7 +46,7 @@ export function Pill({ tone = "neutral", children, title }: { tone?: Tone; child
   return (
     <span
       title={title}
-      className="inline-flex items-center gap-1 px-[6px] rounded-[2px] whitespace-nowrap"
+      className="inline-flex items-center gap-1 px-[6px] rounded-[2px] whitespace-nowrap max-w-full overflow-hidden text-ellipsis"
       style={{ color: t.fg, background: t.bg, border: `1px solid ${t.bd}`, fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 9.5, lineHeight: "16px", fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" }}
     >
       {children}

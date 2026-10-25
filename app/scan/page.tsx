@@ -74,7 +74,7 @@ export default function ScanPage() {
   };
 
   return (
-    <DashboardLayout pageTitle="Scan">
+    <DashboardLayout pageTitle="Assistant">
       <div className="scan-stage" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: showFindings ? "flex-start" : "center", minHeight: showFindings ? undefined : "calc(100vh - 190px)", padding: showFindings ? "32px 0 8px" : "24px 0", boxSizing: "border-box" }}>
         <div className="fade-once" style={{ width: 720, maxWidth: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <h1 className="scan-greeting" style={{ margin: "0 0 26px 0", fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, color: "#191917", textAlign: "center" }}>

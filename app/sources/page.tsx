@@ -177,10 +177,10 @@ export default function SourcesPage() {
   const allHealthy = connected.length > 0 && connected.every((c) => c.state.health === "healthy");
 
   return (
-    <DashboardLayout pageTitle="Sources">
+    <DashboardLayout pageTitle="Data sources">
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <PageHeader
-          title="Sources"
+          title="Data sources"
           subtitle="Where Starlane gets its data"
           right={connectors ? (
             <span style={{ fontSize: 12, color: connected.length && !allHealthy ? "#8C6826" : FAINT }}>
