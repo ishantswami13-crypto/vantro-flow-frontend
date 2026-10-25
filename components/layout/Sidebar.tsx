@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import StarlaneMark from "@/components/brand/StarlaneMark";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FiLogOut, FiX, FiUser, FiSliders, FiCommand } from "react-icons/fi";
@@ -230,7 +231,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         {/* Wordmark and notifications */}
         <div className="flex items-center justify-between shrink-0" style={{ padding: "2px 6px 18px 8px" }}>
           <Link href="/bridge" onClick={onClose} aria-label="Starlane home" className="sb-mark">
-            <span aria-hidden="true" className="sb-mark-sq" />
+            <StarlaneMark size={22} />
             Starlane
           </Link>
           <div className="flex items-center" style={{ gap: 2 }}>

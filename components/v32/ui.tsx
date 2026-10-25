@@ -45,8 +45,8 @@ export function PageHeader({ title, subtitle, right, children }: {
     <div className="fade-once">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 34, lineHeight: 1.08, letterSpacing: "-0.02em", color: V.ink }}>{title}</h1>
-          {subtitle && <div style={{ fontSize: 14, color: V.secondary, marginTop: 8 }}>{subtitle}</div>}
+          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 40, lineHeight: 1.05, letterSpacing: "-0.03em", color: V.ink }}>{title}</h1>
+          {subtitle && <div style={{ fontSize: 15, color: V.secondary, marginTop: 10, lineHeight: 1.5 }}>{subtitle}</div>}
         </div>
         {right && <div className="flex items-center gap-4 shrink-0">{right}</div>}
       </div>
@@ -78,7 +78,7 @@ export function Subnav({ items, active, onChange, label = "Secondary" }: {
         const content = (
           <>
             {it.label}
-            {it.count != null && <span style={{ fontFamily: V.meta, fontSize: 10.5, color: V.tertiary, marginLeft: 5 }}>{it.count}</span>}
+            {it.count != null && <span style={{ fontFamily: V.meta, fontSize: 10, color: on ? "#F6F4EF" : V.body, background: on ? V.ink : "rgba(25,25,23,0.07)", borderRadius: 999, padding: "1px 6px", marginLeft: 6, verticalAlign: "1px" }}>{it.count}</span>}
           </>
         );
         if (it.href) {
@@ -150,7 +150,7 @@ export function Chevron({ size = 14 }: { size?: number }) {
 /** White card: 1px rgba(25,25,23,0.10) border, 8px radius, no shadow. */
 export function Card({ children, className = "", style, lift = false }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; lift?: boolean }) {
   return (
-    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 6, boxShadow: "0 1px 2px rgba(18,20,24,0.04)", ...style }}>
+    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 12, boxShadow: "0 1px 2px rgba(25,25,23,0.04), 0 14px 34px -22px rgba(25,25,23,0.22)", ...style }}>
       {children}
     </div>
   );

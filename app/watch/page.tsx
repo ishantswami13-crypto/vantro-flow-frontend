@@ -172,7 +172,7 @@ function WatchPageInner() {
     <DashboardLayout pageTitle="Monitors">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 34, letterSpacing: "-0.02em", color: "#191917" }}>
+          <h1 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 40, lineHeight: 1.05, letterSpacing: "-0.03em", color: "#191917" }}>
             Monitors
           </h1>
           <Button primary small onClick={() => setShowModal(true)}><IconPlus size={13} />New monitor</Button>
@@ -218,8 +218,8 @@ function WatchPageInner() {
             boxSizing: "border-box",
             background: "#FFFFFF",
             border: "1px solid rgba(25,25,23,0.10)",
-            borderRadius: 6,
-            boxShadow: "0 1px 2px rgba(25,25,23,0.04)",
+            borderRadius: 12,
+            boxShadow: "0 1px 2px rgba(25,25,23,0.04), 0 14px 34px -22px rgba(25,25,23,0.22)",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",

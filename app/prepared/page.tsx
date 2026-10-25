@@ -112,7 +112,7 @@ function PreparedCardView({
   const when = formatTimestamp(card.timestamp);
 
   return (
-    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.09)", borderRadius: 6, boxShadow: "0 1px 2px rgba(25,25,23,0.04)", padding: "18px 20px" }}>
+    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.08)", borderRadius: 12, boxShadow: "0 1px 2px rgba(25,25,23,0.04), 0 14px 34px -22px rgba(25,25,23,0.22)", padding: "20px 22px" }}>
       <div className="meta" style={{ fontSize: 10, color: "#6E6E69", marginBottom: 8 }}>
         {card.trigger.replace(/_/g, " ")}{when ? `, ${when}` : ""}
       </div>
@@ -231,9 +231,9 @@ export default function PreparedPage() {
               aria-selected={on}
               onClick={() => setTab(t.key)}
               className={on ? "" : "hover-dim"}
-              style={{ fontSize: 13.5, color: on ? "#191917" : "#63635F", paddingBottom: 8, marginBottom: -1, whiteSpace: "nowrap", background: "none", borderBottom: `2px solid ${on ? "var(--accent)" : "transparent"}` }}
+              style={{ fontSize: 13.5, color: on ? "#191917" : "#63635F", paddingBottom: 8, marginBottom: -1, whiteSpace: "nowrap", background: "none", borderBottom: `1.5px solid ${on ? "#191917" : "transparent"}` }}
             >
-              {t.label} <span style={{ color: on ? "#63635F" : "#B9B8B2", fontSize: 12 }}>{data ? counts[t.key] : ""}</span>
+              {t.label}{data ? <span style={{ fontFamily: "var(--meta)", fontSize: 10, color: on ? "#F6F4EF" : "#43433F", background: on ? "#191917" : "rgba(25,25,23,0.07)", borderRadius: 999, padding: "1px 6px", marginLeft: 6, verticalAlign: "1px" }}>{counts[t.key]}</span> : null}
             </button>
           );
         })}

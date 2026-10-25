@@ -9,7 +9,7 @@ import { DecisionApiError } from "@/lib/decisions";
 
 export function Panel({ title, subtitle, right, children }: { title: string; subtitle?: React.ReactNode; right?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="fade-once" style={{ background: "#FFFFFF", border: `1px solid ${C.card}`, borderRadius: 6, boxShadow: "0 1px 2px rgba(18,20,24,0.04)", padding: "22px 24px" }}>
+    <section className="fade-once" style={{ background: "#FFFFFF", border: `1px solid ${C.card}`, borderRadius: 12, boxShadow: "0 1px 2px rgba(25,25,23,0.04), 0 14px 34px -22px rgba(25,25,23,0.22)", padding: "22px 24px" }}>
       <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
         <div style={{ minWidth: 0 }}>
           <h2 style={{ color: C.ink, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 20, letterSpacing: "-0.012em", margin: 0 }}>{title}</h2>
