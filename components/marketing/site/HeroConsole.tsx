@@ -16,7 +16,7 @@ const TONE_LABEL: Record<string, string> = { risk: "Risk", warn: "Warning", info
 export function HeroConsole() {
   return (
     <>
-      <InView className="hc" aria-hidden>
+      <InView className="hc" threshold={0.01} aria-hidden>
         <div className="hc-glow" />
         <div className="hc-frame">
           <div className="hc-top">

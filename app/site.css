@@ -38,6 +38,29 @@
 .sl-start .hx-facts { margin: 0; padding: 0; border: 0; max-width: none; }
 .sl-start .hx-foot .f-cap { margin: 0; }
 
+/* Centred variant: one column, one focal point, then the product as the
+   cinematic moment. The console settles from a tilt under a horizon beam. */
+.sl-start .hx-c { text-align: center; padding-top: clamp(40px, 4.6vw, 72px); }
+.sl-start .hx-c::after { top: -380px; width: 1600px; margin-left: -800px; background: radial-gradient(closest-side, rgb(241 231 211 / .1), transparent 72%); }
+.sl-start .hx-c .hx-top { display: flex; flex-direction: column; align-items: center; }
+.sl-start .hx-c .hx-h { margin-top: clamp(24px, 2.6vw, 36px); max-width: none; font-size: clamp(48px, 6.9vw, 104px); line-height: .94; }
+.sl-start .hx-c .hx-h > span { white-space: nowrap; }
+.sl-start .hx-c .hx-h em { display: block; }
+.sl-start .hx-c .hx-lead { margin: clamp(24px, 2.4vw, 34px) auto 0; max-width: 36rem; font-size: clamp(17px, 1.4vw, 20px); }
+.sl-start .hx-c .hx-actions { justify-content: center; margin-top: 34px; }
+.sl-start .hx-c .hx-facts { justify-content: center; margin-top: 30px; }
+.sl-start .hx-c .hx-facts li { color: var(--fg2); }
+.sl-start .hx-c .hx-stage { position: relative; margin-top: clamp(56px, 5.5vw, 80px); perspective: 1800px; text-align: left; }
+.sl-start .hx-beam { position: absolute; left: 50%; top: -1px; width: min(1100px, 86vw); height: 1px; transform: translateX(-50%); z-index: 2; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgb(241 231 211 / .9) 50%, transparent); box-shadow: 0 0 40px 8px rgb(241 231 211 / .12); }
+.sl-start .hx-beam::after { content: ""; position: absolute; left: 15%; right: 15%; top: 0; height: 260px; background: radial-gradient(ellipse 50% 100% at 50% 0, rgb(241 231 211 / .1), transparent 70%); }
+.sl-start .hx-c .hc-glow { display: none; }
+.sl-start .hx-c .hx-foot { justify-content: center; margin-top: 8px; }
+.sl-start[data-motion="on"] .hx-c .hc-frame { transition: opacity 1s var(--ease), transform 1.4s var(--ease); }
+.sl-start[data-motion="on"] .hx-c .hc:not(.is-in) .hc-frame { opacity: 0; transform: translateY(40px) rotateX(22deg) scale(.94); }
+.sl-start[data-motion="on"] .hx-beam { transition: opacity 1.2s var(--ease) .3s, width 1.4s var(--ease) .3s; }
+.sl-start[data-motion="on"] .hx-c:not(:has(.hc.is-in)) .hx-beam { opacity: 0; width: 20vw; }
+
 /* Console */
 .sl-start .hc { position: relative; }
 .sl-start .hc-glow { position: absolute; left: 8%; right: 8%; top: -60px; height: 340px; z-index: -1; filter: blur(40px); pointer-events: none;
@@ -278,6 +301,9 @@
   .sl-start .hx-side, .sl-start .ph-side { grid-column: 1 / -1; }
   .sl-start .hx-h { font-size: clamp(42px, 12vw, 64px); }
   .sl-start .hx-h > span { white-space: normal; }
+  .sl-start .hx-c .hx-h { font-size: clamp(42px, 12.4vw, 64px); }
+  .sl-start .hx-c .hx-h > span { white-space: normal; }
+  .sl-start .hx-c .hx-facts { flex-direction: column; align-items: center; gap: 10px; }
   .sl-start .ph-h { font-size: clamp(40px, 11vw, 56px); }
   .sl-start .hx-pill { font-size: 12.5px; }
   .sl-start .hx-pill span { display: none; }

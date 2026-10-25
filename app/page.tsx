@@ -41,32 +41,29 @@ export default function LandingPage() {
   return (
     <SiteShell>
       {/* 01 · Hero */}
-      <header className="f f-dark hx">
-        <div className="f-wrap">
+      <header className="f f-dark hx hx-c">
+        <div className="f-wrap hx-top">
           <Link href="/pricing" className="hx-pill"><i className="sq t-ok" aria-hidden />Now accepting pilot applications<span>How a pilot works<b aria-hidden>→</b></span></Link>
-          <div className="hx-grid">
-            <h1 className="f-display hx-h"><span>Know what changed</span> <em>before it costs you.</em></h1>
-            <div className="hx-side">
-              <p className="f-lead hx-lead">
-                Starlane is the intelligence layer for your business. It reads the systems you already run, raises only
-                the changes that matter, and shows the evidence behind every figure. A person decides.
-              </p>
-              <div className="f-actions hx-actions">
-                <Link href="/access" className="sl-btn sl-btn-solid sl-btn-lg">Request a pilot</Link>
-                <Link href="/platform" className="f-link">See the product<span aria-hidden>→</span></Link>
-              </div>
-            </div>
+          <h1 className="f-display hx-h"><span>Know what changed</span> <em>before it costs you.</em></h1>
+          <p className="f-lead hx-lead">
+            Starlane reads the systems you already run and puts the few changes that matter in front of you each
+            morning, with the evidence behind every figure. A person decides.
+          </p>
+          <div className="f-actions hx-actions">
+            <Link href="/access" className="sl-btn sl-btn-solid sl-btn-lg">Request a pilot</Link>
+            <Link href="/platform" className="f-link">See the product<span aria-hidden>→</span></Link>
           </div>
-        </div>
-        <div className="f-wrap hx-stage"><HeroConsole /></div>
-        <div className="f-wrap hx-foot">
           <ul className="f-facts hx-facts">
             <li><Glyph name="readonly" />Read-only connections</li>
             <li><Glyph name="evidence" />Every figure sourced</li>
             <li><Glyph name="gate" />Nothing sent without approval</li>
           </ul>
-          <p className="f-cap">{CAPTION}</p>
         </div>
+        <div className="hx-stage">
+          <div className="hx-beam" aria-hidden />
+          <div className="f-wrap"><HeroConsole /></div>
+        </div>
+        <div className="f-wrap hx-foot"><p className="f-cap">{CAPTION}</p></div>
       </header>
 
       {/* Live sources, by name */}
