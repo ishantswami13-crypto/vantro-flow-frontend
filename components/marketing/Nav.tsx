@@ -15,21 +15,22 @@ export function useNavScroll(ref: React.RefObject<HTMLElement | null>) {
   }, [ref]);
 }
 
-// Public navigation. Wordmark left, four destinations centred, sign in and one
+// Public navigation. Wordmark left, five destinations centred, sign in and one
 // call to action right. Transparent at the top of the page; a quiet surface and
 // hairline once the page scrolls.
 const LINKS: Array<[string, string]> = [
-  ["/product", "Product"],
+  ["/platform", "Product"],
   ["/integrations", "Integrations"],
-  ["/#how", "How it works"],
   ["/security", "Security"],
+  ["/pricing", "Pricing"],
+  ["/company", "Company"],
 ];
 
 export function Nav({ tone = "light" }: { tone?: "light" | "dark" }) {
   const navRef = useRef<HTMLElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const path = usePathname();
-  const cur = (href: string) => (path === href ? "page" : undefined);
+  const cur = (href: string) => (path === href || path?.startsWith(href + "/") ? "page" : undefined);
   useNavScroll(navRef);
   useEffect(() => {
     const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { setMenuOpen(false); navRef.current?.querySelector<HTMLButtonElement>("button")?.focus(); } };
@@ -64,7 +65,7 @@ export function Nav({ tone = "light" }: { tone?: "light" | "dark" }) {
         </div>
       </nav>
       <div id="sl-mobile-menu" className={`sl-mobile-menu${menuOpen ? " open" : ""}${tone === "dark" ? " sl-menu-dark" : ""}`}>
-        {LINKS.map(([href, label]) => <Link key={href} href={href} onClick={close}>{label}</Link>)}
+        {LINKS.map(([href, label]) => <Link key={href} href={href} aria-current={cur(href)} onClick={close}>{label}</Link>)}
         <Link href="/login" onClick={close}>Sign in</Link>
       </div>
     </>

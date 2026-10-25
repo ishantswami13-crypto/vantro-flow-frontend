@@ -1,6 +1,11 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { PublicShell } from "@/components/marketing/PublicShell";
+import "../landing.css";
+import "../start.css";
+import "../site.css";
+import Link from "next/link";
+import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
+import { Glyph } from "@/components/marketing/home/Glyph";
+import { InView } from "@/components/marketing/home/InView";
 
 export const metadata: Metadata = {
   title: "Security and control · Starlane",
@@ -10,57 +15,128 @@ export const metadata: Metadata = {
 // Only controls that exist in the product and backend today. Anything not yet
 // achieved (certifications, audits, uptime commitments) is said to be absent,
 // not implied.
-const CONTROLS: Array<[string, string]> = [
-  ["Approval queue", "Proposed actions wait for a person, and higher-risk action types always require approval. Opening an approval link changes nothing; you confirm with a button on the page."],
-  ["Runs at most once", "Each approved action is claimed atomically and runs at most once. The message text you approve is the text that is sent."],
-  ["Evidence", "Figures are labelled as fact, calculated, assumption or estimate, with the records they came from. Simulations show a low to high range and the assumptions behind it."],
-  ["Audit trail", "Decisions are logged with who made them, when, and the values before and after."],
-  ["Read-only connections", "TallyPrime is read through export only. Each Bridge device has its own credential, which you can revoke."],
-  ["Outbound messaging off by default", "Nothing is sent to customers or suppliers until messaging is explicitly enabled for the account."],
-  ["Limits on AI agents", "AI agents are blocked from marking payments received, changing amounts or deleting records."],
-  ["Account scoping", "Every request is scoped to the signed-in account. One account is one business."],
-  ["Passwords and sign-in", "Passwords are hashed with bcrypt. Sign-in is rate-limited."],
-  ["Transport and headers", "HTTPS with HTTP Strict Transport Security, standard security headers, and a content security policy on the web app."],
+
+const FLOW = [
+  { g: "decision", k: "Proposed", b: "Starlane proposes an action, with its evidence and options." },
+  { g: "scope", k: "Policy check", b: "Blocked outright if it would mark a payment received, change an amount or delete a record." },
+  { g: "gate", k: "Waits for a person", b: "Opening an approval link changes nothing. You confirm with a button on the page." },
+  { g: "once", k: "Runs once", b: "The approved action is claimed atomically. The text you approved is the text sent." },
+  { g: "audit", k: "Recorded", b: "Who decided, when, and the values before and after, in an append-only log." },
+];
+
+const GROUPS: Array<{ k: string; items: Array<[string, string, string]> }> = [
+  { k: "Decisions", items: [
+    ["gate", "Approval queue", "Proposed actions wait for a person, and higher-risk action types always require approval."],
+    ["once", "Runs at most once", "Each approved action is claimed atomically and runs at most once. The message text you approve is the text that is sent."],
+    ["scope", "Limits on AI agents", "AI agents are blocked from marking payments received, changing amounts or deleting records."],
+    ["audit", "Audit trail", "Decisions are logged with who made them, when, and the values before and after."],
+  ] },
+  { k: "Data", items: [
+    ["readonly", "Read-only connections", "TallyPrime is read through export only. Each Bridge device has its own credential, which you can revoke."],
+    ["evidence", "Evidence on every figure", "Figures are labelled as fact, calculated, assumption or estimate, with the records they came from. Simulations show a low to high range and the assumptions behind it."],
+    ["system", "Account scoping", "Every request is scoped to the signed-in account. One account is one business."],
+  ] },
+  { k: "Access and transport", items: [
+    ["signal", "Outbound messaging off by default", "Nothing is sent to customers or suppliers until messaging is explicitly enabled for the account."],
+    ["verified", "Passwords and sign-in", "Passwords are hashed with bcrypt. Sign-in is rate-limited."],
+    ["external", "Transport and headers", "HTTPS with HTTP Strict Transport Security, standard security headers, and a content security policy on the web app."],
+  ] },
+];
+
+const ABSENT = [
+  ["Certifications", "Starlane does not hold SOC 2, ISO 27001 or other third-party certifications, and does not claim compliance with frameworks it has not been assessed against."],
+  ["Organisations and SSO", "Multi-user organisations and single sign-on are not supported yet."],
+  ["Bug bounty", "There is no bug bounty programme."],
 ];
 
 export default function SecurityPage() {
   return (
-    <PublicShell>
-      <article className="sl-wrap" style={{ maxWidth: 880, paddingTop: "clamp(56px, 8vw, 112px)", paddingBottom: "clamp(88px, 10vw, 144px)" }}>
-        <span className="sl-eyebrow">Security and control</span>
-        <h1 className="sl-h2" style={{ margin: 0, maxWidth: "18ch" }}>The controls Starlane has today.</h1>
-        <p className="sl-sub" style={{ marginTop: 22, maxWidth: 620 }}>
-          Starlane is built to be checked. This page lists what exists now, in plain words. It does not list plans.
-        </p>
+    <SiteShell>
+      <PageHero
+        kicker="Security and control"
+        title={<>Built to be <em>checked.</em></>}
+        lead="This page lists the controls that exist in Starlane today, in plain words. It does not list plans. During a pilot we take your team through each one and how it is built."
+        index={[["#flow", "How an action moves"], ["#controls", "Controls"], ["#claims", "What we do not claim"], ["#disclosure", "Report a vulnerability"]]}
+      />
 
-        <dl className="sl-facts" style={{ marginTop: 56 }}>
-          {CONTROLS.map(([k, v]) => (
-            <div key={k} className="sl-fact"><dt>{k}</dt><dd>{v}</dd></div>
+      <section id="flow" className="f f-dark f-room" aria-labelledby="s1-h">
+        <div className="f-wrap">
+          <div className="f-head f-head-split">
+            <div>
+              <Index n="01" k="How an action moves" />
+              <h2 id="s1-h" className="f-h2">Starlane recommends. People decide.</h2>
+            </div>
+            <p className="f-body">Every action Starlane proposes takes the same path, and none of it can be skipped. Outbound messaging stays off until it is enabled for the account.</p>
+          </div>
+          <InView as="ol" className="sf">
+            {FLOW.map((s, i) => (
+              <li key={s.k} style={{ "--n": i } as React.CSSProperties}>
+                <span className="sf-node"><Glyph name={s.g} size={18} /></span>
+                <span className="sf-n">{String(i + 1).padStart(2, "0")}</span>
+                <h3>{s.k}</h3>
+                <p>{s.b}</p>
+              </li>
+            ))}
+          </InView>
+        </div>
+      </section>
+
+      <section id="controls" className="f f-light" aria-labelledby="s2-h">
+        <div className="f-wrap">
+          <div className="f-head f-head-split">
+            <div>
+              <Index n="02" k="Controls" />
+              <h2 id="s2-h" className="f-h2">Ten controls, in place today.</h2>
+            </div>
+            <p className="f-body">Each is confirmed against the product’s code. Where a control depends on a setting, the default is stated.</p>
+          </div>
+          {GROUPS.map((g) => (
+            <div key={g.k} className="sg">
+              <h3 className="sg-k">{g.k}</h3>
+              <ul className="pz-list">
+                {g.items.map(([gl, k, v]) => (
+                  <li key={k}><h4 className="pz-h"><Glyph name={gl} size={18} />{k}</h4><p>{v}</p></li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </dl>
+        </div>
+      </section>
 
-        <section style={{ marginTop: 72 }} aria-labelledby="claims-h">
-          <h2 id="claims-h" className="sl-h3" style={{ fontSize: 24, fontWeight: 400, margin: 0 }}>What Starlane does not claim</h2>
-          <p className="sl-p" style={{ marginTop: 14, maxWidth: 640 }}>
-            Starlane does not hold SOC 2, ISO 27001 or other third-party certifications, and does not claim compliance
-            with frameworks it has not been assessed against. It does not yet support multi-user organisations or single
-            sign-on. During a pilot we take your team through the controls above and how they are built.
-          </p>
-        </section>
+      <section id="claims" className="f f-slab" aria-labelledby="s3-h">
+        <div className="f-wrap f-grid">
+          <div className="f-side">
+            <Index n="03" k="What we do not claim" />
+            <h2 id="s3-h" className="f-h2">What is absent, said plainly.</h2>
+            <p className="f-body">A security page is only useful if you can trust what it leaves out.</p>
+          </div>
+          <div className="f-main">
+            <ul className="pz-list">
+              {ABSENT.map(([k, v]) => <li key={k}><h3 className="pz-h">{k}</h3><p>{v}</p></li>)}
+            </ul>
+          </div>
+        </div>
+      </section>
 
-        <section style={{ marginTop: 56 }} aria-labelledby="report-h">
-          <h2 id="report-h" className="sl-h3" style={{ fontSize: 24, fontWeight: 400, margin: 0 }}>Reporting a vulnerability</h2>
-          <p className="sl-p" style={{ marginTop: 14, maxWidth: 640 }}>
-            Please report it privately before disclosing it, to{" "}
-            <a href="mailto:ishantswami13@gmail.com?subject=Security%20disclosure" style={{ textDecoration: "underline", textUnderlineOffset: 4 }}>ishantswami13@gmail.com</a>{" "}
-            with the subject “Security disclosure”. There is no bug bounty programme.
-          </p>
-        </section>
+      <section id="disclosure" className="f f-light" aria-labelledby="s4-h">
+        <div className="f-wrap f-grid">
+          <div className="f-side">
+            <Index n="04" k="Disclosure" />
+            <h2 id="s4-h" className="f-h2">Report a vulnerability.</h2>
+          </div>
+          <div className="f-main">
+            <p className="f-lede" style={{ maxWidth: "34ch", marginTop: 0 }}>Please report it privately before disclosing it.</p>
+            <p className="f-body">
+              Write to{" "}
+              <a href="mailto:ishantswami13@gmail.com?subject=Security%20disclosure" className="f-inline">ishantswami13@gmail.com</a>{" "}
+              with the subject “Security disclosure”.
+            </p>
+            <p className="f-after"><Link href="/privacy" className="f-link">Privacy policy<span aria-hidden>→</span></Link></p>
+          </div>
+        </div>
+      </section>
 
-        <p className="sl-p" style={{ marginTop: 56 }}>
-          <Link href="/privacy" className="sl-link-arrow">Privacy policy</Link>
-        </p>
-      </article>
-    </PublicShell>
+      <CloseBand title="Walk your team through the controls." secondary={["/platform", "See the product"]} />
+    </SiteShell>
   );
 }

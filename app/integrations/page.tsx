@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "../landing.css";
 import "../home.css";
+import "../start.css";
+import "../site.css";
 import Link from "next/link";
-import { Nav } from "@/components/marketing/Nav";
-import { Footer } from "@/components/marketing/Footer";
+import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
 import { IntegrationHub } from "@/components/marketing/landing/IntegrationHub";
 import { CATEGORIES } from "@/components/marketing/landing/integrationsData";
 
@@ -15,43 +16,67 @@ export const metadata: Metadata = {
 };
 
 // The full integrations catalogue, as reference documentation. The homepage
-// summary reads the same list; statuses mirror the backend connector registry.
+// reads the same list; statuses mirror the backend connector registry.
+
+const STATES = [
+  { c: "ih-live", k: "Live", n: count("live"), b: "Works in the product today. Connections are read-only; TallyPrime is read through a local bridge, the rest through exports." },
+  { c: "ih-planned", k: "Planned", n: count("planned"), b: "On the roadmap, or built and not yet switched on. Not usable yet, and not shown as if it were." },
+  { c: "ih-custom", k: "Custom", n: count("custom"), b: "Not in the catalogue. Can be built for your pilot on the connector framework, through an API, webhook, database or file." },
+];
+
 export default function IntegrationsPage() {
   return (
-    <div className="sl sl-home">
-      <a className="sl-skip" href="#main">Skip to content</a>
-      <Nav />
-      <main id="main">
-        <header className="st-page-head">
-          <div className="st-wrap st-grid">
-            <div className="st-col-wide">
-              <p className="st-meta">Integrations · {count("live")} live · {count("planned")} planned · {count("custom")} custom</p>
-              <h1 className="st-h1">Works with the systems your business already runs on.</h1>
-              <p className="st-lead">
-                Each entry shows how it connects and its real status. Live works in the product today. Planned is on the
-                roadmap. Custom is built for your pilot on Starlane’s connector framework.
-              </p>
-            </div>
-          </div>
-        </header>
-        <section className="st-section st-section-tight" aria-label="All integrations">
-          <div className="st-wrap">
+    <SiteShell>
+      <PageHero
+        kicker="Integrations"
+        title={<>Works with the systems <em>you already run.</em></>}
+        lead="Each entry shows how it connects and its real status. Nothing in your systems changes: Starlane reads, and every action it proposes waits for a person."
+      >
+        <div className="f-actions">
+          <Link href="/access" className="sl-btn sl-btn-solid">Request a pilot</Link>
+          <a href="#catalogue" className="f-link">Browse the catalogue<span aria-hidden>→</span></a>
+        </div>
+      </PageHero>
+
+      <section className="f f-slab ih-states" aria-labelledby="i1-h">
+        <div className="f-wrap">
+          <Index k="Three statuses" />
+          <h2 id="i1-h" className="sl-sr">What each status means</h2>
+          <ul className="ih-grid">
+            {STATES.map((s) => (
+              <li key={s.k} className={s.c}>
+                <p className="ih-n num">{s.n}</p>
+                <h3><i aria-hidden />{s.k}</h3>
+                <p>{s.b}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section id="catalogue" className="f f-light ih-cat" aria-label="All integrations">
+        <div className="f-wrap">
+          <div className="sl sl-home ih-wrap">
             <IntegrationHub />
           </div>
-        </section>
-        <section className="st-section st-stone st-section-tight" aria-labelledby="custom-h">
-          <div className="st-wrap st-grid">
-            <div className="st-col-head">
-              <h2 id="custom-h" className="st-h3">Not listed?</h2>
-            </div>
-            <div className="st-col-body st-inline-cta">
-              <p className="st-body">If a system has an API, a database or an export, it can be connected for your pilot on the connector framework.</p>
-              <Link href="/access" className="sl-btn sl-btn-solid st-btn">Request a pilot</Link>
-            </div>
+        </div>
+      </section>
+
+      <section className="f f-slab" aria-labelledby="i3-h">
+        <div className="f-wrap f-grid">
+          <div className="f-side">
+            <Index k="Not listed?" />
+            <h2 id="i3-h" className="f-h2">If it has an export, it can connect.</h2>
           </div>
-        </section>
-      </main>
-      <Footer />
-    </div>
+          <div className="f-main">
+            <p className="f-lede" style={{ marginTop: 0 }}>A system with an API, a database or an export can be connected for your pilot on the connector framework.</p>
+            <p className="f-body">Tell us what you run when you apply. We confirm what connects today and what a pilot would need, before anything is connected.</p>
+            <div className="f-actions"><Link href="/access" className="sl-btn sl-btn-solid">Request a pilot</Link></div>
+          </div>
+        </div>
+      </section>
+
+      <CloseBand title="Start with the systems you have." secondary={["/security", "How connections are secured"]} />
+    </SiteShell>
   );
 }
