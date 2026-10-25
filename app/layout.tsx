@@ -18,11 +18,10 @@ export const metadata: Metadata = {
   description:
     "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
   keywords: [
-    "business automation India", "MSME automation software", "collections automation India",
-    "WhatsApp business automation", "invoice automation India", "Hinglish WhatsApp reminders",
-    "Tally ERP sync", "cash flow automation India", "Indian business OS",
-    "autopilot business software", "distributor automation India", "vyapar alternative",
-    "receivables management India", "B2B collections India",
+    "AI business operating system", "decision intelligence", "accounts receivable automation",
+    "collections automation", "cash flow forecasting", "approval workflows",
+    "finance operations software", "enterprise decision automation", "evidence-based AI",
+    "receivables management", "B2B collections", "TallyPrime integration",
   ],
   authors: [{ name: "Starlane", url: APP_URL }],
   creator: "Starlane",
@@ -30,7 +29,7 @@ export const metadata: Metadata = {
 
   openGraph: {
     type: "website",
-    locale: "en_IN",
+    locale: "en_US",
     url: APP_URL,
     siteName: "Starlane",
     title: "Starlane — The operating layer every modern business runs on",
@@ -88,9 +87,9 @@ export const viewport: Viewport = { themeColor: "#FAFAF9" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-IN">
+    <html lang="en">
       <head>
-        {/* Structured data — Indian SaaS product */}
+        {/* Structured data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -106,7 +105,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               inLanguage: ["en", "hi"],
               audience: {
                 "@type": "Audience",
-                audienceType: "Indian MSMEs, distributors, traders, manufacturers",
+                audienceType: "Businesses of every size, from owner-led companies to enterprises",
               },
             }),
           }}

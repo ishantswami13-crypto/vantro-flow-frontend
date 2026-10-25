@@ -9,7 +9,7 @@ export default function MissionsPage() {
       eyebrow="Feature 4 of 7"
       title="Missions"
       status="live"
-      lede="A mission gives Starlane one objective with a deadline — “collect ₹1,20,000 from Mehta Hardware within 14 days” — and measures progress against your books, not against what was sent."
+      lede="A mission gives Starlane one objective with a deadline, “collect $120,000 from Brightwater Retail within 14 days”, and measures progress against your books, not against what was sent."
     >
       <Section title="How a mission works">
         <Facts items={[

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import StarlaneMark from "@/components/brand/StarlaneMark";
 import { useEffect, useRef, useState } from "react";
 
@@ -14,10 +15,21 @@ export function useNavScroll(ref: React.RefObject<HTMLElement | null>) {
   }, [ref]);
 }
 
-// Section 01 — navigation. Wordmark left, a handful of anchors, one CTA.
-export function Nav() {
+// Public navigation. Wordmark left, four destinations centred, sign in and one
+// call to action right. Transparent at the top of the page; a quiet surface and
+// hairline once the page scrolls.
+const LINKS: Array<[string, string]> = [
+  ["/product", "Product"],
+  ["/integrations", "Integrations"],
+  ["/#how", "How it works"],
+  ["/security", "Security"],
+];
+
+export function Nav({ tone = "light" }: { tone?: "light" | "dark" }) {
   const navRef = useRef<HTMLElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const path = usePathname();
+  const cur = (href: string) => (path === href ? "page" : undefined);
   useNavScroll(navRef);
   useEffect(() => {
     const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { setMenuOpen(false); navRef.current?.querySelector<HTMLButtonElement>("button")?.focus(); } };
@@ -29,16 +41,16 @@ export function Nav() {
 
   return (
     <>
-      <nav aria-label="Main navigation" className="sl-nav" ref={navRef}>
-        <Link href="/" aria-label="Starlane home" className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={26} />Starlane</Link>
+      <nav aria-label="Main navigation" className={`sl-nav${tone === "dark" ? " sl-nav-dark" : ""}`} ref={navRef}>
+        <Link href="/" aria-label="Starlane home" className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={22} />Starlane</Link>
         <div className="sl-navlinks">
-          <Link href="/product" className="hidden md:inline">Features</Link>
-          <Link href="/product/bridge" className="hidden md:inline">The Bridge</Link>
-          <Link href="/product/scan" className="hidden md:inline">Scan</Link>
-          <Link href="/#how" className="hidden md:inline">How it works</Link>
-          <Link href="/#trust" className="hidden md:inline">Trust</Link>
-          <Link href="/login" className="hidden md:inline">Sign in</Link>
-          <a href="/download/windows" className="sl-btn sl-btn-solid">Download</a>
+          <div className="sl-navmid">
+            {LINKS.map(([href, label]) => (
+              <Link key={href} href={href} aria-current={cur(href)} className="hidden lg:inline">{label}</Link>
+            ))}
+          </div>
+          <Link href="/login" className="hidden lg:inline">Sign in</Link>
+          <Link href="/access" className="sl-btn sl-btn-solid">Request a pilot</Link>
           <button
             type="button"
             className="sl-nav-toggle"
@@ -47,18 +59,13 @@ export function Nav() {
             aria-controls="sl-mobile-menu"
             onClick={() => setMenuOpen((v) => !v)}
           >
-            <span style={{ fontSize: 18, lineHeight: 1 }}>{menuOpen ? "×" : "≡"}</span>
+            <span aria-hidden className={`sl-burger${menuOpen ? " x" : ""}`}><i /><i /></span>
           </button>
         </div>
       </nav>
-      <div id="sl-mobile-menu" className={`sl-mobile-menu${menuOpen ? " open" : ""}`}>
-        <Link href="/product" onClick={close}>Features</Link>
-        <Link href="/product/bridge" onClick={close}>The Bridge</Link>
-        <Link href="/product/scan" onClick={close}>Scan</Link>
-        <Link href="/#how" onClick={close}>How it works</Link>
-        <Link href="/#trust" onClick={close}>Trust</Link>
+      <div id="sl-mobile-menu" className={`sl-mobile-menu${menuOpen ? " open" : ""}${tone === "dark" ? " sl-menu-dark" : ""}`}>
+        {LINKS.map(([href, label]) => <Link key={href} href={href} onClick={close}>{label}</Link>)}
         <Link href="/login" onClick={close}>Sign in</Link>
-        <Link href="/access" onClick={close}>Request a pilot</Link>
       </div>
     </>
   );
