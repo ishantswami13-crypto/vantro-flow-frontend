@@ -44,7 +44,7 @@ export default function ScanHistoryPage() {
         <PageHeader
           title="History"
           subtitle="Your Scan conversations on this device"
-          right={<Button href="/scan"><IconPlus size={14} /> New conversation</Button>}
+          right={<Button href="/bridge"><IconPlus size={14} /> New conversation</Button>}
         >
           {threads && threads.length > 0 && (
             <div style={{ marginTop: 18 }}>

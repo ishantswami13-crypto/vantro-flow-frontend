@@ -11,7 +11,7 @@ import { ScanComposer, businessNameFromStorage } from "@/components/scan/ScanCom
 import { ScanThinking } from "@/components/scan/ScanThinking";
 import { isPromptSaved, removeSavedPrompt, savePrompt } from "@/lib/promptStore";
 import { api, getUser } from "@/lib/api";
-import { appendTurn, getThread, messagesFor, type ScanThread, type ScanTurn } from "@/lib/scanStore";
+import { appendTurn, createThread, getThread, messagesFor, takePendingQuestion, type ScanThread, type ScanTurn } from "@/lib/scanStore";
 
 // A Scan conversation: every question and answer in order, with the box
 // docked underneath for the next one. POST /api/ai-chat (server.js) returns
@@ -27,8 +27,21 @@ export default function ScanThreadPage() {
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const started = useRef(false);
+  // A question sent from the start screen arrives here before its answer:
+  // the conversation shows it at once and fetches the answer in place.
+  const [fresh, setFresh] = useState(false);
 
-  useEffect(() => { setThread(getThread(params.queryId)); }, [params.queryId]);
+  useEffect(() => {
+    const existing = getThread(params.queryId);
+    if (existing) { setThread(existing); return; }
+    if (started.current) return;
+    const q = takePendingQuestion(params.queryId);
+    if (!q) { setThread(null); return; }
+    started.current = true;
+    setFresh(true);
+    void ask(q, null);
+  }, [params.queryId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keep the newest turn in view as the conversation grows.
   const turnCount = thread?.turns.length || 0;
@@ -36,48 +49,59 @@ export default function ScanThreadPage() {
     if (turnCount > 1 || pending) endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [turnCount, pending]);
 
-  const send = async () => {
-    const q = followUp.trim();
-    if (!q || !thread || pending) return;
+  // Answers q in this conversation; with no saved thread yet, the answer starts it.
+  async function ask(q: string, current: ScanThread | null) {
     setPending(q);
-    setFollowUp("");
     setError(null);
     try {
       const user = getUser();
-      const response = await api.aiChat(user?.id || "", messagesFor(thread, q), businessNameFromStorage(user?.business_name));
+      const response = await api.aiChat(user?.id || "", messagesFor(current, q), businessNameFromStorage(user?.business_name));
       const turn: ScanTurn = { question: q, response, askedAt: new Date().toISOString() };
-      const saved = appendTurn(thread.id, turn);
-      setThread(saved || { ...thread, turns: [...thread.turns, turn], updatedAt: turn.askedAt });
+      if (current) {
+        const saved = appendTurn(current.id, turn);
+        setThread(saved || { ...current, turns: [...current.turns, turn], updatedAt: turn.askedAt });
+      } else {
+        createThread(turn, params.queryId);
+        setThread(getThread(params.queryId) || { id: params.queryId, title: q, createdAt: turn.askedAt, updatedAt: turn.askedAt, turns: [turn] });
+        setFresh(false);
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't reach Starlane for that follow-up.");
+      setError(e instanceof Error ? e.message : "Couldn't reach Starlane to answer that.");
       setFollowUp(q);
     } finally {
       setPending(null);
     }
+  }
+
+  const send = () => {
+    const q = followUp.trim();
+    if (!q || pending || (!thread && !fresh)) return;
+    setFollowUp("");
+    void ask(q, thread || null);
   };
 
   return (
     <DashboardLayout pageTitle="Assistant">
       <div style={{ width: 760, maxWidth: "100%", margin: "0 auto", display: "flex", flexDirection: "column", minHeight: "calc(100vh - 150px)" }}>
         <div className="flex items-center justify-between" style={{ padding: "4px 0 18px" }}>
-          <Link href="/scan" className="scan-tool" style={{ marginLeft: -9 }}><IconPlus size={14} /> New conversation</Link>
+          <Link href="/bridge" className="scan-tool" style={{ marginLeft: -9 }}><IconPlus size={14} /> New conversation</Link>
           <Link href="/scan/history" className="scan-tool" style={{ marginRight: -9 }}><IconHistory size={14} /> History</Link>
         </div>
 
-        {thread === undefined && <div style={{ padding: "40px 0" }}><ThinkingDots /></div>}
+        {thread === undefined && !fresh && <div style={{ padding: "40px 0" }}><ThinkingDots /></div>}
 
         {thread === null && (
           <EmptyLine
             title="This conversation isn't on this device"
             body="Scan keeps conversations in this browser only, so one asked on another device or cleared from History can't be opened here. Ask again for a fresh answer."
-            action={<Link href="/scan" className="btn-secondary-v32" style={{ display: "inline-block", padding: "8px 14px", borderRadius: 6, fontSize: 12.5, textDecoration: "none", marginTop: 12 }}>Back to Scan</Link>}
+            action={<Link href="/bridge" className="btn-secondary-v32" style={{ display: "inline-block", padding: "8px 14px", borderRadius: 6, fontSize: 12.5, textDecoration: "none", marginTop: 12 }}>Start a new conversation</Link>}
           />
         )}
 
-        {thread && (
+        {(thread || fresh) && (
           <>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 34 }}>
-              {thread.turns.map((t, i) => <Turn key={`${t.askedAt}-${i}`} turn={t} />)}
+              {(thread?.turns || []).map((t, i) => <Turn key={`${t.askedAt}-${i}`} turn={t} />)}
               {pending && (
                 <div className="fade-once" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   <div className="scan-q">{pending}</div>
@@ -94,7 +118,7 @@ export default function ScanThreadPage() {
                 onChange={setFollowUp}
                 onSubmit={send}
                 submitting={!!pending}
-                placeholder="Ask a follow-up"
+                placeholder={thread ? "Ask a follow-up" : "Ask Starlane anything about your business"}
               />
               {error && <p role="alert" style={{ fontSize: 12.5, color: "#A64F4B", margin: "10px 4px 0" }}>{error}</p>}
               <p style={{ fontSize: 11.5, color: "#6E6E69", margin: "10px 0 0", textAlign: "center" }}>

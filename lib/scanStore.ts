@@ -67,8 +67,7 @@ export function getThread(id: string): ScanThread | null {
 }
 
 /** Starts a conversation with its first answered question; returns its id. */
-export function createThread(turn: ScanTurn): string {
-  const id = newId();
+export function createThread(turn: ScanTurn, id: string = newId()): string {
   const thread: ScanThread = { id, title: turn.question, createdAt: turn.askedAt, updatedAt: turn.askedAt, turns: [turn] };
   writeAll([thread, ...readAll()]);
   return id;
@@ -82,6 +81,29 @@ export function appendTurn(id: string, turn: ScanTurn): ScanThread | null {
   t.updatedAt = turn.askedAt;
   writeAll([t, ...all.filter((x) => x.id !== id)]);
   return t;
+}
+
+// A question asked from the start screen opens its conversation at once and
+// is answered there, so the person never waits on a blank page. The question
+// rides along in sessionStorage under the new conversation's id until then.
+const PENDING_PREFIX = "starlane_scan_pending_";
+
+/** Reserves an id for a new conversation and parks its first question; returns the id. */
+export function startThread(question: string): string {
+  const id = newId();
+  try { sessionStorage.setItem(PENDING_PREFIX + id, question); } catch { /* blocked: the page asks again */ }
+  return id;
+}
+
+/** Takes (and clears) the parked first question for a conversation, if any. */
+export function takePendingQuestion(id: string): string | null {
+  try {
+    const q = sessionStorage.getItem(PENDING_PREFIX + id);
+    if (q !== null) sessionStorage.removeItem(PENDING_PREFIX + id);
+    return q;
+  } catch {
+    return null;
+  }
 }
 
 export function deleteThread(id: string): void {

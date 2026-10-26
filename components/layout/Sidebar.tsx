@@ -209,8 +209,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   }
 
   const isActive = (href: string) => {
-    // Assistant owns /scan and each conversation; History owns /scan/history.
-    if (href === "/scan") return pathname === "/scan" || (pathname.startsWith("/scan/") && pathname !== "/scan/history");
+    // Home is the chat: it owns /scan and each conversation; History owns /scan/history.
+    if (href === "/bridge") return pathname === "/bridge" || pathname === "/scan" || (pathname.startsWith("/scan/") && pathname !== "/scan/history");
     return pathname === href || pathname.startsWith(href + "/");
   };
 
@@ -256,7 +256,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
         {/* Ask and search, the two things you start with */}
         <div className="shrink-0 flex flex-col" style={{ gap: 6, marginBottom: 18 }}>
-          <Link href="/scan" onClick={onClose} className="sb-ask">
+          <Link href="/bridge" onClick={onClose} className="sb-ask">
             <IconPlus size={14} />
             <span className="flex-1">New question</span>
           </Link>

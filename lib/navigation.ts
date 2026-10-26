@@ -1,6 +1,6 @@
 import type React from "react";
 import {
-  IconBridge, IconScan, IconWatch, IconMissions, IconLibrary, IconHistory,
+  IconBridge, IconWatch, IconMissions, IconLibrary, IconHistory,
   IconDiscover, IconPrepared, IconSimulate, IconMemory, IconSources, IconAgents, IconControl, IconDecision,
 } from "@/components/v32/icons";
 
@@ -10,12 +10,11 @@ export interface PrimaryNavItem {
   icon: (p: { size?: number; className?: string; style?: React.CSSProperties }) => React.ReactElement;
 }
 
-// Primary nav, in plain words: where the work is (Home, Assistant), what
+// Primary nav, in plain words: where you ask (Home, the chat), what
 // is waiting on a person (Approvals, Decisions) and what Starlane keeps
 // running (Monitors, Tasks). Routes are unchanged; only the names are.
 export const V32_NAV_ITEMS: PrimaryNavItem[] = [
   { href: "/bridge",    label: "Home",       icon: IconBridge },
-  { href: "/scan",      label: "Assistant",  icon: IconScan },
   { href: "/prepared",  label: "Approvals",  icon: IconPrepared },
   { href: "/decisions", label: "Decisions",  icon: IconDecision },
   { href: "/watch",     label: "Monitors",   icon: IconWatch },

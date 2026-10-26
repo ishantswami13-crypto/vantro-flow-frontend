@@ -74,7 +74,7 @@ export default function LibraryPage() {
       <PageHeader
         title="Library"
         subtitle="Questions to ask and workflows to run"
-        right={<Button href="/scan"><IconPlus size={14} /> New conversation</Button>}
+        right={<Button href="/bridge"><IconPlus size={14} /> New conversation</Button>}
       >
         <div style={{ marginTop: 18 }}>
           <Subnav
