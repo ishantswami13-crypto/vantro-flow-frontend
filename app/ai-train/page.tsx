@@ -128,16 +128,16 @@ export default function AITrainPage() {
             {tab === "vocab" && (
               <div className="space-y-4">
                 <div className="p-4 bg-accent/5 border border-accent/20 rounded-xl">
-                  <p className="font-semibold text-accent text-sm mb-1 flex items-center gap-2"><FiZap size={14} /> Yahi hai aapka "Custom AI"</p>
+                  <p className="font-semibold text-accent text-sm mb-1 flex items-center gap-2"><FiZap size={14} /> Teach Starlane your words</p>
                   <p className="text-xs text-secondary">
-                    Apne business ki language sikhao — "Bajri" = sand, "Sariya" = TMT rods.
-                    Jab customer call kare, AI in words ko automatically samjhega bina bataye.
+                    Add the names your trade uses: "Bajri" is sand, "Sariya" is TMT rods.
+                    When a customer calls, Starlane understands these words without being told.
                   </p>
                 </div>
 
                 {/* Quick seed */}
                 <div className="card p-4">
-                  <p className="text-sm font-semibold text-primary mb-3">Quick Seed — apni industry choose karo</p>
+                  <p className="text-sm font-semibold text-primary mb-3">Quick start: pick your industry</p>
                   <div className="grid grid-cols-2 gap-2">
                     {INDUSTRIES.map(ind => (
                       <button key={ind.id} onClick={() => seedVocab(ind.id)} disabled={seedLoading}
@@ -152,7 +152,7 @@ export default function AITrainPage() {
 
                 {/* Add custom term */}
                 <div className="card p-4">
-                  <p className="font-semibold text-primary mb-3 text-sm flex items-center gap-2"><FiPlus size={14} /> Apna Term Add Karo</p>
+                  <p className="font-semibold text-primary mb-3 text-sm flex items-center gap-2"><FiPlus size={14} /> Add a term</p>
                   <form onSubmit={addVocab} className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
@@ -192,7 +192,7 @@ export default function AITrainPage() {
                 {Object.keys(vocabByCategory).length === 0 ? (
                   <div className="card p-8 text-center">
                     <FiBook size={32} className="mx-auto mb-3 text-muted opacity-30" />
-                    <p className="text-sm text-muted">AI vocabulary empty hai — upar se industry choose karo</p>
+                    <p className="text-sm text-muted">No terms yet. Pick your industry above to start.</p>
                   </div>
                 ) : (
                   Object.entries(vocabByCategory).map(([cat, items]) => (
@@ -239,7 +239,7 @@ export default function AITrainPage() {
                   <p className="text-xs text-secondary">
                     {twilioConfigured
                       ? "Customers call → AI records order → auto-call worker. Sab automatic!"
-                      : "Apna Twilio account connect karo — ek baar karna hai, hamesha ke liye."}
+                      : "Connect your Twilio account. You only do this once."}
                   </p>
                 </div>
 
@@ -253,7 +253,7 @@ export default function AITrainPage() {
                       <p className="font-bold text-primary text-sm">Twilio Credentials</p>
                       <p className="text-2xs text-muted">
                         <a href="https://www.twilio.com/try-twilio" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">twilio.com</a>
-                        {" "}pe free account → Console mein SID aur token copy karo
+                        {" "}and create a free account, then copy the SID and token from the Console
                       </p>
                     </div>
                   </div>
@@ -263,7 +263,7 @@ export default function AITrainPage() {
                       <input value={twilioForm.account_sid} onChange={e => setTwilioForm(f => ({ ...f, account_sid: e.target.value }))}
                         placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                         className="w-full bg-surface-2 border border-border rounded-xl px-3 py-2.5 text-sm font-mono text-primary focus:outline-none focus:border-accent/50 placeholder:text-muted/40" />
-                      <p className="text-2xs text-muted mt-0.5">Dashboard pe milega — AC... se shuru hota hai</p>
+                      <p className="text-2xs text-muted mt-0.5">On the dashboard; it starts with AC…</p>
                     </div>
                     <div>
                       <label className="text-2xs text-muted font-semibold uppercase tracking-wider block mb-1">Auth Token</label>
@@ -277,7 +277,7 @@ export default function AITrainPage() {
                           {showToken ? <FiEyeOff size={14} /> : <FiEye size={14} />}
                         </button>
                       </div>
-                      <p className="text-2xs text-muted mt-0.5">Account Info → Auth Token (reveal karo, copy karo)</p>
+                      <p className="text-2xs text-muted mt-0.5">Account Info → Auth Token (reveal it, then copy)</p>
                     </div>
                     <div>
                       <label className="text-2xs text-muted font-semibold uppercase tracking-wider block mb-1">Phone Number</label>
@@ -310,14 +310,14 @@ export default function AITrainPage() {
 
                 {/* How it works */}
                 <div className="card p-4">
-                  <p className="font-bold text-primary mb-3 text-sm">Kaise kaam karta hai</p>
+                  <p className="font-bold text-primary mb-3 text-sm">How it works</p>
                   <div className="space-y-2.5">
                     {[
-                      { icon: "📞", text: "Customer aapka Twilio number call karta hai" },
-                      { icon: "🎙️", text: "AI namaste bolta hai, order record karta hai (Hindi/Hinglish)" },
-                      { icon: "🧠", text: "Groq Whisper + aapka vocabulary → order extract" },
+                      { icon: "📞", text: "A customer calls your Twilio number" },
+                      { icon: "🎙️", text: "The assistant answers and records the order (Hindi, Hinglish or English)" },
+                      { icon: "🧠", text: "Speech-to-text and your vocabulary turn the call into an order" },
                       { icon: "💾", text: "Order automatically Today's Orders mein save" },
-                      { icon: "🔔", text: "Aapko push notification milta hai turant" },
+                      { icon: "🔔", text: "You get a notification straight away" },
                       { icon: "🚚", text: "First active worker ko auto-call — full details ke saath" },
                     ].map(({ icon, text }, i) => (
                       <div key={i} className="flex items-center gap-2.5">

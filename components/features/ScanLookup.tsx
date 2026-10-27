@@ -89,7 +89,7 @@ export default function ScanLookup() {
           {scan.invoices.some((i) => i.daysOverdue > 0 && !i.disputed) ? (
             <Link href={invoice ? `/missions/new?invoice=${encodeURIComponent(invoice.subject.id)}` : `/missions/new?customer=${encodeURIComponent(scan.subject.name)}`}
               style={{ justifySelf: "start", fontSize: 13.5, padding: "7px 12px", borderRadius: 6, background: "#191917", color: "#fff", textDecoration: "none" }}>
-              Start a mission to collect{invoice ? " this invoice" : ""}
+              Start a task to collect{invoice ? " this invoice" : ""}
             </Link>
           ) : null}
         </article>

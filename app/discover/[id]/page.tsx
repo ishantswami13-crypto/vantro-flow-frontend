@@ -113,7 +113,7 @@ export default function DiscoverDetailPage() {
 
             <div className="flex flex-wrap" style={{ gap: 10, paddingTop: 12 }}>
               <Button primary small href="/simulate">Simulate</Button>
-              <Button small href="/watch?new=1">Watch this</Button>
+              <Button small href="/watch?new=1">Monitor this</Button>
               <Button small href={`/scan?q=${encodeURIComponent(`Tell me more about: ${impact.signal.event_title || impact.signal.why_exists || "this finding"}`)}`}>Ask about this</Button>
             </div>
           </div>

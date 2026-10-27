@@ -44,7 +44,7 @@ const STEPS: Step[] = [
     desc: "Daily 9 AM auto-chase runs for Pro users — hands-free collections",
     action: "Upgrade Plan",
     href: "/billing",
-    color: "#F5A524",
+    color: "#8C6826",
   },
 ];
 

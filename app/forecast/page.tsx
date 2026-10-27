@@ -254,7 +254,7 @@ export default function ForecastPage() {
         {!loading && !openingCash && (
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
             style={{ background: "rgba(0,102,255,0.08)", border: "1px solid rgba(0,102,255,0.2)" }}>
-            <FiDollarSign size={15} style={{ color: "#0066FF", flexShrink: 0 }} />
+            <FiDollarSign size={15} style={{ color: "#566C82", flexShrink: 0 }} />
             <p className="text-sm flex-1" style={{ color: "#191917" }}>
               Set your current cash balance to get an accurate forecast
             </p>
@@ -273,12 +273,12 @@ export default function ForecastPage() {
                 />
                 <button onClick={saveCash}
                   className="px-3 py-1 rounded-lg text-xs font-semibold"
-                  style={{ background: "#0066FF", color: "#fff" }}>Save</button>
+                  style={{ background: "#566C82", color: "#fff" }}>Save</button>
               </div>
             ) : (
               <button onClick={() => setShowCashInput(true)}
                 className="px-3 py-1 rounded-lg text-xs font-semibold"
-                style={{ background: "#0066FF", color: "#fff" }}>Set Cash</button>
+                style={{ background: "#566C82", color: "#fff" }}>Set Cash</button>
             )}
           </div>
         )}
@@ -291,10 +291,10 @@ export default function ForecastPage() {
         ) : !noData ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 stagger-children">
             {[
-              { label: "Opening Cash",         value: openingCash ? fmt(kpis.cashStart) : "Set →", sub: openingCash ? "tap to update" : "not set yet", icon: FiDollarSign,    color: "#0066FF", clickable: true },
-              { label: "Daily Burn Rate",       value: fmt(kpis.burnRate),       sub: "from your purchases",    icon: FiTrendingDown,  color: "#F5424D", clickable: false },
-              { label: "Avg Daily Collections", value: fmt(kpis.avgCollections), sub: "based on history",       icon: FiDollarSign,    color: "#10D98A", clickable: false },
-              { label: "Cash Runway",           value: kpis.runwayDays > 0 ? `${kpis.runwayDays}d` : "—", sub: "pessimistic case", icon: FiAlertTriangle, color: kpis.runwayDays < 15 ? "#F5424D" : "#F5A524", clickable: false },
+              { label: "Opening Cash",         value: openingCash ? fmt(kpis.cashStart) : "Set →", sub: openingCash ? "tap to update" : "not set yet", icon: FiDollarSign,    color: "#566C82", clickable: true },
+              { label: "Daily Burn Rate",       value: fmt(kpis.burnRate),       sub: "from your purchases",    icon: FiTrendingDown,  color: "#A64F4B", clickable: false },
+              { label: "Avg Daily Collections", value: fmt(kpis.avgCollections), sub: "based on history",       icon: FiDollarSign,    color: "#477054", clickable: false },
+              { label: "Cash Runway",           value: kpis.runwayDays > 0 ? `${kpis.runwayDays}d` : "—", sub: "pessimistic case", icon: FiAlertTriangle, color: kpis.runwayDays < 15 ? "#A64F4B" : "#8C6826", clickable: false },
             ].map(({ label, value, sub, icon: Icon, color, clickable }) => (
               <div key={label} className="card-metric p-5"
                 onClick={() => clickable && setShowCashInput(true)}
@@ -338,9 +338,9 @@ export default function ForecastPage() {
               </div>
               <div className="flex items-center gap-5 text-2xs">
                 {[
-                  { label: "Optimistic",  color: "#10D98A", dash: false },
-                  { label: "Expected",    color: "#0066FF", dash: false },
-                  { label: "Pessimistic", color: "#F5424D", dash: true  },
+                  { label: "Optimistic",  color: "#477054", dash: false },
+                  { label: "Expected",    color: "#566C82", dash: false },
+                  { label: "Pessimistic", color: "#A64F4B", dash: true  },
                 ].map(({ label, color, dash }) => (
                   <span key={label} className="flex items-center gap-1.5 text-secondary">
                     <span className="w-5 inline-block" style={{ height: "2px", background: dash ? `repeating-linear-gradient(90deg, ${color} 0, ${color} 4px, transparent 4px, transparent 8px)` : color }} />
@@ -354,23 +354,23 @@ export default function ForecastPage() {
               <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gradOpt"  x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor="#10D98A" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="#10D98A" stopOpacity={0} />
+                    <stop offset="0%"   stopColor="#477054" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="#477054" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="gradExp"  x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor="#0066FF" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#0066FF" stopOpacity={0} />
+                    <stop offset="0%"   stopColor="#566C82" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#566C82" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" vertical={false} />
                 <XAxis dataKey="date" tick={{ fill: "#6E6E69", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                 <YAxis tickFormatter={fmt} tick={{ fill: "#6E6E69", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
                 <Tooltip content={<CustomTooltip />} />
-                <ReferenceLine y={0} stroke="#F5424D" strokeDasharray="4 2" strokeWidth={1}
-                  label={{ value: "Zero Cash", fill: "#F5424D", fontSize: 9, position: "insideTopLeft" }} />
-                <Area type="monotone" dataKey="optimistic"  name="Optimistic"  stroke="#10D98A" strokeWidth={2}   fill="url(#gradOpt)" dot={false} />
-                <Area type="monotone" dataKey="expected"    name="Expected"    stroke="#0066FF" strokeWidth={2.5} fill="url(#gradExp)" dot={false} />
-                <Line type="monotone" dataKey="pessimistic" name="Pessimistic" stroke="#F5424D" strokeWidth={2}   strokeDasharray="5 3" dot={false} />
+                <ReferenceLine y={0} stroke="#A64F4B" strokeDasharray="4 2" strokeWidth={1}
+                  label={{ value: "Zero Cash", fill: "#A64F4B", fontSize: 9, position: "insideTopLeft" }} />
+                <Area type="monotone" dataKey="optimistic"  name="Optimistic"  stroke="#477054" strokeWidth={2}   fill="url(#gradOpt)" dot={false} />
+                <Area type="monotone" dataKey="expected"    name="Expected"    stroke="#566C82" strokeWidth={2.5} fill="url(#gradExp)" dot={false} />
+                <Line type="monotone" dataKey="pessimistic" name="Pessimistic" stroke="#A64F4B" strokeWidth={2}   strokeDasharray="5 3" dot={false} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -411,9 +411,9 @@ export default function ForecastPage() {
                       {c.priority_score != null && (
                         <div className="flex items-center gap-2">
                           <div className="score-bar-track">
-                            <div className="score-bar-fill" style={{ width: `${c.priority_score}%`, background: c.priority_score >= 70 ? "#10D98A" : "#F5A524" }} />
+                            <div className="score-bar-fill" style={{ width: `${c.priority_score}%`, background: c.priority_score >= 70 ? "#477054" : "#8C6826" }} />
                           </div>
-                          <span className="text-xs metric-value" style={{ color: c.priority_score >= 70 ? "#10D98A" : "#F5A524" }}>{c.priority_score}%</span>
+                          <span className="text-xs metric-value" style={{ color: c.priority_score >= 70 ? "#477054" : "#8C6826" }}>{c.priority_score}%</span>
                         </div>
                       )}
                     </td>
@@ -495,9 +495,9 @@ export default function ForecastPage() {
                       <YAxis tickFormatter={fmt} tick={{ fill: "#6E6E69", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
                       <Tooltip content={<CustomTooltip />} />
                       <Line type="monotone" dataKey="observed" name="Observed" stroke="#6E6E69" strokeWidth={2} dot={false} connectNulls />
-                      <Line type="monotone" dataKey="predicted" name="Predicted" stroke="#0066FF" strokeWidth={2.5} dot={false} connectNulls />
-                      <Line type="monotone" dataKey="low" name="Uncertainty (low)" stroke="#F5424D" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
-                      <Line type="monotone" dataKey="high" name="Uncertainty (high)" stroke="#10D98A" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
+                      <Line type="monotone" dataKey="predicted" name="Predicted" stroke="#566C82" strokeWidth={2.5} dot={false} connectNulls />
+                      <Line type="monotone" dataKey="low" name="Uncertainty (low)" stroke="#A64F4B" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
+                      <Line type="monotone" dataKey="high" name="Uncertainty (high)" stroke="#477054" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
                     </ComposedChart>
                   </ResponsiveContainer>
 

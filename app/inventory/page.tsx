@@ -309,10 +309,10 @@ export default function InventoryPage() {
               </div>
             ))
           ) : [
-            { label: "Total Products",   value: summary.total_products.toString(),    icon: <FiPackage size={15}/>,      color: "#0066FF" },
-            { label: "Stock Value",      value: fmtVal(summary.total_value),          icon: <FiTrendingUp size={15}/>,   color: "#10D98A" },
-            { label: "Low Stock",        value: summary.low_stock_count.toString(),   icon: <FiAlertTriangle size={15}/>,color: "#F5A524" },
-            { label: "Out of Stock",     value: summary.out_of_stock_count.toString(),icon: <FiBox size={15}/>,          color: "#F5424D" },
+            { label: "Total Products",   value: summary.total_products.toString(),    icon: <FiPackage size={15}/>,      color: "#566C82" },
+            { label: "Stock Value",      value: fmtVal(summary.total_value),          icon: <FiTrendingUp size={15}/>,   color: "#477054" },
+            { label: "Low Stock",        value: summary.low_stock_count.toString(),   icon: <FiAlertTriangle size={15}/>,color: "#8C6826" },
+            { label: "Out of Stock",     value: summary.out_of_stock_count.toString(),icon: <FiBox size={15}/>,          color: "#A64F4B" },
           ].map(k => (
             <div key={k.label} className="card-metric p-5">
               <div className="flex items-center justify-between mb-3">

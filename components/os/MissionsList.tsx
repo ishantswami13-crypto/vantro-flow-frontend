@@ -61,16 +61,16 @@ export function MissionsList({ all, filter, loading, error, agentNames }: { all:
   const list = all.filter((m) => f.states.includes(m.state));
 
   if (loading) return <SkeletonRows rows={3} />;
-  if (error) return <ErrorBanner>Missions could not be loaded: {errorText(error)} Nothing has been changed.</ErrorBanner>;
+  if (error) return <ErrorBanner>Tasks could not be loaded: {errorText(error)} Nothing has been changed.</ErrorBanner>;
   if (all.length === 0) {
     return (
       <EmptyLine
         title="Nothing is being handled yet."
-        body={<>Open a decision in <Link className="underline" href="/prepared">Prepared</Link> and choose Handle it, or deploy a proposed workflow. Starlane runs it in shadow mode first.</>}
+        body={<>Open a decision in <Link className="underline" href="/prepared">Approvals</Link> and choose Handle it, or deploy a proposed workflow. Starlane runs it in shadow mode first.</>}
       />
     );
   }
-  if (list.length === 0) return <EmptyLine title={filter === "at_risk" ? "No mission is at risk." : filter === "completed" ? "No mission has finished yet." : "No active mission."} />;
+  if (list.length === 0) return <EmptyLine title={filter === "at_risk" ? "No task is at risk." : filter === "completed" ? "No task has finished yet." : "No active task."} />;
   return (
     <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
       {list.map((m) => <MissionCard key={m.id} m={m} agentNames={agentNames} />)}
@@ -118,7 +118,7 @@ function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string
         </div>
       </div>
       <div className="flex items-center justify-between" style={{ marginTop: "auto", fontSize: 12, color: V.secondary }}>
-        <span>{blockers > 0 ? `${blockers} blocker${blockers === 1 ? "" : "s"}` : m.source === "DECISION" ? "From a decision" : m.source === "COLLECTION" ? "Collection mission" : "Deployed workflow"}</span>
+        <span>{blockers > 0 ? `${blockers} blocker${blockers === 1 ? "" : "s"}` : m.source === "DECISION" ? "From a decision" : m.source === "COLLECTION" ? "Collection task" : "Deployed workflow"}</span>
         <span style={{ color: V.tertiary }}>
           {m.mode === "SHADOW" ? "Shadow" : m.mode === "WITH_APPROVAL" ? "Waits for approval" : m.mode ? "Live" : ""}
           {m.updatedAt ? `${m.mode ? " · " : ""}${ago(m.updatedAt)}` : ""}

@@ -325,8 +325,8 @@ export default function DecisionDetailPage() {
   // and precondition check a step-by-step run would have.
   const handle = useMutation(act(() => decisionsApi.handle(id, { approve: true, optionKey: detail?.decision.recommendation?.key, note: note || undefined }), (r) => {
     const ran = r.steps.find((s) => s.step === "EXECUTED");
-    if (!ran) return r.next || "Mission started.";
-    return ran.mode === "SHADOW" ? "Mission started in shadow mode. Nothing was changed outside Starlane. Track it in Missions." : "Mission started. Track it in Missions.";
+    if (!ran) return r.next || "Task started.";
+    return ran.mode === "SHADOW" ? "Task started in shadow mode. Nothing was changed outside Starlane. Track it in Tasks." : "Task started. Track it in Tasks.";
   }));
   const requestInfo = useMutation(act((key: string | undefined) => decisionsApi.requestInformation(id, key), (r) => `Task created: ${r.request.label}`));
   const observe = useMutation(act(() => decisionsApi.observe(id, obs, "MEDIUM"), () => { setObs(""); return "Added to the evidence as your observation."; }));
@@ -473,7 +473,7 @@ export default function DecisionDetailPage() {
             {canChoose && !rec.informationFirst && recOption && recOption.valid !== false && (
               <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(25,25,23,0.08)" }}>
                 <p className="text-[13px] max-w-[760px]" style={{ color: C.body }}>
-                  <span style={{ fontWeight: 500 }}>Handle it</span> approves &ldquo;{rec.label}&rdquo; and starts a mission.{" "}
+                  <span style={{ fontWeight: 500 }}>Handle it</span> approves &ldquo;{rec.label}&rdquo; and starts a task.{" "}
                   {recOption.isDoNothing
                     ? "Nothing is changed; Starlane checks what happens."
                     : detail.pilotMode === "SHADOW"

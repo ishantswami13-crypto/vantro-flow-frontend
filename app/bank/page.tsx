@@ -1,5 +1,6 @@
 "use client";
 import { authHeaders } from "@/lib/api";
+import { txnText } from "@/lib/txnText";
 import { useEffect, useRef, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import {
@@ -19,7 +20,7 @@ const BANKS = [
 
 const BANK_COLORS: Record<string, string> = {
   "HDFC Bank": "#004C8F", "SBI": "#22409A", "ICICI Bank": "#F58220",
-  "Axis Bank": "#800000", "Kotak Mahindra Bank": "#E21F26", "Other": "#0066FF",
+  "Axis Bank": "#800000", "Kotak Mahindra Bank": "#E21F26", "Other": "#566C82",
 };
 
 type BankAccount = {
@@ -372,7 +373,7 @@ export default function BankPage() {
                 <div key={acct.id} className="card p-4 relative group">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-black shrink-0"
-                      style={{ background: BANK_COLORS[acct.bank_name] || "#0066FF" }}>
+                      style={{ background: BANK_COLORS[acct.bank_name] || "#566C82" }}>
                       {acct.bank_name.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -543,8 +544,8 @@ export default function BankPage() {
         ) : txns.length === 0 ? (
           <div className="card p-10 text-center">
             <FiCreditCard size={36} className="mx-auto mb-3 text-muted opacity-30" />
-            <p className="font-semibold text-primary mb-1">Koi transaction nahi abhi tak</p>
-            <p className="text-sm text-muted mb-4">Bank account connect karo aur statement import karo — ya manually add karo</p>
+            <p className="font-semibold text-primary mb-1">No transactions yet</p>
+            <p className="text-sm text-muted mb-4">Connect a bank account and import a statement, or add one by hand.</p>
             <div className="flex gap-3 justify-center">
               <button onClick={() => setShowAddAccount(true)} className="btn-primary px-4 py-2 rounded-xl text-sm font-bold">
                 <FiLink size={13} className="inline mr-1" /> Connect Account
@@ -567,7 +568,7 @@ export default function BankPage() {
                     {txn.type === "credit" ? <FiArrowDown size={14} /> : <FiArrowUp size={14} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-primary truncate">{txn.description || "Transaction"}</p>
+                    <p className="text-sm font-semibold text-primary truncate">{txnText(txn.description) || "Transaction"}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       <p className="text-2xs text-muted">{fmtDate(txn.txn_date)}</p>
                       {txn.status === "matched" && (
@@ -609,7 +610,7 @@ export default function BankPage() {
             <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-primary">Connect Bank Account</h3>
-                <p className="text-xs text-muted mt-0.5">Sirf details store karta hai — securely</p>
+                <p className="text-xs text-muted mt-0.5">Stores the account details only</p>
               </div>
               <button aria-label="Close" onClick={() => setShowAddAccount(false)} className="text-muted hover:text-primary"><FiX size={16} /></button>
             </div>
@@ -653,7 +654,7 @@ export default function BankPage() {
               <div className="p-3 bg-surface-2 rounded-xl flex items-start gap-2">
                 <FiAlertCircle size={13} className="text-muted shrink-0 mt-0.5" />
                 <p className="text-2xs text-muted">
-                  Hum sirf aapke bank ka naam aur last 4 digits store karte hain. Poora account number, password ya OTP kabhi nahi maangenge.
+                  Starlane stores only the bank name and the last 4 digits. It never asks for the full account number, a password or an OTP.
                 </p>
               </div>
               <div className="flex gap-3 pt-1">
@@ -668,7 +669,7 @@ export default function BankPage() {
             {/* How to import */}
             <div className="px-5 pb-5">
               <p className="text-2xs text-muted text-center">
-                Account add karne ke baad → <span className="text-accent font-semibold">Import Statement</span> click karo → bank se CSV download karo → upload karo
+                After adding the account, choose <span className="text-accent font-semibold">Import Statement</span>, download a CSV from your bank and upload it.
               </p>
             </div>
           </div>

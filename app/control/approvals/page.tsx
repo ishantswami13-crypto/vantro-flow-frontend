@@ -142,7 +142,7 @@ export default function ControlApprovalsPage() {
             {actions !== null && !loadError && actions.length === 0 && (
               <EmptyLine
                 title="No other actions are waiting for a decision right now."
-                body={<>Decisions Starlane raises wait on <Link className="underline" href="/prepared">Prepared</Link>.</>}
+                body={<>Decisions Starlane raises wait on <Link className="underline" href="/prepared">Approvals</Link>.</>}
               />
             )}
 

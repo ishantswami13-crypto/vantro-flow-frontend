@@ -79,7 +79,7 @@ export function MemoryLearning() {
       </Panel>
 
       <Panel title="What Starlane knows" subtitle="Kept apart by where it came from. Only learned patterns are measured, and each shows its sample size.">
-        {data && kinds.length === 0 && <Muted>Nothing yet. Teach Starlane on the Bridge, or let a workflow run and be checked.</Muted>}
+        {data && kinds.length === 0 && <Muted>Nothing yet. Teach Starlane from Home, or let a workflow run and be checked.</Muted>}
         {kinds.map(([kind, items]) => (
           <Row key={kind}>
             <SectionLabel>{KIND_LABEL[kind] || kind}</SectionLabel>

@@ -216,7 +216,7 @@ export default function DashboardPage() {
               50px serif hero; the greeting is the subtitle, not the title. ── */}
           <div>
             <h1 className="text-[30px] leading-[1.15] text-gray-900" style={{ fontWeight: 450 }}>Overview</h1>
-            <p className="text-sm text-gray-500 mt-1">{getGreeting()}, {ownerName} · {dateLabel}</p>
+            <p className="text-sm text-gray-500 mt-1" suppressHydrationWarning>{getGreeting()}, {ownerName} · {dateLabel}</p>
           </div>
 
           {/* ── Command input — compact, no pill row inside it. Real

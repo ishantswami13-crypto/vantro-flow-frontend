@@ -49,7 +49,7 @@ const voiceStyleOptions = [
   { value: "regional_hindi",  label: "Regional Hinglish — local dialect, city-specific" },
 ];
 const TONE_COLORS: Record<string, string> = {
-  gentle: "#10D98A", firm: "#F5A524", urgent: "#F5424D",
+  gentle: "#477054", firm: "#8C6826", urgent: "#A64F4B",
 };
 const TONE_LABELS: Record<string, string> = {
   gentle: "🤝 Gentle", firm: "📢 Firm", urgent: "🚨 Urgent",
@@ -550,7 +550,7 @@ function SettingsPageInner() {
                 {/* Test WhatsApp */}
                 <Card>
                   <p className="text-sm font-bold text-primary mb-1">Test WhatsApp Delivery</p>
-                  <p className="text-2xs text-muted mb-4">Apne registered number pe ek test message bhejo to confirm karein sab theek hai.</p>
+                  <p className="text-2xs text-muted mb-4">Send a test message to your registered number to confirm everything works.</p>
                   <div className="flex gap-2 items-center flex-wrap">
                     <button onClick={handleTestWhatsApp} disabled={testLoading}
                       className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-60"
@@ -614,10 +614,10 @@ function SettingsPageInner() {
                     <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
                     <div className="space-y-4">
                       {[
-                        { icon: "📄", label: "Invoice Created", desc: "Customer gets WhatsApp: Invoice raised, pay by [date]", color: "#0066FF", always: true },
-                        { icon: "🔔", label: "Your Dunning Rules", desc: "Reminders go out at Day 3, 7, 15... with payment link", color: "#F5A524", always: false },
-                        { icon: "💰", label: "Customer Pays", desc: "Invoice auto-closed → Thank you WhatsApp → Push notification", color: "#10D98A", always: true },
-                        { icon: "📊", label: "Daily Briefing (8 AM)", desc: "You get a WhatsApp summary of outstanding collections", color: "#9B6DFF", always: true },
+                        { icon: "📄", label: "Invoice Created", desc: "Customer gets WhatsApp: Invoice raised, pay by [date]", color: "#566C82", always: true },
+                        { icon: "🔔", label: "Your Dunning Rules", desc: "Reminders go out at Day 3, 7, 15... with payment link", color: "#8C6826", always: false },
+                        { icon: "💰", label: "Customer Pays", desc: "Invoice auto-closed → Thank you WhatsApp → Push notification", color: "#477054", always: true },
+                        { icon: "📊", label: "Daily Briefing (8 AM)", desc: "You get a WhatsApp summary of outstanding collections", color: "#756775", always: true },
                       ].map(({ icon, label, desc, color, always }) => (
                         <div key={label} className="relative flex gap-4 pl-10">
                           <div className="absolute left-0 w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
@@ -816,7 +816,7 @@ export default function SettingsPage() {
 function DeliveryBadge({ line }: { line?: DeliveryLine }) {
   const state = !line ? "unknown" : line.active ? "on" : "off";
   const styles = {
-    on: { background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#10D98A" },
+    on: { background: "rgba(16,217,138,0.1)", border: "1px solid rgba(16,217,138,0.25)", color: "#477054" },
     off: { background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.3)", color: "#B7791F" },
     unknown: { background: "rgba(128,128,128,0.08)", border: "1px solid rgba(128,128,128,0.2)", color: "#8A8A85" },
   }[state];

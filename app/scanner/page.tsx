@@ -240,7 +240,7 @@ export default function ScannerPage() {
               <div className="space-y-2.5">
                 {[
                   { step: "1", text: "Take a clear photo of any GST invoice" },
-                  { step: "2", text: "Groq AI reads and extracts all invoice details" },
+                  { step: "2", text: "Starlane reads the photo and fills in the invoice details" },
                   { step: "3", text: "Review extracted data and save to collections" },
                 ].map(s => (
                   <div key={s.step} className="flex items-start gap-3">

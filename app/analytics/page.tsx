@@ -156,10 +156,10 @@ export default function AnalyticsPage() {
   const totalCalls     = callLogs.reduce((s, d) => s + d.made, 0);
 
   const kpis = [
-    { label: "Sales Booked",        value: salesBooked >= 100000 ? `₹${(salesBooked/100000).toFixed(2)}L` : `₹${salesBooked.toLocaleString("en-IN")}`, color: "#10D98A", icon: <FiTrendingUp size={16} /> },
-    { label: "Purchases Booked",    value: purchasesBooked >= 100000 ? `₹${(purchasesBooked/100000).toFixed(2)}L` : `₹${purchasesBooked.toLocaleString("en-IN")}`, color: "#F5A524", icon: <FiBarChart2 size={16} /> },
-    { label: "Booked Net",          value: `${bookedNet < 0 ? "-" : ""}₹${Math.abs(bookedNet) >= 100000 ? `${(Math.abs(bookedNet)/100000).toFixed(2)}L` : Math.abs(bookedNet).toLocaleString("en-IN")}`, color: bookedNet >= 0 ? "#0066FF" : "#F5424D", icon: <FiActivity size={16} /> },
-    { label: "Cash Collected",      value: totalCollected >= 100000 ? `₹${(totalCollected/100000).toFixed(2)}L` : `₹${totalCollected.toLocaleString("en-IN")}`, color: "#10D98A", icon: <FiDollarSign size={16} /> },
+    { label: "Sales Booked",        value: salesBooked >= 100000 ? `₹${(salesBooked/100000).toFixed(2)}L` : `₹${salesBooked.toLocaleString("en-IN")}`, color: "#477054", icon: <FiTrendingUp size={16} /> },
+    { label: "Purchases Booked",    value: purchasesBooked >= 100000 ? `₹${(purchasesBooked/100000).toFixed(2)}L` : `₹${purchasesBooked.toLocaleString("en-IN")}`, color: "#8C6826", icon: <FiBarChart2 size={16} /> },
+    { label: "Booked Net",          value: `${bookedNet < 0 ? "-" : ""}₹${Math.abs(bookedNet) >= 100000 ? `${(Math.abs(bookedNet)/100000).toFixed(2)}L` : Math.abs(bookedNet).toLocaleString("en-IN")}`, color: bookedNet >= 0 ? "#566C82" : "#A64F4B", icon: <FiActivity size={16} /> },
+    { label: "Cash Collected",      value: totalCollected >= 100000 ? `₹${(totalCollected/100000).toFixed(2)}L` : `₹${totalCollected.toLocaleString("en-IN")}`, color: "#477054", icon: <FiDollarSign size={16} /> },
   ];
 
   return (
@@ -236,17 +236,17 @@ export default function AnalyticsPage() {
                   <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="gc" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor="#10D98A" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#10D98A" stopOpacity={0} />
+                        <stop offset="5%"  stopColor="#477054" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="#477054" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
                     <XAxis dataKey="month" tick={{ fill: "#6E6E69", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fill: "#6E6E69", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number, name: string) => [`₹${v}L`, name]} />
-                    <Area type="monotone" dataKey="sales" name="Sales booked" stroke="#10D98A" strokeWidth={2} fill="url(#gc)" />
-                    <Area type="monotone" dataKey="purchases" name="Purchases booked" stroke="#F5A524" strokeWidth={2} fill="transparent" />
-                    <Area type="monotone" dataKey="collected" name="Cash collected" stroke="#0066FF" strokeWidth={2} fill="transparent" />
+                    <Area type="monotone" dataKey="sales" name="Sales booked" stroke="#477054" strokeWidth={2} fill="url(#gc)" />
+                    <Area type="monotone" dataKey="purchases" name="Purchases booked" stroke="#8C6826" strokeWidth={2} fill="transparent" />
+                    <Area type="monotone" dataKey="collected" name="Cash collected" stroke="#566C82" strokeWidth={2} fill="transparent" />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
@@ -267,8 +267,8 @@ export default function AnalyticsPage() {
                       <YAxis tick={{ fill: "#6E6E69", fontSize: 11 }} axisLine={false} tickLine={false} />
                       <Tooltip contentStyle={TOOLTIP_STYLE} />
                       <Bar dataKey="made"     name="Called"   fill="#191917" radius={[4,4,0,0]} />
-                      <Bar dataKey="answered" name="Answered" fill="#0066FF" radius={[4,4,0,0]} />
-                      <Bar dataKey="promised" name="Promised" fill="#10D98A" radius={[4,4,0,0]} />
+                      <Bar dataKey="answered" name="Answered" fill="#566C82" radius={[4,4,0,0]} />
+                      <Bar dataKey="promised" name="Promised" fill="#477054" radius={[4,4,0,0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -320,10 +320,10 @@ export default function AnalyticsPage() {
                 <p className="text-sm font-bold text-primary mb-4">Connected Cash Position</p>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: "Receivable", value: analytics?.total_outstanding || 0, color: "#F5424D" },
-                    { label: "Payable", value: analytics?.total_payable || 0, color: "#F5A524" },
-                    { label: "Gross Margin", value: analytics?.gross_margin_pct || 0, suffix: "%", color: (analytics?.gross_margin_pct || 0) >= 0 ? "#10D98A" : "#F5424D" },
-                    { label: "Cash Net", value: analytics?.cash_net || 0, color: (analytics?.cash_net || 0) >= 0 ? "#0066FF" : "#F5424D" },
+                    { label: "Receivable", value: analytics?.total_outstanding || 0, color: "#A64F4B" },
+                    { label: "Payable", value: analytics?.total_payable || 0, color: "#8C6826" },
+                    { label: "Gross Margin", value: analytics?.gross_margin_pct || 0, suffix: "%", color: (analytics?.gross_margin_pct || 0) >= 0 ? "#477054" : "#A64F4B" },
+                    { label: "Cash Net", value: analytics?.cash_net || 0, color: (analytics?.cash_net || 0) >= 0 ? "#566C82" : "#A64F4B" },
                   ].map(item => (
                     <div key={item.label} className="rounded-xl border border-border bg-surface-2 p-4">
                       <p className="section-label mb-2">{item.label}</p>
@@ -368,7 +368,7 @@ export default function AnalyticsPage() {
                     <YAxis tick={{ fill: "#6E6E69", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} />
                     <Legend wrapperStyle={{ fontSize: 12, color: "#6E6E69" }} />
-                    <Line type="monotone" dataKey="collected" name="Collected ₹L" stroke="#10D98A" strokeWidth={2} dot={false} activeDot={{ r: 3, fill: "#10D98A" }} />
+                    <Line type="monotone" dataKey="collected" name="Collected ₹L" stroke="#477054" strokeWidth={2} dot={false} activeDot={{ r: 3, fill: "#477054" }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>

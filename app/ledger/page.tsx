@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser } from "@/lib/api";
+import { txnText } from "@/lib/txnText";
 import {
   FiArrowDown, FiArrowUp, FiActivity, FiPlus, FiX, FiZap,
   FiShield, FiAlertTriangle, FiCheckCircle, FiTrendingUp,
@@ -358,7 +359,7 @@ function AIMonitor({ userId }: { userId: string }) {
   };
 
   const scoreColor = (s: number) =>
-    s >= 70 ? "#10D98A" : s >= 40 ? "#F5A524" : "#F5424D";
+    s >= 70 ? "#477054" : s >= 40 ? "#8C6826" : "#A64F4B";
 
   const alertVariant: Record<string, string> = {
     danger:  "bg-danger-dim border-danger/20 text-danger",
@@ -375,7 +376,7 @@ function AIMonitor({ userId }: { userId: string }) {
           </div>
           <div>
             <p className="text-sm font-bold text-primary">AI Financial Monitor</p>
-            <p className="text-xs text-muted">Groq AI analyses your cash flow and flags issues</p>
+            <p className="text-xs text-muted">Starlane reviews your cash flow and flags issues</p>
           </div>
         </div>
         <button
@@ -659,28 +660,28 @@ export default function LedgerPage() {
       label: "Net Balance",
       value: fmt(Math.abs(summary.balance)),
       sub: summary.balance >= 0 ? "Net positive" : "Net negative",
-      color: summary.balance >= 0 ? "#10D98A" : "#F5424D",
+      color: summary.balance >= 0 ? "#477054" : "#A64F4B",
       icon: FiTrendingUp,
     },
     {
       label: "Total Received",
       value: fmt(summary.totalIn),
       sub: `This month: ${fmt(summary.monthIn)}`,
-      color: "#10D98A",
+      color: "#477054",
       icon: FiArrowDown,
     },
     {
       label: "Total Paid Out",
       value: fmt(summary.totalOut),
       sub: `This month: ${fmt(summary.monthOut)}`,
-      color: "#F5424D",
+      color: "#A64F4B",
       icon: FiArrowUp,
     },
     {
       label: "This Month Net",
       value: fmt(Math.abs(summary.monthBalance)),
       sub: summary.monthBalance >= 0 ? "Surplus this month" : "Deficit this month",
-      color: summary.monthBalance >= 0 ? "#10D98A" : "#F5424D",
+      color: summary.monthBalance >= 0 ? "#477054" : "#A64F4B",
       icon: FiActivity,
     },
   ];
@@ -1041,8 +1042,8 @@ export default function LedgerPage() {
                           <span className="text-xs font-medium text-primary">{t.category}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-xs text-secondary hidden sm:table-cell">{t.party_name || "—"}</td>
-                      <td className="px-5 py-3.5 text-xs text-muted max-w-xs truncate hidden md:table-cell">{t.description || t.notes || "—"}</td>
+                      <td className="px-5 py-3.5 text-xs text-secondary hidden sm:table-cell">{txnText(t.party_name) || "—"}</td>
+                      <td className="px-5 py-3.5 text-xs text-muted max-w-xs truncate hidden md:table-cell">{txnText(t.description || t.notes) || "—"}</td>
                       <td className="px-5 py-3.5 hidden lg:table-cell">
                         {t.payment_method && (
                           <span className="px-2 py-0.5 rounded-md bg-surface-2 border border-border text-2xs text-muted font-mono">

@@ -20,7 +20,7 @@ export function WorkflowsPanel() {
       <Panel title="Workflows Starlane is running" subtitle="Level 3 records in shadow; level 4 prepares and waits for your approval. Full autonomy is not offered.">
         {loading && <Skeleton rows={2} />}
         <ErrorLine error={error ? errorText(error) : null} />
-        {!loading && !error && list.length === 0 && <Muted>No workflow is deployed. Proposals from Scan wait in Prepared.</Muted>}
+        {!loading && !error && list.length === 0 && <Muted>No workflow is deployed. Proposals wait in Approvals.</Muted>}
         {list.map((w) => <WorkflowRow key={w.id} w={w} onChange={reload} />)}
       </Panel>
       <FromSentence onCreated={reload} />
@@ -135,7 +135,7 @@ function FromSentence({ onCreated }: { onCreated: () => void }) {
       <ErrorLine error={err} />
       {ok && (
         <div className="mt-2 text-[12.5px]" style={{ color: C.body }}>
-          <p style={{ color: C.good }}>Proposed. It is waiting in Prepared for you to deploy.</p>
+          <p style={{ color: C.good }}>Proposed. It is waiting in Approvals for you to deploy.</p>
           <ul className="mt-1 space-y-[2px]">{[...ok.understood, ...ok.notes].map((l) => <li key={l}>{l}</li>)}</ul>
         </div>
       )}

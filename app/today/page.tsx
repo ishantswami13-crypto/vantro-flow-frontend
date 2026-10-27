@@ -286,8 +286,8 @@ export default function TodayPage() {
                 <p className="meta text-muted uppercase tracking-wider mb-3">Money in, by source</p>
                 <div className="space-y-3">
                   {[
-                    { icon: FiShoppingBag, label:"Orders booked",       color:"#0066FF", value: s?.income?.orders   || 0 },
-                    { icon: FiFileText,    label:"Invoice payments received",   color:"#10D98A", value: s?.income?.invoices || 0 },
+                    { icon: FiShoppingBag, label:"Orders booked",       color:"#566C82", value: s?.income?.orders   || 0 },
+                    { icon: FiFileText,    label:"Invoice payments received",   color:"#477054", value: s?.income?.invoices || 0 },
                     { icon: FiDollarSign,  label:"Sales Recorded",       color:"#7C5CFC", value: s?.sales_total || 0 },
                   ].filter((r) => r.label !== "Sales Recorded" || r.value > 0).map(({ icon: Icon, label, color, value }) => (
                     <div key={label} className="flex items-center justify-between">
@@ -379,7 +379,7 @@ export default function TodayPage() {
               {(summary?.orders||[]).length===0 ? (
                 <div className="card-premium p-10 text-center">
                   <FiShoppingBag size={32} className="text-muted mx-auto mb-3 opacity-40" />
-                  <p className="font-bold text-primary mb-1">Koi sale nahi aaj</p>
+                  <p className="font-bold text-primary mb-1">No sales today</p>
                   <button onClick={() => setShowSaleForm(true)}
                     className="mt-3 px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-all flex items-center gap-1.5 mx-auto">
                     <FiPlus size={13} /> Add Sale
@@ -441,7 +441,7 @@ export default function TodayPage() {
               {(summary?.expenses||[]).length===0 ? (
                 <div className="card-premium p-10 text-center">
                   <FiTrendingDown size={32} className="text-muted mx-auto mb-3 opacity-40" />
-                  <p className="font-bold text-primary mb-1">Koi expense nahi aaj</p>
+                  <p className="font-bold text-primary mb-1">No expenses today</p>
                   <button onClick={() => setShowExpForm(true)}
                     className="mt-3 px-4 py-2 rounded-xl bg-danger/10 text-danger border border-danger/20 text-xs font-bold hover:bg-danger/20 transition-all flex items-center gap-1.5 mx-auto">
                     <FiPlus size={13} /> Add Expense

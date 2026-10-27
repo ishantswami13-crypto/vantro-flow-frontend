@@ -31,7 +31,7 @@ export default function SourcesConnectPage() {
         {connected && (
           <div role="status" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", border: "1px solid rgba(71,112,84,0.35)", background: "#FFFFFF", borderRadius: 8, padding: "14px 16px" }}>
             <p style={{ margin: 0, fontSize: 13.5, color: "#191917" }}>Tally is connected. Starlane is building your business state from the vouchers it received.</p>
-            <Link href="/bridge" style={{ fontSize: 13, fontWeight: 600, color: "#191917" }}>Open The Bridge →</Link>
+            <Link href="/bridge" style={{ fontSize: 13, fontWeight: 600, color: "#191917" }}>Go to Home →</Link>
           </div>
         )}
       </div>

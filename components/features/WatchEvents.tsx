@@ -39,7 +39,7 @@ export default function WatchEvents() {
   return (
     <section aria-labelledby="watch-events-h" style={{ display: "grid", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <h2 id="watch-events-h" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#191917" }}>What Watch raised</h2>
+        <h2 id="watch-events-h" style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#191917" }}>What monitors raised</h2>
         <div role="tablist" style={{ display: "flex", gap: 4, marginLeft: "auto" }}>
           {(["active", "closed"] as const).map((k) => (
             <button key={k} role="tab" aria-selected={state === k} onClick={() => setState(k)}
