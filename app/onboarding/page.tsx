@@ -355,7 +355,7 @@ export default function OnboardingPage() {
                   <div style={{ fontSize: 14, fontWeight: 600 }}>File import (CSV / Excel)</div>
                   <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Import customers, sales or purchase records from a spreadsheet</div>
                 </div>
-                <Link href="/collections?import=1" className="btn-back" style={{ whiteSpace: "nowrap", textDecoration: "none", display: "inline-block" }}>Import</Link>
+                <Link href="/decisions/import" className="btn-back" style={{ whiteSpace: "nowrap", textDecoration: "none", display: "inline-block" }}>Import</Link>
               </div>
             </div>
 

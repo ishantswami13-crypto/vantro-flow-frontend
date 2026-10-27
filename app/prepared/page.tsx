@@ -91,7 +91,7 @@ function targetPathForCard(card: PreparedCard): string {
   // Opens Approvals with this action already selected.
   if (card.source === "ai_actions") return `/control/approvals?id=${encodeURIComponent(card.id)}`;
   if (card.source === "watches") return "/watch";
-  if (card.source === "predictions") return "/forecast";
+  if (card.source === "predictions") return "/simulate";
   if (card.source === "opportunityPropagation") return "/discover";
   return "/control/approvals";
 }
