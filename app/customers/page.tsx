@@ -6,6 +6,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, authHeaders, getToken, getUser, type CustomerPortfolioResponse } from "@/lib/api";
 import { FiBook, FiMessageSquare, FiPhone, FiSearch, FiUser, FiUsers, FiAlertTriangle } from "react-icons/fi";
 import { LensDrawer, type LensSection } from "@/components/ui/LensDrawer";
+import { ShowMore } from "@/components/ui/ShowMore";
+import { useIncrementalList } from "@/lib/useIncrementalList";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -113,6 +115,7 @@ export default function CustomersPage() {
       )
     );
   }, [customers, search]);
+  const pagedCustomers = useIncrementalList(filtered, 100, search);
 
   const totalReceivable = customers.reduce((sum, c) => sum + (Number(c.balance) > 0 ? Number(c.balance) : 0), 0);
   const totalAdvance = customers.reduce((sum, c) => sum + (Number(c.balance) < 0 ? Math.abs(Number(c.balance)) : 0), 0);
@@ -249,8 +252,9 @@ export default function CustomersPage() {
             <p className="text-xs text-muted mt-1">Scan a sale invoice, create an invoice, or add a Khata entry.</p>
           </div>
         ) : (
+          <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {filtered.map((customer) => {
+            {pagedCustomers.visible.map((customer) => {
               const balance = Number(customer.balance || 0);
               return (
                 <div key={customer.customer_name} className="card-premium p-5">
@@ -345,6 +349,8 @@ export default function CustomersPage() {
               );
             })}
           </div>
+          <ShowMore shown={pagedCustomers.visible.length} total={pagedCustomers.total} remaining={pagedCustomers.remaining} onClick={pagedCustomers.showMore} />
+          </>
         )}
       </div>
 

@@ -5,6 +5,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type Invoice, authHeaders } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import { Badge } from "@/components/ui/Badge";
+import { ShowMore } from "@/components/ui/ShowMore";
+import { useIncrementalList } from "@/lib/useIncrementalList";
 import { generateWhatsAppPaymentLink } from "@/lib/paymentLink";
 import {
   FiSearch, FiMessageSquare, FiCheckSquare,
@@ -492,6 +494,7 @@ export default function CollectionsPage() {
       return sortDir === "desc" ? -d : d;
     });
   }, [search, sortKey, sortDir, filterStatus, filterIndustry, tableData]);
+  const pagedRows = useIncrementalList(rows, 100, `${search}|${sortKey}|${sortDir}|${filterStatus}|${filterIndustry}`);
 
   const toggleSort = (k: SortKey) => {
     if (k === sortKey) setSortDir(d => d === "desc" ? "asc" : "desc");
@@ -961,7 +964,7 @@ export default function CollectionsPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((c) => {
+                {pagedRows.visible.map((c) => {
                   const reply = replyLogs[c.id];
                   const broken = isPromiseBroken(c.id);
                   const nudgeMsg = broken ? getPromiseNudgeMsg(c) : "";
@@ -1119,6 +1122,7 @@ export default function CollectionsPage() {
               </tbody>
             </table>
           </div>
+          <ShowMore shown={pagedRows.visible.length} total={pagedRows.total} remaining={pagedRows.remaining} onClick={pagedRows.showMore} />
           {rows.length === 0 && (
             <div className="py-16 text-center">
               <FiSearch size={28} className="mx-auto mb-3 text-muted opacity-50" />
