@@ -126,6 +126,34 @@ export type DeliveryStatus = {
   push: DeliveryLine;
 };
 
+// A deploy or a restart of the API answers 502/503/504 (or drops the
+// connection) for a few seconds. Reads are safe to repeat, so a GET gets two
+// more tries with a short wait instead of an error on screen. Writes are never
+// repeated here: a POST that timed out may already have been applied.
+const RETRY_STATUSES = new Set([502, 503, 504]);
+const RETRY_DELAYS_MS = [400, 1200];
+
+export async function fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+  const method = (init.method || 'GET').toUpperCase();
+  const retryable = method === 'GET' || method === 'HEAD';
+  for (let attempt = 0; ; attempt++) {
+    const last = !retryable || attempt >= RETRY_DELAYS_MS.length;
+    try {
+      const res = await fetch(url, init);
+      if (last || !RETRY_STATUSES.has(res.status)) return res;
+    } catch (err) {
+      // An abort is our own timeout or the caller giving up: do not retry it.
+      if (last || (err instanceof Error && err.name === 'AbortError') || init.signal?.aborted) throw err;
+    }
+    await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
+    if (init.signal?.aborted) {
+      const abort = new Error('Aborted');
+      abort.name = 'AbortError';
+      throw abort;
+    }
+  }
+}
+
 export async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -137,7 +165,7 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include', signal: controller.signal });
+    const res = await fetchWithRetry(`${API_BASE}${path}`, { ...options, headers, credentials: 'include', signal: controller.signal });
     // A gateway error page, a 204 or a proxy timeout is not JSON; read the body
     // as text first so the caller sees the HTTP status, not a parse error.
     const raw = await res.text();

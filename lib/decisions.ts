@@ -2,7 +2,7 @@
 // Every number shown on the decision screens comes from these responses;
 // the frontend formats, it never calculates financial values.
 
-import { API_BASE, authHeaders } from '@/lib/api';
+import { API_BASE, authHeaders, fetchWithRetry } from '@/lib/api';
 
 export type Band = 'KNOWN' | 'LIKELY' | 'POSSIBLE' | 'UNKNOWN' | 'CONTRADICTED';
 export type DecisionStatus =
@@ -257,7 +257,7 @@ async function call<T>(method: 'GET' | 'POST' | 'PUT', path: string, body?: unkn
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`${API_BASE}/api/decisions${path}`, {
+    const res = await fetchWithRetry(`${API_BASE}/api/decisions${path}`, {
       method,
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       credentials: 'include',

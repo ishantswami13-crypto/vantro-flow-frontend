@@ -3,14 +3,14 @@
 // Memory panels comes from these responses; the frontend formats, it never
 // calculates financial values or decides what is allowed.
 
-import { API_BASE, authHeaders } from '@/lib/api';
+import { API_BASE, authHeaders, fetchWithRetry } from '@/lib/api';
 import { DecisionApiError } from '@/lib/decisions';
 
 async function call<T>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', path: string, body?: unknown, timeoutMs = 60_000): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`${API_BASE}/api/os${path}`, {
+    const res = await fetchWithRetry(`${API_BASE}/api/os${path}`, {
       method,
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       credentials: 'include',
