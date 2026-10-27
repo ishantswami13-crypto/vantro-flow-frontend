@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useRef, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type ScenarioInvoice, type SimulateScenarioResponse } from "@/lib/api";
@@ -51,9 +51,15 @@ function SimulatePageInner() {
   const [userId, setUserId] = useState<string | null>(null);
   const [invoices, setInvoices] = useState<ScenarioInvoice[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(true);
+  // A large ledger has thousands of open invoices; the backend sends the most
+  // overdue ones and a search narrows them. total counts every open invoice.
+  const [invoiceTotal, setInvoiceTotal] = useState(0);
+  const [invoiceQuery, setInvoiceQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [allCurrencies, setAllCurrencies] = useState<string[] | null>(null);
   // One currency across the open invoices means the totals are in it too;
   // with several, totals show as plain numbers rather than a wrong symbol.
-  const currencies = Array.from(new Set(invoices.map((i) => i.currency).filter(Boolean)));
+  const currencies = allCurrencies ?? Array.from(new Set(invoices.map((i) => i.currency).filter(Boolean)));
   const fmt = fmtIn(currencies.length === 1 ? (currencies[0] as string) : currencies.length > 1 ? "" : null);
   const [invoicesError, setInvoicesError] = useState("");
 
@@ -73,22 +79,49 @@ function SimulatePageInner() {
   }, []);
 
   useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(invoiceQuery.trim()), 300);
+    return () => clearTimeout(t);
+  }, [invoiceQuery]);
+
+  // First load: the most overdue invoices, plus a deep-linked one.
+  useEffect(() => {
     if (!userId) return;
     setInvoicesLoading(true);
     setInvoicesError("");
-    api.intelligence.scenarioInvoices(userId)
+    const prefill = searchParams?.get("invoiceId") || undefined;
+    api.intelligence.scenarioInvoices(userId, { id: prefill })
       .then((res) => {
-        setInvoices(res.invoices || []);
-        const prefill = searchParams?.get("invoiceId");
-        if (prefill && (res.invoices || []).some((inv) => inv.id === prefill)) {
+        const list = res.invoices || [];
+        setInvoices(list);
+        setInvoiceTotal(res.total ?? list.length);
+        if (res.currencies) setAllCurrencies(res.currencies);
+        if (prefill && list.some((inv) => inv.id === prefill)) {
           setSelectedInvoiceId(prefill);
-        } else if ((res.invoices || []).length > 0) {
-          setSelectedInvoiceId(res.invoices[0].id);
+        } else if (list.length > 0) {
+          setSelectedInvoiceId(list[0].id);
         }
       })
       .catch((e) => setInvoicesError(e instanceof Error ? e.message : "Could not load invoices"))
       .finally(() => setInvoicesLoading(false));
   }, [userId, searchParams]);
+
+  // Searching replaces the list but keeps the chosen invoice in it.
+  const searched = useRef(false);
+  useEffect(() => {
+    if (!userId) return;
+    if (!debouncedQuery && !searched.current) return;
+    searched.current = true;
+    let cancelled = false;
+    api.intelligence.scenarioInvoices(userId, { q: debouncedQuery || undefined, id: selectedInvoiceId || undefined })
+      .then((res) => {
+        if (cancelled) return;
+        setInvoices(res.invoices || []);
+      })
+      .catch(() => { /* keep the current list */ });
+    return () => { cancelled = true; };
+    // selectedInvoiceId is read, not watched: choosing an invoice must not refetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, debouncedQuery]);
 
   const runSimulation = useCallback(async () => {
     if (!userId || !selectedInvoiceId) return;
@@ -139,6 +172,20 @@ function SimulatePageInner() {
             ) : (
               <>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  {invoiceTotal > invoices.length && (
+                    <>
+                      <label className="sr-only" htmlFor="sim-invoice-search">Find an invoice</label>
+                      <input
+                        id="sim-invoice-search"
+                        type="search"
+                        value={invoiceQuery}
+                        onChange={(e) => setInvoiceQuery(e.target.value)}
+                        placeholder={`Search ${invoiceTotal.toLocaleString("en-IN")} open invoices`}
+                        className="sim-pill"
+                        style={{ ...pill, minWidth: 220 }}
+                      />
+                    </>
+                  )}
                   <label className="sr-only" htmlFor="sim-invoice">Invoice</label>
                   <select
                     id="sim-invoice"

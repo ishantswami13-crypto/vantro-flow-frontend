@@ -482,8 +482,16 @@ export const api = {
     // Simulate V1 (lib/routes/scenarios.js / scenarioEngine.js / fxScenarioEngine.js
     // on the backend): baseline vs. hypothetical-scenario vs. delta, over the
     // tenant's own real invoices. Never computed client-side.
-    scenarioInvoices: (userId: string) =>
-      request<{ invoices: ScenarioInvoice[] }>(`/api/intelligence/scenarios/${encodeURIComponent(userId)}/invoices`),
+    scenarioInvoices: (userId: string, opts: { q?: string; id?: string; limit?: number } = {}) => {
+      const qs = new URLSearchParams();
+      if (opts.q) qs.set('q', opts.q);
+      if (opts.id) qs.set('id', opts.id);
+      if (opts.limit) qs.set('limit', String(opts.limit));
+      const suffix = qs.toString() ? `?${qs}` : '';
+      return request<{ invoices: ScenarioInvoice[]; total?: number; currencies?: string[]; limit?: number }>(
+        `/api/intelligence/scenarios/${encodeURIComponent(userId)}/invoices${suffix}`
+      );
+    },
     simulateScenario: (
       userId: string,
       params: { targetInvoiceId: string; daysEarlier?: number; remainsUnpaid?: boolean }

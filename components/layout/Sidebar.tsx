@@ -17,60 +17,10 @@ import { IconBell, IconSearch, IconMore, IconPlus, IconSettings } from "@/compon
 
 // Everything real that sits outside the Version 32 nav lives in the "More"
 // flyout: it is still reachable, but the rail stays as quiet as the design.
+// The older screens (GST, khata, inventory, sales and the rest) are no longer
+// part of the product; middleware sends their routes home. Only the account
+// page is left beside the workspace tools.
 const MORE_GROUPS: { label: string; items: { href: string; label: string; badge?: string | null }[] }[] = [
-  {
-    label: "Business",
-    items: [
-      { href: "/today",          label: "Today" },
-      { href: "/business-state", label: "Business State" },
-      { href: "/dashboard",      label: "Overview" },
-      { href: "/customers",      label: "Customers" },
-      { href: "/suppliers",      label: "Suppliers" },
-    ],
-  },
-  {
-    label: "Money",
-    items: [
-      { href: "/collections", label: "Collections", badge: "live" },
-      { href: "/invoice/new", label: "New Invoice" },
-      { href: "/bills",       label: "GST Invoices" },
-      { href: "/bank",        label: "Bank Monitor" },
-      { href: "/ledger",      label: "Bank Ledger" },
-      { href: "/forecast",    label: "Cash Forecast" },
-      { href: "/bad-debt",    label: "Bad Debt Radar" },
-      { href: "/khata",       label: "Customer Khata" },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      { href: "/sales",      label: "Sales" },
-      { href: "/purchases",  label: "Purchases" },
-      { href: "/orders",     label: "Today's Orders" },
-      { href: "/inventory",  label: "Inventory" },
-      { href: "/scanner",    label: "Invoice Scanner" },
-      { href: "/attendance", label: "Staff Attendance" },
-      { href: "/team",       label: "Team" },
-    ],
-  },
-  {
-    label: "Automation",
-    items: [
-      { href: "/whatsapp",   label: "WhatsApp" },
-      { href: "/dunning",    label: "Auto Follow-Up" },
-      { href: "/ai-actions", label: "Action Center" },
-      { href: "/brain",      label: "Starlane Brain" },
-      { href: "/ai-chat",    label: "AI Founder" },
-      { href: "/ai-train",   label: "AI Training" },
-    ],
-  },
-  {
-    label: "Insights",
-    items: [
-      { href: "/analytics", label: "Analytics" },
-      { href: "/reports",   label: "Reports" },
-    ],
-  },
   {
     label: "Account",
     items: [
@@ -237,7 +187,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           <div className="flex items-center" style={{ gap: 2 }}>
             {/* The dot is the pending follow-up count, so the bell opens them. */}
             <Link
-              href="/collections"
+              href="/decisions"
               onClick={onClose}
               aria-label={pendingCount ? `${pendingCount} pending follow-up${pendingCount === 1 ? "" : "s"}` : "Follow-ups"}
               title={pendingCount ? `${pendingCount} pending follow-up${pendingCount === 1 ? "" : "s"}` : "Follow-ups"}

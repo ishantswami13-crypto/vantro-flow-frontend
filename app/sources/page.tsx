@@ -167,7 +167,7 @@ export default function SourcesPage() {
         </div>
       );
     }
-    if (c.authType === "file_import") return <Quiet href="/collections?import=1"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><FiUploadCloud size={13} /> Upload</span></Quiet>;
+    if (c.authType === "file_import") return <Quiet href="/decisions/import"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><FiUploadCloud size={13} /> Upload</span></Quiet>;
     return null;
   };
 
