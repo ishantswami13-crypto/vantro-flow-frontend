@@ -260,7 +260,7 @@ export default function ForecastPage() {
             </p>
             {showCashInput ? (
               <div className="flex items-center gap-2">
-                <span className="text-sm" style={{ color: "#8A8A86" }}>₹</span>
+                <span className="text-sm" style={{ color: "#6E6E69" }}>₹</span>
                 <input
                   type="number"
                   value={cashInput}
@@ -363,8 +363,8 @@ export default function ForecastPage() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" vertical={false} />
-                <XAxis dataKey="date" tick={{ fill: "#8A8A86", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis tickFormatter={fmt} tick={{ fill: "#8A8A86", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
+                <XAxis dataKey="date" tick={{ fill: "#6E6E69", fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                <YAxis tickFormatter={fmt} tick={{ fill: "#6E6E69", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
                 <Tooltip content={<CustomTooltip />} />
                 <ReferenceLine y={0} stroke="#F5424D" strokeDasharray="4 2" strokeWidth={1}
                   label={{ value: "Zero Cash", fill: "#F5424D", fontSize: 9, position: "insideTopLeft" }} />
@@ -491,10 +491,10 @@ export default function ForecastPage() {
                       margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" vertical={false} />
-                      <XAxis dataKey="label" tick={{ fill: "#8A8A86", fontSize: 9 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                      <YAxis tickFormatter={fmt} tick={{ fill: "#8A8A86", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
+                      <XAxis dataKey="label" tick={{ fill: "#6E6E69", fontSize: 9 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                      <YAxis tickFormatter={fmt} tick={{ fill: "#6E6E69", fontSize: 10 }} axisLine={false} tickLine={false} width={56} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Line type="monotone" dataKey="observed" name="Observed" stroke="#8A8A86" strokeWidth={2} dot={false} connectNulls />
+                      <Line type="monotone" dataKey="observed" name="Observed" stroke="#6E6E69" strokeWidth={2} dot={false} connectNulls />
                       <Line type="monotone" dataKey="predicted" name="Predicted" stroke="#0066FF" strokeWidth={2.5} dot={false} connectNulls />
                       <Line type="monotone" dataKey="low" name="Uncertainty (low)" stroke="#F5424D" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />
                       <Line type="monotone" dataKey="high" name="Uncertainty (high)" stroke="#10D98A" strokeDasharray="4 2" strokeWidth={1.5} dot={false} connectNulls />

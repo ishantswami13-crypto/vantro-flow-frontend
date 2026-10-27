@@ -21,8 +21,8 @@ export default function AgentRunDetail() {
   return (
     <DashboardLayout pageTitle="Agent run">
       <div className="max-w-xl mx-auto mt-16 text-center px-4 fade-once">
-        <FiUsers size={28} className="mx-auto mb-4" style={{ color: "#8A8A86" }} />
-        <h1 className="mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 22, color: "#191917" }}>No run data</h1>
+        <FiUsers size={28} className="mx-auto mb-4" style={{ color: "#6E6E69" }} />
+        <h1 className="mb-3" style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 22, color: "#191917" }}>No run data</h1>
         <p className="v32-body">
           {id && runId ? `No run "${runId}" exists for agent "${id}". ` : ""}
           Starlane doesn&apos;t track agent runs yet. Once agents can actually run, this page will show its

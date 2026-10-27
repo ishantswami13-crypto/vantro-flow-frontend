@@ -241,8 +241,8 @@ export default function AnalyticsPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
-                    <XAxis dataKey="month" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="month" tick={{ fill: "#6E6E69", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#6E6E69", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number, name: string) => [`₹${v}L`, name]} />
                     <Area type="monotone" dataKey="sales" name="Sales booked" stroke="#10D98A" strokeWidth={2} fill="url(#gc)" />
                     <Area type="monotone" dataKey="purchases" name="Purchases booked" stroke="#F5A524" strokeWidth={2} fill="transparent" />
@@ -263,8 +263,8 @@ export default function AnalyticsPage() {
                   <ResponsiveContainer width="100%" height={180}>
                     <BarChart data={callLogs} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
-                      <XAxis dataKey="day" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <XAxis dataKey="day" tick={{ fill: "#6E6E69", fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: "#6E6E69", fontSize: 11 }} axisLine={false} tickLine={false} />
                       <Tooltip contentStyle={TOOLTIP_STYLE} />
                       <Bar dataKey="made"     name="Called"   fill="#191917" radius={[4,4,0,0]} />
                       <Bar dataKey="answered" name="Answered" fill="#0066FF" radius={[4,4,0,0]} />
@@ -364,10 +364,10 @@ export default function AnalyticsPage() {
                 <ResponsiveContainer width="100%" height={160}>
                   <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#EDEDE9" />
-                    <XAxis dataKey="month" tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#8A8A86", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="month" tick={{ fill: "#6E6E69", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#6E6E69", fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={TOOLTIP_STYLE} />
-                    <Legend wrapperStyle={{ fontSize: 12, color: "#8A8A86" }} />
+                    <Legend wrapperStyle={{ fontSize: 12, color: "#6E6E69" }} />
                     <Line type="monotone" dataKey="collected" name="Collected ₹L" stroke="#10D98A" strokeWidth={2} dot={false} activeDot={{ r: 3, fill: "#10D98A" }} />
                   </LineChart>
                 </ResponsiveContainer>

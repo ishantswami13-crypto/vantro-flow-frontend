@@ -39,7 +39,7 @@ export function missionCount(all: Mission[], k: MissionFilter): number {
   return all.filter((m) => f.states.includes(m.state)).length;
 }
 
-// Status pill colours (handoff §5): outlined, 11px, radius 20.
+// Status colours (handoff §5): a square marker and a mono label.
 function stateColor(s: MissionState): string {
   if (s === "COMPLETED") return V.positive;
   if (s === "BLOCKED" || s === "FAILED") return V.critical;
@@ -91,7 +91,8 @@ function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string
   const body = (
     <>
       <div>
-        <span className="inline-block" style={{ fontSize: 11, letterSpacing: 0, color, border: `1px solid ${color}`, borderRadius: 20, padding: "3px 10px", whiteSpace: "nowrap", marginBottom: 10 }}>
+        <span className="meta inline-flex items-center" style={{ gap: 7, fontSize: 10, color, whiteSpace: "nowrap", marginBottom: 10 }}>
+          <span className="sq" aria-hidden="true" />
           {MISSION_STATE_LABEL[m.state]}
         </span>
         <div style={{ fontFamily: V.serif, fontSize: 18, lineHeight: 1.35, color: V.ink, marginBottom: 4 }}>{m.title}</div>
@@ -108,7 +109,7 @@ function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string
         </div>
       )}
       <div>
-        <div style={{ height: 5, background: "rgba(25,25,23,0.08)", borderRadius: 3, overflow: "hidden" }}>
+        <div style={{ height: 3, background: "rgba(25,25,23,0.08)", borderRadius: 0, overflow: "hidden" }}>
           <div style={{ width: `${pct}%`, height: "100%", background: V.ink }} />
         </div>
         <div className="flex items-center justify-between" style={{ marginTop: 6, fontSize: 11.5, color: V.tertiary }}>
@@ -126,7 +127,7 @@ function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string
     </>
   );
   const cls = "card-in hover-lift flex flex-col";
-  const style: React.CSSProperties = { boxSizing: "border-box", background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 8, padding: 20, gap: 12, minHeight: 200 };
+  const style: React.CSSProperties = { boxSizing: "border-box", background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 12, boxShadow: "0 1px 2px rgba(25,25,23,0.04), 0 14px 34px -22px rgba(25,25,23,0.22)", padding: 22, gap: 12, minHeight: 200 };
   if (m.source !== "WORKFLOW") return <Link href={m.href} className={cls} style={style}>{body}</Link>;
   return <div className={cls} style={style}>{body}</div>;
 }

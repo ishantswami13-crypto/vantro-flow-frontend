@@ -14,7 +14,7 @@ export default function TodayDecisionsCard() {
   const demo = typeof window !== "undefined" && isDemoMode();
   const q = useQuery({ queryKey: ["decisions-today"], queryFn: decisionsApi.today, staleTime: 30_000, enabled: !demo });
   if (demo) return null;
-  if (q.isLoading) return <div className="skeleton h-20 w-full rounded-2xl mb-5" />;
+  if (q.isLoading) return <div className="skeleton h-20 w-full rounded-md mb-5" />;
   if (q.isError) {
     return (
       <p className="text-[12px] mb-5" style={{ color: C.faint }}>

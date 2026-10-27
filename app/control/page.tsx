@@ -77,7 +77,7 @@ function ConnectionSection({ connections }: { connections: DataConnection[] }) {
 function Stat({ value, label, tone }: { value: React.ReactNode; label: string; tone?: "danger" | "warning" | "success" }) {
   // Tone only when there is something to report: a coloured zero is noise.
   const empty = value === 0 || value === null || value === undefined || value === "—";
-  const color = empty ? "#191917" : tone === "danger" ? "#A64F4B" : tone === "warning" ? "#9B742B" : tone === "success" ? "#477054" : "#191917";
+  const color = empty ? "#191917" : tone === "danger" ? "#A64F4B" : tone === "warning" ? "#8C6826" : tone === "success" ? "#477054" : "#191917";
   return (
     <div>
       <div style={{ fontSize: 12, color: "#63635F", marginBottom: 6 }}>{label}</div>
@@ -123,11 +123,11 @@ function PolicyRows() {
     <div>
       {POLICY_LEVELS.map((p) => (
         <div key={p.level} className="flex items-start flex-wrap md:flex-nowrap" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid #EBEAE6" }}>
-          <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: "#8A8A86", width: 20, paddingTop: 1, flexShrink: 0 }}>{p.level}</span>
+          <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: "#6E6E69", width: 20, paddingTop: 1, flexShrink: 0 }}>{p.level}</span>
           <div style={{ width: 110, flexShrink: 0, fontSize: 13, color: "#191917" }}>{p.name}</div>
           <div style={{ flex: 1, minWidth: 180, fontSize: 12.5, color: "#63635F" }}>{p.description}</div>
           <div style={{ width: 210, flexShrink: 0 }}>
-            <StatusDot label={p.granted ? "Allowed" : "Requires approval every time"} color={p.granted ? "#477054" : "#9B742B"} />
+            <StatusDot label={p.granted ? "Allowed" : "Requires approval every time"} color={p.granted ? "#477054" : "#8C6826"} />
           </div>
         </div>
       ))}
@@ -170,7 +170,7 @@ function OverviewTab() {
       <div className="flex items-center flex-wrap" style={{ gap: 10, fontSize: 13, color: "#43433F" }}>
         <span>1 user</span><Sep />
         <span>{connectedN} connected source{connectedN === 1 ? "" : "s"}</span><Sep />
-        <span style={{ color: pending > 0 ? "#9B742B" : undefined }}>
+        <span style={{ color: pending > 0 ? "#8C6826" : undefined }}>
           {pending} pending approval{pending === 1 ? "" : "s"}
         </span>
       </div>
@@ -224,7 +224,7 @@ function UsersTab() {
             <Lettermark letter={u?.business_name || u?.email || "O"} />
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: "#191917" }}>{u?.business_name || "Owner"}</div>
-              <div style={{ fontSize: 12, color: "#8A8A86" }}>{u?.email}</div>
+              <div style={{ fontSize: 12, color: "#6E6E69" }}>{u?.email}</div>
             </div>
           </div>
           <span style={{ fontSize: 12.5, color: "#43433F" }}>Owner · full access</span>

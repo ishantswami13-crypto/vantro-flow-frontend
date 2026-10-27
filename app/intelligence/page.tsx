@@ -59,10 +59,10 @@ function SignalRow({ signal, onOpen }: { signal: IntelligenceSignal; onOpen: () 
         style={{ width: 6, height: 6, background: isExternal ? "#191917" : "#D8D8D3" }}
       />
       <div className="min-w-0 flex-1">
-        <p className="text-[12px]" style={{ color: "#8A8A86" }}>{metaParts.join(" · ")}</p>
+        <p className="text-[12px]" style={{ color: "#6E6E69" }}>{metaParts.join(" · ")}</p>
         <p className="text-[15px] font-medium mt-1" style={{ color: "#191917" }}>{signal.event_title || "External event"}</p>
         <p className="text-[13px] mt-1 leading-[1.5] max-w-[640px] line-clamp-2" style={{ color: "#686868" }}>{humanReason(signal)}</p>
-        <p className="text-[12px] mt-2" style={{ color: "#8A8A86" }}>
+        <p className="text-[12px] mt-2" style={{ color: "#6E6E69" }}>
           Updated {formatDateTime(signal.last_updated_at || signal.first_detected_at)}
           {confidence !== "UNKNOWN" && ` · ${confidence.charAt(0)}${confidence.slice(1).toLowerCase()} confidence`}
           {` · ${statusLabel(signal.status)}`}
@@ -152,7 +152,7 @@ export default function IntelligencePage() {
             </span>
             <div className="relative">
               <p className="text-[15px] font-medium" style={{ color: "#191917" }}>No material changes detected</p>
-              <p className="text-[13px] mt-1.5 max-w-[440px] mx-auto" style={{ color: "#8A8A86" }}>
+              <p className="text-[13px] mt-1.5 max-w-[440px] mx-auto" style={{ color: "#6E6E69" }}>
                 Starlane hasn't identified a material change from the evidence currently available.
               </p>
             </div>

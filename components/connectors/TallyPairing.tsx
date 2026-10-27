@@ -14,7 +14,7 @@ import { api, type Connector } from "@/lib/api";
 type Pairing = { code: string; expiresAt: string; command: string; knownDeviceIds: string[] };
 const POLL_MS = 4000;
 
-const ink = "#191917", soft = "#63635F", faint = "#8A8A86", line = "#EBEAE6", ok = "#477054", bad = "#A64F4B";
+const ink = "#191917", soft = "#63635F", faint = "#6E6E69", line = "#EBEAE6", ok = "#477054", bad = "#A64F4B";
 
 function Step({ n, title, done, active, children }: { n: number; title: string; done: boolean; active: boolean; children?: React.ReactNode }) {
   return (

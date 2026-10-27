@@ -188,7 +188,7 @@ export default function ImportPage() {
 
         {/* RESULT: the first finding */}
         {result && (
-          <section className="rounded-2xl p-6 mb-10" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+          <section className="rounded-md p-6 mb-10" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
             <SectionLabel>{result.import.alreadyImported ? "This file was already imported" : "What Starlane found"}</SectionLabel>
             <div className="space-y-2">
               {result.firstLook.lines.map((l, i) => (
@@ -239,7 +239,7 @@ export default function ImportPage() {
 
         {/* STEP 1: choose a file */}
         {!result && (
-          <section className="rounded-2xl p-6 mb-8" style={{ background: "#FFFFFF", border: `1px dashed ${C.line}` }}>
+          <section className="rounded-md p-6 mb-8" style={{ background: "#FFFFFF", border: `1px dashed ${C.line}` }}>
             <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,.txt" className="hidden" onChange={(e) => onFile(e.target.files?.[0] || null)} />
             <div className="flex flex-wrap items-center gap-4">
               <FiUploadCloud size={22} style={{ color: C.accent }} />
@@ -338,7 +338,7 @@ export default function ImportPage() {
             </section>
 
             {questions.length > 0 && (
-              <section className="mb-10 rounded-2xl p-5" style={{ background: "#FBF7EF", border: "1px solid #EFDDC2" }}>
+              <section className="mb-10 rounded-md p-5" style={{ background: "#FBF7EF", border: "1px solid #EFDDC2" }}>
                 <SectionLabel>Please confirm</SectionLabel>
                 <ul className="space-y-3">
                   {questions.map((q) => (
@@ -363,7 +363,7 @@ export default function ImportPage() {
             {preview.profile && (
               <section className="mb-10">
                 <SectionLabel>What this file gives Starlane</SectionLabel>
-                <div className="rounded-2xl px-5 py-5" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
+                <div className="rounded-md px-5 py-5" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
                   <ProfileSummary p={preview.profile} />
                 </div>
                 <div className="mt-6">

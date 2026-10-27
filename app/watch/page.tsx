@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, Watch, WatchConditionConfig } from "@/lib/api";
 import { WatchBrief, ObjectivesPanel } from "@/components/os/WatchPanels";
-import { Button } from "@/components/v32/ui";
+import { Button, formatAmount } from "@/components/v32/ui";
 import { IconPlus } from "@/components/v32/icons";
 
 // Watch — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
@@ -45,7 +45,10 @@ const OPERATOR_OPTIONS: { value: WatchConditionConfig["operator"]; label: string
 function conditionLabel(w: Watch): string {
   const metric = METRIC_OPTIONS.find((m) => m.value === w.metric_key)?.label || w.metric_key;
   const op = OPERATOR_OPTIONS.find((o) => o.value === w.condition_config?.operator)?.label || w.condition_config?.operator;
-  const threshold = w.condition_config?.threshold;
+  const raw = w.condition_config?.threshold;
+  const threshold = typeof raw === "number"
+    ? (w.metric_key === "cash_forecast_runway_days" ? formatAmount(raw, "days") : raw.toLocaleString("en-US"))
+    : raw;
   const suffix = w.metric_key === "customer_exposure_amount" && w.condition_config?.entity_name
     ? ` (${w.condition_config.entity_name})`
     : "";
@@ -58,14 +61,14 @@ function statusOf(w: Watch): { label: string; color: string } {
     return { label: "Triggered", color: "#A64F4B" };
   }
   // Triggered at some earlier check, clear at the latest one.
-  if (w.last_triggered_at) return { label: "Clear now, triggered before", color: "#9B742B" };
-  return { label: w.last_evaluated_at ? "Clear" : "Not checked yet", color: w.last_evaluated_at ? "#477054" : "#8A8A86" };
+  if (w.last_triggered_at) return { label: "Clear now, triggered before", color: "#8C6826" };
+  return { label: w.last_evaluated_at ? "Clear" : "Not checked yet", color: w.last_evaluated_at ? "#477054" : "#6E6E69" };
 }
 
 function formatChecked(w: Watch): string {
   if (!w.last_evaluated_at) return "Never";
   const d = new Date(w.last_evaluated_at);
-  return d.toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return `${d.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}, ${d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`;
 }
 
 // useSearchParams requires a Suspense boundary during static prerendering.
@@ -166,13 +169,13 @@ function WatchPageInner() {
   const triggeredCount = list.filter((w) => statusOf(w).label === "Triggered").length;
 
   return (
-    <DashboardLayout pageTitle="Watch">
+    <DashboardLayout pageTitle="Monitors">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>
-            Watch
+          <h1 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 40, lineHeight: 1.05, letterSpacing: "-0.03em", color: "#191917" }}>
+            Monitors
           </h1>
-          <Button primary small onClick={() => setShowModal(true)}><IconPlus size={13} />New watch</Button>
+          <Button primary small onClick={() => setShowModal(true)}><IconPlus size={13} />New monitor</Button>
         </div>
 
         <div style={{ fontSize: 13.5, color: "#63635F", marginTop: -16 }}>
@@ -215,19 +218,20 @@ function WatchPageInner() {
             boxSizing: "border-box",
             background: "#FFFFFF",
             border: "1px solid rgba(25,25,23,0.10)",
-            borderRadius: 8,
+            borderRadius: 12,
+            boxShadow: "0 1px 2px rgba(25,25,23,0.04), 0 14px 34px -22px rgba(25,25,23,0.22)",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
           }}
         >
           <div
-            className="watch-grid watch-head"
+            className="watch-grid watch-head meta"
             style={{
-              padding: "10px 14px",
-              background: "#F3F2EE",
-              fontSize: 11,
-              letterSpacing: 0.5,
+              padding: "10px 16px",
+              background: "#F6F5F1",
+              borderBottom: "1px solid rgba(25,25,23,0.08)",
+              fontSize: 10,
               color: "#63635F",
             }}
           >
@@ -256,7 +260,7 @@ function WatchPageInner() {
 
           {!error && !loading && filtered.length === 0 && (
             <div className="fade-once py-10 text-center" style={{ padding: "40px 24px" }}>
-              <p style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 16, color: "#191917", marginBottom: 6 }}>
+              <p style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 16, color: "#191917", marginBottom: 6 }}>
                 {tab === "active" && "No active watch conditions"}
                 {tab === "changed" && "No status changes to show"}
                 {tab === "paused" && "No paused watches"}
@@ -278,16 +282,17 @@ function WatchPageInner() {
                 key={w.id}
                 className="card-in row-hover group watch-grid"
                 style={{
-                  padding: "16px 14px",
+                  padding: "16px 16px",
                   minHeight: 52,
                   boxSizing: "border-box",
                   borderBottom: "1px solid rgba(25,25,23,0.06)",
                   alignItems: "center",
                 }}
               >
-                <span style={{ fontSize: 13.5, color: "#191917" }}>{w.name}</span>
-                <span style={{ fontSize: 12.5, color: "#63635F" }}>{conditionLabel(w)}</span>
-                <span style={{ fontSize: 12.5, color: s.color }}>
+                <span style={{ fontSize: 13.5, fontWeight: 500, color: "#191917" }}>{w.name}</span>
+                <span style={{ fontSize: 12.5, color: "#63635F", fontVariantNumeric: "tabular-nums" }}>{conditionLabel(w)}</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12.5, color: s.color }}>
+                  <span className="sq" aria-hidden="true" />
                   {s.label}
                 </span>
                 <span style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10 }}>
@@ -318,7 +323,7 @@ function WatchPageInner() {
                     Delete
                   </button>
                   </span>
-                  <span style={{ color: "#63635F", fontSize: 12 }}>{formatChecked(w)}</span>
+                  <span className="meta" style={{ color: "#63635F", fontSize: 10.5, whiteSpace: "nowrap" }}>{formatChecked(w)}</span>
                 </span>
               </div>
             );
@@ -408,7 +413,7 @@ function NewWatchModal({
           boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
         }}
       >
-        <h2 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 20, color: "#191917" }}>
+        <h2 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 20, color: "#191917" }}>
           New watch
         </h2>
 

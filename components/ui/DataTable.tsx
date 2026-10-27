@@ -39,7 +39,7 @@ export function DataTable<T>({ columns, rows, rowKey, emptyMessage = "No rows to
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="text-center py-6" style={{ color: "#8A8A86" }}>
+              <td colSpan={columns.length} className="text-center py-6" style={{ color: "#6E6E69" }}>
                 {emptyMessage}
               </td>
             </tr>

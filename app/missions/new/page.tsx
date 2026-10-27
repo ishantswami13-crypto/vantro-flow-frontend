@@ -66,11 +66,11 @@ export default function NewMissionPage() {
   const owed = sim?.facts[0]?.value as number | undefined;
   const blocked = busy || !preview || !!preview.errors.length;
   return (
-    <DashboardLayout pageTitle="New mission">
+    <DashboardLayout pageTitle="New task">
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "32px 24px 48px", display: "grid", gap: 20 }}>
         <div>
           <Link href="/missions" style={{ fontSize: 13, color: GRAPHITE }}>‹ Missions</Link>
-          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: 30, fontWeight: 400, color: "#191917", margin: "8px 0 0" }}>{d?.title || "New collections mission"}</h1>
+          <h1 style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 30, fontWeight: 400, color: "#191917", margin: "8px 0 0" }}>{d?.title || "New collections mission"}</h1>
           <p className="v32-body" style={{ color: GRAPHITE, maxWidth: "66ch", marginTop: 8 }}>One objective with a deadline, measured against your books. Starting it proposes one reminder per customer for your approval — nothing is sent until you approve it.</p>
         </div>
         {input ? (

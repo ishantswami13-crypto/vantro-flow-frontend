@@ -160,12 +160,12 @@ export default function CustomersPage() {
           <div className="card-metric p-5">
             <p className="section-label mb-3">We Need To Collect</p>
             <p className="metric-lg text-danger">{fmtINR(totalReceivable)}</p>
-            <p className="text-2xs text-muted mt-1">lena hai</p>
+            <p className="text-2xs text-muted mt-1">owed to you</p>
           </div>
           <div className="card-metric p-5">
             <p className="section-label mb-3">Customer Advance</p>
             <p className="metric-lg text-success">{fmtINR(totalAdvance)}</p>
-            <p className="text-2xs text-muted mt-1">dena / adjust karna hai</p>
+            <p className="text-2xs text-muted mt-1">owed back or to adjust</p>
           </div>
           <div className="card-metric p-5">
             <p className="section-label mb-3">Ledger Entries</p>
@@ -274,7 +274,7 @@ export default function CustomersPage() {
                       <p className={balance > 0 ? "metric-value text-danger" : balance < 0 ? "metric-value text-success" : "metric-value text-muted"}>
                         {fmtINR(Math.abs(balance))}
                       </p>
-                      <p className="text-2xs text-muted">{balance > 0 ? "lena hai" : balance < 0 ? "advance" : "clear"}</p>
+                      <p className="text-2xs text-muted">{balance > 0 ? "owed to you" : balance < 0 ? "advance" : "clear"}</p>
                       {scoreMap[customer.customer_name] && (() => {
                         const risk = scoreMap[customer.customer_name];
                         const tierColor = risk.tier === "HIGH_RISK" ? "#F5424D" : risk.tier === "MEDIUM" ? "#F5A524" : "#10D98A";

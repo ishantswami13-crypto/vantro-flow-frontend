@@ -65,11 +65,11 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
       .map(r => ({ key: `p:${r.href}`, href: r.href, title: r.label, context: r.context, icon: <span style={{ width: 16, display: "inline-block" }} /> }));
     if (pageRows.length) out.push({ label: "Work", rows: pageRows });
     const actions: Row[] = [
-      { key: "a:ask", href: "/scan", title: "Ask Starlane", context: "Open Scan", icon: <IconScan {...ICON} />, shortcut: "↵" },
-      { key: "a:watch", href: "/watch?new=1", title: "New Watch", icon: <IconPlus {...ICON} /> },
-      { key: "a:mission", href: "/missions/new", title: "New Mission", icon: <IconMissions {...ICON} /> },
-      { key: "a:sim", href: "/simulate", title: "Simulate", context: "Run a new scenario", icon: <IconSimulate {...ICON} /> },
-      { key: "a:watchlist", href: "/watch", title: "Watch", context: "What Starlane is watching", icon: <IconWatch {...ICON} /> },
+      { key: "a:ask", href: "/scan", title: "Ask Starlane", context: "Open the Assistant", icon: <IconScan {...ICON} />, shortcut: "↵" },
+      { key: "a:watch", href: "/watch?new=1", title: "New monitor", icon: <IconPlus {...ICON} /> },
+      { key: "a:mission", href: "/missions/new", title: "New task", icon: <IconMissions {...ICON} /> },
+      { key: "a:sim", href: "/simulate", title: "Scenarios", context: "Run a new what-if", icon: <IconSimulate {...ICON} /> },
+      { key: "a:watchlist", href: "/watch", title: "Monitors", context: "What Starlane is watching", icon: <IconWatch {...ICON} /> },
     ].filter(a => hit(a.title));
     if (actions.length) out.push({ label: "Actions", rows: actions });
     return out;
@@ -128,7 +128,7 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 shrink-0" style={{ padding: "14px 16px", borderBottom: "1px solid #EBEAE6" }}>
-          <IconSearch size={15} style={{ color: "#8A8A86" }} />
+          <IconSearch size={15} style={{ color: "#6E6E69" }} />
           <input
             ref={inputRef}
             value={query}
@@ -145,10 +145,10 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
         </div>
         <div ref={listRef} id="command-palette-results" role="listbox" className="overflow-y-auto" style={{ padding: "4px 8px 8px" }}>
           {flat.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#8A8A86", padding: "28px 0", textAlign: "center" }}>No results</p>
+            <p style={{ fontSize: 13, color: "#6E6E69", padding: "28px 0", textAlign: "center" }}>No results</p>
           ) : groups.map(g => (
             <div key={g.label}>
-              <div style={{ padding: "10px 14px 4px 14px", fontSize: 10.5, letterSpacing: 0, color: "#8A8A86" }}>{g.label}</div>
+              <div style={{ padding: "10px 14px 4px 14px", fontSize: 10.5, letterSpacing: 0, color: "#6E6E69" }}>{g.label}</div>
               {g.rows.map(r => {
                 index += 1;
                 const i = index;
@@ -167,7 +167,7 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
                   >
                     {r.icon}
                     <span className="shrink-0" style={{ fontSize: 13.5, color: "#191917" }}>{r.title}</span>
-                    {r.context && <span className="truncate flex-1" style={{ fontSize: 12, color: "#8A8A86" }}>{r.context}</span>}
+                    {r.context && <span className="truncate flex-1" style={{ fontSize: 12, color: "#6E6E69" }}>{r.context}</span>}
                     {!r.context && <span className="flex-1" />}
                     {r.shortcut
                       ? <kbd style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>{r.shortcut}</kbd>

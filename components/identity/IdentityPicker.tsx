@@ -9,7 +9,7 @@ export function IdentityPicker({ dark = false }: { dark?: boolean }) {
   const current = useIdentity();
   return (
     <div>
-      <p className="text-[11px] mb-2" style={{ color: dark ? "#8A8A86" : "#8A8A86" }}>Your colour · {current.name}</p>
+      <p className="text-[11px] mb-2" style={{ color: dark ? "#6E6E69" : "#6E6E69" }}>Your colour · {current.name}</p>
       <div className="grid grid-cols-5 gap-2">
         {IDENTITIES.map(id => {
           const active = id.key === current.key;

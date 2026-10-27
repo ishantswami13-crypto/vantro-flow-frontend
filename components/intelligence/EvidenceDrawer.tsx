@@ -71,7 +71,7 @@ export function EvidenceDrawer({
                   <p style={{ fontSize: 13, color: "#191917" }}>{item.label}</p>
                   <p className="mt-1" style={{ fontSize: 12.5, color: "#43433F", lineHeight: 1.55 }}>{item.detail}</p>
                   <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
-                    <span className="truncate" style={{ fontSize: 11.5, color: "#8A8A86", fontFamily: "'IBM Plex Mono', monospace" }}>
+                    <span className="truncate" style={{ fontSize: 11.5, color: "#6E6E69", fontFamily: "'IBM Plex Mono', monospace" }}>
                       {item.source}{item.timestamp ? ` · ${formatDateTime(item.timestamp)}` : ""}
                     </span>
                     <ConfidenceBadge level={item.confidence} />

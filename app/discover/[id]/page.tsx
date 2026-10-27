@@ -67,7 +67,7 @@ export default function DiscoverDetailPage() {
             <div style={{ fontSize: 11, letterSpacing: "0.6px", color: RISKY.has(impact.signal.impact_status) ? "#A64F4B" : "#63635F", marginBottom: 6 }}>
               {(impact.signal.related_entity_type || impact.signal.event_type || "Signal").replace(/_/g, " ")}
             </div>
-            <h1 style={{ margin: "0 0 16px", fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 21, color: "#191917", lineHeight: 1.4 }}>
+            <h1 style={{ margin: "0 0 16px", fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 21, color: "#191917", lineHeight: 1.4 }}>
               {impact.signal.event_title || impact.signal.why_exists}
             </h1>
             {impact.signal.event_title && impact.signal.why_exists && (
@@ -194,7 +194,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function RailLabel({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 10.5, letterSpacing: 0, color: "#8A8A86", marginBottom: 6 }}>{children}</div>;
+  return <div style={{ fontSize: 10.5, letterSpacing: 0, color: "#6E6E69", marginBottom: 6 }}>{children}</div>;
 }
 
 function Block({ label, children }: { label: string; children: React.ReactNode }) {
@@ -212,7 +212,7 @@ function KVLine({ label, value, tone }: { label: string; value: string; tone: "k
       <span
         className="shrink-0"
         style={{
-          fontSize: 11, color: tone === "known" ? "#477054" : "#8A8A86",
+          fontSize: 11, color: tone === "known" ? "#477054" : "#6E6E69",
           width: 62,
         }}
       >

@@ -18,7 +18,7 @@ export default function SourcesConnectPage() {
         <nav aria-label="Breadcrumb" style={{ fontSize: 12.5, color: "#63635F" }}>
           <Link href="/sources" className="hover-dim" style={{ color: "#63635F" }}>Sources</Link> <span aria-hidden>›</span> Connect Tally
         </nav>
-        <h1 style={{ margin: 0, fontFamily: "'Fraunces', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>Connect TallyPrime</h1>
+        <h1 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>Connect TallyPrime</h1>
         <p style={{ fontSize: 13.5, color: "#63635F", lineHeight: 1.6, margin: 0 }}>
           Starlane reads Tally through a small bridge on the computer where Tally runs. It is read-only — it never creates,
           edits or deletes anything in Tally — and it uses its own device credential, which you can revoke from Sources at any time.

@@ -25,11 +25,11 @@ export default function MissionsPage() {
   const all = data?.missions || [];
   const n = (k: MissionFilter) => (data ? missionCount(all, k) : null);
   return (
-    <DashboardLayout pageTitle="Missions">
+    <DashboardLayout pageTitle="Tasks">
       <PageHeader
-        title="Missions"
+        title="Tasks"
         subtitle="What Starlane is handling, and whether it worked."
-        right={<Button primary small href="/missions/new"><IconPlus size={13} />New mission</Button>}
+        right={<Button primary small href="/missions/new"><IconPlus size={13} />New task</Button>}
       />
       <Subnav
         active={tab}

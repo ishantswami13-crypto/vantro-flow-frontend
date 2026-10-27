@@ -74,7 +74,7 @@ export default function LibraryPage() {
       <PageHeader
         title="Library"
         subtitle="Questions to ask and workflows to run"
-        right={<Button href="/scan"><IconPlus size={14} /> New conversation</Button>}
+        right={<Button href="/bridge"><IconPlus size={14} /> New conversation</Button>}
       >
         <div style={{ marginTop: 18 }}>
           <Subnav
@@ -137,7 +137,7 @@ export default function LibraryPage() {
                   <Link key={w.title} href={w.href} className="lib-card rise-in" style={{ animationDelay: `${i * 40}ms` }}>
                     <div className="flex items-center justify-between">
                       <IconTile size={32}>{w.icon}</IconTile>
-                      <span style={{ color: "#8A8A86" }}><IconArrowRight size={14} /></span>
+                      <span style={{ color: "#6E6E69" }}><IconArrowRight size={14} /></span>
                     </div>
                     <div>
                       <div style={{ fontSize: 14, color: "#191917" }}>{w.title}</div>

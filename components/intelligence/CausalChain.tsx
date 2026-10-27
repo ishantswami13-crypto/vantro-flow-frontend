@@ -33,7 +33,7 @@ function Step({ index, title, detail, cites, last = false, tone }: {
         {title}
         {cites}
       </p>
-      {detail && <p className="text-[12.5px] mt-0.5 leading-snug" style={{ color: "#8A8A86" }}>{detail}</p>}
+      {detail && <p className="text-[12.5px] mt-0.5 leading-snug" style={{ color: "#6E6E69" }}>{detail}</p>}
     </li>
   );
 }
@@ -64,7 +64,7 @@ export function CausalChain({ impact, component, citations, onCite }: {
       />
       <Step
         index={3}
-        title={<>They supply {component.component.name} <span className="font-mono text-[12px]" style={{ color: "#8A8A86" }}>{component.component.sku}</span>.</>}
+        title={<>They supply {component.component.name} <span className="font-mono text-[12px]" style={{ color: "#6E6E69" }}>{component.component.sku}</span>.</>}
         detail={component.alternateSource ? `Alternate source on record: ${component.alternateSource.name}` : "No alternate source on record."}
         cites={<><Cite n={c.inventory} onCite={onCite} /><Cite n={c.alternate} onCite={onCite} /></>}
       />
