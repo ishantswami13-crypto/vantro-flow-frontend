@@ -1051,7 +1051,7 @@ export default function PurchasesPage() {
                     : "Add Purchase"}
                 </h3>
                 <p className="text-xs text-muted">
-                  {scanning ? "AI is extracting all details from your photo" : "Supplier ka bill add karo"}
+                  {scanning ? "AI is extracting all details from your photo" : "Add a supplier bill"}
                 </p>
               </div>
               <button aria-label="Close" onClick={closeModal} className="p-1.5 text-muted hover:text-primary">
@@ -1149,7 +1149,7 @@ export default function PurchasesPage() {
                               {scannedGst.type}{scannedGst.rate ? ` @ ${scannedGst.rate}%` : ""}
                             </td>
                             <td />
-                            <td className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "#F5A524" }}>
+                            <td className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "#8C6826" }}>
                               +{fmtINR(scannedGst.amount)}
                             </td>
                           </tr>

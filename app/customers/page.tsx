@@ -98,7 +98,7 @@ export default function CustomersPage() {
     DORMANT: "Dormant", AT_RISK: "At Risk", WATCH: "Watch", GROWING: "Growing", HEALTHY: "Healthy",
   };
   const HEALTH_LABEL_COLOR: Record<string, string> = {
-    DORMANT: "#8B8FA3", AT_RISK: "#F5424D", WATCH: "#F5A524", GROWING: "#10D98A", HEALTHY: "#3B82F6",
+    DORMANT: "#8B8FA3", AT_RISK: "#A64F4B", WATCH: "#8C6826", GROWING: "#477054", HEALTHY: "#566C82",
   };
   const attentionList = (portfolio?.customers || [])
     .filter(c => c.healthLabel !== "HEALTHY")
@@ -277,13 +277,13 @@ export default function CustomersPage() {
                       <p className="text-2xs text-muted">{balance > 0 ? "owed to you" : balance < 0 ? "advance" : "clear"}</p>
                       {scoreMap[customer.customer_name] && (() => {
                         const risk = scoreMap[customer.customer_name];
-                        const tierColor = risk.tier === "HIGH_RISK" ? "#F5424D" : risk.tier === "MEDIUM" ? "#F5A524" : "#10D98A";
+                        const tierColor = risk.tier === "HIGH_RISK" ? "#A64F4B" : risk.tier === "MEDIUM" ? "#8C6826" : "#477054";
                         const tierLabel = risk.tier === "HIGH_RISK" ? "High Risk" : risk.tier === "MEDIUM" ? "Medium" : "Low Risk";
                         const HEALTH_LABEL_TEXT: Record<string, string> = {
                           DORMANT: "Dormant", AT_RISK: "At Risk", WATCH: "Watch", GROWING: "Growing", HEALTHY: "Healthy",
                         };
                         const HEALTH_LABEL_COLOR: Record<string, string> = {
-                          DORMANT: "#8B8FA3", AT_RISK: "#F5424D", WATCH: "#F5A524", GROWING: "#10D98A", HEALTHY: "#3B82F6",
+                          DORMANT: "#8B8FA3", AT_RISK: "#A64F4B", WATCH: "#8C6826", GROWING: "#477054", HEALTHY: "#566C82",
                         };
                         const health = risk.health_label;
                         return (

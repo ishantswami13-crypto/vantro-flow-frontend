@@ -142,15 +142,8 @@ export default function IntelligencePage() {
         )}
 
         {!isLoading && !isError && signals.length === 0 && (
-          <div className="py-16 text-center relative overflow-hidden">
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 flex items-center justify-center select-none pointer-events-none"
-              style={{ fontSize: "clamp(56px, 16vw, 140px)", fontWeight: 600, color: "#191917", opacity: 0.03, letterSpacing: "-0.04em", whiteSpace: "nowrap" }}
-            >
-              Starlane
-            </span>
-            <div className="relative">
+          <div className="py-16 text-center">
+            <div>
               <p className="text-[15px] font-medium" style={{ color: "#191917" }}>No material changes detected</p>
               <p className="text-[13px] mt-1.5 max-w-[440px] mx-auto" style={{ color: "#6E6E69" }}>
                 Starlane hasn't identified a material change from the evidence currently available.

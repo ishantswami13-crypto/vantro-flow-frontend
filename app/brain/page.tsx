@@ -12,14 +12,14 @@ const API = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-prod
 
 const RULE_CATEGORIES = ["pricing", "customer", "product", "operations", "credit", "general"];
 const STARTER_PROMPTS = [
-  "Aaj kitna kamaya aur kitna kharch hua?",
-  "Sabse bada outstanding kaun sa hai?",
-  "Kal ke liye kya karna chahiye?",
-  "Pichhle hafte ki summary do",
-  "Sabse pehle kise call karna chahiye?",
-  "Aaj ke orders ka status kya hai?",
-  "Mera net profit is mahine kitna hai?",
-  "Kaun sa maal sabse zyada bika aaj?",
+  "How much came in and went out today?",
+  "Which balance is the largest?",
+  "What should I do tomorrow?",
+  "Summarise last week",
+  "Who should I call first?",
+  "Where do today's orders stand?",
+  "What is this month's net profit?",
+  "What sold most today?",
 ];
 const TOOL_LABELS: Record<string,string> = {
   get_invoices: "📋 invoices dekhe",
@@ -56,7 +56,7 @@ export default function BrainPage() {
     // Welcome message
     setMessages([{
       role: "assistant",
-      content: "Namaste! Main Starlane Brain hoon — aapka business intelligence AI. Mujhe apne aapke business ke baare mein poochho: sales, outstanding, orders, expenses, kuch bhi. Main live data dekh sakta hoon aur aapko best action suggest karunga. 🧠\n\nAaj ka update lene ke liye kaho: *\"Aaj ki summary do\"*",
+      content: "Ask about your sales, balances, orders or expenses. Answers come from your live data, and I will suggest what to do next.\n\nFor today's update, ask: *\"Summarise today\"*",
     }]);
   }, []);
 
@@ -116,7 +116,7 @@ export default function BrainPage() {
   const clearChat = () => {
     setMessages([{
       role: "assistant",
-      content: "Chat clear ho gaya! Kya poochhhna hai?",
+      content: "Cleared. What would you like to know?",
     }]);
     setHistory([]);
   };
@@ -132,8 +132,8 @@ export default function BrainPage() {
               <FiCpu size={15} className="text-white" />
             </div>
             <div>
-              <p className="font-bold text-primary text-sm">Starlane Brain v1</p>
-              <p className="text-2xs text-muted">Live data · Vocabulary aware · Learns your rules</p>
+              <p className="font-bold text-primary text-sm">Starlane Brain</p>
+              <p className="text-2xs text-muted">Live data, your vocabulary and your rules</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -155,7 +155,7 @@ export default function BrainPage() {
             </p>
             <form onSubmit={addRule} className="flex gap-2 mb-3">
               <input required value={ruleForm.rule} onChange={e => setRuleForm(f=>({...f, rule:e.target.value}))}
-                className="input-base text-xs flex-1" placeholder="e.g. Ramesh ko 60 din credit dena hai, Suresh ko nahi" />
+                className="input-base text-xs flex-1" placeholder="e.g. Give Ramesh 60 days of credit, not Suresh" />
               <select value={ruleForm.category} onChange={e => setRuleForm(f=>({...f, category:e.target.value}))}
                 className="input-base text-xs w-24">
                 {RULE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -166,7 +166,7 @@ export default function BrainPage() {
               </button>
             </form>
             {rules.length === 0 ? (
-              <p className="text-2xs text-muted text-center py-2">Koi rule nahi — add karo taaki AI aapke business rules follow kare</p>
+              <p className="text-2xs text-muted text-center py-2">No rules yet. Add one and the assistant will follow it.</p>
             ) : (
               <div className="space-y-1.5">
                 {rules.map(r => (
@@ -230,7 +230,7 @@ export default function BrainPage() {
                   <span className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce" style={{ animationDelay:"0ms" }} />
                   <span className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce" style={{ animationDelay:"150ms" }} />
                   <span className="w-1.5 h-1.5 rounded-full bg-muted animate-bounce" style={{ animationDelay:"300ms" }} />
-                  <span className="text-2xs text-muted ml-1">Soch raha hoon…</span>
+                  <span className="text-2xs text-muted ml-1">Thinking…</span>
                 </div>
               </div>
             </div>
@@ -256,7 +256,7 @@ export default function BrainPage() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }}}
-            placeholder="Poochho kuch bhi — aaj ki sale, outstanding, orders…"
+            placeholder="Ask about today's sales, balances, orders…"
             className="input-base flex-1 text-sm px-4 py-3"
             disabled={loading}
           />
@@ -268,7 +268,7 @@ export default function BrainPage() {
 
         {/* Live data badge */}
         <p className="text-center text-2xs text-muted mt-1.5 shrink-0">
-          🟢 Live — orders, invoices, expenses, vocabulary sab connected hai
+          Reads your orders, invoices, expenses and vocabulary
         </p>
       </div>
     </DashboardLayout>

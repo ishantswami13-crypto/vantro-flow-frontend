@@ -19,8 +19,8 @@ const ACTION_ICON: Record<ActionType, React.ReactNode> = {
 };
 const ACTION_COLOR: Record<ActionType, string> = {
   whatsapp: "#25D366",
-  call:     "#0066FF",
-  email:    "#F5A524",
+  call:     "#566C82",
+  email:    "#8C6826",
 };
 const TONE_BADGE: Record<ToneType, "success"|"warning"|"danger"> = {
   gentle: "success",
@@ -143,10 +143,10 @@ export default function DunningPage() {
         {!loading && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
             {[
-              { label: "Active Rules",       value: activeRules.toString(),  color: "#0066FF" },
-              { label: "Messages Sent",      value: totalSent.toString(),    color: "#F5A524" },
-              { label: "Payments Triggered", value: totalPaid.toString(),    color: "#10D98A" },
-              { label: "Recovery Rate",      value: totalSent > 0 ? `${recoveryPct}%` : "—", color: "#10D98A" },
+              { label: "Active Rules",       value: activeRules.toString(),  color: "#566C82" },
+              { label: "Messages Sent",      value: totalSent.toString(),    color: "#8C6826" },
+              { label: "Payments Triggered", value: totalPaid.toString(),    color: "#477054" },
+              { label: "Recovery Rate",      value: totalSent > 0 ? `${recoveryPct}%` : "—", color: "#477054" },
             ].map(k => (
               <div key={k.label} className="card-metric p-5">
                 <p className="section-label mb-3">{k.label}</p>

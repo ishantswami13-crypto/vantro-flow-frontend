@@ -101,7 +101,7 @@ export default function AttendancePage() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Staff Attendance</h1>
-          <p className="text-xs text-muted mt-1">Haazri aur salary calculator</p>
+          <p className="text-xs text-muted mt-1">Attendance and salary calculator</p>
         </div>
         <div className="flex items-center gap-2">
           <button aria-label="Previous" onClick={prevMonth} className="p-2 bg-surface-2 rounded-xl text-muted hover:text-primary transition-colors"><FiChevronLeft size={16} /></button>
@@ -142,8 +142,8 @@ export default function AttendancePage() {
       ) : workers.length === 0 ? (
         <div className="text-center py-12 card">
           <FiUsers size={36} className="mx-auto mb-3 text-muted opacity-30" />
-          <p className="text-muted text-sm">Koi worker nahi mila</p>
-          <p className="text-xs text-muted mt-1">Team page se workers add karo</p>
+          <p className="text-muted text-sm">No team members yet</p>
+          <p className="text-xs text-muted mt-1">Add them on the Team page.</p>
         </div>
       ) : tab === "attendance" ? (
         <div className="card overflow-hidden">

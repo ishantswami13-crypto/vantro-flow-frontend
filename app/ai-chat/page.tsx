@@ -84,27 +84,27 @@ function formatMsg(text: string) {
 }
 
 const tierColor: Record<string, string> = {
-  high: "#10D98A", medium: "#F5A524", low: "#F5424D",
+  high: "#477054", medium: "#8C6826", low: "#A64F4B",
 };
 
 const INITIAL_MESSAGES: Message[] = [{
   role: "assistant",
-  content: "Namaste! Main aapka AI Founder hoon — aapka business data dekh sakta hoon, WhatsApp messages ka draft likh sakta hoon (bhejenge aap khud), call scripts generate kar sakta hoon, aur strategic advice de sakta hoon.\n\nKya poochna hai? Aap bolke bhi pooch sakte hain — mic button press karein.",
+  content: "I can read your business data, draft WhatsApp messages (you send them yourself), write call scripts and help you plan.\n\nWhat would you like to know? You can also ask by voice with the mic button.",
 }];
 
 const QUICK_PROMPTS = [
-  "Aaj kisko call karoon?",
-  "Mere top overdue customers kaun hain?",
-  "Mera cash flow kaisa hai?",
-  "Kaunse invoices 60+ days overdue hain?",
-  "Iss hafte kitna paisa aayega?",
+  "Who should I call today?",
+  "Who are my most overdue customers?",
+  "How is my cash flow?",
+  "Which invoices are 60+ days overdue?",
+  "How much money comes in this week?",
 ];
 
 // ─── Health Ring ─────────────────────────────────────────────────────────────
 function HealthRing({ score }: { score: number }) {
   const r = 38; const circ = 2 * Math.PI * r;
   const filled = (score / 100) * circ;
-  const color = score >= 65 ? "#10D98A" : score >= 40 ? "#F5A524" : "#F5424D";
+  const color = score >= 65 ? "#477054" : score >= 40 ? "#8C6826" : "#A64F4B";
   return (
     <div className="relative w-24 h-24">
       <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
@@ -168,10 +168,10 @@ function CallScriptModal({ debtor, script, onClose }: {
         {/* Script sections */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {[
-            { key: "opening",           label: "Opening (Greeting)", Icon: FiPhone,       text: script.opening,           color: "#0066FF" },
-            { key: "main_ask",          label: "Main Ask",           Icon: FiMessageSquare, text: script.main_ask,        color: "#9B6DFF" },
-            { key: "objection_handler", label: "If They Hesitate",   Icon: FiShield,      text: script.objection_handler, color: "#F5A524" },
-            { key: "closing",           label: "Closing",            Icon: FiCheckCircle, text: script.closing,           color: "#10D98A" },
+            { key: "opening",           label: "Opening (Greeting)", Icon: FiPhone,       text: script.opening,           color: "#566C82" },
+            { key: "main_ask",          label: "Main Ask",           Icon: FiMessageSquare, text: script.main_ask,        color: "#756775" },
+            { key: "objection_handler", label: "If They Hesitate",   Icon: FiShield,      text: script.objection_handler, color: "#8C6826" },
+            { key: "closing",           label: "Closing",            Icon: FiCheckCircle, text: script.closing,           color: "#477054" },
           ].map(({ key, label, Icon, text, color }) => (
             <div key={key} className="bg-surface-2 rounded-xl p-3.5 border border-border">
               <div className="flex items-center justify-between mb-2">
@@ -466,11 +466,11 @@ function AIFounderPageInner() {
       history.push({ role: "user", content: msg });
       posthog.capture("ai_founder_message", { length: msg.length });
       const data = await api.aiChat(user?.id || "", history, user?.business_name || "");
-      let reply = data.message || "Dobara try karein.";
+      let reply = data.message || "Please try again.";
       if (data.actions?.length) reply += "\n\n" + data.actions.join("\n");
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: "Backend se connect nahi ho pa raha. Internet check karein." }]);
+      setMessages(prev => [...prev, { role: "assistant", content: "Starlane could not be reached. Check your connection and try again." }]);
     } finally {
       setChatLoading(false);
     }
@@ -498,7 +498,7 @@ function AIFounderPageInner() {
   };
 
   const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
-    { key: "briefing",   label: "ML Dashboard", icon: FiActivity },
+    { key: "briefing",   label: "Overview", icon: FiActivity },
     { key: "chat",       label: "Chat",          icon: FiZap },
     { key: "callcenter", label: "Call Center",   icon: FiPhone },
   ];
@@ -515,10 +515,6 @@ function AIFounderPageInner() {
                 <FiCpu size={15} className="text-white" />
               </div>
               <h2 className="text-2xl font-black text-primary tracking-tight">AI Founder</h2>
-              <span className="text-2xs font-bold text-success bg-success-dim border border-success/20 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse inline-block" />
-                LLaMA 70B
-              </span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <p className="text-sm text-muted">Sees your data · generates scripts · advises strategy</p>
@@ -566,7 +562,7 @@ function AIFounderPageInner() {
                 <div className="w-12 h-12 rounded-xl bg-accent-dim border border-accent/20 flex items-center justify-center">
                   <FiCpu size={20} className="text-accent animate-pulse" />
                 </div>
-                <p className="text-sm text-muted animate-pulse">Neural network is analyzing your business...</p>
+                <p className="text-sm text-muted animate-pulse">Reading your business data…</p>
               </div>
             ) : !briefing || !briefing.debtors?.length ? (
               <div className="card-premium p-8 text-center">
@@ -592,10 +588,10 @@ function AIFounderPageInner() {
                 {/* Metrics */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {[
-                    { label: "Total Outstanding", value: fmt(briefing.total_outstanding), icon: FiAlertTriangle, color: "#F5424D" },
-                    { label: "Expected This Week", value: fmt(briefing.expected_inflow_7d), icon: FiTrendingUp, color: "#10D98A" },
-                    { label: "Avg Pay Probability", value: `${briefing.avg_payment_probability}%`, icon: FiTarget, color: "#0066FF" },
-                    { label: "High-Priority Leads", value: String(briefing.stats.high_priority), icon: FiActivity, color: "#9B6DFF" },
+                    { label: "Total Outstanding", value: fmt(briefing.total_outstanding), icon: FiAlertTriangle, color: "#A64F4B" },
+                    { label: "Expected This Week", value: fmt(briefing.expected_inflow_7d), icon: FiTrendingUp, color: "#477054" },
+                    { label: "Avg Pay Probability", value: `${briefing.avg_payment_probability}%`, icon: FiTarget, color: "#566C82" },
+                    { label: "High-Priority Leads", value: String(briefing.stats.high_priority), icon: FiActivity, color: "#756775" },
                   ].map(({ label, value, icon: Icon, color }) => (
                     <div key={label} className="card-premium p-4">
                       <div className="flex items-center gap-2 mb-2">
@@ -613,8 +609,8 @@ function AIFounderPageInner() {
                 {/* Neural Priority List */}
                 <div className="card-premium overflow-hidden">
                   <div className="px-5 py-4 border-b border-border">
-                    <p className="text-sm font-bold text-primary">Neural Network Priority Ranking</p>
-                    <p className="text-xs text-muted mt-0.5">ML-scored · click "Call Center" tab to generate call scripts</p>
+                    <p className="text-sm font-bold text-primary">Who to call first</p>
+                    <p className="text-xs text-muted mt-0.5">Open the Call Center tab for a call script per customer</p>
                   </div>
                   <div className="divide-y divide-border/50">
                     {briefing.debtors.slice(0, 8).map((d, i) => (
@@ -732,7 +728,7 @@ function AIFounderPageInner() {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendChat()}
-                  placeholder="Kuch bhi poochein... ya mic button dabayein"
+                  placeholder="Ask anything, or press the mic"
                   className="flex-1 bg-surface-2 border border-border rounded-xl text-sm text-primary placeholder-muted px-4 py-3 focus:outline-none focus:border-accent transition-colors"
                 />
 
@@ -862,9 +858,9 @@ function AIFounderPageInner() {
                             <p className="text-xs font-bold text-primary">{m.name}</p>
                             <span className="text-2xs px-1.5 py-0.5 rounded-full font-bold"
                               style={{
-                                background: m.urgency === "high" ? "#F5424D15" : m.urgency === "medium" ? "#F5A52415" : "#10D98A15",
-                                color: m.urgency === "high" ? "#F5424D" : m.urgency === "medium" ? "#F5A524" : "#10D98A",
-                                border: `1px solid ${m.urgency === "high" ? "#F5424D25" : m.urgency === "medium" ? "#F5A52425" : "#10D98A25"}`,
+                                background: m.urgency === "high" ? "#A64F4B15" : m.urgency === "medium" ? "#8C682615" : "#47705415",
+                                color: m.urgency === "high" ? "#A64F4B" : m.urgency === "medium" ? "#8C6826" : "#477054",
+                                border: `1px solid ${m.urgency === "high" ? "#A64F4B25" : m.urgency === "medium" ? "#8C682625" : "#47705425"}`,
                               }}>
                               {m.urgency}
                             </span>
@@ -900,12 +896,12 @@ function AIFounderPageInner() {
               <p className="text-xs font-bold text-secondary uppercase tracking-wider mb-3">What AI Founder Can Do</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
-                  { Icon: FiTarget,       label: "Priority Scoring", desc: "ML ranks debtors by pay probability",  color: "#0066FF" },
-                  { Icon: FiPhone,        label: "Call Scripts",     desc: "Hinglish scripts per debtor, any tone", color: "#10D98A" },
-                  { Icon: FiMessageSquare,label: "WhatsApp Drafts",  desc: "Personalized messages in seconds",      color: "#9B6DFF" },
-                  { Icon: FiBarChart2,    label: "Cash Forecasting", desc: "Predict inflow for next 7/30 days",     color: "#F5A524" },
-                  { Icon: FiMic,          label: "Voice Input",      desc: "Ask questions by speaking in Hindi",    color: "#F5424D" },
-                  { Icon: FiCpu,          label: "Business Strategy",desc: "LLaMA 70B — your AI co-founder",        color: "#10D98A" },
+                  { Icon: FiTarget,       label: "Priority Scoring", desc: "Ranks customers by how likely they are to pay",  color: "#566C82" },
+                  { Icon: FiPhone,        label: "Call Scripts",     desc: "Hinglish scripts per debtor, any tone", color: "#477054" },
+                  { Icon: FiMessageSquare,label: "WhatsApp Drafts",  desc: "Personalized messages in seconds",      color: "#756775" },
+                  { Icon: FiBarChart2,    label: "Cash Forecasting", desc: "Predict inflow for next 7/30 days",     color: "#8C6826" },
+                  { Icon: FiMic,          label: "Voice Input",      desc: "Ask questions by speaking in Hindi",    color: "#A64F4B" },
+                  { Icon: FiCpu,          label: "Business Strategy",desc: "Plans grounded in your own numbers",        color: "#477054" },
                 ].map(({ Icon, label, desc, color }) => (
                   <div key={label} className="flex items-start gap-2.5 p-3 bg-surface-2 rounded-xl border border-border">
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}18`, border: `1px solid ${color}25` }}>

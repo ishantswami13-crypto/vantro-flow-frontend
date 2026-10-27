@@ -54,8 +54,8 @@ function StepBar({ current }: { current: number }) {
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all"
                 style={{
-                  background: done   ? "#10D98A"
-                            : active ? "#4F6EF7"
+                  background: done   ? "#477054"
+                            : active ? "#566C82"
                             : "#F2F2EF",
                   border: done || active ? "none" : "1px solid #E5E5E1",
                   color: done || active ? "#fff" : "#6E6E69",
@@ -65,7 +65,7 @@ function StepBar({ current }: { current: number }) {
               </div>
               <span
                 className="text-[9px] font-bold mt-1 tracking-wide uppercase"
-                style={{ color: done ? "#10D98A" : active ? "#4F6EF7" : "#6E6E69" }}
+                style={{ color: done ? "#477054" : active ? "#566C82" : "#6E6E69" }}
               >
                 {s.label}
               </span>
@@ -74,7 +74,7 @@ function StepBar({ current }: { current: number }) {
             {i < STEPS.length - 1 && (
               <div
                 className="flex-1 h-px mx-1 transition-all"
-                style={{ background: done ? "#10D98A" : "rgba(255,255,255,0.08)" }}
+                style={{ background: done ? "#477054" : "rgba(255,255,255,0.08)" }}
               />
             )}
           </div>

@@ -163,8 +163,8 @@ export default function OrdersPage() {
       ) : orders.length === 0 ? (
         <div className="card-base p-10 text-center">
           <FiPackage size={40} className="text-muted mx-auto mb-3" />
-          <p className="text-lg font-semibold text-primary mb-1">Koi order nahi aaj ke liye</p>
-          <p className="text-sm text-muted mb-4">Orders aayenge calls se ya manually add karo</p>
+          <p className="text-lg font-semibold text-primary mb-1">No orders today</p>
+          <p className="text-sm text-muted mb-4">Orders arrive from calls, or add one by hand.</p>
           <button onClick={() => setShowAdd(true)} className="btn-primary text-sm px-4 py-2 flex items-center gap-2 mx-auto">
             <FiPlus size={14} /> Add First Order
           </button>
@@ -347,7 +347,7 @@ export default function OrdersPage() {
                 <div>
                   <label className="text-xs text-muted mb-1 block">Delivery Time</label>
                   <input value={form.delivery_time} onChange={e => setForm(f => ({ ...f, delivery_time: e.target.value }))}
-                    className="input-base text-sm w-full" placeholder="Kal subah, aaj 4 baje…" />
+                    className="input-base text-sm w-full" placeholder="Tomorrow morning, today 4 pm…" />
                 </div>
                 <div>
                   <label className="text-xs text-muted mb-1 block">Assign Worker</label>

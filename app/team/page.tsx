@@ -179,7 +179,7 @@ export default function TeamPage() {
             <div className="grid grid-cols-3 gap-2 text-center">
               {[
                 { n: "1", t: "twilio.com pe account banao" },
-                { n: "2", t: "Credentials neeche paste karo" },
+                { n: "2", t: "Paste the credentials below" },
                 { n: "3", t: "Webhook URL Twilio me lagao" },
               ].map(s => (
                 <div key={s.n} className="p-2.5 bg-surface-2 rounded-xl">
@@ -269,8 +269,8 @@ export default function TeamPage() {
         ) : workers.length === 0 ? (
           <div className="card p-10 text-center">
             <FiUser size={40} className="mx-auto mb-3 text-muted opacity-30" />
-            <p className="font-semibold text-primary mb-1">Koi worker nahi abhi tak</p>
-            <p className="text-sm text-muted mb-4">Delivery boy, driver, helper — sab add karo</p>
+            <p className="font-semibold text-primary mb-1">No team members yet</p>
+            <p className="text-sm text-muted mb-4">Add delivery staff, drivers and helpers.</p>
             <button onClick={() => setShowAdd(true)} className="btn-primary px-4 py-2 rounded-xl text-sm font-bold">
               <FiPlus size={14} className="inline mr-1.5" /> Add First Worker
             </button>

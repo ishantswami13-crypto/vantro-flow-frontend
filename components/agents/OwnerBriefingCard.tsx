@@ -16,8 +16,8 @@ import {
 // alarming; medium/low are neutral grades, not a blue "info" hue reusing
 // the interactive accent color (which reads as a link, not a risk level).
 const RISK_COLOR: Record<string, string> = {
-  critical: "#F5424D",
-  high:     "#F5A524",
+  critical: "#A64F4B",
+  high:     "#8C6826",
   medium:   "#888888",
   low:      "#555555",
 };
@@ -30,9 +30,9 @@ function confidenceLabel(c: number): string {
 // Same three hues the rest of the product uses for confidence
 // (success/warning/danger) - not a separately-invented green/orange/red.
 function confidenceColor(c: number): string {
-  if (c >= 0.9) return "#10D98A";
-  if (c >= 0.65) return "#F5A524";
-  return "#F5424D";
+  if (c >= 0.9) return "#477054";
+  if (c >= 0.65) return "#8C6826";
+  return "#A64F4B";
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────

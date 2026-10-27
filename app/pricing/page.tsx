@@ -23,7 +23,7 @@ const STEPS = [
 ];
 
 const INCLUDED: Array<[string, string, string]> = [
-  ["system", "The seven features", "The Bridge, Scan, Watch, Missions, Simulate, Memory and Prepared, on your own data."],
+  ["system", "The seven features", "Ask Starlane, Approvals, Decisions, Monitors, Tasks, Scenarios and Memory, on your own data."],
   ["readonly", "Live connections", "Every integration marked Live, connected read-only."],
   ["external", "Custom connectors where needed", "Systems not in the catalogue can be built for the pilot on the connector framework."],
   ["gate", "A walkthrough of the controls", "We take your team through each control on the security page and how it is built."],

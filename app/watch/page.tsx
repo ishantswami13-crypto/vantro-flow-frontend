@@ -267,7 +267,7 @@ function WatchPageInner() {
                 {tab === "history" && "No watch history yet"}
               </p>
               <p className="v32-body max-w-md mx-auto" style={{ color: "#63635F" }}>
-                {tab === "active" && 'Create one with "New watch" to have Starlane re-evaluate a condition against live data every 15 minutes, or check it on demand.'}
+                {tab === "active" && 'Create one with "New monitor" to have Starlane re-evaluate a condition against live data every 15 minutes, or check it on demand.'}
                 {tab === "changed" && "This lists watches whose status just moved into a triggered state."}
                 {tab === "paused" && "Paused watches stop being evaluated by the 15-minute cron until resumed."}
                 {tab === "history" && "Once watches exist and are evaluated, their trigger history will show here."}
@@ -414,7 +414,7 @@ function NewWatchModal({
         }}
       >
         <h2 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 20, color: "#191917" }}>
-          New watch
+          New monitor
         </h2>
 
         <label style={{ fontSize: 12, color: "#63635F" }}>
@@ -481,7 +481,7 @@ function NewWatchModal({
             className="btn-primary-v32"
             style={{ padding: "8px 14px", fontSize: 13, borderRadius: 6 }}
           >
-            {saving ? "Creating…" : "Create watch"}
+            {saving ? "Creating…" : "Create monitor"}
           </button>
         </div>
       </form>

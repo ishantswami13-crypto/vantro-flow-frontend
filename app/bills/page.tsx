@@ -148,7 +148,7 @@ export default function BillsPage() {
           {bills.length === 0 && !showForm && !error && (
             <div className="card-base p-10 text-center">
               <FiFileText size={40} className="text-muted mx-auto mb-3" />
-              <p className="font-semibold text-primary mb-1">Koi invoice nahi abhi</p>
+              <p className="font-semibold text-primary mb-1">No invoices yet</p>
               <button onClick={() => setShowForm(true)} className="btn-primary text-sm px-4 py-2 mt-2 mx-auto flex items-center gap-1.5">
                 <FiPlus size={13} /> Create First Invoice
               </button>

@@ -70,7 +70,7 @@ export default function InvoiceViewPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <div className="w-10 h-10 border-2 border-[#191917] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-gray-500 text-sm">Loading invoice…</p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function InvoiceViewPage() {
         <div className="text-center">
           <p className="text-red-500 font-semibold mb-2">Invoice not found</p>
           <p className="text-gray-400 text-sm mb-4">{error}</p>
-          <button onClick={() => router.push("/collections")} className="text-blue-600 text-sm underline">← Back to Collections</button>
+          <button onClick={() => router.push("/collections")} className="text-[#191917] text-sm underline">← Back to Collections</button>
         </div>
       </div>
     );
@@ -122,7 +122,7 @@ export default function InvoiceViewPage() {
             <FiMessageSquare size={12} /> Send via WhatsApp
           </button>
           <button onClick={handleShare}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-all">
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E5E4DF] text-[#191917] text-xs font-semibold hover:bg-[#F3F2EE] transition-all">
             <FiShare2 size={12} /> Share Link
           </button>
           <button onClick={() => window.print()}
@@ -142,7 +142,7 @@ export default function InvoiceViewPage() {
               {/* Business details */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-sm">
+                  <div className="w-8 h-8 rounded-lg bg-[#191917] flex items-center justify-center text-white font-black text-sm">
                     {(biz.business_name || "V").charAt(0).toUpperCase()}
                   </div>
                   <span className="text-white font-bold text-base tracking-tight">
@@ -218,7 +218,7 @@ export default function InvoiceViewPage() {
                 <p className="text-3xl font-black text-gray-900 tracking-tight">{fmtINR(invoice.invoice_amount)}</p>
                 {invoice.payment_link && !isPaid && (
                   <a href={invoice.payment_link} target="_blank" rel="noopener noreferrer"
-                    className="no-print inline-block mt-2 px-4 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-all">
+                    className="no-print inline-block mt-2 px-4 py-1.5 rounded-lg bg-[#191917] text-white text-xs font-bold hover:bg-[#2A2A27] transition-all">
                     Pay Online →
                   </a>
                 )}
@@ -319,9 +319,9 @@ export default function InvoiceViewPage() {
             </div>
 
             {/* Amount in words */}
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl">
-              <p className="text-xs text-blue-500 font-semibold mb-0.5">Amount in Words</p>
-              <p className="text-sm text-blue-800 font-medium">{toWords(invoice.invoice_amount)}</p>
+            <div className="mt-4 p-3 bg-[#F3F2EE] border border-[#E5E4DF] rounded-xl">
+              <p className="text-xs text-[#6E6E69] font-semibold mb-0.5">Amount in Words</p>
+              <p className="text-sm text-[#191917] font-medium">{toWords(invoice.invoice_amount)}</p>
             </div>
           </div>
 

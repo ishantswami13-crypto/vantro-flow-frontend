@@ -27,8 +27,8 @@ export function BusinessSummarySection({ brain, brainSection }: BusinessSummaryS
     if (brainSection === "disabled") {
       return (
         <EmptyState
-          title="Business Summary isn't enabled for this account yet"
-          message="Ask STARLANE support to turn on the brain dashboard for this business."
+          title="The sales and profit summary is off for this account"
+          message="Your data is unaffected. Write to Starlane support to turn it on."
         />
       );
     }

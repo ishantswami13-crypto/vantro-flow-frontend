@@ -70,14 +70,14 @@ function classifyIntent(text: string): ReplyLog {
   const paidKw = ["paid", "kar diya", "bhej diya", "done", "ho gaya", "send kar", "transferred", "upi kar", "payment kiya", "de diya", "diya"];
   const promisedKw = ["kal", "parso", "pakka", "promise", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "next week", "agli", "agle", "de dunga", "dunga", "sure", "zaroor", "confirm", "by", "tak", "shaam tak", "dopahar", "subah"];
   const uncertainKw = ["dekhunga", "dekhta", "pata nahi", "maybe", "try", "mushkil", "problem", "baad mein", "later", "soch", "nahi pata", "abhi nahi", "thodi der", "wait"];
-  if (paidKw.some(k => t.includes(k))) return { intent: "paid", label: "🟢 Paid", color: "#10D98A", text, date: new Date().toISOString() };
-  if (promisedKw.some(k => t.includes(k))) return { intent: "promised", label: "🟡 Promised", color: "#F5A524", text, date: new Date().toISOString() };
-  if (uncertainKw.some(k => t.includes(k))) return { intent: "uncertain", label: "🔴 Uncertain", color: "#F5424D", text, date: new Date().toISOString() };
-  return { intent: "uncertain", label: "🔴 Uncertain", color: "#F5424D", text, date: new Date().toISOString() };
+  if (paidKw.some(k => t.includes(k))) return { intent: "paid", label: "🟢 Paid", color: "#477054", text, date: new Date().toISOString() };
+  if (promisedKw.some(k => t.includes(k))) return { intent: "promised", label: "🟡 Promised", color: "#8C6826", text, date: new Date().toISOString() };
+  if (uncertainKw.some(k => t.includes(k))) return { intent: "uncertain", label: "🔴 Uncertain", color: "#A64F4B", text, date: new Date().toISOString() };
+  return { intent: "uncertain", label: "🔴 Uncertain", color: "#A64F4B", text, date: new Date().toISOString() };
 }
 
 type SortKey = "outstanding" | "daysOverdue" | "score";
-const SCORE_COLOR = (s: number) => s >= 70 ? "#10D98A" : s >= 40 ? "#F5A524" : "#F5424D";
+const SCORE_COLOR = (s: number) => s >= 70 ? "#477054" : s >= 40 ? "#8C6826" : "#A64F4B";
 const STATUS_VARIANT: Record<string, "danger" | "warning" | "default"> = {
   overdue: "danger", promised: "warning", due: "default",
 };
@@ -803,11 +803,11 @@ export default function CollectionsPage() {
         {agingSummary && (
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { label: "Due Today", value: agingSummary.buckets.due_today, color: "#10D98A", glow: "rgba(16,217,138,0.06)" },
-              { label: "1-7 Days", value: agingSummary.buckets.overdue_1_7, color: "#F5A524", glow: "rgba(245,165,36,0.06)" },
-              { label: "8-30 Days", value: agingSummary.buckets.overdue_8_30, color: "#F5A524", glow: "rgba(245,165,36,0.06)" },
-              { label: "31-60 Days", value: agingSummary.buckets.overdue_31_60, color: "#F5424D", glow: "rgba(245,66,77,0.06)" },
-              { label: "60+ Days", value: agingSummary.buckets.overdue_60_plus, color: "#F5424D", glow: "rgba(245,66,77,0.06)" }
+              { label: "Due Today", value: agingSummary.buckets.due_today, color: "#477054", glow: "rgba(16,217,138,0.06)" },
+              { label: "1-7 Days", value: agingSummary.buckets.overdue_1_7, color: "#8C6826", glow: "rgba(245,165,36,0.06)" },
+              { label: "8-30 Days", value: agingSummary.buckets.overdue_8_30, color: "#8C6826", glow: "rgba(245,165,36,0.06)" },
+              { label: "31-60 Days", value: agingSummary.buckets.overdue_31_60, color: "#A64F4B", glow: "rgba(245,66,77,0.06)" },
+              { label: "60+ Days", value: agingSummary.buckets.overdue_60_plus, color: "#A64F4B", glow: "rgba(245,66,77,0.06)" }
             ].map(b => (
               <div key={b.label} className="rounded-xl border p-3" style={{ background: b.glow, borderColor: `${b.color}20` }}>
                 <p className="text-[10px] text-muted font-medium mb-1">{b.label}</p>
@@ -1018,7 +1018,7 @@ export default function CollectionsPage() {
                           <ScoreRing score={c.score} />
                           {scoreMap[c.name] && (() => {
                             const risk = scoreMap[c.name];
-                            const tierColor = risk.tier === "HIGH_RISK" ? "#F5424D" : risk.tier === "MEDIUM" ? "#F5A524" : "#10D98A";
+                            const tierColor = risk.tier === "HIGH_RISK" ? "#A64F4B" : risk.tier === "MEDIUM" ? "#8C6826" : "#477054";
                             const tierShort = risk.tier === "HIGH_RISK" ? "HIGH" : risk.tier === "MEDIUM" ? "MED" : "LOW";
                             return (
                               <span className="text-[9px] font-bold rounded px-1.5 py-0.5"
@@ -1073,7 +1073,7 @@ export default function CollectionsPage() {
                                 background: isPromiseBroken(c.id)
                                   ? "rgba(245,66,77,0.15)"
                                   : "rgba(245,165,36,0.12)",
-                                color: isPromiseBroken(c.id) ? "#F5424D" : "#F5A524",
+                                color: isPromiseBroken(c.id) ? "#A64F4B" : "#8C6826",
                                 border: `1px solid ${isPromiseBroken(c.id) ? "rgba(245,66,77,0.3)" : "rgba(245,165,36,0.25)"}`,
                               }}>
                               {isPromiseBroken(c.id) ? "⚠️" : "🤝"} {promises[c.id].date.slice(5)}

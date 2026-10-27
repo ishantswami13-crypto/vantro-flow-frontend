@@ -996,7 +996,7 @@ export default function SalesPage() {
                         </div>
                       )}
                       {s.gst_type && s.gst_amount && (
-                        <p className="text-xs mt-0.5" style={{ color: "#F5A524" }}>
+                        <p className="text-xs mt-0.5" style={{ color: "#8C6826" }}>
                           {s.gst_type}{s.gst_rate ? ` @${s.gst_rate}%` : ""}: {fmtINR(s.gst_amount)}
                         </p>
                       )}
@@ -1024,7 +1024,7 @@ export default function SalesPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-bold text-lg text-success">{fmtINR(s.total_amount)}</p>
-                      {s.status !== "paid" && <p className="text-xs text-warning font-semibold">{fmtINR(pending)} lena</p>}
+                      {s.status !== "paid" && <p className="text-xs text-warning font-semibold">{fmtINR(pending)} to receive</p>}
                       <div className="flex gap-1.5 mt-2 justify-end">
                         {s.status !== "paid" && (
                           <button onClick={() => { setPayModal(s); setPayAmount(""); }}
@@ -1065,7 +1065,7 @@ export default function SalesPage() {
                     {scanning ? "Reading Invoice…" : editId ? "Edit Sale" : scanPreview ? "Confirm Scanned Invoice" : "Add Sale"}
                   </h3>
                   <p className="text-xs text-muted">
-                    {scanning ? "AI is extracting details from your photo" : "Customer ka invoice add karo"}
+                    {scanning ? "AI is extracting details from your photo" : "Add a customer invoice"}
                   </p>
                 </div>
                 <button aria-label="Close" onClick={closeModal} className="p-1.5 text-muted hover:text-primary"><FiX size={16} /></button>
@@ -1161,7 +1161,7 @@ export default function SalesPage() {
                                 {scannedGst.type}{scannedGst.rate ? ` @ ${scannedGst.rate}%` : ""}
                               </td>
                               <td />
-                              <td className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "#F5A524" }}>
+                              <td className="px-3 py-2 text-right text-xs font-semibold" style={{ color: "#8C6826" }}>
                                 +{fmtINR(scannedGst.amount)}
                               </td>
                             </tr>

@@ -265,12 +265,12 @@ function AutomationTab() {
     <div className="max-w-[640px] space-y-3 text-[13.5px]" style={{ color: "#63635F" }}>
       <p>
         Automations in Starlane are workflows you deploy from a proposal on{" "}
-        <Link className="underline" href="/prepared">Prepared</Link>. Each one starts in shadow mode, never sends a message on its own,
+        <Link className="underline" href="/prepared">Approvals</Link>. Each one starts in shadow mode, never sends a message on its own,
         and has an action budget per run.
       </p>
       <p>
         Their runs, what is waiting for you and what was verified are on{" "}
-        <Link className="underline" href="/missions">Missions</Link>. To stop everything or one agent, use the switches on{" "}
+        <Link className="underline" href="/missions">Tasks</Link>. To stop everything or one agent, use the switches on{" "}
         <Link className="underline" href="/control/decisions">Control, Decisions</Link>.
       </p>
     </div>

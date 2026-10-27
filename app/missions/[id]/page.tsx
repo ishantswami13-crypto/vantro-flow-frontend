@@ -57,14 +57,14 @@ export default function MissionPage() {
   return (
     <DashboardLayout pageTitle="Task">
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "32px 24px 48px", display: "grid", gap: 20 }}>
-        <Link href="/missions" style={{ fontSize: 13, color: GRAPHITE }}>‹ Missions</Link>
+        <Link href="/missions" style={{ fontSize: 13, color: GRAPHITE }}>‹ Tasks</Link>
         {error && !m ? <p role="alert" style={{ color: "#A23B3B" }}>{error}</p> : null}
         {!m && !error ? <p style={{ color: GRAPHITE }}>Loading…</p> : null}
         {m ? (
           <>
             <div>
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: GRAPHITE }}>Mission · Collections</span>
+                <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: GRAPHITE }}>Task · Collections</span>
                 <span style={{ fontSize: 12, fontWeight: 600, color, background: "#F1F0EC", borderRadius: 999, padding: "3px 9px" }}>{label}</span>
               </div>
               <h1 style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 30, fontWeight: 400, color: "#191917", margin: "10px 0 0" }}>{m.title}</h1>
@@ -121,9 +121,9 @@ export default function MissionPage() {
                 <div style={{ ...panel, padding: "14px 16px", display: "grid", gap: 10 }}>
                   {m.allowed?.length || m.status === "active" || m.status === "paused" ? (
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {m.allowed?.includes("activate") ? <button style={{ ...btn, background: "#191917", color: "#fff" }} disabled={!!busy} onClick={() => void act("activate")}>{busy === "activate" ? "Starting…" : m.status === "paused" ? "Resume" : "Start mission"}</button> : null}
+                      {m.allowed?.includes("activate") ? <button style={{ ...btn, background: "#191917", color: "#fff" }} disabled={!!busy} onClick={() => void act("activate")}>{busy === "activate" ? "Starting…" : m.status === "paused" ? "Resume" : "Start task"}</button> : null}
                       {m.allowed?.includes("pause") ? <button style={btn} disabled={!!busy} onClick={() => void act("pause")}>Pause</button> : null}
-                      {m.allowed?.includes("cancel") ? <button style={btn} disabled={!!busy} onClick={() => void act("cancel")}>Cancel mission</button> : null}
+                      {m.allowed?.includes("cancel") ? <button style={btn} disabled={!!busy} onClick={() => void act("cancel")}>Cancel task</button> : null}
                       
                     </div>
                   ) : null}

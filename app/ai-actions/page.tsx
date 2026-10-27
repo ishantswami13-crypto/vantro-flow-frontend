@@ -366,7 +366,7 @@ export default function AiActionsPage() {
             </p>
             <p className="text-sm text-muted mt-1">
               {statusTab === "pending"
-                ? "Cortex will surface actions here as your business generates data."
+                ? "Starlane will raise actions here as your data comes in."
                 : "Approved and done actions will appear here."}
             </p>
           </div>

@@ -126,16 +126,16 @@ export default function KhataPage() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-[26px] leading-[1.15]" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>Customer Khata</h1>
-          <p className="text-xs text-muted mt-1">Udhaar aur bhugtan ka hisab</p>
+          <p className="text-xs text-muted mt-1">Credit given and payments received, per customer</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => { setAddType("debit"); setShowAdd(true); }}
             className="flex items-center gap-1.5 bg-danger/20 text-danger px-3 py-2 rounded-xl text-sm font-semibold border border-danger/30 hover:bg-danger/30 transition-colors">
-            <FiArrowUp size={14} /> Udhaar Diya
+            <FiArrowUp size={14} /> Credit given
           </button>
           <button onClick={() => { setAddType("credit"); setShowAdd(true); }}
             className="flex items-center gap-1.5 bg-success/20 text-success px-3 py-2 rounded-xl text-sm font-semibold border border-success/30 hover:bg-success/30 transition-colors">
-            <FiArrowDown size={14} /> Payment Mila
+            <FiArrowDown size={14} /> Payment received
           </button>
         </div>
       </div>
@@ -143,12 +143,12 @@ export default function KhataPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="card p-4">
-          <p className="text-xs text-muted mb-1">Total Lena Hai</p>
+          <p className="text-xs text-muted mb-1">To receive</p>
           <p className="text-xl font-bold text-danger">{fmtINR(totalReceivable)}</p>
           <p className="text-2xs text-muted">{customers.filter(c => c.balance > 0).length} customers</p>
         </div>
         <div className="card p-4">
-          <p className="text-xs text-muted mb-1">Total Dena Hai</p>
+          <p className="text-xs text-muted mb-1">To pay back</p>
           <p className="text-xl font-bold text-success">{fmtINR(totalPayable)}</p>
           <p className="text-2xs text-muted">{customers.filter(c => c.balance < 0).length} customers</p>
         </div>
@@ -160,7 +160,7 @@ export default function KhataPage() {
           <div className="relative mb-3">
             <FiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Customer dhundo..."
+              placeholder="Search customers"
               className="w-full bg-surface-2 border border-border rounded-xl pl-8 pr-3 py-2.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent/50" />
           </div>
 
@@ -169,8 +169,8 @@ export default function KhataPage() {
           ) : filtered.length === 0 ? (
             <div className="text-center py-8 text-muted text-sm">
               <FiUser size={32} className="mx-auto mb-2 opacity-30" />
-              <p>Koi customer nahi</p>
-              <p className="text-xs mt-1">Udhaar ya payment add karein</p>
+              <p>No customers yet</p>
+              <p className="text-xs mt-1">Add credit given or a payment received</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -195,7 +195,7 @@ export default function KhataPage() {
                         <p className={`font-bold text-sm ${c.balance > 0 ? "text-danger" : c.balance < 0 ? "text-success" : "text-muted"}`}>
                           {c.balance > 0 ? "+" : ""}{fmtINR(c.balance)}
                         </p>
-                        <p className="text-2xs text-muted">{c.balance > 0 ? "lena hai" : c.balance < 0 ? "dena hai" : "clear"}</p>
+                        <p className="text-2xs text-muted">{c.balance > 0 ? "to receive" : c.balance < 0 ? "to pay back" : "clear"}</p>
                       </div>
                       <div className="flex flex-col gap-1">
                         <button onClick={e => { e.stopPropagation(); whatsappStatement(c); }}
@@ -217,8 +217,8 @@ export default function KhataPage() {
           {!selected ? (
             <div className="card p-8 text-center">
               <FiUser size={36} className="mx-auto mb-3 text-muted opacity-40" />
-              <p className="text-secondary text-sm">Customer select karein</p>
-              <p className="text-muted text-xs mt-1">Transaction history dekhne ke liye</p>
+              <p className="text-secondary text-sm">Select a customer</p>
+              <p className="text-muted text-xs mt-1">to see their history</p>
             </div>
           ) : (
             <div className="card overflow-hidden">
@@ -234,7 +234,7 @@ export default function KhataPage() {
                       {fmtINR(selectedCustomer?.balance ?? 0)}
                     </p>
                     <p className="text-2xs text-muted">
-                      {(selectedCustomer?.balance ?? 0) > 0 ? "⬆ Lena Hai" : (selectedCustomer?.balance ?? 0) < 0 ? "⬇ Dena Hai" : "✓ Clear"}
+                      {(selectedCustomer?.balance ?? 0) > 0 ? "To receive" : (selectedCustomer?.balance ?? 0) < 0 ? "To pay back" : "Clear"}
                     </p>
                   </div>
                 </div>
@@ -253,7 +253,7 @@ export default function KhataPage() {
                         {entry.type === "debit" ? <FiArrowUp size={14} /> : <FiArrowDown size={14} />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-primary font-medium truncate">{entry.note || (entry.type === "debit" ? "Udhaar diya" : "Payment mila")}</p>
+                        <p className="text-sm text-primary font-medium truncate">{entry.note || (entry.type === "debit" ? "Credit given" : "Payment received")}</p>
                         <p className="text-2xs text-muted">{fmtDate(entry.created_at)} · {entry.payment_mode}</p>
                       </div>
                       <div className="text-right">
@@ -275,11 +275,11 @@ export default function KhataPage() {
               <div className="p-3 border-t border-border flex gap-2">
                 <button onClick={() => { setForm(f => ({ ...f, customer_name: selected || "" })); setAddType("debit"); setShowAdd(true); }}
                   className="flex-1 py-2 rounded-xl bg-danger/10 text-danger text-xs font-semibold hover:bg-danger/20 transition-colors">
-                  + Udhaar Diya
+                  + Credit given
                 </button>
                 <button onClick={() => { setForm(f => ({ ...f, customer_name: selected || "" })); setAddType("credit"); setShowAdd(true); }}
                   className="flex-1 py-2 rounded-xl bg-success/10 text-success text-xs font-semibold hover:bg-success/20 transition-colors">
-                  + Payment Mila
+                  + Payment received
                 </button>
               </div>
             </div>
@@ -298,8 +298,8 @@ export default function KhataPage() {
                     {addType === "debit" ? <FiArrowUp size={16} /> : <FiArrowDown size={16} />}
                   </div>
                   <div>
-                    <h3 className="font-bold text-primary">{addType === "debit" ? "Udhaar Diya" : "Payment Mila"}</h3>
-                    <p className="text-xs text-muted">{addType === "debit" ? "Customer ko credit diya" : "Customer se paisa mila"}</p>
+                    <h3 className="font-bold text-primary">{addType === "debit" ? "Credit given" : "Payment received"}</h3>
+                    <p className="text-xs text-muted">{addType === "debit" ? "Goods or money given on credit" : "Money received from the customer"}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">

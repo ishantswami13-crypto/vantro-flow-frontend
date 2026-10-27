@@ -69,7 +69,7 @@ export default function NewMissionPage() {
     <DashboardLayout pageTitle="New task">
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "32px 24px 48px", display: "grid", gap: 20 }}>
         <div>
-          <Link href="/missions" style={{ fontSize: 13, color: GRAPHITE }}>‹ Missions</Link>
+          <Link href="/missions" style={{ fontSize: 13, color: GRAPHITE }}>‹ Tasks</Link>
           <h1 style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 30, fontWeight: 400, color: "#191917", margin: "8px 0 0" }}>{d?.title || "New collections mission"}</h1>
           <p className="v32-body" style={{ color: GRAPHITE, maxWidth: "66ch", marginTop: 8 }}>One objective with a deadline, measured against your books. Starting it proposes one reminder per customer for your approval — nothing is sent until you approve it.</p>
         </div>
@@ -98,7 +98,7 @@ export default function NewMissionPage() {
               {preview?.errors.length ? <p role="alert" style={{ margin: 0, color: "#A23B3B" }}>{preview.errors.join(" · ")}</p> : null}
               {err ? <p role="alert" style={{ margin: 0, color: "#A23B3B" }}>{err}</p> : null}
               <div style={{ display: "flex", gap: 8 }}>
-                <button style={{ ...btn, background: "#191917", color: "#fff", opacity: blocked ? 0.4 : 1 }} disabled={blocked} onClick={() => void create(true)}>{busy ? "Starting…" : "Start mission"}</button>
+                <button style={{ ...btn, background: "#191917", color: "#fff", opacity: blocked ? 0.4 : 1 }} disabled={blocked} onClick={() => void create(true)}>{busy ? "Starting…" : "Start task"}</button>
                 <button style={btn} disabled={blocked} onClick={() => void create(false)}>Save as draft</button>
               </div>
             </section>

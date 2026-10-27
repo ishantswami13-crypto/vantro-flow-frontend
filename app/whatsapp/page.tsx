@@ -220,8 +220,8 @@ export default function WhatsAppPage() {
                 ) : customers.length === 0 ? (
                   <div className="p-8 text-center">
                     <FiUsers size={28} className="mx-auto mb-3 text-muted opacity-40" />
-                    <p className="text-sm font-semibold text-secondary mb-1">Koi overdue customer nahi mila</p>
-                    <p className="text-xs text-muted mb-4">Pehle Collections page pe invoices add karo — phir yahan customers dikhenge.</p>
+                    <p className="text-sm font-semibold text-secondary mb-1">No overdue customers</p>
+                    <p className="text-xs text-muted mb-4">Add invoices in Collections first; overdue customers then show here.</p>
                     <Link href="/collections"
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800 transition-colors">
                       <FiFilter size={11} /> Go to Collections
@@ -364,7 +364,7 @@ export default function WhatsAppPage() {
                         style={{ borderRight: "8px solid #1F2C34", borderBottom: "8px solid transparent" }} />
                       {previewText || "Select a template to see the preview..."}
                       <div className="flex items-center justify-end gap-1 mt-1.5">
-                        <span className="text-[10px] text-[#8696A0]">
+                        <span className="text-[10px] text-[#8696A0]" suppressHydrationWarning>
                           {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })}
                         </span>
                         {/* Double tick (delivered) */}
