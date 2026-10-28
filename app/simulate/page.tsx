@@ -34,6 +34,7 @@ const fmtIn = (currency: string | null) => (n: number | null | undefined) => {
   const sign = n < 0 ? "−" : "";
   if (currency === "") return `${sign}${Math.round(abs).toLocaleString("en-US")}`;
   if (currency && currency !== "INR") return `${sign}${currency} ${Math.round(abs).toLocaleString("en-US")}`;
+  if (abs >= 1e7) return `${sign}₹${(abs / 1e7).toFixed(2)}Cr`;
   return abs >= 100000 ? `${sign}₹${(abs / 100000).toFixed(1)}L` : `${sign}₹${Math.round(abs).toLocaleString("en-IN")}`;
 };
 
@@ -181,8 +182,7 @@ function SimulatePageInner() {
                         value={invoiceQuery}
                         onChange={(e) => setInvoiceQuery(e.target.value)}
                         placeholder={`Search ${invoiceTotal.toLocaleString("en-IN")} open invoices`}
-                        className="sim-pill"
-                        style={{ ...pill, minWidth: 220 }}
+                        style={{ ...pill, minWidth: 220, paddingRight: 14, cursor: "text" }}
                       />
                     </>
                   )}
