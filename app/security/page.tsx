@@ -16,7 +16,7 @@ export const metadata: Metadata = pageMetadata({
     "The controls Starlane has today, stated plainly: read-only connections, an approval queue, actions that run at most once, an append-only audit trail, and what it does not claim.",
 });
 
-export const viewport: Viewport = { themeColor: "#0B0D10" };
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
 // Only controls that exist in the product and backend today. Anything not yet
 // achieved (certifications, audits, uptime commitments) is said to be absent,
@@ -34,7 +34,7 @@ const GROUPS: Array<{ k: string; items: Array<[string, string, string]> }> = [
   { k: "Decisions", items: [
     ["gate", "Approval queue", "Proposed actions wait for a person, and higher-risk action types always require approval."],
     ["once", "Runs at most once", "Each approved action is claimed atomically and runs at most once. The message text you approve is the text that is sent."],
-    ["scope", "Limits on AI agents", "AI agents are blocked from marking payments received, changing amounts or deleting records."],
+    ["scope", "Hard limits", "Starlane is blocked from marking payments received, changing amounts or deleting records, whatever it is asked."],
     ["audit", "Audit trail", "Decisions are logged with who made them, when, and the values before and after."],
   ] },
   { k: "Data", items: [

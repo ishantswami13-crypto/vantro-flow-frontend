@@ -12,7 +12,7 @@ export const metadata: Metadata = pageMetadata({
   description: "How Starlane collects, uses and protects your business data, and the rights you have over it.",
 });
 
-export const viewport: Viewport = { themeColor: "#0B0D10" };
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
 // The legal text is unchanged; it now sits in the public site's frame.
 export default function PrivacyPage() {

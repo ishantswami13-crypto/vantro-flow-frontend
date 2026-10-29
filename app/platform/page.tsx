@@ -17,7 +17,7 @@ export const metadata: Metadata = pageMetadata({
     "How Starlane works, end to end: read-only connections to the systems you run, one model of the business, the changes that matter, the evidence and options behind each decision, and a check on what happened next.",
 });
 
-export const viewport: Viewport = { themeColor: "#0B0D10" };
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
 // The product, in the order it works: connect, model, watch, decide, verify.
 // Same fictional company as the homepage; every figure is illustrative.

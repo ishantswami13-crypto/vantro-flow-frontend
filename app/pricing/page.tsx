@@ -15,7 +15,7 @@ export const metadata: Metadata = pageMetadata({
     "Starlane is available through private pilots. How a pilot runs, what it includes, what stays off by default, and how pricing is agreed.",
 });
 
-export const viewport: Viewport = { themeColor: "#0B0D10" };
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
 // Starlane is sold through private pilots; pricing is agreed directly. This
 // page describes the pilot as the access flow and product actually run it,

@@ -73,7 +73,7 @@ export const metadata: Metadata = pageMetadata({
   description: HOME_DESCRIPTION,
 });
 
-export const viewport: Viewport = { themeColor: "#0B0D10" };
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
 // Who publishes the site, the site itself, and the product, for search engines.
 const STRUCTURED = {
@@ -114,20 +114,6 @@ export default function LandingPage() {
       <JsonLd data={[STRUCTURED, { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQ.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) }]} />
       {/* 01 · Hero */}
       <header className="f f-dark hx hx-c hx-cine">
-        <div className="hx-scene" aria-hidden>
-          <picture>
-            {/* Phones skip the picture: the brief is the first screen there, and a
-                transparent pixel keeps the image off a slow connection. */}
-            <source media="(max-width: 760px)" srcSet="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" />
-            <img
-              src="/brand/hero-dawn-1600.webp"
-              srcSet="/brand/hero-dawn-1600.webp 1600w, /brand/hero-dawn-2560.webp 2560w"
-              sizes="100vw"
-              alt=""
-              fetchPriority="high"
-            />
-          </picture>
-        </div>
         <div className="f-wrap hx-split">
           <div className="hx-copy">
             <Link href="/pricing" className="hx-kicker">Private pilots now open<span aria-hidden>→</span></Link>

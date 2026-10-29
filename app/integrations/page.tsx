@@ -19,7 +19,7 @@ export const metadata: Metadata = pageMetadata({
     "Every system Starlane connects to, by category, with how it connects and its real status: live today, planned, or built for your pilot.",
 });
 
-export const viewport: Viewport = { themeColor: "#0B0D10" };
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
 // The full integrations catalogue, as reference documentation. The homepage
 // reads the same list; statuses mirror the backend connector registry.

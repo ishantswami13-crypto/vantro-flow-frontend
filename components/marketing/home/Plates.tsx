@@ -31,18 +31,18 @@ export function SystemsPlate() {
           return (
             <g key={s.k} className={s.live ? "sp2-live" : "sp2-plan"}>
               <rect x="0.5" y={y - 25.5} width="261" height="51" className="sp2-box" />
-              <text x="14" y={y - 6} className="sp2-k">{s.k.toUpperCase()}</text>
+              <text x="14" y={y - 6} className="sp2-k">{s.k}</text>
               <text x="14" y={y + 13} className="sp2-has">{s.has}</text>
               <path d={d} className="sp2-line" />
               {s.live && <rect width="5" height="5" x="-2.5" y="-2.5" className="sp2-pkt" style={{ offsetPath: `path("${d}")`, animationDelay: `${(i * 0.53) % 3}s` } as React.CSSProperties} />}
               <rect x="300" y={y - 8} width={s.via.length * 6.1 + 12} height="16" className="sp2-knock" />
-              <text x="306" y={y + 3.5} className="sp2-via">{s.via.toUpperCase()}</text>
+              <text x="306" y={y + 3.5} className="sp2-via">{s.via}</text>
             </g>
           );
         })}
         <rect x="486" y="0" width="58" height="516" className="sp2-bar" />
-        <text className="sp2-bar-t" transform="translate(520 258) rotate(-90)" textAnchor="middle">STARLANE · ONE MODEL</text>
-        <text x="580" y="20" className="sp2-k">NARMADA PIPES & FITTINGS · ILLUSTRATIVE</text>
+        <text className="sp2-bar-t" transform="translate(520 258) rotate(-90)" textAnchor="middle">Starlane · one model</text>
+        <text x="580" y="20" className="sp2-k">Sample data · Narmada Pipes & Fittings</text>
         {MODEL.map(([k, v], i) => {
           const y = 66 + i * 58;
           return (

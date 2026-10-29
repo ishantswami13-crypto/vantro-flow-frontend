@@ -15,7 +15,7 @@ export const metadata: Metadata = pageMetadata({
     "Why Starlane exists, the principles it is built on, and where it is today. Starlane is built by Vantro Technologies.",
 });
 
-export const viewport: Viewport = { themeColor: "#0B0D10" };
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
 // Company. No team, funding, customer or location claims: only why the product
 // exists, the principles visible in how it is built, and an honest status.

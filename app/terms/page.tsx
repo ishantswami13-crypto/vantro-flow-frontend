@@ -11,7 +11,7 @@ export const metadata: Metadata = pageMetadata({
   description: "The terms that apply when you use Starlane.",
 });
 
-export const viewport: Viewport = { themeColor: "#0B0D10" };
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
 // The legal text is unchanged; it now sits in the public site's frame.
 export default function TermsPage() {
