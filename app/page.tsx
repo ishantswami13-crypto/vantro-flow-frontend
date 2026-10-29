@@ -6,8 +6,7 @@ import Link from "next/link";
 import { SITE, SITE_URL, pageMetadata } from "@/lib/site";
 import { JsonLd } from "@/components/marketing/JsonLd";
 import { SiteShell, CloseBand } from "@/components/marketing/site/Site";
-import { HeroBrief } from "@/components/marketing/site/HeroBrief";
-import { ApprovalPhone } from "@/components/marketing/site/ApprovalPhone";
+import { Tour, HeroScene } from "@/components/marketing/site/Tour";
 import { Scene3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { WatchRoom } from "@/components/marketing/home/Rooms";
 
@@ -109,7 +108,7 @@ export default function LandingPage() {
             <Link href="/access" className="sl-btn sl-btn-solid sl-btn-lg">Request a pilot</Link>
             <Link href="#brief" className="f-link">See a sample brief<span aria-hidden>→</span></Link>
           </div>
-          <div className="ex-shot"><HeroBrief /></div>
+          <div className="ex-shot"><HeroScene /></div>
           <div className="ex-works">
             <h2 className="ex-works-k">Works with what you already run</h2>
             <ul>{LIVE.map((n) => <li key={n}>{n}</li>)}</ul>
@@ -146,15 +145,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="f f-dark ex-sec ex-approve" aria-labelledby="ex-ap-h">
-        <div className="f-wrap ex-split">
-          <div>
-            <h2 id="ex-ap-h" className="ex-h2">You approve. Then it sends.</h2>
-            <p className="ex-sub">Starlane drafts the reminder in your words and waits. Approve, edit or skip it from your phone. The text you approve is the text that goes, once, and every step is logged.</p>
-            <p className="ex-more"><Link href="/platform" className="f-link">See the product<span aria-hidden>→</span></Link></p>
-          </div>
-          <ApprovalPhone />
+      <section className="f f-dark ex-sec ex-tour" aria-labelledby="ex-tour-h">
+        <div className="f-wrap ex-head">
+          <h2 id="ex-tour-h" className="ex-h2">Six screens. One morning.</h2>
+          <p className="ex-sub">From what changed overnight to what happened after you acted. Nothing reaches a customer until you approve the exact text.</p>
         </div>
+        <Tour />
       </section>
 
       <section id="faq" className="f f-light ex-faq" aria-labelledby="fq-h">
