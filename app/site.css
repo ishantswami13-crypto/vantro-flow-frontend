@@ -570,3 +570,51 @@ html:has(.sl.sl-start) .cookie-card { backdrop-filter: none; -webkit-backdrop-fi
 .sl-start .sp2-k, .sl-start .sp2-via { font-family: var(--sl-sans); font-size: 11px; letter-spacing: 0; }
 .sl-start .sp2-bar-t { font-family: var(--sl-sans); font-size: 13px; letter-spacing: 0; }
 html:has(.sl.sl-start) .sl-foot-sign { display: none; }
+
+/* ── Homepage, minimal ─────────────────────────────────────────────
+ * One idea per screen: a centred promise, one large product frame, three
+ * rules, the morning view, the approval, questions. Generous space, large
+ * serif type, hairlines only where they separate.
+ */
+.sl-start .f { padding: clamp(120px, 13vw, 208px) 0; }
+.sl-start .ex-hero { padding: clamp(96px, 11vw, 168px) 0 clamp(96px, 10vw, 152px); text-align: center; background: #0F0E0D; }
+.sl-start .ex-h { margin: 0 auto; max-width: 22ch; font-family: var(--serif); font-weight: 400; font-size: clamp(46px, 6.6vw, 104px); line-height: 1; letter-spacing: -0.032em; color: #F4F1EC; text-wrap: balance; font-variation-settings: "opsz" 72; }
+.sl-start .ex-h > span { display: block; }
+.sl-start .ex-h > span:nth-child(2) { color: #8E897F; }
+.sl-start .ex-h em { font-style: italic; color: #E2C9A0; }
+.sl-start .ex-lead { margin: clamp(28px, 2.6vw, 40px) auto 0; max-width: 34rem; font-size: clamp(16px, 1.25vw, 19px); line-height: 1.6; color: #ABA59C; }
+.sl-start .ex-actions { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 14px 32px; margin-top: clamp(32px, 3vw, 44px); }
+.sl-start .ex-shot { max-width: 940px; margin: clamp(80px, 9vw, 136px) auto 0; text-align: left; }
+.sl-start .ex-shot .hb-panel { box-shadow: 0 1px 0 rgb(255 255 255 / .04) inset, 0 60px 120px -60px rgb(0 0 0 / .9); }
+.sl-start .ex-shot .hb-cap { justify-content: center; }
+.sl-start .ex-works { margin-top: clamp(80px, 8vw, 120px); padding-top: 40px; border-top: 1px solid #2A2825; }
+.sl-start .ex-works-k { margin: 0; font-family: var(--sl-sans); font-size: 13px; font-weight: 500; color: #8E897F; }
+.sl-start .ex-works ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 44px; margin: 22px 0 0; padding: 0; list-style: none; }
+.sl-start .ex-works li { font-family: var(--serif); font-size: clamp(18px, 1.6vw, 22px); color: #CFC8BC; }
+
+.sl-start .ex-h2 { margin: 0; max-width: 18ch; font-family: var(--serif); font-weight: 400; font-size: clamp(38px, 4.6vw, 72px); line-height: 1.02; letter-spacing: -0.026em; color: var(--fg); text-wrap: balance; font-variation-settings: "opsz" 72; }
+.sl-start .ex-sub { margin: 28px 0 0; max-width: 32rem; font-size: clamp(16px, 1.2vw, 18px); line-height: 1.65; color: var(--fg2); }
+.sl-start .ex-more { margin: 36px 0 0; }
+.sl-start .ex-head { margin-bottom: clamp(64px, 7vw, 104px); }
+
+.sl-start .ex-tri { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 clamp(32px, 4vw, 64px); margin: clamp(72px, 8vw, 120px) 0 0; padding: 0; list-style: none; }
+.sl-start .ex-tri li { padding-top: 32px; border-top: 1px solid var(--line2); }
+.sl-start .ex-tri h3 { margin: 0; font-family: var(--serif); font-weight: 400; font-size: clamp(30px, 3vw, 46px); line-height: 1.05; letter-spacing: -0.02em; color: var(--fg); }
+.sl-start .ex-tri p { margin: 20px 0 0; max-width: 22rem; font-size: 16px; line-height: 1.65; color: var(--fg2); }
+
+.sl-start .ex-split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(48px, 7vw, 120px); align-items: center; }
+.sl-start .ex-approve { border-top: 1px solid #2A2825; }
+.sl-start .ex-faq .ex-split { align-items: start; }
+
+@media (max-width: 900px) {
+  .sl-start .ex-tri { grid-template-columns: 1fr; gap: 48px; }
+  .sl-start .ex-split { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .sl-start .ex-hero { text-align: left; }
+  .sl-start .ex-h, .sl-start .ex-lead { margin-left: 0; }
+  .sl-start .ex-actions { justify-content: flex-start; }
+  .sl-start .ex-works ul { justify-content: flex-start; gap: 10px 28px; }
+}
+.sl-start h1.ex-h { font-family: var(--serif) !important; font-weight: 400 !important; letter-spacing: -0.032em !important; }
+@media (max-width: 760px) { .sl-start h1.ex-h { font-size: clamp(40px, 11vw, 52px); line-height: 1.02; } }
