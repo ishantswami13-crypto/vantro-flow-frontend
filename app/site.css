@@ -781,3 +781,17 @@ html:has(.sl.sl-start) .sl-foot-sign { display: none; }
   .sl-start .s3-row { --s: .5; --sh: 420px; }
   .sl-start .s3-row .s3-scene { margin-top: 40px; transform: scale(var(--s)) rotateX(57deg) rotateZ(-64deg); }
 }
+
+/* Round 2 plate scenes: company, pricing, integrations, closing band. */
+.sl-start .s3 .s3-face p { max-width: none; text-align: left; letter-spacing: -0.01em; }
+.sl-start .s3 .s3-face p.s3-k { margin: 0; font-family: var(--sl-sans); font-size: 11px; line-height: 1.4; letter-spacing: 0; color: #8E897F; }
+.sl-start .s3 .s3-top .s3-face p.s3-k { color: #ABA59C; }
+.sl-start .s3 .s3-face p.s3-t { margin: 4px 0 0; font-family: var(--serif); line-height: 1.1; color: inherit; }
+.sl-start .co-join { margin-top: clamp(56px, 7vw, 104px); }
+.sl-start .f-side .s3-sm { margin: 24px 0 0 -24px; justify-items: start; }
+.sl-start .f-side .s3-sm .s3-scene { margin-left: 60px; }
+.sl-start .f-room .s3-row { margin: clamp(24px, 4vw, 56px) 0 clamp(16px, 3vw, 40px); }
+.sl-start .cb-scene .s3 { --sh: 230px; margin: 0 auto 8px; }
+.sl-start .cb-scene .s3-scene { margin-top: 70px; }
+@media (max-width: 900px) { .sl-start .f-side .s3-sm { margin-left: auto; margin-right: auto; justify-items: center; } .sl-start .f-side .s3-sm .s3-scene { margin-left: 0; } }
+.sl-start .f-side .s3-sm.s3-stairs { --sh: 220px; margin-top: 8px; }
