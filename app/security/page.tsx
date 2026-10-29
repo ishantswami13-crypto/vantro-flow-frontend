@@ -1,16 +1,23 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { pageMetadata, breadcrumb } from "@/lib/site";
+import { JsonLd } from "@/components/marketing/JsonLd";
 import "../landing.css";
 import "../start.css";
 import "../site.css";
 import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
+import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { Glyph } from "@/components/marketing/home/Glyph";
 import { InView } from "@/components/marketing/home/InView";
 
-export const metadata: Metadata = {
-  title: "Security and control · Starlane",
-  description: "The controls Starlane has today, stated plainly, and what it does not claim.",
-};
+export const metadata: Metadata = pageMetadata({
+  path: "/security",
+  title: "Security and control",
+  description:
+    "The controls Starlane has today, stated plainly: read-only connections, an approval queue, actions that run at most once, an append-only audit trail, and what it does not claim.",
+});
+
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
 // Only controls that exist in the product and backend today. Anything not yet
 // achieved (certifications, audits, uptime commitments) is said to be absent,
@@ -28,7 +35,7 @@ const GROUPS: Array<{ k: string; items: Array<[string, string, string]> }> = [
   { k: "Decisions", items: [
     ["gate", "Approval queue", "Proposed actions wait for a person, and higher-risk action types always require approval."],
     ["once", "Runs at most once", "Each approved action is claimed atomically and runs at most once. The message text you approve is the text that is sent."],
-    ["scope", "Limits on AI agents", "AI agents are blocked from marking payments received, changing amounts or deleting records."],
+    ["scope", "Hard limits", "Starlane is blocked from marking payments received, changing amounts or deleting records, whatever it is asked."],
     ["audit", "Audit trail", "Decisions are logged with who made them, when, and the values before and after."],
   ] },
   { k: "Data", items: [
@@ -49,11 +56,20 @@ const ABSENT = [
   ["Bug bounty", "There is no bug bounty programme."],
 ];
 
+const HERO_PLATES: Plate[] = [
+  { k: "Read-only", title: "Your books", lines: 4 },
+  { k: "Blocks risky actions", title: "Policy check", lines: 3 },
+  { k: "A person decides", title: "Approval", tone: "warn", lines: 3 },
+  { k: "Append-only", title: "Audit trail", kind: "top", lines: 4 },
+];
+
 export default function SecurityPage() {
   return (
     <SiteShell>
+      <JsonLd data={breadcrumb("/security", "Security and control")} />
       <PageHero
         kicker="Security and control"
+        visual={<Stack3D plates={HERO_PLATES} variant="stack" label="Four layers of control: read-only access to your books, a policy check, human approval, and an append-only audit trail." />}
         title={<>Built to be <em>checked.</em></>}
         lead="This page lists the controls that exist in Starlane today, in plain words. It does not list plans. During a pilot we take your team through each one and how it is built."
         index={[["#flow", "How an action moves"], ["#controls", "Controls"], ["#claims", "What we do not claim"], ["#disclosure", "Report a vulnerability"]]}

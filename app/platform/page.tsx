@@ -1,22 +1,29 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { pageMetadata, breadcrumb } from "@/lib/site";
+import { JsonLd } from "@/components/marketing/JsonLd";
 import "../landing.css";
 import "../start.css";
 import "../site.css";
 import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
+import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { SystemsPlate, StatePlate, EvidenceStack } from "@/components/marketing/home/Plates";
 import { WatchRoom, SimulationRoom, VerificationRecord } from "@/components/marketing/home/Rooms";
 import { PlatformAvailability } from "@/components/marketing/PlatformAvailability";
 
-export const metadata: Metadata = {
-  title: "Product · Starlane",
-  description: "How Starlane works, end to end: it connects read-only to the systems you run, keeps one model of the business, raises what changed, lays out the evidence and options, and checks what happened afterwards.",
-};
+export const metadata: Metadata = pageMetadata({
+  path: "/platform",
+  title: "Product",
+  description:
+    "How Starlane works, end to end: read-only connections to the systems you run, one model of the business, the changes that matter, the evidence and options behind each decision, and a check on what happened next.",
+});
+
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
 // The product, in the order it works: connect, model, watch, decide, verify.
 // Same fictional company as the homepage; every figure is illustrative.
 
-const CAPTION = "Illustrative · Fictional company · Halden Supply Co.";
+const CAPTION = "Sample data · Fictional business · Narmada Pipes & Fittings";
 
 const FEATURES: Array<[string, string, string]> = [
   ["/product/bridge", "The Bridge", "What you are owed, what is overdue, what needs you and what is coming, from your own books."],
@@ -28,11 +35,20 @@ const FEATURES: Array<[string, string, string]> = [
   ["/product/prepared", "Prepared", "The next 24 hours, 7 days and 30 days, worked out from the dates in your books."],
 ];
 
+const HERO_PLATES: Plate[] = [
+  { k: "Connect", title: "Your systems", lines: 4 },
+  { k: "Model", title: "One record", lines: 3 },
+  { k: "Watch", title: "What changed", tone: "risk", lines: 3 },
+  { k: "Decide", title: "Your decision", kind: "top", lines: 3 },
+];
+
 export default function PlatformPage() {
   return (
     <SiteShell>
+      <JsonLd data={breadcrumb("/platform", "Product")} />
       <PageHero
         kicker="Product"
+        visual={<Stack3D plates={HERO_PLATES} variant="stack" label="Four layers: your systems, one record, what changed, and your decision on top." />}
         title={<>One model of the business, <em>read every morning.</em></>}
         lead="Starlane connects to the systems you already run, keeps a single current record of what happened between customers, suppliers, stock and cash, and raises only what changed. Every figure carries its evidence, and every action waits for a person."
         index={[["#connect", "Connect"], ["#model", "Model"], ["#watch", "Watch"], ["#decide", "Decide"], ["#verify", "Verify"]]}
@@ -111,8 +127,8 @@ export default function PlatformPage() {
             <h2 id="p5-h" className="f-h2">Compare before committing.</h2>
             <p className="f-body">Real options are simulated as ranges against this customer’s own history, and ranked by rules you can read. A person decides.</p>
             <dl className="s6-dec">
-              <div><dt>Decision</dt><dd>Escalate Brightwater Retail</dd></div>
-              <div><dt>Owed</dt><dd className="num">$184,200 · 47 days</dd></div>
+              <div><dt>Decision</dt><dd>Escalate Gupta Traders</dd></div>
+              <div><dt>Owed</dt><dd className="num">₹18,42,000 · 47 days</dd></div>
               <div><dt>Horizon</dt><dd>30 days</dd></div>
             </dl>
           </div>

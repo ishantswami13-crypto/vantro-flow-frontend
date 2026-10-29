@@ -46,6 +46,22 @@ function stepErrors(step: number, v: ApplicationInput): Record<string, string> {
   return e;
 }
 
+// The application as an email, for when the service is unreachable. Uses the
+// contact address the site already publishes (security and privacy pages).
+const CONTACT = "ishantswami13@gmail.com";
+function applicationMailto(v: ApplicationInput, catalog: CatalogConnector[] | null) {
+  const names = new Map((catalog || []).map((c) => [c.id, c.name]));
+  const lines: Array<[string, string]> = [
+    ["Name", v.name], ["Email", v.email], ["Company", v.company], ["Website", v.website], ["Role", v.role],
+    ["Company size", v.companySize], ["Industry", v.industry], ["Country", v.country],
+    ["Systems", [...v.systems.map((id) => names.get(id) || id), v.otherSystems].filter(Boolean).join(", ")],
+    ["Will connect systems", v.willConnectSystems === null ? "" : v.willConnectSystems ? "Yes" : "No"],
+    ["Problem", v.problem], ["Desired outcome", v.desiredOutcome], ["Notes", v.notes],
+  ];
+  const body = lines.filter(([, x]) => x).map(([k, x]) => `${k}: ${x}`).join("\n");
+  return `mailto:${CONTACT}?subject=${encodeURIComponent(`Starlane pilot application: ${v.company}`)}&body=${encodeURIComponent(body)}`;
+}
+
 export default function RequestAccessPage() {
   const [step, setStep] = useState(0);
   const [v, setV] = useState<ApplicationInput>(EMPTY);
@@ -54,6 +70,9 @@ export default function RequestAccessPage() {
   const [catalogError, setCatalogError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Set when the service could not take the application (offline, or a server
+  // error), so it can still be sent by email with nothing retyped.
+  const [unreachable, setUnreachable] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
@@ -93,7 +112,7 @@ export default function RequestAccessPage() {
     const e = stepErrors(2, v);
     setErrors(e);
     if (Object.keys(e).length) return;
-    setSubmitting(true); setSubmitError(null);
+    setSubmitting(true); setSubmitError(null); setUnreachable(false);
     try {
       const { status, body } = await accessApi.submit(v);
       if (status === 400 && body.fields) {
@@ -102,13 +121,17 @@ export default function RequestAccessPage() {
         setSubmitError(body.error || "Please correct the highlighted fields");
       } else if (status === 429) {
         setSubmitError(body.error || "Too many applications from this network. Please try again later.");
+      } else if (status >= 500) {
+        setUnreachable(true);
+        setSubmitError("Starlane could not take applications just now.");
       } else if (!body.success) {
         setSubmitError(body.error || "Something went wrong. Please try again.");
       } else {
         setResult(body);
       }
     } catch {
-      setSubmitError("Could not reach Starlane. Check your connection and try again.");
+      setUnreachable(true);
+      setSubmitError("Could not reach Starlane.");
     } finally {
       setSubmitting(false);
     }
@@ -142,7 +165,12 @@ export default function RequestAccessPage() {
           ))}
         </ol>
 
-        {submitError && <p className="sl-alert err" role="alert" style={{ marginBottom: 24 }}>{submitError}</p>}
+        {submitError && (
+          <p className="sl-alert err" role="alert" style={{ marginBottom: 24 }}>
+            {submitError}
+            {unreachable && <> You can try again in a moment, or <a href={applicationMailto(v, catalog)} style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>send the application by email</a> with everything you entered.</>}
+          </p>
+        )}
 
         <form onSubmit={(e) => { e.preventDefault(); if (step < 2) next(); else submit(); }} noValidate>
           {/* Honeypot — hidden from people and assistive tech. */}

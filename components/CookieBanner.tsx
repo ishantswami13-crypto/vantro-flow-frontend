@@ -31,48 +31,22 @@ export default function CookieBanner() {
 
   if (!visible) return null;
 
+  // Colours come from --ck-* variables so a page can restyle the notice to its
+  // own surface (the public site sets a dark variant in start.css).
   return (
     <div
-      role="dialog"
+      role="region"
       aria-label="Cookie consent"
-      className="fixed bottom-4 right-4 left-4 sm:left-auto w-auto sm:w-[380px] z-[300] cookie-slide-up"
+      className="cookie-consent fixed bottom-4 right-4 left-4 sm:left-auto w-auto sm:w-[380px] z-[300] cookie-slide-up"
     >
-      <div
-        className="flex flex-col gap-3 px-4 py-3.5 rounded-xl"
-        style={{
-          background: "#FFFFFF",
-          border: "1px solid #E5E5E1",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-        }}
-      >
-        {/* Text */}
-        <p className="text-xs leading-relaxed" style={{ color: "#686868" }}>
+      <div className="cookie-card flex flex-col gap-3 px-4 py-3.5 rounded-xl">
+        <p className="text-xs leading-relaxed">
           We use cookies to improve your experience and analyse usage.{" "}
-          <Link
-            href="/privacy"
-            className="underline transition-colors hover:text-gray-900"
-            style={{ color: "#191917" }}
-          >
-            Privacy policy
-          </Link>
+          <Link href="/privacy" className="underline">Privacy policy</Link>
         </p>
-
-        {/* Actions */}
         <div className="flex items-center justify-end gap-2 shrink-0">
-          <button
-            onClick={decline}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-gray-50"
-            style={{ color: "#686868" }}
-          >
-            Decline
-          </button>
-          <button
-            onClick={accept}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-85"
-            style={{ background: "#191917", color: "#ffffff" }}
-          >
-            Accept all
-          </button>
+          <button type="button" onClick={decline} className="cookie-quiet px-3 py-1.5 rounded-lg text-xs font-medium">Decline</button>
+          <button type="button" onClick={accept} className="cookie-solid px-3.5 py-1.5 rounded-lg text-xs font-semibold">Accept all</button>
         </div>
       </div>
     </div>

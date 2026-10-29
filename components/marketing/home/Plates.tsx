@@ -31,18 +31,18 @@ export function SystemsPlate() {
           return (
             <g key={s.k} className={s.live ? "sp2-live" : "sp2-plan"}>
               <rect x="0.5" y={y - 25.5} width="261" height="51" className="sp2-box" />
-              <text x="14" y={y - 6} className="sp2-k">{s.k.toUpperCase()}</text>
+              <text x="14" y={y - 6} className="sp2-k">{s.k}</text>
               <text x="14" y={y + 13} className="sp2-has">{s.has}</text>
               <path d={d} className="sp2-line" />
               {s.live && <rect width="5" height="5" x="-2.5" y="-2.5" className="sp2-pkt" style={{ offsetPath: `path("${d}")`, animationDelay: `${(i * 0.53) % 3}s` } as React.CSSProperties} />}
               <rect x="300" y={y - 8} width={s.via.length * 6.1 + 12} height="16" className="sp2-knock" />
-              <text x="306" y={y + 3.5} className="sp2-via">{s.via.toUpperCase()}</text>
+              <text x="306" y={y + 3.5} className="sp2-via">{s.via}</text>
             </g>
           );
         })}
         <rect x="486" y="0" width="58" height="516" className="sp2-bar" />
-        <text className="sp2-bar-t" transform="translate(520 258) rotate(-90)" textAnchor="middle">STARLANE · ONE MODEL</text>
-        <text x="580" y="20" className="sp2-k">HALDEN SUPPLY CO. · ILLUSTRATIVE</text>
+        <text className="sp2-bar-t" transform="translate(520 258) rotate(-90)" textAnchor="middle">Starlane · one model</text>
+        <text x="580" y="20" className="sp2-k">Sample data · Narmada Pipes & Fittings</text>
         {MODEL.map(([k, v], i) => {
           const y = 66 + i * 58;
           return (
@@ -84,22 +84,22 @@ type Band = { k: string; rows: Row[] };
 
 export const BANDS: Band[] = [
   { k: "External", rows: [
-    { name: "ECB · EUR/USD", sub: "Public feed", note: "+2.1%", strip: { series: { v: [1.072, 1.070, 1.073, 1.071, 1.069, 1.072, 1.070, 1.071, 1.073, 1.071, 1.069, 1.091], min: 1.06, max: 1.095, tone: "warn" }, marks: [{ w: 12, t: "ext", tone: "warn" }] } },
+    { name: "RBI · EUR/INR", sub: "Public feed", note: "+2.1%", strip: { series: { v: [96.2, 96.0, 96.3, 96.1, 95.9, 96.2, 96.0, 96.1, 96.3, 96.1, 96.1, 98.1], min: 95.0, max: 98.6, tone: "warn" }, marks: [{ w: 12, t: "ext", tone: "warn" }] } },
   ] },
   { k: "Customers", rows: [
-    { name: "Brightwater Retail", sub: "Owner A. Okafor · 3 open invoices", note: "2 promises missed", strip: { marks: [{ w: 1, t: "ord", dx: -12 }, { w: 1, t: "inv" }, { w: 2, t: "pay", tone: "ok" }, { w: 4, t: "ord", dx: -12 }, { w: 4, t: "inv" }, { w: 6, t: "ord", dx: -12 }, { w: 6, t: "inv" }, { w: 10, t: "miss" }, { w: 11, t: "miss" }], bracket: { from: 10, to: 12, tone: "risk" } } },
-    { name: "Lumen Health Group", sub: "Pays within terms", strip: { marks: [{ w: 2, t: "inv" }, { w: 2, t: "ord", dx: -12 }, { w: 4, t: "pay", tone: "ok" }, { w: 6, t: "inv" }, { w: 6, t: "ord", dx: -12 }, { w: 8, t: "pay", tone: "ok" }, { w: 10, t: "inv" }, { w: 10, t: "ord", dx: -12 }, { w: 12, t: "pay", tone: "ok" }] } },
-    { name: "Northfield Labs", sub: "Limit $250,000", note: "Exposure $268,400", strip: { marks: [{ w: 3, t: "ord" }, { w: 5, t: "ord" }, { w: 5, t: "inv", dx: 10 }, { w: 7, t: "ord" }, { w: 8, t: "pay", tone: "ok" }, { w: 9, t: "ord" }, { w: 9, t: "inv", dx: 10 }, { w: 10, t: "ord" }, { w: 11, t: "ord" }, { w: 11, t: "inv", dx: 10 }, { w: 12, t: "ord" }], bracket: { from: 11, to: 12, tone: "info" } } },
+    { name: "Gupta Traders", sub: "Owner R. Mehra · 3 open invoices", note: "2 promises missed", strip: { marks: [{ w: 1, t: "ord", dx: -12 }, { w: 1, t: "inv" }, { w: 2, t: "pay", tone: "ok" }, { w: 4, t: "ord", dx: -12 }, { w: 4, t: "inv" }, { w: 6, t: "ord", dx: -12 }, { w: 6, t: "inv" }, { w: 10, t: "miss" }, { w: 11, t: "miss" }], bracket: { from: 10, to: 12, tone: "risk" } } },
+    { name: "Shree Ganesh Hardware", sub: "Pays within terms", strip: { marks: [{ w: 2, t: "inv" }, { w: 2, t: "ord", dx: -12 }, { w: 4, t: "pay", tone: "ok" }, { w: 6, t: "inv" }, { w: 6, t: "ord", dx: -12 }, { w: 8, t: "pay", tone: "ok" }, { w: 10, t: "inv" }, { w: 10, t: "ord", dx: -12 }, { w: 12, t: "pay", tone: "ok" }] } },
+    { name: "Mehta & Sons", sub: "Limit ₹25,00,000", note: "Exposure ₹26,84,000", strip: { marks: [{ w: 3, t: "ord" }, { w: 5, t: "ord" }, { w: 5, t: "inv", dx: 10 }, { w: 7, t: "ord" }, { w: 8, t: "pay", tone: "ok" }, { w: 9, t: "ord" }, { w: 9, t: "inv", dx: 10 }, { w: 10, t: "ord" }, { w: 11, t: "ord" }, { w: 11, t: "inv", dx: 10 }, { w: 12, t: "ord" }], bracket: { from: 11, to: 12, tone: "info" } } },
   ] },
   { k: "Suppliers", rows: [
-    { name: "Meridian Components", sub: "Supplies VA-200 · bills in EUR", note: "€412,000 open", strip: { marks: [{ w: 3, t: "inv" }, { w: 5, t: "pay", tone: "ok" }, { w: 8, t: "inv" }, { w: 9, t: "inv" }, { w: 11, t: "inv" }], bracket: { from: 11, to: 12, tone: "warn" } } },
+    { name: "Brenner Armaturen GmbH", sub: "Supplies CPVC 25 mm · bills in EUR", note: "€41,200 open", strip: { marks: [{ w: 3, t: "inv" }, { w: 5, t: "pay", tone: "ok" }, { w: 8, t: "inv" }, { w: 9, t: "inv" }, { w: 11, t: "inv" }], bracket: { from: 11, to: 12, tone: "warn" } } },
   ] },
   { k: "Stock", rows: [
-    { name: "VA-200 valve assembly", sub: "2 open orders · reorder at 12 days", note: "9 days cover", strip: { series: { v: [31, 29, 30, 27, 25, 24, 21, 20, 17, 15, 12, 9], min: 5, max: 34, threshold: 12, tone: "warn" }, bracket: { from: 11, to: 12, tone: "warn" } } },
+    { name: "CPVC pipe 25 mm", sub: "2 open orders · reorder at 12 days", note: "9 days cover", strip: { series: { v: [31, 29, 30, 27, 25, 24, 21, 20, 17, 15, 12, 9], min: 5, max: 34, threshold: 12, tone: "warn" }, bracket: { from: 11, to: 12, tone: "warn" } } },
   ] },
   { k: "People", rows: [
-    { name: "A. Okafor", sub: "Account owner, Brightwater", strip: { marks: [{ w: 9, t: "act" }, { w: 11, t: "act" }] } },
-    { name: "R. Lindqvist", sub: "Finance lead · approvals", strip: { marks: [{ w: 4, t: "act" }, { w: 8, t: "act" }] } },
+    { name: "R. Mehra", sub: "Account owner, Gupta Traders", strip: { marks: [{ w: 9, t: "act" }, { w: 11, t: "act" }] } },
+    { name: "S. Iyer", sub: "Finance lead · approvals", strip: { marks: [{ w: 4, t: "act" }, { w: 8, t: "act" }] } },
   ] },
 ];
 
@@ -107,7 +107,7 @@ export function StatePlate() {
   return (
     <InView className="st3">
       <div className="st3-head" aria-hidden>
-        <p className="st3-co">Halden Supply Co. · Illustrative</p>
+        <p className="st3-co">Narmada Pipes & Fittings · Illustrative</p>
         <div className="st3-axis"><RecordAxis labels={WEEKS} /><RecordAxis labels={WEEKS} weeks={6} /></div>
       </div>
       <div className="st3-body">
@@ -146,11 +146,11 @@ export function StatePlate() {
 /* ── Frame 05 · Evidence, exploded ─────────────────────────────── */
 
 const LAYERS = [
-  { k: "Observed", v: "3 open invoices, $184,200", tag: "Fact", cls: "fact", src: "INV-1042 · 1051 · 1066 · TallyPrime" },
+  { k: "Observed", v: "3 open invoices, ₹18,42,000", tag: "Fact", cls: "fact", src: "INV-1042 · 1051 · 1066 · TallyPrime" },
   { k: "Calculated", v: "Oldest invoice 47 days overdue", tag: "Calculated", cls: "calc", src: "Due date and today" },
   { k: "Assumed", v: "Payment terms Net 30", tag: "Assumption", cls: "asm", src: "No terms on record" },
-  { k: "External", v: "EUR/USD +2.1% this week", tag: "Fact", cls: "fact", src: "ECB · 13 Oct" },
-  { k: "Simulated", v: "$96k–$151k collected in 30 days", tag: "Estimate", cls: "est", src: "Ranges from 12 months of history" },
+  { k: "External", v: "EUR/INR +2.1% this week", tag: "Fact", cls: "fact", src: "RBI reference rate · 13 Oct" },
+  { k: "Simulated", v: "₹9.6–15.1 lakh collected in 30 days", tag: "Estimate", cls: "est", src: "Ranges from 12 months of history" },
   { k: "Proposed", v: "Firm reminder and an owner call", tag: "Proposal", cls: "prop", src: "Ranked by your collection rules" },
   { k: "Approval", v: "Waiting for the account owner", tag: "Pending", cls: "pend", src: "Runs once after approval" },
   { k: "Verification", v: "Check the books after the action", tag: "Scheduled", cls: "pend", src: "Payment matched against INV-1042" },
@@ -160,8 +160,8 @@ export function EvidenceStack() {
   return (
     <InView className="ev5">
       <div className="ev5-cap" aria-hidden>
-        <p className="ui-kicker"><i className="sq t-risk" />Decision</p>
-        <p className="ev5-cap-t">Escalate Brightwater Retail</p>
+        <p className="ui-kicker t-risk">Decision</p>
+        <p className="ev5-cap-t">Escalate Gupta Traders</p>
       </div>
       <ol className="ev5-plates">
         {LAYERS.map((l, i) => (

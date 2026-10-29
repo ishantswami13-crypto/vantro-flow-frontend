@@ -1,195 +1,177 @@
 import "./landing.css";
 import "./start.css";
 import "./site.css";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { SiteShell, Index, CloseBand } from "@/components/marketing/site/Site";
-import { HeroConsole } from "@/components/marketing/site/HeroConsole";
-import { SystemsPlate, EvidenceStack } from "@/components/marketing/home/Plates";
-import { WatchRoom, VerificationRecord } from "@/components/marketing/home/Rooms";
-import { Glyph } from "@/components/marketing/home/Glyph";
-import { InView } from "@/components/marketing/home/InView";
-import { CATEGORIES } from "@/components/marketing/landing/integrationsData";
+import { SITE, SITE_URL, pageMetadata } from "@/lib/site";
+import { JsonLd } from "@/components/marketing/JsonLd";
+import { SiteShell, CloseBand } from "@/components/marketing/site/Site";
+import { HeroBrief } from "@/components/marketing/site/HeroBrief";
+import { ApprovalPhone } from "@/components/marketing/site/ApprovalPhone";
+import { Scene3D, type Plate } from "@/components/marketing/site/Stack3D";
+import { WatchRoom } from "@/components/marketing/home/Rooms";
 
-// Starlane, public homepage. The short version of one story on one fictional
-// company (Halden Supply Co.): what changed, why, what to do, and what
-// happened next. Each frame hands off to the page that covers it in depth.
-// Every product figure is illustrative and labelled so. Every capability shown
-// exists in the product; integration statuses come from the registry.
+// Starlane, public homepage. Deliberately short: the promise, the product,
+// three rules, the morning view, the approval, and questions. The detail lives
+// on the platform, security and pricing pages. Product figures are sample data
+// on a fictional business and labelled so.
 
-const CAPTION = "Illustrative · Fictional company · Halden Supply Co.";
-
-const COUNT = (s: string) => CATEGORIES.reduce((n, c) => n + c.items.filter((i) => i.s === s).length, 0);
 // Live connections by name (registry status "live"); public feeds are opt-in per pilot.
-const LIVE = ["TallyPrime", "Excel", "CSV", "Google Sheets exports", "Bank statements", "Accounting exports", "Stock exports"];
+const LIVE = ["TallyPrime", "Excel", "CSV", "Google Sheets", "Bank statements", "Stock exports"];
 
-const CONTROLS = [
-  { g: "gate", k: "Approval queue", b: "Proposed actions wait for a person. Higher-risk types always require approval." },
-  { g: "once", k: "Runs at most once", b: "Each approved action is claimed once. The text you approve is the text sent." },
-  { g: "audit", k: "Audit trail", b: "Who decided, when, and the values before and after, in an append-only log." },
-  { g: "signal", k: "Messaging off by default", b: "Nothing reaches a customer or supplier until outbound messaging is enabled." },
+const LAYERS: Plate[] = [
+  { k: "Source", title: "TallyPrime", lines: 4 },
+  { k: "Source", title: "Bank statements", lines: 3 },
+  { k: "Source", title: "Stock", lines: 3 },
+  { k: "Starlane", title: "Morning brief", kind: "top", lines: 4 },
+];
+const LAYERS_LEGEND: Array<[string, string]> = [
+  ["TallyPrime", "Read through a local bridge, export only."],
+  ["Bank statements", "Imported as statement files."],
+  ["Stock", "Levels and movements, from your exports."],
+  ["Morning brief", "What changed since yesterday, with the records behind it."],
 ];
 
-const PAGES = [
-  { href: "/platform", g: "system", k: "Product", b: "Connect, model, watch, decide and verify: the whole loop, frame by frame." },
-  { href: "/integrations", g: "external", k: "Integrations", b: `${COUNT("live")} live today, ${COUNT("planned")} planned, and custom work for a pilot. Every status is real.` },
-  { href: "/security", g: "readonly", k: "Security", b: "The controls that exist now, in plain words, and what Starlane does not claim." },
-  { href: "/pricing", g: "range", k: "Pricing", b: "How a pilot runs, what it includes, and how pricing is agreed afterwards." },
-  { href: "/company", g: "scope", k: "Company", b: "Why Starlane exists and the principles it is built on." },
+const RULES = [
+  ["Read-only.", "Starlane reads TallyPrime, bank statements and stock. Nothing in your books is created, changed or deleted."],
+  ["Sourced.", "Every figure is marked fact, calculation, assumption or estimate, with the record it came from."],
+  ["Approved.", "Nothing reaches a customer until you approve the exact text, and it is sent once."],
 ];
+
+const FAQ: Array<[string, string]> = [
+  ["Does Starlane change anything in Tally?", "No. Connections are read-only. TallyPrime is read through export only, and each bridge device has its own credential, which you can revoke."],
+  ["Will Starlane message my customers?", "Not unless outbound messaging is enabled for your account, and then only with text you have approved, sent once."],
+  ["Are the numbers made up by AI?", "No language model produces the figures. They come from your records, simple calculations and simulations you can inspect, each labelled fact, calculated, assumption or estimate."],
+  ["What do I need for a pilot?", "Someone who knows which systems you run, TallyPrime on one Windows machine or exports of the rest, and a person who will approve or decline what Starlane proposes."],
+  ["Who can see my data?", "Every request is scoped to your account, and one account is one business. Passwords are hashed and sign-in is rate-limited. The security page lists each control and what Starlane does not claim."],
+  ["What does it cost?", "Starlane is available through private pilots, and pricing is agreed with each business once you have seen what it finds in your own data."],
+];
+
+
+const HOME_DESCRIPTION =
+  "A morning brief for owners who run on Tally. Starlane reads TallyPrime, bank statements and stock, read-only, shows the few changes worth your attention with the evidence behind every figure, and sends nothing to a customer until you approve it.";
+
+export const metadata: Metadata = pageMetadata({
+  path: "/",
+  title: `${SITE.name} · Morning cash brief for businesses on Tally`,
+  absoluteTitle: true,
+  description: HOME_DESCRIPTION,
+});
+
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
+
+// Who publishes the site, the site itself, and the product, for search engines.
+const STRUCTURED = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE.name,
+      legalName: SITE.legalName,
+      url: SITE_URL,
+      logo: `${SITE_URL}/branding/starlane-icon-light-512.png`,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE.name,
+      description: SITE.description,
+      publisher: { "@id": `${SITE_URL}/#organization` },
+      inLanguage: "en",
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: SITE.name,
+      url: SITE_URL,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      description: SITE.description,
+      publisher: { "@id": `${SITE_URL}/#organization` },
+    },
+  ],
+};
 
 export default function LandingPage() {
   return (
     <SiteShell>
-      {/* 01 · Hero */}
-      <header className="f f-dark hx hx-c">
-        <div className="f-wrap hx-top">
-          <Link href="/pricing" className="hx-pill"><i className="sq t-ok" aria-hidden />Now accepting pilot applications<span>How a pilot works<b aria-hidden>→</b></span></Link>
-          <h1 className="f-display hx-h"><span>Know what changed</span> <em>before it costs you.</em></h1>
-          <p className="f-lead hx-lead">
-            Starlane reads the systems you already run and puts the few changes that matter in front of you each
-            morning, with the evidence behind every figure. A person decides.
+      <JsonLd data={[STRUCTURED, { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQ.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) }]} />
+      <header className="f f-dark ex-hero">
+        <div className="f-wrap">
+          <h1 className="ex-h">
+            <span>Who owes you.</span> <span>Who broke a promise.</span> <span>Who to call <em>today.</em></span>
+          </h1>
+          <p className="ex-lead">
+            A morning brief from your TallyPrime, bank statements and stock. Every figure sourced. Nothing sent without your approval.
           </p>
-          <div className="f-actions hx-actions">
+          <div className="ex-actions">
             <Link href="/access" className="sl-btn sl-btn-solid sl-btn-lg">Request a pilot</Link>
-            <Link href="/platform" className="f-link">See the product<span aria-hidden>→</span></Link>
+            <Link href="#brief" className="f-link">See a sample brief<span aria-hidden>→</span></Link>
           </div>
-          <ul className="f-facts hx-facts">
-            <li><Glyph name="readonly" />Read-only connections</li>
-            <li><Glyph name="evidence" />Every figure sourced</li>
-            <li><Glyph name="gate" />Nothing sent without approval</li>
-          </ul>
+          <div className="ex-shot"><HeroBrief /></div>
+          <div className="ex-works">
+            <h2 className="ex-works-k">Works with what you already run</h2>
+            <ul>{LIVE.map((n) => <li key={n}>{n}</li>)}</ul>
+          </div>
         </div>
-        <div className="hx-stage">
-          <div className="hx-beam" aria-hidden />
-          <div className="f-wrap"><HeroConsole /></div>
-        </div>
-        <div className="f-wrap hx-foot"><p className="f-cap">{CAPTION}</p></div>
       </header>
 
-      {/* Live sources, by name */}
-      <section className="f-light rb" aria-labelledby="rb-h">
-        <div className="f-wrap rb-in">
-          <h2 id="rb-h" className="rb-k">Reads from, today</h2>
-          <ul className="rb-list">
-            {LIVE.map((n) => <li key={n}>{n}</li>)}
-          </ul>
-          <Link href="/integrations" className="f-link rb-more">All integrations<span aria-hidden>→</span></Link>
-        </div>
-      </section>
-
-      {/* 02 · Fragmented systems */}
-      <section id="how" className="f f-light" aria-labelledby="f2-h">
-        <div className="f-wrap f-grid">
-          <div className="f-side">
-            <Index n="01" k="The problem" />
-            <h2 id="f2-h" className="f-h2">Your company already knows what happened.</h2>
-            <p className="f-lede">The questions that matter sit between your systems.</p>
-            <p className="f-body">Accounting knows the balance. Your team knows the promise. The bank knows whether the money arrived. Nobody connects them until it is late.</p>
-            <p className="f-note"><span className="f-key f-key-solid" />Live today <span className="f-key f-key-dash" />Planned or custom</p>
-          </div>
-          <div className="f-main"><SystemsPlate /></div>
-        </div>
-      </section>
-
-      {/* 03 · Know what changed */}
-      <section className="f f-dark" aria-labelledby="f4-h">
+      <section className="f f-light ex-layers" aria-labelledby="ex-layers-h">
         <div className="f-wrap">
-          <div className="f-head f-head-split">
-            <div>
-              <Index n="02" k="Know what changed" />
-              <h2 id="f4-h" className="f-h2">07:42. Four things changed.</h2>
-            </div>
-            <div>
-              <p className="f-body">Only material changes are raised, each with its exposure and the records behind it. The rest stays quiet, so the four that matter are the four you see.</p>
-              <p className="f-after"><Link href="/platform#watch" className="f-link">How Watch works<span aria-hidden>→</span></Link></p>
-            </div>
+          <div className="ex-head">
+            <h2 id="ex-layers-h" className="ex-h2">Three systems. One morning view.</h2>
+            <p className="ex-sub">Starlane reads each one, read-only, and keeps a single record of what happened between customers, suppliers, stock and cash.</p>
           </div>
+          <Scene3D plates={LAYERS} legend={LAYERS_LEGEND} label="TallyPrime, bank statements and stock, stacked as layers beneath one morning brief." />
+        </div>
+      </section>
+
+
+      <section id="brief" className="f f-dark ex-sec" aria-labelledby="ex-watch-h">
+        <div className="f-wrap ex-head">
+          <h2 id="ex-watch-h" className="ex-h2">Four things changed overnight. You see those four.</h2>
+          <p className="ex-sub">Only material changes are raised, each with its exposure and the records behind it. Everything else stays quiet.</p>
         </div>
         <div className="f-bleed"><WatchRoom /></div>
       </section>
 
-      {/* 04 · Evidence */}
-      <section className="f f-light" aria-labelledby="f5-h">
-        <div className="f-wrap f-grid">
-          <div className="f-side">
-            <Index n="03" k="Evidence" />
-            <h2 id="f5-h" className="f-h2">Every figure shows its work.</h2>
-            <p className="f-lede">Fact, calculation, assumption or estimate, and always the record it came from.</p>
-            <p className="f-body">Open any decision and its reasoning comes apart into layers you can check, from the invoices it started with to the check that will follow it. No language model produces these numbers.</p>
-            <dl className="f-tags">
-              <div><dt><i className="tag tag-fact">Fact</i></dt><dd>Read from a system</dd></div>
-              <div><dt><i className="tag tag-calc">Calculated</i></dt><dd>Derived from facts</dd></div>
-              <div><dt><i className="tag tag-asm">Assumption</i></dt><dd>Stated, and yours to change</dd></div>
-              <div><dt><i className="tag tag-est">Estimate</i></dt><dd>A simulated range</dd></div>
-            </dl>
-          </div>
-          <div className="f-main"><EvidenceStack /></div>
-        </div>
-      </section>
-
-      {/* 05 · Action, then verification */}
-      <section className="f f-slab f-verify" aria-labelledby="f7-h">
+      <section className="f f-light ex-rules" aria-labelledby="ex-rules-h">
         <div className="f-wrap">
-          <div className="f-head f-head-split">
-            <div>
-              <Index n="04" k="Verify" />
-              <h2 id="f7-h" className="f-h2">It checks what happened next.</h2>
-            </div>
-            <div>
-              <p className="f-lede">Most software stops at the recommendation. Starlane watches the books afterwards.</p>
-              <p className="f-after"><Link href="/platform#verify" className="f-link">From decision to outcome<span aria-hidden>→</span></Link></p>
-            </div>
-          </div>
-          <VerificationRecord />
-          <p className="f-cap">{CAPTION} · Outbound messaging and outcome checks are off by default.</p>
+          <h2 id="ex-rules-h" className="ex-h2">Three rules it never breaks.</h2>
+          <ol className="ex-tri">
+            {RULES.map(([k, v]) => <li key={k}><h3>{k}</h3><p>{v}</p></li>)}
+          </ol>
+          <p className="ex-more"><Link href="/security" className="f-link">Security and control<span aria-hidden>→</span></Link></p>
         </div>
       </section>
 
-      {/* 06 · Control */}
-      <section className="f f-dark f-room f-control" aria-labelledby="f9-h">
-        <div className="f-wrap f-grid">
-          <div className="f-side">
-            <Index n="05" k="Control" />
-            <h2 id="f9-h" className="f-statement">Starlane recommends. People decide.</h2>
-            <p className="f-body">Every decision is recorded, and nothing is sent to a customer or supplier without a person saying so.</p>
-            <p className="f-after"><Link href="/security" className="f-link">Security and control<span aria-hidden>→</span></Link></p>
+      <section className="f f-dark ex-sec ex-approve" aria-labelledby="ex-ap-h">
+        <div className="f-wrap ex-split">
+          <div>
+            <h2 id="ex-ap-h" className="ex-h2">You approve. Then it sends.</h2>
+            <p className="ex-sub">Starlane drafts the reminder in your words and waits. Approve, edit or skip it from your phone. The text you approve is the text that goes, once, and every step is logged.</p>
+            <p className="ex-more"><Link href="/platform" className="f-link">See the product<span aria-hidden>→</span></Link></p>
           </div>
-          <div className="f-main">
-            <InView as="ul" className="c9">
-              {CONTROLS.map((c, i) => (
-                <li key={c.k} style={{ "--n": i } as React.CSSProperties}><Glyph name={c.g} size={20} /><h3>{c.k}</h3><p>{c.b}</p></li>
-              ))}
-            </InView>
-          </div>
+          <ApprovalPhone />
         </div>
       </section>
 
-      {/* 07 · Go deeper */}
-      <section className="f f-light gd" aria-labelledby="gd-h">
-        <div className="f-wrap">
-          <div className="f-head f-head-split">
-            <div>
-              <Index k="Go deeper" />
-              <h2 id="gd-h" className="f-h2">Everything, checked page by page.</h2>
-            </div>
-            <p className="f-body">Each page says what exists today and what does not. Start where your questions are.</p>
-          </div>
-          <InView as="ul" className="gd-list">
-            {PAGES.map((p, i) => (
-              <li key={p.href} style={{ "--n": i } as React.CSSProperties}>
-                <Link href={p.href}>
-                  <Glyph name={p.g} size={20} />
-                  <h3>{p.k}</h3>
-                  <p>{p.b}</p>
-                  <span className="gd-go" aria-hidden>→</span>
-                </Link>
-              </li>
+      <section id="faq" className="f f-light ex-faq" aria-labelledby="fq-h">
+        <div className="f-wrap ex-split">
+          <h2 id="fq-h" className="ex-h2">Questions owners ask.</h2>
+          <div className="fq-list">
+            {FAQ.map(([q, a]) => (
+              <details key={q}>
+                <summary>{q}</summary>
+                <p>{a}</p>
+              </details>
             ))}
-          </InView>
+          </div>
         </div>
       </section>
 
-      <CloseBand title="Bring Starlane into your organization." />
+      <CloseBand title="Fewer surprises. Faster cash." />
     </SiteShell>
   );
 }

@@ -1,15 +1,22 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { pageMetadata, breadcrumb } from "@/lib/site";
+import { JsonLd } from "@/components/marketing/JsonLd";
 import "../landing.css";
 import "../start.css";
 import "../site.css";
 import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
+import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { Glyph } from "@/components/marketing/home/Glyph";
 
-export const metadata: Metadata = {
-  title: "Pricing and pilots · Starlane",
-  description: "Starlane is available through private pilots. How a pilot runs, what it includes, what stays off by default, and how pricing is agreed.",
-};
+export const metadata: Metadata = pageMetadata({
+  path: "/pricing",
+  title: "Pricing and pilots",
+  description:
+    "Starlane is available through private pilots. How a pilot runs, what it includes, what stays off by default, and how pricing is agreed.",
+});
+
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
 // Starlane is sold through private pilots; pricing is agreed directly. This
 // page describes the pilot as the access flow and product actually run it,
@@ -42,11 +49,24 @@ const FAQ: Array<[string, string]> = [
   ["Are the numbers produced by AI?", "No language model produces the figures. They come from your records, simple calculations and simulations you can inspect, each labelled as fact, calculated, assumption or estimate."],
 ];
 
+const HERO_PLATES: Plate[] = [
+  { k: "Step 1", title: "Apply", lines: 2 },
+  { k: "Step 2", title: "Connect read-only", lines: 2 },
+  { k: "Step 3", title: "Mornings on your data", lines: 2 },
+  { k: "Step 4", title: "Decide", kind: "top", lines: 2 },
+];
+
 export default function PricingPage() {
   return (
     <SiteShell>
+      <JsonLd data={[breadcrumb("/pricing", "Pricing and pilots"), {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: FAQ.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+      }]} />
       <PageHero
         kicker="Pricing and pilots"
+        visual={<Stack3D plates={HERO_PLATES} variant="stairs" label="Four steps rising: apply, connect read-only, mornings on your own data, then decide." />}
         title={<>Start with a pilot, <em>on your own books.</em></>}
         lead="Starlane is available through private pilots with selected organizations. We agree pricing with each organization directly, once you have seen what Starlane does with your data."
         index={[["#pilot", "How a pilot runs"], ["#included", "What is included"], ["#faq", "Questions"]]}
