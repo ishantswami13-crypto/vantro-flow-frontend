@@ -22,7 +22,7 @@ export const viewport: Viewport = { themeColor: "#0B0D10" };
 // The product, in the order it works: connect, model, watch, decide, verify.
 // Same fictional company as the homepage; every figure is illustrative.
 
-const CAPTION = "Illustrative · Fictional company · Halden Supply Co.";
+const CAPTION = "Sample data · Fictional business · Narmada Pipes & Fittings";
 
 const FEATURES: Array<[string, string, string]> = [
   ["/product/bridge", "The Bridge", "What you are owed, what is overdue, what needs you and what is coming, from your own books."],
@@ -118,8 +118,8 @@ export default function PlatformPage() {
             <h2 id="p5-h" className="f-h2">Compare before committing.</h2>
             <p className="f-body">Real options are simulated as ranges against this customer’s own history, and ranked by rules you can read. A person decides.</p>
             <dl className="s6-dec">
-              <div><dt>Decision</dt><dd>Escalate Brightwater Retail</dd></div>
-              <div><dt>Owed</dt><dd className="num">$184,200 · 47 days</dd></div>
+              <div><dt>Decision</dt><dd>Escalate Gupta Traders</dd></div>
+              <div><dt>Owed</dt><dd className="num">₹18,42,000 · 47 days</dd></div>
               <div><dt>Horizon</dt><dd>30 days</dd></div>
             </dl>
           </div>

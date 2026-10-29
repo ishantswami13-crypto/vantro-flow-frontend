@@ -10,7 +10,7 @@ import { CHANGES } from "@/components/marketing/home/HeroStage";
 // JavaScript, it is shown in its final state. Illustrative, fictional company.
 
 const SOURCES = ["TallyPrime", "Bank statements", "Stock", "Promise log"];
-const brightwater = BANDS.flatMap((b) => b.rows).find((r) => r.name === "Brightwater Retail")!.strip;
+const brightwater = BANDS.flatMap((b) => b.rows).find((r) => r.name === "Gupta Traders")!.strip;
 const TONE_LABEL: Record<string, string> = { risk: "Risk", warn: "Warning", info: "Change" };
 
 export function HeroConsole() {
@@ -20,7 +20,7 @@ export function HeroConsole() {
         <div className="hc-glow" />
         <div className="hc-frame">
           <div className="hc-top">
-            <p className="hc-where"><b>Halden Supply Co.</b><span>Today</span><span className="num">Tue 14 Oct · 07:42</span></p>
+            <p className="hc-where"><b>Narmada Pipes & Fittings</b><span>Today</span><span className="num">Tue 14 Oct · 07:42</span></p>
             <ul className="hc-srcs">
               {SOURCES.map((s, i) => (
                 <li key={s} style={{ "--i": i } as React.CSSProperties}>{s}</li>
@@ -48,9 +48,9 @@ export function HeroConsole() {
 
             <div className="hc-detail">
               <p className="ui-kicker t-risk">Needs a decision</p>
-              <p className="hc-title">Escalate Brightwater Retail</p>
+              <p className="hc-title">Escalate Gupta Traders</p>
               <div className="hc-fig">
-                <p className="num">$184,200</p>
+                <p className="num">₹18,42,000</p>
                 <p>open · 3 invoices · 47 days overdue · 2 promises missed</p>
               </div>
               <div className="hc-strip">
@@ -63,8 +63,8 @@ export function HeroConsole() {
                 <li><i className="tag tag-asm">Assumption</i><span>Net 30 terms</span><em>Yours to change</em></li>
               </ul>
               <div className="hc-opts">
-                <p className="hc-opt is-rec"><span><em>Recommended</em>Firm reminder and an owner call</span><b className="num">$96k–$151k</b></p>
-                <p className="hc-opt"><span>Payment plan, three instalments</span><b className="num">$61k–$92k</b></p>
+                <p className="hc-opt is-rec"><span><em>Recommended</em>Firm reminder and an owner call</span><b className="num">₹9.6–15.1 L</b></p>
+                <p className="hc-opt"><span>Payment plan, three instalments</span><b className="num">₹6.1–9.2 L</b></p>
                 <p className="hc-opt-k">Likely collected in 30 days <i className="tag tag-est">Estimate</i></p>
               </div>
               <div className="hc-act">
@@ -77,10 +77,10 @@ export function HeroConsole() {
         </div>
       </InView>
       <p className="sl-sr">
-        Illustration on a fictional company, Halden Supply Co. Four systems are current and four material changes are raised:{" "}
+        Illustration on a fictional company, Narmada Pipes & Fittings Four systems are current and four material changes are raised:{" "}
         {CHANGES.map((c) => `${TONE_LABEL[c.tone]}: ${c.what}, ${c.who}, ${c.amt}.`).join(" ")}{" "}
-        The first leads to a decision awaiting the account owner&apos;s approval: escalate Brightwater Retail, $184,200 open and 47 days overdue,
-        with a recommended firm reminder and owner call estimated to collect $96k to $151k in 30 days.
+        The first leads to a decision awaiting the account owner&apos;s approval: escalate Gupta Traders, ₹18,42,000 open and 47 days overdue,
+        with a recommended firm reminder and owner call estimated to collect ₹9.6 lakh to ₹15.1 lakh in 30 days.
       </p>
     </>
   );

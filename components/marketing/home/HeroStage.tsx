@@ -5,28 +5,28 @@ import { InView } from "./InView";
 // leads to, brought forward. Everything is illustrative, on a fictional company.
 
 export const CHANGES = [
-  { tone: "risk", cat: "Receivables", what: "Second payment promise missed", who: "Brightwater Retail", amt: "$184,200", src: "Promise log · Ledger" },
-  { tone: "warn", cat: "Payables · FX", what: "EUR up 2.1% on 3 open supplier invoices", who: "Meridian Components", amt: "€412,000", src: "ECB · Payables" },
-  { tone: "warn", cat: "Stock", what: "VA-200 below reorder level, 9 days cover", who: "2 open orders depend on it", amt: "$58,300", src: "Stock · Orders" },
-  { tone: "info", cat: "Exposure", what: "Exposure above your $250,000 limit", who: "Northfield Labs", amt: "$268,400", src: "Ledger · Watch rule" },
+  { tone: "risk", cat: "Receivables", what: "Second payment promise missed", who: "Gupta Traders", amt: "₹18,42,000", src: "Promise log · Ledger" },
+  { tone: "warn", cat: "Payables · FX", what: "EUR up 2.1% on 3 open supplier bills", who: "Brenner Armaturen GmbH", amt: "+₹86,500", src: "RBI reference rate · Payables" },
+  { tone: "warn", cat: "Stock", what: "CPVC 25 mm below reorder level, 9 days cover", who: "2 open orders depend on it", amt: "₹5,83,000", src: "Stock · Orders" },
+  { tone: "info", cat: "Exposure", what: "₹1,84,000 above its ₹25,00,000 limit", who: "Mehta & Sons", amt: "₹26,84,000", src: "Ledger · Watch rule" },
 ] as const;
 
 const TONE_LABEL: Record<string, string> = { risk: "Risk", warn: "Warning", info: "Change", ok: "Verified" };
 
 const SOURCES = [
-  ["INV-1042", "Brightwater Retail", "TallyPrime · 29 Jul", "$62,400"],
-  ["INV-1051", "Brightwater Retail", "TallyPrime · 18 Aug", "$71,900"],
-  ["INV-1066", "Brightwater Retail", "TallyPrime · 05 Sep", "$49,900"],
+  ["INV-1042", "Gupta Traders", "TallyPrime · 29 Jul", "₹6,24,000"],
+  ["INV-1051", "Gupta Traders", "TallyPrime · 18 Aug", "₹7,19,000"],
+  ["INV-1066", "Gupta Traders", "TallyPrime · 05 Sep", "₹4,99,000"],
   ["PROMISE", "“Paying by Friday”", "Promise log · 29 Sep", "missed"],
   ["PROMISE", "“Transfer Monday”", "Promise log · 06 Oct", "missed"],
-  ["EUR/USD", "+2.1% since 07 Oct", "ECB · 13 Oct", "1.0912"],
-  ["BILL-2210", "Meridian Components", "TallyPrime · 24 Sep", "€138,000"],
+  ["EUR/INR", "+2.1% since 07 Oct", "RBI · 13 Oct", "98.14"],
+  ["BILL-2210", "Brenner Armaturen GmbH", "TallyPrime · 24 Sep", "€13,800"],
 ];
 
 export function HeroStage() {
   return (
     <>
-    <InView className="hs" role="img" aria-label="Illustration of Starlane on a fictional company: the Today view lists four material changes, and the first, a missed payment promise from Brightwater Retail, leads to a decision awaiting approval.">
+    <InView className="hs" role="img" aria-label="Illustration of Starlane on a fictional company: the Today view lists four material changes, and the first, a missed payment promise from Gupta Traders, leads to a decision awaiting approval.">
       <div className="hs-ghost" aria-hidden>
         <p className="hs-ghost-h">Source records</p>
         <table>
@@ -44,9 +44,9 @@ export function HeroStage() {
           <p className="ui-status"><i className="sq t-ok" />4 systems current</p>
         </div>
         <dl className="ui-kpis">
-          <div><dt>Open receivables</dt><dd>$1,426,900</dd></div>
-          <div><dt>Over 30 days</dt><dd>$412,600</dd></div>
-          <div><dt>Cash in, next 30 days</dt><dd>$340k–$470k</dd><i className="tag tag-est">Estimate</i></div>
+          <div><dt>Open receivables</dt><dd>₹1,42,69,000</dd></div>
+          <div><dt>Over 30 days</dt><dd>₹41,26,000</dd></div>
+          <div><dt>Cash in, next 30 days</dt><dd>₹34–47 lakh</dd><i className="tag tag-est">Estimate</i></div>
         </dl>
         <p className="ui-h">Material changes since yesterday <span>4</span></p>
         <table className="ui-table">
@@ -70,8 +70,8 @@ export function HeroStage() {
 
       <div className="hs-card" aria-hidden>
         <p className="ui-kicker"><i className="sq t-risk" />Needs a decision</p>
-        <p className="hs-card-t">Escalate Brightwater Retail</p>
-        <p className="hs-card-m"><b>$184,200</b> open · 3 invoices · 47 days overdue · 2 promises missed</p>
+        <p className="hs-card-t">Escalate Gupta Traders</p>
+        <p className="hs-card-m"><b>₹18,42,000</b> open · 3 invoices · 47 days overdue · 2 promises missed</p>
         <ul className="hs-ev">
           <li><i className="tag tag-fact">Fact</i>3 open invoices</li>
           <li><i className="tag tag-calc">Calculated</i>47 days overdue</li>
@@ -79,7 +79,7 @@ export function HeroStage() {
         </ul>
         <div className="hs-rec">
           <p><span>Recommended</span>Firm reminder and an owner call</p>
-          <p className="num">$96k–$151k <i className="tag tag-est">Estimate</i></p>
+          <p className="num">₹9.6–15.1 lakh <i className="tag tag-est">Estimate</i></p>
         </div>
         <div className="hs-foot">
           <p><i className="sq t-warn" />Awaiting approval · account owner</p>

@@ -1,8 +1,8 @@
 """Renders the homepage hero scene: dawn over hazy ridges, procedurally.
 
 Usage: python3 scripts/make-hero-scene.py 2560 1440 out.png
-Then export public/brand/hero-dawn-{2560,1600,tall}.webp from it
-(the tall crop is 9:16 centred at 62% across, resized to 828x1472).
+Then export public/brand/hero-dawn-{2560,1600}.webp from it (WebP, q88).
+Phones do not load the scene.
 """
 import numpy as np, sys
 from PIL import Image, ImageFilter
