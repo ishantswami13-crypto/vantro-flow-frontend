@@ -719,42 +719,6 @@ html:has(.sl.sl-start) .sl-foot-sign { display: none; }
 @media (max-width: 1180px) { .sl-start .hs3-phone { right: -24px; width: 260px; } .sl-start .hs3-phone .ap-phone { width: 260px; } }
 @media (max-width: 900px) { .sl-start .hs3-phone { display: none; } }
 
-/* ── Tour: six real screens in a row that turn as they pass ─────────── */
-.sl-start .ex-tour .ex-head { margin-bottom: clamp(40px, 5vw, 72px); }
-.sl-start .tr { overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; perspective: 1600px; padding: 24px 0 48px; scrollbar-width: thin; scrollbar-color: #3B3834 transparent; }
-.sl-start .tr:focus-visible { outline: 2px solid #EDEAE4; outline-offset: -2px; }
-.sl-start .tr-row { display: flex; gap: 36px; margin: 0; padding: 0 max(var(--gut), calc((100vw - var(--max)) / 2)); list-style: none; transform-style: preserve-3d; width: max-content; }
-.sl-start .tr-card { flex: 0 0 auto; width: 480px; scroll-snap-align: center; transform-style: preserve-3d; }
-.sl-start .tr-link { display: block; color: inherit; text-decoration: none; }
-.sl-start .tr-frame { position: relative; width: 480px; height: 320px; overflow: hidden; border: 1px solid #3B3834; border-radius: 12px; background: var(--bg); box-shadow: 0 40px 80px -40px rgb(0 0 0 / .8); transition: transform .5s var(--ease), border-color .3s; }
-.sl-start .tr-link:hover .tr-frame { transform: translateY(-6px); border-color: #6E685F; }
-.sl-start .tr-screen { width: 1200px; padding: 48px; transform: scale(.4); transform-origin: 0 0; }
-.sl-start .tr-narrow .tr-screen { width: 686px; padding: 28px 0 0; transform: scale(.7); display: flex; justify-content: center; }
-.sl-start .tr-narrow .ap-cap { display: none; }
-.sl-start .tr-k { margin: 22px 0 0; font-size: 12.5px; font-weight: 500; color: var(--fg3); }
-.sl-start .tr-t { margin: 6px 0 0; font-family: var(--serif); font-size: 24px; line-height: 1.15; letter-spacing: -0.01em; color: var(--fg); }
-.sl-start .tr-b { margin: 6px 0 0; max-width: 26rem; font-size: 14.5px; line-height: 1.55; color: var(--fg2); }
-@media (prefers-reduced-motion: no-preference) { @supports (animation-timeline: view(inline)) {
-  .sl-start .tr-card { animation: tr-turn linear both; animation-timeline: view(inline); }
-} }
-@keyframes tr-turn {
-  0% { transform: rotateY(38deg) translateZ(-120px); }
-  45%, 55% { transform: none; }
-  100% { transform: rotateY(-38deg) translateZ(-120px); }
-}
-@media (max-width: 560px) {
-  .sl-start .tr-row { gap: 20px; }
-  .sl-start .tr-card { width: 300px; }
-  .sl-start .tr-frame { width: 300px; height: 200px; }
-  .sl-start .tr-screen { transform: scale(.25); }
-  .sl-start .tr-narrow .tr-screen { width: 682px; transform: scale(.44); }
-}
-@media (prefers-reduced-motion: no-preference) { @supports (animation-timeline: view(inline)) {
-  .sl-start .tr-card { animation: none; }
-  .sl-start .tr-frame { animation: tr-turn linear both; animation-timeline: view(inline); }
-  .sl-start .tr-link:hover .tr-frame { transform: none; }
-} }
-@media (max-width: 560px) { .sl-start .tr-row { gap: 32px; } }
 .sl-start .hs3-phone { right: -170px; bottom: -150px; width: 270px; }
 .sl-start .hs3-phone .ap-phone { width: 270px; }
 .sl-start .hs3-phone .ap-btn { font-size: 11.5px; padding-left: 6px; padding-right: 6px; white-space: nowrap; }
@@ -770,4 +734,50 @@ html:has(.sl.sl-start) .sl-foot-sign { display: none; }
 @keyframes hs3-phone { from { transform: translate3d(80px, 40px, 0) rotateY(-34deg); } }
 @media (max-width: 1280px) { .sl-start .hs3-desk { width: calc(100% - 260px); } .sl-start .hs3-phone { right: 0; bottom: auto; width: 240px; } .sl-start .hs3-phone .ap-phone { width: 240px; } }
 @media (max-width: 900px) { .sl-start .hs3-desk { width: 100%; } }
-.sl-start .ex-layers, .sl-start .ex-tour, .sl-start .ex-rules, .sl-start .ex-faq, .sl-start #brief { content-visibility: auto; contain-intrinsic-size: auto 1000px; }
+.sl-start .ex-layers, .sl-start .ex-path, .sl-start .ex-rules, .sl-start .ex-faq, .sl-start #brief { content-visibility: auto; contain-intrinsic-size: auto 1000px; }
+
+/* ── More plate layouts ────────────────────────────────────────────
+ * row: a path laid along the floor, each step a little higher.
+ * converge: source tiles on the floor, one record floating above them.
+ * sm: a small scene inside a card.
+ */
+.sl-start .s3-row { --pw: 210px; --ph: 140px; --t: 10px; --sh: 520px; --s: 1; }
+.sl-start .s3-row .s3-plate { --to: translate3d(calc((var(--i) - (var(--n) - 1) / 2) * 236px), 0px, calc(var(--i) * 26px)); --from: translate3d(calc((var(--i) - (var(--n) - 1) / 2) * 236px), 0px, 0px); }
+.sl-start .s3-row .s3-scene { transform: scale(var(--s)) rotateX(57deg) rotateZ(-30deg); }
+.sl-start .s3-row .s3-t { font-size: 18px; }
+.sl-start .s3-row .s3-lines i:nth-child(n+3) { display: none; }
+.sl-start .s3-converge { --pw: 170px; --ph: 112px; --t: 10px; --sh: 620px; --s: 1.05; }
+.sl-start .s3-converge .s3-plate { --to: translate3d(calc((var(--x) - 1) * 192px), calc((var(--y) - .5) * 136px), 0px); --from: var(--to); }
+.sl-start .s3-converge .s3-top { inset: -60px -120px; --to: translateZ(210px); --from: translateZ(40px); }
+.sl-start .s3-converge .s3-t { font-size: 16px; }
+.sl-start .s3-converge .s3-top .s3-t { font-size: 26px; }
+.sl-start .s3-converge .s3-plate:not(.s3-top) .s3-lines { display: none; }
+.sl-start .s3-converge .s3-scene { margin-top: 140px; }
+.sl-start .s3-sm { --s: .5; --sh: 240px; --gap: 120px; }
+.sl-start .s3-sm.s3-stack .s3-scene { margin-top: calc(var(--n) * 30px); }
+.sl-start .s3-sm .s3-t { font-size: 24px; }
+@media (max-width: 1080px) { .sl-start .s3-row { --s: .72; --sh: 400px; } .sl-start .s3-converge { --s: .8; --sh: 520px; } }
+@media (max-width: 560px) { .sl-start .s3-row { --s: .42; --sh: 280px; } .sl-start .s3-converge { --s: .5; --sh: 360px; } .sl-start .s3-converge .s3-scene { margin-top: 80px; } }
+
+/* Under a row scene, the steps it shows, as text. */
+.sl-start .ex-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0 28px; margin: 24px 0 0; padding: 0; list-style: none; }
+.sl-start .ex-steps li { padding-top: 22px; border-top: 1px solid var(--line2); }
+.sl-start .ex-steps .num { font-size: 12px; color: var(--fg3); }
+.sl-start .ex-steps h3 { margin: 8px 0 0; font-family: var(--serif); font-weight: 400; font-size: 22px; line-height: 1.15; color: var(--fg); }
+.sl-start .ex-steps p { margin: 8px 0 0; font-size: 14.5px; line-height: 1.55; color: var(--fg2); }
+@media (max-width: 900px) { .sl-start .ex-steps { grid-template-columns: 1fr 1fr; gap: 28px; } }
+@media (max-width: 560px) { .sl-start .ex-steps { grid-template-columns: 1fr; } }
+.sl-start .ex-tri .s3 { margin: -20px 0 8px; }
+.sl-start .ex-tri .s3 .s3-t { margin: 4px 0 0; max-width: none; line-height: 1.1; color: inherit; }
+.sl-start .ex-tri .s3 .s3-k { margin: 0; max-width: none; font-size: 11px; line-height: 1.4; }
+.sl-start .ex-tri .s3-top .s3-k { color: #ABA59C; }
+.sl-start .s3-row { --sh: 600px; }
+.sl-start .s3-row .s3-scene { margin-top: 110px; }
+.sl-start .s3-row { --sh: 520px; }
+@media (max-width: 1080px) { .sl-start .s3-row { --sh: 460px; } .sl-start .s3-row .s3-scene { margin-top: 120px; } }
+@media (max-width: 560px) { .sl-start .s3-row { --sh: 300px; } .sl-start .s3-row .s3-scene { margin-top: 70px; } }
+/* Phones: turn the path so it climbs the screen diagonally instead of running off both edges. */
+@media (max-width: 560px) {
+  .sl-start .s3-row { --s: .5; --sh: 420px; }
+  .sl-start .s3-row .s3-scene { margin-top: 40px; transform: scale(var(--s)) rotateX(57deg) rotateZ(-64deg); }
+}

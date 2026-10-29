@@ -56,6 +56,14 @@ const ABSENT = [
   ["Bug bounty", "There is no bug bounty programme."],
 ];
 
+const FLOW_PLATES: Plate[] = [
+  { k: "01", title: "Proposed" },
+  { k: "02", title: "Policy check" },
+  { k: "03", title: "A person decides", tone: "warn" },
+  { k: "04", title: "Runs once" },
+  { k: "05", title: "Recorded", kind: "top" },
+];
+
 const HERO_PLATES: Plate[] = [
   { k: "Read-only", title: "Your books", lines: 4 },
   { k: "Blocks risky actions", title: "Policy check", lines: 3 },
@@ -84,6 +92,7 @@ export default function SecurityPage() {
             </div>
             <p className="f-body">Every action Starlane proposes takes the same path, and none of it can be skipped. Outbound messaging stays off until it is enabled for the account.</p>
           </div>
+          <Stack3D plates={FLOW_PLATES} variant="row" label="Five plates in a rising path: proposed, policy check, a person decides, runs once, recorded." />
           <InView as="ol" className="sf">
             {FLOW.map((s, i) => (
               <li key={s.k} style={{ "--n": i } as React.CSSProperties}>
