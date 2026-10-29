@@ -6,9 +6,8 @@ import Link from "next/link";
 import { SITE, SITE_URL, pageMetadata } from "@/lib/site";
 import { JsonLd } from "@/components/marketing/JsonLd";
 import { SiteShell, CloseBand } from "@/components/marketing/site/Site";
-import { HeroBrief } from "@/components/marketing/site/HeroBrief";
-import { ApprovalPhone } from "@/components/marketing/site/ApprovalPhone";
-import { Scene3D, type Plate } from "@/components/marketing/site/Stack3D";
+import { HeroScene } from "@/components/marketing/site/Tour";
+import { Scene3D, Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { WatchRoom } from "@/components/marketing/home/Rooms";
 
 // Starlane, public homepage. Deliberately short: the promise, the product,
@@ -30,6 +29,28 @@ const LAYERS_LEGEND: Array<[string, string]> = [
   ["Bank statements", "Imported as statement files."],
   ["Stock", "Levels and movements, from your exports."],
   ["Morning brief", "What changed since yesterday, with the records behind it."],
+];
+
+// One change, start to finish, on the sample business.
+const PATH: Plate[] = [
+  { k: "07:42", title: "Promise missed", tone: "risk" },
+  { k: "Evidence", title: "3 invoices, 47 days" },
+  { k: "Recommended", title: "Firm reminder" },
+  { k: "You", title: "Approve", kind: "top" },
+  { k: "8 days later", title: "₹6,00,000 received", tone: "ok" },
+];
+const PATH_STEPS: Array<[string, string]> = [
+  ["Raised", "Gupta Traders missed a second payment promise."],
+  ["Shown", "Three open invoices, 47 days overdue, each from TallyPrime."],
+  ["Proposed", "A firm WhatsApp reminder, then an owner call."],
+  ["Approved", "By you, from your phone. Sent once, as written."],
+  ["Checked", "The books show ₹6,00,000 received against INV-1042."],
+];
+
+const RULE_PLATES: Plate[][] = [
+  [{ k: "Read-only", title: "Your books", lines: 4 }, { k: "Starlane", title: "Reads", kind: "top", lines: 2 }],
+  [{ k: "Fact", title: "Fact", lines: 2 }, { k: "Calculated", title: "Calculation", lines: 2 }, { k: "Every figure", title: "Sourced", kind: "top", lines: 2 }],
+  [{ k: "Draft", title: "Reminder", lines: 3 }, { k: "You", title: "Approve", kind: "top", lines: 2 }],
 ];
 
 const RULES = [
@@ -109,7 +130,7 @@ export default function LandingPage() {
             <Link href="/access" className="sl-btn sl-btn-solid sl-btn-lg">Request a pilot</Link>
             <Link href="#brief" className="f-link">See a sample brief<span aria-hidden>→</span></Link>
           </div>
-          <div className="ex-shot"><HeroBrief /></div>
+          <div className="ex-shot"><HeroScene /></div>
           <div className="ex-works">
             <h2 className="ex-works-k">Works with what you already run</h2>
             <ul>{LIVE.map((n) => <li key={n}>{n}</li>)}</ul>
@@ -140,20 +161,22 @@ export default function LandingPage() {
         <div className="f-wrap">
           <h2 id="ex-rules-h" className="ex-h2">Three rules it never breaks.</h2>
           <ol className="ex-tri">
-            {RULES.map(([k, v]) => <li key={k}><h3>{k}</h3><p>{v}</p></li>)}
+            {RULES.map(([k, v], i) => <li key={k}><Stack3D plates={RULE_PLATES[i]} size="sm" label={`${k} ${v}`} /><h3>{k}</h3><p>{v}</p></li>)}
           </ol>
           <p className="ex-more"><Link href="/security" className="f-link">Security and control<span aria-hidden>→</span></Link></p>
         </div>
       </section>
 
-      <section className="f f-dark ex-sec ex-approve" aria-labelledby="ex-ap-h">
-        <div className="f-wrap ex-split">
-          <div>
-            <h2 id="ex-ap-h" className="ex-h2">You approve. Then it sends.</h2>
-            <p className="ex-sub">Starlane drafts the reminder in your words and waits. Approve, edit or skip it from your phone. The text you approve is the text that goes, once, and every step is logged.</p>
-            <p className="ex-more"><Link href="/platform" className="f-link">See the product<span aria-hidden>→</span></Link></p>
+      <section className="f f-dark ex-sec ex-path" aria-labelledby="ex-path-h">
+        <div className="f-wrap">
+          <div className="ex-head">
+            <h2 id="ex-path-h" className="ex-h2">One change, start to finish.</h2>
+            <p className="ex-sub">Raised, shown with its evidence, proposed, approved by you, then checked against the books. Sample data on a fictional business.</p>
           </div>
-          <ApprovalPhone />
+          <Stack3D plates={PATH} variant="row" label="Five plates in a rising path: promise missed, the evidence, the recommended reminder, your approval, and ₹6,00,000 received." />
+          <ol className="ex-steps">
+            {PATH_STEPS.map(([k, v], i) => <li key={k}><span className="num">{String(i + 1).padStart(2, "0")}</span><h3>{k}</h3><p>{v}</p></li>)}
+          </ol>
         </div>
       </section>
 

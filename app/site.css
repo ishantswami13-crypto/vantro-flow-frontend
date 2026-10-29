@@ -704,3 +704,80 @@ html:has(.sl.sl-start) .sl-foot-sign { display: none; }
 .sl-start .s3-grid { --s: 1.3; --sh: 600px; }
 @media (max-width: 1080px) { .sl-start .s3-grid { --s: 1; } }
 @media (max-width: 560px) { .sl-start .s3-grid { --s: .62; --sh: 340px; } .sl-start .s3-stairs .s3-scene { margin: 110px 0 0 -40px; } }
+
+/* ── Hero scene: the brief on the desk, the approval on a phone ─────── */
+.sl-start .hs3 { position: relative; perspective: 2200px; }
+.sl-start .hs3-desk { position: relative; }
+.sl-start .hs3-phone { position: absolute; right: -96px; bottom: -72px; width: 300px; transform: translateZ(90px) rotateY(-16deg) rotateX(3deg); transform-origin: 100% 100%; }
+.sl-start .hs3-phone .ap-phone { width: 300px; background: #0B0A0A; box-shadow: 0 40px 80px -24px rgb(0 0 0 / .9), 0 0 0 1px #2A2825; }
+.sl-start .hs3-phone .ap-cap, .sl-start .hs3-phone .ap-log { display: none; }
+.sl-start .hs3-phone .ap-msg p { font-size: 13px; }
+@media (prefers-reduced-motion: no-preference) { @supports (animation-timeline: view()) {
+  .sl-start .hs3-phone { animation: hs3-phone linear both; animation-timeline: view(); animation-range: entry 0% cover 45%; }
+} }
+@keyframes hs3-phone { from { transform: translate3d(60px, 80px, 0) rotateY(-30deg) rotateX(8deg); } }
+@media (max-width: 1180px) { .sl-start .hs3-phone { right: -24px; width: 260px; } .sl-start .hs3-phone .ap-phone { width: 260px; } }
+@media (max-width: 900px) { .sl-start .hs3-phone { display: none; } }
+
+.sl-start .hs3-phone { right: -170px; bottom: -150px; width: 270px; }
+.sl-start .hs3-phone .ap-phone { width: 270px; }
+.sl-start .hs3-phone .ap-btn { font-size: 11.5px; padding-left: 6px; padding-right: 6px; white-space: nowrap; }
+.sl-start .ex-hero .ex-shot { margin-bottom: 120px; }
+@media (max-width: 1280px) { .sl-start .hs3-phone { right: -60px; bottom: -150px; width: 240px; } .sl-start .hs3-phone .ap-phone { width: 240px; } }
+@media (max-width: 900px) { .sl-start .ex-hero .ex-shot { margin-bottom: 0; } }
+/* Side by side: the brief and, standing just forward of it, the phone. */
+.sl-start .ex-hero .ex-shot { max-width: 1220px; }
+.sl-start .hs3-desk { width: calc(100% - 300px); }
+.sl-start .hs3-phone { right: 0; bottom: auto; top: 64px; width: 280px; transform: translateZ(60px) rotateY(-14deg); transform-origin: 0 50%; }
+.sl-start .hs3-phone .ap-phone { width: 280px; }
+.sl-start .ex-hero .ex-shot { margin-bottom: 0; }
+@keyframes hs3-phone { from { transform: translate3d(80px, 40px, 0) rotateY(-34deg); } }
+@media (max-width: 1280px) { .sl-start .hs3-desk { width: calc(100% - 260px); } .sl-start .hs3-phone { right: 0; bottom: auto; width: 240px; } .sl-start .hs3-phone .ap-phone { width: 240px; } }
+@media (max-width: 900px) { .sl-start .hs3-desk { width: 100%; } }
+.sl-start .ex-layers, .sl-start .ex-path, .sl-start .ex-rules, .sl-start .ex-faq, .sl-start #brief { content-visibility: auto; contain-intrinsic-size: auto 1000px; }
+
+/* ── More plate layouts ────────────────────────────────────────────
+ * row: a path laid along the floor, each step a little higher.
+ * converge: source tiles on the floor, one record floating above them.
+ * sm: a small scene inside a card.
+ */
+.sl-start .s3-row { --pw: 210px; --ph: 140px; --t: 10px; --sh: 520px; --s: 1; }
+.sl-start .s3-row .s3-plate { --to: translate3d(calc((var(--i) - (var(--n) - 1) / 2) * 236px), 0px, calc(var(--i) * 26px)); --from: translate3d(calc((var(--i) - (var(--n) - 1) / 2) * 236px), 0px, 0px); }
+.sl-start .s3-row .s3-scene { transform: scale(var(--s)) rotateX(57deg) rotateZ(-30deg); }
+.sl-start .s3-row .s3-t { font-size: 18px; }
+.sl-start .s3-row .s3-lines i:nth-child(n+3) { display: none; }
+.sl-start .s3-converge { --pw: 170px; --ph: 112px; --t: 10px; --sh: 620px; --s: 1.05; }
+.sl-start .s3-converge .s3-plate { --to: translate3d(calc((var(--x) - 1) * 192px), calc((var(--y) - .5) * 136px), 0px); --from: var(--to); }
+.sl-start .s3-converge .s3-top { inset: -60px -120px; --to: translateZ(210px); --from: translateZ(40px); }
+.sl-start .s3-converge .s3-t { font-size: 16px; }
+.sl-start .s3-converge .s3-top .s3-t { font-size: 26px; }
+.sl-start .s3-converge .s3-plate:not(.s3-top) .s3-lines { display: none; }
+.sl-start .s3-converge .s3-scene { margin-top: 140px; }
+.sl-start .s3-sm { --s: .5; --sh: 240px; --gap: 120px; }
+.sl-start .s3-sm.s3-stack .s3-scene { margin-top: calc(var(--n) * 30px); }
+.sl-start .s3-sm .s3-t { font-size: 24px; }
+@media (max-width: 1080px) { .sl-start .s3-row { --s: .72; --sh: 400px; } .sl-start .s3-converge { --s: .8; --sh: 520px; } }
+@media (max-width: 560px) { .sl-start .s3-row { --s: .42; --sh: 280px; } .sl-start .s3-converge { --s: .5; --sh: 360px; } .sl-start .s3-converge .s3-scene { margin-top: 80px; } }
+
+/* Under a row scene, the steps it shows, as text. */
+.sl-start .ex-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0 28px; margin: 24px 0 0; padding: 0; list-style: none; }
+.sl-start .ex-steps li { padding-top: 22px; border-top: 1px solid var(--line2); }
+.sl-start .ex-steps .num { font-size: 12px; color: var(--fg3); }
+.sl-start .ex-steps h3 { margin: 8px 0 0; font-family: var(--serif); font-weight: 400; font-size: 22px; line-height: 1.15; color: var(--fg); }
+.sl-start .ex-steps p { margin: 8px 0 0; font-size: 14.5px; line-height: 1.55; color: var(--fg2); }
+@media (max-width: 900px) { .sl-start .ex-steps { grid-template-columns: 1fr 1fr; gap: 28px; } }
+@media (max-width: 560px) { .sl-start .ex-steps { grid-template-columns: 1fr; } }
+.sl-start .ex-tri .s3 { margin: -20px 0 8px; }
+.sl-start .ex-tri .s3 .s3-t { margin: 4px 0 0; max-width: none; line-height: 1.1; color: inherit; }
+.sl-start .ex-tri .s3 .s3-k { margin: 0; max-width: none; font-size: 11px; line-height: 1.4; }
+.sl-start .ex-tri .s3-top .s3-k { color: #ABA59C; }
+.sl-start .s3-row { --sh: 600px; }
+.sl-start .s3-row .s3-scene { margin-top: 110px; }
+.sl-start .s3-row { --sh: 520px; }
+@media (max-width: 1080px) { .sl-start .s3-row { --sh: 460px; } .sl-start .s3-row .s3-scene { margin-top: 120px; } }
+@media (max-width: 560px) { .sl-start .s3-row { --sh: 300px; } .sl-start .s3-row .s3-scene { margin-top: 70px; } }
+/* Phones: turn the path so it climbs the screen diagonally instead of running off both edges. */
+@media (max-width: 560px) {
+  .sl-start .s3-row { --s: .5; --sh: 420px; }
+  .sl-start .s3-row .s3-scene { margin-top: 40px; transform: scale(var(--s)) rotateX(57deg) rotateZ(-64deg); }
+}

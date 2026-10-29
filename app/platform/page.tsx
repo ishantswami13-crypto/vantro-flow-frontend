@@ -7,7 +7,7 @@ import "../site.css";
 import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
 import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
-import { SystemsPlate, StatePlate, EvidenceStack } from "@/components/marketing/home/Plates";
+import { StatePlate, EvidenceStack } from "@/components/marketing/home/Plates";
 import { WatchRoom, SimulationRoom, VerificationRecord } from "@/components/marketing/home/Rooms";
 import { PlatformAvailability } from "@/components/marketing/PlatformAvailability";
 
@@ -33,6 +33,16 @@ const FEATURES: Array<[string, string, string]> = [
   ["/product/simulate", "Simulate", "Likely collections, with every assumption visible and yours to change."],
   ["/product/memory", "Memory", "What Starlane learned about how you get paid, and your say on it."],
   ["/product/prepared", "Prepared", "The next 24 hours, 7 days and 30 days, worked out from the dates in your books."],
+];
+
+const SOURCES_PLATES: Plate[] = [
+  { k: "Live", title: "TallyPrime" },
+  { k: "Live", title: "Bank statements" },
+  { k: "Live", title: "Stock" },
+  { k: "Live", title: "Spreadsheets" },
+  { k: "Live", title: "Promise log" },
+  { k: "Planned or custom", title: "ERP", kind: "plan" },
+  { k: "Starlane", title: "One record", kind: "top", lines: 4 },
 ];
 
 const HERO_PLATES: Plate[] = [
@@ -69,7 +79,7 @@ export default function PlatformPage() {
             <p className="f-note"><span className="f-key f-key-solid" />Live today <span className="f-key f-key-dash" />Planned or custom</p>
             <p className="f-after"><Link href="/integrations" className="f-link">Every integration and its status<span aria-hidden>→</span></Link></p>
           </div>
-          <div className="f-main"><SystemsPlate /></div>
+          <div className="f-main"><Stack3D plates={SOURCES_PLATES} variant="converge" label="Six source tiles on the floor, five live and ERP planned, with one record floating above them." /></div>
         </div>
       </section>
 

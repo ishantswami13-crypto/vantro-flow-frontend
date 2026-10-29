@@ -13,9 +13,11 @@ export type Plate = {
   kind?: "top" | "plan";
 };
 
-export function Stack3D({ plates, variant = "stack", label }: { plates: Plate[]; variant?: "stack" | "stairs" | "grid"; label: string }) {
+export type Variant = "stack" | "stairs" | "grid" | "row" | "converge";
+
+export function Stack3D({ plates, variant = "stack", label, size }: { plates: Plate[]; variant?: Variant; label: string; size?: "sm" }) {
   return (
-    <div className={`s3 s3-${variant}`} role="img" aria-label={label}>
+    <div className={`s3 s3-${variant}${size ? ` s3-${size}` : ""}`} role="img" aria-label={label}>
       <div className="s3-scene" style={{ "--n": plates.length } as React.CSSProperties}>
         {plates.map((p, i) => (
           <div
@@ -40,7 +42,7 @@ export function Stack3D({ plates, variant = "stack", label }: { plates: Plate[];
 }
 
 // The same scene with a numbered legend beside it, for page heroes and sections.
-export function Scene3D({ plates, variant, label, legend }: { plates: Plate[]; variant?: "stack" | "stairs" | "grid"; label: string; legend?: Array<[string, string]> }) {
+export function Scene3D({ plates, variant, label, legend }: { plates: Plate[]; variant?: Variant; label: string; legend?: Array<[string, string]> }) {
   return (
     <div className="s3-wrap">
       <Stack3D plates={plates} variant={variant} label={label} />
