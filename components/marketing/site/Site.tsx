@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { preload } from "react-dom";
 import { Nav } from "@/components/marketing/Nav";
 import { Footer } from "@/components/marketing/Footer";
 import { MotionGate } from "@/components/marketing/home/InView";
@@ -7,7 +8,12 @@ import { MotionGate } from "@/components/marketing/home/InView";
 // same "Operating Record" surfaces (start.css + site.css): light editorial
 // sections carry the argument, dark rooms carry the product.
 
+// The faces above the fold: the display serif (roman and italic) and the UI sans.
+// Preloaded so the hero renders in its own type on first paint.
+const FONTS = ["newsreader-normal-latin", "newsreader-italic-latin", "plus-jakarta-sans-normal-latin"];
+
 export function SiteShell({ children }: { children: React.ReactNode }) {
+  for (const f of FONTS) preload(`/fonts/${f}.woff2`, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
   return (
     <div className="sl sl-start">
       <MotionGate />

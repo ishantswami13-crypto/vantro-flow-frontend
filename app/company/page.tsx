@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { pageMetadata, breadcrumb } from "@/lib/site";
+import { JsonLd } from "@/components/marketing/JsonLd";
 import "../landing.css";
 import "../start.css";
 import "../site.css";
@@ -6,10 +8,14 @@ import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
 import { InView } from "@/components/marketing/home/InView";
 
-export const metadata: Metadata = {
-  title: "Company · Starlane",
-  description: "Why Starlane exists, the principles it is built on, and where it is today. Starlane is built by Vantro Technologies.",
-};
+export const metadata: Metadata = pageMetadata({
+  path: "/company",
+  title: "Company",
+  description:
+    "Why Starlane exists, the principles it is built on, and where it is today. Starlane is built by Vantro Technologies.",
+});
+
+export const viewport: Viewport = { themeColor: "#0B0D10" };
 
 // Company. No team, funding, customer or location claims: only why the product
 // exists, the principles visible in how it is built, and an honest status.
@@ -25,6 +31,7 @@ const PRINCIPLES = [
 export default function CompanyPage() {
   return (
     <SiteShell>
+      <JsonLd data={breadcrumb("/company", "Company")} />
       <PageHero
         kicker="Company"
         title={<>Software that <em>shows its work.</em></>}

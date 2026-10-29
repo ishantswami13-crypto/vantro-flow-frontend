@@ -1,60 +1,30 @@
-import Link from "next/link";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import "../landing.css";
+import "../start.css";
+import "../site.css";
+import { SiteShell, PageHero } from "@/components/marketing/site/Site";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Terms of Service — Starlane",
-  description: "Terms and conditions for using Starlane.",
-};
+export const metadata: Metadata = pageMetadata({
+  path: "/terms",
+  title: "Terms of service",
+  description: "The terms that apply when you use Starlane.",
+});
 
-function StarlaneMark({ size = 22 }: { size?: number }) {
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        display: "inline-block",
-        width: size,
-        height: size,
-        backgroundImage: 'url("/brand/starlane-icon.jpeg")',
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
-        backgroundSize: "contain",
-        borderRadius: Math.max(4, Math.round(size * 0.18)),
-        flexShrink: 0,
-      }}
-    />
-  );
-}
+export const viewport: Viewport = { themeColor: "#0B0D10" };
 
+// The legal text is unchanged; it now sits in the public site's frame.
 export default function TermsPage() {
   return (
-    <div className="atlas-page">
-      <div className="grain"/>
-      <div className="draft-banner">⚠ Draft template — to be reviewed by a qualified legal professional before paid public launch</div>
-
-      <nav className="nav on">
-        <div className="wrap nav-inner">
-          <Link href="/" className="brand" style={{display:"flex",alignItems:"center",gap:"9px",textDecoration:"none"}}>
-            <StarlaneMark/> <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13.5px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
-          </Link>
-          <div className="nav-links"><Link href="/#features">Features</Link><Link href="/#pricing">Pricing</Link><Link href="/#faq">FAQ</Link></div>
-          <div className="nav-cta">
-            <Link className="nav-login" href="/login">Log in</Link>
-            <Link className="btn btn-primary" href="/signup">Start free</Link>
-          </div>
-        </div>
-      </nav>
-
-      <section className="legal-header">
-        <div className="wrap">
-          <span className="s-label">Legal</span>
-          <h1>Terms of Service</h1>
-          <div className="lh-meta">Last updated: 31 May 2026 &middot; Starlane</div>
-        </div>
-      </section>
-
-      <div className="legal-body">
-        <div className="wrap">
-          <div className="legal-content">
+    <SiteShell>
+      <PageHero
+        kicker="Legal"
+        title={<>Terms of <em>service.</em></>}
+        lead={<>The terms that apply when you use Starlane.<span className="lg-meta">Last updated 31 May 2026 · Draft, to be reviewed by a qualified legal professional before paid public launch</span></>}
+      />
+      <section className="f f-light lg" aria-label="Terms of service">
+        <div className="f-wrap">
+          <div className="lg-body">
             <h2>Acceptance of terms</h2>
             <p>By creating a Starlane account or using our services, you agree to these Terms of Service. If you are signing up on behalf of a business, you confirm that you have authority to bind that business to these terms.</p>
             <p>These terms form a binding agreement under the Indian Contract Act, 1872 and the Information Technology Act, 2000.</p>
@@ -108,35 +78,14 @@ export default function TermsPage() {
             <h2>Governing law and disputes</h2>
             <p>These terms are governed by the laws of India. Disputes shall be subject to the exclusive jurisdiction of courts in Mumbai. Email <a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a> and we&apos;ll respond within 10 business days.</p>
 
-            <div className="notice">
+            <div className="lg-notice">
               <strong>Starlane</strong><br/>
               Mumbai, India &middot; <a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a>
             </div>
-            <p style={{marginTop:"16px",fontSize:"13px",color:"rgba(255,255,255,.55)"}}>This is a draft template and should be reviewed by a qualified legal professional before paid public launch.</p>
+            <p className="lg-note">This is a draft template and should be reviewed by a qualified legal professional before paid public launch.</p>
           </div>
         </div>
-      </div>
-
-      <footer className="footer">
-        <div className="wrap">
-          <div className="foot-grid">
-            <div className="foot-brand">
-              <Link href="/" className="brand" style={{display:"flex",alignItems:"center",gap:"9px",textDecoration:"none"}}>
-                <StarlaneMark/> <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
-              </Link>
-              <p>Starlane — the AI business control room for Indian founders.</p>
-              <p className="foot-made">Made in India &middot; Data stays in India</p>
-            </div>
-            <div className="foot-col"><h4>Product</h4><Link href="/#features">Features</Link><Link href="/#pricing">Pricing</Link><Link href="/#faq">FAQ</Link></div>
-            <div className="foot-col"><h4>Contact</h4><a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a></div>
-          </div>
-          <div className="wm">STARLANE</div>
-          <div className="foot-bottom">
-            <span>&copy; 2026 Starlane.</span>
-            <span className="foot-links"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link></span>
-          </div>
-        </div>
-      </footer>
-    </div>
+      </section>
+    </SiteShell>
   );
 }

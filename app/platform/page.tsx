@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { pageMetadata, breadcrumb } from "@/lib/site";
+import { JsonLd } from "@/components/marketing/JsonLd";
 import "../landing.css";
 import "../start.css";
 import "../site.css";
@@ -8,10 +10,14 @@ import { SystemsPlate, StatePlate, EvidenceStack } from "@/components/marketing/
 import { WatchRoom, SimulationRoom, VerificationRecord } from "@/components/marketing/home/Rooms";
 import { PlatformAvailability } from "@/components/marketing/PlatformAvailability";
 
-export const metadata: Metadata = {
-  title: "Product · Starlane",
-  description: "How Starlane works, end to end: it connects read-only to the systems you run, keeps one model of the business, raises what changed, lays out the evidence and options, and checks what happened afterwards.",
-};
+export const metadata: Metadata = pageMetadata({
+  path: "/platform",
+  title: "Product",
+  description:
+    "How Starlane works, end to end: read-only connections to the systems you run, one model of the business, the changes that matter, the evidence and options behind each decision, and a check on what happened next.",
+});
+
+export const viewport: Viewport = { themeColor: "#0B0D10" };
 
 // The product, in the order it works: connect, model, watch, decide, verify.
 // Same fictional company as the homepage; every figure is illustrative.
@@ -31,6 +37,7 @@ const FEATURES: Array<[string, string, string]> = [
 export default function PlatformPage() {
   return (
     <SiteShell>
+      <JsonLd data={breadcrumb("/platform", "Product")} />
       <PageHero
         kicker="Product"
         title={<>One model of the business, <em>read every morning.</em></>}

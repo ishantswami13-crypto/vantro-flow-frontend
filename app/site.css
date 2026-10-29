@@ -61,6 +61,15 @@
 .sl-start[data-motion="on"] .hx-beam { transition: opacity 1.2s var(--ease) .3s, width 1.4s var(--ease) .3s; }
 .sl-start[data-motion="on"] .hx-c:not(:has(.hc.is-in)) .hx-beam { opacity: 0; width: 20vw; }
 
+/* A sparse field of points above the claim: the name, said quietly. Static,
+   decorative, and faded out before it reaches the copy's edges. */
+.sl-start .hx-stars { position: absolute; left: 50%; top: 0; width: 1600px; height: 720px; margin-left: -800px; z-index: -1; pointer-events: none;
+  background: url(/brand/starfield.svg) center top / 1600px 720px no-repeat; opacity: .5;
+  -webkit-mask-image: radial-gradient(ellipse 50% 62% at 50% 34%, #000 0%, rgb(0 0 0 / .5) 48%, transparent 100%);
+  mask-image: radial-gradient(ellipse 50% 62% at 50% 34%, #000 0%, rgb(0 0 0 / .5) 48%, transparent 100%); }
+.sl-start[data-motion="on"] .hx-stars { animation: hx-stars-in 2.4s var(--ease) both; }
+@keyframes hx-stars-in { from { opacity: 0; } to { opacity: .5; } }
+
 /* Console */
 .sl-start .hc { position: relative; }
 .sl-start .hc-glow { position: absolute; left: 8%; right: 8%; top: -60px; height: 340px; z-index: -1; filter: blur(40px); pointer-events: none;
@@ -301,7 +310,8 @@
   .sl-start .hx-side, .sl-start .ph-side { grid-column: 1 / -1; }
   .sl-start .hx-h { font-size: clamp(42px, 12vw, 64px); }
   .sl-start .hx-h > span { white-space: normal; }
-  .sl-start .hx-c .hx-h { font-size: clamp(42px, 12.4vw, 64px); }
+  .sl-start .hx-c .hx-h { font-size: clamp(36px, 10.2vw, 64px); }
+  .sl-start .hx-stars { display: none; }
   .sl-start .hx-c .hx-h > span { white-space: normal; }
   .sl-start .hx-c .hx-facts { flex-direction: column; align-items: center; gap: 10px; }
   .sl-start .ph-h { font-size: clamp(40px, 11vw, 56px); }
@@ -343,3 +353,19 @@
 @media (prefers-reduced-motion: reduce) {
   .sl-start .hc-btn::after { animation: none !important; }
 }
+
+/* Legal pages: long-form prose on paper, one comfortable measure. */
+.sl-start .lg-meta { display: block; margin-top: 18px; font-family: var(--sl-mono); font-size: 10.5px; line-height: 1.6; letter-spacing: .08em; text-transform: uppercase; color: var(--fg3); }
+.sl-start .lg { padding-top: clamp(64px, 7vw, 104px); }
+.sl-start .lg-body { max-width: 44rem; }
+.sl-start .lg-body h2 { margin: 56px 0 14px !important; padding-top: 18px; border-top: 1px solid var(--line); font-family: var(--serif) !important; font-size: clamp(24px, 2.2vw, 30px) !important; font-weight: 400 !important; line-height: 1.15; letter-spacing: -0.015em; color: var(--fg) !important; }
+.sl-start .lg-body h2:first-child { margin-top: 0 !important; }
+.sl-start .lg-body h3 { margin: 28px 0 8px !important; font-family: var(--sl-sans) !important; font-size: 16px !important; font-weight: 600 !important; color: var(--fg) !important; }
+.sl-start .lg-body p, .sl-start .lg-body li { font-size: 16px; line-height: 1.7; color: var(--fg2); }
+.sl-start .lg-body p { margin: 0 0 14px; }
+.sl-start .lg-body ul, .sl-start .lg-body ol { margin: 0 0 16px; padding-left: 1.2em; }
+.sl-start .lg-body strong { font-weight: 600; color: var(--fg); }
+.sl-start .lg-body a { color: var(--fg); text-decoration: underline; text-decoration-color: var(--line2); text-underline-offset: 4px; }
+.sl-start .lg-body a:hover { text-decoration-color: currentColor; }
+.sl-start .lg-notice { margin: 8px 0 0; padding: 20px 22px; border: 1px solid var(--line); background: var(--panel); font-size: 15px; line-height: 1.75; color: var(--fg2); }
+.sl-start .lg-note { margin-top: 28px !important; font-size: 13px !important; color: var(--fg3) !important; }

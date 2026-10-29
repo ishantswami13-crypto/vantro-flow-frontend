@@ -1,7 +1,10 @@
 import "./landing.css";
 import "./start.css";
 import "./site.css";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { SITE, SITE_URL, pageMetadata } from "@/lib/site";
+import { JsonLd } from "@/components/marketing/JsonLd";
 import { SiteShell, Index, CloseBand } from "@/components/marketing/site/Site";
 import { HeroConsole } from "@/components/marketing/site/HeroConsole";
 import { SystemsPlate, EvidenceStack } from "@/components/marketing/home/Plates";
@@ -37,11 +40,55 @@ const PAGES = [
   { href: "/company", g: "scope", k: "Company", b: "Why Starlane exists and the principles it is built on." },
 ];
 
+export const metadata: Metadata = pageMetadata({
+  path: "/",
+  title: `${SITE.name} · ${SITE.tagline}`,
+  absoluteTitle: true,
+  description: SITE.description,
+});
+
+export const viewport: Viewport = { themeColor: "#0B0D10" };
+
+// Who publishes the site, the site itself, and the product, for search engines.
+const STRUCTURED = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE.name,
+      legalName: SITE.legalName,
+      url: SITE_URL,
+      logo: `${SITE_URL}/branding/starlane-icon-light-512.png`,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE.name,
+      description: SITE.description,
+      publisher: { "@id": `${SITE_URL}/#organization` },
+      inLanguage: "en",
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: SITE.name,
+      url: SITE_URL,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      description: SITE.description,
+      publisher: { "@id": `${SITE_URL}/#organization` },
+    },
+  ],
+};
+
 export default function LandingPage() {
   return (
     <SiteShell>
+      <JsonLd data={STRUCTURED} />
       {/* 01 · Hero */}
       <header className="f f-dark hx hx-c">
+        <div className="hx-stars" aria-hidden />
         <div className="f-wrap hx-top">
           <Link href="/pricing" className="hx-pill"><i className="sq t-ok" aria-hidden />Now accepting pilot applications<span>How a pilot works<b aria-hidden>→</b></span></Link>
           <h1 className="f-display hx-h"><span>Know what changed</span> <em>before it costs you.</em></h1>

@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { pageMetadata, breadcrumb } from "@/lib/site";
+import { JsonLd } from "@/components/marketing/JsonLd";
 import "../landing.css";
 import "../start.css";
 import "../site.css";
@@ -7,10 +9,14 @@ import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/si
 import { Glyph } from "@/components/marketing/home/Glyph";
 import { InView } from "@/components/marketing/home/InView";
 
-export const metadata: Metadata = {
-  title: "Security and control · Starlane",
-  description: "The controls Starlane has today, stated plainly, and what it does not claim.",
-};
+export const metadata: Metadata = pageMetadata({
+  path: "/security",
+  title: "Security and control",
+  description:
+    "The controls Starlane has today, stated plainly: read-only connections, an approval queue, actions that run at most once, an append-only audit trail, and what it does not claim.",
+});
+
+export const viewport: Viewport = { themeColor: "#0B0D10" };
 
 // Only controls that exist in the product and backend today. Anything not yet
 // achieved (certifications, audits, uptime commitments) is said to be absent,
@@ -52,6 +58,7 @@ const ABSENT = [
 export default function SecurityPage() {
   return (
     <SiteShell>
+      <JsonLd data={breadcrumb("/security", "Security and control")} />
       <PageHero
         kicker="Security and control"
         title={<>Built to be <em>checked.</em></>}

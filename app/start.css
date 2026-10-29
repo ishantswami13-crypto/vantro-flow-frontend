@@ -583,3 +583,10 @@
 .sl-start .hs-link { display: none; }
 .sl-start .f-facts { gap: 10px 22px; max-width: 36rem; }
 .sl-start .f-facts li { font-size: 13px; white-space: nowrap; }
+
+/* The cookie notice on the public site sits on the dark product rooms. */
+html:has(.sl.sl-start) .cookie-consent {
+  --ck-bg: rgb(20 24 29 / .92); --ck-line: #363D47; --ck-text: #A3A9B2; --ck-ink: #E8E9EB; --ck-hover: rgb(255 255 255 / .06);
+  --ck-solid: #E8E9EB; --ck-on-solid: #0B0D10; --ck-shadow: 0 24px 60px -20px rgb(0 0 0 / .7);
+}
+html:has(.sl.sl-start) .cookie-card { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }

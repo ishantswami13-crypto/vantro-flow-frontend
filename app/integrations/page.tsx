@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { pageMetadata, breadcrumb } from "@/lib/site";
+import { JsonLd } from "@/components/marketing/JsonLd";
 import "../landing.css";
 import "../home.css";
 import "../start.css";
@@ -10,10 +12,14 @@ import { CATEGORIES } from "@/components/marketing/landing/integrationsData";
 
 const count = (state: string) => CATEGORIES.reduce((n, c) => n + c.items.filter((i) => i.s === state).length, 0);
 
-export const metadata: Metadata = {
-  title: "Integrations · Starlane",
-  description: "Every system Starlane connects to, by category, with how it connects and its real status: live today, planned, or built for your pilot.",
-};
+export const metadata: Metadata = pageMetadata({
+  path: "/integrations",
+  title: "Integrations",
+  description:
+    "Every system Starlane connects to, by category, with how it connects and its real status: live today, planned, or built for your pilot.",
+});
+
+export const viewport: Viewport = { themeColor: "#0B0D10" };
 
 // The full integrations catalogue, as reference documentation. The homepage
 // reads the same list; statuses mirror the backend connector registry.
@@ -27,6 +33,7 @@ const STATES = [
 export default function IntegrationsPage() {
   return (
     <SiteShell>
+      <JsonLd data={breadcrumb("/integrations", "Integrations")} />
       <PageHero
         kicker="Integrations"
         title={<>Works with the systems <em>you already run.</em></>}

@@ -1,4 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { pageMetadata, breadcrumb } from "@/lib/site";
+import { JsonLd } from "@/components/marketing/JsonLd";
 import "../landing.css";
 import "../start.css";
 import "../site.css";
@@ -6,10 +8,14 @@ import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
 import { Glyph } from "@/components/marketing/home/Glyph";
 
-export const metadata: Metadata = {
-  title: "Pricing and pilots · Starlane",
-  description: "Starlane is available through private pilots. How a pilot runs, what it includes, what stays off by default, and how pricing is agreed.",
-};
+export const metadata: Metadata = pageMetadata({
+  path: "/pricing",
+  title: "Pricing and pilots",
+  description:
+    "Starlane is available through private pilots. How a pilot runs, what it includes, what stays off by default, and how pricing is agreed.",
+});
+
+export const viewport: Viewport = { themeColor: "#0B0D10" };
 
 // Starlane is sold through private pilots; pricing is agreed directly. This
 // page describes the pilot as the access flow and product actually run it,
@@ -45,6 +51,11 @@ const FAQ: Array<[string, string]> = [
 export default function PricingPage() {
   return (
     <SiteShell>
+      <JsonLd data={[breadcrumb("/pricing", "Pricing and pilots"), {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: FAQ.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+      }]} />
       <PageHero
         kicker="Pricing and pilots"
         title={<>Start with a pilot, <em>on your own books.</em></>}

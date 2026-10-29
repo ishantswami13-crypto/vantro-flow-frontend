@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -695,6 +694,18 @@ input:focus, select:focus, textarea:focus {
 /* ============================================================
    COOKIE CONSENT BANNER
    ============================================================ */
+.cookie-consent {
+  --ck-bg: #FFFFFF; --ck-line: #E5E5E1; --ck-text: #686868; --ck-ink: #191917; --ck-hover: #F7F7F5;
+  --ck-solid: #191917; --ck-on-solid: #FFFFFF; --ck-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+.cookie-card { background: var(--ck-bg); border: 1px solid var(--ck-line); box-shadow: var(--ck-shadow); color: var(--ck-text); }
+.cookie-card a { color: var(--ck-ink); text-underline-offset: 3px; }
+.cookie-quiet { color: var(--ck-text); transition: background-color .15s ease, color .15s ease; }
+.cookie-quiet:hover { background: var(--ck-hover); color: var(--ck-ink); }
+.cookie-solid { background: var(--ck-solid); color: var(--ck-on-solid); transition: opacity .15s ease; }
+.cookie-solid:hover { opacity: .88; }
+.cookie-card button:focus-visible, .cookie-card a:focus-visible { outline: 2px solid var(--ck-ink); outline-offset: 2px; }
+
 .cookie-slide-up {
   animation: cookie-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
