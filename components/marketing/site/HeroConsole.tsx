@@ -23,7 +23,7 @@ export function HeroConsole() {
             <p className="hc-where"><b>Halden Supply Co.</b><span>Today</span><span className="num">Tue 14 Oct · 07:42</span></p>
             <ul className="hc-srcs">
               {SOURCES.map((s, i) => (
-                <li key={s} style={{ "--i": i } as React.CSSProperties}><i className="sq t-ok" />{s}</li>
+                <li key={s} style={{ "--i": i } as React.CSSProperties}>{s}</li>
               ))}
             </ul>
           </div>
@@ -34,9 +34,8 @@ export function HeroConsole() {
               <ol>
                 {CHANGES.map((c, i) => (
                   <li key={c.what} className={i === 0 ? "is-sel" : undefined} style={{ "--i": i } as React.CSSProperties}>
-                    <i className={`sq t-${c.tone}`} />
                     <div>
-                      <span className="hc-cat">{c.cat}</span>
+                      <span className={`hc-cat t-${c.tone}`}>{c.cat}</span>
                       <b>{c.what}</b>
                       <span className="hc-who">{c.who}</span>
                     </div>
@@ -48,7 +47,7 @@ export function HeroConsole() {
             </div>
 
             <div className="hc-detail">
-              <p className="ui-kicker"><i className="sq t-risk" />Needs a decision</p>
+              <p className="ui-kicker t-risk">Needs a decision</p>
               <p className="hc-title">Escalate Brightwater Retail</p>
               <div className="hc-fig">
                 <p className="num">$184,200</p>
@@ -69,7 +68,7 @@ export function HeroConsole() {
                 <p className="hc-opt-k">Likely collected in 30 days <i className="tag tag-est">Estimate</i></p>
               </div>
               <div className="hc-act">
-                <p><i className="sq t-warn" />Awaiting approval · account owner</p>
+                <p>Awaiting approval · account owner</p>
                 <span className="hc-btn hc-btn-q">Not now</span>
                 <span className="hc-btn">Review and approve</span>
               </div>

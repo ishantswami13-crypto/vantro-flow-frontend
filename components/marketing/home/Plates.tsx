@@ -160,7 +160,7 @@ export function EvidenceStack() {
   return (
     <InView className="ev5">
       <div className="ev5-cap" aria-hidden>
-        <p className="ui-kicker"><i className="sq t-risk" />Decision</p>
+        <p className="ui-kicker t-risk">Decision</p>
         <p className="ev5-cap-t">Escalate Brightwater Retail</p>
       </div>
       <ol className="ev5-plates">

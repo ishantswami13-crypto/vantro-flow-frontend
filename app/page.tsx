@@ -90,7 +90,7 @@ export default function LandingPage() {
       <header className="f f-dark hx hx-c">
         <div className="hx-stars" aria-hidden />
         <div className="f-wrap hx-top">
-          <Link href="/pricing" className="hx-pill"><i className="sq t-ok" aria-hidden />Now accepting pilot applications<span>How a pilot works<b aria-hidden>→</b></span></Link>
+          <Link href="/pricing" className="hx-pill">Now accepting pilot applications<span>How a pilot works<b aria-hidden>→</b></span></Link>
           <h1 className="f-display hx-h"><span>Know what changed</span> <em>before it costs you.</em></h1>
           <p className="f-lead hx-lead">
             Starlane reads the systems you already run and puts the few changes that matter in front of you each
@@ -107,7 +107,7 @@ export default function LandingPage() {
           </ul>
         </div>
         <div className="hx-stage">
-          <div className="hx-beam" aria-hidden />
+          <div className="hx-horizon" aria-hidden />
           <div className="f-wrap"><HeroConsole /></div>
         </div>
         <div className="f-wrap hx-foot"><p className="f-cap">{CAPTION}</p></div>

@@ -19,12 +19,12 @@ export function WatchRoom() {
     <InView className="w4">
       <div className="w4-bar">
         <p><b>Watch</b><span>Tue 14 Oct · 07:42</span><span className="w4-ill">Illustrative · Halden Supply Co.</span></p>
-        <p className="w4-bar-r"><span>4 material changes</span><span><i className="sq t-ok" />4 systems current</span></p>
+        <p className="w4-bar-r"><span>4 material changes</span><span>4 systems current</span></p>
       </div>
       <ol className="w4-grid">
         {WATCH.map((c, i) => (
           <li key={c.cat} className={`w4-card t-${c.tone}`} style={{ "--i": i } as React.CSSProperties}>
-            <p className="w4-cat"><i className={`sq t-${c.tone}`} />{c.cat}</p>
+            <p className={`w4-cat t-${c.tone}`}>{c.cat}</p>
             <p className="w4-what">{c.what}</p>
             <p className="w4-who">{c.who}</p>
             <p className="w4-fig num">{c.fig}<span>{c.figK}</span></p>
@@ -102,7 +102,7 @@ export function VerificationRecord() {
       <div className="v7-dim" aria-hidden><span>8 days</span></div>
       <figure className="v7-macro">
         <div className="v7-macro-in">
-          <p className="ui-kicker"><i className="sq t-ok" />Observed · on track · 22 Oct 07:41</p>
+          <p className="ui-kicker t-ok">Observed · on track · 22 Oct 07:41</p>
           <p className="v7-macro-fig num">$60,000.00 <span>received</span></p>
           <dl>
             <div><dt>Against</dt><dd>INV-1042 · $2,400 left on it</dd></div>

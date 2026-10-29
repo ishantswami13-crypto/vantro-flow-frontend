@@ -590,3 +590,7 @@ html:has(.sl.sl-start) .cookie-consent {
   --ck-solid: #E8E9EB; --ck-on-solid: #0B0D10; --ck-shadow: 0 24px 60px -20px rgb(0 0 0 / .7);
 }
 html:has(.sl.sl-start) .cookie-card { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+
+/* Status is carried by the label's colour; no square markers on the public site. */
+.sl-start .sq { display: none; }
+.sl-start .hc-cat[class*="t-"], .sl-start .w4-cat[class*="t-"], .sl-start .ui-kicker[class*="t-"] { color: var(--tone); }
