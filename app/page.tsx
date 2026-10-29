@@ -8,6 +8,7 @@ import { JsonLd } from "@/components/marketing/JsonLd";
 import { SiteShell, CloseBand } from "@/components/marketing/site/Site";
 import { HeroBrief } from "@/components/marketing/site/HeroBrief";
 import { ApprovalPhone } from "@/components/marketing/site/ApprovalPhone";
+import { Scene3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { WatchRoom } from "@/components/marketing/home/Rooms";
 
 // Starlane, public homepage. Deliberately short: the promise, the product,
@@ -17,6 +18,19 @@ import { WatchRoom } from "@/components/marketing/home/Rooms";
 
 // Live connections by name (registry status "live"); public feeds are opt-in per pilot.
 const LIVE = ["TallyPrime", "Excel", "CSV", "Google Sheets", "Bank statements", "Stock exports"];
+
+const LAYERS: Plate[] = [
+  { k: "Source", title: "TallyPrime", lines: 4 },
+  { k: "Source", title: "Bank statements", lines: 3 },
+  { k: "Source", title: "Stock", lines: 3 },
+  { k: "Starlane", title: "Morning brief", kind: "top", lines: 4 },
+];
+const LAYERS_LEGEND: Array<[string, string]> = [
+  ["TallyPrime", "Read through a local bridge, export only."],
+  ["Bank statements", "Imported as statement files."],
+  ["Stock", "Levels and movements, from your exports."],
+  ["Morning brief", "What changed since yesterday, with the records behind it."],
+];
 
 const RULES = [
   ["Read-only.", "Starlane reads TallyPrime, bank statements and stock. Nothing in your books is created, changed or deleted."],
@@ -103,6 +117,25 @@ export default function LandingPage() {
         </div>
       </header>
 
+      <section className="f f-light ex-layers" aria-labelledby="ex-layers-h">
+        <div className="f-wrap">
+          <div className="ex-head">
+            <h2 id="ex-layers-h" className="ex-h2">Three systems. One morning view.</h2>
+            <p className="ex-sub">Starlane reads each one, read-only, and keeps a single record of what happened between customers, suppliers, stock and cash.</p>
+          </div>
+          <Scene3D plates={LAYERS} legend={LAYERS_LEGEND} label="TallyPrime, bank statements and stock, stacked as layers beneath one morning brief." />
+        </div>
+      </section>
+
+
+      <section id="brief" className="f f-dark ex-sec" aria-labelledby="ex-watch-h">
+        <div className="f-wrap ex-head">
+          <h2 id="ex-watch-h" className="ex-h2">Four things changed overnight. You see those four.</h2>
+          <p className="ex-sub">Only material changes are raised, each with its exposure and the records behind it. Everything else stays quiet.</p>
+        </div>
+        <div className="f-bleed"><WatchRoom /></div>
+      </section>
+
       <section className="f f-light ex-rules" aria-labelledby="ex-rules-h">
         <div className="f-wrap">
           <h2 id="ex-rules-h" className="ex-h2">Three rules it never breaks.</h2>
@@ -111,14 +144,6 @@ export default function LandingPage() {
           </ol>
           <p className="ex-more"><Link href="/security" className="f-link">Security and control<span aria-hidden>→</span></Link></p>
         </div>
-      </section>
-
-      <section id="brief" className="f f-dark ex-sec" aria-labelledby="ex-watch-h">
-        <div className="f-wrap ex-head">
-          <h2 id="ex-watch-h" className="ex-h2">Four things changed overnight. You see those four.</h2>
-          <p className="ex-sub">Only material changes are raised, each with its exposure and the records behind it. Everything else stays quiet.</p>
-        </div>
-        <div className="f-bleed"><WatchRoom /></div>
       </section>
 
       <section className="f f-dark ex-sec ex-approve" aria-labelledby="ex-ap-h">

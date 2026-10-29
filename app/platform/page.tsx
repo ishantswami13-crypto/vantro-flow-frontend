@@ -6,6 +6,7 @@ import "../start.css";
 import "../site.css";
 import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
+import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { SystemsPlate, StatePlate, EvidenceStack } from "@/components/marketing/home/Plates";
 import { WatchRoom, SimulationRoom, VerificationRecord } from "@/components/marketing/home/Rooms";
 import { PlatformAvailability } from "@/components/marketing/PlatformAvailability";
@@ -34,12 +35,20 @@ const FEATURES: Array<[string, string, string]> = [
   ["/product/prepared", "Prepared", "The next 24 hours, 7 days and 30 days, worked out from the dates in your books."],
 ];
 
+const HERO_PLATES: Plate[] = [
+  { k: "Connect", title: "Your systems", lines: 4 },
+  { k: "Model", title: "One record", lines: 3 },
+  { k: "Watch", title: "What changed", tone: "risk", lines: 3 },
+  { k: "Decide", title: "Your decision", kind: "top", lines: 3 },
+];
+
 export default function PlatformPage() {
   return (
     <SiteShell>
       <JsonLd data={breadcrumb("/platform", "Product")} />
       <PageHero
         kicker="Product"
+        visual={<Stack3D plates={HERO_PLATES} variant="stack" label="Four layers: your systems, one record, what changed, and your decision on top." />}
         title={<>One model of the business, <em>read every morning.</em></>}
         lead="Starlane connects to the systems you already run, keeps a single current record of what happened between customers, suppliers, stock and cash, and raises only what changed. Every figure carries its evidence, and every action waits for a person."
         index={[["#connect", "Connect"], ["#model", "Model"], ["#watch", "Watch"], ["#decide", "Decide"], ["#verify", "Verify"]]}

@@ -6,6 +6,7 @@ import "../start.css";
 import "../site.css";
 import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
+import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { Glyph } from "@/components/marketing/home/Glyph";
 import { InView } from "@/components/marketing/home/InView";
 
@@ -55,12 +56,20 @@ const ABSENT = [
   ["Bug bounty", "There is no bug bounty programme."],
 ];
 
+const HERO_PLATES: Plate[] = [
+  { k: "Read-only", title: "Your books", lines: 4 },
+  { k: "Blocks risky actions", title: "Policy check", lines: 3 },
+  { k: "A person decides", title: "Approval", tone: "warn", lines: 3 },
+  { k: "Append-only", title: "Audit trail", kind: "top", lines: 4 },
+];
+
 export default function SecurityPage() {
   return (
     <SiteShell>
       <JsonLd data={breadcrumb("/security", "Security and control")} />
       <PageHero
         kicker="Security and control"
+        visual={<Stack3D plates={HERO_PLATES} variant="stack" label="Four layers of control: read-only access to your books, a policy check, human approval, and an append-only audit trail." />}
         title={<>Built to be <em>checked.</em></>}
         lead="This page lists the controls that exist in Starlane today, in plain words. It does not list plans. During a pilot we take your team through each one and how it is built."
         index={[["#flow", "How an action moves"], ["#controls", "Controls"], ["#claims", "What we do not claim"], ["#disclosure", "Report a vulnerability"]]}

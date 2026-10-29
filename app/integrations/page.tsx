@@ -7,6 +7,7 @@ import "../start.css";
 import "../site.css";
 import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
+import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { IntegrationHub } from "@/components/marketing/landing/IntegrationHub";
 import { CATEGORIES } from "@/components/marketing/landing/integrationsData";
 
@@ -30,12 +31,25 @@ const STATES = [
   { c: "ih-custom", k: "Custom", n: count("custom"), b: "Not in the catalogue. Can be built for your pilot on the connector framework, through an API, webhook, database or file." },
 ];
 
+const HERO_PLATES: Plate[] = [
+  { k: "Live", title: "TallyPrime", kind: "top" },
+  { k: "Live", title: "Excel" },
+  { k: "Live", title: "CSV" },
+  { k: "Live", title: "Google Sheets" },
+  { k: "Live", title: "Bank statements" },
+  { k: "Live", title: "Stock exports" },
+  { k: "Planned or custom", title: "ERP", kind: "plan" },
+  { k: "Planned", title: "CRM", kind: "plan" },
+  { k: "Planned", title: "Commerce", kind: "plan" },
+];
+
 export default function IntegrationsPage() {
   return (
     <SiteShell>
       <JsonLd data={breadcrumb("/integrations", "Integrations")} />
       <PageHero
         kicker="Integrations"
+        visual={<Stack3D plates={HERO_PLATES} variant="grid" label="Nine tiles: TallyPrime, Excel, CSV, Google Sheets, bank statements and stock exports are live and raised; ERP, CRM and commerce are planned and flat." />}
         title={<>Works with the systems <em>you already run.</em></>}
         lead="Each entry shows how it connects and its real status. Nothing in your systems changes: Starlane reads, and every action it proposes waits for a person."
       >

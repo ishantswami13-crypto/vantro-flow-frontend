@@ -31,9 +31,9 @@ export function Index({ n, k }: { n?: string; k: string }) {
 
 // Opening frame for an inner page: one sentence, one supporting paragraph,
 // and, where it helps, an index of the page's sections.
-export function PageHero({ kicker, title, lead, children, index }: {
+export function PageHero({ kicker, title, lead, children, index, visual }: {
   kicker: string; title: React.ReactNode; lead: React.ReactNode; children?: React.ReactNode;
-  index?: Array<[string, string]>;
+  index?: Array<[string, string]>; visual?: React.ReactNode;
 }) {
   return (
     <header className="f f-dark ph">
@@ -46,6 +46,7 @@ export function PageHero({ kicker, title, lead, children, index }: {
             {children}
           </div>
         </div>
+        {visual && <div className="ph-visual">{visual}</div>}
         {index && (
           <nav className="ph-index" aria-label="On this page">
             <ol>

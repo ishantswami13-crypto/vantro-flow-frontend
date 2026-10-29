@@ -6,6 +6,7 @@ import "../start.css";
 import "../site.css";
 import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
+import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { InView } from "@/components/marketing/home/InView";
 
 export const metadata: Metadata = pageMetadata({
@@ -28,12 +29,20 @@ const PRINCIPLES = [
   ["Say what is absent", "Every integration carries its real status, and the security page lists what Starlane does not claim. We would rather lose a deal than imply something exists."],
 ];
 
+const HERO_PLATES: Plate[] = [
+  { k: "Read from a system", title: "Fact", lines: 3 },
+  { k: "Derived from facts", title: "Calculation", lines: 3 },
+  { k: "Stated, yours to change", title: "Assumption", lines: 3 },
+  { k: "Shown with its working", title: "Decision", kind: "top", lines: 3 },
+];
+
 export default function CompanyPage() {
   return (
     <SiteShell>
       <JsonLd data={breadcrumb("/company", "Company")} />
       <PageHero
         kicker="Company"
+        visual={<Stack3D plates={HERO_PLATES} variant="stack" label="Four layers of a decision: fact, calculation and assumption beneath the decision they support." />}
         title={<>Software that <em>shows its work.</em></>}
         lead="Starlane is built by Vantro Technologies. We think the people who run a business should know each morning what changed, why it matters and what to do, without taking anyone’s word for it, including ours."
       />

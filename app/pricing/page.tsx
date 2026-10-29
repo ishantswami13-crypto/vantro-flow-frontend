@@ -6,6 +6,7 @@ import "../start.css";
 import "../site.css";
 import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
+import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { Glyph } from "@/components/marketing/home/Glyph";
 
 export const metadata: Metadata = pageMetadata({
@@ -48,6 +49,13 @@ const FAQ: Array<[string, string]> = [
   ["Are the numbers produced by AI?", "No language model produces the figures. They come from your records, simple calculations and simulations you can inspect, each labelled as fact, calculated, assumption or estimate."],
 ];
 
+const HERO_PLATES: Plate[] = [
+  { k: "Step 1", title: "Apply", lines: 2 },
+  { k: "Step 2", title: "Connect read-only", lines: 2 },
+  { k: "Step 3", title: "Mornings on your data", lines: 2 },
+  { k: "Step 4", title: "Decide", kind: "top", lines: 2 },
+];
+
 export default function PricingPage() {
   return (
     <SiteShell>
@@ -58,6 +66,7 @@ export default function PricingPage() {
       }]} />
       <PageHero
         kicker="Pricing and pilots"
+        visual={<Stack3D plates={HERO_PLATES} variant="stairs" label="Four steps rising: apply, connect read-only, mornings on your own data, then decide." />}
         title={<>Start with a pilot, <em>on your own books.</em></>}
         lead="Starlane is available through private pilots with selected organizations. We agree pricing with each organization directly, once you have seen what Starlane does with your data."
         index={[["#pilot", "How a pilot runs"], ["#included", "What is included"], ["#faq", "Questions"]]}
