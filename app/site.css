@@ -73,7 +73,7 @@
 .sl-start .hx-c .hx-stage > .f-wrap { position: relative; z-index: 1; }
 .sl-start .hx-c .hx-stage { margin-top: clamp(112px, 10vw, 152px); }
 .sl-start[data-motion="on"] .hx-horizon { transition: opacity 1.6s var(--ease) .2s, transform 1.8s var(--ease) .2s; }
-.sl-start[data-motion="on"] .hx-c:not(:has(.hc.is-in)) .hx-horizon { opacity: 0; transform: translateX(-50%) translateY(60px); }
+.sl-start[data-motion="on"] .hx-c:not(.hx-cine):not(:has(.hc.is-in)) .hx-horizon { opacity: 0; transform: translateX(-50%) translateY(60px); }
 
 /* A sparse field of points above the claim: the name, said quietly. Static,
    decorative, and faded out before it reaches the copy's edges. */
@@ -382,3 +382,53 @@
 .sl-start .lg-body a:hover { text-decoration-color: currentColor; }
 .sl-start .lg-notice { margin: 8px 0 0; padding: 20px 22px; border: 1px solid var(--line); background: var(--panel); font-size: 15px; line-height: 1.75; color: var(--fg2); }
 .sl-start .lg-note { margin-top: 28px !important; font-size: 13px !important; color: var(--fg3) !important; }
+
+/* ── Cinematic hero (.hx-cine) ─────────────────────────────────────
+ * The first screen holds only the claim: a near-black field, a faint sky,
+ * and a lit horizon at the fold. No product, no chrome, no icons. The
+ * product rises over the horizon on the first scroll. Overrides .hx-c.
+ */
+.sl-start .hx-cine { --fold: calc(100svh - 76px); padding: 0 0 clamp(56px, 6vw, 88px); background: #07080A; }
+.sl-start .hx-cine::after { display: none; }
+.sl-start .hx-cine .hx-top { position: relative; z-index: 1; min-height: calc(var(--fold) - 132px); justify-content: center; padding-top: 24px; }
+.sl-start .hx-cine .hx-kicker { display: inline-flex; align-items: center; gap: 10px; font-family: var(--sl-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9B968C; transition: color .2s var(--ease); }
+.sl-start .hx-cine .hx-kicker span { transition: transform .2s var(--ease); }
+.sl-start .hx-cine .hx-kicker:hover { color: #E8E4DC; }
+.sl-start .hx-cine .hx-kicker:hover span { transform: translateX(3px); }
+.sl-start .hx-cine .hx-h { margin-top: clamp(28px, 3vw, 40px); font-size: clamp(54px, 8.6vw, 140px); line-height: .9; letter-spacing: -0.042em !important; font-weight: 400; }
+.sl-start .hx-cine .hx-h > span { background: none; -webkit-background-clip: border-box; background-clip: border-box; color: #F4F2EE; padding: 0; }
+.sl-start .hx-cine .hx-h em { background: none; -webkit-background-clip: border-box; background-clip: border-box; color: #CFC4AE; padding: 0 .04em .06em; }
+.sl-start .hx-cine .hx-lead { margin-top: clamp(28px, 2.8vw, 40px); max-width: 33rem; font-size: clamp(16.5px, 1.25vw, 19px); line-height: 1.6; color: #9DA2A9; }
+.sl-start .hx-cine .hx-actions { margin-top: clamp(32px, 3vw, 44px); gap: 12px 32px; }
+.sl-start .hx-cine .sl-btn-lg { height: 50px; padding: 0 24px; border-radius: 999px; font-size: 14.5px; }
+
+/* The promises, as a quiet line resting on the horizon. */
+.sl-start .hx-cine .hx-base { position: relative; z-index: 1; height: 132px; display: flex; align-items: flex-start; justify-content: center; }
+.sl-start .hx-cine .hx-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 0; list-style: none; margin: 0; padding: 0; border: 0; max-width: none; }
+.sl-start .hx-cine .hx-facts li { font-family: var(--sl-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: #7D8189; white-space: nowrap; }
+.sl-start .hx-cine .hx-facts li + li::before { content: "·"; margin: 0 16px; color: #4A4E55; }
+
+/* Horizon: crest just above the fold, rim-lit, dark planet below. */
+.sl-start .hx-cine .hx-horizon { top: calc(var(--fold) - 64px); width: max(3600px, 250vw); background: radial-gradient(closest-side, #07080A 97%, transparent 100%);
+  box-shadow: 0 -1px 0 0 rgb(244 236 220 / .62), 0 -2px 22px 0 rgb(241 231 211 / .24), 0 -60px 160px 20px rgb(241 231 211 / .09), 0 -220px 380px 60px rgb(190 168 128 / .06); }
+.sl-start .hx-cine .hx-horizon::before { width: 11%; }
+.sl-start .sl-nav-dark .sl-btn.sl-btn-solid { border-radius: 999px; padding: 0 20px; }
+.sl-start .hx-cine .hx-stars { height: var(--fold); opacity: .55; -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 92%); mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 92%); }
+.sl-start .hx-cine .hx-stage { position: relative; z-index: 1; margin-top: clamp(24px, 3vw, 48px); }
+/* Dawn: the rim light comes up once on load. Pure CSS, so it starts with the
+   first paint and never hides the claim. */
+@media (prefers-reduced-motion: no-preference) {
+  .sl-start .hx-cine .hx-horizon { animation: hx-dawn 2.4s cubic-bezier(.2, .7, .2, 1) .1s both; }
+}
+@keyframes hx-dawn { from { opacity: 0; transform: translateX(-50%) translateY(36px); } to { opacity: 1; transform: translateX(-50%); } }
+
+@media (max-width: 760px) {
+  .sl-start .hx-cine .hx-top { min-height: calc(var(--fold) - 150px); }
+  .sl-start .hx-cine .hx-h { font-size: clamp(38px, 10.4vw, 64px); line-height: .96; }
+  .sl-start .hx-cine .hx-lead { font-size: 16px; }
+  .sl-start .hx-cine .hx-base { height: 150px; }
+  .sl-start .hx-cine .hx-facts { flex-direction: column; align-items: center; gap: 10px; }
+  .sl-start .hx-cine .hx-facts li + li::before { display: none; }
+  .sl-start .hx-cine .hx-horizon { top: calc(var(--fold) - 40px); width: 900vw; }
+  .sl-start .hx-cine .hx-actions { flex-direction: column; gap: 22px; }
+}
