@@ -88,26 +88,31 @@ export default function LandingPage() {
       <JsonLd data={STRUCTURED} />
       {/* 01 · Hero */}
       <header className="f f-dark hx hx-c hx-cine">
-        <div className="hx-stars" aria-hidden />
-        <div className="hx-horizon" aria-hidden />
+        <div className="hx-scene" aria-hidden>
+          <picture>
+            <source media="(max-width: 760px)" srcSet="/brand/hero-dawn-tall.webp" />
+            <img
+              src="/brand/hero-dawn-1600.webp"
+              srcSet="/brand/hero-dawn-1600.webp 1600w, /brand/hero-dawn-2560.webp 2560w"
+              sizes="100vw"
+              alt=""
+              fetchPriority="high"
+            />
+          </picture>
+        </div>
         <div className="f-wrap hx-top">
           <Link href="/pricing" className="hx-kicker">Private pilots now open<span aria-hidden>→</span></Link>
           <h1 className="f-display hx-h"><span>Know what changed</span> <em>before it costs you.</em></h1>
-          <p className="f-lead hx-lead">
-            Starlane reads the systems you already run and puts the few changes that matter in front of you each
-            morning, with the evidence behind every figure. A person decides.
-          </p>
-          <div className="f-actions hx-actions">
-            <Link href="/access" className="sl-btn sl-btn-solid sl-btn-lg">Request a pilot</Link>
-            <Link href="/platform" className="f-link">See the product<span aria-hidden>→</span></Link>
+          <div className="hx-row">
+            <p className="f-lead hx-lead">
+              Starlane reads the systems you already run and puts the few changes that matter in front of you each
+              morning, with the evidence behind every figure. A person decides.
+            </p>
+            <div className="f-actions hx-actions">
+              <Link href="/access" className="sl-btn sl-btn-solid sl-btn-lg">Request a pilot</Link>
+              <Link href="/platform" className="f-link">See the product<span aria-hidden>→</span></Link>
+            </div>
           </div>
-        </div>
-        <div className="f-wrap hx-base">
-          <ul className="hx-facts">
-            <li>Read-only connections</li>
-            <li>Every figure sourced</li>
-            <li>Nothing sent without approval</li>
-          </ul>
         </div>
         <div className="hx-stage">
           <div className="f-wrap"><HeroConsole /></div>

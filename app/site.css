@@ -384,51 +384,51 @@
 .sl-start .lg-note { margin-top: 28px !important; font-size: 13px !important; color: var(--fg3) !important; }
 
 /* ── Cinematic hero (.hx-cine) ─────────────────────────────────────
- * The first screen holds only the claim: a near-black field, a faint sky,
- * and a lit horizon at the fold. No product, no chrome, no icons. The
- * product rises over the horizon on the first scroll. Overrides .hx-c.
+ * The first screen is a scene, not a layout: dawn breaking over ridges in
+ * haze, the claim set large at the lower left, and one hairline row with
+ * the lead and the actions. The product rises out of the dark on the first
+ * scroll. The scene is a generated still (scripts/make-hero-scene.py), a
+ * few dozen KB, so the page stays fast. Overrides .hx-c.
  */
-.sl-start .hx-cine { --fold: calc(100svh - 76px); padding: 0 0 clamp(56px, 6vw, 88px); background: #07080A; }
+.sl-start .hx-cine { --fold: calc(100svh - 76px); position: relative; isolation: isolate; text-align: left; padding: 0 0 clamp(56px, 6vw, 88px); background: #07080A; }
 .sl-start .hx-cine::after { display: none; }
-.sl-start .hx-cine .hx-top { position: relative; z-index: 1; min-height: calc(var(--fold) - 132px); justify-content: center; padding-top: 24px; }
-.sl-start .hx-cine .hx-kicker { display: inline-flex; align-items: center; gap: 10px; font-family: var(--sl-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #9B968C; transition: color .2s var(--ease); }
+.sl-start .hx-scene { position: absolute; left: 0; right: 0; top: 0; height: max(var(--fold), 560px); z-index: 0; overflow: hidden; pointer-events: none; background: #07080A;
+  -webkit-mask-image: linear-gradient(180deg, #000 68%, transparent 100%); mask-image: linear-gradient(180deg, #000 68%, transparent 100%); }
+.sl-start .hx-scene img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 62% 64%; }
+/* Film grain, a left-hand shade for the type, and a fade into the page. */
+.sl-start .hx-scene::before { content: ""; position: absolute; inset: 0; z-index: 1; opacity: .16; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.sl-start .hx-scene::after { content: ""; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(180deg, rgb(7 8 10 / .3) 0%, rgb(7 8 10 / 0) 20%, rgb(7 8 10 / 0) 72%, rgb(7 8 10 / .6) 90%, #07080A 100%),
+              linear-gradient(90deg, rgb(7 8 10 / .32) 0%, rgb(7 8 10 / 0) 55%); }
+
+.sl-start .hx-cine .hx-top { position: relative; z-index: 1; min-height: max(var(--fold), 560px); display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; padding-top: 48px; padding-bottom: clamp(36px, 4.4vw, 64px); }
+.sl-start .hx-cine .hx-kicker { display: inline-flex; align-items: center; gap: 10px; font-family: var(--sl-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #D9D2C5; text-shadow: 0 1px 14px rgb(7 8 10 / .55); transition: color .2s var(--ease); }
 .sl-start .hx-cine .hx-kicker span { transition: transform .2s var(--ease); }
-.sl-start .hx-cine .hx-kicker:hover { color: #E8E4DC; }
+.sl-start .hx-cine .hx-kicker:hover { color: #F1EDE6; }
 .sl-start .hx-cine .hx-kicker:hover span { transform: translateX(3px); }
-.sl-start .hx-cine .hx-h { margin-top: clamp(28px, 3vw, 40px); font-size: clamp(54px, 8.6vw, 140px); line-height: .9; letter-spacing: -0.042em !important; font-weight: 400; }
-.sl-start .hx-cine .hx-h > span { background: none; -webkit-background-clip: border-box; background-clip: border-box; color: #F4F2EE; padding: 0; }
-.sl-start .hx-cine .hx-h em { background: none; -webkit-background-clip: border-box; background-clip: border-box; color: #CFC4AE; padding: 0 .04em .06em; }
-.sl-start .hx-cine .hx-lead { margin-top: clamp(28px, 2.8vw, 40px); max-width: 33rem; font-size: clamp(16.5px, 1.25vw, 19px); line-height: 1.6; color: #9DA2A9; }
-.sl-start .hx-cine .hx-actions { margin-top: clamp(32px, 3vw, 44px); gap: 12px 32px; }
+.sl-start .hx-cine .hx-h { margin-top: clamp(20px, 2vw, 28px); font-size: clamp(50px, 7.6vw, 128px); line-height: .92; letter-spacing: -0.04em !important; font-weight: 400; text-shadow: 0 2px 40px rgb(7 8 10 / .35); }
+.sl-start .hx-cine .hx-h > span { display: block; background: none; -webkit-background-clip: border-box; background-clip: border-box; color: #F6F4F0; padding: 0; }
+.sl-start .hx-cine .hx-h em { display: block; background: none; -webkit-background-clip: border-box; background-clip: border-box; color: #DCCFB6; padding: 0 0 .06em; }
+.sl-start .hx-cine .hx-row { width: 100%; margin-top: clamp(32px, 3.4vw, 52px); padding-top: clamp(20px, 2vw, 28px); border-top: 1px solid rgb(244 240 232 / .16); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px 48px; }
+.sl-start .hx-cine .hx-lead { margin: 0; max-width: 35rem; font-size: clamp(16px, 1.15vw, 18px); line-height: 1.6; color: #B3B6BB; }
+.sl-start .hx-cine .hx-actions { margin: 0; gap: 12px 32px; justify-content: flex-start; }
 .sl-start .hx-cine .sl-btn-lg { height: 50px; padding: 0 24px; border-radius: 999px; font-size: 14.5px; }
-
-/* The promises, as a quiet line resting on the horizon. */
-.sl-start .hx-cine .hx-base { position: relative; z-index: 1; height: 132px; display: flex; align-items: flex-start; justify-content: center; }
-.sl-start .hx-cine .hx-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 0; list-style: none; margin: 0; padding: 0; border: 0; max-width: none; }
-.sl-start .hx-cine .hx-facts li { font-family: var(--sl-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: #7D8189; white-space: nowrap; }
-.sl-start .hx-cine .hx-facts li + li::before { content: "·"; margin: 0 16px; color: #4A4E55; }
-
-/* Horizon: crest just above the fold, rim-lit, dark planet below. */
-.sl-start .hx-cine .hx-horizon { top: calc(var(--fold) - 64px); width: max(3600px, 250vw); background: radial-gradient(closest-side, #07080A 97%, transparent 100%);
-  box-shadow: 0 -1px 0 0 rgb(244 236 220 / .62), 0 -2px 22px 0 rgb(241 231 211 / .24), 0 -60px 160px 20px rgb(241 231 211 / .09), 0 -220px 380px 60px rgb(190 168 128 / .06); }
-.sl-start .hx-cine .hx-horizon::before { width: 11%; }
 .sl-start .sl-nav-dark .sl-btn.sl-btn-solid { border-radius: 999px; padding: 0 20px; }
-.sl-start .hx-cine .hx-stars { height: var(--fold); opacity: .55; -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 92%); mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 92%); }
-.sl-start .hx-cine .hx-stage { position: relative; z-index: 1; margin-top: clamp(24px, 3vw, 48px); }
-/* Dawn: the rim light comes up once on load. Pure CSS, so it starts with the
-   first paint and never hides the claim. */
+.sl-start .hx-cine .hx-stage { position: relative; z-index: 1; margin-top: clamp(32px, 4vw, 64px); }
+
+/* The scene settles once on load: a slow push-in as the light comes up.
+   Pure CSS, so it starts with the first paint and never hides the claim. */
 @media (prefers-reduced-motion: no-preference) {
-  .sl-start .hx-cine .hx-horizon { animation: hx-dawn 2.4s cubic-bezier(.2, .7, .2, 1) .1s both; }
+  .sl-start .hx-scene img { animation: hx-scene-in 3.2s cubic-bezier(.2, .7, .2, 1) both; }
 }
-@keyframes hx-dawn { from { opacity: 0; transform: translateX(-50%) translateY(36px); } to { opacity: 1; transform: translateX(-50%); } }
+@keyframes hx-scene-in { from { transform: scale(1.07); filter: brightness(.45); } to { transform: none; filter: none; } }
 
 @media (max-width: 760px) {
-  .sl-start .hx-cine .hx-top { min-height: calc(var(--fold) - 150px); }
-  .sl-start .hx-cine .hx-h { font-size: clamp(38px, 10.4vw, 64px); line-height: .96; }
+  .sl-start .hx-scene img { object-position: 50% 50%; }
+  .sl-start .hx-scene::after { background: linear-gradient(180deg, rgb(7 8 10 / .3) 0%, rgb(7 8 10 / 0) 18%, rgb(7 8 10 / .15) 50%, rgb(7 8 10 / .78) 78%, #07080A 100%); }
+  .sl-start .hx-cine .hx-h { font-size: clamp(36px, 10.2vw, 66px); line-height: .95; }
+  .sl-start .hx-cine .hx-row { flex-direction: column; align-items: flex-start; gap: 24px; }
   .sl-start .hx-cine .hx-lead { font-size: 16px; }
-  .sl-start .hx-cine .hx-base { height: 150px; }
-  .sl-start .hx-cine .hx-facts { flex-direction: column; align-items: center; gap: 10px; }
-  .sl-start .hx-cine .hx-facts li + li::before { display: none; }
-  .sl-start .hx-cine .hx-horizon { top: calc(var(--fold) - 40px); width: 900vw; }
-  .sl-start .hx-cine .hx-actions { flex-direction: column; gap: 22px; }
+  .sl-start .hx-cine .hx-actions { flex-direction: row; align-items: center; gap: 24px; }
 }
