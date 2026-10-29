@@ -6,7 +6,7 @@ import "../start.css";
 import "../site.css";
 import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
-import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
+import { Stack3D, Scene3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { InView } from "@/components/marketing/home/InView";
 
 export const metadata: Metadata = pageMetadata({
@@ -36,6 +36,30 @@ const HERO_PLATES: Plate[] = [
   { k: "Shown with its working", title: "Decision", kind: "top", lines: 3 },
 ];
 
+// The systems each hold part of the picture; Starlane joins them each morning.
+const JOIN_PLATES: Plate[] = [
+  { k: "Accounts", title: "Invoices", lines: 3 },
+  { k: "Accounts", title: "Supplier bills", lines: 3 },
+  { k: "Bank", title: "Receipts", lines: 3 },
+  { k: "Stock", title: "Levels", lines: 3 },
+  { k: "Sales", title: "Open orders", lines: 3 },
+  { k: "Phone", title: "Promises", lines: 3 },
+  { k: "Starlane", title: "Joined each morning", kind: "top", lines: 4 },
+];
+const JOIN_LEGEND: Array<[string, string]> = [
+  ["Each system", "Right about its own part: invoices, bills, the bank, stock and orders."],
+  ["Promises", "What customers said on the phone they would pay, and when."],
+  ["Joined each morning", "Where the trouble between them shows up, with the records behind it."],
+];
+
+const PRINCIPLE_PLATES: Plate[] = [
+  { k: "01", title: "Evidence", lines: 2 },
+  { k: "02", title: "People decide", lines: 2 },
+  { k: "03", title: "Read before write", lines: 2 },
+  { k: "04", title: "Quiet by default", lines: 2 },
+  { k: "05", title: "Say what is absent", kind: "top", lines: 2 },
+];
+
 export default function CompanyPage() {
   return (
     <SiteShell>
@@ -59,6 +83,9 @@ export default function CompanyPage() {
             <p className="f-body">Starlane joins them up every morning, from the systems a company already runs, and puts the few things that matter in front of the person who can act, with everything needed to check them.</p>
           </div>
         </div>
+        <div className="f-wrap co-join">
+          <Scene3D plates={JOIN_PLATES} variant="converge" legend={JOIN_LEGEND} label="Six tiles, invoices, supplier bills, bank receipts, stock, open orders and customer promises, beneath one raised plate where Starlane joins them each morning." />
+        </div>
       </section>
 
       <section className="f f-dark f-room" aria-labelledby="c2-h">
@@ -70,6 +97,7 @@ export default function CompanyPage() {
             </div>
             <p className="f-body">Each one is visible in how Starlane behaves, not only in what this page says.</p>
           </div>
+          <Stack3D plates={PRINCIPLE_PLATES} variant="row" label="Five plates in a rising row, one for each principle." />
           <InView as="ol" className="co-pr">
             {PRINCIPLES.map(([k, b], i) => (
               <li key={k} style={{ "--n": i } as React.CSSProperties}>

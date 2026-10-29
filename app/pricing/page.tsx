@@ -56,6 +56,12 @@ const HERO_PLATES: Plate[] = [
   { k: "Step 4", title: "Decide", kind: "top", lines: 2 },
 ];
 
+const INCLUDED_PLATES: Plate[] = [
+  { k: "Read-only", title: "Live connections", lines: 3 },
+  { k: "On your data", title: "Seven features", lines: 3 },
+  { k: "Walked through", title: "Every control", kind: "top", lines: 2 },
+];
+
 export default function PricingPage() {
   return (
     <SiteShell>
@@ -100,6 +106,7 @@ export default function PricingPage() {
             <Index n="02" k="What is included" />
             <h2 id="pr2-h" className="f-h2">The whole product, on your data.</h2>
             <p className="f-body">A pilot is not a cut-down trial. What is off by default stays off until you choose otherwise.</p>
+            <Stack3D plates={INCLUDED_PLATES} size="sm" label="Three layers of a pilot: live read-only connections, the seven features on your data, and a walkthrough of every control." />
           </div>
           <div className="f-main">
             <ul className="c9">

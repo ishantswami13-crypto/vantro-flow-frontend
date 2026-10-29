@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { preload } from "react-dom";
 import { Nav } from "@/components/marketing/Nav";
 import { Footer } from "@/components/marketing/Footer";
@@ -62,12 +63,20 @@ export function PageHero({ kicker, title, lead, children, index, visual }: {
 }
 
 // The closing call, shared by every page so the next step is always the same.
+// The closing band's scene: your systems beneath tomorrow morning's brief.
+const CLOSE_PLATES: Plate[] = [
+  { k: "Read-only", title: "Your books", lines: 3 },
+  { k: "Read-only", title: "Your bank", lines: 3 },
+  { k: "Tomorrow, 07:00", title: "Your morning", kind: "top", lines: 3 },
+];
+
 export function CloseBand({ title = "See it on your own business.", secondary = ["/platform", "See the product"] }: { title?: string; secondary?: [string, string] }) {
   return (
     <section className="f f-dark f-close cb" aria-labelledby="cb-h">
       <div className="f-close-bg" aria-hidden />
       <div className="f-wrap">
         <div className="f-close-copy">
+          <div className="cb-scene" aria-hidden><Stack3D plates={CLOSE_PLATES} size="sm" label="Your books and bank beneath tomorrow morning's brief." /></div>
           <h2 id="cb-h" className="f-display f-display-close">{title}</h2>
           <div className="f-actions">
             <Link href="/access" className="sl-btn sl-btn-solid sl-btn-lg">Request a pilot</Link>

@@ -43,6 +43,14 @@ const HERO_PLATES: Plate[] = [
   { k: "Planned", title: "Commerce", kind: "plan" },
 ];
 
+// Any system with an API, a database or an export, through one connector.
+const EXPORT_PLATES: Plate[] = [
+  { k: "Your system", title: "API", lines: 2 },
+  { k: "Your system", title: "Database", lines: 2 },
+  { k: "Your system", title: "Export", lines: 2 },
+  { k: "Read-only", title: "Connector", kind: "top", lines: 2 },
+];
+
 export default function IntegrationsPage() {
   return (
     <SiteShell>
@@ -88,6 +96,7 @@ export default function IntegrationsPage() {
           <div className="f-side">
             <Index k="Not listed?" />
             <h2 id="i3-h" className="f-h2">If it has an export, it can connect.</h2>
+            <Stack3D plates={EXPORT_PLATES} variant="stairs" size="sm" label="An API, a database and an export stepping up to one read-only connector." />
           </div>
           <div className="f-main">
             <p className="f-lede" style={{ marginTop: 0 }}>A system with an API, a database or an export can be connected for your pilot on the connector framework.</p>
