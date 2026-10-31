@@ -213,6 +213,7 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
       const errorObj = new Error(`${errorMsg} (Error ID: ${requestId})`);
       (errorObj as any).requestId = requestId;
       (errorObj as any).status = res.status;
+      (errorObj as any).code = data?.code;
 
       if (typeof window !== 'undefined') {
         authenticatedFetch('/api/client-errors', {
