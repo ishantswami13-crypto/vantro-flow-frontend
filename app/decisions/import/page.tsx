@@ -16,6 +16,7 @@ import {
   decisionsApi, money, shortDate,
   type ImportCommit, type ImportOptions, type ImportPreview, type LedgerField, type LedgerProfile,
 } from "@/lib/decisions";
+import { isRequiredMapping } from "@/lib/importMappingRequirements";
 
 const FIELD_LABEL: Record<LedgerField, string> = {
   customer: "Customer name",
@@ -31,7 +32,6 @@ const FIELD_LABEL: Record<LedgerField, string> = {
   credit_days: "Credit days",
   phone: "Phone",
 };
-const REQUIRED: LedgerField[] = ["customer", "invoice_date", "amount"];
 const FIELD_ORDER: LedgerField[] = ["customer", "invoice_number", "invoice_date", "due_date", "amount", "paid_amount", "outstanding", "payment_date", "status", "credit_days", "currency", "phone"];
 const DATE_FIELDS: LedgerField[] = ["invoice_date", "due_date", "payment_date"];
 
@@ -274,7 +274,7 @@ export default function ImportPage() {
                   return (
                     <div key={f} className="flex flex-wrap items-center gap-3 px-4 py-3" style={{ borderTop: i ? `1px solid ${C.line}` : undefined, background: i % 2 ? C.wash : "#FFFFFF" }}>
                       <span className="w-[160px] text-[13px]" style={{ color: C.ink, fontWeight: 500 }}>
-                        {FIELD_LABEL[f]}{REQUIRED.includes(f) && <span style={{ color: C.bad }}> *</span>}
+                        {FIELD_LABEL[f]}{isRequiredMapping(f, options.mapping) && <span style={{ color: C.bad }}> *</span>}
                       </span>
                       <select
                         value={chosen}
