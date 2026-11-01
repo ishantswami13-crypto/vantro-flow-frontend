@@ -76,6 +76,7 @@ export default function SecurityPage() {
     <SiteShell>
       <JsonLd data={breadcrumb("/security", "Security and control")} />
       <PageHero
+        tone="slate"
         kicker="Security and control"
         visual={<Stack3D plates={HERO_PLATES} variant="stack" label="Four layers of control: read-only access to your books, a policy check, human approval, and an append-only audit trail." />}
         title={<>Built to be <em>checked.</em></>}

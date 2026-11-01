@@ -65,6 +65,7 @@ export default function PricingPage() {
         mainEntity: FAQ.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
       }]} />
       <PageHero
+        tone="clay"
         kicker="Pricing and pilots"
         visual={<Stack3D plates={HERO_PLATES} variant="stairs" label="Four steps rising: apply, connect read-only, mornings on your own data, then decide." />}
         title={<>Start with a pilot, <em>on your own books.</em></>}
