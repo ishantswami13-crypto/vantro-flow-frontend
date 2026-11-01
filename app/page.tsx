@@ -1,12 +1,13 @@
 import "./landing.css";
 import "./start.css";
 import "./site.css";
+import "./film.css";
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { SITE, SITE_URL, pageMetadata } from "@/lib/site";
 import { JsonLd } from "@/components/marketing/JsonLd";
 import { SiteShell, CloseBand } from "@/components/marketing/site/Site";
-import { HeroScene } from "@/components/marketing/site/Tour";
+import { HeroFilm } from "@/components/marketing/site/HeroFilm";
 import { Scene3D, Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { WatchRoom } from "@/components/marketing/home/Rooms";
 
@@ -79,7 +80,7 @@ export const metadata: Metadata = pageMetadata({
   description: HOME_DESCRIPTION,
 });
 
-export const viewport: Viewport = { themeColor: "#0F0E0D" };
+export const viewport: Viewport = { themeColor: "#0A0908" };
 
 // Who publishes the site, the site itself, and the product, for search engines.
 const STRUCTURED = {
@@ -118,21 +119,30 @@ export default function LandingPage() {
   return (
     <SiteShell>
       <JsonLd data={[STRUCTURED, { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQ.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) }]} />
-      <header className="f f-dark ex-hero">
-        <div className="f-wrap">
-          <h1 className="ex-h">
-            <span>Who owes you.</span> <span>Who broke a promise.</span> <span>Who to call <em>today.</em></span>
-          </h1>
-          <p className="ex-lead">
-            A morning brief from your TallyPrime, bank statements and stock. Every figure sourced. Nothing sent without your approval.
-          </p>
-          <div className="ex-actions">
-            <Link href="/access" className="sl-btn sl-btn-solid sl-btn-lg">Request a pilot</Link>
-            <Link href="#brief" className="f-link">See a sample brief<span aria-hidden>→</span></Link>
+      <header className="fh">
+        <div className="fh-sky" aria-hidden>
+          <i className="fh-orb fh-orb-a" /><i className="fh-orb fh-orb-b" /><i className="fh-orb fh-orb-c" />
+          <i className="fh-stars" /><i className="fh-horizon" /><i className="fh-grain" />
+        </div>
+        <div className="fh-wrap">
+          <div className="fh-copy">
+            <p className="fh-eyebrow"><span>Private pilots</span>For businesses that run on TallyPrime</p>
+            <h1 className="fh-h">
+              <span>Who owes you.</span> <span className="fh-dim">Who broke a promise.</span> <span>Who to call <em>today.</em></span>
+            </h1>
+            <div className="fh-side">
+              <p className="fh-lead">
+                A morning brief from your TallyPrime, bank statements and stock. Every figure sourced. Nothing sent without your approval.
+              </p>
+              <div className="fh-actions">
+                <Link href="/access" className="sl-btn sl-btn-solid sl-btn-lg fh-cta">Request a pilot</Link>
+                <a href="#film" className="fh-watch"><span className="fh-watch-i" aria-hidden><svg viewBox="0 0 16 16"><path d="M5 3.2v9.6a.5.5 0 0 0 .77.42l7.4-4.8a.5.5 0 0 0 0-.84l-7.4-4.8A.5.5 0 0 0 5 3.2Z" /></svg></span>Watch the film<span className="fh-watch-t num">0:31</span></a>
+              </div>
+            </div>
           </div>
-          <div className="ex-shot"><HeroScene /></div>
-          <div className="ex-works">
-            <h2 className="ex-works-k">Works with what you already run</h2>
+          <div id="film" className="fh-film"><HeroFilm /></div>
+          <div className="fh-works">
+            <h2 className="fh-works-k">Works with what you already run</h2>
             <ul>{LIVE.map((n) => <li key={n}>{n}</li>)}</ul>
           </div>
         </div>
