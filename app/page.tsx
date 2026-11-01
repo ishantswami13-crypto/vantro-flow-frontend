@@ -6,10 +6,10 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { SITE, SITE_URL, pageMetadata } from "@/lib/site";
 import { JsonLd } from "@/components/marketing/JsonLd";
-import { SiteShell, CloseBand } from "@/components/marketing/site/Site";
+import { SiteShell } from "@/components/marketing/site/Site";
 import { HeroFilm } from "@/components/marketing/site/HeroFilm";
-import { Scene3D, Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
-import { WatchRoom } from "@/components/marketing/home/Rooms";
+import { HomeTabs } from "@/components/marketing/home2/Tabs";
+import { Texture } from "@/components/marketing/home2/Texture";
 
 // Starlane, public homepage. Deliberately short: the promise, the product,
 // three rules, the morning view, the approval, and questions. The detail lives
@@ -19,27 +19,8 @@ import { WatchRoom } from "@/components/marketing/home/Rooms";
 // Live connections by name (registry status "live"); public feeds are opt-in per pilot.
 const LIVE = ["TallyPrime", "Excel", "CSV", "Google Sheets", "Bank statements", "Stock exports"];
 
-const LAYERS: Plate[] = [
-  { k: "Source", title: "TallyPrime", lines: 4 },
-  { k: "Source", title: "Bank statements", lines: 3 },
-  { k: "Source", title: "Stock", lines: 3 },
-  { k: "Starlane", title: "Morning brief", kind: "top", lines: 4 },
-];
-const LAYERS_LEGEND: Array<[string, string]> = [
-  ["TallyPrime", "Read through a local bridge, export only."],
-  ["Bank statements", "Imported as statement files."],
-  ["Stock", "Levels and movements, from your exports."],
-  ["Morning brief", "What changed since yesterday, with the records behind it."],
-];
 
 // One change, start to finish, on the sample business.
-const PATH: Plate[] = [
-  { k: "07:42", title: "Promise missed", tone: "risk" },
-  { k: "Evidence", title: "3 invoices, 47 days" },
-  { k: "Recommended", title: "Firm reminder" },
-  { k: "You", title: "Approve", kind: "top" },
-  { k: "8 days later", title: "₹6,00,000 received", tone: "ok" },
-];
 const PATH_STEPS: Array<[string, string]> = [
   ["Raised", "Gupta Traders missed a second payment promise."],
   ["Shown", "Three open invoices, 47 days overdue, each from TallyPrime."],
@@ -48,16 +29,20 @@ const PATH_STEPS: Array<[string, string]> = [
   ["Checked", "The books show ₹6,00,000 received against INV-1042."],
 ];
 
-const RULE_PLATES: Plate[][] = [
-  [{ k: "Read-only", title: "Your books", lines: 4 }, { k: "Starlane", title: "Reads", kind: "top", lines: 2 }],
-  [{ k: "Fact", title: "Fact", lines: 2 }, { k: "Calculated", title: "Calculation", lines: 2 }, { k: "Every figure", title: "Sourced", kind: "top", lines: 2 }],
-  [{ k: "Draft", title: "Reminder", lines: 3 }, { k: "You", title: "Approve", kind: "top", lines: 2 }],
-];
 
 const RULES = [
   ["Read-only.", "Starlane reads TallyPrime, bank statements and stock. Nothing in your books is created, changed or deleted."],
   ["Sourced.", "Every figure is marked fact, calculation, assumption or estimate, with the record it came from."],
   ["Approved.", "Nothing reaches a customer until you approve the exact text, and it is sent once."],
+];
+
+const RULE_TONES = ["moss", "slate", "clay"] as const;
+
+const FACTS: Array<[string, string, string]> = [
+  ["0", "writes to your books", "Connections are read-only. Nothing in TallyPrime is created, changed or deleted."],
+  ["4", "kinds of figure", "Fact, calculation, assumption or estimate, each with the record it came from."],
+  ["1", "approval per message", "Every reminder waits for you and is sent once, exactly as written."],
+  ["07:42", "brief on your phone", "What changed overnight, before the working day starts. Sample time."],
 ];
 
 const FAQ: Array<[string, string]> = [
@@ -136,63 +121,95 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <section className="f f-light ex-layers" aria-labelledby="ex-layers-h">
-        <div className="f-wrap">
-          <div className="ex-head">
-            <h2 id="ex-layers-h" className="ex-h2">Three systems. One morning view.</h2>
-            <p className="ex-sub">Starlane reads each one, read-only, and keeps a single record of what happened between customers, suppliers, stock and cash.</p>
+      <div className="hp">
+        <section className="hp-sec hp-intro" aria-label="What Starlane is">
+          <div className="hp-wrap">
+            <p className="hp-kicker">Starlane</p>
+            <p className="hp-statement">
+              Starlane reads your TallyPrime, bank statements and stock overnight, <span>raises the few changes that matter, shows the record behind every figure, and waits for you before anything reaches a customer.</span>
+            </p>
           </div>
-          <Scene3D plates={LAYERS} legend={LAYERS_LEGEND} label="TallyPrime, bank statements and stock, stacked as layers beneath one morning brief." />
-        </div>
-      </section>
+        </section>
 
-
-      <section id="brief" className="f f-dark ex-sec" aria-labelledby="ex-watch-h">
-        <div className="f-wrap ex-head">
-          <h2 id="ex-watch-h" className="ex-h2">Four things changed overnight. You see those four.</h2>
-          <p className="ex-sub">Only material changes are raised, each with its exposure and the records behind it. Everything else stays quiet.</p>
-        </div>
-        <div className="f-bleed"><WatchRoom /></div>
-      </section>
-
-      <section className="f f-light ex-rules" aria-labelledby="ex-rules-h">
-        <div className="f-wrap">
-          <h2 id="ex-rules-h" className="ex-h2">Three rules it never breaks.</h2>
-          <ol className="ex-tri">
-            {RULES.map(([k, v], i) => <li key={k}><Stack3D plates={RULE_PLATES[i]} size="sm" label={`${k} ${v}`} /><h3>{k}</h3><p>{v}</p></li>)}
-          </ol>
-          <p className="ex-more"><Link href="/security" className="f-link">Security and control<span aria-hidden>→</span></Link></p>
-        </div>
-      </section>
-
-      <section className="f f-dark ex-sec ex-path" aria-labelledby="ex-path-h">
-        <div className="f-wrap">
-          <div className="ex-head">
-            <h2 id="ex-path-h" className="ex-h2">One change, start to finish.</h2>
-            <p className="ex-sub">Raised, shown with its evidence, proposed, approved by you, then checked against the books. Sample data on a fictional business.</p>
+        <section className="hp-sec" aria-labelledby="hp-do-h">
+          <div className="hp-wrap">
+            <div className="hp-head">
+              <h2 id="hp-do-h" className="hp-h2">Built for the owner&apos;s morning</h2>
+              <p className="hp-sub">One view across receivables, payables and stock, read-only, with every figure sourced.</p>
+            </div>
+            <HomeTabs />
           </div>
-          <Stack3D plates={PATH} variant="row" label="Five plates in a rising path: promise missed, the evidence, the recommended reminder, your approval, and ₹6,00,000 received." />
-          <ol className="ex-steps">
-            {PATH_STEPS.map(([k, v], i) => <li key={k}><span className="num">{String(i + 1).padStart(2, "0")}</span><h3>{k}</h3><p>{v}</p></li>)}
-          </ol>
-        </div>
-      </section>
+        </section>
 
-      <section id="faq" className="f f-light ex-faq" aria-labelledby="fq-h">
-        <div className="f-wrap ex-split">
-          <h2 id="fq-h" className="ex-h2">Questions owners ask.</h2>
-          <div className="fq-list">
-            {FAQ.map(([q, a]) => (
-              <details key={q}>
-                <summary>{q}</summary>
-                <p>{a}</p>
-              </details>
-            ))}
+        <section className="hp-sec hp-facts" aria-labelledby="hp-facts-h">
+          <div className="hp-wrap">
+            <h2 id="hp-facts-h" className="hp-h2">How it behaves, every day</h2>
+            <ul className="hp-stats">
+              {FACTS.map(([n, k, v]) => <li key={k}><p className="hp-stat-n">{n}</p><p className="hp-stat-k">{k}</p><p className="hp-stat-v">{v}</p></li>)}
+            </ul>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <CloseBand title="Fewer surprises. Faster cash." />
+        <section className="hp-sec" aria-labelledby="hp-rules-h">
+          <div className="hp-wrap">
+            <div className="hp-head hp-head-row">
+              <h2 id="hp-rules-h" className="hp-h2">Three rules it never breaks</h2>
+              <Link href="/security" className="hp-btn-line">Security and control</Link>
+            </div>
+            <ol className="hp-cards">
+              {RULES.map(([k, v], i) => (
+                <li key={k}>
+                  <div className="hp-card-art"><Texture id={`hp-rule-${i}`} tone={RULE_TONES[i]} seed={7 + i * 9} /><span className="hp-card-num">0{i + 1}</span></div>
+                  <h3>{k}</h3>
+                  <p>{v}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="hp-sec hp-path" aria-labelledby="hp-path-h">
+          <div className="hp-wrap">
+            <div className="hp-head">
+              <h2 id="hp-path-h" className="hp-h2">One change, start to finish</h2>
+              <p className="hp-sub">Raised, shown with its evidence, proposed, approved by you, then checked against the books. Sample data on a fictional business.</p>
+            </div>
+            <ol className="hp-steps">
+              {PATH_STEPS.map(([k, v], i) => <li key={k}><span className="hp-step-n">{String(i + 1).padStart(2, "0")}</span><h3>{k}</h3><p>{v}</p></li>)}
+            </ol>
+          </div>
+        </section>
+
+        <section id="faq" className="hp-sec" aria-labelledby="fq-h">
+          <div className="hp-wrap hp-split">
+            <h2 id="fq-h" className="hp-h2">Questions owners ask</h2>
+            <div className="hp-faq">
+              {FAQ.map(([q, a]) => (
+                <details key={q}>
+                  <summary>{q}<i aria-hidden /></summary>
+                  <p>{a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="hp-sec hp-close" aria-labelledby="hp-close-h">
+          <div className="hp-wrap">
+            <div className="hp-close-panel">
+              <Texture id="hp-close-tx" tone="moss" seed={17} />
+              <div className="hp-close-copy">
+                <h2 id="hp-close-h">See it on your own business.</h2>
+                <p>Private pilots for businesses that run on TallyPrime. Read-only connections, and nothing is sent without your approval.</p>
+                <div className="hp-close-act">
+                  <Link href="/access" className="hp-btn-light">Request a pilot</Link>
+                  <Link href="/platform" className="hp-btn-ghost">See the product</Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </SiteShell>
   );
 }
