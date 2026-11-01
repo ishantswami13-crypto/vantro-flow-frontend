@@ -80,7 +80,7 @@ export const metadata: Metadata = pageMetadata({
   description: HOME_DESCRIPTION,
 });
 
-export const viewport: Viewport = { themeColor: "#0A0908" };
+export const viewport: Viewport = { themeColor: "#F8F7F4" };
 
 // Who publishes the site, the site itself, and the product, for search engines.
 const STRUCTURED = {
@@ -117,32 +117,20 @@ const STRUCTURED = {
 
 export default function LandingPage() {
   return (
-    <SiteShell>
+    <SiteShell navTone="light">
       <JsonLd data={[STRUCTURED, { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQ.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) }]} />
-      <header className="fh">
-        <div className="fh-sky" aria-hidden>
-          <i className="fh-orb fh-orb-a" /><i className="fh-orb fh-orb-b" /><i className="fh-orb fh-orb-c" />
-          <i className="fh-stars" /><i className="fh-horizon" /><i className="fh-grain" />
-        </div>
-        <div className="fh-wrap">
-          <div className="fh-copy">
-            <p className="fh-eyebrow"><span>Private pilots</span>For businesses that run on TallyPrime</p>
-            <h1 className="fh-h">
-              <span>Who owes you.</span> <span className="fh-dim">Who broke a promise.</span> <span>Who to call <em>today.</em></span>
-            </h1>
-            <div className="fh-side">
-              <p className="fh-lead">
-                A morning brief from your TallyPrime, bank statements and stock. Every figure sourced. Nothing sent without your approval.
-              </p>
-              <div className="fh-actions">
-                <Link href="/access" className="sl-btn sl-btn-solid sl-btn-lg fh-cta">Request a pilot</Link>
-                <a href="#film" className="fh-watch"><span className="fh-watch-i" aria-hidden><svg viewBox="0 0 16 16"><path d="M5 3.2v9.6a.5.5 0 0 0 .77.42l7.4-4.8a.5.5 0 0 0 0-.84l-7.4-4.8A.5.5 0 0 0 5 3.2Z" /></svg></span>Watch the film<span className="fh-watch-t num">0:31</span></a>
-              </div>
+      <header className="hv">
+        <div className="hv-wrap">
+          <div className="hv-top">
+            <h1 className="hv-h"><span>Who owes you.</span> <span>Who to call today.</span></h1>
+            <div className="hv-side">
+              <p className="hv-lead">Owners who run on TallyPrime see the few changes worth their attention each morning, with the evidence behind every figure.</p>
+              <Link href="/access" className="hv-cta">Request a pilot</Link>
             </div>
           </div>
-          <div id="film" className="fh-film"><HeroFilm /></div>
-          <div className="fh-works">
-            <h2 className="fh-works-k">Works with what you already run</h2>
+          <div id="film" className="hv-film"><HeroFilm /></div>
+          <div className="hv-works">
+            <h2 className="hv-works-k">Works with what you already run</h2>
             <ul>{LIVE.map((n) => <li key={n}>{n}</li>)}</ul>
           </div>
         </div>

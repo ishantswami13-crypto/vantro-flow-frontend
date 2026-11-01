@@ -31,22 +31,19 @@ export default function CookieBanner() {
 
   if (!visible) return null;
 
-  // Colours come from --ck-* variables so a page can restyle the notice to its
-  // own surface (the public site sets a dark variant in start.css).
+  // A centred card that rises in over the page. Colours come from --ck-*
+  // variables so a page can restyle the notice to its own surface.
   return (
-    <div
-      role="region"
-      aria-label="Cookie consent"
-      className="cookie-consent fixed bottom-4 right-4 left-4 sm:left-auto w-auto sm:w-[380px] z-[300] cookie-slide-up"
-    >
-      <div className="cookie-card flex flex-col gap-3 px-4 py-3.5 rounded-xl">
-        <p className="text-xs leading-relaxed">
-          We use cookies to improve your experience and analyse usage.{" "}
-          <Link href="/privacy" className="underline">Privacy policy</Link>
+    <div role="region" aria-label="Cookie consent" className="cookie-consent cookie-rise">
+      <div className="cookie-card">
+        <p className="cookie-title">We use cookies</p>
+        <p className="cookie-text">
+          By choosing &ldquo;Accept all&rdquo;, you agree to cookies that help us understand how the site is used. Starlane works the same if you reject them.
         </p>
-        <div className="flex items-center justify-end gap-2 shrink-0">
-          <button type="button" onClick={decline} className="cookie-quiet px-3 py-1.5 rounded-lg text-xs font-medium">Decline</button>
-          <button type="button" onClick={accept} className="cookie-solid px-3.5 py-1.5 rounded-lg text-xs font-semibold">Accept all</button>
+        <div className="cookie-actions">
+          <button type="button" onClick={accept} className="cookie-btn">Accept all</button>
+          <button type="button" onClick={decline} className="cookie-btn">Reject all</button>
+          <Link href="/privacy" className="cookie-btn">Privacy policy</Link>
         </div>
       </div>
     </div>

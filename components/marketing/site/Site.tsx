@@ -12,13 +12,13 @@ import { MotionGate } from "@/components/marketing/home/InView";
 // Preloaded so the hero renders in its own type on first paint.
 const FONTS = ["newsreader-normal-latin", "newsreader-italic-latin", "plus-jakarta-sans-normal-latin"];
 
-export function SiteShell({ children }: { children: React.ReactNode }) {
+export function SiteShell({ children, navTone = "dark" }: { children: React.ReactNode; navTone?: "light" | "dark" }) {
   for (const f of FONTS) preload(`/fonts/${f}.woff2`, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
   return (
     <div className="sl sl-start">
       <MotionGate />
       <a className="sl-skip" href="#main">Skip to content</a>
-      <Nav tone="dark" />
+      <Nav tone={navTone} />
       <main id="main">{children}</main>
       <Footer tone="dark" />
     </div>
