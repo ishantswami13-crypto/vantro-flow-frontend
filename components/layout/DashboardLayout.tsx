@@ -161,16 +161,16 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-bg">
+    <div className="hv-app flex h-screen overflow-hidden">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className="hv-canvas flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onMenuToggle={() => setSidebarOpen(true)} pageTitle={pageTitle} />
 
         {/* Demo mode notice — a quiet horizontal disclosure strip, not an
             all-caps terminal-style alert. Truthful, low-key, sentence case. */}
         {isDemo && (
-          <div className="flex items-center justify-between gap-3 px-4 py-1.5 shrink-0" style={{ background: "#F7F7F4", borderBottom: "1px solid #EBEAE6" }}>
+          <div className="flex items-center justify-between gap-3 px-4 py-1.5 shrink-0" style={{ background: "#F1EFE9", borderBottom: "1px solid #E4E1DA" }}>
             <span className="text-xs flex items-center gap-1.5" style={{ color: "#6E6E69" }}>
               <FiInfo size={11} />
               Simulated demonstration — sample data, not your business

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import StarlaneMark from "@/components/brand/StarlaneMark";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FiLogOut, FiX, FiUser, FiSliders, FiCommand } from "react-icons/fi";
@@ -178,10 +177,9 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           open ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >
-        {/* Wordmark and notifications */}
-        <div className="flex items-center justify-between shrink-0" style={{ padding: "2px 6px 18px 8px" }}>
+        {/* Wordmark, notifications and search, as one quiet row */}
+        <div className="flex items-center justify-between shrink-0" style={{ padding: "4px 4px 22px 10px" }}>
           <Link href="/bridge" onClick={onClose} aria-label="Starlane home" className="sb-mark">
-            <StarlaneMark size={22} />
             Starlane
           </Link>
           <div className="flex items-center" style={{ gap: 2 }}>
@@ -195,36 +193,30 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             >
               <IconBell size={15} />
               {pendingCount !== null && pendingCount > 0 && (
-                <span className="absolute" style={{ width: 5, height: 5, top: 5, right: 6, background: "#A64F4B" }} />
+                <span className="absolute rounded-full" style={{ width: 6, height: 6, top: 6, right: 7, background: "#D9776F" }} />
               )}
             </Link>
+            <button onClick={() => setSearchOpen(true)} className="sb-icon-btn" aria-label="Search Starlane (Ctrl+K)" title="Search (Ctrl+K)">
+              <IconSearch size={15} />
+            </button>
             <button aria-label="Close menu" onClick={onClose} className="sb-icon-btn lg:hidden">
               <FiX size={14} />
             </button>
           </div>
         </div>
 
-        {/* Ask and search, the two things you start with */}
-        <div className="shrink-0 flex flex-col" style={{ gap: 6, marginBottom: 18 }}>
-          <Link href="/bridge" onClick={onClose} className="sb-ask">
-            <IconPlus size={14} />
-            <span className="flex-1">New question</span>
-          </Link>
-          <button onClick={() => setSearchOpen(true)} className="sb-search" aria-label="Search Starlane (Ctrl+K)">
-            <IconSearch size={14} />
-            <span className="flex-1 text-left">Search</span>
-            <kbd>⌘K</kbd>
-          </button>
-        </div>
-
         <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0" style={{ margin: "0 -4px", padding: "0 4px" }}>
-          <nav aria-label="Primary" className="flex flex-col" style={{ gap: 1 }}>
+          <nav aria-label="Primary" className="flex flex-col" style={{ gap: 2 }}>
+            <Link href="/bridge" onClick={onClose} className="sb-row sb-new">
+              <IconPlus size={16} />
+              <span className="flex-1 truncate">New question</span>
+            </Link>
             {V32_NAV_ITEMS.map(n => (
               <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
             ))}
           </nav>
 
-          <nav aria-label="Workspace" className="flex flex-col" style={{ gap: 1, marginTop: 18 }}>
+          <nav aria-label="Workspace" className="flex flex-col" style={{ gap: 2, marginTop: 26 }}>
             <p className="sb-label">Workspace</p>
             {V32_SECONDARY_NAV_ITEMS.map(n => (
               <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
@@ -242,7 +234,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           </nav>
 
           {recent.length > 0 && (
-            <nav aria-label="Recent conversations" className="flex flex-col" style={{ gap: 1, marginTop: 18 }}>
+            <nav aria-label="Recent conversations" className="flex flex-col" style={{ gap: 2, marginTop: 26 }}>
               <p className="sb-label">Recent</p>
               {recent.map(t => {
                 const active = pathname === `/scan/${t.id}`;
@@ -267,7 +259,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               ref={moreRef}
               className="sb-flyout fixed z-40 overflow-hidden pop-in"
               style={{
-                left: typeof window !== "undefined" && window.innerWidth < 600 ? 12 : 252,
+                left: typeof window !== "undefined" && window.innerWidth < 600 ? 12 : 256,
                 top: Math.max(12, (moreBtnRef.current?.getBoundingClientRect().top ?? 0) - 160),
               }}
             >
@@ -314,7 +306,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </div>
 
         {/* Settings and the account */}
-        <div ref={accountRef} className="relative shrink-0" style={{ borderTop: "1px solid rgba(25,25,23,0.08)", paddingTop: 8, marginTop: 8 }}>
+        <div ref={accountRef} className="relative shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 10, marginTop: 10 }}>
           <NavRow href="/settings" label="Settings" Icon={IconSettings} active={isActive("/settings")} onClick={onClose} />
           <button
             onClick={() => setAccountOpen(v => !v)}

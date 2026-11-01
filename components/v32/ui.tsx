@@ -31,7 +31,8 @@ export const V = {
   accent: "var(--accent, #696D86)",
   serif: "'Newsreader', Georgia, serif",
   mono: "'Plus Jakarta Sans', system-ui, sans-serif",
-  meta: "'IBM Plex Mono', ui-monospace, monospace",
+  // Small labels use the UI sans in sentence case, as Harvey does.
+  meta: "'Plus Jakarta Sans', system-ui, sans-serif",
 };
 
 /** Page title row: Fraunces 26px, an optional one-line subtitle and a right slot. */
@@ -45,8 +46,8 @@ export function PageHeader({ title, subtitle, right, children }: {
     <div className="fade-once">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 40, lineHeight: 1.05, letterSpacing: "-0.03em", color: V.ink }}>{title}</h1>
-          {subtitle && <div style={{ fontSize: 15, color: V.secondary, marginTop: 10, lineHeight: 1.5 }}>{subtitle}</div>}
+          <h1 className="hv-title" style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 38, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#0F0E0D" }}>{title}</h1>
+          {subtitle && <div style={{ fontSize: 14.5, color: "#6E6A63", marginTop: 8, lineHeight: 1.5 }}>{subtitle}</div>}
         </div>
         {right && <div className="flex items-center gap-4 shrink-0">{right}</div>}
       </div>
@@ -57,7 +58,7 @@ export function PageHeader({ title, subtitle, right, children }: {
 
 export interface SubnavItem { key: string; label: React.ReactNode; href?: string; count?: number | null }
 
-/** Secondary tab row: 22px gap, divider underneath, the user's accent under the active tab. */
+/** Secondary tabs as Harvey draws them: quiet words, the active one on a soft pill. */
 export function Subnav({ items, active, onChange, label = "Secondary" }: {
   items: SubnavItem[];
   active: string;
@@ -67,25 +68,24 @@ export function Subnav({ items, active, onChange, label = "Secondary" }: {
   // Button items are tabs and need a tablist parent; link items are navigation.
   const tabs = items.some((it) => !it.href);
   return (
-    <nav aria-label={label} role={tabs ? "tablist" : undefined} className="flex items-center overflow-x-auto" style={{ gap: 22, borderBottom: `1px solid ${V.divider}`, marginBottom: 4 }}>
+    <nav aria-label={label} role={tabs ? "tablist" : undefined} className="hv-tabs flex items-center overflow-x-auto" style={{ gap: 4, marginBottom: 4 }}>
       {items.map((it) => {
         const on = it.key === active;
         const style: React.CSSProperties = {
-          padding: "8px 2px", fontSize: 13, fontWeight: on ? 500 : 400, whiteSpace: "nowrap",
-          color: on ? V.ink : V.secondary, borderBottom: `1.5px solid ${on ? V.ink : "transparent"}`,
-          marginBottom: -1, background: "none",
+          padding: "5px 11px", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", borderRadius: 6,
+          color: on ? "#0F0E0D" : "#6E6A63", background: on ? "#ECEAE4" : "transparent",
         };
         const content = (
           <>
             {it.label}
-            {it.count != null && <span style={{ fontFamily: V.meta, fontSize: 10, color: on ? "#F6F4EF" : V.body, background: on ? V.ink : "rgba(25,25,23,0.07)", borderRadius: 999, padding: "1px 6px", marginLeft: 6, verticalAlign: "1px" }}>{it.count}</span>}
+            {it.count != null && <span style={{ fontSize: 12, fontWeight: 500, color: on ? "#3F3D39" : "#8F8A81", marginLeft: 5 }}>({it.count})</span>}
           </>
         );
         if (it.href) {
-          return <Link key={it.key} href={it.href} aria-current={on ? "page" : undefined} className="hover-dim" style={style}>{content}</Link>;
+          return <Link key={it.key} href={it.href} aria-current={on ? "page" : undefined} className="hv-tab" style={style}>{content}</Link>;
         }
         return (
-          <button key={it.key} type="button" role="tab" aria-selected={on} onClick={() => onChange?.(it.key)} className="hover-dim" style={style}>
+          <button key={it.key} type="button" role="tab" aria-selected={on} onClick={() => onChange?.(it.key)} className="hv-tab" style={style}>
             {content}
           </button>
         );
@@ -94,10 +94,10 @@ export function Subnav({ items, active, onChange, label = "Secondary" }: {
   );
 }
 
-/** Uppercase section label (10.5–11px, letter-spacing 1px). */
+/** Quiet section label: small grey sans, sentence case. */
 export function Label({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={className} style={{ fontFamily: V.meta, fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: V.tertiary, ...style }}>
+    <div className={className} style={{ fontFamily: V.meta, fontSize: 12.5, fontWeight: 500, color: "#6E6A63", ...style }}>
       {children}
     </div>
   );
@@ -150,7 +150,7 @@ export function Chevron({ size = 14 }: { size?: number }) {
 /** White card: 1px rgba(25,25,23,0.10) border, 8px radius, no shadow. */
 export function Card({ children, className = "", style, lift = false }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; lift?: boolean }) {
   return (
-    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 12, boxShadow: "0 1px 2px rgba(25,25,23,0.04), 0 14px 34px -22px rgba(25,25,23,0.22)", ...style }}>
+    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "#FFFFFF", border: "1px solid #E4E1DA", borderRadius: 10, boxShadow: "0 1px 2px rgba(15,14,13,0.03)", ...style }}>
       {children}
     </div>
   );
@@ -170,18 +170,18 @@ export function Button({ children, onClick, primary, disabled, type = "button", 
 }) {
   const cls = `${disabled ? "" : primary ? "btn-primary-v32" : "btn-secondary-v32"} inline-flex items-center justify-center gap-1.5 whitespace-nowrap ${className}`;
   const style: React.CSSProperties = {
-    padding: small ? "6px 12px" : "9px 14px", borderRadius: 4, fontSize: small ? 12 : 13, fontWeight: 400,
-    background: primary ? "#191917" : "transparent", color: primary ? "#F7F7F4" : V.body,
-    border: `1px solid ${primary ? "#191917" : V.button}`, opacity: disabled ? 0.4 : 1, cursor: disabled ? "default" : "pointer",
+    padding: small ? "6px 12px" : "8px 14px", borderRadius: 6, fontSize: small ? 12.5 : 13.5, fontWeight: 500,
+    background: primary ? "#0F0E0D" : "#FFFFFF", color: primary ? "#FFFFFF" : "#2B2926",
+    border: `1px solid ${primary ? "#0F0E0D" : "#E4E1DA"}`, opacity: disabled ? 0.4 : 1, cursor: disabled ? "default" : "pointer",
   };
   if (href && !disabled) return <Link href={href} className={cls} style={style} title={title}>{children}</Link>;
   return <button type={type} onClick={onClick} disabled={disabled} className={cls} style={style} title={title}>{children}</button>;
 }
 
-/** Table header row (§12): surface-2, 11px uppercase, letter-spacing 0.5px. */
+/** Table header row: small grey sans over a hairline, as in Harvey's tables. */
 export function TableHead({ columns, template, className = "" }: { columns: React.ReactNode[]; template: string; className?: string }) {
   return (
-    <div className={`hidden md:grid ${className}`} style={{ gridTemplateColumns: template, padding: "10px 14px", background: V.surface2, fontFamily: V.meta, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: V.secondary }}>
+    <div className={`hidden md:grid ${className}`} style={{ gridTemplateColumns: template, padding: "10px 14px", background: "transparent", borderBottom: "1px solid #E4E1DA", fontFamily: V.meta, fontSize: 12, fontWeight: 500, color: "#6E6A63" }}>
       {columns.map((c, i) => <span key={i} style={{ textAlign: i === columns.length - 1 ? "right" : undefined }}>{c}</span>)}
     </div>
   );
@@ -210,7 +210,7 @@ export function EntityRow({ type, name, relevance, metric, href, onClick }: {
   const inner = (
     <>
       <div className="flex-1 min-w-0">
-        <div style={{ fontFamily: V.meta, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: V.tertiary }}>{type}</div>
+        <div style={{ fontFamily: V.meta, fontSize: 11.5, color: "#6E6A63" }}>{type}</div>
         <div style={{ fontSize: 13.5, color: V.ink }}>{name}</div>
         {relevance && <div style={{ fontSize: 12, color: V.secondary }}>{relevance}</div>}
       </div>
@@ -327,8 +327,8 @@ export function IconTile({ children, tone, size = 34 }: { children: React.ReactN
 export function Figure({ value, label, tone }: { value: React.ReactNode; label: React.ReactNode; tone?: string }) {
   return (
     <div className="min-w-0">
-      <div className="figure-in" style={{ fontFamily: V.mono, fontWeight: 500, fontSize: 38, lineHeight: 1, letterSpacing: "-0.035em", color: tone || V.ink, fontVariantNumeric: "tabular-nums" }}>{value}</div>
-      <div style={{ fontFamily: V.meta, fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: V.secondary, marginTop: 10 }}>{label}</div>
+      <div className="figure-in" style={{ fontFamily: V.serif, fontWeight: 400, fontSize: 44, lineHeight: 1, letterSpacing: "-0.02em", color: tone || "#0F0E0D", fontVariantNumeric: "tabular-nums" }}>{value}</div>
+      <div style={{ fontFamily: V.meta, fontSize: 13, color: "#6E6A63", marginTop: 8 }}>{label}</div>
     </div>
   );
 }

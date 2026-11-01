@@ -1127,3 +1127,104 @@ button:disabled { cursor: default; }
 /* The active nav row carries a short ink tick on its left edge. */
 .sb-row.is-active::before { content: ""; position: absolute; left: -1px; top: 9px; bottom: 9px; width: 2px; border-radius: 2px; background: #191917; }
 .sb-mark { gap: 10px; font-size: 21px; }
+
+/* ============================================================
+   HARVEY-STYLE APP THEME (signed-in product only)
+   A near-black sidebar with light words and a soft highlight on the
+   active row, a paper canvas, serif titles and figures, white cards on
+   hairlines, sentence-case grey labels and small tinted status pills.
+   Tokens follow the public site (app/editorial.css): paper #F8F7F4,
+   ink #0F0E0D, hairline #E4E1DA. Everything here is scoped to .hv-app,
+   which DashboardLayout puts on the signed-in shell.
+   ============================================================ */
+.hv-app {
+  --hv-rail: #171614; --hv-rail-hi: #2C2B28; --hv-rail-text: #D9D6D0; --hv-rail-dim: #94908A;
+  --hv-paper: #F8F7F4; --hv-card: #FFFFFF; --hv-ink: #0F0E0D; --hv-body: #3F3D39; --hv-muted: #6E6A63;
+  --hv-line: #E4E1DA; --hv-line-2: #CFCBC2; --hv-wash: #F1EFE9;
+  --meta: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--hv-rail);
+}
+.hv-canvas { background: var(--hv-paper); }
+@media (min-width: 1024px) {
+  .hv-canvas { border-radius: 14px 0 0 14px; box-shadow: -1px 0 0 rgba(255,255,255,0.04); }
+}
+.hv-app .v32-main { background: var(--hv-paper) !important; background-image: none !important; }
+.hv-app .v32-main::before, .hv-app .v32-main::after { display: none; }
+
+/* Sidebar */
+.hv-app .sb { width: 256px; padding: 16px 12px 12px; background: var(--hv-rail); border-right: 0; color: var(--hv-rail-text); }
+.hv-app .sb-mark { gap: 8px; font-family: var(--serif); font-size: 26px; line-height: 1; letter-spacing: -0.02em; color: #F8F7F4; }
+.hv-app .sb-mark:hover { color: #FFFFFF; }
+.hv-app .sb-icon-btn { width: 30px; height: 30px; border-radius: 6px; color: var(--hv-rail-dim); }
+.hv-app .sb-icon-btn:hover { background: rgba(255,255,255,0.07); color: #FFFFFF; }
+.hv-app .sb .sb-row { height: 34px; padding: 0 10px; gap: 11px; border: 0; border-radius: 6px; font-size: 14px; font-weight: 400; color: var(--hv-rail-text); }
+.hv-app .sb .sb-row svg { color: var(--hv-rail-dim); }
+.hv-app .sb .sb-row:hover { background: rgba(255,255,255,0.05); color: #FFFFFF; }
+.hv-app .sb .sb-row:hover svg { color: #E9E6E0; }
+.hv-app .sb .sb-row.is-active { background: var(--hv-rail-hi); box-shadow: none; color: #FFFFFF; font-weight: 400; }
+.hv-app .sb .sb-row.is-active svg { color: #FFFFFF; }
+.hv-app .sb .sb-row.is-active::before { display: none; }
+.hv-app .sb-label { padding: 0 10px 8px; font-family: inherit; font-size: 12.5px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--hv-rail-dim); }
+.hv-app .sb-recent { position: relative; padding: 7px 10px 7px 30px; border-radius: 6px; font-size: 13.5px; color: #C9C6C0; }
+.hv-app .sb-recent::before { content: ""; position: absolute; left: 14px; top: 50%; width: 4px; height: 4px; margin-top: -2px; border-radius: 50%; background: #8F8B84; }
+.hv-app .sb-recent:hover { background: rgba(255,255,255,0.05); color: #FFFFFF; }
+.hv-app .sb-recent.is-active { background: var(--hv-rail-hi); color: #FFFFFF; }
+.hv-app .sb-count { color: var(--hv-rail-dim); }
+.hv-app .sb ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); }
+/* Flyouts stay light, like Harvey's menus. */
+.hv-app .sb .sb-flyout { background: #FFFFFF; border-color: var(--hv-line); box-shadow: 0 16px 40px rgba(15,14,13,0.22); }
+.hv-app .sb .sb-flyout .sb-row { color: var(--hv-body); }
+.hv-app .sb .sb-flyout .sb-row svg { color: var(--hv-muted); }
+.hv-app .sb .sb-flyout .sb-row:hover { background: var(--hv-wash); color: var(--hv-ink); }
+.hv-app .sb .sb-flyout .sb-row.is-active { background: var(--hv-wash); color: var(--hv-ink); }
+.hv-app .sb .sb-flyout .sb-row.is-active svg { color: var(--hv-ink); }
+.hv-app .sb .sb-flyout .sb-label { color: var(--hv-muted); }
+.hv-app .sb .sb-flyout .sb-count { color: var(--hv-muted); }
+
+/* Titles: the display serif. */
+.hv-app main h1 { color: var(--hv-ink); letter-spacing: -0.02em !important; }
+
+/* Labels: sentence case, small grey sans; never mono capitals. */
+.hv-app .meta { font-family: inherit; font-size: 12px !important; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.hv-app .lib-tag { font-family: inherit; font-size: 11.5px; letter-spacing: 0; text-transform: none; color: var(--hv-muted); }
+.hv-app .v32-section-label, .hv-app .section-label { font-family: inherit; font-size: 12.5px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--hv-muted); }
+
+/* Headline figures: big serif numbers. */
+.hv-app .br-figs { border-color: var(--hv-line); border-radius: 10px; box-shadow: none; }
+.hv-app .br-figs > div { border-left-color: var(--hv-line); padding: 20px 22px 22px; }
+.hv-app .br-figs dt { font-family: inherit; font-size: 13px; letter-spacing: 0; text-transform: none; color: var(--hv-muted); }
+.hv-app .br-figs dd { font-family: var(--serif); font-weight: 400; font-size: 44px; letter-spacing: -0.02em; }
+.hv-app .br-fig { font-family: var(--serif); font-weight: 400; font-size: 28px; letter-spacing: -0.015em; }
+.hv-app .metric-value, .hv-app .metric-lg, .hv-app .metric-xl { font-family: var(--serif); font-weight: 400; letter-spacing: -0.02em; }
+
+/* Cards and panels: white on a hairline, a 10px corner, almost no shadow. */
+.hv-app .card, .hv-app .card-premium, .hv-app .card-metric, .hv-app .card-base,
+.hv-app .br-panel, .hv-app .agent-card, .hv-app .lib-card {
+  background: var(--hv-card); border-color: var(--hv-line); border-radius: 10px; box-shadow: 0 1px 2px rgba(15,14,13,0.03);
+}
+.hv-app .hover-lift:hover { transform: none; box-shadow: 0 1px 2px rgba(15,14,13,0.04), 0 8px 24px -16px rgba(15,14,13,0.18); border-color: var(--hv-line-2); }
+.hv-app .row-hover:hover { background: #F6F5F1 !important; }
+
+/* Buttons: ink and square-ish, like "Ask". */
+.hv-app .btn-primary-v32, .hv-app .btn-primary, .hv-app .btn-cta { background: var(--hv-ink) !important; border-color: var(--hv-ink) !important; color: #FFFFFF !important; border-radius: 6px !important; }
+.hv-app .btn-primary-v32:hover, .hv-app .btn-primary:hover, .hv-app .btn-cta:hover { background: #2B2926 !important; border-color: #2B2926 !important; }
+.hv-app .btn-secondary-v32 { background: #FFFFFF !important; border-color: var(--hv-line) !important; color: #2B2926 !important; border-radius: 6px !important; }
+.hv-app .btn-secondary-v32:hover { background: var(--hv-wash) !important; border-color: var(--hv-line-2) !important; }
+
+/* Tabs: a soft pill under the active word. */
+.hv-app .hv-tab { transition: background-color 120ms ease, color 120ms ease; }
+.hv-app .hv-tab:hover { color: var(--hv-ink) !important; background: rgba(15,14,13,0.04); }
+.hv-app .hv-tab[aria-selected="true"]:hover, .hv-app .hv-tab[aria-current="page"]:hover, .hv-app .hv-tab[aria-pressed="true"]:hover { background: #ECEAE4 !important; }
+
+/* Tables: grey sentence-case heads on a hairline. */
+.hv-app .v32-table thead th { font-family: inherit; font-size: 12px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--hv-muted); background: transparent; border-bottom: 1px solid var(--hv-line); }
+.hv-app .v32-table tbody tr { border-bottom-color: #EEECE7; }
+
+/* Inputs and search. */
+.hv-app .page-search { border-radius: 8px; background: #FFFFFF; border-color: var(--hv-line); }
+.hv-app .input-base { border-radius: 8px; }
+
+/* Charts: slate marks, quiet axes. */
+.hv-app .recharts-cartesian-grid-horizontal line { stroke: #ECEAE4; }
+.hv-app .recharts-cartesian-axis-tick-value { fill: #8F8A81; font-size: 11px; }
+.hv-app .recharts-default-tooltip { background: #FFFFFF !important; border: 1px solid var(--hv-line) !important; border-radius: 8px !important; }

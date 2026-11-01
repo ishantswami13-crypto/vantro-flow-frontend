@@ -160,14 +160,15 @@ export default function DecisionsPage() {
         )}
 
         {/* Inbox */}
-        <div className="flex items-center gap-5 mb-1" style={{ borderBottom: `1px solid ${C.line}` }}>
+        <div className="hv-tabs flex items-center gap-1 mb-2">
           {(["active", "closed"] as const).map((s) => (
             <button
               key={s}
               type="button"
+              aria-pressed={scope === s}
               onClick={() => setScope(s)}
-              className="py-2 text-[13px]"
-              style={{ color: scope === s ? C.ink : C.muted, fontWeight: scope === s ? 500 : 400, borderBottom: `2px solid ${scope === s ? C.accent : "transparent"}` }}
+              className="hv-tab text-[13px]"
+              style={{ padding: "5px 11px", borderRadius: 6, fontWeight: 500, color: scope === s ? "#0F0E0D" : "#6E6A63", background: scope === s ? "#ECEAE4" : "transparent" }}
             >
               {s === "active" ? "Open" : "Closed"}
             </button>
