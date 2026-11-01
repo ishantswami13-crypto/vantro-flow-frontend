@@ -48,6 +48,7 @@ export default function IntegrationsPage() {
     <SiteShell>
       <JsonLd data={breadcrumb("/integrations", "Integrations")} />
       <PageHero
+        tone="ink"
         kicker="Integrations"
         visual={<Stack3D plates={HERO_PLATES} variant="grid" label="Nine tiles: TallyPrime, Excel, CSV, Google Sheets, bank statements and stock exports are live and raised; ERP, CRM and commerce are planned and flat." />}
         title={<>Works with the systems <em>you already run.</em></>}

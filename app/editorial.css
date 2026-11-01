@@ -1,0 +1,94 @@
+/* ── Editorial theme for every public page ───────────────────────────────
+ * Paper, ink and painted panels, matching the homepage. Sections that were
+ * dark "rooms" become paper, and their product views sit on painted panels.
+ * Scoped to .sl-ed (set by SiteShell).
+ */
+.sl-start.sl-ed {
+  --paint-moss: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='.6'%3E%3Cstop offset='0' stop-color='%233B4743'/%3E%3Cstop offset='.45' stop-color='%232A3532'/%3E%3Cstop offset='1' stop-color='%234C5753'/%3E%3C/linearGradient%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .93 0 0 0 0 .94 0 0 0 0 .91 0 0 0 7 -3.9'/%3E%3C/filter%3E%3Cfilter id='c' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0028 .004' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 -3.2 2.1'/%3E%3C/filter%3E%3Cmask id='m'%3E%3Crect width='1600' height='900' filter='url(%23c)'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='1600' height='900' fill='url(%23b)'/%3E%3Crect width='1600' height='900' filter='url(%23s)' mask='url(%23m)'/%3E%3C/svg%3E");
+  --paint-slate: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='.6'%3E%3Cstop offset='0' stop-color='%233E4650'/%3E%3Cstop offset='.45' stop-color='%232B3139'/%3E%3Cstop offset='1' stop-color='%2356606B'/%3E%3C/linearGradient%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .93 0 0 0 0 .94 0 0 0 0 .91 0 0 0 7 -3.9'/%3E%3C/filter%3E%3Cfilter id='c' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0028 .004' numOctaves='4' seed='10'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 -3.2 2.1'/%3E%3C/filter%3E%3Cmask id='m'%3E%3Crect width='1600' height='900' filter='url(%23c)'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='1600' height='900' fill='url(%23b)'/%3E%3Crect width='1600' height='900' filter='url(%23s)' mask='url(%23m)'/%3E%3C/svg%3E");
+  --paint-clay: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='.6'%3E%3Cstop offset='0' stop-color='%236B5A4A'/%3E%3Cstop offset='.45' stop-color='%234E4136'/%3E%3Cstop offset='1' stop-color='%23857260'/%3E%3C/linearGradient%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .93 0 0 0 0 .94 0 0 0 0 .91 0 0 0 7 -3.9'/%3E%3C/filter%3E%3Cfilter id='c' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0028 .004' numOctaves='4' seed='17'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 -3.2 2.1'/%3E%3C/filter%3E%3Cmask id='m'%3E%3Crect width='1600' height='900' filter='url(%23c)'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='1600' height='900' fill='url(%23b)'/%3E%3Crect width='1600' height='900' filter='url(%23s)' mask='url(%23m)'/%3E%3C/svg%3E");
+  --paint-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='1' y2='.6'%3E%3Cstop offset='0' stop-color='%232C2B29'/%3E%3Cstop offset='.45' stop-color='%231B1A19'/%3E%3Cstop offset='1' stop-color='%233C3A37'/%3E%3C/linearGradient%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 .93 0 0 0 0 .94 0 0 0 0 .91 0 0 0 7 -3.9'/%3E%3C/filter%3E%3Cfilter id='c' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0028 .004' numOctaves='4' seed='24'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 -3.2 2.1'/%3E%3C/filter%3E%3Cmask id='m'%3E%3Crect width='1600' height='900' filter='url(%23c)'/%3E%3C/mask%3E%3C/defs%3E%3Crect width='1600' height='900' fill='url(%23b)'/%3E%3Crect width='1600' height='900' filter='url(%23s)' mask='url(%23m)'/%3E%3C/svg%3E");  background: #F8F7F4;
+}
+
+/* Paint: a textured panel any element can carry. */
+.sl-start.sl-ed .ed-paint { position: relative; border-radius: 10px; background-color: #2E3935; background-size: cover; background-position: center; isolation: isolate; }
+.sl-start.sl-ed .ed-paint-moss { background-image: var(--paint-moss); }
+.sl-start.sl-ed .ed-paint-slate { background-image: var(--paint-slate); }
+.sl-start.sl-ed .ed-paint-clay { background-image: var(--paint-clay); }
+.sl-start.sl-ed .ed-paint-ink { background-image: var(--paint-ink); }
+
+/* Every surface reads as paper. */
+.sl-start.sl-ed .f-light, .sl-start.sl-ed .f-slab, .sl-start.sl-ed .f-dark, .sl-start.sl-ed .ph {
+  --bg: #F8F7F4; --fg: #0F0E0D; --fg2: #3F3D39; --fg3: #6E6A63;
+  --line: #E4E1DA; --line2: #CFCBC2; --panel: #FFFFFF; --panel-hi: #FFFFFF;
+  --ok: #3A7656; --risk: #B04A38; --warn: #8A6420; --info: #52637A;
+  --sl-ink: var(--fg); --sl-ink-soft: var(--fg2); --sl-bg-raised: #FFFFFF; --sl-line: var(--line); --sl-line-2: var(--line2); --sl-ink-faint: var(--fg3);
+  color-scheme: light; color: var(--fg);
+  background: var(--bg) !important;
+}
+.sl-start.sl-ed .f-slab { --bg: #F1EFE9; }
+.sl-start.sl-ed .f-light::before, .sl-start.sl-ed .f-slab::before, .sl-start.sl-ed .f-dark::before, .sl-start.sl-ed .ph::after, .sl-start.sl-ed .ph::before { display: none !important; }
+.sl-start.sl-ed .f { border-top: 1px solid var(--line); }
+
+/* Light navigation everywhere. */
+.sl-start.sl-ed .sl-nav:not(.sl-nav-dark) { background: #F8F7F4; --sl-ink: #0F0E0D; --sl-ink-soft: #3F3D39; --sl-bg-raised: #F8F7F4; --sl-line: #E4E1DA; --sl-line-2: #CFCBC2; color: #0F0E0D; padding-inline: max(clamp(20px, 2.6vw, 48px), calc((100% - 1820px) / 2)); }
+.sl-start.sl-ed .sl-nav:not(.sl-nav-dark).on { background: rgb(248 247 244 / .92); border-bottom-color: #E4E1DA; }
+.sl-start.sl-ed .sl-nav:not(.sl-nav-dark) .sl-navmid a { font-size: 15px; color: #0F0E0D; }
+.sl-start.sl-ed .sl-nav:not(.sl-nav-dark) .sl-navmid a[aria-current="page"] { text-decoration: underline; text-underline-offset: 6px; }
+.sl-start.sl-ed .sl-nav:not(.sl-nav-dark) .sl-btn.sl-btn-solid { border-radius: 3px; background: #0F0E0D; border-color: #0F0E0D; color: #FFFFFF; height: 44px; padding: 0 18px; font-size: 15px; font-weight: 500; }
+.sl-start.sl-ed .sl-nav:not(.sl-nav-dark) .sl-btn.sl-btn-solid:hover { background: #2B2926; border-color: #2B2926; }
+.sl-start.sl-ed .sl-mobile-menu:not(.sl-menu-dark) { background: #F8F7F4; color: #0F0E0D; }
+
+/* Buttons: square, ink. */
+.sl-start.sl-ed .f .sl-btn.sl-btn-solid, .sl-start.sl-ed .ph .sl-btn.sl-btn-solid { height: 52px; padding: 0 22px; border-radius: 3px; background: #0F0E0D; border-color: #0F0E0D; color: #fff; font-size: 16px; font-weight: 500; }
+.sl-start.sl-ed .f .sl-btn.sl-btn-solid:hover, .sl-start.sl-ed .ph .sl-btn.sl-btn-solid:hover { background: #2B2926; border-color: #2B2926; }
+.sl-start.sl-ed .f-link { color: var(--fg); }
+
+/* Page opening: title left, lead right, then the visual on paint. */
+.sl-start.sl-ed .ph { padding: clamp(72px, 8vw, 132px) 0 clamp(72px, 7vw, 112px); }
+.sl-start.sl-ed .ph .f-index { color: var(--fg3); }
+.sl-start.sl-ed h1.ph-h { font-family: var(--serif) !important; font-weight: 400 !important; font-size: clamp(46px, 5.6vw, 104px) !important; line-height: 1.02 !important; letter-spacing: -0.02em !important; color: var(--fg) !important; }
+.sl-start.sl-ed .ph-h em { font-style: normal; color: #8F8A81; }
+.sl-start.sl-ed .ph-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: clamp(32px, 4vw, 72px); align-items: start; }
+.sl-start.sl-ed .ph-h, .sl-start.sl-ed .ph-side { grid-column: auto !important; }
+.sl-start.sl-ed .ph-side { padding-top: 12px; }
+.sl-start.sl-ed .ph-lead { font-size: clamp(18px, 1.5vw, 24px) !important; line-height: 1.45 !important; color: #2B2926 !important; }
+.sl-start.sl-ed .ph-visual { margin-top: clamp(56px, 6vw, 104px); padding: clamp(40px, 6vw, 112px) clamp(20px, 6vw, 120px); overflow: hidden; }
+.sl-start.sl-ed .ph-visual > * { position: relative; }
+.sl-start.sl-ed .ph-index { border-top-color: var(--fg); }
+.sl-start.sl-ed .ph-index a { font-size: 15px; color: var(--fg2); }
+.sl-start.sl-ed .ph-index a:hover { background: rgb(0 0 0 / .03); color: var(--fg); }
+
+/* Headings: the display serif, larger. */
+.sl-start.sl-ed .f-h2 { font-size: clamp(38px, 4.4vw, 76px) !important; line-height: 1.04 !important; letter-spacing: -0.02em !important; }
+.sl-start.sl-ed .f-lede { font-family: var(--serif); font-size: clamp(22px, 1.8vw, 30px); line-height: 1.3; color: var(--fg); }
+.sl-start.sl-ed .f-body { font-size: 17px; line-height: 1.65; color: var(--fg2); }
+.sl-start.sl-ed .f-index { color: var(--fg3); }
+
+/* Product views that lived in dark rooms now float on painted panels. */
+.sl-start.sl-ed .f-dark .f-bleed, .sl-start.sl-ed .f-room .f-main, .sl-start.sl-ed .ed-on-paint {
+  position: relative; padding: clamp(28px, 4.4vw, 80px); border-radius: 10px; background: #2E3935 var(--paint-moss) center / cover;
+}
+.sl-start.sl-ed .f-room .f-main { background-image: var(--paint-slate); }
+.sl-start.sl-ed .f-dark .f-bleed { width: min(1820px, 100% - 2 * clamp(20px, 2.6vw, 48px)); max-width: none; margin: 0 auto; }
+.sl-start.sl-ed .f-dark .f-bleed > *, .sl-start.sl-ed .f-room .f-main > * { background: #FFFFFF; border-radius: 8px; box-shadow: 0 40px 80px -30px rgb(0 0 0 / .55); }
+
+/* Closing panel, shared by every page. */
+.sl-start.sl-ed .ed-wrap { width: min(1820px, 100% - 2 * clamp(20px, 2.6vw, 48px)); margin: 0 auto; }
+.sl-start.sl-ed .ed-close { padding: clamp(72px, 8vw, 140px) 0; background: #F8F7F4; }
+.sl-start.sl-ed .ed-close-panel { padding: clamp(64px, 9vw, 160px) clamp(28px, 5vw, 96px); overflow: hidden; color: #F4F1EC; }
+.sl-start.sl-ed .ed-close-panel h2 { margin: 0; max-width: 16ch; font-family: var(--serif) !important; font-weight: 400 !important; font-size: clamp(40px, 5vw, 88px) !important; line-height: 1.04 !important; letter-spacing: -0.02em; color: #F8F7F4 !important; }
+.sl-start.sl-ed .ed-close-panel p { margin: 24px 0 0; max-width: 34rem; font-size: clamp(17px, 1.3vw, 21px); line-height: 1.5; color: rgb(244 241 236 / .82); }
+.sl-start.sl-ed .ed-close-act { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 40px; }
+.sl-start.sl-ed .ed-btn-light { display: inline-flex; align-items: center; height: 56px; padding: 0 26px; border-radius: 3px; background: #F8F7F4; color: #0F0E0D; font-size: 17px; font-weight: 500; }
+.sl-start.sl-ed .ed-btn-light:hover { background: #fff; }
+.sl-start.sl-ed .ed-btn-ghost { display: inline-flex; align-items: center; height: 56px; padding: 0 26px; border-radius: 3px; border: 1px solid rgb(248 247 244 / .6); color: #F8F7F4; font-size: 17px; font-weight: 500; }
+.sl-start.sl-ed .ed-btn-ghost:hover { background: rgb(255 255 255 / .1); }
+.sl-start.sl-ed .ed-close-act a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+@media (max-width: 900px) {
+  .sl-start.sl-ed .ph-grid { grid-template-columns: 1fr; }
+  .sl-start.sl-ed .ph-side { margin-top: 24px; }
+  .sl-start.sl-ed .ph-visual { padding: 24px 12px; }
+}
+.sl-start.sl-ed .f-room .f-main > * { padding: clamp(16px, 2vw, 28px); }
