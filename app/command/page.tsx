@@ -78,6 +78,12 @@ function Delta({ now, before, upIsGood = false }: { now: number; before: number;
   );
 }
 
+function IconFilter() {
+  return <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true"><path d="M2.5 4.5h11M4.5 8h7M6.5 11.5h3" /></svg>;
+}
+
+const STEPS: { value: "day" | "week"; label: string }[] = [{ value: "day", label: "Daily" }, { value: "week", label: "Weekly" }];
+
 function IconDownload() {
   return <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true"><path d="M8 2.5v8M4.5 7L8 10.5 11.5 7M3 13.5h10" /></svg>;
 }
@@ -89,6 +95,12 @@ export default function CommandCenterPage() {
   const [range, setRange] = useState<Range>("180");
   const [range2, setRange2] = useState<Range>("180");
   const [rankBy, setRankBy] = useState<"owed" | "overdue">("owed");
+  const [step, setStep] = useState<"day" | "week">("day");
+  const [step2, setStep2] = useState<"day" | "week">("day");
+  // The comparison line on the trend cards: one switch in the header, or each card's filter button.
+  const [line1, setLine1] = useState(true);
+  const [line2, setLine2] = useState(true);
+  const compare = line1 && line2;
 
   const invoicesQ = useQuery({
     queryKey: ["command-invoices", user?.id],
@@ -162,6 +174,10 @@ export default function CommandCenterPage() {
         <header className="cc-head">
           <h1 className="cc-title">{owner} Command Center</h1>
           <div className="cc-actions">
+            <button type="button" role="switch" aria-checked={compare} className="cc-toggle"
+              onClick={() => { setLine1(!compare); setLine2(!compare); }}>
+              <span className="cc-switch" aria-hidden="true" /> Compare
+            </button>
             <Link href="/decisions" className="cc-btn">View all decisions</Link>
             <Link href="/bridge" className="cc-btn cc-btn-ink"><StarlaneMark variant="glyph" size={12} /> Ask Starlane</Link>
           </div>
@@ -184,13 +200,19 @@ export default function CommandCenterPage() {
                 <div className="cc-fig">{loading ? "—" : money(full.owed[last] || 0)} <Delta now={full.owed[last] || 0} before={full.owed[ago] || 0} /></div>
                 <div className="cc-sub">Owed to you</div>
               </div>
-              <PillSelect label="Period" value={range} options={RANGES} onChange={setRange} />
+              <div className="cc-pills">
+                <PillSelect label="Period" value={range} options={RANGES} onChange={setRange} />
+                <PillSelect label="Bars" value={step} options={STEPS} onChange={setStep} />
+              </div>
             </div>
-            <div className="cc-chart"><BarcodeChart data={owedSeries} format={(v) => money(v)} barLabel="Owed" lineLabel="Overdue" /></div>
+            <div className="cc-chart"><BarcodeChart data={owedSeries} weekly={step === "week"} showLine={line1} format={(v) => money(v)} barLabel="Owed" lineLabel="Overdue" /></div>
             <footer className="cc-foot">
-              <Legend items={[{ label: "Owed to you", color: BAR }, { label: "Overdue", color: LINE }]} />
+              <Legend items={[{ label: "Owed to you", color: BAR, glyph: "bars" }, { label: "Overdue", color: LINE, light: true, underline: true }]} />
+              <span className="cc-foot-icons">
+              <button type="button" className="cc-icon" aria-label="Show the overdue line" aria-pressed={line1} title="Show the overdue line" onClick={() => setLine1(!line1)}><IconFilter /></button>
               <button type="button" className="cc-icon" aria-label="Download as CSV" title="Download as CSV"
                 onClick={() => downloadCsv("owed-by-day", ["date", "owed", "overdue"], owedSeries.map((d) => [d.date, Math.round(d.bar), Math.round(d.line)]))}><IconDownload /></button>
+              </span>
             </footer>
           </section>
 
@@ -204,7 +226,7 @@ export default function CommandCenterPage() {
             </div>
             <div className="cc-chart"><PairedBars groups={buckets} /></div>
             <footer className="cc-foot">
-              <Legend items={[{ label: "Share of amount", color: INK }, { label: "Share of invoices", color: SOFT }, { label: "Needs attention", color: ALERT }]} />
+              <Legend items={[{ label: "Share of amount", color: INK }, { label: "Share of invoices", color: SOFT, light: true, underline: true }, { label: "Needs attention", color: ALERT }]} />
               <button type="button" className="cc-icon" aria-label="Download as CSV" title="Download as CSV"
                 onClick={() => downloadCsv("ageing", ["bucket", "amount", "invoices"], buckets.map((b) => [b.label, Math.round(b.amount), b.count]))}><IconDownload /></button>
             </footer>
@@ -217,13 +239,19 @@ export default function CommandCenterPage() {
                 <div className="cc-fig">{loading ? "—" : (full.overdueCount[last] || 0)} <Delta now={full.overdueCount[last] || 0} before={full.overdueCount[ago] || 0} /></div>
                 <div className="cc-sub">Overdue invoices</div>
               </div>
-              <PillSelect label="Period" value={range2} options={RANGES} onChange={setRange2} />
+              <div className="cc-pills">
+                <PillSelect label="Bars" value={step2} options={STEPS} onChange={setStep2} />
+                <PillSelect label="Period" value={range2} options={RANGES} onChange={setRange2} />
+              </div>
             </div>
-            <div className="cc-chart"><BarcodeChart data={countSeries} format={(v) => String(Math.round(v))} barLabel="Overdue invoices" lineLabel="Open invoices" /></div>
+            <div className="cc-chart"><BarcodeChart data={countSeries} weekly={step2 === "week"} showLine={line2} format={(v) => String(Math.round(v))} barLabel="Overdue invoices" lineLabel="Open invoices" /></div>
             <footer className="cc-foot">
-              <Legend items={[{ label: "Overdue", color: BAR }, { label: "Open", color: LINE }]} />
+              <Legend items={[{ label: "Overdue", color: BAR, glyph: "bars" }, { label: "Open", color: LINE, light: true, underline: true }]} />
+              <span className="cc-foot-icons">
+              <button type="button" className="cc-icon" aria-label="Show the open invoices line" aria-pressed={line2} title="Show the open invoices line" onClick={() => setLine2(!line2)}><IconFilter /></button>
               <button type="button" className="cc-icon" aria-label="Download as CSV" title="Download as CSV"
                 onClick={() => downloadCsv("overdue-invoices-by-day", ["date", "overdue", "open"], countSeries.map((d) => [d.date, d.bar, d.line]))}><IconDownload /></button>
+              </span>
             </footer>
           </section>
 
@@ -240,7 +268,7 @@ export default function CommandCenterPage() {
               {top.length > 0 ? <RankBars rows={top} format={(v) => money(v)} /> : <p className="cc-note">{loading ? "Loading…" : "Nothing open."}</p>}
             </div>
             <footer className="cc-foot">
-              <Legend items={[{ label: rankBy === "owed" ? "Owed" : "Overdue", color: "#4E5562" }, { label: "Over 90 days late", color: ALERT }]} />
+              <Legend items={[{ label: rankBy === "owed" ? "Owed" : "Overdue", color: "#4A505B" }, { label: "Over 90 days late", color: ALERT }]} />
               <button type="button" className="cc-icon" aria-label="Download as CSV" title="Download as CSV"
                 onClick={() => downloadCsv("top-customers", ["customer", rankBy], top.map((r) => [r.label, Math.round(r.value)]))}><IconDownload /></button>
             </footer>

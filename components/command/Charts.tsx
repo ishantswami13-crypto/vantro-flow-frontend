@@ -17,6 +17,15 @@ export const LINE = "#CFD1D5";      // the smooth comparison line
 const LABEL = "#8F8A81";
 const GRID = "#EFEDE9";
 
+// Harvey's bars carry a fine film grain: light speckle on the dark bars,
+// darker speckle on the pale ones. A tiled SVG noise, no image files.
+const noise = (rgb: string, a: number) =>
+  `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'><filter id='n' x='0' y='0'><feTurbulence type='fractalNoise' baseFrequency='1.35' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 ${rgb} 0 0 0 0 ${rgb} 0 0 0 0 ${rgb} 0 0 0 ${a} -0.3'/></filter><rect width='48' height='48' filter='url(#n)'/></svg>`)}")`;
+const GRAIN_ON_DARK = noise("1", 0.75);
+const GRAIN_ON_LIGHT = noise("0.45", 0.75);
+export const grain = (color: string, light = false): React.CSSProperties =>
+  ({ backgroundColor: color, backgroundImage: light ? GRAIN_ON_LIGHT : GRAIN_ON_DARK, backgroundSize: "48px 48px" });
+
 export interface DayPoint { date: string; bar: number; line: number }
 
 /** Smooth path through points (Catmull-Rom as cubic Béziers). */
@@ -35,13 +44,16 @@ function smooth(pts: [number, number][]): string {
 /** Hairline bars (one per day, or per few days on long ranges) with a soft
  *  smooth line behind them, as in Harvey's usage charts. Every bar is a 1px
  *  line whatever the width; empty days still show as a dot on the baseline. */
-export function BarcodeChart({ data, height = 170, format, barLabel, lineLabel }: {
-  data: DayPoint[]; height?: number; format: (v: number) => string; barLabel: string; lineLabel: string;
+export function BarcodeChart({ data, height = 170, format, barLabel, lineLabel, showLine = true, weekly = false }: {
+  data: DayPoint[]; height?: number; format: (v: number) => string; barLabel: string; lineLabel: string; showLine?: boolean; weekly?: boolean;
 }) {
   const [hover, setHover] = useState<number | null>(null);
-  // One bar per day up to ~200 bars, so they read as a dense field of hairlines.
+  // About 140 hairlines across the card (Harvey's spacing), or one per week.
   const bins = useMemo(() => {
-    const per = Math.max(1, Math.ceil(data.length / 200));
+    if (!weekly && data.length > 140) {
+      return Array.from({ length: 140 }, (_, i) => data[Math.round((i * (data.length - 1)) / 139)]);
+    }
+    const per = weekly ? 7 : 1;
     const out: DayPoint[] = [];
     for (let i = 0; i < data.length; i += per) {
       const chunk = data.slice(i, i + per);
@@ -49,7 +61,16 @@ export function BarcodeChart({ data, height = 170, format, barLabel, lineLabel }
       out.push({ date: lastPt.date, bar: lastPt.bar, line: lastPt.line });
     }
     return out;
-  }, [data]);
+  }, [data, weekly]);
+  // Bar heights follow a short centred average so the field rises as a smooth
+  // hill rather than in stair steps; the tooltip still shows the exact value.
+  const heights = useMemo(() => {
+    const k = weekly ? 0 : Math.max(2, Math.round(bins.length / 24));
+    return bins.map((_, i) => {
+      const win = bins.slice(Math.max(0, i - k), Math.min(bins.length, i + k + 1));
+      return win.reduce((s, p) => s + p.bar, 0) / win.length;
+    });
+  }, [bins, weekly]);
   const W = 600, H = height, top = 6;
   const n = bins.length;
   const max = Math.max(1, ...bins.map((d) => Math.max(d.bar, d.line))) * 1.04;
@@ -84,9 +105,9 @@ export function BarcodeChart({ data, height = 170, format, barLabel, lineLabel }
           const i = Math.floor(((e.clientX - r.left) / r.width) * n);
           setHover(i >= 0 && i < n ? i : null);
         }}>
-        <path d={smooth(linePts)} fill="none" stroke={LINE} strokeWidth={1.5} vectorEffect="non-scaling-stroke" strokeLinecap="round" />
+        {showLine && <path d={smooth(linePts)} fill="none" stroke={LINE} strokeWidth={1.5} vectorEffect="non-scaling-stroke" strokeLinecap="round" />}
         {bins.map((d, i) => {
-          const yy = Math.min(y(d.bar), H - 1.5);
+          const yy = Math.min(y(heights[i]), H - 1.5);
           return <line key={d.date} x1={x(i)} x2={x(i)} y1={H} y2={yy} stroke={hover === i ? "#0F0E0D" : BAR} strokeWidth={1} vectorEffect="non-scaling-stroke" />;
         })}
       </svg>
@@ -99,7 +120,7 @@ export function BarcodeChart({ data, height = 170, format, barLabel, lineLabel }
         <div className="pointer-events-none absolute" style={{ left: `${Math.min(70, (hover! / n) * 100)}%`, top: 0, background: "#FFFFFF", border: "1px solid #E4E1DA", borderRadius: 8, padding: "6px 9px", fontSize: 11.5, color: "#3F3D39", boxShadow: "0 6px 18px -10px rgba(15,14,13,0.25)", whiteSpace: "nowrap" }}>
           <div style={{ color: "#8F8A81" }}>{new Date(h.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
           <div>{barLabel}: <b style={{ fontWeight: 500 }}>{format(h.bar)}</b></div>
-          <div>{lineLabel}: <b style={{ fontWeight: 500 }}>{format(h.line)}</b></div>
+          {showLine && <div>{lineLabel}: <b style={{ fontWeight: 500 }}>{format(h.line)}</b></div>}
         </div>
       )}
     </div>
@@ -122,8 +143,8 @@ export function PairedBars({ groups, height = 170 }: { groups: PairedGroup[]; he
           <div className="absolute inset-0 flex items-end justify-around">
             {groups.map((g) => (
               <div key={g.label} className="flex items-end" style={{ gap: 6, height: "100%" }}>
-                <div title={g.aTitle} style={{ width: 9, height: `${Math.max(0.6, g.a)}%`, background: g.alert ? ALERT : INK }} />
-                <div title={g.bTitle} style={{ width: 9, height: `${Math.max(0.6, g.b)}%`, background: g.alert ? "#CDBAB6" : SOFT }} />
+                <div title={g.aTitle} style={{ width: 10, height: `${Math.max(0.6, g.a)}%`, borderRadius: 2, ...grain(g.alert ? ALERT : INK) }} />
+                <div title={g.bTitle} style={{ width: 10, height: `${Math.max(0.6, g.b)}%`, borderRadius: 2, ...grain(SOFT, true) }} />
               </div>
             ))}
           </div>
@@ -148,7 +169,7 @@ export function RankBars({ rows, format }: { rows: { label: string; value: numbe
         <div key={r.label} className="grid items-center" style={{ gridTemplateColumns: "minmax(90px, 28%) 1fr", gap: 14 }}>
           <span className="truncate" title={r.label} style={{ fontSize: 10.5, color: "#3F3D39" }}>{r.label}</span>
           <div className="flex items-center min-w-0" style={{ gap: 8 }}>
-            <div style={{ height: 10, width: `${Math.max(2, (r.value / max) * 86)}%`, background: r.alert ? ALERT : "#4E5562", borderRadius: 1 }} />
+            <div style={{ height: 11, width: `${Math.max(2, (r.value / max) * 86)}%`, borderRadius: 2, ...grain(r.alert ? ALERT : "#4A505B") }} />
             <span className="shrink-0 tabular-nums" style={{ fontSize: 10.5, color: LABEL }}>{format(r.value)}</span>
           </div>
         </div>
@@ -157,13 +178,15 @@ export function RankBars({ rows, format }: { rows: { label: string; value: numbe
   );
 }
 
-export function Legend({ items }: { items: { label: string; color: string }[] }) {
+export function Legend({ items }: { items: { label: string; color: string; glyph?: "bars"; underline?: boolean; light?: boolean }[] }) {
   return (
     <div className="flex flex-wrap items-center" style={{ gap: 14 }}>
       {items.map((it) => (
         <span key={it.label} className="inline-flex items-center" style={{ gap: 6, fontSize: 11.5, color: "#6E6A63" }}>
-          <span aria-hidden="true" className="rounded-full" style={{ width: 7, height: 7, background: it.color }} />
-          {it.label}
+          {it.glyph === "bars"
+            ? <svg aria-hidden="true" width="11" height="9" viewBox="0 0 11 9">{[1, 3, 5, 7, 9].map((x, i) => <line key={x} x1={x} x2={x} y1={9} y2={[5, 3, 1, 2, 4][i]} stroke={it.color} strokeWidth="1" />)}</svg>
+            : <span aria-hidden="true" className="rounded-full" style={{ width: 8, height: 8, ...grain(it.color, it.light) }} />}
+          <span style={it.underline ? { textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: "#BDB8AF" } : undefined}>{it.label}</span>
         </span>
       ))}
     </div>
