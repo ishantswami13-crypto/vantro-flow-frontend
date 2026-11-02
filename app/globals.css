@@ -1141,8 +1141,12 @@ button:disabled { cursor: default; }
   --hv-rail: #171614; --hv-rail-hi: #2C2B28; --hv-rail-text: #D9D6D0; --hv-rail-dim: #94908A;
   --hv-paper: #F8F7F4; --hv-card: #FFFFFF; --hv-ink: #0F0E0D; --hv-body: #3F3D39; --hv-muted: #6E6A63;
   --hv-line: #E4E1DA; --hv-line-2: #CFCBC2; --hv-wash: #F1EFE9;
-  --meta: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --meta: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --hv-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: var(--hv-sans);
   background: var(--hv-rail);
+}
+.hv-app .font-sans, .hv-app button, .hv-app input, .hv-app select, .hv-app textarea { font-family: var(--hv-sans);
 }
 .hv-canvas { background: var(--hv-paper); }
 @media (min-width: 1024px) {
@@ -1228,3 +1232,34 @@ button:disabled { cursor: default; }
 .hv-app .recharts-cartesian-grid-horizontal line { stroke: #ECEAE4; }
 .hv-app .recharts-cartesian-axis-tick-value { fill: #8F8A81; font-size: 11px; }
 .hv-app .recharts-default-tooltip { background: #FFFFFF !important; border: 1px solid var(--hv-line) !important; border-radius: 8px !important; }
+
+/* Command Center (Harvey's analytics page, in Starlane's data). */
+.cc { display: flex; flex-direction: column; gap: 18px; }
+.cc-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.cc-title { margin: 0; font-family: var(--serif) !important; font-weight: 400 !important; font-size: 34px !important; line-height: 1.1 !important; letter-spacing: -0.02em !important; color: #0F0E0D; }
+.cc-actions { display: flex; align-items: center; gap: 8px; }
+.cc-btn { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; border-radius: 6px; background: #FFFFFF; border: 1px solid #E4E1DA; font-size: 12.5px; font-weight: 500; color: #2B2926; }
+.cc-btn:hover { background: #F1EFE9; color: #0F0E0D; }
+.cc-btn-ink { background: #0F0E0D; border-color: #0F0E0D; color: #FFFFFF; }
+.cc-btn-ink:hover { background: #2B2926; color: #FFFFFF; }
+.cc-banner { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 8px; background: #FFFFFF; border: 1px solid #ECEAE4; font-size: 13px; color: #3F3D39; }
+.cc-banner:hover { color: #0F0E0D; border-color: #E4E1DA; }
+.cc-banner-mark { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 4px; background: #0F0E0D; color: #FFFFFF; }
+.cc-grid { display: grid; grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr); gap: 18px; }
+.cc-card { display: flex; flex-direction: column; min-width: 0; background: #FFFFFF; border: 1px solid #ECEAE4; border-radius: 10px; padding: 20px 20px 0; }
+.cc-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.cc-fig { display: flex; align-items: baseline; gap: 8px; font-family: var(--serif); font-weight: 400; font-size: 40px; line-height: 1; letter-spacing: -0.02em; color: #0F0E0D; font-variant-numeric: tabular-nums; }
+.cc-delta { font-family: var(--hv-sans, inherit); font-size: 11.5px; font-weight: 500; letter-spacing: 0; }
+.cc-sub { margin-top: 8px; font-size: 12px; color: #6E6A63; }
+.cc-h2 { margin: 0; font-family: var(--hv-sans, inherit); font-size: 15px; font-weight: 500; letter-spacing: -0.005em; color: #0F0E0D; }
+.cc-h2 + .cc-sub { margin-top: 5px; }
+.cc-chart { flex: 1; padding: 22px 0 14px; }
+.cc-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 -20px; padding: 12px 20px; border-top: 1px solid #F0EEE9; }
+.cc-icon { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; color: #6E6A63; }
+.cc-icon:hover { background: #F1EFE9; color: #0F0E0D; }
+.cc-pill { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px 0 10px; border: 1px solid #E4E1DA; border-radius: 6px; background: #FFFFFF; color: #3F3D39; font-size: 12px; flex-shrink: 0; }
+.cc-pill select { appearance: none; -webkit-appearance: none; border: 0; outline: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+.cc-pill:focus-within { border-color: #CFCBC2; }
+.cc-note { margin: 0; font-size: 12px; color: #8F8A81; }
+@media (max-width: 1000px) { .cc-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .cc-title { font-size: 28px !important; } .cc-fig { font-size: 34px; } }

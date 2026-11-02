@@ -19,6 +19,7 @@ const FAMILIES = [
   "Space+Grotesk:wght@400;500;600;700",
   "Hanken+Grotesk:wght@300;400;500;600;700",
   "JetBrains+Mono:wght@400;500",
+  "Inter:wght@400;500;600",
 ];
 
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");

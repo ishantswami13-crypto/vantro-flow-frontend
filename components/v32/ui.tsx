@@ -30,9 +30,9 @@ export const V = {
   neutralDot: "rgba(25,25,23,0.25)",
   accent: "var(--accent, #696D86)",
   serif: "'Newsreader', Georgia, serif",
-  mono: "'Plus Jakarta Sans', system-ui, sans-serif",
+  mono: "'Inter', system-ui, sans-serif",
   // Small labels use the UI sans in sentence case, as Harvey does.
-  meta: "'Plus Jakarta Sans', system-ui, sans-serif",
+  meta: "'Inter', system-ui, sans-serif",
 };
 
 /** Page title row: Fraunces 26px, an optional one-line subtitle and a right slot. */

@@ -39,7 +39,7 @@ function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between" style={{ gap: 12, padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>
       <span style={{ fontSize: 12.5, color: "#63635F" }}>{label}</span>
-      <span style={{ fontSize: 12.5, color: "#191917", fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", textAlign: "right" }}>{value}</span>
+      <span style={{ fontSize: 12.5, color: "#191917", fontFamily: "'Inter', system-ui, sans-serif", textAlign: "right" }}>{value}</span>
     </div>
   );
 }

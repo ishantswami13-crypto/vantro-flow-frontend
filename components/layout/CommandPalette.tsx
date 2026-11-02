@@ -141,7 +141,7 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
             aria-controls="command-palette-results"
             aria-activedescendant={flat[activeIndex] ? `command-palette-row-${activeIndex}` : undefined}
           />
-          <kbd style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>Esc</kbd>
+          <kbd style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>Esc</kbd>
         </div>
         <div ref={listRef} id="command-palette-results" role="listbox" className="overflow-y-auto" style={{ padding: "4px 8px 8px" }}>
           {flat.length === 0 ? (
@@ -170,7 +170,7 @@ export function CommandPalette({ open, onClose, routes }: CommandPaletteProps) {
                     {r.context && <span className="truncate flex-1" style={{ fontSize: 12, color: "#6E6E69" }}>{r.context}</span>}
                     {!r.context && <span className="flex-1" />}
                     {r.shortcut
-                      ? <kbd style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>{r.shortcut}</kbd>
+                      ? <kbd style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 10.5, color: "#63635F", border: "1px solid #E5E4DF", borderRadius: 4, padding: "1px 6px" }}>{r.shortcut}</kbd>
                       : <Chevron size={13} />}
                   </button>
                 );

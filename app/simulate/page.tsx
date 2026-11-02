@@ -254,7 +254,7 @@ function SimCard({ label, value, color, note }: { label: string; value: string; 
   return (
     <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", borderRadius: 8, padding: 18 }}>
       <div style={{ fontSize: 12, color: "#63635F", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 22, color, marginBottom: 6 }}>{value}</div>
+      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 22, color, marginBottom: 6 }}>{value}</div>
       <div style={{ fontSize: 12, color: "#63635F", lineHeight: 1.5 }}>{note}</div>
     </div>
   );
