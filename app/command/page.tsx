@@ -13,7 +13,7 @@ import StarlaneMark from "@/components/brand/StarlaneMark";
 import { api, getUser, type Invoice } from "@/lib/api";
 import { decisionsApi, money } from "@/lib/decisions";
 import {
-  ALERT, BarcodeChart, INK, Legend, PairedBars, PillSelect, RankBars, SOFT, downloadCsv, type DayPoint,
+  ALERT, BAR, BarcodeChart, INK, LINE, Legend, PairedBars, PillSelect, RankBars, SOFT, downloadCsv, type DayPoint,
 } from "@/components/command/Charts";
 
 const DAY = 86_400_000;
@@ -188,7 +188,7 @@ export default function CommandCenterPage() {
             </div>
             <div className="cc-chart"><BarcodeChart data={owedSeries} format={(v) => money(v)} barLabel="Owed" lineLabel="Overdue" /></div>
             <footer className="cc-foot">
-              <Legend items={[{ label: "Owed to you", color: INK }, { label: "Overdue", color: SOFT }]} />
+              <Legend items={[{ label: "Owed to you", color: BAR }, { label: "Overdue", color: LINE }]} />
               <button type="button" className="cc-icon" aria-label="Download as CSV" title="Download as CSV"
                 onClick={() => downloadCsv("owed-by-day", ["date", "owed", "overdue"], owedSeries.map((d) => [d.date, Math.round(d.bar), Math.round(d.line)]))}><IconDownload /></button>
             </footer>
@@ -221,7 +221,7 @@ export default function CommandCenterPage() {
             </div>
             <div className="cc-chart"><BarcodeChart data={countSeries} format={(v) => String(Math.round(v))} barLabel="Overdue invoices" lineLabel="Open invoices" /></div>
             <footer className="cc-foot">
-              <Legend items={[{ label: "Overdue", color: INK }, { label: "Open", color: SOFT }]} />
+              <Legend items={[{ label: "Overdue", color: BAR }, { label: "Open", color: LINE }]} />
               <button type="button" className="cc-icon" aria-label="Download as CSV" title="Download as CSV"
                 onClick={() => downloadCsv("overdue-invoices-by-day", ["date", "overdue", "open"], countSeries.map((d) => [d.date, d.bar, d.line]))}><IconDownload /></button>
             </footer>
@@ -240,7 +240,7 @@ export default function CommandCenterPage() {
               {top.length > 0 ? <RankBars rows={top} format={(v) => money(v)} /> : <p className="cc-note">{loading ? "Loading…" : "Nothing open."}</p>}
             </div>
             <footer className="cc-foot">
-              <Legend items={[{ label: rankBy === "owed" ? "Owed" : "Overdue", color: "#4A5160" }, { label: "Over 90 days late", color: ALERT }]} />
+              <Legend items={[{ label: rankBy === "owed" ? "Owed" : "Overdue", color: "#4E5562" }, { label: "Over 90 days late", color: ALERT }]} />
               <button type="button" className="cc-icon" aria-label="Download as CSV" title="Download as CSV"
                 onClick={() => downloadCsv("top-customers", ["customer", rankBy], top.map((r) => [r.label, Math.round(r.value)]))}><IconDownload /></button>
             </footer>
