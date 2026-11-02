@@ -41,6 +41,18 @@ function smooth(pts: [number, number][]): string {
   return d;
 }
 
+/** Gaussian smoothing with edge renormalisation, so curves flow instead of kinking. */
+function gauss(vals: number[], sigma: number): number[] {
+  if (sigma <= 0 || vals.length < 3) return vals.slice();
+  const r = Math.ceil(sigma * 3);
+  const w = Array.from({ length: 2 * r + 1 }, (_, j) => Math.exp(-((j - r) ** 2) / (2 * sigma * sigma)));
+  return vals.map((_, i) => {
+    let s = 0, ws = 0;
+    for (let j = -r; j <= r; j++) { const v = vals[i + j]; if (v !== undefined) { s += v * w[j + r]; ws += w[j + r]; } }
+    return s / ws;
+  });
+}
+
 /** Hairline bars (one per day, or per few days on long ranges) with a soft
  *  smooth line behind them, as in Harvey's usage charts. Every bar is a 1px
  *  line whatever the width; empty days still show as a dot on the baseline. */
@@ -64,24 +76,22 @@ export function BarcodeChart({ data, height = 170, format, barLabel, lineLabel, 
   }, [data, weekly]);
   // Bar heights follow a short centred average so the field rises as a smooth
   // hill rather than in stair steps; the tooltip still shows the exact value.
-  const heights = useMemo(() => {
-    const k = weekly ? 0 : Math.max(2, Math.round(bins.length / 24));
-    return bins.map((_, i) => {
-      const win = bins.slice(Math.max(0, i - k), Math.min(bins.length, i + k + 1));
-      return win.reduce((s, p) => s + p.bar, 0) / win.length;
-    });
-  }, [bins, weekly]);
+  const heights = useMemo(() => gauss(bins.map((d) => d.bar), weekly ? 0.8 : bins.length / 26), [bins, weekly]);
   const W = 600, H = height, top = 6;
   const n = bins.length;
   const max = Math.max(1, ...bins.map((d) => Math.max(d.bar, d.line))) * 1.04;
   const step = n > 0 ? W / n : W;
   const x = (i: number) => i * step + step / 2;
   const y = (v: number) => top + (H - top) * (1 - v / max);
+  // The comparison line is a broad, flowing trend: heavily smoothed, then
+  // drawn through about ten evenly spaced knots so it never kinks.
   const linePts = useMemo<[number, number][]>(() => {
-    const k = Math.max(1, Math.round(n / 30));
-    return bins.map((d, i) => {
-      const win = bins.slice(Math.max(0, i - k), Math.min(n, i + k + 1));
-      return [x(i), y(win.reduce((s, p) => s + p.line, 0) / win.length)];
+    if (n < 2) return [];
+    const sm = gauss(gauss(bins.map((d) => d.line), n / 9), n / 14);
+    const knots = Math.min(n, 10);
+    return Array.from({ length: knots }, (_, k) => {
+      const i = Math.round((k * (n - 1)) / (knots - 1));
+      return [x(i), y(sm[i])] as [number, number];
     });
   }, [bins, n]); // eslint-disable-line react-hooks/exhaustive-deps
   const months = useMemo(() => {
@@ -105,11 +115,11 @@ export function BarcodeChart({ data, height = 170, format, barLabel, lineLabel, 
           const i = Math.floor(((e.clientX - r.left) / r.width) * n);
           setHover(i >= 0 && i < n ? i : null);
         }}>
-        {showLine && <path d={smooth(linePts)} fill="none" stroke={LINE} strokeWidth={1.5} vectorEffect="non-scaling-stroke" strokeLinecap="round" />}
         {bins.map((d, i) => {
           const yy = Math.min(y(heights[i]), H - 1.5);
           return <line key={d.date} x1={x(i)} x2={x(i)} y1={H} y2={yy} stroke={hover === i ? "#0F0E0D" : BAR} strokeWidth={1} vectorEffect="non-scaling-stroke" />;
         })}
+        {showLine && <path d={smooth(linePts)} fill="none" stroke={LINE} strokeWidth={1.6} vectorEffect="non-scaling-stroke" strokeLinecap="round" />}
       </svg>
       <div aria-hidden="true" className="relative" style={{ height: 14, marginTop: 8 }}>
         {months.map((m) => (
