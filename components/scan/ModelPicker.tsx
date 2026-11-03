@@ -9,7 +9,7 @@ const PROVIDER: Record<string, string> = { groq: "Groq", gemini: "Google", anthr
 // A small "Model" control inside the Ask box. Every model the server knows is
 // listed; the ones whose provider has no key are shown but can't be picked.
 // Hidden entirely when the server doesn't report a model list.
-export function ModelPicker() {
+export function ModelPicker({ compact = false }: { compact?: boolean } = {}) {
   const [models, setModels] = useState<AiModel[]>([]);
   const [choice, setChoice] = useState("auto");
   const [open, setOpen] = useState(false);
@@ -51,15 +51,21 @@ export function ModelPicker() {
 
   return (
     <div ref={ref} className="relative">
-      <button type="button" className="mp-btn" aria-haspopup="listbox" aria-expanded={open} onClick={(e) => {
+      <button type="button" className={`mp-btn ${compact ? "mp-compact" : ""}`} aria-haspopup="listbox" aria-expanded={open} onClick={(e) => {
         const r = e.currentTarget.getBoundingClientRect();
         const below = window.innerHeight - r.bottom - 16, above = r.top - 16;
         const down = below > above;
         setPlace({ down, max: Math.max(200, Math.min(440, down ? below : above)) });
         setOpen((v) => !v);
-      }} title="Choose the AI model">
-        <span className="mp-btn-label">{current.label}</span>
-        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden><path d="M2.5 4l2.5 2.5L7.5 4" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      }} title={compact ? `Model: ${current.label}` : "Choose the AI model"} aria-label={compact ? `Model: ${current.label}` : undefined}>
+        {compact ? (
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" aria-hidden><path d="M2.5 4.5h6M11.5 4.5h2M2.5 11.5h2M7.5 11.5h6" /><circle cx="10" cy="4.5" r="1.5" /><circle cx="6" cy="11.5" r="1.5" /></svg>
+        ) : (
+          <>
+            <span className="mp-btn-label">{current.label}</span>
+            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden><path d="M2.5 4l2.5 2.5L7.5 4" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </>
+        )}
       </button>
       {open && (
         <div role="listbox" aria-label="AI model" className={`pop-in mp-menu ${place.down ? "mp-down" : ""}`} style={{ maxHeight: place.max }}>

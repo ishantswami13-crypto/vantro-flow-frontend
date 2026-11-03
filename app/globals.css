@@ -1585,3 +1585,51 @@ button:disabled { cursor: default; }
   .hv-app .vt-tool { padding: 0 9px; font-size: 12.5px; }
   .hv-app .vt-tools { gap: 6px; }
 }
+
+/* Vault: measured against Harvey's Vault (screenshot at 125% scale, so px / 1.25). */
+.hv-app .vt { padding-top: 22px; }
+.hv-app .vt-modes { gap: 10px; }
+.hv-app .vt-pill { height: 34px; padding: 0 12px; gap: 7px; border-radius: 4px; font-size: 14px; color: #3B3A36; }
+.hv-app .vt-ask { max-width: 632px; margin-top: 26px; }
+.hv-app .vt-ask-head { padding: 0 10px 6px; }
+.hv-app .vt-drop { font-size: 12.5px; gap: 5px; }
+.hv-app .vt-box { border-radius: 8px; padding: 18px 13px 13px 19px; }
+.hv-app .vt-chip { height: 21px; padding: 0 6px; gap: 5px; border-radius: 3px; font-size: 12px; }
+.hv-app .vt-input { margin-top: 14px; font-size: 16.5px; line-height: 25px; padding-right: 6px; }
+.hv-app .vt-box-foot { margin-top: 18px; }
+.hv-app .vt-act { height: 30px; padding: 0 5px; gap: 5px; font-size: 14.5px; color: #4A4843; margin-right: 12px; }
+.hv-app .vt-act:last-child { margin-right: 0; }
+.hv-app .vt-send { width: 42px; height: 34px; border-radius: 4px; }
+.hv-app .mp-compact { width: 30px; height: 30px; padding: 0; justify-content: center; color: #4A4843; }
+.hv-app .vt-suggest { margin-top: 22px; gap: 9px; }
+.hv-app .vt-suggest .vt-pill { height: 32px; }
+.hv-app .vt-files { margin-top: 64px; }
+.hv-app .vt-files-bar { padding-bottom: 16px; }
+.hv-app .vt-files-title { font-size: 15px; }
+.hv-app .vt-synced { font-size: 12.5px; gap: 5px; margin-right: 2px; }
+.hv-app .vt-s { width: 14px; height: 14px; font-size: 9.5px; }
+.hv-app .vt-tool { height: 26px; padding: 0 9px; border-radius: 4px; font-size: 12.5px; font-weight: 500; gap: 5px; }
+.hv-app .vt-search { height: 26px; width: 210px; border-radius: 4px; font-size: 12.5px; }
+.hv-app .vt-search input { font-size: 12.5px; }
+.hv-app .vt-tools { gap: 7px; }
+.hv-app .vt-table-wrap { border-top: none; }
+.hv-app .vt-table { table-layout: fixed; }
+.hv-app .vt-table th { font-size: 12.5px; padding: 10px 5px 9px; color: #6E6B64; }
+.hv-app .vt-table td { height: 46px; padding: 0 5px; font-size: 14.5px; border-bottom-color: #ECEAE5; }
+.hv-app .vt-name { gap: 8px; }
+.hv-app .vt-tag { height: 22px; padding: 0 7px; gap: 5px; border-radius: 4px; font-size: 12px; }
+.hv-app .vt-muted { color: #3B3A36; }
+@media (max-width: 760px) {
+  .hv-app .vt-table td { height: auto; padding: 12px 5px; }
+  .hv-app .vt-table th:first-child { width: auto !important; }
+  .hv-app .vt-table { table-layout: auto; }
+}
+.hv-app .vt { max-width: 1240px; }
+.hv-app .vt-ask { margin-top: 20px; }
+.hv-app .vt-input, .hv-app .vt-input:focus { margin-top: 10px; border: none; box-shadow: none; padding: 0 6px 0 0; border-radius: 0; background: transparent; }
+.hv-app .vt-box-foot { margin-top: 14px; }
+.hv-app .vt-files { margin-top: 50px; }
+.hv-app .vt-sep { width: 1px; height: 16px; background: #E4E1DA; margin: 0 2px; }
+@media (max-width: 760px) { .hv-app .vt-sep { display: none; } }
+.hv-app .vt-box { background: #F5F4F1; border-color: #E8E6E1; box-shadow: 0 1px 2px rgba(15,14,13,0.03), 0 10px 24px -22px rgba(15,14,13,0.3); }
+@media (max-width: 760px) { .hv-app .vt-search { width: 100%; } }

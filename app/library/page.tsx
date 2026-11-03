@@ -99,7 +99,7 @@ export default function VaultPage() {
     const el = taRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.min(Math.max(el.scrollHeight, 64), 220)}px`;
+    el.style.height = `${Math.min(Math.max(el.scrollHeight, 50), 220)}px`;
   }, [text]);
 
   const folders = useMemo(() => vault?.folders || [], [vault]);
@@ -202,7 +202,7 @@ export default function VaultPage() {
                 <button type="button" className="vt-act" onClick={improve} disabled={!text.trim() || improved} title="Make the question more specific"><WandGlyph /> <span className="vt-act-l">Improve</span></button>
               </div>
               <div className="flex items-center" style={{ gap: 6 }}>
-                <ModelPicker />
+                <ModelPicker compact />
                 <button type="submit" className="vt-send" aria-label="Ask" disabled={!text.trim()}><IconArrowRight size={16} /></button>
               </div>
             </div>
@@ -230,6 +230,7 @@ export default function VaultPage() {
                 <Link href="/sources" className="vt-synced"><span className="vt-s">S</span> Last synced {relTime(vault.last_synced_at)} <ExtGlyph /></Link>
               )}
               <button type="button" className="vt-tool" onClick={() => void load()} disabled={refreshing}><IconSync size={13} /> {refreshing ? "Refreshing" : "Refresh"}</button>
+              <span className="vt-sep" aria-hidden="true" />
               <label className="vt-search">
                 <IconSearch size={13} />
                 <span className="sr-only">Search files</span>
@@ -252,7 +253,7 @@ export default function VaultPage() {
           <div className="vt-table-wrap">
             <table className="vt-table">
               <thead>
-                <tr><th>Name</th><th>Category</th><th>Type</th><th>Last modified</th><th className="vt-right">Size</th></tr>
+                <tr><th style={{ width: "36%" }}>Name</th><th style={{ width: "22%" }}>Category</th><th style={{ width: "17.5%" }}>Type</th><th style={{ width: "17.5%" }}>Last modified</th><th>Size</th></tr>
               </thead>
               <tbody>
                 {rows.map((i, n) => (
@@ -268,7 +269,7 @@ export default function VaultPage() {
                     <td>{i.category && <span className="vt-tag"><span className="vt-dot" style={{ background: TAG[i.category] || "#8A877F" }} />{i.category}{i.outstanding ? ` · ${inr(i.outstanding)}` : ""}</span>}</td>
                     <td className="vt-muted">{i.type}</td>
                     <td className="vt-muted">{dateOf(i.modified_at)}</td>
-                    <td className="vt-muted vt-right">{i.folder ? items(i.folder.count) : sizeOf(i)}</td>
+                    <td className="vt-muted">{i.folder ? items(i.folder.count) : sizeOf(i)}</td>
                   </tr>
                 ))}
               </tbody>
