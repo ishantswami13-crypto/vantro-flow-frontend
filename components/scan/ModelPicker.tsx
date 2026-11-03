@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { IconCheck } from "@/components/v32/icons";
 import { getModelChoice, loadModels, onModelChoice, setModelChoice, type AiModel } from "@/lib/modelChoice";
 
-const PROVIDER: Record<string, string> = { groq: "Groq", gemini: "Google", anthropic: "Anthropic" };
+const PROVIDER: Record<string, string> = { groq: "Groq", gemini: "Google", anthropic: "Anthropic", openai: "OpenAI", xai: "xAI", perplexity: "Perplexity" };
 
 // A small "Model" control inside the Ask box. Every model the server knows is
 // listed; the ones whose provider has no key are shown but can't be picked.
