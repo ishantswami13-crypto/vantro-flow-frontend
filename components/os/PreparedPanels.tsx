@@ -5,7 +5,7 @@
 // Starlane never sends: in shadow pilot mode an approval records what would
 // have gone out; in live mode it marks the reminder ready for a person to send.
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { C, Pill, Skeleton } from "@/components/decisions/ui";
 import { osApi, Workflow, WorkflowItem, ITEM_STATUS_LABEL } from "@/lib/os";
@@ -141,9 +141,11 @@ function ItemRow({ item, onDone, onStale }: { item: WorkflowItem; onDone: (i: Wo
 // Decisions waiting on a person: the first thing Prepared shows. Each one
 // says what it is, why now, how much money it touches and by when; the
 // decision page holds the evidence, unknowns, options and Handle it.
-export function DecisionsNeedingYou() {
+export function DecisionsNeedingYou({ onCount }: { onCount?: (n: number) => void } = {}) {
   const { data, error, loading, reload } = useLoad(() => decisionsApi.list("active"));
   const waiting = (data?.decisions || []).filter((d) => ["OPEN", "NEEDS_INFORMATION", "SELECTED", "APPROVED"].includes(d.status));
+  // Lets the Approvals tab count what is waiting here too.
+  useEffect(() => { if (data && onCount) onCount(waiting.length); }, [data, waiting.length, onCount]);
   return (
     <Panel
       title="Decisions"
