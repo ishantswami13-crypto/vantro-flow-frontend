@@ -20,7 +20,7 @@ export function SiteShell({ children, navTone = "light" }: { children: React.Rea
     <div className="sl sl-start sl-ed">
       <MotionGate />
       <a className="sl-skip" href="#main">Skip to content</a>
-      <TopBar tone={navTone} />
+      <TopBar />
       <main id="main">{children}</main>
       <Footer tone="dark" />
     </div>

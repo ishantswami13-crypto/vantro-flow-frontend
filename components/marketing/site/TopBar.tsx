@@ -8,8 +8,8 @@ import { MENUS, PLAIN, LOGIN, BANNER, type Menu } from "./topbar-data";
 // The public top bar: an announcement banner, then a sticky header with the
 // wordmark, six destinations, sign in and one call to action. Four
 // destinations open a full-width mega menu (columns of links and a featured
-// card). The header reads the colour of the section under it and turns light
-// or dark to match, so it never sits as a slab of the wrong colour.
+// card). The header and its menus are ink, matching the reference; the light
+// tokens (.tb-light) are kept for a page that wants a paper header.
 
 type Theme = "light" | "dark";
 
@@ -22,48 +22,6 @@ function Chevron() {
       <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
-}
-
-// Relative luminance of the first opaque background at or above an element.
-function backgroundIsDark(start: Element | null): boolean | null {
-  let el: Element | null = start;
-  while (el && el !== document.documentElement) {
-    const bg = getComputedStyle(el).backgroundColor;
-    const m = bg.match(/rgba?\(([^)]+)\)/);
-    if (m) {
-      const [r, g, b, a = "1"] = m[1].split(/[ ,/]+/).filter(Boolean);
-      if (parseFloat(a) > 0.5) {
-        const lum = 0.2126 * +r + 0.7152 * +g + 0.0722 * +b;
-        return lum < 110;
-      }
-    }
-    el = el.parentElement;
-  }
-  return null;
-}
-
-function useSectionTheme(headerRef: React.RefObject<HTMLElement | null>, fallback: Theme) {
-  const [theme, setTheme] = useState<Theme>(fallback);
-  useEffect(() => {
-    let raf = 0;
-    const read = () => {
-      raf = 0;
-      const h = headerRef.current;
-      if (!h) return;
-      const y = h.getBoundingClientRect().bottom + 2;
-      const x = Math.round(window.innerWidth * 0.5);
-      const below = document.elementsFromPoint(x, y).find((el) => !h.contains(el) && !el.closest(".tb-mobile") && getComputedStyle(el).position !== "fixed");
-      const dark = backgroundIsDark(below ?? null);
-      if (dark !== null) setTheme(dark ? "dark" : "light");
-    };
-    const queue = () => { if (!raf) raf = requestAnimationFrame(read); };
-    read();
-    window.addEventListener("scroll", queue, { passive: true });
-    window.addEventListener("resize", queue);
-    const t = window.setTimeout(read, 400);
-    return () => { window.removeEventListener("scroll", queue); window.removeEventListener("resize", queue); cancelAnimationFrame(raf); clearTimeout(t); };
-  }, [headerRef]);
-  return theme;
 }
 
 function Featured({ menu, onNavigate }: { menu: Menu; onNavigate: () => void }) {
@@ -85,11 +43,11 @@ function Featured({ menu, onNavigate }: { menu: Menu; onNavigate: () => void }) 
   );
 }
 
-export function TopBar({ tone = "light" }: { tone?: Theme }) {
+export function TopBar() {
   const headerRef = useRef<HTMLElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const path = usePathname() ?? "/";
-  const theme = useSectionTheme(headerRef, tone);
+  const theme: Theme = "dark";
   const [open, setOpen] = useState<string | null>(null);
   const [login, setLogin] = useState(false);
   const [mobile, setMobile] = useState(false);
