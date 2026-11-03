@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { FiUploadCloud, FiCheck, FiAlertTriangle, FiChevronRight, FiDownload } from "react-icons/fi";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
+import { getRegion } from "@/lib/locale";
 import { C, Notice, Pill, SectionLabel, Stat } from "@/components/decisions/ui";
 import {
   decisionsApi, money, shortDate,
@@ -37,9 +38,9 @@ const DATE_FIELDS: LedgerField[] = ["invoice_date", "due_date", "payment_date"];
 
 const TEMPLATE = [
   "Customer,Invoice No,Invoice Date,Due Date,Invoice Amount,Amount Paid,Payment Date,Status,Currency,Credit Days,Phone",
-  "Sharma Traders (example),INV-1041,13/04/2026,13/05/2026,\"1,20,000\",0,,Unpaid,INR,30,9876500001",
-  "Mehta Stores (example),INV-1042,15/04/2026,15/05/2026,\"45,000\",\"45,000\",14/05/2026,Paid,INR,30,9876500002",
-  "Kapoor & Sons (example),INV-1043,20/04/2026,20/05/2026,\"80,000\",\"30,000\",25/05/2026,Partially paid,INR,30,",
+  "Harbor Supply Co. (example),INV-1041,2026-04-13,2026-05-13,12000,0,,Unpaid,USD,30,+12125550101",
+  "Ridgeline Builders (example),INV-1042,2026-04-15,2026-05-15,4500,4500,2026-05-14,Paid,USD,30,+12125550102",
+  "Northgate Hardware (example),INV-1043,2026-04-20,2026-05-20,8000,3000,2026-05-25,Partially paid,USD,30,",
 ].join("\n");
 
 function downloadTemplate() {
@@ -110,7 +111,7 @@ export default function ImportPage() {
       const p = await decisionsApi.importPreview(f, opts);
       setPreview(p);
       if (!opts) {
-        setOptions({ ...p.suggestedInput, currency: p.suggestedInput.currency ?? "INR" });
+        setOptions({ ...p.suggestedInput, currency: p.suggestedInput.currency ?? getRegion().currency });
         setConfirmed({});
       }
     } catch (e) {
@@ -180,7 +181,7 @@ export default function ImportPage() {
         <Link href="/decisions" className="text-[13px] hover-dim" style={{ color: C.muted }}>← Decisions</Link>
         <h1 className="text-[30px] lg:text-[34px] mt-3" style={{ color: C.ink }}>Bring your receivables</h1>
         <p className="text-[14px] max-w-[680px] mt-2 mb-8" style={{ color: C.muted }}>
-          Upload the file you already have: a sales register, an outstanding report or a Tally export, as CSV or Excel.
+          Upload the file you already have: a sales register, an outstanding report or an export from your accounting system, as CSV or Excel.
           You check what each column means before anything is saved. Starlane then works out what needs a decision, from your data only.
         </p>
 
@@ -312,7 +313,7 @@ export default function ImportPage() {
                   <input
                     value={options.currency || ""}
                     onChange={(e) => setOptions({ ...options, currency: e.target.value.toUpperCase().slice(0, 3) || null })}
-                    placeholder="INR"
+                    placeholder="USD"
                     className="w-16 rounded-lg px-2 py-1 text-[13px]"
                     style={{ border: `1px solid ${C.line}` }}
                   />

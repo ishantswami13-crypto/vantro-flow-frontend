@@ -213,6 +213,7 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
       const errorObj = new Error(`${errorMsg} (Error ID: ${requestId})`);
       (errorObj as any).requestId = requestId;
       (errorObj as any).status = res.status;
+      (errorObj as any).body = data;
 
       if (typeof window !== 'undefined') {
         authenticatedFetch('/api/client-errors', {
@@ -748,10 +749,34 @@ export const api = {
     // strips any req.body.role as a privilege-escalation guard, so a field
     // named `role` would silently vanish before the handler sees it.
     saveBusiness: (body: { company_name: string; company_website?: string; country: string; job_role?: string }) =>
-      request<{ success: boolean }>('/api/onboarding/business', { method: 'POST', body: JSON.stringify(body) }),
+      request<{ success: boolean; region?: RegionSettings | null }>('/api/onboarding/business', { method: 'POST', body: JSON.stringify(body) }),
     savePriorities: (priority_areas: string[]) =>
       request<{ success: boolean }>('/api/onboarding/priorities', { method: 'POST', body: JSON.stringify({ priority_areas }) }),
     complete: () => request<{ success: boolean }>('/api/onboarding/complete', { method: 'POST' }),
+  },
+
+  // ─── Region: country, currency, formats, timezone, tax label ─
+  // Backend lib/routes/region.js. Stored as versioned definitions.
+  region: {
+    get: () => request<{ region: RegionSettings; options: RegionOptions }>('/api/settings/region'),
+    update: (body: Partial<{ country: string | null; currency: string; locale: string | null; timezone: string; taxLabel: string | null }>) =>
+      request<{ region: RegionSettings }>('/api/settings/region', { method: 'PUT', body: JSON.stringify(body) }),
+  },
+
+  // ─── Custom workflows (trigger → agent / condition / action steps) ─
+  // Backend lib/routes/customWorkflows.js. Only built steps can be saved.
+  customWorkflows: {
+    catalog: () => request<WorkflowCatalog>('/api/custom-workflows/catalog'),
+    list: () => request<{ workflows: CustomWorkflow[]; schedulerEnabled: boolean; timezone: string }>('/api/custom-workflows'),
+    get: (id: string) => request<{ workflow: CustomWorkflow; runs: CustomWorkflowRun[] }>(`/api/custom-workflows/${id}`),
+    create: (body: { name: string; description?: string; definition: WorkflowDefinition }) =>
+      request<{ workflow: CustomWorkflow }>('/api/custom-workflows', { method: 'POST', body: JSON.stringify(body) }),
+    update: (id: string, body: { name?: string; description?: string; definition?: WorkflowDefinition }) =>
+      request<{ workflow: CustomWorkflow }>(`/api/custom-workflows/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    remove: (id: string) => request<{ deleted: boolean }>(`/api/custom-workflows/${id}`, { method: 'DELETE' }),
+    activate: (id: string) => request<{ workflow: CustomWorkflow }>(`/api/custom-workflows/${id}/activate`, { method: 'POST' }),
+    pause: (id: string) => request<{ workflow: CustomWorkflow }>(`/api/custom-workflows/${id}/pause`, { method: 'POST' }),
+    run: (id: string) => request<{ run: { id: string; status: CustomWorkflowRun['status']; steps: CustomWorkflowRunStep[]; summary: string | null; error: string | null } }>(`/api/custom-workflows/${id}/run`, { method: 'POST' }),
   },
 
   // Real-world event ingestion sources (USGS, FX, ...) — tenant-agnostic
@@ -760,6 +785,50 @@ export const api = {
     health: () => request<WorldHealthResponse>('/api/world/health'),
   },
 };
+
+export interface RegionSettings {
+  country: string | null; currency: string; locale: string; timezone: string; taxLabel: string;
+  explicit?: { currency: boolean; timezone: boolean; locale: boolean; taxLabel: boolean; country: boolean };
+  definitionsVersion?: number;
+}
+export interface RegionOptions {
+  countries: Array<{ code: string; name: string; currency: string; locale: string; timezone: string; taxLabel: string }>;
+  currencies: string[];
+}
+
+export type WorkflowTrigger =
+  | { type: 'manual' }
+  | { type: 'schedule'; every: 'daily' | 'weekly'; hour: number; weekday?: 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' };
+export type WorkflowStep =
+  | { id: string; type: 'agent'; agent: string; params?: Record<string, number> }
+  | { id: string; type: 'condition'; signal: string; op: string; value?: number }
+  | { id: string; type: 'action'; action: string; params: { title: string; includeSummaryOf?: string } };
+export interface WorkflowDefinition { trigger: WorkflowTrigger; steps: WorkflowStep[] }
+export type Availability = 'available' | 'coming_soon';
+export interface WorkflowCatalog {
+  triggers: Array<{ type: string; name: string; summary: string; availability: Availability; reason?: string; schedulerEnabled?: boolean }>;
+  agents: Array<{ key: string; name: string; summary: string; availability: Availability; reason?: string;
+    params?: Array<{ key: string; label: string; min: number; max: number; default: number }>;
+    outputs: Array<{ key: string; label: string; unit: 'count' | 'money' | 'week' }> }>;
+  actions: Array<{ key: string; name: string; summary: string; availability: Availability; reason?: string }>;
+  operators: Array<{ key: string; label: string; needsValue: boolean }>;
+  templates: Array<{ key: string; name: string; description: string; definition: WorkflowDefinition }>;
+  limits: { maxSteps: number; maxWorkflows: number };
+}
+export interface CustomWorkflow {
+  id: string; name: string; description: string | null; status: 'DRAFT' | 'ACTIVE' | 'PAUSED'; version: number;
+  definition: WorkflowDefinition; createdAt: string; updatedAt: string;
+  lastRun: { status: CustomWorkflowRun['status']; startedAt: string; summary: string | null } | null;
+  runCount: number | null; nextRunAt: string | null; timezone: string;
+}
+export interface CustomWorkflowRunStep {
+  id: string; type: 'agent' | 'condition' | 'action'; status: 'DONE' | 'PASSED' | 'NOT_MET' | 'SKIPPED' | 'BLOCKED' | 'FAILED';
+  summary?: string | null; durationMs?: number; agent?: string; agentRunId?: string | null; outputs?: Record<string, number | null>; actual?: number | null;
+}
+export interface CustomWorkflowRun {
+  id: string; workflowVersion: number; trigger: string; status: 'RUNNING' | 'COMPLETED' | 'ENDED_BY_CONDITION' | 'FAILED' | 'BLOCKED';
+  steps: CustomWorkflowRunStep[]; summary: string | null; error: string | null; startedAt: string; finishedAt: string | null;
+}
 
 // Bridge connectors (Tally) also report pairing / connected / syncing /
 // delayed / revoked, derived from their latest sync run (lib/connectors/state.js).

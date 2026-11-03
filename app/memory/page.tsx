@@ -7,6 +7,7 @@ import { api, type AuditEvent } from "@/lib/api";
 import { MemoryLearning } from "@/components/os/MemoryPanels";
 import { TeachStarlanePanel } from "@/components/os/BridgePanels";
 import { PageHeader, Subnav, EmptyLine } from "@/components/v32/ui";
+import { formatDate as fmtDate } from "@/lib/locale";
 
 // Memory — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
 //
@@ -84,7 +85,7 @@ function humanize(action: string): string {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return fmtDate(iso, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 function classify(action: string): { outcome: string; color: string } | null {
@@ -121,7 +122,7 @@ const EMPTY_COPY: Record<Exclude<TabKey, "learning">, { title: string; body: str
 function shortDate(iso: string): string {
   const d = new Date(iso);
   const sameYear = d.getFullYear() === new Date().getFullYear();
-  return d.toLocaleDateString("en-IN", sameYear ? { day: "numeric", month: "short" } : { month: "short", year: "numeric" });
+  return fmtDate(d, sameYear ? { day: "numeric", month: "short" } : { month: "short", year: "numeric" });
 }
 
 // V32 memory_event: date column, a dot on a hairline, title, reason and an

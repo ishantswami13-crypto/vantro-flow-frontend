@@ -3,6 +3,7 @@
 // the frontend formats, it never calculates financial values.
 
 import { API_BASE, authHeaders, fetchWithRetry } from '@/lib/api';
+import { formatMoneyShort } from './locale';
 
 export type Band = 'KNOWN' | 'LIKELY' | 'POSSIBLE' | 'UNKNOWN' | 'CONTRADICTED';
 export type DecisionStatus =
@@ -417,14 +418,11 @@ export const decisionsApi = {
 
 // ── Formatting (display only) ─────────────────────────────────────────────
 
-export function money(value: number | null | undefined, currency = 'INR'): string {
+// In the amount's own currency, written the way its market reads it, and
+// shortened from 100,000 ($1.3M, £420K, ₹4.2L). No currency = the business's.
+export function money(value: number | null | undefined, currency?: string | null): string {
   if (value == null || !Number.isFinite(value)) return '—';
-  if (currency !== 'INR') return `${value < 0 ? '−' : ''}${currency} ${Math.round(Math.abs(value)).toLocaleString('en-US')}`;
-  const abs = Math.abs(value);
-  const sign = value < 0 ? '−' : '';
-  if (abs >= 1e7) return `${sign}₹${(abs / 1e7).toFixed(2)}Cr`;
-  if (abs >= 1e5) return `${sign}₹${(abs / 1e5).toFixed(2)}L`;
-  return `${sign}₹${Math.round(abs).toLocaleString('en-IN')}`;
+  return formatMoneyShort(value, { currency });
 }
 
 export function pct(v: number | null | undefined): string {

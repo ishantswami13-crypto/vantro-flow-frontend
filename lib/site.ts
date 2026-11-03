@@ -14,6 +14,8 @@ export const SITE = {
     "Starlane reads the systems your business already runs, raises the few changes that matter each morning with the evidence behind every figure, and leaves every decision to a person.",
   twitter: "@ishantswami13",
   locale: "en_US",
+  /** Where the company is based. */
+  location: "New York, NY",
 };
 
 export function pageMetadata({ path, title, description, absoluteTitle }: {

@@ -17,21 +17,21 @@ import { Texture } from "@/components/marketing/home2/Texture";
 // on a fictional business and labelled so.
 
 // Live connections by name (registry status "live"); public feeds are opt-in per pilot.
-const LIVE = ["TallyPrime", "Excel", "CSV", "Google Sheets", "Bank statements", "Stock exports"];
+const LIVE = ["Accounting exports", "TallyPrime", "Excel", "CSV", "Google Sheets", "Bank statements", "Stock exports"];
 
 
 // One change, start to finish, on the sample business.
 const PATH_STEPS: Array<[string, string]> = [
-  ["Raised", "Gupta Traders missed a second payment promise."],
-  ["Shown", "Three open invoices, 47 days overdue, each from TallyPrime."],
+  ["Raised", "Harbor Supply Co. missed a second payment promise."],
+  ["Shown", "Three open invoices, 47 days overdue, each from the ledger."],
   ["Proposed", "A firm WhatsApp reminder, then an owner call."],
   ["Approved", "By you, from your phone. Sent once, as written."],
-  ["Checked", "The books show ₹6,00,000 received against INV-1042."],
+  ["Checked", "The books show $60,000 received against INV-1042."],
 ];
 
 
 const RULES = [
-  ["Read-only.", "Starlane reads TallyPrime, bank statements and stock. Nothing in your books is created, changed or deleted."],
+  ["Read-only.", "Starlane reads your accounting system, bank statements and stock. Nothing in your books is created, changed or deleted."],
   ["Sourced.", "Every figure is marked fact, calculation, assumption or estimate, with the record it came from."],
   ["Approved.", "Nothing reaches a customer until you approve the exact text, and it is sent once."],
 ];
@@ -39,28 +39,28 @@ const RULES = [
 const RULE_TONES = ["moss", "slate", "clay"] as const;
 
 const FACTS: Array<[string, string, string]> = [
-  ["0", "writes to your books", "Connections are read-only. Nothing in TallyPrime is created, changed or deleted."],
+  ["0", "writes to your books", "Connections are read-only. Nothing in your accounting system is created, changed or deleted."],
   ["4", "kinds of figure", "Fact, calculation, assumption or estimate, each with the record it came from."],
   ["1", "approval per message", "Every reminder waits for you and is sent once, exactly as written."],
   ["07:42", "brief on your phone", "What changed overnight, before the working day starts. Sample time."],
 ];
 
 const FAQ: Array<[string, string]> = [
-  ["Does Starlane change anything in Tally?", "No. Connections are read-only. TallyPrime is read through export only, and each bridge device has its own credential, which you can revoke."],
+  ["Does Starlane change anything in my books?", "No. Connections are read-only. Accounting data arrives as exports or, for TallyPrime, through a read-only bridge where each device has its own credential, which you can revoke."],
   ["Will Starlane message my customers?", "Not unless outbound messaging is enabled for your account, and then only with text you have approved, sent once."],
   ["Are the numbers made up by AI?", "No language model produces the figures. They come from your records, simple calculations and simulations you can inspect, each labelled fact, calculated, assumption or estimate."],
-  ["What do I need for a pilot?", "Someone who knows which systems you run, TallyPrime on one Windows machine or exports of the rest, and a person who will approve or decline what Starlane proposes."],
+  ["What do I need for a pilot?", "Someone who knows which systems you run, exports from your accounting system (or TallyPrime on one Windows machine), and a person who will approve or decline what Starlane proposes."],
   ["Who can see my data?", "Every request is scoped to your account, and one account is one business. Passwords are hashed and sign-in is rate-limited. The security page lists each control and what Starlane does not claim."],
   ["What does it cost?", "Starlane is available through private pilots, and pricing is agreed with each business once you have seen what it finds in your own data."],
 ];
 
 
 const HOME_DESCRIPTION =
-  "A morning brief for owners who run on Tally. Starlane reads TallyPrime, bank statements and stock, read-only, shows the few changes worth your attention with the evidence behind every figure, and sends nothing to a customer until you approve it.";
+  "A morning brief for business owners, wherever they are. Starlane reads your accounting system, bank statements and stock, read-only, shows the few changes worth your attention with the evidence behind every figure, and sends nothing to a customer until you approve it.";
 
 export const metadata: Metadata = pageMetadata({
   path: "/",
-  title: `${SITE.name} · Morning cash brief for businesses on Tally`,
+  title: `${SITE.name} · Morning cash brief for business owners`,
   absoluteTitle: true,
   description: HOME_DESCRIPTION,
 });
@@ -109,7 +109,7 @@ export default function LandingPage() {
           <div className="hv-top">
             <h1 className="hv-h"><span>Who owes you.</span> <span>Who to call today.</span></h1>
             <div className="hv-side">
-              <p className="hv-lead">Owners who run on TallyPrime see the few changes worth their attention each morning, with the evidence behind every figure.</p>
+              <p className="hv-lead">Owners see the few changes worth their attention each morning, with the evidence behind every figure.</p>
               <Link href="/access" className="hv-cta">Request a pilot</Link>
             </div>
           </div>
@@ -126,7 +126,7 @@ export default function LandingPage() {
           <div className="hp-wrap">
             <p className="hp-kicker">Starlane</p>
             <p className="hp-statement">
-              Starlane reads your TallyPrime, bank statements and stock overnight, <span>raises the few changes that matter, shows the record behind every figure, and waits for you before anything reaches a customer.</span>
+              Starlane reads your accounting system, bank statements and stock overnight, <span>raises the few changes that matter, shows the record behind every figure, and waits for you before anything reaches a customer.</span>
             </p>
           </div>
         </section>
@@ -200,7 +200,7 @@ export default function LandingPage() {
               <Texture id="hp-close-tx" tone="moss" seed={17} />
               <div className="hp-close-copy">
                 <h2 id="hp-close-h">See it on your own business.</h2>
-                <p>Private pilots for businesses that run on TallyPrime. Read-only connections, and nothing is sent without your approval.</p>
+                <p>Private pilots for businesses anywhere, on the systems they already run. Read-only connections, and nothing is sent without your approval.</p>
                 <div className="hp-close-act">
                   <Link href="/access" className="hp-btn-light">Request a pilot</Link>
                   <Link href="/platform" className="hp-btn-ghost">See the product</Link>

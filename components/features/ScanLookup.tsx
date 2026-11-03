@@ -8,13 +8,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { request } from "@/lib/api";
 import type { CustomerScan, InvoiceScan, ScanSearch } from "../../packages/contracts/src/features";
+import { formatMoney, formatNumber } from "@/lib/locale";
 
 const RULE = "rgba(25,25,23,0.10)", GRAPHITE = "#63635F";
-const inr = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
 function show(v: unknown, unit?: string) {
   if (v === null || v === undefined || v === "") return "—";
   if (typeof v === "boolean") return v ? "Yes" : "No";
-  if (typeof v === "number") return unit === "INR" ? inr(v) : `${v.toLocaleString("en-US")}${unit && unit !== "INR" ? ` ${unit}` : ""}`;
+  if (typeof v === "number") return unit && /^[A-Z]{3}$/.test(unit) ? formatMoney(v, { currency: unit }) : `${formatNumber(v)}${unit ? ` ${unit}` : ""}`;
   return String(v);
 }
 
@@ -53,20 +53,20 @@ export default function ScanLookup() {
   return (
     <section aria-labelledby="scan-lookup-h" style={{ width: "100%", display: "grid", gap: 10, marginBottom: 28 }}>
       <h2 id="scan-lookup-h" style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>Look into a customer or invoice</h2>
-      <input aria-label="Customer or invoice number" placeholder="Mehta Hardware, S/101…" value={q} onChange={(e) => setQ(e.target.value)}
+      <input aria-label="Customer or invoice number" placeholder="Acme Supply, INV-101…" value={q} onChange={(e) => setQ(e.target.value)}
         style={{ padding: "10px 12px", border: `1px solid ${RULE}`, borderRadius: 8, font: "inherit", background: "#fff" }} />
       {hits && (hits.customers.length || hits.invoices.length) ? (
         <div style={{ background: "#fff", border: `1px solid ${RULE}`, borderRadius: 8, overflow: "hidden" }}>
           {hits.customers.map((c, i) => (
             <button key={c.key} onClick={() => void openCustomer(c.key)} style={{ all: "unset", boxSizing: "border-box", width: "100%", display: "flex", gap: 12, padding: "10px 14px", borderTop: i ? `1px solid ${RULE}` : 0, cursor: "pointer" }}>
               <span style={{ flex: 1 }}><strong style={{ fontWeight: 500 }}>{c.name}</strong> <span style={{ color: GRAPHITE, fontSize: 13 }}>· {c.openCount} open · oldest {c.oldestDays} days</span></span>
-              <span style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>{inr(c.openTotal)}</span>
+              <span style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>{formatMoney(c.openTotal)}</span>
             </button>
           ))}
           {hits.invoices.map((v) => (
             <button key={v.id} onClick={() => void openInvoice(v.id)} style={{ all: "unset", boxSizing: "border-box", width: "100%", display: "flex", gap: 12, padding: "10px 14px", borderTop: `1px solid ${RULE}`, cursor: "pointer" }}>
               <span style={{ flex: 1 }}><strong style={{ fontWeight: 500 }}>{v.invoiceNumber}</strong> <span style={{ color: GRAPHITE, fontSize: 13 }}>· {v.customer} · {v.daysOverdue > 0 ? `${v.daysOverdue} days overdue` : "not yet due"}</span></span>
-              <span style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>{inr(v.amount)}</span>
+              <span style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>{formatMoney(v.amount)}</span>
             </button>
           ))}
         </div>

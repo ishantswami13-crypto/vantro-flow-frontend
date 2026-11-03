@@ -5,11 +5,13 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type Connector, type ConnectorHealth } from "@/lib/api";
 import { FiUploadCloud } from "react-icons/fi";
-import { PageHeader, Subnav, StatusDot, Chevron, EmptyLine, ErrorBanner, SkeletonRows } from "@/components/v32/ui";
+import { PageHeader, Subnav, StatusDot, Chevron, EmptyLine, ErrorBanner, SkeletonRows, SearchField } from "@/components/v32/ui";
 import { IconSources } from "@/components/v32/icons";
 import { BridgeHealthPanel } from "@/components/os/BridgePanels";
 
-// Sources — every system Starlane can connect to, and its live state.
+// Sources — every system a business runs on that Starlane can connect to,
+// and its live state. Accounting, ERP, banks, payments, CRM, e-commerce,
+// spreadsheets, email and messaging; Tally is one of many.
 //
 // Driven entirely by GET /api/connectors (backend lib/connectors): the
 // manifest says what a connector is and what access Starlane receives; the
@@ -24,7 +26,7 @@ import { BridgeHealthPanel } from "@/components/os/BridgePanels";
 type TabKey = "connected" | "available" | "sync" | "quality" | "reconciliation";
 const TABS: { key: TabKey; label: string }[] = [
   { key: "connected", label: "Connected" },
-  { key: "available", label: "Available" },
+  { key: "available", label: "Catalog" },
   { key: "sync", label: "Sync Activity" },
   { key: "quality", label: "Data Quality" },
   { key: "reconciliation", label: "Reconciliation" },
@@ -57,7 +59,7 @@ const STATUS: Record<ConnectorHealth, { label: string; color: string }> = {
   pairing: { label: "Waiting for pairing", color: "rgba(25,25,23,0.25)" },
   revoked: { label: "Device revoked", color: "rgba(25,25,23,0.25)" },
   not_connected: { label: "Not connected", color: "rgba(25,25,23,0.25)" },
-  unavailable: { label: "Not available yet", color: "rgba(25,25,23,0.25)" },
+  unavailable: { label: "Coming soon", color: "rgba(25,25,23,0.25)" },
 };
 
 function noteFor(c: Connector): string {
@@ -76,6 +78,25 @@ const CAPABILITY_TEXT: Record<string, string> = {
   WRITE_CAPABLE: "Starlane can write to it",
   EXECUTION_REQUIRES_APPROVAL: "Starlane can act through it, only after you approve each action",
 };
+
+// Catalog groups, in the order a business owner thinks about their systems.
+const CATEGORY_ORDER: { key: string; label: string }[] = [
+  { key: "accounting", label: "Accounting" },
+  { key: "erp", label: "ERP" },
+  { key: "banking", label: "Banks" },
+  { key: "payments", label: "Payments" },
+  { key: "crm", label: "CRM" },
+  { key: "ecommerce", label: "E-commerce" },
+  { key: "spreadsheets", label: "Spreadsheets and files" },
+  { key: "email", label: "Email" },
+  { key: "messaging", label: "Messaging" },
+  { key: "productivity", label: "Docs and storage" },
+  { key: "hr_payroll", label: "Payroll" },
+  { key: "support", label: "Support" },
+  { key: "logistics", label: "Logistics" },
+  { key: "inventory", label: "Inventory" },
+  { key: "communication", label: "Communication" },
+];
 
 const isConnected = (c: Connector) => ["healthy", "syncing", "connected", "delayed", "stale", "error"].includes(c.state.health);
 
@@ -133,6 +154,8 @@ export default function SourcesPage() {
   const [connectors, setConnectors] = useState<Connector[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<string>("all");
 
   const load = useCallback(async () => {
     setLoadError(null);
@@ -181,7 +204,7 @@ export default function SourcesPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <PageHeader
           title="Data sources"
-          subtitle="Where Starlane gets its data"
+          subtitle="Everything your business runs on, connected in one place"
           right={connectors ? (
             <span style={{ fontSize: 12, color: connected.length && !allHealthy ? "#8C6826" : FAINT }}>
               {!connected.length ? "Nothing connected yet" : `${allHealthy ? "All current" : "Needs a look"}${lastSync ? ` · Last sync ${timeAgo(lastSync)}` : ""}`}
@@ -210,9 +233,9 @@ export default function SourcesPage() {
                 {connected.length > 0 && <TableHeader />}
                 {connected.map((c) => <Row key={c.id} c={c} action={actionFor(c)} />)}
                 {!connected.length && (
-                  <Empty title="No company system is connected yet." body="Connect Tally or upload an export to give Starlane your real receivables, payables and stock.">
+                  <Empty title="No company system is connected yet." body="Upload an export from your accounting system, ERP or a spreadsheet, or connect TallyPrime, to give Starlane your real receivables, payables and stock.">
                     <div style={{ display: "flex", gap: 18 }}>
-                      <Quiet href="/sources/connect">Connect Tally</Quiet><Quiet onClick={() => setTab("available")}>See all sources</Quiet>
+                      <Quiet href="/decisions/import">Upload an export</Quiet><Quiet onClick={() => setTab("available")}>Browse the catalog</Quiet>
                     </div>
                   </Empty>
                 )}
@@ -226,23 +249,71 @@ export default function SourcesPage() {
             ) : <Empty title="Nothing connected yet" body="Connect a source to begin." />
           )}
 
-          {connectors && tab === "available" && (
-            <div>
-              <TableHeader />
-              {available.filter((c) => c.availability === "available").map((c) => (
-                <div key={c.id}>
-                  <Row c={c} action={actionFor(c)} />
-                  {c.access.length > 0 && (
-                    <ul style={{ margin: "8px 0 10px 42px", padding: 0, listStyle: "none", display: "grid", gap: 4 }}>
-                      {c.access.map((a) => <li key={a} style={{ fontSize: 12, color: SOFT }}>· {a}</li>)}
-                    </ul>
-                  )}
+          {connectors && tab === "available" && (() => {
+            const q = query.trim().toLowerCase();
+            const match = (c: Connector) => (category === "all" || c.category === category)
+              && (!q || `${c.name} ${c.provider || ""} ${c.category} ${c.summary}`.toLowerCase().includes(q));
+            const ready = available.filter((c) => c.availability === "available" && match(c));
+            const soon = available.filter((c) => c.availability !== "available" && match(c));
+            const cats = CATEGORY_ORDER.filter((g) => company.some((c) => c.category === g.key));
+            const groups = cats.map((g) => ({ ...g, items: soon.filter((c) => c.category === g.key) })).filter((g) => g.items.length);
+            return (
+              <div>
+                <div className="flex flex-wrap items-center" style={{ gap: 10, margin: "0 0 14px" }}>
+                  <div style={{ flex: "1 1 240px", maxWidth: 360 }}>
+                    <SearchField id="connector-search" value={query} onChange={setQuery} placeholder={`Search ${company.length} systems`} />
+                  </div>
+                  <div className="flex flex-wrap" style={{ gap: 6 }}>
+                    {[{ key: "all", label: "All" }, ...cats].map((g) => (
+                      <button key={g.key} type="button" onClick={() => setCategory(g.key)} className="hover-dim"
+                        style={{ fontSize: 12, padding: "4px 10px", borderRadius: 999, border: `1px solid ${LINE}`, background: category === g.key ? INK : "transparent", color: category === g.key ? "#fff" : SOFT, cursor: "pointer" }}>
+                        {g.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              ))}
-              <p style={{ fontSize: 11, letterSpacing: 0, color: FAINT, margin: "24px 12px 4px" }}>Not built yet</p>
-              {available.filter((c) => c.availability !== "available").map((c) => <Row key={c.id} c={c} action={actionFor(c)} />)}
-            </div>
-          )}
+
+                <p style={{ fontSize: 11, letterSpacing: 0, color: FAINT, margin: "8px 12px 4px" }}>Works today</p>
+                {ready.length ? (
+                  <>
+                    <TableHeader />
+                    {ready.map((c) => (
+                      <div key={c.id}>
+                        <Row c={c} action={actionFor(c)} />
+                        {c.access.length > 0 && (
+                          <ul style={{ margin: "8px 0 10px 42px", padding: 0, listStyle: "none", display: "grid", gap: 4 }}>
+                            {c.access.map((a) => <li key={a} style={{ fontSize: 12, color: SOFT }}>· {a}</li>)}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </>
+                ) : <p style={{ fontSize: 12.5, color: SOFT, margin: "4px 12px 12px" }}>Nothing that works today matches. A CSV or Excel export from any system can always be uploaded.</p>}
+
+                <p style={{ fontSize: 11, letterSpacing: 0, color: FAINT, margin: "28px 12px 4px" }}>Coming soon · until then, an export from any of these works through Upload</p>
+                {groups.map((g) => (
+                  <div key={g.key} style={{ marginTop: 14 }}>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: INK, margin: "0 12px 6px" }}>{g.label}</p>
+                    <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 8, padding: "0 12px" }}>
+                      {g.items.map((c) => (
+                        <div key={c.id} title={c.unavailableReason || c.summary} style={{ border: `1px solid ${LINE}`, borderRadius: 8, padding: "12px 12px 10px", minWidth: 0 }}>
+                          <div className="flex items-center justify-between" style={{ gap: 8 }}>
+                            <span style={{ fontSize: 13.5, fontWeight: 600, color: INK, minWidth: 0 }} className="truncate">{c.name}</span>
+                            <span style={{ fontSize: 10.5, color: FAINT, border: `1px solid ${LINE}`, borderRadius: 999, padding: "1px 7px", whiteSpace: "nowrap" }}>Coming soon</span>
+                          </div>
+                          <p style={{ fontSize: 12, color: SOFT, margin: "6px 0 0", lineHeight: 1.45 }}>{c.summary}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {!groups.length && <p style={{ fontSize: 12.5, color: SOFT, margin: "4px 12px" }}>Nothing coming soon matches your search.</p>}
+                <p style={{ fontSize: 12, color: FAINT, margin: "24px 12px 0" }}>
+                  Use something that is not listed? Starlane connectors share one interface (read, search, subscribe, write and approved actions), so new systems are added without changing the rest of the product.
+                </p>
+              </div>
+            );
+          })()}
 
           {connectors && tab === "sync" && (
             syncEntries.length ? (
@@ -253,7 +324,7 @@ export default function SourcesPage() {
           {/* What Starlane understood from each connection, likely duplicate
               customers and how it reads the data (GET /api/os/bridge). */}
           {tab === "quality" && <BridgeHealthPanel />}
-          {tab === "reconciliation" && <Empty title="Reconciliation isn’t running yet." body="Planned: receivables, payables and sales totals compared against Tally before those numbers are used elsewhere. Nothing is compared today." />}
+          {tab === "reconciliation" && <Empty title="Reconciliation isn’t running yet." body="Planned: receivables, payables and sales totals compared against your books of record before those numbers are used elsewhere. Nothing is compared today." />}
         </div>
       </div>
     </DashboardLayout>

@@ -8,6 +8,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ControlSubnav } from "@/components/control/ControlSubnav";
 import { api, type AuditEvent } from "@/lib/api";
+import { formatDateTime } from "@/lib/locale";
 
 // A real, chronological, per-user audit trail — sourced from audit_logs, a
 // table that already existed and was already being written to on every
@@ -26,7 +27,7 @@ function humanizeAction(action: string): string {
 }
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return formatDateTime(iso);
 }
 
 const GRID_COLS = "90px 150px 2fr 140px 160px 1fr";

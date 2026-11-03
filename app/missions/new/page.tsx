@@ -12,14 +12,17 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Link from "next/link";
 import { request } from "@/lib/api";
 import type { Mission, MissionDraft, MissionInput, Simulation } from "../../../packages/contracts/src/features";
+import { formatMoney, formatNumber, currencySymbol } from "@/lib/locale";
+import { useRegion } from "@/components/providers/RegionSync";
 
 const RULE = "rgba(25,25,23,0.10)", GRAPHITE = "#63635F";
-const inr = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
+const inr = (v: number) => formatMoney(v);
 const field: React.CSSProperties = { padding: "8px 10px", border: `1px solid ${RULE}`, borderRadius: 6, font: "inherit", background: "#fff" };
 const btn: React.CSSProperties = { fontSize: 13.5, padding: "8px 14px", borderRadius: 6, border: `1px solid ${RULE}`, background: "#fff", cursor: "pointer" };
 type Preview = { errors: string[]; draft: MissionDraft; simulation: Simulation | null };
 
 export default function NewMissionPage() {
+  const region = useRegion();
   const router = useRouter();
   const [input, setInput] = useState<MissionInput | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -82,8 +85,8 @@ export default function NewMissionPage() {
                     onChange={(e) => setInput((i) => ({ ...i!, customer: e.target.value || undefined }))} />
                 </label>
                 {input.invoiceIds ? <button style={{ ...btn, justifySelf: "start", padding: "4px 10px", fontSize: 12.5 }} onClick={() => setInput((i) => { if (!i) return i; const { invoiceIds: _drop, ...rest } = i; return rest; })}>Use everyone overdue instead</button> : null}
-                <label style={{ display: "grid", gap: 4, fontSize: 13, color: GRAPHITE }}>Collect (₹)
-                  <input style={field} inputMode="numeric" placeholder={owed ? `Up to ${Math.round(owed).toLocaleString("en-IN")}` : ""} value={input.targetAmount ?? ""}
+                <label style={{ display: "grid", gap: 4, fontSize: 13, color: GRAPHITE }}>Collect ({currencySymbol(region.currency)})
+                  <input style={field} inputMode="numeric" placeholder={owed ? `Up to ${formatNumber(Math.round(owed))}` : ""} value={input.targetAmount ?? ""}
                     onChange={(e) => { const v = e.target.value.replace(/[^0-9.]/g, ""); setInput((i) => ({ ...i!, targetAmount: v ? Number(v) : undefined })); }} />
                 </label>
                 <label style={{ display: "grid", gap: 4, fontSize: 13, color: GRAPHITE }}>Within {input.horizonDays} days

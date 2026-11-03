@@ -13,7 +13,7 @@ type Chapter = { k: string; nav: string; title: string };
 const CHAPTERS: Chapter[] = [
   { k: "Connect", nav: "Sources", title: "Reading your books" },
   { k: "Brief", nav: "Today", title: "Morning brief" },
-  { k: "Evidence", nav: "Customers", title: "Gupta Traders" },
+  { k: "Evidence", nav: "Customers", title: "Harbor Supply Co." },
   { k: "Approve", nav: "Approvals", title: "Waiting for you" },
   { k: "Collected", nav: "Collections", title: "Collected" },
 ];
@@ -31,15 +31,15 @@ const SCENE_MS = 6200;
 const TOTAL_MS = SCENE_MS * CHAPTERS.length;
 
 const SOURCES: Array<[string, string, number]> = [
-  ["TallyPrime", "vouchers read", 1284],
+  ["Accounting", "entries read", 1284],
   ["Bank statements", "bank lines matched", 312],
   ["Stock", "items checked", 86],
 ];
 
-// Twelve weeks of Gupta Traders paying later and later, then not at all.
+// Twelve weeks of Harbor Supply Co. paying later and later, then not at all.
 const STRIP = [0, 0, 1, 0, 1, 1, 2, 1, 2, 2, 3, 3];
 
-const inr = (n: number) => n.toLocaleString("en-IN");
+const usd = (n: number) => n.toLocaleString("en-US");
 
 export function HeroFilm() {
   const [scene, setScene] = useState(0);
@@ -67,7 +67,7 @@ export function HeroFilm() {
       const at = Number(el.dataset.scene);
       const from = Number(el.dataset.delay ?? 0);
       const p = idx === at ? ease((local * SCENE_MS - from) / 1600) : idx > at ? 1 : 0;
-      el.textContent = inr(Math.round(target * p));
+      el.textContent = usd(Math.round(target * p));
     });
     return idx;
   }, []);
@@ -175,7 +175,7 @@ export function HeroFilm() {
                 {SOURCES.map(([name, unit, n], i) => (
                   <li key={name} style={{ "--i": i } as React.CSSProperties}>
                     <p className="fs-name"><i />{name}<em>Read-only</em></p>
-                    <p className="fs-n num"><b ref={counter(n, 0, 500 + i * 250)}>{inr(n)}</b></p>
+                    <p className="fs-n num"><b ref={counter(n, 0, 500 + i * 250)}>{usd(n)}</b></p>
                     <p className="fs-unit">{unit}</p>
                   </li>
                 ))}
@@ -202,7 +202,7 @@ export function HeroFilm() {
               <div className="fs-ev-grid">
                 <div>
                   <p className="fs-kick t-risk">Receivables · needs a decision</p>
-                  <p className="fs-big num">₹<b ref={counter(1842000, 2, 300)}>{inr(1842000)}</b></p>
+                  <p className="fs-big num">$<b ref={counter(184200, 2, 300)}>{usd(184200)}</b></p>
                   <p className="fs-meta">3 invoices · 47 days overdue · 2 promises missed</p>
                   <div className="fs-strip">
                     {STRIP.map((v, i) => <i key={i} className={`v${v}`} style={{ "--i": i } as React.CSSProperties} />)}
@@ -210,10 +210,10 @@ export function HeroFilm() {
                   <p className="fs-strip-k"><span>12 weeks ago</span><span>now</span></p>
                 </div>
                 <ul className="fs-ev">
-                  <li style={{ "--i": 0 } as React.CSSProperties}><i className="tag tag-fact">Fact</i><span>3 open invoices</span><em>TallyPrime</em></li>
+                  <li style={{ "--i": 0 } as React.CSSProperties}><i className="tag tag-fact">Fact</i><span>3 open invoices</span><em>Ledger</em></li>
                   <li style={{ "--i": 1 } as React.CSSProperties}><i className="tag tag-calc">Calculated</i><span>47 days overdue</span><em>Ledger</em></li>
                   <li style={{ "--i": 2 } as React.CSSProperties}><i className="tag tag-asm">Assumption</i><span>30-day terms</span><em>Yours to change</em></li>
-                  <li style={{ "--i": 3 } as React.CSSProperties}><i className="tag tag-est">Estimate</i><span>₹9.6–15.1 L likely in 30 days</span><em>Simulation</em></li>
+                  <li style={{ "--i": 3 } as React.CSSProperties}><i className="tag tag-est">Estimate</i><span>$96–151K likely in 30 days</span><em>Simulation</em></li>
                 </ul>
               </div>
             </section>
@@ -222,8 +222,8 @@ export function HeroFilm() {
             <section className={`fm-scene fs-approve${scene === 3 ? " is-on" : ""}`}>
               <div className="fs-draft">
                 <p className="fs-draft-k">Draft WhatsApp reminder · to {first.who}</p>
-                <p className="fs-draft-body">Namaste Guptaji, three invoices totalling ₹18,42,000 are now overdue, the oldest by 47 days. Please confirm a date for the transfer today.</p>
-                <p className="fs-draft-src">INV-1042, 1051, 1066 · TallyPrime</p>
+                <p className="fs-draft-body">Hi Dana, three invoices totalling $184,200 are now overdue, the oldest by 47 days. Please confirm a date for the transfer today.</p>
+                <p className="fs-draft-src">INV-1042, 1051, 1066 · Ledger</p>
                 <div className="fs-choices">
                   <span className="fs-go">Approve and send<i className="fs-tap" /></span>
                   <span>Edit</span>
@@ -236,8 +236,8 @@ export function HeroFilm() {
             {/* 05 Collected */}
             <section className={`fm-scene fs-done${scene === 4 ? " is-on" : ""}`}>
               <p className="fs-later">8 days later</p>
-              <p className="fs-paid num">₹<b ref={counter(600000, 4, 400)}>{inr(600000)}</b></p>
-              <p className="fs-recv"><i />Received against INV-1042 · confirmed in TallyPrime</p>
+              <p className="fs-paid num">$<b ref={counter(60000, 4, 400)}>{usd(60000)}</b></p>
+              <p className="fs-recv"><i />Received against INV-1042 · confirmed in your books</p>
               <ol className="fs-trail">
                 {["Raised", "Shown", "Proposed", "Approved", "Checked"].map((s, i) => (
                   <li key={s} style={{ "--i": i } as React.CSSProperties}><i />{s}</li>
@@ -269,11 +269,11 @@ export function HeroFilm() {
       </div>
 
       <p className="sl-sr">
-        A short film of the Starlane app on a fictional business. Starlane reads TallyPrime, bank statements and stock overnight,
+        A short film of the Starlane app on a fictional business. Starlane reads the accounting system, bank statements and stock overnight,
         read-only. The morning brief raises four changes: {CHANGES.map((c) => `${c.what}, ${c.who}, ${c.amt}`).join("; ")}. The first,
         {" "}{first.who}, shows {first.amt} open across three invoices, 47 days overdue, each figure labelled fact, calculated, assumption
         or estimate. A firm reminder is drafted and waits until the owner approves it, then is sent once. Eight days later the books
-        confirm ₹6,00,000 received against INV-1042.
+        confirm $60,000 received against INV-1042.
       </p>
     </div>
   );

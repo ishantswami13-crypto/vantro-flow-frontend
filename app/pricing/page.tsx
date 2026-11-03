@@ -25,7 +25,7 @@ export const viewport: Viewport = { themeColor: "#0F0E0D" };
 const STEPS = [
   ["Apply", "Three short steps: your company, the systems you run, and what you want to change. You see an explained assessment straight away, produced by fixed rules rather than AI."],
   ["Scope", "We confirm which of your systems connect today, what would be custom work, and who approves actions on your side."],
-  ["Connect read-only", "TallyPrime through the local bridge; bank statements, stock and spreadsheets as exports. Nothing in your systems changes."],
+  ["Connect read-only", "Accounting, bank, stock and spreadsheet exports, or TallyPrime through the local bridge. Nothing in your systems changes."],
   ["Review with your team", "Work through real changes and decisions on your own data, with the evidence. Then decide whether to continue, and on what terms."],
 ];
 
@@ -43,8 +43,8 @@ const OFF: Array<[string, string]> = [
 ];
 
 const FAQ: Array<[string, string]> = [
-  ["What does a pilot need from us?", "Someone who knows which systems you run, access to TallyPrime on one Windows machine or exports of the rest, and a person who will approve or decline what Starlane proposes."],
-  ["Does Starlane change anything in our systems?", "No. Connections are read-only. TallyPrime is read through export only, and each bridge device has its own credential, which you can revoke."],
+  ["What does a pilot need from us?", "Someone who knows which systems you run, exports from your accounting system (or TallyPrime on one Windows machine), and a person who will approve or decline what Starlane proposes."],
+  ["Does Starlane change anything in our systems?", "No. Connections are read-only. Accounting data arrives as exports or through a read-only bridge, and each bridge device has its own credential, which you can revoke."],
   ["Will Starlane contact our customers?", "Not unless outbound messaging is enabled for your account, and then only with text a person has approved, sent once."],
   ["Are the numbers produced by AI?", "No language model produces the figures. They come from your records, simple calculations and simulations you can inspect, each labelled as fact, calculated, assumption or estimate."],
 ];

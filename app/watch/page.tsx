@@ -422,7 +422,7 @@ function NewWatchModal({
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder='e.g. "Overdue receivables above ₹50k"'
+            placeholder='e.g. "Overdue receivables above 50k"'
             style={inputStyle}
           />
         </label>

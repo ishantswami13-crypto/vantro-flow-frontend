@@ -27,7 +27,7 @@ export default function PrivacyPage() {
         <div className="f-wrap">
           <div className="lg-body">
             <h2>Who we are</h2>
-            <p><strong>Starlane</strong> is an AI-powered collections, cashflow and inventory management app for Indian businesses.</p>
+            <p><strong>Starlane</strong> is an AI-powered collections, cashflow and inventory management app for businesses.</p>
             <p>This policy explains what data we collect, how we use it, and what rights you have. It applies to all users of the Starlane app.</p>
 
             <h2>What we collect</h2>

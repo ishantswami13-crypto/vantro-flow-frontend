@@ -22,14 +22,14 @@ const Brief = () => (
 
 const Evidence = () => (
   <div className="hp-ui">
-    <p className="hp-ui-top"><b>Gupta Traders</b><span>Needs a decision</span></p>
-    <p className="hp-ui-big num">₹18,42,000</p>
+    <p className="hp-ui-top"><b>Harbor Supply Co.</b><span>Needs a decision</span></p>
+    <p className="hp-ui-big num">$184,200</p>
     <p className="hp-ui-meta">3 invoices · 47 days overdue · 2 promises missed</p>
     <ul className="hp-ui-ev">
-      <li><i className="tag tag-fact">Fact</i>3 open invoices<em>TallyPrime</em></li>
+      <li><i className="tag tag-fact">Fact</i>3 open invoices<em>Ledger</em></li>
       <li><i className="tag tag-calc">Calculated</i>47 days overdue<em>Ledger</em></li>
       <li><i className="tag tag-asm">Assumption</i>30-day terms<em>Yours to change</em></li>
-      <li><i className="tag tag-est">Estimate</i>₹9.6–15.1 L in 30 days<em>Simulation</em></li>
+      <li><i className="tag tag-est">Estimate</i>$96–151K in 30 days<em>Simulation</em></li>
     </ul>
   </div>
 );
@@ -37,8 +37,8 @@ const Evidence = () => (
 const Approve = () => (
   <div className="hp-ui">
     <p className="hp-ui-top"><b>Approvals</b><span>1 waiting</span></p>
-    <p className="hp-ui-k">Draft WhatsApp reminder · Gupta Traders</p>
-    <p className="hp-ui-msg">Namaste Guptaji, three invoices totalling ₹18,42,000 are now overdue, the oldest by 47 days. Please confirm a date for the transfer today.</p>
+    <p className="hp-ui-k">Draft WhatsApp reminder · Harbor Supply Co.</p>
+    <p className="hp-ui-msg">Hi Dana, three invoices totalling $184,200 are now overdue, the oldest by 47 days. Please confirm a date for the transfer today.</p>
     <p className="hp-ui-btns"><span className="is-go">Approve and send</span><span>Edit</span><span>Skip</span></p>
     <p className="hp-ui-note">Nothing is sent until you approve. Sent once, as written.</p>
   </div>
@@ -48,17 +48,17 @@ const Collect = () => (
   <div className="hp-ui">
     <p className="hp-ui-top"><b>Collections</b><span>Checked against the books</span></p>
     <p className="hp-ui-k">8 days later</p>
-    <p className="hp-ui-paid num">₹6,00,000</p>
-    <p className="hp-ui-meta">Received against INV-1042 · confirmed in TallyPrime</p>
+    <p className="hp-ui-paid num">$60,000</p>
+    <p className="hp-ui-meta">Received against INV-1042 · confirmed in your books</p>
     <ol className="hp-ui-trail">{["Raised", "Shown", "Proposed", "Approved", "Checked"].map((s) => <li key={s}><i />{s}</li>)}</ol>
   </div>
 );
 
 const TABS: Tab[] = [
-  { k: "Brief", h: "The few changes worth your attention, every morning.", p: "Starlane reads TallyPrime, bank statements and stock overnight and raises only what moved: a missed promise, a bill that got dearer, stock running short. Everything else stays quiet.", href: "/platform#watch", link: "How the brief works", tone: "moss", seed: 3, ui: <Brief /> },
+  { k: "Brief", h: "The few changes worth your attention, every morning.", p: "Starlane reads your accounting system, bank statements and stock overnight and raises only what moved: a missed promise, a bill that got dearer, stock running short. Everything else stays quiet.", href: "/platform#watch", link: "How the brief works", tone: "moss", seed: 3, ui: <Brief /> },
   { k: "Evidence", h: "Every figure shows where it came from.", p: "Each number is labelled fact, calculation, assumption or estimate, with the record behind it. No language model produces the figures.", href: "/platform#decide", link: "How figures are sourced", tone: "slate", seed: 11, ui: <Evidence /> },
   { k: "Approvals", h: "Nothing reaches a customer until you approve it.", p: "Starlane drafts the reminder from your own template. You approve, edit or skip it from your phone, and it is sent once, exactly as written.", href: "/security", link: "Security and control", tone: "clay", seed: 21, ui: <Approve /> },
-  { k: "Collections", h: "Checked against the books, not assumed.", p: "When money arrives, Starlane confirms it in TallyPrime before it calls anything done, so the brief tomorrow starts from what really happened.", href: "/platform#verify", link: "How results are checked", tone: "ink", seed: 5, ui: <Collect /> },
+  { k: "Collections", h: "Checked against the books, not assumed.", p: "When money arrives, Starlane confirms it in your books before it calls anything done, so the brief tomorrow starts from what really happened.", href: "/platform#verify", link: "How results are checked", tone: "ink", seed: 5, ui: <Collect /> },
 ];
 
 export function HomeTabs() {

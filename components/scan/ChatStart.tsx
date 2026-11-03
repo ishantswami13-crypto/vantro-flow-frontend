@@ -76,7 +76,7 @@ export function ChatStart() {
                 {menuOpen && (
                   <div role="menu" className="pop-in scan-menu">
                     <MenuItem icon={<IconUpload size={16} />} title="Upload a file" hint="A receivables or sales export" onClick={() => router.push("/decisions/import")} />
-                    <MenuItem icon={<IconLink size={16} />} title="Connect a source" hint="Tally or another system" onClick={() => router.push("/sources")} />
+                    <MenuItem icon={<IconLink size={16} />} title="Connect a source" hint="Accounting, ERP, bank or a spreadsheet" onClick={() => router.push("/sources")} />
                     <MenuItem icon={<IconSparkle size={16} />} title="Scan my books" hint="See how invoices turn into cash" onClick={() => { setMenuOpen(false); setShowFindings(true); }} />
                   </div>
                 )}

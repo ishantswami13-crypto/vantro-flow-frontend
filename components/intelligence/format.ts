@@ -1,27 +1,25 @@
 // Shared formatting helpers for the supply-chain intelligence screens.
 // No calculation happens here — this file only formats numbers the backend
 // already computed (see lib/domain/intelligence/supplyChainImpact.js).
-export function formatINR(value: number | null | undefined): string {
+// Money and dates follow the business's region (lib/locale.ts).
+import { formatMoney as regionMoney, formatDate as regionDate } from "@/lib/locale";
+
+export function formatMoney(value: number | null | undefined, currency?: string | null): string {
   if (value == null) return "—";
-  return `₹${value.toLocaleString("en-IN")}`;
+  return regionMoney(value, { currency });
 }
+
+/** @deprecated Kept for older imports; writes the business's own currency. */
+export const formatINR = formatMoney;
 
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-  } catch {
-    return iso;
-  }
+  return regionDate(iso, { day: "numeric", month: "short", year: "numeric" }, iso);
 }
 
 export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return iso;
-  }
+  return regionDate(iso, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }, iso);
 }
 
 export function confidenceFromScore(value: number | null | undefined): "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN" {

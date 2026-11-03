@@ -75,7 +75,7 @@ export default function PlatformPage() {
             <Index n="01" k="Connect" />
             <h2 id="p1-h" className="f-h2">Read-only, from what you already run.</h2>
             <p className="f-lede">Nothing in your systems changes.</p>
-            <p className="f-body">TallyPrime is read through a local bridge with a revocable credential per device. Bank statements, stock and spreadsheets arrive as exports. Your team logs the promises customers make. External feeds are switched on per pilot.</p>
+            <p className="f-body">Accounting data arrives as exports from QuickBooks, Xero, Zoho Books and others, or through a local read-only bridge for TallyPrime with a revocable credential per device. Bank statements, stock and spreadsheets arrive as exports. Your team logs the promises customers make. External feeds are switched on per pilot.</p>
             <p className="f-note"><span className="f-key f-key-solid" />Live today <span className="f-key f-key-dash" />Planned or custom</p>
             <p className="f-after"><Link href="/integrations" className="f-link">Every integration and its status<span aria-hidden>→</span></Link></p>
           </div>
@@ -137,8 +137,8 @@ export default function PlatformPage() {
             <h2 id="p5-h" className="f-h2">Compare before committing.</h2>
             <p className="f-body">Real options are simulated as ranges against this customer’s own history, and ranked by rules you can read. A person decides.</p>
             <dl className="s6-dec">
-              <div><dt>Decision</dt><dd>Escalate Gupta Traders</dd></div>
-              <div><dt>Owed</dt><dd className="num">₹18,42,000 · 47 days</dd></div>
+              <div><dt>Decision</dt><dd>Escalate Harbor Supply Co.</dd></div>
+              <div><dt>Owed</dt><dd className="num">$184,200 · 47 days</dd></div>
               <div><dt>Horizon</dt><dd>30 days</dd></div>
             </dl>
           </div>

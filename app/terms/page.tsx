@@ -30,10 +30,10 @@ export default function TermsPage() {
             <p>These terms form a binding agreement under the Indian Contract Act, 1872 and the Information Technology Act, 2000.</p>
 
             <h2>Who operates Starlane</h2>
-            <p><strong>Starlane</strong> builds AI business automation infrastructure for Indian businesses.</p>
+            <p><strong>Starlane</strong> builds AI business automation infrastructure for businesses.</p>
 
             <h2>What Starlane does</h2>
-            <p>Starlane is an AI-powered platform for Indian businesses that automates accounts receivable collections, cashflow forecasting, inventory monitoring, and WhatsApp-based customer follow-ups. <strong>Starlane is a software tool — it does not provide legal, financial, tax or accounting advice.</strong></p>
+            <p>Starlane is an AI-powered platform for businesses that automates accounts receivable collections, cashflow forecasting, inventory monitoring, and WhatsApp-based customer follow-ups. <strong>Starlane is a software tool — it does not provide legal, financial, tax or accounting advice.</strong></p>
 
             <h2>Your account</h2>
             <p>You are responsible for keeping your account credentials secure. Notify us immediately at <a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a> if you suspect unauthorised access. You must provide accurate information when registering. Accounts may not be shared between multiple businesses.</p>
