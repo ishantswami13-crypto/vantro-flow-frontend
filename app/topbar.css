@@ -36,7 +36,7 @@
 .tb-mark:hover { opacity: .8; }
 .tb-items { display: flex; align-items: stretch; gap: calc(32px * var(--s)); margin: 0; padding: 0; list-style: none; }
 .tb-items li { display: flex; }
-.tb .tb-bar .tb-item { position: relative; display: inline-flex; align-items: center; gap: calc(6px * var(--s)); padding: 0; border: 0; background: none; color: var(--tb-mute); font: inherit; font-size: calc(14px * var(--s)); font-weight: 500; letter-spacing: 0; cursor: pointer; white-space: nowrap; transition: color .25s var(--tb-out); }
+.tb .tb-bar .tb-item { position: relative; display: inline-flex; align-items: center; gap: calc(6px * var(--s)); padding: 0; border: 0; background: none; color: var(--tb-mute); font: inherit; font-size: calc(14px * var(--s)); font-weight: 500; letter-spacing: -0.012em; cursor: pointer; white-space: nowrap; transition: color .25s var(--tb-out); }
 .tb .tb-bar .tb-item:hover, .tb .tb-bar .tb-item.is-open, .tb .tb-bar .tb-item[aria-current="page"], .tb .tb-bar .tb-item.is-current { color: var(--tb-fg); }
 .tb-item::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--tb-fg); transform: scaleX(0); transform-origin: left; transition: transform .45s var(--tb-io); }
 .tb-item.is-open::after { transform: scaleX(1); }
@@ -73,7 +73,7 @@
 .tb-col-h { margin: 0 0 calc(14px * var(--s)); font-size: calc(14px * var(--s)); line-height: calc(20px * var(--s)); font-weight: 500; color: var(--tb-mute); }
 .tb-col li { line-height: calc(18px * var(--s)); }
 .tb-col ul { display: grid; gap: calc(8px * var(--s)); margin: 0; padding: 0; list-style: none; }
-.tb-col a { display: inline; font-size: calc(14px * var(--s)); font-weight: 600; letter-spacing: -0.005em; line-height: calc(18px * var(--s)); color: var(--tb-fg); background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size .4s var(--tb-out), color .2s; }
+.tb-col a { display: inline; font-size: calc(14px * var(--s)); font-weight: 600; letter-spacing: -0.015em; line-height: calc(18px * var(--s)); color: var(--tb-fg); background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size .4s var(--tb-out), color .2s; }
 .tb-col a:hover { background-size: 100% 1px; }
 .tb-side { padding: calc(32px * var(--s)) 0 calc(40px * var(--s)) calc(65px * var(--s)); }
 .tb-feat { display: block; color: var(--tb-fg); }
