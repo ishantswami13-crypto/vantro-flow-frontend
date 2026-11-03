@@ -661,7 +661,9 @@ function ApprovalCard({ a, onDone }: { a: WorkflowApproval; onDone: () => void }
           <input style={field} maxLength={300} value={subject} onChange={(e) => setSubject(e.target.value)} aria-label="Subject" />
           <textarea style={{ ...field, minHeight: 120 }} maxLength={4000} value={body} onChange={(e) => setBody(e.target.value)} aria-label="Email" />
           <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
-            <Button small primary onClick={() => decide("approve")} disabled={!!busy || !subject.trim() || !body.trim()}>{busy === "approve" ? "Sending…" : a.status === "BLOCKED" ? "Try again" : "Approve and send"}</Button>
+            {!(a.status === "BLOCKED" && /do-not-contact/.test(a.statusReason || "")) && (
+              <Button small primary onClick={() => decide("approve")} disabled={!!busy || !subject.trim() || !body.trim()}>{busy === "approve" ? "Sending…" : a.status === "BLOCKED" ? "Try again" : "Approve and send"}</Button>
+            )}
             <Button small onClick={() => decide("reject")} disabled={!!busy}>{busy === "reject" ? "Rejecting…" : "Reject"}</Button>
           </div>
         </div>
