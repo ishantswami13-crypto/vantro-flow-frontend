@@ -18,6 +18,21 @@ export const SITE = {
   location: "New York, NY",
 };
 
+// Legal identity used by /terms and /privacy. Edit these in one place.
+// ASSUMED values (set 2026-11-03, pending the company's confirmed details):
+// entityName, address and governingLaw/venue. dataLocation is left null so
+// the privacy policy does not state a server region nobody has confirmed;
+// set it (e.g. "the United States") once the hosting region is known.
+export const LEGAL = {
+  entityName: "Starlane, Inc.",
+  address: "New York, NY, USA",
+  governingLaw: "the State of New York, USA",
+  venue: "the state and federal courts located in New York County, New York",
+  email: "ishantswami13@gmail.com",
+  dataLocation: null as string | null,
+  lastUpdated: "3 November 2026",
+};
+
 export function pageMetadata({ path, title, description, absoluteTitle }: {
   /** Route path, e.g. "/pricing". */
   path: string;
