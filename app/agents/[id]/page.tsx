@@ -3,7 +3,9 @@
 // Agent detail (V32 AgentDetail). Read from the same GET /api/os/agents the
 // list uses: an agent is one of the workers that really runs in Starlane,
 // addressed by its key. Unknown keys say so instead of rendering made-up
-// detail. Stopping an agent lives on Control, Decisions.
+// detail. Stopping an agent lives on Control, Decisions. Agents that are safe
+// to run on demand (POST /api/os/agents/:key/run) get a Run now button, and
+// recent runs come from GET /api/os/agents/:key/runs.
 
 import { useState } from "react";
 import Link from "next/link";
@@ -47,9 +49,25 @@ function Fact({ label, value }: { label: string; value: string }) {
 export default function AgentDetail() {
   const params = useParams<{ id: string }>();
   const id = params?.id ? decodeURIComponent(params.id) : "";
-  const { data, error, loading } = useLoad(() => osApi.agents());
+  const { data, error, loading, reload } = useLoad(() => osApi.agents());
+  const runs = useLoad(() => osApi.agentRuns(id));
   const [tab, setTab] = useState<"overview" | "rules">("overview");
+  const [running, setRunning] = useState(false);
+  const [runError, setRunError] = useState<string | null>(null);
   const a = data?.agents.find((x) => x.key === id);
+
+  async function runNow() {
+    setRunning(true);
+    setRunError(null);
+    try {
+      await osApi.runAgent(id);
+      await Promise.all([reload(), runs.reload()]);
+    } catch (err) {
+      setRunError(errorText(err));
+    } finally {
+      setRunning(false);
+    }
+  }
 
   return (
     <DashboardLayout pageTitle="Agent">
@@ -77,8 +95,17 @@ export default function AgentDetail() {
                   </div>
                 </div>
               </div>
-              <Button small href="/control/decisions">Pause or stop</Button>
+              <div className="flex items-center" style={{ gap: 8 }}>
+                {a.runnable && (
+                  <Button small primary onClick={runNow} disabled={running || a.status === "STOPPED"} title={a.status === "STOPPED" ? "Stopped on Control" : undefined}>
+                    {running ? "Running…" : "Run now"}
+                  </Button>
+                )}
+                <Button small href="/control/decisions">Pause or stop</Button>
+              </div>
             </div>
+
+            {runError && <ErrorBanner>The run did not finish: {runError}</ErrorBanner>}
 
             <Subnav
               active={tab}
@@ -120,6 +147,19 @@ export default function AgentDetail() {
                   <Fact label="Last run" value={a.lastRunAt ? ago(a.lastRunAt) : "Never"} />
                   {a.budget && <Fact label="Budget" value={a.budget} />}
                 </div>
+                {runs.data?.tracked && (
+                  <div>
+                    <div style={{ fontSize: 10.5, letterSpacing: 0, color: "#6E6E69", marginBottom: 6 }}>Recent runs</div>
+                    {runs.data.runs.length === 0 ? (
+                      <div style={{ fontSize: 12.5, color: "#6E6E69" }}>No runs recorded yet.</div>
+                    ) : runs.data.runs.slice(0, 8).map((r) => (
+                      <Link key={r.id} href={`/agents/${encodeURIComponent(a.key)}/run/${r.id}`} className="hover-dim flex items-baseline justify-between" style={{ gap: 12, padding: "7px 0", borderBottom: "1px solid #EBEAE6", fontSize: 12.5 }}>
+                        <span style={{ color: "#191917" }}>{r.startedAt ? ago(r.startedAt) : "Unknown time"}</span>
+                        <span style={{ color: r.status === "failed" ? "#A64F4B" : "#63635F" }}>{r.status === "completed" ? "Completed" : r.status === "failed" ? "Failed" : "Running"}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
                 <div>
                   <div style={{ fontSize: 10.5, letterSpacing: 0, color: "#6E6E69", marginBottom: 6 }}>Approval</div>
                   <div style={{ fontSize: 12.5, color: "#43433F", lineHeight: 1.6 }}>Nothing leaves Starlane without a person approving it. Approvals wait on Control.</div>
