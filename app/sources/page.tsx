@@ -8,6 +8,7 @@ import { FiUploadCloud } from "react-icons/fi";
 import { PageHeader, Subnav, StatusDot, Chevron, EmptyLine, ErrorBanner, SkeletonRows, SearchField } from "@/components/v32/ui";
 import { IconSources } from "@/components/v32/icons";
 import { BridgeHealthPanel } from "@/components/os/BridgePanels";
+import IntegrationsPanel from "@/components/os/IntegrationsPanel";
 
 // Sources — every system a business runs on that Starlane can connect to,
 // and its live state. Accounting, ERP, banks, payments, CRM, e-commerce,
@@ -23,9 +24,10 @@ import { BridgeHealthPanel } from "@/components/os/BridgePanels";
 // from the connections; Reconciliation has no computation behind it yet and
 // says exactly that.
 
-type TabKey = "connected" | "available" | "sync" | "quality" | "reconciliation";
+type TabKey = "connected" | "apps" | "available" | "sync" | "quality" | "reconciliation";
 const TABS: { key: TabKey; label: string }[] = [
   { key: "connected", label: "Connected" },
+  { key: "apps", label: "Gmail, apps and webhooks" },
   { key: "available", label: "Catalog" },
   { key: "sync", label: "Sync Activity" },
   { key: "quality", label: "Data Quality" },
@@ -96,6 +98,7 @@ const CATEGORY_ORDER: { key: string; label: string }[] = [
   { key: "logistics", label: "Logistics" },
   { key: "inventory", label: "Inventory" },
   { key: "communication", label: "Communication" },
+  { key: "custom", label: "Any other software" },
 ];
 
 const isConnected = (c: Connector) => ["healthy", "syncing", "connected", "delayed", "stale", "error"].includes(c.state.health);
@@ -164,6 +167,23 @@ export default function SourcesPage() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
+  // Back from Google's consent page (?gmail=connected|failed|cancelled), or a
+  // link straight to a tab (?tab=apps).
+  const [banner, setBanner] = useState<{ tone: "ok" | "bad"; text: string } | null>(null);
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const g = q.get("gmail");
+    const t = q.get("tab");
+    if (t && TABS.some((x) => x.key === t)) setTab(t as TabKey);
+    if (g) {
+      setTab("apps");
+      setBanner(g === "connected" ? { tone: "ok", text: "Gmail is connected. New messages can now start your workflows." }
+        : g === "cancelled" ? { tone: "bad", text: "Gmail was not connected: the Google sign-in was cancelled." }
+          : { tone: "bad", text: "Gmail could not be connected. Try again, and allow both reading and sending when Google asks." });
+      window.history.replaceState(null, "", "/sources");
+    }
+  }, []);
+
   const revoke = async (deviceId: string, name: string) => {
     if (!window.confirm(`Revoke "${name}"? That computer will stop syncing until it is paired again.`)) return;
     setRevoking(deviceId);
@@ -190,6 +210,8 @@ export default function SourcesPage() {
         </div>
       );
     }
+    if (c.authType === "oauth" || c.authType === "webhook" || (c.authType === "api_key" && c.connect)) return <Quiet onClick={() => setTab("apps")}>{isConnected(c) ? "Manage" : "Connect"}</Quiet>;
+    if (c.authType === "link") return <Quiet href="/decisions/import?sheet=1">Import a sheet</Quiet>;
     if (c.authType === "file_import") return <Quiet href="/decisions/import"><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><FiUploadCloud size={13} /> Upload</span></Quiet>;
     return null;
   };
@@ -216,6 +238,12 @@ export default function SourcesPage() {
           <ErrorBanner>
             {loadError} <button type="button" onClick={load} className="hover-dim" style={{ background: "none", border: "none", color: INK, textDecoration: "underline", cursor: "pointer" }}>Retry</button>
           </ErrorBanner>
+        )}
+
+        {banner && (
+          <div role="status" style={{ fontSize: 13, padding: "10px 12px", borderRadius: 8, border: `1px solid ${LINE}`, color: banner.tone === "ok" ? "#477054" : WARN, background: "#fff" }}>
+            {banner.text} <button type="button" onClick={() => setBanner(null)} className="hover-dim" style={{ background: "none", border: "none", color: SOFT, cursor: "pointer", marginLeft: 6 }}>Dismiss</button>
+          </div>
         )}
 
         <Subnav items={TABS} active={tab} onChange={(k) => setTab(k as TabKey)} />
@@ -309,11 +337,13 @@ export default function SourcesPage() {
                 ))}
                 {!groups.length && <p style={{ fontSize: 12.5, color: SOFT, margin: "4px 12px" }}>Nothing coming soon matches your search.</p>}
                 <p style={{ fontSize: 12, color: FAINT, margin: "24px 12px 0" }}>
-                  Use something that is not listed? Starlane connectors share one interface (read, search, subscribe, write and approved actions), so new systems are added without changing the rest of the product.
+                  Use something that is not listed? Connect it today with an incoming webhook (it sends data to Starlane) or its REST API (workflows act on it), under Gmail, apps and webhooks.
                 </p>
               </div>
             );
           })()}
+
+          {tab === "apps" && <IntegrationsPanel />}
 
           {connectors && tab === "sync" && (
             syncEntries.length ? (

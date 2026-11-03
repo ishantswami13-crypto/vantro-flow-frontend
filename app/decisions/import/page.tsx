@@ -15,7 +15,7 @@ import { getRegion } from "@/lib/locale";
 import { C, Notice, Pill, SectionLabel, Stat } from "@/components/decisions/ui";
 import {
   decisionsApi, money, shortDate,
-  type ImportCommit, type ImportOptions, type ImportPreview, type LedgerField, type LedgerProfile,
+  type ImportCommit, type ImportOptions, type ImportSource, type ImportPreview, type LedgerField, type LedgerProfile,
 } from "@/lib/decisions";
 
 const FIELD_LABEL: Record<LedgerField, string> = {
@@ -96,7 +96,10 @@ function Limitations({ p }: { p: LedgerProfile }) {
 export default function ImportPage() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState<ImportSource | null>(null);
+  const [sheetUrl, setSheetUrl] = useState("");
+  const [showSheet, setShowSheet] = useState(false);
+  useEffect(() => { if (new URLSearchParams(window.location.search).get("sheet")) setShowSheet(true); }, []);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [options, setOptions] = useState<ImportOptions | null>(null);
   const [confirmed, setConfirmed] = useState<Record<string, boolean>>({});
@@ -104,7 +107,7 @@ export default function ImportPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportCommit | null>(null);
 
-  const runPreview = useCallback(async (f: File, opts: ImportOptions | null) => {
+  const runPreview = useCallback(async (f: ImportSource, opts: ImportOptions | null) => {
     setBusy("preview");
     setError(null);
     try {
@@ -121,7 +124,7 @@ export default function ImportPage() {
     }
   }, []);
 
-  const onFile = (f: File | null) => {
+  const onFile = (f: ImportSource | null) => {
     setFile(f);
     setPreview(null);
     setOptions(null);
@@ -254,7 +257,21 @@ export default function ImportPage() {
               <button type="button" onClick={downloadTemplate} className="text-[13px] inline-flex items-center gap-1.5 hover-dim" style={{ color: C.muted }}>
                 <FiDownload size={13} /> Template
               </button>
+              <button type="button" onClick={() => setShowSheet((v) => !v)} className="text-[13px] hover-dim" style={{ color: C.muted }}>
+                {showSheet ? "Hide Google Sheets" : "Use a Google Sheet"}
+              </button>
             </div>
+            {showSheet && (
+              <div className="mt-5 pt-5 flex flex-wrap items-end gap-3" style={{ borderTop: `1px solid ${C.line}` }}>
+                <label className="flex-1 min-w-[260px] grid gap-1 text-[12px]" style={{ color: C.muted }}>
+                  Google Sheet link (Share › Anyone with the link › Viewer). The tab open in the link is imported.
+                  <input value={sheetUrl} onChange={(e) => setSheetUrl(e.target.value)} inputMode="url" placeholder="https://docs.google.com/spreadsheets/d/…"
+                    className="text-[14px] rounded-md px-3 py-2" style={{ border: `1px solid ${C.line}`, color: C.ink, background: "#fff" }} />
+                </label>
+                <Button size="sm" loading={busy === "preview"} disabled={!/^https:\/\/docs\.google\.com\/spreadsheets\/d\//.test(sheetUrl.trim())}
+                  onClick={() => onFile({ sheetUrl: sheetUrl.trim(), name: "Google Sheet" })}>Read sheet</Button>
+              </div>
+            )}
           </section>
         )}
 
