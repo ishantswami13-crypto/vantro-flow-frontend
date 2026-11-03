@@ -266,7 +266,7 @@ function SettingsPageInner() {
     <DashboardLayout pageTitle="Settings">
       <div className="space-y-4">
         <div>
-          <h1 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 26, color: "#191917" }}>Settings</h1>
+          <h1 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 38, lineHeight: 1.08, color: "#0F0E0D" }}>Settings</h1>
           <p style={{ fontSize: 13.5, color: "#63635F", marginTop: 4 }}>Manage your account, integrations, and automation.</p>
         </div>
 

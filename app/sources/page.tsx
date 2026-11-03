@@ -104,7 +104,7 @@ function Row({ c, action }: { c: Connector; action?: React.ReactNode }) {
         <div className="md:hidden" style={{ marginTop: 4 }}><StatusDot label={st.label} color={st.color} /></div>
       </div>
       <div className="hidden md:block"><StatusDot label={st.label} color={st.color} /></div>
-      <div className="hidden md:block" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "#43433F" }}>{timeAgo(c.state.lastSyncAt) || "—"}</div>
+      <div className="hidden md:block" style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "#43433F" }}>{timeAgo(c.state.lastSyncAt) || "—"}</div>
       <div className="hidden md:block min-w-0 truncate" style={{ fontSize: 12, color: SOFT }} title={cap ? `${noteFor(c)}. ${cap}` : noteFor(c)}>{noteFor(c)}</div>
       <div className="flex items-center justify-end" style={{ gap: 12 }} onClick={(e) => e.stopPropagation()}>
         {action}
