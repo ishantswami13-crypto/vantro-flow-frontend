@@ -17,6 +17,10 @@ import Link from "next/link";
 interface DashboardLayoutProps {
   children: React.ReactNode;
   pageTitle?: string;
+  /** Harvey's agent view: the rail collapses to icons on desktop. */
+  slimRail?: boolean;
+  /** The page lays itself out edge to edge (no page padding or width cap). */
+  bare?: boolean;
 }
 
 // Convert base64url VAPID key to Uint8Array (required by PushManager)
@@ -71,7 +75,7 @@ async function subscribeToPush() {
   }
 }
 
-export default function DashboardLayout({ children, pageTitle }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, pageTitle, slimRail = false, bare = false }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNotifBanner, setShowNotifBanner] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
@@ -162,7 +166,7 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
 
   return (
     <div className="hv-app flex h-screen overflow-hidden">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} slim={slimRail} />
 
       <div className="hv-canvas flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onMenuToggle={() => setSidebarOpen(true)} pageTitle={pageTitle} />
@@ -214,9 +218,15 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto v32-main">
-          <div key={pathname} className="v32-wrap page-in">{children}</div>
-        </main>
+        {bare ? (
+          <main className="flex-1 min-h-0 overflow-hidden">
+            <div key={pathname} className="h-full page-in">{children}</div>
+          </main>
+        ) : (
+          <main className="flex-1 overflow-y-auto v32-main">
+            <div key={pathname} className="v32-wrap page-in">{children}</div>
+          </main>
+        )}
       </div>
 
       <InstallPrompt />

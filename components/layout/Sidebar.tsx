@@ -8,6 +8,7 @@ import { api, getUser, clearAuth } from "@/lib/api";
 import { getSmartHiddenRoutes } from "@/lib/businessTypes";
 import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
 import { CommandPalette, type SearchableRoute } from "./CommandPalette";
+import StarlaneMark from "@/components/brand/StarlaneMark";
 import { IdentityPicker } from "@/components/identity/IdentityPicker";
 import { V32_NAV_ITEMS, V32_APPS_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, V32_WORKSPACE_NAV_ITEMS, HISTORY_NAV_ITEM, HOME_NAV_ITEM, type PrimaryNavItem } from "@/lib/navigation";
 import { listThreads, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
@@ -31,9 +32,9 @@ const MORE_HREFS = new Set([
   ...MORE_GROUPS.flatMap(g => g.items.map(i => i.href)),
 ]);
 
-interface SidebarProps { open: boolean; onClose: () => void; }
+interface SidebarProps { open: boolean; onClose: () => void; slim?: boolean; }
 
-export default function Sidebar({ open, onClose }: SidebarProps) {
+export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
   const pathname = usePathname();
   const [userName, setUserName]           = useState("User");
   const [isAdmin, setIsAdmin]             = useState(false);
@@ -151,6 +152,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         href={href}
         onClick={onClick}
         aria-current={active ? "page" : undefined}
+        title={slim ? label : undefined}
         className={`sb-row ${active ? "is-active" : ""}`}
       >
         <Icon size={16} />
@@ -173,7 +175,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
       <aside
         className={[
-          "sb fixed top-0 left-0 z-30 h-full flex flex-col",
+          `sb ${slim ? "sb-slim" : ""} fixed top-0 left-0 z-30 h-full flex flex-col`,
           "transition-transform duration-200 ease-out",
           "lg:translate-x-0 lg:static lg:z-30",
           open ? "translate-x-0" : "-translate-x-full",
@@ -182,9 +184,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         {/* Wordmark, notifications and search, as one quiet row */}
         <div className="flex items-center justify-between shrink-0" style={{ padding: "4px 4px 22px 10px" }}>
           <Link href="/bridge" onClick={onClose} aria-label="Starlane home" className="sb-mark">
-            Starlane
+            <span className="sb-mark-full">Starlane</span>
+            <span className="sb-mark-glyph" aria-hidden="true"><StarlaneMark variant="glyph" size={11} /></span>
           </Link>
-          <div className="flex items-center" style={{ gap: 2 }}>
+          <div className="sb-head-icons flex items-center" style={{ gap: 2 }}>
             {/* The dot is the pending follow-up count, so the bell opens them. */}
             <Link
               href="/decisions"
@@ -209,7 +212,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0" style={{ margin: "0 -4px", padding: "0 4px" }}>
           <nav aria-label="Primary" className="flex flex-col" style={{ gap: 1 }}>
-            <Link href="/bridge" onClick={onClose} aria-current={isActive("/bridge") ? "page" : undefined} className={`sb-row sb-new ${isActive("/bridge") ? "is-active" : ""}`}>
+            <Link href="/bridge" onClick={onClose} title={slim ? "New question" : undefined} aria-current={isActive("/bridge") ? "page" : undefined} className={`sb-row sb-new ${isActive("/bridge") ? "is-active" : ""}`}>
               <IconPlus size={16} />
               <span className="flex-1 truncate">New question</span>
             </Link>
@@ -221,6 +224,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               ref={moreBtnRef}
               onClick={() => setMoreOpen(v => !v)}
               aria-expanded={moreOpen}
+              title={slim ? "More" : undefined}
               className={`sb-row w-full text-left ${isMoreActive || moreOpen ? "is-active" : ""}`}
             >
               <IconMore size={16} />
@@ -267,7 +271,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               ref={moreRef}
               className="sb-flyout fixed z-40 overflow-hidden pop-in"
               style={{
-                left: typeof window !== "undefined" && window.innerWidth < 600 ? 12 : 264,
+                left: typeof window !== "undefined" && window.innerWidth < 600 ? 12 : slim ? 60 : 264,
                 top: Math.max(12, (moreBtnRef.current?.getBoundingClientRect().top ?? 0) - 8),
               }}
             >
