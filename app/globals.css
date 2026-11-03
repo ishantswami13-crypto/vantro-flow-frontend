@@ -1280,3 +1280,41 @@ button:disabled { cursor: default; }
   .hv-app .cc-card-top { flex-wrap: wrap; }
   .hv-app .cc-actions { flex-wrap: wrap; }
 }
+
+/* Decisions: Harvey's review summary line, stat tiles and review table */
+.hv-app .ds-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13.5px; color: #8F8A81; margin: 4px 0 14px; }
+.hv-app .ds-line b { color: #0F0E0D; font-weight: 500; }
+.hv-app .ds-line > span:nth-child(3) { margin-left: -8px; }
+.hv-app .ds-meta { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; font-size: 12px; }
+.hv-app .ds-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.hv-app .ds-tile { background: #F2F1EC; border: 1px solid #ECEAE4; border-radius: 10px; padding: 16px 16px 14px; min-width: 0; }
+.hv-app .ds-tile p:first-child { font-size: 30px !important; }
+.hv-app .ds-tile p:nth-child(2) { font-size: 12px !important; color: #8F8A81 !important; margin-top: 8px !important; }
+@media (max-width: 900px) { .hv-app .ds-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.hv-app .dt-wrap { margin-top: 10px; }
+.hv-app .dt { width: 100%; border-collapse: collapse; table-layout: auto; }
+.hv-app .dt thead th { text-align: left; font-size: 12px; font-weight: 400; color: #8F8A81; padding: 10px 12px; border-bottom: 1px solid #E4E1DA; border-top: 1px solid #E4E1DA; background: #FBFAF7; white-space: nowrap; }
+.hv-app .dt td { padding: 14px 12px; border-bottom: 1px solid #EFEDE8; vertical-align: top; font-size: 12.5px; }
+.hv-app .dt-row { cursor: pointer; }
+.hv-app .dt-row:hover td { background: #F6F5F1; }
+.hv-app .dt-ic { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 4px; color: #3F5E9A; background: #EAEFF8; flex-shrink: 0; margin-top: 1px; }
+.hv-app .dt-ic-sm { width: 15px; height: 15px; background: #0F0E0D; color: #FFFFFF; border-radius: 3px; }
+.hv-app .dt-title { display: block; font-size: 13.5px; color: #0F0E0D; font-weight: 500; line-height: 1.35; }
+.hv-app .dt-title:hover { text-decoration: underline; text-underline-offset: 3px; }
+.hv-app .dt-sub { font-size: 12px; color: #8F8A81; margin-top: 3px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; max-width: 420px; }
+.hv-app .dt-sugg { color: #3F3D39; max-width: 220px; }
+.hv-app .dt-right { text-align: right; white-space: nowrap; }
+.hv-app .dt-mobile { display: none; }
+@media (max-width: 760px) {
+  .hv-app .dt .dt-col { display: none; }
+  .hv-app .dt-mobile { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: #43433F; }
+  .hv-app .dt-sub { -webkit-line-clamp: 2; }
+  .hv-app .ds-meta { margin-left: 0; }
+}
+.hv-app .dt th.dt-right { text-align: right; }
+.hv-app .ds-meta { flex-wrap: wrap; }
+
+/* Library and other card grids: Harvey's Vault tiles (soft grey fill, no
+   shadow, icon top-left, title sitting low) */
+.hv-app .lib-card { background: #F2F1EC !important; border: 1px solid #ECEAE4 !important; box-shadow: none !important; border-radius: 10px !important; min-height: 118px; display: flex; flex-direction: column; justify-content: space-between; }
+.hv-app .lib-card:hover, .hv-app .lib-card:focus-visible { background: #ECEAE4 !important; translate: none; box-shadow: none !important; }

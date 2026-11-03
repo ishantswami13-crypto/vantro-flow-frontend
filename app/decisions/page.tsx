@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FiChevronRight, FiRefreshCw, FiAlertTriangle } from "react-icons/fi";
+import { FiRefreshCw, FiAlertTriangle } from "react-icons/fi";
+import StarlaneMark from "@/components/brand/StarlaneMark";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ErrorState } from "@/components/ui/ErrorState";
 import Button from "@/components/ui/Button";
@@ -22,39 +23,47 @@ function deadlineText(d: DecisionListItem): { text: string; tone?: "bad" | "warn
   return { text: `Decide by ${shortDate(d.deadline)}` };
 }
 
+const STATUS_TONE: Record<string, "neutral" | "good" | "warn" | "bad" | "accent"> = {
+  OPEN: "warn", NEEDS_INFORMATION: "neutral", SELECTED: "accent", APPROVED: "accent", EXECUTING: "accent",
+  SHADOWED: "neutral", EXECUTED: "good", VERIFIED: "good", REJECTED: "neutral", EXPIRED: "bad", RESOLVED: "good", SUPERSEDED: "neutral",
+};
+
+function IconDoc() {
+  return <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true"><path d="M4 1.8h5.2L12.5 5v9.2H4z" /><path d="M9 1.8V5.2h3.5M6 8.5h4.5M6 11h3" /></svg>;
+}
+
+/** One row of the decisions table, laid out like Harvey's review table. */
 function DecisionRow({ d, onOpen }: { d: DecisionListItem; onOpen: () => void }) {
   const dl = deadlineText(d);
   const atRisk = d.materiality?.expectedUncollected90 ?? d.materiality?.workingCapitalTiedUp ?? d.materiality?.revenueExposure ?? null;
+  const sub = d.whyNow && d.whyNow.length > 0 ? d.whyNow[0] : d.collisions && d.collisions.length > 0 ? `Linked to ${d.collisions.length} other decision${d.collisions.length === 1 ? "" : "s"}` : null;
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="w-full text-left flex items-start gap-4 py-6 transition-colors"
-      style={{ borderBottom: `1px solid ${C.line}` }}
-      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = C.wash)}
-      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
-    >
-      <span aria-hidden="true" className="mt-2 rounded-full shrink-0 id-gradient" style={{ width: 7, height: 7, opacity: d.status === "OPEN" || d.status === "NEEDS_INFORMATION" ? 1 : 0.35 }} />
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2 text-[12px]" style={{ color: C.faint }}>
-          <span>{STATUS_LABEL[d.status] || d.status}</span>
-          {dl && <span style={{ color: dl.tone ? C[dl.tone] : C.faint, fontWeight: dl.tone ? 500 : 400 }}>· {dl.text}</span>}
-          {d.collisions && d.collisions.length > 0 && <span>· Linked to {d.collisions.length} other decision{d.collisions.length === 1 ? "" : "s"}</span>}
+    <tr className="dt-row" onClick={onOpen}>
+      <td className="dt-main">
+        <div className="flex items-start gap-2 min-w-0">
+          <span className="dt-ic"><IconDoc /></span>
+          <div className="min-w-0">
+            <Link href={`/decisions/${d.id}`} className="dt-title" onClick={(e) => e.stopPropagation()}>{d.title}</Link>
+            {sub && <p className="dt-sub">{sub}</p>}
+            <div className="dt-mobile">
+              <Pill tone={STATUS_TONE[d.status] || "neutral"}>{STATUS_LABEL[d.status] || d.status}</Pill>
+              {atRisk != null && <span className="tabular-nums">{money(atRisk, d.currency)}</span>}
+            </div>
+          </div>
         </div>
-        <p className="text-[16px] mt-1 leading-snug" style={{ color: C.ink, fontWeight: 500 }}>{d.title}</p>
-        {d.whyNow && d.whyNow.length > 0 && (
-          <p className="text-[13px] mt-1 leading-[1.5] max-w-[680px] line-clamp-2" style={{ color: C.muted }}>{d.whyNow.slice(0, 2).join(". ")}.</p>
-        )}
-        <div className="flex flex-wrap items-center gap-2 mt-2">
-          {atRisk != null && <span className="text-[12px] tabular-nums" style={{ color: C.body }}>{money(atRisk, d.currency)} at stake if ignored</span>}
-          {d.recommendation && (
-            <Pill tone="accent">{d.recommendation.informationFirst ? "Find out first" : `Suggests: ${d.recommendation.label}`}</Pill>
-          )}
-          <ConfidencePill band={d.confidence?.band} score={d.confidence?.score} />
-        </div>
-      </div>
-      <FiChevronRight className="shrink-0 mt-2" size={16} style={{ color: "#B5B5B0" }} />
-    </button>
+      </td>
+      <td className="dt-col"><Pill tone={STATUS_TONE[d.status] || "neutral"}>{STATUS_LABEL[d.status] || d.status}</Pill></td>
+      <td className="dt-col dt-sugg">
+        {d.recommendation
+          ? <span className="inline-flex items-center gap-1.5"><span className="dt-ic dt-ic-sm"><StarlaneMark variant="glyph" size={8} /></span>{d.recommendation.informationFirst ? "Find out first" : d.recommendation.label}</span>
+          : <span style={{ color: "#A8A39A" }}>Weighing options…</span>}
+        <div className="mt-1"><ConfidencePill band={d.confidence?.band} score={d.confidence?.score} /></div>
+      </td>
+      <td className="dt-col tabular-nums" style={{ color: C.body }}>{atRisk != null ? money(atRisk, d.currency) : "—"}</td>
+      <td className="dt-col dt-right" style={{ color: dl?.tone ? C[dl.tone] : "#8F8A81" }}>
+        {dl ? dl.text : d.updatedAt ? relTime(d.updatedAt) : "—"}
+      </td>
+    </tr>
   );
 }
 
@@ -97,7 +106,7 @@ export default function DecisionsPage() {
     <DashboardLayout pageTitle="Decisions">
       <div className="max-w-[1100px] mx-auto px-2 sm:px-6 lg:px-10 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4 mb-2">
-          <h1 style={{ color: C.ink, fontSize: 40, lineHeight: 1.05, letterSpacing: "-0.03em" }}>Decisions</h1>
+          <h1 className="hv-title" style={{ color: "#0F0E0D", fontSize: 38, lineHeight: 1.05, letterSpacing: "-0.02em", fontFamily: "var(--serif, 'Newsreader', Georgia, serif)", fontWeight: 400 }}>Decisions</h1>
           <div className="flex items-center gap-3">
             <Link href="/decisions/import" className="text-[13px] hover-dim" style={{ color: C.muted }}>Bring data</Link>
             <Link href="/decisions/proof" className="text-[13px] hover-dim" style={{ color: C.muted }}>Track record</Link>
@@ -130,31 +139,25 @@ export default function DecisionsPage() {
           </div>
         )}
 
-        {/* Command header */}
+        {/* Summary: Harvey's auto-review line, then light stat tiles */}
         {today.isLoading && <div className="skeleton h-24 w-full rounded-xl mb-8" />}
         {today.isError && <div className="mb-8"><ErrorState title="Couldn't load today's summary" message={(today.error as Error).message} onRetry={() => today.refetch()} /></div>}
         {t && (
-          <section className="rounded-md px-5 py-5 mb-10" style={{ background: "#FFFFFF", border: `1px solid ${C.line}` }}>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              <Stat label="Need your decision" value={t.command.open + t.command.awaitingApproval} sub={t.command.awaitingApproval ? `${t.command.awaitingApproval} waiting for approval` : "options analysed"} />
-              <Stat label="Deadline this week" value={t.command.deadlinesThisWeek} tone={t.command.deadlinesThisWeek ? "warn" : undefined} sub="before the window closes" />
-              <Stat
-                label="At stake if ignored"
-                value={atStake.length ? atStake.map(([cur, v]) => money(v, cur)).join(" + ") : money(0)}
-                sub="expected unpaid in 90 days, open decisions"
-              />
-              <Stat label="Being verified" value={t.command.underWatch} tone={t.command.offTrack ? "bad" : undefined} sub={t.command.offTrack ? `${t.command.offTrack} off track` : "outcomes checked against forecasts"} />
-            </div>
-            <div className="flex flex-wrap items-center gap-2 mt-5 pt-4 text-[12px]" style={{ borderTop: `1px solid ${C.line}`, color: C.faint }}>
-              <span>Analysed {relTime(t.lastDiscovery?.at)}</span>
-              <span>·</span>
-              {t.pilotMode === "SHADOW" ? (
-                <Pill tone="accent" title="Nothing is executed; Starlane records what it would have done">Shadow mode</Pill>
-              ) : (
-                <Pill tone="good">Live mode</Pill>
-              )}
-              {!t.externalSendEnabled && <Pill>Customer messages: drafts only</Pill>}
-              <Link href="/control/decisions" className="hover-dim ml-auto" style={{ color: C.muted }}>Controls</Link>
+          <section className="mb-9">
+            <p className="ds-line">
+              <span className="cc-banner-mark"><StarlaneMark variant="glyph" size={10} /></span>
+              <b>Starlane analysed your ledger</b>&nbsp;<span>{relTime(t.lastDiscovery?.at)}</span>
+              <span className="ds-meta">
+                {t.pilotMode === "SHADOW" ? <Pill tone="accent" title="Nothing is executed; Starlane records what it would have done">Shadow mode</Pill> : <Pill tone="good">Live mode</Pill>}
+                {!t.externalSendEnabled && <Pill>Customer messages: drafts only</Pill>}
+                <Link href="/control/decisions" className="hover-dim" style={{ color: C.muted }}>Controls</Link>
+              </span>
+            </p>
+            <div className="ds-tiles">
+              <div className="ds-tile"><Stat label="Need your decision" value={t.command.open + t.command.awaitingApproval} sub={t.command.awaitingApproval ? `${t.command.awaitingApproval} waiting for approval` : undefined} /></div>
+              <div className="ds-tile"><Stat label="Deadline this week" value={t.command.deadlinesThisWeek} tone={t.command.deadlinesThisWeek ? "warn" : undefined} /></div>
+              <div className="ds-tile"><Stat label="At stake if ignored, next 90 days" value={atStake.length ? atStake.map(([cur, v]) => money(v, cur)).join(" + ") : money(0)} /></div>
+              <div className="ds-tile"><Stat label="Being verified" value={t.command.underWatch} tone={t.command.offTrack ? "bad" : undefined} sub={t.command.offTrack ? `${t.command.offTrack} off track` : undefined} /></div>
             </div>
           </section>
         )}
@@ -170,7 +173,7 @@ export default function DecisionsPage() {
               className="hv-tab text-[13px]"
               style={{ padding: "5px 11px", borderRadius: 6, fontWeight: 500, color: scope === s ? "#0F0E0D" : "#6E6A63", background: scope === s ? "#ECEAE4" : "transparent" }}
             >
-              {s === "active" ? "Open" : "Closed"}
+              {s === "active" ? "Open" : "Closed"}{scope === s && list.data ? ` (${decisions.length})` : ""}
             </button>
           ))}
         </div>
@@ -204,9 +207,20 @@ export default function DecisionsPage() {
             )}
           </div>
         )}
-        {decisions.map((d) => (
-          <DecisionRow key={d.id} d={d} onOpen={() => router.push(`/decisions/${d.id}`)} />
-        ))}
+        {decisions.length > 0 && (
+          <div className="dt-wrap">
+            <table className="dt">
+              <thead>
+                <tr><th scope="col">Decision</th><th scope="col" className="dt-col">Status</th><th scope="col" className="dt-col">Starlane suggests</th><th scope="col" className="dt-col">At stake</th><th scope="col" className="dt-col dt-right">Deadline</th></tr>
+              </thead>
+              <tbody>
+                {decisions.map((d) => (
+                  <DecisionRow key={d.id} d={d} onOpen={() => router.push(`/decisions/${d.id}`)} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {lastRun && lastRun.watched.length > 0 && scope === "active" && (
           <section className="mt-10">

@@ -47,7 +47,7 @@ export function Pill({ tone = "neutral", children, title }: { tone?: Tone; child
     <span
       title={title}
       className="inline-flex items-center gap-[5px] px-[7px] rounded-[5px] whitespace-nowrap max-w-full overflow-hidden text-ellipsis"
-      style={{ color: t.fg, background: t.bg, fontSize: 11.5, lineHeight: "20px", fontWeight: 500 }}
+      style={{ color: t.fg, background: t.bg, boxShadow: `inset 0 0 0 1px ${t.bd}`, fontSize: 11.5, lineHeight: "20px", fontWeight: 500 }}
     >
       <span aria-hidden="true" className="shrink-0 rounded-full" style={{ width: 5, height: 5, background: t.dot }} />
       {children}
