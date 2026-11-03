@@ -28,7 +28,7 @@ export const V32_APPS_NAV_ITEMS: PrimaryNavItem[] = [
 
 // Reference material, like Harvey's "Spaces".
 export const V32_SECONDARY_NAV_ITEMS: PrimaryNavItem[] = [
-  { href: "/library",      label: "Library",      icon: IconLibrary },
+  { href: "/library",      label: "Vault",        icon: IconLibrary },
   { href: "/sources",      label: "Data sources", icon: IconSources },
 ];
 
