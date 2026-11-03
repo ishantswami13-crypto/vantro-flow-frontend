@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { preload } from "react-dom";
-import { Nav } from "@/components/marketing/Nav";
+import { TopBar } from "@/components/marketing/site/TopBar";
 import { Footer } from "@/components/marketing/Footer";
 import { MotionGate } from "@/components/marketing/home/InView";
 import "@/app/editorial.css";
+import "@/app/topbar.css";
 
 // The public site's frame and its shared pieces. Every marketing page uses the
 // same "Operating Record" surfaces (start.css + site.css): light editorial
@@ -19,7 +20,7 @@ export function SiteShell({ children, navTone = "light" }: { children: React.Rea
     <div className="sl sl-start sl-ed">
       <MotionGate />
       <a className="sl-skip" href="#main">Skip to content</a>
-      <Nav tone={navTone} />
+      <TopBar tone={navTone} />
       <main id="main">{children}</main>
       <Footer tone="dark" />
     </div>
