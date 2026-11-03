@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { ThinkingDots } from "@/components/v32/ui";
 import { IconArrowUp } from "@/components/v32/icons";
+import { ModelPicker } from "@/components/scan/ModelPicker";
 
 // The one rounded box Scan asks through, on the start page and docked under
 // a conversation. Enter sends, Shift+Enter adds a line, and the box grows
@@ -44,9 +45,12 @@ export function ScanComposer({ value, onChange, onSubmit, submitting, placeholde
       />
       <div className="flex items-center justify-between" style={{ padding: "4px 10px 10px 10px" }}>
         <div>{leading}</div>
-        <button type="submit" disabled={submitting || !value.trim()} aria-label="Ask" className="scan-round scan-send">
-          {submitting ? <ThinkingDots color="#F7F7F4" /> : <IconArrowUp size={16} />}
-        </button>
+        <div className="flex items-center" style={{ gap: 6 }}>
+          <ModelPicker />
+          <button type="submit" disabled={submitting || !value.trim()} aria-label="Ask" className="scan-round scan-send">
+            {submitting ? <ThinkingDots color="#F7F7F4" /> : <IconArrowUp size={16} />}
+          </button>
+        </div>
       </div>
     </form>
   );
