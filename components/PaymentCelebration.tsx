@@ -43,28 +43,26 @@ export default function PaymentCelebration() {
   const checkForNewPayments = useCallback(async () => {
     const user = getUser();
     if (!user?.id) return;
+    // Not while the tab is in the background: nobody sees it there.
+    if (typeof document !== "undefined" && document.visibilityState === "hidden" && initializedRef.current) return;
 
     try {
-      const data = await api.invoices.list(user.id);
-      const paid = (data.invoices || []).filter(
-        (inv) => inv.payment_status === "Paid"
-      );
+      // Only invoices paid in the last two days, not the whole invoice list.
+      const data = await api.payments.recent();
+      const paid = data.payments || [];
 
       if (!initializedRef.current) {
         // First load — seed known set, don't celebrate existing payments
-        paid.forEach((inv) => knownPaidRef.current.add(inv.id));
+        paid.forEach((p) => knownPaidRef.current.add(p.id));
         initializedRef.current = true;
         return;
       }
 
       // Detect newly paid invoice
-      for (const inv of paid) {
-        if (!knownPaidRef.current.has(inv.id)) {
-          knownPaidRef.current.add(inv.id);
-          setCelebration({
-            name:   inv.customer_name,
-            amount: inv.invoice_amount,
-          });
+      for (const p of paid) {
+        if (!knownPaidRef.current.has(p.id)) {
+          knownPaidRef.current.add(p.id);
+          setCelebration({ name: p.customer_name, amount: p.amount });
           break; // one celebration at a time
         }
       }
