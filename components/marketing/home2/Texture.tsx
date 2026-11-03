@@ -7,6 +7,10 @@ const TONES = {
   slate: ["#3E4650", "#2B3139", "#56606B"],
   clay: ["#6B5A4A", "#4E4136", "#857260"],
   ink: ["#2C2B29", "#1B1A19", "#3C3A37"],
+  plum: ["#3A3542", "#25212C", "#4B4556"],
+  umber: ["#4A4136", "#2D2721", "#5B5144"],
+  stone: ["#9BA19C", "#6F7672", "#B2B6B0"],
+  night: ["#1E1D1C", "#121110", "#2A2826"],
 } as const;
 
 export type TextureTone = keyof typeof TONES;
