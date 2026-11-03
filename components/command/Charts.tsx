@@ -115,11 +115,11 @@ export function BarcodeChart({ data, height = 170, format, barLabel, lineLabel, 
           const i = Math.floor(((e.clientX - r.left) / r.width) * n);
           setHover(i >= 0 && i < n ? i : null);
         }}>
-        {bins.map((d, i) => {
+        <g className="hv-bars">{bins.map((d, i) => {
           const yy = Math.min(y(heights[i]), H - 1.5);
-          return <line key={d.date} x1={x(i)} x2={x(i)} y1={H} y2={yy} stroke={hover === i ? "#0F0E0D" : BAR} strokeWidth={1} vectorEffect="non-scaling-stroke" />;
-        })}
-        {showLine && <path d={smooth(linePts)} fill="none" stroke={LINE} strokeWidth={1.6} vectorEffect="non-scaling-stroke" strokeLinecap="round" />}
+          return <line key={d.date} style={{ animationDelay: `${Math.round((i / Math.max(1, n)) * 600)}ms` }} x1={x(i)} x2={x(i)} y1={H} y2={yy} stroke={hover === i ? "#0F0E0D" : BAR} strokeWidth={1} vectorEffect="non-scaling-stroke" />;
+        })}</g>
+        {showLine && <path key={bins.length + (weekly ? "w" : "d")} className="hv-draw" pathLength={1} d={smooth(linePts)} fill="none" stroke={LINE} strokeWidth={1.6} vectorEffect="non-scaling-stroke" strokeLinecap="round" />}
       </svg>
       <div aria-hidden="true" className="relative" style={{ height: 14, marginTop: 8 }}>
         {months.map((m) => (
@@ -151,10 +151,10 @@ export function PairedBars({ groups, height = 170 }: { groups: PairedGroup[]; he
         <div className="relative flex-1 min-w-0">
           {ticks.map((t) => <div key={t} aria-hidden="true" className="absolute left-0 right-0" style={{ top: `${100 - t}%`, borderTop: `1px solid ${GRID}` }} />)}
           <div className="absolute inset-0 flex items-end justify-around">
-            {groups.map((g) => (
+            {groups.map((g, gi) => (
               <div key={g.label} className="flex items-end" style={{ gap: 6, height: "100%" }}>
-                <div title={g.aTitle} style={{ width: 10, height: `${Math.max(0.6, g.a)}%`, borderRadius: 2, ...grain(g.alert ? ALERT : INK) }} />
-                <div title={g.bTitle} style={{ width: 10, height: `${Math.max(0.6, g.b)}%`, borderRadius: 2, ...grain(SOFT, true) }} />
+                <div title={g.aTitle} className="hv-grow-y" style={{ animationDelay: `${gi * 70}ms`, width: 10, height: `${Math.max(0.6, g.a)}%`, borderRadius: 2, ...grain(g.alert ? ALERT : INK) }} />
+                <div title={g.bTitle} className="hv-grow-y" style={{ animationDelay: `${gi * 70 + 40}ms`, width: 10, height: `${Math.max(0.6, g.b)}%`, borderRadius: 2, ...grain(SOFT, true) }} />
               </div>
             ))}
           </div>
@@ -175,11 +175,11 @@ export function RankBars({ rows, format }: { rows: { label: string; value: numbe
   const max = Math.max(1, ...rows.map((r) => r.value));
   return (
     <div className="flex flex-col" style={{ gap: 16 }}>
-      {rows.map((r) => (
+      {rows.map((r, ri) => (
         <div key={r.label} className="grid items-center" style={{ gridTemplateColumns: "minmax(90px, 28%) 1fr", gap: 14 }}>
           <span className="truncate" title={r.label} style={{ fontSize: 10.5, color: "#3F3D39" }}>{r.label}</span>
           <div className="flex items-center min-w-0" style={{ gap: 8 }}>
-            <div style={{ height: 11, width: `${Math.max(2, (r.value / max) * 86)}%`, borderRadius: 2, ...grain(r.alert ? ALERT : "#4A505B") }} />
+            <div className="hv-grow-x" style={{ animationDelay: `${ri * 70}ms`, height: 11, width: `${Math.max(2, (r.value / max) * 86)}%`, borderRadius: 2, ...grain(r.alert ? ALERT : "#4A505B") }} />
             <span className="shrink-0 tabular-nums" style={{ fontSize: 10.5, color: LABEL }}>{format(r.value)}</span>
           </div>
         </div>

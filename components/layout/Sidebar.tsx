@@ -3,16 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { FiLogOut, FiX, FiUser, FiSliders, FiCommand } from "react-icons/fi";
+import { FiLogOut, FiX, FiUser, FiSliders, FiCommand, FiSettings } from "react-icons/fi";
 import { api, getUser, clearAuth } from "@/lib/api";
 import { getSmartHiddenRoutes } from "@/lib/businessTypes";
 import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
 import { CommandPalette, type SearchableRoute } from "./CommandPalette";
-import { IdentityAvatar } from "@/components/identity/IdentityAvatar";
 import { IdentityPicker } from "@/components/identity/IdentityPicker";
-import { V32_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, V32_WORKSPACE_NAV_ITEMS, type PrimaryNavItem } from "@/lib/navigation";
+import { V32_NAV_ITEMS, V32_APPS_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, V32_WORKSPACE_NAV_ITEMS, HISTORY_NAV_ITEM, HOME_NAV_ITEM, type PrimaryNavItem } from "@/lib/navigation";
 import { listThreads, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
-import { IconBell, IconSearch, IconMore, IconPlus, IconSettings } from "@/components/v32/icons";
+import { IconBell, IconSearch, IconMore, IconPlus } from "@/components/v32/icons";
 
 // Everything real that sits outside the Version 32 nav lives in the "More"
 // flyout: it is still reachable, but the rail stays as quiet as the design.
@@ -136,7 +135,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
   const searchableRoutes: SearchableRoute[] = [
     { href: "/intelligence", label: "Intelligence", type: "Page" },
+    { href: HOME_NAV_ITEM.href, label: HOME_NAV_ITEM.label, type: "Page" as const },
     ...V32_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
+    ...V32_APPS_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
+    { href: HISTORY_NAV_ITEM.href, label: "History", type: "Page" as const },
     ...V32_SECONDARY_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
     { href: "/settings", label: "Settings", type: "Page" as const },
     ...V32_WORKSPACE_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
@@ -206,22 +208,15 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0" style={{ margin: "0 -4px", padding: "0 4px" }}>
-          <nav aria-label="Primary" className="flex flex-col" style={{ gap: 2 }}>
-            <Link href="/bridge" onClick={onClose} className="sb-row sb-new">
+          <nav aria-label="Primary" className="flex flex-col" style={{ gap: 1 }}>
+            <Link href="/bridge" onClick={onClose} aria-current={isActive("/bridge") ? "page" : undefined} className={`sb-row sb-new ${isActive("/bridge") ? "is-active" : ""}`}>
               <IconPlus size={16} />
               <span className="flex-1 truncate">New question</span>
             </Link>
             {V32_NAV_ITEMS.map(n => (
               <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
             ))}
-          </nav>
-
-          <nav aria-label="Workspace" className="flex flex-col" style={{ gap: 2, marginTop: 26 }}>
-            <p className="sb-label">Workspace</p>
-            {V32_SECONDARY_NAV_ITEMS.map(n => (
-              <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
-            ))}
-            {/* All tools: a floating flyout, never expands inline */}
+            {/* More: a floating flyout with the rest of the workspace */}
             <button
               ref={moreBtnRef}
               onClick={() => setMoreOpen(v => !v)}
@@ -229,38 +224,51 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               className={`sb-row w-full text-left ${isMoreActive || moreOpen ? "is-active" : ""}`}
             >
               <IconMore size={16} />
-              <span className="flex-1">All tools</span>
+              <span className="flex-1">More</span>
             </button>
           </nav>
 
-          {recent.length > 0 && (
-            <nav aria-label="Recent conversations" className="flex flex-col" style={{ gap: 2, marginTop: 26 }}>
-              <p className="sb-label">Recent</p>
-              {recent.map(t => {
-                const active = pathname === `/scan/${t.id}`;
-                return (
-                  <Link
-                    key={t.id}
-                    href={`/scan/${t.id}`}
-                    onClick={onClose}
-                    aria-current={active ? "page" : undefined}
-                    title={t.title}
-                    className={`sb-recent truncate ${active ? "is-active" : ""}`}
-                  >
-                    {t.title}
-                  </Link>
-                );
-              })}
-            </nav>
-          )}
+          <nav aria-label="Apps" className="sb-group flex flex-col" style={{ gap: 1 }}>
+            <p className="sb-label">Apps</p>
+            {V32_APPS_NAV_ITEMS.map(n => (
+              <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
+            ))}
+          </nav>
+
+          <nav aria-label="Recent conversations" className="sb-group flex flex-col" style={{ gap: 1 }}>
+            <p className="sb-label">Recents</p>
+            {recent.map(t => {
+              const active = pathname === `/scan/${t.id}`;
+              return (
+                <Link
+                  key={t.id}
+                  href={`/scan/${t.id}`}
+                  onClick={onClose}
+                  aria-current={active ? "page" : undefined}
+                  title={t.title}
+                  className={`sb-recent truncate ${active ? "is-active" : ""}`}
+                >
+                  {t.title}
+                </Link>
+              );
+            })}
+            <NavRow href={HISTORY_NAV_ITEM.href} label={HISTORY_NAV_ITEM.label} Icon={HISTORY_NAV_ITEM.icon} active={isActive(HISTORY_NAV_ITEM.href)} onClick={onClose} />
+          </nav>
+
+          <nav aria-label="Workspace" className="sb-group flex flex-col" style={{ gap: 1 }}>
+            <p className="sb-label">Workspace</p>
+            {V32_SECONDARY_NAV_ITEMS.map(n => (
+              <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
+            ))}
+          </nav>
 
           {moreOpen && (
             <div
               ref={moreRef}
               className="sb-flyout fixed z-40 overflow-hidden pop-in"
               style={{
-                left: typeof window !== "undefined" && window.innerWidth < 600 ? 12 : 256,
-                top: Math.max(12, (moreBtnRef.current?.getBoundingClientRect().top ?? 0) - 160),
+                left: typeof window !== "undefined" && window.innerWidth < 600 ? 12 : 264,
+                top: Math.max(12, (moreBtnRef.current?.getBoundingClientRect().top ?? 0) - 8),
               }}
             >
               <div className="overflow-y-auto" style={{ maxHeight: "72vh", padding: 8 }}>
@@ -306,25 +314,25 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </div>
 
         {/* Settings and the account */}
-        <div ref={accountRef} className="relative shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 10, marginTop: 10 }}>
-          <NavRow href="/settings" label="Settings" Icon={IconSettings} active={isActive("/settings")} onClick={onClose} />
+        <div ref={accountRef} className="relative shrink-0" style={{ paddingTop: 8, marginTop: 8 }}>
           <button
             onClick={() => setAccountOpen(v => !v)}
             aria-expanded={accountOpen}
-            className="sb-row w-full text-left"
-            style={{ marginTop: 2 }}
+            aria-label={`Account: ${userName}`}
+            className={`sb-row sb-user w-full text-left ${isActive("/settings") ? "is-active" : ""}`}
           >
-            <IdentityAvatar name={userName} size={20} />
+            <span className="sb-avatar" aria-hidden="true">{(userName.trim()[0] || "S").toUpperCase()}</span>
             <span className="flex-1 truncate">{userName}</span>
           </button>
 
           {accountOpen && (
-            <div className="sb-flyout absolute z-40 overflow-hidden pop-in" style={{ left: 0, right: 0, bottom: 44, width: "auto" }}>
+            <div className="sb-flyout absolute z-40 overflow-hidden pop-in" style={{ left: 0, right: 0, bottom: 48, width: "auto" }}>
               <div style={{ padding: 12, borderBottom: "1px solid rgba(25,25,23,0.08)" }}>
                 <IdentityPicker />
               </div>
               <div style={{ padding: 6 }}>
                 {[
+                  { href: "/settings", label: "Settings", Icon: FiSettings },
                   { href: "/settings?tab=profile", label: "Profile", Icon: FiUser },
                   { href: "/settings?tab=preferences", label: "Preferences", Icon: FiSliders },
                 ].map(({ href, label, Icon }) => (

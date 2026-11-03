@@ -1318,3 +1318,41 @@ button:disabled { cursor: default; }
    shadow, icon top-left, title sitting low) */
 .hv-app .lib-card { background: #F2F1EC !important; border: 1px solid #ECEAE4 !important; box-shadow: none !important; border-radius: 10px !important; min-height: 118px; display: flex; flex-direction: column; justify-content: space-between; }
 .hv-app .lib-card:hover, .hv-app .lib-card:focus-visible { background: #ECEAE4 !important; translate: none; box-shadow: none !important; }
+
+/* Sidebar, Harvey's rail: wider, grouped sections (Apps, Recents, Workspace),
+   a square initial for the account, no footer rule */
+.hv-app .sb { width: 270px; padding: 18px 14px 14px; }
+.hv-app .sb-group { margin-top: 28px; }
+.hv-app .sb .sb-row { height: 33px; font-size: 14px; }
+.hv-app .sb-label { padding: 0 10px 6px; font-size: 12.5px; }
+.hv-app .sb-recent { padding: 7px 10px 7px 33px; font-size: 14px; }
+.hv-app .sb-recent::before { left: 17px; width: 3.5px; height: 3.5px; background: #A29E96; }
+.hv-app .sb-avatar { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; background: #D8D4EA; color: #2B2733; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.hv-app .sb .sb-user { height: 38px; }
+
+/* Motion, Harvey-style: rows ease their highlight, the rail's groups and the
+   page settle in once, and charts draw themselves. All off for reduced motion. */
+.hv-app .sb .sb-row, .hv-app .sb-recent { transition: background-color 160ms ease, color 160ms ease; }
+@keyframes hv-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes hv-fade { from { opacity: 0; } to { opacity: 1; } }
+.hv-app .sb nav { animation: hv-fade 420ms ease both; }
+.hv-app .sb nav:nth-of-type(2) { animation-delay: 50ms; }
+.hv-app .sb nav:nth-of-type(3) { animation-delay: 100ms; }
+.hv-app .sb nav:nth-of-type(4) { animation-delay: 150ms; }
+.hv-app .cc > * { animation: hv-rise 520ms cubic-bezier(.2,.7,.2,1) both; }
+.hv-app .cc > *:nth-child(2) { animation-delay: 60ms; }
+.hv-app .cc > *:nth-child(3), .hv-app .cc > *:nth-child(4) { animation-delay: 120ms; }
+.hv-app .cc-card { animation: hv-rise 560ms cubic-bezier(.2,.7,.2,1) both; }
+.hv-app .cc-card:nth-child(2) { animation-delay: 80ms; }
+.hv-app .cc-card:nth-child(3) { animation-delay: 160ms; }
+.hv-app .cc-card:nth-child(4) { animation-delay: 240ms; }
+@keyframes hv-grow-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes hv-grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes hv-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.hv-grow-y { transform-origin: bottom; animation: hv-grow-y 700ms cubic-bezier(.2,.7,.2,1) both; }
+.hv-grow-x { transform-origin: left; animation: hv-grow-x 800ms cubic-bezier(.2,.7,.2,1) both; }
+.hv-bars line { transform-box: fill-box; transform-origin: bottom; animation: hv-grow-y 650ms cubic-bezier(.2,.7,.2,1) both; }
+.hv-draw { stroke-dasharray: 1; animation: hv-draw 1100ms ease-out 250ms both; }
+@media (prefers-reduced-motion: reduce) {
+  .hv-app .sb nav, .hv-app .cc > *, .hv-app .cc-card, .hv-grow-y, .hv-grow-x, .hv-bars line, .hv-draw { animation: none !important; }
+}
