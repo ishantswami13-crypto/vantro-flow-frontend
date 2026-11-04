@@ -21,6 +21,7 @@ import { useLoad, errorText } from "@/components/os/shared";
 import { startThread } from "@/lib/scanStore";
 import { savePrompt } from "@/lib/promptStore";
 import { downloadCsv } from "@/components/command/Charts";
+import { formatMoney, formatDate } from "@/lib/locale";
 
 const WORKING_CAPITAL = "starlane.working_capital";
 
@@ -29,17 +30,13 @@ type Chase = { invoiceId: string; number: string | null; customer: string; outst
 type Payable = { purchaseId: string; supplier: string; billNumber: string | null; outstanding: number; dueDate: string | null; when: string; daysLate?: number };
 type Flow = { dueInHorizonCount?: number; overdueCount?: number; noDueDateCount?: number };
 
-function money(n: unknown, currency = "INR"): string {
-  const v = Math.round(Number(n) || 0);
-  const sign = v < 0 ? "−" : "";
-  const abs = Math.abs(v);
-  if (currency === "INR") return `${sign}₹${abs.toLocaleString("en-IN")}`;
-  return `${sign}${currency} ${abs.toLocaleString("en-US")}`;
+function money(n: unknown, currency?: string | null): string {
+  return formatMoney(Number(n) || 0, { currency });
 }
 function day(iso?: string | null): string {
   if (!iso) return "";
   const d = new Date(iso.length <= 10 ? `${iso}T00:00:00Z` : iso);
-  return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  return Number.isNaN(d.getTime()) ? String(iso) : formatDate(d, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
 function dur(ms: number | null): string {
   if (ms == null) return "";
@@ -81,7 +78,7 @@ function describe(run: AgentRun, agent: AgentInfo | null) {
   const name = agent?.name || "This agent";
 
   if (run.agentKey === WORKING_CAPITAL && run.output) {
-    const cur = String(out.currency || "INR");
+    const cur = out.currency ? String(out.currency) : undefined;
     const weeks = (out.weeks as Week[]) || [];
     const chase = (out.chaseFirst as Chase[]) || [];
     const pay = (out.payablesSoonest as Payable[]) || [];

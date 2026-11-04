@@ -10,6 +10,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { api, getUser } from "@/lib/api";
+import { formatMoneyShort } from "@/lib/locale";
 
 interface CelebrationData {
   name: string;
@@ -17,9 +18,7 @@ interface CelebrationData {
 }
 
 function fmtAmt(n: number) {
-  return n >= 100000
-    ? `₹${(n / 100000).toFixed(1)}L`
-    : `₹${n.toLocaleString("en-IN")}`;
+  return formatMoneyShort(n);
 }
 
 export default function PaymentCelebration() {

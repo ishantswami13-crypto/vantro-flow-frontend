@@ -7,13 +7,14 @@
 import React from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import type { EvidenceSet, EvidenceItem } from "../../packages/contracts/src/features";
+import { formatMoney, formatNumber } from "@/lib/locale";
 
 const KIND: Record<string, string> = { fact: "Fact", calculated: "Calculated", assumption: "Assumption", estimate: "Estimate", model: "Model" };
 const SOURCE: Record<string, string> = { invoices: "Invoices in Starlane", payments: "Payments", tally: "Tally", your_books: "Your books" };
 
 export function showValue(v: unknown, unit?: string): string {
   if (v === null || v === undefined || v === "") return "—";
-  if (typeof v === "number") return unit === "INR" ? `₹${Math.round(v).toLocaleString("en-IN")}` : v.toLocaleString("en-US");
+  if (typeof v === "number") return unit && /^[A-Z]{3}$/.test(unit) ? formatMoney(v, { currency: unit }) : formatNumber(v);
   if (Array.isArray(v)) return v.join(", ");
   return String(v);
 }

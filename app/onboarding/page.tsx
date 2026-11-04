@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowRight, FiCheck, FiLoader } from "react-icons/fi";
 import { api } from "@/lib/api";
+import { formatMoney, setRegion } from "@/lib/locale";
 
 // ── Onboarding V2 — Business / Priorities / Connect / First value ──────────
 //
@@ -26,7 +27,28 @@ const SS_KEY = "vantro_onboarding_draft";
 type Role = "Founder/CEO" | "Finance" | "Operations" | "Sales" | "Procurement" | "Technology" | "Other";
 const ROLES: Role[] = ["Founder/CEO", "Finance", "Operations", "Sales", "Procurement", "Technology", "Other"];
 
-const COUNTRIES = ["India", "United States", "United Kingdom", "United Arab Emirates", "Singapore", "Other"];
+// The countries Starlane sets currency, formats, timezone and tax up for
+// (backend lib/locale/region.js). "Other" works too; Settings sets the rest.
+const COUNTRIES = [
+  "United States", "Canada", "Mexico", "Brazil", "United Kingdom", "Ireland", "Germany", "France", "Spain", "Italy",
+  "Netherlands", "Switzerland", "Sweden", "Poland", "United Arab Emirates", "Saudi Arabia", "South Africa", "Nigeria",
+  "Kenya", "India", "Singapore", "Malaysia", "Indonesia", "Philippines", "Japan", "Hong Kong", "Australia", "New Zealand", "Other",
+];
+const REGION_TO_COUNTRY: Record<string, string> = {
+  US: "United States", CA: "Canada", MX: "Mexico", BR: "Brazil", GB: "United Kingdom", IE: "Ireland", DE: "Germany", FR: "France",
+  ES: "Spain", IT: "Italy", NL: "Netherlands", CH: "Switzerland", SE: "Sweden", PL: "Poland", AE: "United Arab Emirates",
+  SA: "Saudi Arabia", ZA: "South Africa", NG: "Nigeria", KE: "Kenya", IN: "India", SG: "Singapore", MY: "Malaysia",
+  ID: "Indonesia", PH: "Philippines", JP: "Japan", HK: "Hong Kong", AU: "Australia", NZ: "New Zealand",
+};
+
+// A first guess from the browser's language region (en-GB -> United Kingdom).
+function guessCountry(): string {
+  try {
+    const tag = navigator.languages?.find((l) => /-[A-Z]{2}$/i.test(l)) || navigator.language || "";
+    const region = tag.split("-")[1]?.toUpperCase();
+    return (region && REGION_TO_COUNTRY[region]) || "United States";
+  } catch { return "United States"; }
+}
 
 const PRIORITIES = [
   { key: "cash", label: "Cash & liquidity" },
@@ -80,7 +102,8 @@ export default function OnboardingPage() {
   // Stage 1 — Business
   const [companyName, setCompanyName] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
-  const [country, setCountry] = useState("India");
+  const [country, setCountry] = useState("United States");
+  useEffect(() => { setCountry((c) => (c === "United States" ? guessCountry() : c)); }, []);
   const [role, setRole] = useState<Role | "">("");
 
   // Stage 2 — Priorities
@@ -155,7 +178,9 @@ export default function OnboardingPage() {
     if (!country.trim()) { setError("Country is required"); return; }
     setLoading(true);
     try {
-      await api.onboarding.saveBusiness({ company_name: companyName.trim(), company_website: companyWebsite.trim() || undefined, country, job_role: role || undefined });
+      const saved = await api.onboarding.saveBusiness({ company_name: companyName.trim(), company_website: companyWebsite.trim() || undefined, country, job_role: role || undefined });
+      // The backend set currency, formats, timezone and tax from the country.
+      if (saved.region) setRegion(saved.region);
       setStage(2);
     } catch (err: unknown) { setError(err instanceof Error ? err.message : "Could not save — try again"); }
     finally { setLoading(false); }
@@ -312,12 +337,20 @@ export default function OnboardingPage() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
+              {/* CSV / Excel import — real, wired to /api/import/excel */}
+              <div style={{ border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>File import (CSV / Excel)</div>
+                  <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Invoices and customers from any accounting system, ERP or spreadsheet export</div>
+                </div>
+                <Link href="/decisions/import" className="btn-back" style={{ whiteSpace: "nowrap", textDecoration: "none", display: "inline-block" }}>Import</Link>
+              </div>
               {/* Tally — real, wired to the actual device-enrollment flow */}
               <div style={{ border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: 18 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: enrollment ? 14 : 0 }}>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>Tally</div>
-                    <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Connect your Tally install via the local connector</div>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>TallyPrime</div>
+                    <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>A read-only bridge on the computer that runs Tally</div>
                   </div>
                   {!enrollment && (
                     <button type="button" className="btn-back" disabled={enrolling} onClick={startTallyEnrollment} style={{ whiteSpace: "nowrap" }}>
@@ -349,13 +382,13 @@ export default function OnboardingPage() {
                 )}
               </div>
 
-              {/* CSV / Excel import — real, wired to /api/import/excel */}
-              <div style={{ border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              {/* Everything else: the connector catalog, with honest status */}
+              <div style={{ border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>File import (CSV / Excel)</div>
-                  <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Import customers, sales or purchase records from a spreadsheet</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>QuickBooks, Xero, NetSuite, Stripe, Shopify and more</div>
+                  <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Direct connections are coming soon. Until then, an export from any of them works through File import.</div>
                 </div>
-                <Link href="/decisions/import" className="btn-back" style={{ whiteSpace: "nowrap", textDecoration: "none", display: "inline-block" }}>Import</Link>
+                <Link href="/sources" className="btn-back" style={{ whiteSpace: "nowrap", textDecoration: "none", display: "inline-block" }}>See all</Link>
               </div>
             </div>
 
@@ -393,7 +426,7 @@ export default function OnboardingPage() {
                     {item.reason && <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.45)", marginTop: 6 }}>{item.reason}</div>}
                     {(item.amount || item.due_date || item.related_entity_name) && (
                       <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", marginTop: 8, display: "flex", gap: 14 }}>
-                        {item.amount && <span>₹{Number(item.amount).toLocaleString("en-IN")}</span>}
+                        {item.amount && <span>{formatMoney(item.amount)}</span>}
                         {item.due_date && <span>{new Date(item.due_date).toLocaleDateString()}</span>}
                         {item.related_entity_name && <span>{item.related_entity_name}</span>}
                       </div>

@@ -328,7 +328,7 @@ export default function ForgotPasswordPage() {
 
         <p className="mt-6 text-center text-xs text-muted">
           <Link href="/" className="hover:text-secondary transition-colors">Starlane</Link>
-          {" "}— Collections OS for Indian MSMEs
+          {" "}— the morning cash brief for business owners
         </p>
       </div>
     </div>

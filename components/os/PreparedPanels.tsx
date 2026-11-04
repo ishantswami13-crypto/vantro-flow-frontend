@@ -166,7 +166,7 @@ export function DecisionsNeedingYou() {
                 <p className="text-[14px]" style={{ color: C.ink, fontWeight: 600 }}>{d.title}</p>
                 {d.whyNow && d.whyNow[0] && <p className="text-[12.5px] mt-1" style={{ color: C.body }}>{d.whyNow[0]}</p>}
                 <p className="text-[12px] mt-1" style={{ color: C.faint }}>
-                  {stake ? `${money(stake, d.currency || "INR")} at stake` : "Amount not estimated"}
+                  {stake ? `${money(stake, d.currency)} at stake` : "Amount not estimated"}
                   {left != null ? ` · ${left < 0 ? "past its latest safe date" : left === 0 ? "act today" : `${left} day${left === 1 ? "" : "s"} left to act`}` : ""}
                   {d.recommendation ? ` · Starlane suggests: ${d.recommendation.label}` : ""}
                 </p>
