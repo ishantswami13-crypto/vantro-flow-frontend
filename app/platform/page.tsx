@@ -4,11 +4,13 @@ import { JsonLd } from "@/components/marketing/JsonLd";
 import "../landing.css";
 import "../start.css";
 import "../site.css";
+import "../ccv.css";
 import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
 import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { StatePlate, EvidenceStack } from "@/components/marketing/home/Plates";
 import { WatchRoom, SimulationRoom, VerificationRecord } from "@/components/marketing/home/Rooms";
+import { CommandCenterVideo } from "@/components/marketing/site/CommandCenterVideo";
 import { PlatformAvailability } from "@/components/marketing/PlatformAvailability";
 
 export const metadata: Metadata = pageMetadata({
@@ -68,6 +70,16 @@ export default function PlatformPage() {
           <Link href="/product" className="f-link">Product guide<span aria-hidden>→</span></Link>
         </div>
       </PageHero>
+
+      <section id="film" className="ccv-sec" aria-labelledby="ccv-h">
+        <div className="ccv-wrap">
+          <div className="ccv-head">
+            <h2 id="ccv-h" className="ccv-h">Starlane Command Center</h2>
+            <p className="ccv-sub">One morning in 38 seconds: invoices reviewed overnight, the evidence behind Gupta Traders, an agent preparing the reminder, and the owner approving it once.</p>
+          </div>
+          <CommandCenterVideo />
+        </div>
+      </section>
 
       <section id="connect" className="f f-light" aria-labelledby="p1-h">
         <div className="f-wrap f-grid">
