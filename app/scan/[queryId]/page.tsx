@@ -11,6 +11,7 @@ import { ScanComposer, businessNameFromStorage } from "@/components/scan/ScanCom
 import { ScanThinking } from "@/components/scan/ScanThinking";
 import { isPromptSaved, removeSavedPrompt, savePrompt } from "@/lib/promptStore";
 import { api, getUser } from "@/lib/api";
+import { getModelChoice } from "@/lib/modelChoice";
 import { appendTurn, createThread, getThread, messagesFor, takePendingQuestion, type ScanThread, type ScanTurn } from "@/lib/scanStore";
 
 // A Scan conversation: every question and answer in order, with the box
@@ -55,7 +56,7 @@ export default function ScanThreadPage() {
     setError(null);
     try {
       const user = getUser();
-      const response = await api.aiChat(user?.id || "", messagesFor(current, q), businessNameFromStorage(user?.business_name));
+      const response = await api.aiChat(user?.id || "", messagesFor(current, q), businessNameFromStorage(user?.business_name), getModelChoice());
       const turn: ScanTurn = { question: q, response, askedAt: new Date().toISOString() };
       if (current) {
         const saved = appendTurn(current.id, turn);
@@ -136,6 +137,8 @@ function Turn({ turn }: { turn: ScanTurn }) {
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
   const { message, actions, waLinks } = turn.response;
+  const answeredBy = turn.response.model || null;
+  const fellBack = !!answeredBy && !!turn.response.requested_model && turn.response.requested_model !== "auto" && !answeredBy.picked;
 
   useEffect(() => { setSaved(isPromptSaved(turn.question)); }, [turn.question]);
 
@@ -185,6 +188,7 @@ function Turn({ turn }: { turn: ScanTurn }) {
           <button type="button" onClick={toggleSave} className="scan-tool" aria-pressed={saved} title={saved ? "Remove from your Library" : "Save this question to your Library"}>
             {saved ? <IconBookmarkFilled size={14} /> : <IconBookmark size={14} />} {saved ? "Saved to Library" : "Save prompt"}
           </button>
+          {answeredBy && <span className="scan-model" title={fellBack ? "The model you picked didn't answer, so Starlane used another one." : undefined}>{fellBack ? `Your pick was busy, answered by ${answeredBy.model}` : answeredBy.model}</span>}
         </div>
       </div>
     </div>

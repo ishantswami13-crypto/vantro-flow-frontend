@@ -112,7 +112,7 @@ function PreparedCardView({
   const when = formatTimestamp(card.timestamp);
 
   return (
-    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.08)", borderRadius: 12, boxShadow: "0 1px 2px rgba(25,25,23,0.04), 0 14px 34px -22px rgba(25,25,23,0.22)", padding: "20px 22px" }}>
+    <div className="card-in hover-lift" style={{ boxSizing: "border-box", background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.08)", borderRadius: 12, boxShadow: "0 1px 2px rgba(15,14,13,0.03)", padding: "20px 22px" }}>
       <div className="meta" style={{ fontSize: 10, color: "#6E6E69", marginBottom: 8 }}>
         {card.trigger.replace(/_/g, " ")}{when ? `, ${when}` : ""}
       </div>
@@ -220,7 +220,7 @@ export default function PreparedPage() {
         }
       />
 
-      <div role="tablist" aria-label="Prepared" className="flex items-baseline overflow-x-auto" style={{ gap: 26, borderBottom: "1px solid rgba(25,25,23,0.08)" }}>
+      <div role="tablist" aria-label="Prepared" className="hv-tabs flex items-center overflow-x-auto" style={{ gap: 4 }}>
         {TABS.map((t) => {
           const on = t.key === tab;
           return (
@@ -230,10 +230,10 @@ export default function PreparedPage() {
               role="tab"
               aria-selected={on}
               onClick={() => setTab(t.key)}
-              className={on ? "" : "hover-dim"}
-              style={{ fontSize: 13.5, color: on ? "#191917" : "#63635F", paddingBottom: 8, marginBottom: -1, whiteSpace: "nowrap", background: "none", borderBottom: `1.5px solid ${on ? "#191917" : "transparent"}` }}
+              className="hv-tab"
+              style={{ fontSize: 13, fontWeight: 500, padding: "5px 11px", borderRadius: 6, color: on ? "#0F0E0D" : "#6E6A63", whiteSpace: "nowrap", background: on ? "#ECEAE4" : "transparent" }}
             >
-              {t.label}{data ? <span style={{ fontFamily: "var(--meta)", fontSize: 10, color: on ? "#F6F4EF" : "#43433F", background: on ? "#191917" : "rgba(25,25,23,0.07)", borderRadius: 999, padding: "1px 6px", marginLeft: 6, verticalAlign: "1px" }}>{counts[t.key]}</span> : null}
+              {t.label}{data ? <span style={{ fontSize: 12, fontWeight: 500, color: on ? "#3F3D39" : "#8F8A81", marginLeft: 5 }}>({counts[t.key]})</span> : null}
             </button>
           );
         })}

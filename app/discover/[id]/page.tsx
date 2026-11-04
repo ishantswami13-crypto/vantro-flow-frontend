@@ -245,7 +245,7 @@ function ComponentRow({ component }: { component: ImpactComponent }) {
           <p className="v32-meta">{relevance}</p>
         </div>
         {component.revenueExposure.sufficientData && (
-          <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12.5, color: "#191917" }}>
+          <span style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12.5, color: "#191917" }}>
             ₹{(component.revenueExposure.totalRevenueExposure / 100000).toFixed(1)}L
           </span>
         )}

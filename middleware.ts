@@ -13,7 +13,7 @@ export const PROTECTED = [
   '/decisions', '/control', '/approvals', '/connections',
   // The seven surfaces and their supporting pages — guarded server-side so a
   // signed-out visitor never sees a page shell before the client-side bounce.
-  '/bridge', '/scan', '/watch', '/simulate', '/prepared', '/missions', '/memory',
+  '/bridge', '/command', '/scan', '/watch', '/simulate', '/prepared', '/missions', '/memory',
   '/agents', '/sources', '/discover', '/intelligence', '/outreach',
 ];
 

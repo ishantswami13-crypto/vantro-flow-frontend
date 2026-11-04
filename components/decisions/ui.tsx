@@ -24,21 +24,21 @@ export const C = {
 
 export function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="uppercase mb-3" style={{ color: C.muted, fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 10.5, fontWeight: 400, letterSpacing: "0.08em" }}>
+    <p className="mb-3" style={{ color: "#6E6A63", fontSize: 12.5, fontWeight: 500 }}>
       {children}
     </p>
   );
 }
 
 type Tone = "neutral" | "good" | "warn" | "bad" | "accent";
-// Outlined tag pills, as on the Missions and Memory boards: coloured text
-// and border on white, radius 20px. Never a filled colour block.
-const TONE: Record<Tone, { fg: string; bg: string; bd: string }> = {
-  neutral: { fg: C.muted, bg: "transparent", bd: "rgba(25,25,23,0.14)" },
-  good: { fg: C.good, bg: "transparent", bd: "rgba(71,112,84,0.45)" },
-  warn: { fg: C.warn, bg: "transparent", bd: "rgba(155,116,43,0.45)" },
-  bad: { fg: C.bad, bg: "transparent", bd: "rgba(166,79,75,0.45)" },
-  accent: { fg: C.accent, bg: "transparent", bd: "rgba(var(--accent-rgb, 105, 109, 134), 0.5)" },
+// Status pills as Harvey draws them: a soft tint, a small dot and the
+// word in sentence case. Colour is never the only signal; the word is.
+const TONE: Record<Tone, { fg: string; bg: string; bd: string; dot: string }> = {
+  neutral: { fg: "#57534D", bg: "#F0EEEA", bd: "#E4E1DA", dot: "#A8A39A" },
+  good: { fg: "#2F6B45", bg: "#EAF3EC", bd: "#CFE3D5", dot: "#3E8A5A" },
+  warn: { fg: "#8A5A12", bg: "#FBF1DD", bd: "#F0DDB4", dot: "#D19A2E" },
+  bad: { fg: "#A3392E", bg: "#F9E7E4", bd: "#EFCBC5", dot: "#C9533F" },
+  accent: { fg: "#2F5E9A", bg: "#E7EEF8", bd: "#CCDAEE", dot: "#3F74C0" },
 };
 
 export function Pill({ tone = "neutral", children, title }: { tone?: Tone; children: React.ReactNode; title?: string }) {
@@ -46,9 +46,10 @@ export function Pill({ tone = "neutral", children, title }: { tone?: Tone; child
   return (
     <span
       title={title}
-      className="inline-flex items-center gap-1 px-[6px] rounded-[2px] whitespace-nowrap max-w-full overflow-hidden text-ellipsis"
-      style={{ color: t.fg, background: t.bg, border: `1px solid ${t.bd}`, fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 9.5, lineHeight: "16px", fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase" }}
+      className="inline-flex items-center gap-[5px] px-[7px] rounded-[5px] whitespace-nowrap max-w-full overflow-hidden text-ellipsis"
+      style={{ color: t.fg, background: t.bg, boxShadow: `inset 0 0 0 1px ${t.bd}`, fontSize: 11.5, lineHeight: "20px", fontWeight: 500 }}
     >
+      <span aria-hidden="true" className="shrink-0 rounded-full" style={{ width: 5, height: 5, background: t.dot }} />
       {children}
     </span>
   );
@@ -73,8 +74,8 @@ export function ConfidencePill({ band, score }: { band?: string | null; score?: 
 export function Stat({ label, value, sub, tone }: { label: string; value: React.ReactNode; sub?: React.ReactNode; tone?: "bad" | "warn" | "good" }) {
   return (
     <div className="min-w-0">
-      <p style={{ color: C.faint, fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" }}>{label}</p>
-      <p className="leading-tight mt-2 tabular-nums" style={{ color: tone ? C[tone] : C.ink, fontSize: 26, fontWeight: 500, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", letterSpacing: "-0.03em" }}>{value}</p>
+      <p className="leading-none tabular-nums" style={{ color: tone ? C[tone] : "#0F0E0D", fontSize: 38, fontWeight: 400, fontFamily: "'Newsreader', Georgia, serif", letterSpacing: "-0.02em" }}>{value}</p>
+      <p className="mt-2" style={{ color: "#6E6A63", fontSize: 13 }}>{label}</p>
       {sub && <p className="text-[12px] mt-1" style={{ color: C.muted }}>{sub}</p>}
     </div>
   );
@@ -103,7 +104,7 @@ export function RangeBar({ interval, max, currency, highlight }: { interval?: In
           <span style={{ fontWeight: 500 }}>{money(interval.mean, currency)}</span> expected
           <span style={{ color: C.faint }}> · range {money(interval.p10, currency)} to {money(interval.p90, currency)}</span>
         </span>
-        <span style={{ fontFamily: "'IBM Plex Mono', ui-monospace, monospace", fontSize: 10, letterSpacing: ".08em", textTransform: "uppercase", color: C.faint }}>
+        <span style={{ fontSize: 11.5, color: C.faint }}>
           Axis 0 to {money(max, currency)}
         </span>
       </div>
@@ -156,7 +157,7 @@ export function Skeleton({ rows = 3 }: { rows?: number }) {
 export function Notice({ tone = "neutral", title, children }: { tone?: Tone; title: string; children?: React.ReactNode }) {
   const t = TONE[tone];
   return (
-    <div className="rounded-xl px-4 py-3" style={{ background: t.bg, border: `1px solid ${t.bd}` }} role={tone === "bad" ? "alert" : undefined}>
+    <div className="rounded-[10px] px-4 py-3" style={{ background: tone === "neutral" ? "#FFFFFF" : t.bg, border: `1px solid ${t.bd}` }} role={tone === "bad" ? "alert" : undefined}>
       <p className="text-[13px]" style={{ color: t.fg, fontWeight: 500 }}>{title}</p>
       {children && <div className="text-[12px] mt-1 leading-[1.55]" style={{ color: C.body }}>{children}</div>}
     </div>
