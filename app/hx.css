@@ -264,7 +264,7 @@
 .acc-t { margin: 0 0 3.4cqw; font-family: var(--serif); font-size: 3.8cqw; line-height: 1.1; letter-spacing: -.01em; color: #0F0E0D; }
 .acc-win .hx-mock * { box-shadow: none !important; }
 .acc-win > .hx-mock, .acc-win > .hx-mock.fit { font-size: 1.75cqw; position: static; transform: none; width: 100% !important; max-width: none; margin: 0; box-shadow: none; border: 0; background: transparent; }
-.acc-vt .dw-host { position: absolute; left: .9%; top: 7.74%; width: 142.3%; box-shadow: 0 10px 30px rgba(0,0,0,.18); clip-path: inset(0 0 0 3.47% round 10px 0 0 0); }
+.acc-vt .dw-host { position: absolute; left: -1.35%; top: 7.74%; width: 206%; box-shadow: 0 10px 30px rgba(0,0,0,.18); clip-path: inset(0 0 0 3.47% round 10px 0 0 0); }
 
 /* Film block: scales up into place */
 .hx-film { margin: calc(64px * var(--s)) auto 0; width: calc(100% - 2 * 138px * var(--s)); }
