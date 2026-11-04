@@ -10,6 +10,8 @@ const PAGES: Array<[string, number, MetadataRoute.Sitemap[number]["changeFrequen
   ["/security", 0.8, "monthly"],
   ["/pricing", 0.8, "monthly"],
   ["/company", 0.6, "monthly"],
+  ["/solutions", 0.7, "monthly"],
+  ["/pilots", 0.6, "monthly"],
   ["/access", 0.7, "monthly"],
   ["/product", 0.6, "monthly"],
   ["/product/bridge", 0.5, "monthly"],
