@@ -23,6 +23,7 @@ export const V32_NAV_ITEMS: PrimaryNavItem[] = [
 export const V32_APPS_NAV_ITEMS: PrimaryNavItem[] = [
   { href: "/watch",    label: "Monitors",  icon: IconWatch },
   { href: "/missions", label: "Tasks",     icon: IconMissions },
+  { href: "/workflows", label: "Workflows", icon: IconAgents },
   { href: "/simulate", label: "Scenarios", icon: IconSimulate },
 ];
 

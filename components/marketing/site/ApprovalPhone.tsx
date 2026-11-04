@@ -13,17 +13,17 @@ export function ApprovalPhone() {
     <figure className="ap">
       <div className="ap-phone" aria-hidden>
         <div className="ap-head">
-          <p className="ap-who"><b>Starlane</b><span>Approval needed · Gupta Traders</span></p>
+          <p className="ap-who"><b>Starlane</b><span>Approval needed · Harbor Supply Co.</span></p>
         </div>
         <div className="ap-chat">
           <p className="ap-day">Today</p>
           <div className="ap-msg ap-in">
-            <p className="ap-label">Draft reminder to Gupta Traders</p>
+            <p className="ap-label">Draft reminder to Harbor Supply Co.</p>
             <p>
-              Namaste Guptaji, three invoices totalling ₹18,42,000 are now overdue, the oldest by 47 days. You had promised payment by
+              Hi Dana, three invoices totalling $184,200 are now overdue, the oldest by 47 days. You had promised payment by
               Monday. Please confirm a date for the transfer today.
             </p>
-            <p className="ap-src">Invoices 1042, 1051, 1066 · TallyPrime</p>
+            <p className="ap-src">Invoices 1042, 1051, 1066 · Ledger</p>
           </div>
           <div className="ap-choices">
             <span className="ap-btn ap-btn-go">Approve and send</span>
@@ -40,7 +40,7 @@ export function ApprovalPhone() {
       <figcaption className="ap-cap">
         Sample data · Fictional business. Outbound messaging is off until you enable it, and then each message waits for approval.
         <span className="sl-sr">
-          A drafted WhatsApp reminder to Gupta Traders about ₹18,42,000 overdue, with Approve and send, Edit and Skip.
+          A drafted reminder to Harbor Supply Co. about $184,200 overdue, with Approve and send, Edit and Skip.
           The log shows the change raised and the draft prepared at 07:42, and that nothing has been sent while it waits for you.
         </span>
       </figcaption>

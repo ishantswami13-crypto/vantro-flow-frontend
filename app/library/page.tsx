@@ -276,7 +276,7 @@ export default function VaultPage() {
             </table>
             {vault && rows.length === 0 && (
               <p className="vt-empty">
-                {query || category ? "No file matches." : <>Nothing here yet. <Link href="/decisions/import">Upload a receivables export</Link> or <Link href="/sources">connect Tally</Link>.</>}
+                {query || category ? "No file matches." : <>Nothing here yet. <Link href="/decisions/import">Upload a receivables export</Link> or <Link href="/sources">connect a data source</Link>.</>}
               </p>
             )}
             {!vault && !error && <p className="vt-empty">Loading your files…</p>}

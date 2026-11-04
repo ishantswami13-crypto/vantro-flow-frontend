@@ -71,7 +71,7 @@ export function CloseBand({ title = "See it on your own business.", secondary = 
       <div className="ed-wrap">
         <div className="ed-close-panel ed-paint ed-paint-moss">
           <h2 id="cb-h">{title}</h2>
-          <p>Private pilots for businesses that run on TallyPrime. Read-only connections, and nothing is sent without your approval.</p>
+          <p>Private pilots for businesses anywhere, on the systems they already run. Read-only connections, and nothing is sent without your approval.</p>
           <div className="ed-close-act">
             <Link href="/access" className="ed-btn-light">Request a pilot</Link>
             <Link href={secondary[0]} className="ed-btn-ghost">{secondary[1]}</Link>

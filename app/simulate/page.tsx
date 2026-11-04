@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type ScenarioInvoice, type SimulateScenarioResponse } from "@/lib/api";
 import { SalesWhatIf, WorkflowReplays } from "@/components/os/SimulatePanels";
 import { PageHeader, Subnav } from "@/components/v32/ui";
+import { formatMoneyShort, formatNumber } from "@/lib/locale";
 
 // Simulate — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§6/§14/§16.
 //
@@ -26,15 +27,12 @@ import { PageHeader, Subnav } from "@/components/v32/ui";
 // today (named invoice hypotheticals), not the broader one that was never
 // built.
 
-// Amounts follow the ledger's currency. With no currency on record the
-// ledger is the older INR-only one, so lakh formatting stays for it.
+// Amounts follow the ledger's currency; with none on record, the business's
+// own (lib/locale.ts). "" means a plain number with no currency.
 const fmtIn = (currency: string | null) => (n: number | null | undefined) => {
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
-  const abs = Math.abs(n);
-  const sign = n < 0 ? "−" : "";
-  if (currency === "") return `${sign}${Math.round(abs).toLocaleString("en-US")}`;
-  if (currency && currency !== "INR") return `${sign}${currency} ${Math.round(abs).toLocaleString("en-US")}`;
-  return abs >= 100000 ? `${sign}₹${(abs / 100000).toFixed(1)}L` : `${sign}₹${Math.round(abs).toLocaleString("en-IN")}`;
+  if (currency === "") return formatNumber(Math.round(n));
+  return formatMoneyShort(n, { currency });
 };
 
 export default function SimulatePage() {
@@ -168,7 +166,7 @@ function SimulatePageInner() {
             ) : invoicesError ? (
               <p style={{ fontSize: 13, color: "#A64F4B" }}>{invoicesError}</p>
             ) : invoices.length === 0 ? (
-              <p style={{ fontSize: 13, color: "#63635F" }}>No open invoices to simulate against yet. Import your receivables or connect Tally first.</p>
+              <p style={{ fontSize: 13, color: "#63635F" }}>No open invoices to simulate against yet. Import your receivables or connect your accounting system first.</p>
             ) : (
               <>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -180,7 +178,7 @@ function SimulatePageInner() {
                         type="search"
                         value={invoiceQuery}
                         onChange={(e) => setInvoiceQuery(e.target.value)}
-                        placeholder={`Search ${invoiceTotal.toLocaleString("en-IN")} open invoices`}
+                        placeholder={`Search ${formatNumber(invoiceTotal)} open invoices`}
                         className="sim-pill"
                         style={{ ...pill, minWidth: 220 }}
                       />

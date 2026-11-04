@@ -9,6 +9,7 @@ import React from "react";
 import Link from "next/link";
 import { FiChevronRight } from "react-icons/fi";
 import { IconSearch, IconSparkle } from "./icons";
+import { formatMoney, formatNumber } from "@/lib/locale";
 
 export const V = {
   ink: "#191917",
@@ -271,19 +272,15 @@ export function ErrorBanner({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** An amount in its own currency: Indian grouping and ₹ for INR, the
- *  international form for every other ISO code. Units that are not
- *  currencies (days, %) are appended as written. */
+/** An amount in its own currency, written the way that currency's market
+ *  reads it (lib/locale.ts). Units that are not currencies (days, %) are
+ *  appended as written. */
 export function formatAmount(value: number, unit?: string | null): string {
   if (!Number.isFinite(value)) return "";
-  if (unit === "INR") return `₹${Math.round(value).toLocaleString("en-IN")}`;
-  if (unit && /^[A-Z]{3}$/.test(unit)) {
-    try { return new Intl.NumberFormat("en-US", { style: "currency", currency: unit, maximumFractionDigits: 0 }).format(value); } catch { /* unknown code */ }
-    return `${unit} ${Math.round(value).toLocaleString("en-US")}`;
-  }
+  if (unit && /^[A-Z]{3}$/.test(unit)) return formatMoney(value, { currency: unit });
   if (unit === "%") return `${value}%`;
   if (unit && /days?/i.test(unit)) return `${value} ${value === 1 ? "day" : "days"}`;
-  return value.toLocaleString("en-US");
+  return formatNumber(value);
 }
 
 /** Relative time in the design's voice: "3m ago", "2h ago". */

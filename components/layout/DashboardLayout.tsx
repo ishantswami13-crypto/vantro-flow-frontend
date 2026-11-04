@@ -11,6 +11,7 @@ import { hydrateUserContext } from "@/lib/featureGating";
 import { api, authenticatedFetch, authHeaders, isLoggedIn } from "@/lib/api";
 import { recordRecent } from "@/lib/recents";
 import { useApplyIdentity } from "@/components/identity/useIdentity";
+import { useRegionSync } from "@/components/providers/RegionSync";
 import Link from "next/link";
 
 
@@ -82,6 +83,10 @@ export default function DashboardLayout({ children, pageTitle, slimRail = false,
   const pathname = usePathname();
   // Keeps the user's colour identity (--id-* CSS variables) on :root.
   useApplyIdentity();
+  // The business's currency, number format and timezone (lib/locale.ts).
+  // Changes only when the backend's region differs from this device's cache;
+  // the page is then re-mounted once so every amount is written the new way.
+  const regionVersion = useRegionSync();
 
   useEffect(() => { setIsDemo(isDemoMode()); }, []);
 
@@ -220,11 +225,11 @@ export default function DashboardLayout({ children, pageTitle, slimRail = false,
 
         {bare ? (
           <main className="flex-1 min-h-0 overflow-hidden">
-            <div key={pathname} className="h-full page-in">{children}</div>
+            <div key={`${pathname}:${regionVersion}`} className="h-full page-in">{children}</div>
           </main>
         ) : (
           <main className="flex-1 overflow-y-auto v32-main">
-            <div key={pathname} className="v32-wrap page-in">{children}</div>
+            <div key={`${pathname}:${regionVersion}`} className="v32-wrap page-in">{children}</div>
           </main>
         )}
       </div>

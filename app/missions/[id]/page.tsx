@@ -13,13 +13,14 @@ import { FeatureActionRow } from "@/components/features/FeatureActionRow";
 import { agentLabel } from "@/components/os/MissionsList";
 import { osApi } from "@/lib/os";
 import type { Mission } from "../../../packages/contracts/src/features";
+import { formatMoney, formatDate } from "@/lib/locale";
 
 const RULE = "rgba(25,25,23,0.10)", GRAPHITE = "#63635F";
 const STATUS: Record<string, [string, string]> = {
   active: ["Active", "#4B5170"], paused: ["Paused", "#8A5A12"], draft: ["Draft", GRAPHITE],
   completed: ["Completed", "#477054"], failed: ["Missed target", "#A23B3B"], cancelled: ["Cancelled", GRAPHITE],
 };
-const inr = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
+const inr = (v: number) => formatMoney(v);
 const btn: React.CSSProperties = { fontSize: 13, padding: "6px 12px", borderRadius: 6, border: `1px solid ${RULE}`, background: "#fff", cursor: "pointer" };
 const panel: React.CSSProperties = { background: "#fff", border: `1px solid ${RULE}`, borderRadius: 8 };
 const h2: React.CSSProperties = { fontSize: 14, fontWeight: 600, margin: "0 0 8px" };
@@ -131,7 +132,7 @@ export default function MissionPage() {
                   {error ? <p role="alert" style={{ margin: 0, fontSize: 13, color: "#A23B3B" }}>{error}</p> : null}
                   <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "4px 14px", fontSize: 13 }}>
                     {m.assigned ? <><dt style={{ color: GRAPHITE }}>Agent</dt><dd style={{ margin: 0 }}>{agentLabel(m.assigned.agent, agentNames)} · proposes actions, you approve each one</dd></> : null}
-                    <dt style={{ color: GRAPHITE }}>Horizon</dt><dd style={{ margin: 0 }}>{m.horizonDays} days{m.endsAt ? ` · ends ${new Date(m.endsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}` : ""}</dd>
+                    <dt style={{ color: GRAPHITE }}>Horizon</dt><dd style={{ margin: 0 }}>{m.horizonDays} days{m.endsAt ? ` · ends ${formatDate(m.endsAt, { day: "numeric", month: "short" })}` : ""}</dd>
                     <dt style={{ color: GRAPHITE }}>Escalation</dt><dd style={{ margin: 0 }}>{m.constraints.allowEscalation ? "Allowed" : "Reminders only"}</dd>
                     <dt style={{ color: GRAPHITE }}>Disputed</dt><dd style={{ margin: 0 }}>Always left out</dd>
                   </dl>

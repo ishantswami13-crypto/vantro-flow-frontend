@@ -11,6 +11,7 @@ import {
   FiAlertTriangle, FiArrowRight, FiCheckCircle, FiCpu,
   FiWifiOff, FiShield, FiDatabase, FiInfo,
 } from "react-icons/fi";
+import { formatTime } from "@/lib/locale";
 
 // ─── Priority / risk colour map — only critical/high are genuinely
 // alarming; medium/low are neutral grades, not a blue "info" hue reusing
@@ -249,7 +250,7 @@ export default function OwnerBriefingCard({ data, loading, error, fetchedAt }: P
   }
 
   const fetchedTime = fetchedAt
-    ? fetchedAt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+    ? formatTime(fetchedAt)
     : null;
 
   return (

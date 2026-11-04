@@ -188,11 +188,11 @@ export default function DecisionsPage() {
               <>
                 <p className="text-[15px]" style={{ color: C.ink, fontWeight: 500 }}>No data to decide on yet</p>
                 <p className="text-[13px] mt-1.5 max-w-[460px] mx-auto" style={{ color: C.faint }}>
-                  Upload the receivables file you already have (CSV or Excel), or connect Tally. Starlane needs your own history to find decisions; it never invents one.
+                  Upload the receivables file you already have (CSV or Excel), or connect your accounting system. Starlane needs your own history to find decisions; it never invents one.
                 </p>
                 <div className="mt-4 flex justify-center gap-3">
                   <Button size="sm" onClick={() => router.push("/decisions/import")}>Upload a file</Button>
-                  <Button size="sm" variant="secondary" onClick={() => router.push("/sources")}>Connect Tally</Button>
+                  <Button size="sm" variant="secondary" onClick={() => router.push("/sources")}>Connect a data source</Button>
                 </div>
               </>
             ) : (

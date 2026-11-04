@@ -20,6 +20,8 @@ import {
 } from "react-icons/fi";
 import { api, getUser, clearAuth, type DunningRule, type DeliveryLine, type DeliveryStatus, authHeaders } from "@/lib/api";
 import { INDUSTRY_OPTIONS, setBusinessType } from "@/lib/businessTypes";
+import { RegionSettingsCard } from "@/components/settings/RegionSettingsCard";
+import { getRegion, taxLabel } from "@/lib/locale";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
@@ -37,14 +39,14 @@ const TABS: { key: Tab; label: string; icon: React.ElementType; badge?: string }
 
 const industryOptions  = INDUSTRY_OPTIONS;
 const languageOptions  = [
-  { value: "hinglish", label: "Hinglish (Hindi + English)" },
   { value: "english",  label: "English" },
+  { value: "hinglish", label: "Hinglish (Hindi + English)" },
   { value: "hindi",    label: "Hindi" },
 ];
 const voiceStyleOptions = [
+  { value: "direct_english",  label: "Direct English — professional, no-nonsense" },
   { value: "casual_hinglish", label: "Casual Hinglish — 'Bhai', 'yaar', short & direct" },
   { value: "formal_hindi",    label: "Formal Hindi — 'Aap', respectful, full sentences" },
-  { value: "direct_english",  label: "Direct English — professional, no-nonsense" },
   { value: "friendly_urdu",   label: "Friendly Urdu-Hindi mix — warm, relationship-first" },
   { value: "regional_hindi",  label: "Regional Hinglish — local dialect, city-specific" },
 ];
@@ -59,12 +61,6 @@ const employeeOptions = [
   { value: "21-50", label: "21–50 employees" }, { value: "51-200", label: "51–200 employees" },
   { value: "200+", label: "200+ employees" },
 ];
-const CITIES = [
-  "Mumbai","Delhi","Bangalore","Chennai","Hyderabad","Pune","Ahmedabad","Kolkata",
-  "Surat","Jaipur","Lucknow","Kanpur","Nagpur","Indore","Bhopal","Patna",
-  "Ludhiana","Agra","Nashik","Vadodara","Other",
-];
-const timezoneOptions = [{ value: "Asia/Kolkata", label: "IST — Asia/Kolkata (UTC+5:30)" }];
 
 const WEBHOOK_URL    = `${BASE}/api/payments/webhook`;
 const WA_WEBHOOK_URL = `${BASE}/api/webhooks/whatsapp-inbound`;
@@ -105,10 +101,10 @@ function SettingsPageInner() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [delivery, setDelivery] = useState<DeliveryStatus | null>(null);
   const [business, setBusiness] = useState({ business_name: "", gstin: "", industry: "trading", team_size: "6-20", business_address: "", city: "", upi_id: "", invoice_prefix: "INV" });
-  const [prefs, setPrefs]       = useState({ language: "hinglish", contact_time: "" });
+  const [prefs, setPrefs]       = useState({ language: "english", contact_time: "" });
 
   // Voice profile
-  const [voice, setVoice] = useState({ owner_name: "", city: "", voice_style: "casual_hinglish", ai_persona: "" });
+  const [voice, setVoice] = useState({ owner_name: "", city: "", voice_style: "direct_english", ai_persona: "" });
   const [samples, setSamples]         = useState(["", "", ""]);
   const [extracting, setExtracting]   = useState(false);
   const [extractResult, setExtractResult] = useState<{ style_description: string; sample_phrase: string } | null>(null);
@@ -143,7 +139,7 @@ function SettingsPageInner() {
       if (settings.contact_time)      setPrefs(p => ({ ...p, contact_time: settings.contact_time }));
       if (settings.owner_name)        setProfile(p => ({ ...p, full_name: settings.owner_name }));
       if (settings.owner_name || settings.ai_persona) {
-        setVoice({ owner_name: settings.owner_name || "", city: settings.city || "", voice_style: settings.voice_style || "casual_hinglish", ai_persona: settings.ai_persona || "" });
+        setVoice({ owner_name: settings.owner_name || "", city: settings.city || "", voice_style: settings.voice_style || "direct_english", ai_persona: settings.ai_persona || "" });
         setVoiceActive(!!(settings.owner_name && settings.ai_persona));
       }
       if (settings.automation_enabled !== undefined) setAutoEnabled(!!settings.automation_enabled);
@@ -197,7 +193,7 @@ function SettingsPageInner() {
   };
   const handlePrefsSave    = (e: React.FormEvent) => { e.preventDefault(); save({ language: prefs.language, contact_time: prefs.contact_time }); };
   const handleVoiceSave    = async (e: React.FormEvent) => { e.preventDefault(); await save({ owner_name: voice.owner_name, city: voice.city, voice_style: voice.voice_style, ai_persona: voice.ai_persona }); setVoiceActive(!!(voice.owner_name && voice.ai_persona)); };
-  const clearVoice         = async () => { setVoice({ owner_name: "", city: "", voice_style: "casual_hinglish", ai_persona: "" }); setSamples(["", "", ""]); setExtractResult(null); setVoiceActive(false); await save({ owner_name: "", city: "", voice_style: "", ai_persona: "" }); };
+  const clearVoice         = async () => { setVoice({ owner_name: "", city: "", voice_style: "direct_english", ai_persona: "" }); setSamples(["", "", ""]); setExtractResult(null); setVoiceActive(false); await save({ owner_name: "", city: "", voice_style: "", ai_persona: "" }); };
 
   const handleExtractVoice = async () => {
     const validSamples = samples.filter(s => s.trim().length > 5);
@@ -326,27 +322,26 @@ function SettingsPageInner() {
 
             {/* ── Business ──────────────────────────────────── */}
             {tab === "business" && (
+              <>
+              <RegionSettingsCard />
               <Card>
                 <h3 className="text-sm font-semibold text-primary mb-5">Business Information</h3>
                 <form onSubmit={handleBusinessSave} className="space-y-4 max-w-lg">
                   <Input label="Business / Company Name" type="text" value={business.business_name} onChange={e => setBusiness(b => ({ ...b, business_name: e.target.value }))} />
                   <div className="grid grid-cols-2 gap-4">
-                    <Input label="GSTIN" type="text" placeholder="22AAAAA0000A1Z5" value={business.gstin} onChange={e => setBusiness(b => ({ ...b, gstin: e.target.value.toUpperCase() }))} />
+                    <Input label={`${taxLabel()} registration number`} type="text" placeholder="Optional" value={business.gstin} onChange={e => setBusiness(b => ({ ...b, gstin: e.target.value.toUpperCase() }))} />
                     <Select label="Industry" options={industryOptions} value={business.industry} onChange={e => setBusiness(b => ({ ...b, industry: e.target.value }))} />
                   </div>
                   <div>
                     <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">Business Address</label>
-                    <textarea value={business.business_address} onChange={e => setBusiness(b => ({ ...b, business_address: e.target.value }))} placeholder="Shop No. 12, Gandhi Nagar, Delhi - 110031" rows={2}
+                    <textarea value={business.business_address} onChange={e => setBusiness(b => ({ ...b, business_address: e.target.value }))} placeholder="Street, city, postal code" rows={2}
                       className="w-full bg-white border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-medium text-secondary uppercase tracking-wider block mb-1.5">City</label>
-                      <select value={business.city} onChange={e => setBusiness(b => ({ ...b, city: e.target.value }))}
-                        className="w-full bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
-                        <option value="">Select city</option>
-                        {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
+                      <input value={business.city} onChange={e => setBusiness(b => ({ ...b, city: e.target.value }))} placeholder="e.g. New York"
+                        className="w-full bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors" />
                     </div>
                     <Select label="Team Size" options={employeeOptions} value={business.team_size} onChange={e => setBusiness(b => ({ ...b, team_size: e.target.value }))} />
                   </div>
@@ -359,12 +354,15 @@ function SettingsPageInner() {
                           className="w-full bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors font-mono" />
                         <p className="text-2xs text-muted mt-1">Bills will be INV-2025-0001</p>
                       </div>
-                      <Input label="UPI ID (for invoices)" type="text" placeholder="yourname@upi" value={business.upi_id} onChange={e => setBusiness(b => ({ ...b, upi_id: e.target.value }))} />
+                      {getRegion().currency === "INR" && (
+                        <Input label="UPI ID (for invoices)" type="text" placeholder="yourname@upi" value={business.upi_id} onChange={e => setBusiness(b => ({ ...b, upi_id: e.target.value }))} />
+                      )}
                     </div>
                   </div>
                   <Button type="submit" icon={<FiCheck size={14} />} loading={saving}>Save Business Info</Button>
                 </form>
               </Card>
+              </>
             )}
 
             {/* ── AI Voice ──────────────────────────────────── */}
@@ -379,7 +377,7 @@ function SettingsPageInner() {
                         <p className="text-sm font-bold text-primary">AI Voice Profile</p>
                         {voiceActive && <span className="flex items-center gap-1 text-2xs font-bold text-success bg-success-dim border border-success/20 px-2 py-0.5 rounded-full"><FiCheckCircle size={10} /> Active</span>}
                       </div>
-                      <p className="text-xs text-secondary leading-relaxed">Train AI to sound exactly like you — your voice, your Hinglish, your style.</p>
+                      <p className="text-xs text-secondary leading-relaxed">Train AI to sound exactly like you: your words, your language, your style.</p>
                     </div>
                   </div>
                 </div>
@@ -387,13 +385,10 @@ function SettingsPageInner() {
                   <h3 className="text-sm font-semibold text-primary mb-4 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-accent text-white text-2xs font-black flex items-center justify-center">1</span>Your Identity</h3>
                   <div className="space-y-4 max-w-lg">
                     <div className="grid grid-cols-2 gap-4">
-                      <Input label="Your First Name" type="text" placeholder="e.g. Rajesh" value={voice.owner_name} onChange={e => setVoice(v => ({ ...v, owner_name: e.target.value }))} />
+                      <Input label="Your First Name" type="text" placeholder="e.g. Alex" value={voice.owner_name} onChange={e => setVoice(v => ({ ...v, owner_name: e.target.value }))} />
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-medium text-secondary uppercase tracking-wider">Business City</label>
-                        <select value={voice.city} onChange={e => setVoice(v => ({ ...v, city: e.target.value }))} className="bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors">
-                          <option value="">Select city</option>
-                          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
+                        <input value={voice.city} onChange={e => setVoice(v => ({ ...v, city: e.target.value }))} placeholder="e.g. New York" className="bg-white border border-border-input rounded-md text-sm text-primary px-3 py-2.5 focus:outline-none focus:border-accent transition-colors" />
                       </div>
                     </div>
                     <div>
@@ -411,13 +406,13 @@ function SettingsPageInner() {
                 </Card>
                 <Card>
                   <h3 className="text-sm font-semibold text-primary mb-1 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-accent text-white text-2xs font-black flex items-center justify-center">2</span>Paste Your Real Messages</h3>
-                  <p className="text-xs text-muted mb-4 ml-7">Copy 2-3 WhatsApp messages you've actually sent. AI learns your exact style.</p>
+                  <p className="text-xs text-muted mb-4 ml-7">Copy 2-3 payment reminders you've actually sent (email, WhatsApp or text). AI learns your exact style.</p>
                   <div className="space-y-3 max-w-lg">
                     {samples.map((s, i) => (
                       <div key={i}>
                         <label className="text-xs font-medium text-muted uppercase tracking-wider block mb-1">Message {i + 1} {i === 0 ? "(required)" : "(optional)"}</label>
                         <textarea value={s} onChange={e => setSamples(prev => prev.map((v, j) => j === i ? e.target.value : v))} rows={2}
-                          placeholder={i === 0 ? 'e.g. Ramesh bhai, aapka ₹45,000 pending hai. Aaj possible hai kya?' : 'Paste another message...'}
+                          placeholder={i === 0 ? 'e.g. Hi Sam, just checking in on invoice 1042. Could you let me know when it will be paid?' : 'Paste another message...'}
                           className="w-full bg-white border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
                       </div>
                     ))}
@@ -439,7 +434,7 @@ function SettingsPageInner() {
                   <p className="text-xs text-muted mb-4 ml-7">Tell AI how you talk — auto-filled from step 2, or write it yourself.</p>
                   <div className="max-w-lg">
                     <textarea value={voice.ai_persona} onChange={e => setVoice(v => ({ ...v, ai_persona: e.target.value }))}
-                      placeholder="e.g. I talk in casual Hinglish. I use 'bhai' often. I keep messages short and to the point."
+                      placeholder="e.g. I keep messages short and friendly, use first names and never sound threatening."
                       rows={4} className="w-full bg-white border border-border-input rounded-md text-sm text-primary placeholder-muted px-3.5 py-2.5 focus:outline-none focus:border-accent transition-colors resize-none" />
                   </div>
                 </Card>
@@ -456,7 +451,7 @@ function SettingsPageInner() {
                 <h3 className="text-sm font-semibold text-primary mb-5">Preferences</h3>
                 <form onSubmit={handlePrefsSave} className="space-y-4 max-w-lg">
                   <Select label="Message Language" options={languageOptions} value={prefs.language} onChange={e => setPrefs(p => ({ ...p, language: e.target.value }))} />
-                  <Select label="Time Zone" options={timezoneOptions} value="Asia/Kolkata" onChange={() => {}} />
+                  <p className="text-xs text-muted">Timezone: <span className="text-primary">{getRegion().timezone.replace(/_/g, " ")}</span>. Change it under Business › Region.</p>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-medium text-secondary uppercase tracking-wider">Best Time to Call Customers</label>
                     <input type="time" value={prefs.contact_time} onChange={e => setPrefs(p => ({ ...p, contact_time: e.target.value }))}
@@ -769,7 +764,7 @@ function SettingsPageInner() {
 
                 {/* Recommended setup */}
                 <div className="p-4 bg-accent/5 border border-accent/20 rounded-xl">
-                  <p className="text-xs font-bold text-accent mb-2">⚡ Recommended Setup for Indian MSMEs</p>
+                  <p className="text-xs font-bold text-accent mb-2">⚡ Recommended setup for small businesses</p>
                   <div className="space-y-1">
                     {[
                       { day: 3,  tone: "gentle",  desc: "Gentle reminder — most customers pay here" },
