@@ -21,6 +21,10 @@ const PAGES: Array<[string, number, MetadataRoute.Sitemap[number]["changeFrequen
   ["/product/simulate", 0.5, "monthly"],
   ["/product/memory", 0.5, "monthly"],
   ["/product/prepared", 0.5, "monthly"],
+  ["/resources", 0.6, "monthly"],
+  ["/legal", 0.3, "yearly"],
+  ...["agents", "command-center", "decisions", "vault", "memory", "connectors"].map((s) => [`/platform/${s}`, 0.7, "monthly"] as [string, number, "monthly"]),
+  ...["finance-teams", "owners", "collections", "global-trade", "distribution", "manufacturing"].map((s) => [`/solutions/${s}`, 0.6, "monthly"] as [string, number, "monthly"]),
   ["/privacy", 0.3, "yearly"],
   ["/terms", 0.3, "yearly"],
 ];

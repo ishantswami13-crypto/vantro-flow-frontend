@@ -1,205 +1,76 @@
 import type { Metadata, Viewport } from "next";
 import { pageMetadata, breadcrumb } from "@/lib/site";
 import { JsonLd } from "@/components/marketing/JsonLd";
-import "../landing.css";
-import "../start.css";
-import "../site.css";
-import "../ccv.css";
-import Link from "next/link";
-import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
-import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
-import { StatePlate, EvidenceStack } from "@/components/marketing/home/Plates";
-import { WatchRoom, SimulationRoom, VerificationRecord } from "@/components/marketing/home/Rooms";
+import { HxShell } from "@/components/marketing/hx/Shell";
+import { Hero, Panel, Tiles, StackStats, AltRows, ToolLists, Controls, SplitHead } from "@/components/marketing/hx/Blocks";
+import { Quotes } from "@/components/marketing/hx/Interactive";
+import { CONTROLS, CONTROLS_BODY, MODULES, PRINCIPLES } from "@/components/marketing/hx/data";
+import { CommandCenterMock, DecisionMock, PlanMock, QueueMock, SourcesMock, LedgerMock } from "@/components/marketing/hx/Mocks";
 import { CommandCenterVideo } from "@/components/marketing/site/CommandCenterVideo";
-import { PlatformAvailability } from "@/components/marketing/PlatformAvailability";
+import "../ccv.css";
 
 export const metadata: Metadata = pageMetadata({
   path: "/platform",
-  title: "Product",
+  title: "Platform",
   description:
-    "How Starlane works, end to end: read-only connections to the systems you run, one model of the business, the changes that matter, the evidence and options behind each decision, and a check on what happened next.",
+    "The Starlane platform: agents, the Command Center, decisions with their evidence, a read-only vault, memory and connectors, for finance teams and owners.",
 });
 
 export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
-// The product, in the order it works: connect, model, watch, decide, verify.
-// Same fictional company as the homepage; every figure is illustrative.
-
-const CAPTION = "Sample data · Fictional business · Narmada Pipes & Fittings";
-
-const FEATURES: Array<[string, string, string]> = [
-  ["/product/bridge", "The Bridge", "What you are owed, what is overdue, what needs you and what is coming, from your own books."],
-  ["/product/scan", "Scan", "Look into any customer or invoice and see why it matters, or ask in plain words."],
-  ["/product/watch", "Watch", "Invoices slipping, promises missed, syncs failing. Raised once, with evidence, closed when resolved."],
-  ["/product/missions", "Missions", "One objective with a deadline, proposed step by step and measured against your books."],
-  ["/product/simulate", "Simulate", "Likely collections, with every assumption visible and yours to change."],
-  ["/product/memory", "Memory", "What Starlane learned about how you get paid, and your say on it."],
-  ["/product/prepared", "Prepared", "The next 24 hours, 7 days and 30 days, worked out from the dates in your books."],
-];
-
-const SOURCES_PLATES: Plate[] = [
-  { k: "Live", title: "TallyPrime" },
-  { k: "Live", title: "Bank statements" },
-  { k: "Live", title: "Stock" },
-  { k: "Live", title: "Spreadsheets" },
-  { k: "Live", title: "Promise log" },
-  { k: "Planned or custom", title: "ERP", kind: "plan" },
-  { k: "Starlane", title: "One record", kind: "top", lines: 4 },
-];
-
-const HERO_PLATES: Plate[] = [
-  { k: "Connect", title: "Your systems", lines: 4 },
-  { k: "Model", title: "One record", lines: 3 },
-  { k: "Watch", title: "What changed", tone: "risk", lines: 3 },
-  { k: "Decide", title: "Your decision", kind: "top", lines: 3 },
-];
+const QUOTE_VIEWS = [<DecisionMock key="a" />, <PlanMock key="b" />, <LedgerMock key="c" />, <CommandCenterMock key="d" />];
+const QUOTE_TONES = ["stone", "plum", "moss", "slate"] as const;
 
 export default function PlatformPage() {
   return (
-    <SiteShell>
-      <JsonLd data={breadcrumb("/platform", "Product")} />
-      <PageHero
-        kicker="Product"
-        visual={<Stack3D plates={HERO_PLATES} variant="stack" label="Four layers: your systems, one record, what changed, and your decision on top." />}
-        title={<>One model of the business, <em>read every morning.</em></>}
-        lead="Starlane connects to the systems you already run, keeps a single current record of what happened between customers, suppliers, stock and cash, and raises only what changed. Every figure carries its evidence, and every action waits for a person."
-        index={[["#connect", "Connect"], ["#model", "Model"], ["#watch", "Watch"], ["#decide", "Decide"], ["#verify", "Verify"]]}
-      >
-        <div className="f-actions">
-          <Link href="/access" className="sl-btn sl-btn-solid">Request a pilot</Link>
-          <Link href="/product" className="f-link">Product guide<span aria-hidden>→</span></Link>
-        </div>
-      </PageHero>
+    <HxShell>
+      <JsonLd data={breadcrumb("/platform", "Platform")} />
+      <Hero kicker="Platform Overview" title={<>Engineered for<br />Every Finance Task</>} lead="Finance teams and owners use Starlane to cut through scattered ledgers, statements and stock, and act on what changed.">
+        <div id="film"><CommandCenterVideo /></div>
+      </Hero>
 
-      <section id="film" className="ccv-sec" aria-labelledby="ccv-h">
-        <div className="ccv-wrap">
-          <div className="ccv-head">
-            <h2 id="ccv-h" className="ccv-h">Starlane Command Center</h2>
-            <p className="ccv-sub">One morning in 38 seconds: invoices reviewed overnight, the evidence behind Gupta Traders, an agent preparing the reminder, and the owner approving it once.</p>
-          </div>
-          <CommandCenterVideo />
+      <section className="hx-s pt160 pb128" aria-labelledby="why-h">
+        <div className="hx-w">
+          <h2 id="why-h" className="hx-h2 hx-r" style={{ maxWidth: "calc(440px * var(--s))" }}>Why finance teams choose Starlane</h2>
+          <Tiles items={[
+            { title: "Move fast, stay sharp", body: "Hand the first pass to agents: matching, ranking and drafting. Your team spends its time on the decisions.", tone: "umber", view: <QueueMock /> },
+            { title: "Decide with confidence", body: "Every recommendation shows its working, and every outbound step waits for a person and runs once.", tone: "plum", view: <DecisionMock /> },
+            { title: "Put your records to work", body: "Ledgers, exports, bank statements and stock, unified read-only in one record built for precision.", tone: "clay", view: <SourcesMock /> },
+          ]} />
         </div>
       </section>
 
-      <section id="connect" className="f f-light" aria-labelledby="p1-h">
-        <div className="f-wrap f-grid">
-          <div className="f-side">
-            <Index n="01" k="Connect" />
-            <h2 id="p1-h" className="f-h2">Read-only, from what you already run.</h2>
-            <p className="f-lede">Nothing in your systems changes.</p>
-            <p className="f-body">Accounting data arrives as exports from QuickBooks, Xero, Zoho Books and others, or through a local read-only bridge for TallyPrime with a revocable credential per device. Bank statements, stock and spreadsheets arrive as exports. Your team logs the promises customers make. External feeds are switched on per pilot.</p>
-            <p className="f-note"><span className="f-key f-key-solid" />Live today <span className="f-key f-key-dash" />Planned or custom</p>
-            <p className="f-after"><Link href="/integrations" className="f-link">Every integration and its status<span aria-hidden>→</span></Link></p>
-          </div>
-          <div className="f-main"><Stack3D plates={SOURCES_PLATES} variant="converge" label="Six source tiles on the floor, five live and ERP planned, with one record floating above them." /></div>
+      <section className="hx-s alt pt128 pb64" aria-label="By design">
+        <div className="hx-w">
+          <StackStats title="Built for checking, not trusting" items={[["0", "writes to your books, ever"], ["4", "kinds of figure, each labelled with its source"], ["1", "approval for every outbound message, sent once"]]} />
         </div>
       </section>
 
-      <section id="model" className="f f-slab" aria-labelledby="p2-h">
-        <div className="f-wrap">
-          <div className="f-head f-head-split">
-            <div>
-              <Index n="02" k="Model" />
-              <h2 id="p2-h" className="f-h2">Every entity on one record.</h2>
-            </div>
-            <div>
-              <p className="f-lede">Every customer, invoice, payment, promise and order, on one record that stays current.</p>
-              <p className="f-body">Starlane links entities by what actually happened between them, updates the record as each system syncs, and marks changes where they occur.</p>
-            </div>
-          </div>
-          <StatePlate />
+      <section className="hx-s pt128 pb64" aria-label="Principles">
+        <div className="hx-w">
+          <Quotes items={PRINCIPLES.map((p, i) => ({ ...p, view: <Panel id={`pq-${i}`} tone={QUOTE_TONES[i]} kind="" className="hx-q-art">{QUOTE_VIEWS[i]}</Panel> }))} />
         </div>
       </section>
 
-      <section id="watch" className="f f-dark" aria-labelledby="p3-h">
-        <div className="f-wrap">
-          <div className="f-head f-head-split">
-            <div>
-              <Index n="03" k="Watch" />
-              <h2 id="p3-h" className="f-h2">Only what changed, and why it matters.</h2>
-            </div>
-            <p className="f-body">Watch compares each sync with the last. A change is raised once, with its exposure and the records behind it, and closed when it resolves. The rest stays quiet.</p>
-          </div>
-        </div>
-        <div className="f-bleed"><WatchRoom /></div>
-      </section>
-
-      <section id="decide" className="f f-light" aria-labelledby="p4-h">
-        <div className="f-wrap f-grid">
-          <div className="f-side">
-            <Index n="04" k="Decide" />
-            <h2 id="p4-h" className="f-h2">Every figure shows its work.</h2>
-            <p className="f-lede">Fact, calculation, assumption or estimate, and always the record it came from.</p>
-            <p className="f-body">Open a decision and its reasoning comes apart into layers you can check. No language model produces these numbers; they come from your records and rules you can read.</p>
-            <dl className="f-tags">
-              <div><dt><i className="tag tag-fact">Fact</i></dt><dd>Read from a system</dd></div>
-              <div><dt><i className="tag tag-calc">Calculated</i></dt><dd>Derived from facts</dd></div>
-              <div><dt><i className="tag tag-asm">Assumption</i></dt><dd>Stated, and yours to change</dd></div>
-              <div><dt><i className="tag tag-est">Estimate</i></dt><dd>A simulated range</dd></div>
-            </dl>
-          </div>
-          <div className="f-main"><EvidenceStack /></div>
+      <section className="hx-s ink pt160 pb128" aria-label="Products">
+        <div className="hx-w">
+          <SplitHead strong="One platform for the whole finance team." soft="Each part does one job well, and every part works from the same sourced record." className="hx-mute" />
+          <AltRows items={MODULES.map((m) => ({ title: m.name, body: m.lead, href: `/platform/${m.slug}`, tone: m.tone, view: m.hero }))} />
         </div>
       </section>
 
-      <section className="f f-dark f-room" aria-labelledby="p5-h">
-        <div className="f-wrap f-grid">
-          <div className="f-side">
-            <Index n="04" k="Simulate" />
-            <h2 id="p5-h" className="f-h2">Compare before committing.</h2>
-            <p className="f-body">Real options are simulated as ranges against this customer’s own history, and ranked by rules you can read. A person decides.</p>
-            <dl className="s6-dec">
-              <div><dt>Decision</dt><dd>Escalate Harbor Supply Co.</dd></div>
-              <div><dt>Owed</dt><dd className="num">$184,200 · 47 days</dd></div>
-              <div><dt>Horizon</dt><dd>30 days</dd></div>
-            </dl>
-          </div>
-          <div className="f-main"><SimulationRoom /></div>
+      <section className="hx-s ink pt96 pb160" aria-label="Where Starlane works">
+        <div className="hx-w">
+          <ToolLists title="Works with the tools your team already uses" lists={[
+            { h: "Use Starlane in:", items: [["Web app"], ["Morning brief on your phone"], ["Desktop bridge", "Windows"], ["Approval links"]] },
+            { h: "Read records from:", items: [["TallyPrime", "Live"], ["QuickBooks, Xero and Zoho Books exports", "Live"], ["Bank statements", "Live"], ["Excel, CSV and Google Sheets", "Live"], ["Stock exports", "Live"], ["Live bank feeds", "Planned"], ["NetSuite, Dynamics", "Custom"]] },
+          ]} />
         </div>
       </section>
 
-      <section id="verify" className="f f-slab f-verify" aria-labelledby="p6-h">
-        <div className="f-wrap">
-          <div className="f-head f-head-split">
-            <div>
-              <Index n="05" k="Verify" />
-              <h2 id="p6-h" className="f-h2">It checks what happened next.</h2>
-            </div>
-            <p className="f-lede">An approved action runs once, exactly as approved. Then Starlane watches the books to see whether it worked.</p>
-          </div>
-          <VerificationRecord />
-          <p className="f-cap">{CAPTION} · Outbound messaging and outcome checks are off by default.</p>
-        </div>
+      <section className="hx-s ink2 grain pt128 pb128" aria-label="Security">
+        <div className="hx-w"><Controls title="Controls built in, not bolted on" body={CONTROLS_BODY} items={CONTROLS} /></div>
       </section>
-
-      <section className="f f-light" aria-labelledby="p7-h">
-        <div className="f-wrap">
-          <div className="f-head f-head-split">
-            <div>
-              <Index k="In the product" />
-              <h2 id="p7-h" className="f-h2">Seven places to work.</h2>
-            </div>
-            <div>
-              <p className="f-body">Everything above lives in seven features, the same seven in the sidebar when you sign in. The product guide covers each one, page by page, with its real status.</p>
-              <PlatformAvailability />
-            </div>
-          </div>
-          <ul className="ft-list">
-            {FEATURES.map(([href, k, b], i) => (
-              <li key={href}>
-                <Link href={href}>
-                  <span className="ft-n">{String(i + 1).padStart(2, "0")}</span>
-                  <h3>{k}</h3>
-                  <p>{b}</p>
-                  <span className="gd-go" aria-hidden>→</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <CloseBand title="See it on your own books." secondary={["/integrations", "Check your systems"]} />
-    </SiteShell>
+    </HxShell>
   );
 }
