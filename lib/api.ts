@@ -154,6 +154,9 @@ export async function fetchWithRetry(url: string, init: RequestInit): Promise<Re
   }
 }
 
+// Which model answered an Ask Starlane question (server: modelRouter session).
+export interface AnsweredBy { provider: string; model: string; picked: string | null }
+
 export async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -385,10 +388,10 @@ export const api = {
   },
 
   // ─── AI Chat ─────────────────────────────────────────────
-  aiChat: (userId: string, messages: ChatMessage[], businessName: string) =>
-    request<{ message: string; actions: string[]; navigate: string | null; waLinks: WaLink[] }>('/api/ai-chat', {
+  aiChat: (userId: string, messages: ChatMessage[], businessName: string, model?: string) =>
+    request<{ message: string; actions: string[]; navigate: string | null; waLinks: WaLink[]; model?: AnsweredBy | null; requested_model?: string }>('/api/ai-chat', {
       method: 'POST',
-      body: JSON.stringify({ user_id: userId, messages, business_name: businessName }),
+      body: JSON.stringify({ user_id: userId, messages, business_name: businessName, ...(model && model !== 'auto' ? { model } : {}) }),
     }),
 
   // ─── WhatsApp ────────────────────────────────────────────

@@ -1,0 +1,64 @@
+/* ── Command Center film: a dark, rounded video player ─────────────────────
+ * Black frame, square translucent buttons, a thin white scrub line. Used on
+ * the product page. The video file itself is in public/film/.
+ */
+.ccv-sec { background: #F8F7F4; color: #0F0E0D; padding: clamp(40px, 5vw, 88px) 0 clamp(56px, 6vw, 104px); }
+.ccv-wrap { width: min(1820px, 100% - 2 * clamp(16px, 2.6vw, 48px)); margin: 0 auto; }
+.ccv-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 40px; margin-bottom: clamp(20px, 2.4vw, 40px); }
+.ccv-h { margin: 0; font-family: var(--serif, "Newsreader", Georgia, serif); font-weight: 400; font-size: clamp(32px, 4vw, 64px); line-height: 1.05; letter-spacing: -0.02em; }
+.ccv-sub { margin: 0; max-width: 34rem; font-size: clamp(16px, 1.25vw, 20px); line-height: 1.45; color: #3F3D39; }
+
+.ccv-fig { margin: 0; }
+.ccv { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: clamp(8px, .8vw, 14px); background: #000; isolation: isolate; }
+.ccv:fullscreen { border-radius: 0; aspect-ratio: auto; display: grid; place-items: center; }
+.ccv-v { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; cursor: pointer; }
+
+.ccv-bar {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+  display: flex; align-items: center; gap: clamp(10px, 1.6vw, 32px);
+  padding: clamp(10px, 1.6vw, 30px);
+  background: linear-gradient(to top, rgb(0 0 0 / .45), transparent);
+  transition: opacity .3s ease;
+}
+.ccv[data-playing] .ccv-bar { opacity: 0; }
+.ccv[data-playing]:hover .ccv-bar, .ccv[data-playing]:focus-within .ccv-bar { opacity: 1; }
+@media (hover: none) { .ccv[data-playing] .ccv-bar { opacity: 1; } }
+
+.ccv-btn {
+  flex: none; display: grid; place-items: center;
+  width: clamp(36px, 3.2vw, 60px); height: clamp(36px, 3.2vw, 60px);
+  border: 0; border-radius: 4px; background: rgb(255 255 255 / .2); color: #fff; cursor: pointer;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  transition: background-color .15s ease;
+}
+.ccv-btn:hover { background: rgb(255 255 255 / .32); }
+.ccv-btn:focus-visible, .ccv-replay:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.ccv-btn svg { width: 46%; height: 46%; }
+
+.ccv-time { flex: none; min-width: 3.2em; font-size: clamp(12px, .9vw, 15px); font-variant-numeric: tabular-nums; color: rgb(255 255 255 / .85); }
+
+.ccv-scrub { flex: 1; min-width: 0; height: 24px; margin: 0; background: transparent; cursor: pointer; -webkit-appearance: none; appearance: none; }
+.ccv-scrub::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: linear-gradient(to right, #fff var(--p, 0%), rgb(255 255 255 / .35) var(--p, 0%)); }
+.ccv-scrub::-moz-range-track { height: 3px; border-radius: 2px; background: rgb(255 255 255 / .35); }
+.ccv-scrub::-moz-range-progress { height: 3px; border-radius: 2px; background: #fff; }
+.ccv-scrub::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6.5px; border-radius: 50%; background: #fff; border: 0; }
+.ccv-scrub::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 0; }
+.ccv-scrub:focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 2px; }
+
+.ccv-replay {
+  position: absolute; left: 50%; top: 50%; z-index: 2; translate: -50% -50%;
+  display: grid; place-items: center; width: clamp(64px, 5.6vw, 108px); aspect-ratio: 1;
+  border: 0; border-radius: 50%; color: #fff; cursor: pointer;
+  background: rgb(255 255 255 / .22); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.ccv-replay:hover { background: rgb(255 255 255 / .32); }
+
+.ccv-cap { margin-top: 12px; font-size: 13px; color: #77736C; }
+
+@media (max-width: 640px) {
+  .ccv-bar { gap: 10px; padding: 10px; }
+  .ccv-time { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ccv-bar, .ccv-btn { transition: none; }
+}

@@ -5,10 +5,10 @@
 // other's questions. They survive a refresh and power the History page,
 // but they do not follow the person to another device; the UI says so.
 
-import type { ChatMessage } from "./api";
+import type { AnsweredBy, ChatMessage } from "./api";
 import { getUser } from "./api";
 
-export type ScanResponse = { message: string; actions: string[]; navigate: string | null; waLinks: { to: string; phone: string; message: string; url: string }[] };
+export type ScanResponse = { message: string; actions: string[]; navigate: string | null; waLinks: { to: string; phone: string; message: string; url: string }[]; model?: AnsweredBy | null; requested_model?: string };
 
 export interface ScanTurn {
   question: string;
