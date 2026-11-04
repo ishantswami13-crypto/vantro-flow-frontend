@@ -6,6 +6,7 @@ import { HxShell, Paint } from "@/components/marketing/hx/Shell";
 import { Hero, Panel, CenterHead, DuoCards, StatRows, Controls } from "@/components/marketing/hx/Blocks";
 import { SourceGrid, Accordion, Quotes, Rail } from "@/components/marketing/hx/Interactive";
 import { CommandCenterMock, AgentRunMock, LedgerMock, VaultMock, DecisionMock, MemoryMock, PlanMock } from "@/components/marketing/hx/Mocks";
+import { HeroDashboard } from "@/components/marketing/hx/HeroDashboard";
 import { CommandCenterVideo } from "@/components/marketing/site/CommandCenterVideo";
 import "./ccv.css";
 
@@ -93,7 +94,7 @@ export default function HomePage() {
         title={<>Run Finance on Agents That Show Their Work</>}
         lead="Finance teams and owners use Starlane to see what changed overnight, what it puts at risk and what to do, with the evidence behind every figure."
       >
-        <Panel id="hero" tone="stone" seed={5} kind="hero"><CommandCenterMock /></Panel>
+        <div className="hx-panel hero hd-host"><HeroDashboard /></div>
       </Hero>
 
       <section className="hx-s pt128 pb128" aria-labelledby="src-h">
