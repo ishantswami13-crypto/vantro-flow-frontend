@@ -81,7 +81,7 @@ export function SourceGrid({ sets, className = "" }: { sets: string[][]; classNa
 export type AccItem = { k: string; title: string; body: string; href?: string; cta?: string; view: React.ReactNode };
 
 /** Tabs that advance on a timer, with the active row's line filling as it runs. */
-export function Accordion({ items, ms = 7000, className = "" }: { items: AccItem[]; ms?: number; className?: string }) {
+export function Accordion({ items, ms = 7500, className = "" }: { items: AccItem[]; ms?: number; className?: string }) {
   const [on, setOn] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const next = useCallback(() => setOn((v) => (v + 1) % items.length), [items.length]);
@@ -94,7 +94,7 @@ export function Accordion({ items, ms = 7000, className = "" }: { items: AccItem
             <button type="button" role="tab" id={`acc-${it.k}`} aria-selected={i === on} aria-controls={`accp-${it.k}`} className="hx-acc-b" onClick={() => setOn(i)}>{it.title}</button>
             <div className="hx-acc-p"><div>
               <p>{it.body}</p>
-              {it.href && <Link href={it.href} className="hx-arrow hx-b2">{it.cta ?? "Learn more"} <i>→</i></Link>}
+              {it.href && <Link href={it.href} className="hx-arrow hx-b2">{it.cta ?? "Learn More"} <i>→</i></Link>}
             </div></div>
             <div className="hx-acc-bar" key={i === on ? `on-${on}` : "off"} />
           </div>

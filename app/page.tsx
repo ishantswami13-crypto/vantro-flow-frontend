@@ -5,8 +5,9 @@ import { JsonLd } from "@/components/marketing/JsonLd";
 import { HxShell, Paint } from "@/components/marketing/hx/Shell";
 import { Hero, Panel, CenterHead, DuoCards, StatRows, Controls } from "@/components/marketing/hx/Blocks";
 import { SourceGrid, Accordion, Quotes, Rail } from "@/components/marketing/hx/Interactive";
-import { CommandCenterMock, AgentRunMock, LedgerMock, VaultMock, DecisionMock, MemoryMock, PlanMock } from "@/components/marketing/hx/Mocks";
+import { CommandCenterMock, LedgerMock, VaultMock, DecisionMock, MemoryMock, PlanMock } from "@/components/marketing/hx/Mocks";
 import { HeroDashboard } from "@/components/marketing/hx/HeroDashboard";
+import { CloseWindow, ReviewWindow, DuoPaint, AgentRunView } from "@/components/marketing/hx/DuoViews";
 import { CommandCenterVideo } from "@/components/marketing/site/CommandCenterVideo";
 import "./ccv.css";
 
@@ -44,7 +45,7 @@ const SOURCES = [
 ];
 
 const ACC = [
-  { k: "agents", title: "Agents", body: "Describe the work and Starlane plans it, reads the records, and returns a review-ready result with every figure sourced.", href: "/platform/agents", view: <Panel id="acc-a" tone="night" kind="tall bleed-r"><AgentRunMock /></Panel> },
+  { k: "agents", title: "Agents", body: "Describe the work and Starlane plans it, reads the records, and returns a review-ready result with every figure sourced.", href: "/platform/agents", view: <AgentRunView /> },
   { k: "cc", title: "Command Center", body: "Cash at risk, collections against plan and what the agents did overnight, across every entity and currency.", href: "/platform/command-center", view: <Panel id="acc-b" tone="stone" kind="tall bleed-r"><CommandCenterMock /></Panel> },
   { k: "dec", title: "Decisions", body: "Every recommendation arrives with its evidence, each figure marked fact, calculation, assumption or estimate.", href: "/platform/decisions", view: <Panel id="acc-c" tone="clay" kind="tall"><DecisionMock className="fit" /></Panel> },
   { k: "vault", title: "Vault", body: "Ledgers, bank statements, contracts and policies in one place, read-only, for agents and people to work from.", href: "/platform/vault", view: <Panel id="acc-d" tone="slate" kind="tall bleed-r"><VaultMock /></Panel> },
@@ -108,8 +109,8 @@ export default function HomePage() {
         <div className="hx-w">
           <CenterHead title={<span id="one-h">One Platform for Finance Work</span>} body={"Owners and finance teams work from one sourced record. Agents run the\nrepetitive work, and every action waits for a person."} />
           <DuoCards items={[
-            { title: "For Finance Teams", body: "Close faster on one record across ledgers, bank statements and stock, with agents doing the matching and the first pass.", href: "/solutions/finance-teams", cta: "Explore Starlane for Finance Teams", tone: "moss", view: <LedgerMock /> },
-            { title: "For Owners", body: "Know who owes you, who broke a promise and what cash is at risk, and approve the next step from your phone.", href: "/solutions/owners", cta: "Explore Starlane for Owners", tone: "umber", view: <CommandCenterMock /> },
+            { title: "For Finance Teams", body: "Close faster on one record across ledgers, bank and stock, with agents doing the matching and first pass.", href: "/solutions/finance-teams", cta: "Explore Starlane for Finance Teams", tone: "moss", view: <CloseWindow />, paint: <DuoPaint id="dp-a" base="#3A4746" light="#56625F" dark="#141716" /> },
+            { title: "For Owners", body: "Know who owes you, who broke a promise and what cash is at risk, and approve the next step from your phone.", href: "/solutions/owners", cta: "Explore Starlane for Owners", tone: "umber", view: <ReviewWindow />, paint: <DuoPaint id="dp-b" base="#4A4535" light="#625B47" dark="#15130F" /> },
           ]} />
         </div>
       </section>

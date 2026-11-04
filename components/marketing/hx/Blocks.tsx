@@ -61,13 +61,13 @@ export function SplitHead({ strong, soft, className = "" }: { strong: string; so
   return <h2 className={`hx-split-h hx-r ${className}`} style={{ maxWidth: "calc(680px * var(--s))" }}>{strong}{soft && <span> {soft}</span>}</h2>;
 }
 
-export type Duo = { title: string; body: string; href: string; cta: string; tone: TextureTone; view: React.ReactNode };
+export type Duo = { title: string; body: string; href: string; cta: string; tone: TextureTone; view: React.ReactNode; paint?: React.ReactNode };
 export function DuoCards({ items }: { items: Duo[] }) {
   return (
     <div className="hx-duo">
       {items.map((c, i) => (
         <article key={c.title} className="hx-duo-c hx-r" style={st(i)}>
-          <Paint id={`duo-${i}`} tone={c.tone} seed={i * 5 + 2} />
+          {c.paint ?? <Paint id={`duo-${i}`} tone={c.tone} seed={i * 5 + 2} />}
           <div className="hx-duo-t">
             <h3 className="hx-d3">{c.title}</h3>
             <p>{c.body}</p>
@@ -161,7 +161,7 @@ export function Tiles({ items }: { items: Tile[] }) {
   );
 }
 
-export type AltRow = { title: string; body: string; href: string; tone: TextureTone; view: React.ReactNode };
+export type AltRow = { title: string; body: string; href: string; tone: TextureTone; view: React.ReactNode; paint?: React.ReactNode };
 export function AltRows({ items }: { items: AltRow[] }) {
   return (
     <div className="hx-alt">
