@@ -5,9 +5,9 @@ import { JsonLd } from "@/components/marketing/JsonLd";
 import { HxShell, Paint } from "@/components/marketing/hx/Shell";
 import { Hero, Panel, CenterHead, DuoCards, StatRows, Controls } from "@/components/marketing/hx/Blocks";
 import { SourceGrid, Accordion, Quotes, Rail } from "@/components/marketing/hx/Interactive";
-import { CommandCenterMock, LedgerMock, VaultMock, DecisionMock, MemoryMock, PlanMock } from "@/components/marketing/hx/Mocks";
+import { LedgerMock, DecisionMock, MemoryMock, PlanMock } from "@/components/marketing/hx/Mocks";
 import { HeroDashboard } from "@/components/marketing/hx/HeroDashboard";
-import { CloseWindow, ReviewWindow, DuoPaint, AgentRunView } from "@/components/marketing/hx/DuoViews";
+import { CloseWindow, ReviewWindow, DuoPaint, AgentRunView, AccFrame } from "@/components/marketing/hx/DuoViews";
 import { CommandCenterVideo } from "@/components/marketing/site/CommandCenterVideo";
 import "./ccv.css";
 
@@ -46,10 +46,10 @@ const SOURCES = [
 
 const ACC = [
   { k: "agents", title: "Agents", body: "Describe the work and Starlane plans it, reads the records, and returns a review-ready result with every figure sourced.", href: "/platform/agents", view: <AgentRunView /> },
-  { k: "cc", title: "Command Center", body: "Cash at risk, collections against plan and what the agents did overnight, across every entity and currency.", href: "/platform/command-center", view: <Panel id="acc-b" tone="stone" kind="tall bleed-r"><CommandCenterMock /></Panel> },
-  { k: "dec", title: "Decisions", body: "Every recommendation arrives with its evidence, each figure marked fact, calculation, assumption or estimate.", href: "/platform/decisions", view: <Panel id="acc-c" tone="clay" kind="tall"><DecisionMock className="fit" /></Panel> },
-  { k: "vault", title: "Vault", body: "Ledgers, bank statements, contracts and policies in one place, read-only, for agents and people to work from.", href: "/platform/vault", view: <Panel id="acc-d" tone="slate" kind="tall bleed-r"><VaultMock /></Panel> },
-  { k: "mem", title: "Memory", body: "Starlane learns how each customer pays and how your team works, and shows you what it learned so you can change it.", href: "/platform/memory", view: <Panel id="acc-e" tone="plum" kind="tall"><MemoryMock className="fit" /></Panel> },
+  { k: "cc", title: "Command Center", body: "Cash at risk, collections against plan and what the agents did overnight, across every entity and currency.", href: "/platform/command-center", view: <AccFrame id="acc-cc" className="acc-cc"><div className="hx-panel hero hd-host"><HeroDashboard /></div></AccFrame> },
+  { k: "dec", title: "Decisions", body: "Every recommendation arrives with its evidence, each figure marked fact, calculation, assumption or estimate.", href: "/platform/decisions", view: <AccFrame id="acc-dc" className="acc-mk"><div className="acc-win"><p className="acc-t">Decisions waiting for you</p><DecisionMock className="fit" /></div></AccFrame> },
+  { k: "vault", title: "Vault", body: "Ledgers, bank statements, contracts and policies in one place, read-only, for agents and people to work from.", href: "/platform/vault", view: <AccFrame id="acc-vt" className="acc-vt"><CloseWindow /></AccFrame> },
+  { k: "mem", title: "Memory", body: "Starlane learns how each customer pays and how your team works, and shows you what it learned so you can change it.", href: "/platform/memory", view: <AccFrame id="acc-mm" className="acc-mk"><div className="acc-win"><p className="acc-t">What Starlane has learned</p><MemoryMock className="fit" /></div></AccFrame> },
 ];
 
 // Principles rather than testimonials: Starlane is in private pilots and names

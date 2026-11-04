@@ -252,3 +252,13 @@ export function AgentRunView() {
     </div>
   );
 }
+
+/* Accordion view frames: the real product window, zoomed, on dark paint. */
+export function AccFrame({ id, children, className = "" }: { id: string; children: ReactNode; className?: string }) {
+  return (
+    <div className={`aw-host acc-f ${className}`}>
+      <DuoPaint id={id} base="#2C2B28" light="#3B3A36" dark="#191816" />
+      {children}
+    </div>
+  );
+}

@@ -256,6 +256,16 @@
 .aw-out.xls b { border-color: #2E8B57; }
 @media (prefers-reduced-motion: reduce) { .aw-step.run > span span, .aw-step.run .aw-ic::before { animation: none; } }
 
+.acc-f { background: #2C2B28; }
+.acc-cc .hx-panel.hero.hd-host { position: absolute; margin: 0; padding: 0; border-radius: 0; width: 204%; left: -42%; top: -4.08cqw; background: transparent; box-shadow: none; overflow: visible; }
+.acc-cc .hd-paint { display: none; }
+.acc-cc .hd-win { clip-path: inset(0 0 0 calc(301 * var(--u)) round calc(14 * var(--u)) 0 0 0); }
+.acc-win { position: absolute; left: 5.8%; top: 7.74%; right: -1px; bottom: -1px; background: #FFFFFF; border-top-left-radius: 10px; padding: 4.6cqw 4.6cqw 0; box-shadow: 0 10px 30px rgba(0,0,0,.18); overflow: hidden; }
+.acc-t { margin: 0 0 3.4cqw; font-family: var(--serif); font-size: 3.8cqw; line-height: 1.1; letter-spacing: -.01em; color: #0F0E0D; }
+.acc-win .hx-mock * { box-shadow: none !important; }
+.acc-win > .hx-mock, .acc-win > .hx-mock.fit { font-size: 1.75cqw; position: static; transform: none; width: 100% !important; max-width: none; margin: 0; box-shadow: none; border: 0; background: transparent; }
+.acc-vt .dw-host { position: absolute; left: .9%; top: 7.74%; width: 142.3%; box-shadow: 0 10px 30px rgba(0,0,0,.18); clip-path: inset(0 0 0 3.47% round 10px 0 0 0); }
+
 /* Film block: scales up into place */
 .hx-film { margin: calc(64px * var(--s)) auto 0; width: calc(100% - 2 * 138px * var(--s)); }
 .hx-film-frame { position: relative; overflow: hidden; border-radius: 4px; aspect-ratio: 16 / 9; background: #C9C8C6; }
@@ -723,3 +733,5 @@ html[data-hx-motion] .hx-r.in .hd-bar, html[data-hx-motion] .hx-r.in .hd-hbar { 
 html[data-hx-motion] .hx-r .hd-peer { stroke-dasharray: 700; stroke-dashoffset: 700; transition: stroke-dashoffset 2s var(--hx-soft) .4s; }
 html[data-hx-motion] .hx-r.in .hd-peer { stroke-dashoffset: 0; }
 @media (max-width: 760px) { .hx .hx-panel.hd-host { aspect-ratio: 2000 / 1090; padding: 0; min-height: 0; } }
+.acc-win .hx-mock.float { width: 100% !important; justify-self: stretch !important; border: 1px solid #ECEAE7; border-radius: 8px; padding: 2.4cqw 2.6cqw !important; background: #FAFAF9; }
+.acc-win > .hx-mock > div { gap: 1.6cqw !important; }
