@@ -188,23 +188,23 @@ function WatchPageInner() {
 
         <nav
           aria-label="Secondary"
-          style={{ display: "flex", alignItems: "center", gap: 22, borderBottom: "1px solid #EBEAE6", marginBottom: 4 }}
+          className="hv-tabs"
+          style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}
         >
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className="hover-dim"
+              aria-pressed={t.key === tab}
+              className="hv-tab"
               style={{
-                padding: "8px 2px",
+                padding: "5px 11px",
+                borderRadius: 6,
                 fontSize: 13,
-                fontWeight: t.key === tab ? 500 : 400,
-                color: t.key === tab ? "#191917" : "#63635F",
-                background: "none",
+                fontWeight: 500,
+                color: t.key === tab ? "#0F0E0D" : "#6E6A63",
+                background: t.key === tab ? "#ECEAE4" : "transparent",
                 border: "none",
-                borderBottomColor: t.key === tab ? "var(--accent)" : "transparent",
-                borderBottomWidth: 2,
-                borderBottomStyle: "solid",
                 cursor: "pointer",
               }}
             >
@@ -219,7 +219,7 @@ function WatchPageInner() {
             background: "#FFFFFF",
             border: "1px solid rgba(25,25,23,0.10)",
             borderRadius: 12,
-            boxShadow: "0 1px 2px rgba(25,25,23,0.04), 0 14px 34px -22px rgba(25,25,23,0.22)",
+            boxShadow: "0 1px 2px rgba(15,14,13,0.03)",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
@@ -422,7 +422,7 @@ function NewWatchModal({
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder='e.g. "Overdue receivables above ₹50k"'
+            placeholder='e.g. "Overdue receivables above 50k"'
             style={inputStyle}
           />
         </label>

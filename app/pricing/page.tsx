@@ -1,15 +1,22 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { pageMetadata, breadcrumb } from "@/lib/site";
+import { JsonLd } from "@/components/marketing/JsonLd";
 import "../landing.css";
 import "../start.css";
 import "../site.css";
 import Link from "next/link";
 import { SiteShell, PageHero, Index, CloseBand } from "@/components/marketing/site/Site";
+import { Stack3D, type Plate } from "@/components/marketing/site/Stack3D";
 import { Glyph } from "@/components/marketing/home/Glyph";
 
-export const metadata: Metadata = {
-  title: "Pricing and pilots · Starlane",
-  description: "Starlane is available through private pilots. How a pilot runs, what it includes, what stays off by default, and how pricing is agreed.",
-};
+export const metadata: Metadata = pageMetadata({
+  path: "/pricing",
+  title: "Pricing and pilots",
+  description:
+    "Starlane is available through private pilots. How a pilot runs, what it includes, what stays off by default, and how pricing is agreed.",
+});
+
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
 // Starlane is sold through private pilots; pricing is agreed directly. This
 // page describes the pilot as the access flow and product actually run it,
@@ -18,7 +25,7 @@ export const metadata: Metadata = {
 const STEPS = [
   ["Apply", "Three short steps: your company, the systems you run, and what you want to change. You see an explained assessment straight away, produced by fixed rules rather than AI."],
   ["Scope", "We confirm which of your systems connect today, what would be custom work, and who approves actions on your side."],
-  ["Connect read-only", "TallyPrime through the local bridge; bank statements, stock and spreadsheets as exports. Nothing in your systems changes."],
+  ["Connect read-only", "Accounting, bank, stock and spreadsheet exports, or TallyPrime through the local bridge. Nothing in your systems changes."],
   ["Review with your team", "Work through real changes and decisions on your own data, with the evidence. Then decide whether to continue, and on what terms."],
 ];
 
@@ -36,17 +43,31 @@ const OFF: Array<[string, string]> = [
 ];
 
 const FAQ: Array<[string, string]> = [
-  ["What does a pilot need from us?", "Someone who knows which systems you run, access to TallyPrime on one Windows machine or exports of the rest, and a person who will approve or decline what Starlane proposes."],
-  ["Does Starlane change anything in our systems?", "No. Connections are read-only. TallyPrime is read through export only, and each bridge device has its own credential, which you can revoke."],
+  ["What does a pilot need from us?", "Someone who knows which systems you run, exports from your accounting system (or TallyPrime on one Windows machine), and a person who will approve or decline what Starlane proposes."],
+  ["Does Starlane change anything in our systems?", "No. Connections are read-only. Accounting data arrives as exports or through a read-only bridge, and each bridge device has its own credential, which you can revoke."],
   ["Will Starlane contact our customers?", "Not unless outbound messaging is enabled for your account, and then only with text a person has approved, sent once."],
   ["Are the numbers produced by AI?", "No language model produces the figures. They come from your records, simple calculations and simulations you can inspect, each labelled as fact, calculated, assumption or estimate."],
+];
+
+const HERO_PLATES: Plate[] = [
+  { k: "Step 1", title: "Apply", lines: 2 },
+  { k: "Step 2", title: "Connect read-only", lines: 2 },
+  { k: "Step 3", title: "Mornings on your data", lines: 2 },
+  { k: "Step 4", title: "Decide", kind: "top", lines: 2 },
 ];
 
 export default function PricingPage() {
   return (
     <SiteShell>
+      <JsonLd data={[breadcrumb("/pricing", "Pricing and pilots"), {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: FAQ.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+      }]} />
       <PageHero
+        tone="clay"
         kicker="Pricing and pilots"
+        visual={<Stack3D plates={HERO_PLATES} variant="stairs" label="Four steps rising: apply, connect read-only, mornings on your own data, then decide." />}
         title={<>Start with a pilot, <em>on your own books.</em></>}
         lead="Starlane is available through private pilots with selected organizations. We agree pricing with each organization directly, once you have seen what Starlane does with your data."
         index={[["#pilot", "How a pilot runs"], ["#included", "What is included"], ["#faq", "Questions"]]}

@@ -49,6 +49,7 @@ export const IconArrowRight = (p: P) => <Svg {...p}><path d="M2.75 8h10M9 4l4 4-
 export const IconUpload = (p: P) => <Svg {...p}><path d="M8 10.5V2.75M4.5 6.25L8 2.75l3.5 3.5M2.5 10.5v3h11v-3" /></Svg>;
 export const IconLink = (p: P) => <Svg {...p}><path d="M6.5 9.5l3-3" /><path d="M7.25 4.25L8.5 3a2.5 2.5 0 0 1 3.5 3.5L10.75 7.75M8.75 11.75L7.5 13A2.5 2.5 0 0 1 4 9.5l1.25-1.25" /></Svg>;
 export const IconRupee = (p: P) => <Svg {...p}><path d="M4.5 3h7M4.5 6.25h7" /><path d="M6 3c2.8 0 4.25 1.2 4.25 3.25S8.8 9.5 6 9.5H4.75l5.5 4.5" /></Svg>;
+export const IconChart = (p: P) => <Svg {...p}><path d="M2.5 2.5v11h11" /><path d="M5 10.5l2.5-3 2.25 1.75L13 5" /></Svg>;
 export const IconRanked = (p: P) => <Svg {...p}><path d="M2.5 4h11M2.5 8h7.5M2.5 12h4" /></Svg>;
 export const IconPromise = (p: P) => <Svg {...p}><path d="M2.5 3h11v8h-5.5l-3 2.5V11H2.5z" /><path d="M5.6 7l1.5 1.5 3.3-3.2" /></Svg>;
 export const IconSync = (p: P) => <Svg {...p}><path d="M13 6.75A5.1 5.1 0 0 0 3.5 5.25M3 2.5v2.75h2.75" /><path d="M3 9.25a5.1 5.1 0 0 0 9.5 1.5M13 13.5v-2.75h-2.75" /></Svg>;

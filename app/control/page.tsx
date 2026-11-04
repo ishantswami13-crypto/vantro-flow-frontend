@@ -9,11 +9,11 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { PageHeader, StatusDot, Sep, Lettermark, EmptyLine, Button } from "@/components/v32/ui";
 import { ControlSubnav, type ControlTab } from "@/components/control/ControlSubnav";
-import { api, type CortexHealthResponse, type DataConnection, type UserSettings } from "@/lib/api";
+import { api, type Connector, type CortexHealthResponse, type UserSettings } from "@/lib/api";
 
 // Control — what Starlane can see, what it's doing, and whether it's
 // right. Overview is built from ONLY two real endpoints that already
-// exist (api.connections.list, api.cortexHealth). No "Understanding"
+// exist (api.connectors.list, api.cortexHealth). No "Understanding"
 // layer (entity/relationship coverage) is shown, because no backend
 // data backs it yet — omitted rather than faked with a placeholder.
 //
@@ -48,7 +48,20 @@ function timeSince(iso: string | null): string {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-function ConnectionSection({ connections }: { connections: DataConnection[] }) {
+// The same list and the same "connected" rule as Data sources, so the two
+// pages never disagree about what Starlane can read.
+const CONNECTED_HEALTH = ["healthy", "syncing", "connected", "delayed", "stale", "error"];
+const HEALTH_LABEL: Record<string, { label: string; color: string }> = {
+  healthy: { label: "Healthy", color: "#477054" },
+  connected: { label: "Connected", color: "#477054" },
+  syncing: { label: "Syncing", color: "#477054" },
+  delayed: { label: "Delayed", color: "#8C6826" },
+  stale: { label: "Out of date", color: "#8C6826" },
+  error: { label: "Needs a look", color: "#A64F4B" },
+};
+const isConnectedSource = (c: Connector) => c.authType !== "public_feed" && CONNECTED_HEALTH.includes(c.state.health);
+
+function ConnectionSection({ connections }: { connections: Connector[] }) {
   if (connections.length === 0) {
     return (
       <EmptyLine title="No sources connected yet." body="Connect a business system so Starlane can reason from real, current data." action={<Button small href="/sources">Open Sources</Button>} />
@@ -56,18 +69,25 @@ function ConnectionSection({ connections }: { connections: DataConnection[] }) {
   }
   return (
     <div>
-      {connections.map(c => (
-        <div key={c.id} className="flex items-center justify-between" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid #EBEAE6" }}>
-          <div className="min-w-0">
-            <div style={{ fontSize: 13, color: "#191917" }}>{c.source_type.charAt(0) + c.source_type.slice(1).toLowerCase()}</div>
-            {c.last_sync_error && <div style={{ fontSize: 12, color: "#A64F4B", marginTop: 2 }}>{c.last_sync_error}</div>}
+      {connections.map(c => {
+        const h = HEALTH_LABEL[c.state.health] || HEALTH_LABEL.connected;
+        const err = c.state.lastError || c.state.lastAttempt?.error || null;
+        const last = c.state.lastSyncAt || c.state.lastImport?.completedAt || null;
+        return (
+          <div key={c.id} className="flex items-center justify-between" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid #EBEAE6" }}>
+            <div className="min-w-0">
+              <div style={{ fontSize: 13, color: "#191917" }}>{c.name}</div>
+              {err
+                ? <div style={{ fontSize: 12, color: "#A64F4B", marginTop: 2 }}>{err}</div>
+                : c.state.lastImport?.filename && <div style={{ fontSize: 12, color: "#63635F", marginTop: 2 }}>Last import · {c.state.lastImport.filename}</div>}
+            </div>
+            <div className="flex items-center shrink-0" style={{ gap: 16 }}>
+              <span style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, color: "#43433F" }}>{timeSince(last)}</span>
+              <StatusDot label={h.label} color={h.color} />
+            </div>
           </div>
-          <div className="flex items-center shrink-0" style={{ gap: 16 }}>
-            <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 12, color: "#43433F" }}>{timeSince(c.last_sync_at)}</span>
-            <StatusDot label={String(c.status).toUpperCase() === "CONNECTED" ? "Connected" : "Not connected"} color={String(c.status).toUpperCase() === "CONNECTED" ? "#477054" : "rgba(25,25,23,0.25)"} />
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -81,7 +101,7 @@ function Stat({ value, label, tone }: { value: React.ReactNode; label: string; t
   return (
     <div>
       <div style={{ fontSize: 12, color: "#63635F", marginBottom: 6 }}>{label}</div>
-      <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 22, color, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 22, color, lineHeight: 1 }}>{value}</div>
     </div>
   );
 }
@@ -123,7 +143,7 @@ function PolicyRows() {
     <div>
       {POLICY_LEVELS.map((p) => (
         <div key={p.level} className="flex items-start flex-wrap md:flex-nowrap" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid #EBEAE6" }}>
-          <span style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: "#6E6E69", width: 20, paddingTop: 1, flexShrink: 0 }}>{p.level}</span>
+          <span style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, color: "#6E6E69", width: 20, paddingTop: 1, flexShrink: 0 }}>{p.level}</span>
           <div style={{ width: 110, flexShrink: 0, fontSize: 13, color: "#191917" }}>{p.name}</div>
           <div style={{ flex: 1, minWidth: 180, fontSize: 12.5, color: "#63635F" }}>{p.description}</div>
           <div style={{ width: 210, flexShrink: 0 }}>
@@ -141,9 +161,9 @@ function OverviewTab() {
     queryFn: () => api.cortexHealth(),
     staleTime: 25_000,
   });
-  const connections = useQuery<{ success: boolean; connections: DataConnection[] }>({
-    queryKey: ["control-connections"],
-    queryFn: () => api.connections.list(),
+  const connections = useQuery<{ success: boolean; connectors: Connector[] }>({
+    queryKey: ["control-connectors"],
+    queryFn: () => api.connectors.list(),
     staleTime: 25_000,
   });
 
@@ -161,8 +181,8 @@ function OverviewTab() {
     );
   }
 
-  const conns = connections.data?.connections || [];
-  const connectedN = conns.filter((c) => String(c.status).toUpperCase() === "CONNECTED").length;
+  const conns = (connections.data?.connectors || []).filter(isConnectedSource);
+  const connectedN = conns.length;
   const pending = health.data?.stats?.pending_actions ?? 0;
 
   return (

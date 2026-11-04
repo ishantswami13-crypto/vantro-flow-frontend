@@ -12,18 +12,18 @@ export default function Header({ onMenuToggle, pageTitle }: HeaderProps) {
   return (
     <header
       className="lg:hidden relative flex items-center gap-3 px-4 shrink-0 z-10"
-      style={{ height: 52, background: "#ECEAE3", borderBottom: "1px solid rgba(25,25,23,0.08)" }}
+      style={{ height: 52, background: "#171614", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
     >
       <button
         onClick={onMenuToggle}
         className="hover-dim w-8 h-8 -ml-1.5 flex items-center justify-center rounded-md shrink-0"
-        style={{ color: "#43433F" }}
+        style={{ color: "#D6D3CD" }}
         aria-label="Open menu"
       >
         <FiMenu size={17} />
       </button>
-      <Link href="/bridge" style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 18, color: "#191917", letterSpacing: "-0.3px" }}>Starlane</Link>
-      {pageTitle && <span className="truncate" style={{ fontSize: 13, color: "#5E5E59" }}>{pageTitle}</span>}
+      <Link href="/bridge" style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 19, color: "#F8F7F4", letterSpacing: "-0.3px" }}>Starlane</Link>
+      {pageTitle && <span className="truncate" style={{ fontSize: 13, color: "#A9A59E" }}>{pageTitle}</span>}
     </header>
   );
 }

@@ -154,6 +154,9 @@ export async function fetchWithRetry(url: string, init: RequestInit): Promise<Re
   }
 }
 
+// Which model answered an Ask Starlane question (server: modelRouter session).
+export interface AnsweredBy { provider: string; model: string; picked: string | null }
+
 export async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 30_000): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -213,6 +216,7 @@ export async function request<T>(path: string, options: RequestInit = {}, timeou
       const errorObj = new Error(`${errorMsg} (Error ID: ${requestId})`);
       (errorObj as any).requestId = requestId;
       (errorObj as any).status = res.status;
+      (errorObj as any).body = data;
 
       if (typeof window !== 'undefined') {
         authenticatedFetch('/api/client-errors', {
@@ -316,6 +320,10 @@ export const api = {
   }>('/api/business/control-room'),
 
   // ─── Invoices / Collections ─────────────────────────────
+  payments: {
+    /** Invoices marked paid in the last two days (id, customer, amount). */
+    recent: () => request<{ success: boolean; payments: { id: string; customer_name: string; amount: number; currency: string | null; payment_date: string | null }[] }>('/api/payments/recent'),
+  },
   invoices: {
     list: (userId: string) => request<{ invoices: Invoice[]; summary: Summary }>(`/api/invoices/${userId}`),
     get: (invoiceId: string) => request<{ success: boolean; invoice: InvoiceDetail; business: BusinessProfile }>(`/api/invoice/${invoiceId}`),
@@ -380,10 +388,10 @@ export const api = {
   },
 
   // ─── AI Chat ─────────────────────────────────────────────
-  aiChat: (userId: string, messages: ChatMessage[], businessName: string) =>
-    request<{ message: string; actions: string[]; navigate: string | null; waLinks: WaLink[] }>('/api/ai-chat', {
+  aiChat: (userId: string, messages: ChatMessage[], businessName: string, model?: string) =>
+    request<{ message: string; actions: string[]; navigate: string | null; waLinks: WaLink[]; model?: AnsweredBy | null; requested_model?: string }>('/api/ai-chat', {
       method: 'POST',
-      body: JSON.stringify({ user_id: userId, messages, business_name: businessName }),
+      body: JSON.stringify({ user_id: userId, messages, business_name: businessName, ...(model && model !== 'auto' ? { model } : {}) }),
     }),
 
   // ─── WhatsApp ────────────────────────────────────────────
@@ -748,10 +756,57 @@ export const api = {
     // strips any req.body.role as a privilege-escalation guard, so a field
     // named `role` would silently vanish before the handler sees it.
     saveBusiness: (body: { company_name: string; company_website?: string; country: string; job_role?: string }) =>
-      request<{ success: boolean }>('/api/onboarding/business', { method: 'POST', body: JSON.stringify(body) }),
+      request<{ success: boolean; region?: RegionSettings | null }>('/api/onboarding/business', { method: 'POST', body: JSON.stringify(body) }),
     savePriorities: (priority_areas: string[]) =>
       request<{ success: boolean }>('/api/onboarding/priorities', { method: 'POST', body: JSON.stringify({ priority_areas }) }),
     complete: () => request<{ success: boolean }>('/api/onboarding/complete', { method: 'POST' }),
+  },
+
+  // ─── Region: country, currency, formats, timezone, tax label ─
+  // Backend lib/routes/region.js. Stored as versioned definitions.
+  region: {
+    get: () => request<{ region: RegionSettings; options: RegionOptions }>('/api/settings/region'),
+    update: (body: Partial<{ country: string | null; currency: string; locale: string | null; timezone: string; taxLabel: string | null }>) =>
+      request<{ region: RegionSettings }>('/api/settings/region', { method: 'PUT', body: JSON.stringify(body) }),
+  },
+
+  // ─── Custom workflows (trigger → agent / condition / action steps) ─
+  // Backend lib/routes/customWorkflows.js. Only built steps can be saved.
+  customWorkflows: {
+    catalog: () => request<WorkflowCatalog>('/api/custom-workflows/catalog'),
+    list: () => request<{ workflows: CustomWorkflow[]; schedulerEnabled: boolean; timezone: string }>('/api/custom-workflows'),
+    get: (id: string) => request<{ workflow: CustomWorkflow; runs: CustomWorkflowRun[] }>(`/api/custom-workflows/${id}`),
+    create: (body: { name: string; description?: string; definition: WorkflowDefinition }) =>
+      request<{ workflow: CustomWorkflow }>('/api/custom-workflows', { method: 'POST', body: JSON.stringify(body) }),
+    update: (id: string, body: { name?: string; description?: string; definition?: WorkflowDefinition }) =>
+      request<{ workflow: CustomWorkflow }>(`/api/custom-workflows/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    remove: (id: string) => request<{ deleted: boolean }>(`/api/custom-workflows/${id}`, { method: 'DELETE' }),
+    activate: (id: string) => request<{ workflow: CustomWorkflow }>(`/api/custom-workflows/${id}/activate`, { method: 'POST' }),
+    pause: (id: string) => request<{ workflow: CustomWorkflow }>(`/api/custom-workflows/${id}/pause`, { method: 'POST' }),
+    /** For an email or webhook trigger, `sample` is tested instead of the latest event (it is not stored). */
+    run: (id: string, sample?: Record<string, unknown>) => request<{ run: { id: string; status: CustomWorkflowRun['status']; steps: CustomWorkflowRunStep[]; summary: string | null; error: string | null } }>(`/api/custom-workflows/${id}/run`, { method: 'POST', body: JSON.stringify(sample ? { sample } : {}) }),
+    approvals: (status?: WorkflowApproval['status']) => request<{ approvals: WorkflowApproval[]; externalSendEnabled: boolean }>(`/api/custom-workflows/approvals${status ? `?status=${status}` : ''}`),
+    approve: (id: string, edits?: { subject?: string; body?: string }) => request<{ approval: WorkflowApproval }>(`/api/custom-workflows/approvals/${id}/approve`, { method: 'POST', body: JSON.stringify(edits || {}) }),
+    reject: (id: string) => request<{ approval: WorkflowApproval }>(`/api/custom-workflows/approvals/${id}/reject`, { method: 'POST' }),
+    tasks: (status: 'OPEN' | 'DONE' | 'all' = 'OPEN') => request<{ tasks: WorkflowTask[] }>(`/api/custom-workflows/tasks?status=${status}`),
+    taskDone: (id: string) => request<{ ok: boolean }>(`/api/custom-workflows/tasks/${id}/done`, { method: 'POST' }),
+    taskReopen: (id: string) => request<{ ok: boolean }>(`/api/custom-workflows/tasks/${id}/reopen`, { method: 'POST' }),
+  },
+
+  // ─── Connect any software (backend lib/routes/connections.js) ─
+  // Gmail (OAuth), incoming webhooks, HTTP APIs and Slack. Secrets are never
+  // returned; a webhook URL and signing secret are shown once, at creation.
+  integrations: {
+    list: () => request<IntegrationsResponse>('/api/integrations'),
+    create: (body: IntegrationCreate) => request<{ connection: Integration; webhookUrl?: string; signingSecret?: string }>('/api/integrations', { method: 'POST', body: JSON.stringify(body) }),
+    enable: (id: string) => request<{ connection: Integration }>(`/api/integrations/${id}/enable`, { method: 'POST' }),
+    disable: (id: string) => request<{ connection: Integration }>(`/api/integrations/${id}/disable`, { method: 'POST' }),
+    rotate: (id: string) => request<{ webhookUrl: string }>(`/api/integrations/${id}/rotate`, { method: 'POST' }),
+    remove: (id: string) => request<{ deleted: boolean }>(`/api/integrations/${id}`, { method: 'DELETE' }),
+    events: (connectionId?: string) => request<{ events: IntegrationEvent[] }>(`/api/integrations/events${connectionId ? `?connectionId=${connectionId}` : ''}`),
+    gmailCheck: () => request<{ status: 'OK' | 'NOT_CONNECTED' | 'AUTH_REQUIRED'; newMessages: number; workflowsRun: number }>('/api/integrations/gmail/check', { method: 'POST' }),
+    /** Google's consent page. After it, Google returns to /sources or /workflows with ?gmail=connected|failed|cancelled. */
+    gmailConnectUrl: (returnTo: 'sources' | 'workflows' = 'sources') => request<{ url: string; scopes: string[] }>(`/api/outreach/providers/gmail/connect-url?returnTo=${returnTo}`),
   },
 
   // Real-world event ingestion sources (USGS, FX, ...) — tenant-agnostic
@@ -761,12 +816,100 @@ export const api = {
   },
 };
 
+export interface RegionSettings {
+  country: string | null; currency: string; locale: string; timezone: string; taxLabel: string;
+  explicit?: { currency: boolean; timezone: boolean; locale: boolean; taxLabel: boolean; country: boolean };
+  definitionsVersion?: number;
+}
+export interface RegionOptions {
+  countries: Array<{ code: string; name: string; currency: string; locale: string; timezone: string; taxLabel: string }>;
+  currencies: string[];
+}
+
+export type WorkflowTrigger =
+  | { type: 'manual' }
+  | { type: 'schedule'; every: 'daily' | 'weekly'; hour: number; weekday?: 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' }
+  | { type: 'email_received'; fromContains?: string; subjectContains?: string }
+  | { type: 'webhook_received'; connectionId: string; eventType?: string };
+export type WorkflowActionParams = {
+  title?: string; message?: string; includeSummaryOf?: string; detail?: string; dueInDays?: number;
+  to?: string; subject?: string; body?: string; replyToTrigger?: boolean;
+  connectionId?: string; method?: string; path?: string;
+};
+export type WorkflowStep =
+  | { id: string; type: 'agent'; agent: string; params?: Record<string, number> }
+  | { id: string; type: 'condition'; signal: string; op: string; value?: number | string }
+  | { id: string; type: 'action'; action: string; params: WorkflowActionParams };
+export interface WorkflowDefinition { trigger: WorkflowTrigger; steps: WorkflowStep[] }
+export type Availability = 'available' | 'coming_soon';
+export type OutputUnit = 'count' | 'money' | 'week' | 'text' | 'any';
+export interface WorkflowOutput { key: string; label: string; unit: OutputUnit; dynamic?: boolean }
+export interface WorkflowCatalog {
+  triggers: Array<{ type: WorkflowTrigger['type'] | string; name: string; summary: string; availability: Availability; reason?: string; schedulerEnabled?: boolean; requires?: string; outputs?: WorkflowOutput[] }>;
+  agents: Array<{ key: string; name: string; summary: string; availability: Availability; reason?: string; needsTrigger?: string[];
+    params?: Array<{ key: string; label: string; min: number; max: number; default: number }>;
+    outputs: WorkflowOutput[] }>;
+  actions: Array<{ key: string; name: string; summary: string; availability: Availability; reason?: string; external?: boolean; requires?: string; flag?: string; enabledOnServer?: boolean }>;
+  operators: Array<{ key: string; label: string; needsValue: boolean; for?: Array<'number' | 'text'> }>;
+  templates: Array<{ key: string; name: string; description: string; definition: WorkflowDefinition }>;
+  limits: { maxSteps: number; maxWorkflows: number };
+}
+export interface CustomWorkflow {
+  id: string; name: string; description: string | null; status: 'DRAFT' | 'ACTIVE' | 'PAUSED'; version: number;
+  definition: WorkflowDefinition; createdAt: string; updatedAt: string;
+  lastRun: { status: CustomWorkflowRun['status']; startedAt: string; summary: string | null } | null;
+  runCount: number | null; nextRunAt: string | null; timezone: string;
+}
+export interface CustomWorkflowRunStep {
+  id: string; type: 'trigger' | 'agent' | 'condition' | 'action';
+  status: 'DONE' | 'PASSED' | 'NOT_MET' | 'SKIPPED' | 'BLOCKED' | 'FAILED' | 'WAITING_APPROVAL';
+  summary?: string | null; durationMs?: number; agent?: string; agentRunId?: string | null; outputs?: Record<string, number | string | null>; actual?: number | string | null;
+  approvalId?: string | null; httpStatus?: number; response?: string | null;
+}
+export interface CustomWorkflowRun {
+  id: string; workflowVersion: number; trigger: string; status: 'RUNNING' | 'COMPLETED' | 'ENDED_BY_CONDITION' | 'FAILED' | 'BLOCKED';
+  steps: CustomWorkflowRunStep[]; summary: string | null; error: string | null; startedAt: string; finishedAt: string | null;
+}
+export interface WorkflowApproval {
+  id: string; workflowId: string | null; runId: string; stepId: string; kind: 'send_email';
+  status: 'PENDING' | 'SENDING' | 'SENT' | 'REJECTED' | 'BLOCKED' | 'FAILED'; statusReason: string | null;
+  to: string; subject: string; body: string; isReply: boolean; workflowName: string | null;
+  result: { sentFrom: string | null; providerMessageId: string | null; alreadySent: boolean } | null;
+  decidedAt: string | null; createdAt: string;
+}
+export interface WorkflowTask {
+  id: string; title: string; detail: string | null; dueOn: string | null; status: 'OPEN' | 'DONE';
+  workflowId: string | null; workflowName: string | null; createdAt: string; doneAt: string | null;
+}
+
+export type IntegrationAuth = 'none' | 'bearer' | 'header' | 'basic' | 'oauth2_client_credentials';
+export interface Integration {
+  id: string; kind: 'webhook_in' | 'http_api'; name: string; status: 'ACTIVE' | 'DISABLED'; preset: 'custom' | 'slack';
+  baseUrl: string | null; authType: IntegrationAuth | null; headerName: string | null; signed: boolean | null; hasSecret: boolean;
+  lastUsedAt: string | null; lastError: string | null; createdAt: string; urlHint?: string;
+}
+export interface GmailAccountStatus { id: string; address: string; status: string; statusReason: string | null; connectedAt: string; lastSuccessAt: string | null }
+export interface IntegrationsResponse {
+  connections: Integration[];
+  gmail: { oauthConfigured: boolean; credentialsKeyConfigured: boolean; accounts: GmailAccountStatus[] };
+  webhookBase: string;
+}
+export type IntegrationCreate =
+  | { kind: 'webhook_in'; name: string; signed?: boolean }
+  | { kind: 'http_api'; preset: 'slack'; name: string; webhookUrl: string }
+  | { kind: 'http_api'; preset?: 'custom'; name: string; baseUrl: string; authType: IntegrationAuth; headerName?: string; secret?: string; tokenUrl?: string; clientId?: string; scope?: string };
+export interface IntegrationEvent {
+  id: string; source: 'webhook' | 'gmail'; connectionId: string | null; receivedAt: string; dispatchedAt: string | null;
+  preview: { from?: string; subject?: string; eventType?: string | null; keys?: string[] };
+}
+
 // Bridge connectors (Tally) also report pairing / connected / syncing /
 // delayed / revoked, derived from their latest sync run (lib/connectors/state.js).
 export type ConnectorHealth = 'not_connected' | 'pairing' | 'connected' | 'syncing' | 'healthy' | 'delayed' | 'stale' | 'error' | 'revoked' | 'disconnected' | 'unavailable';
 export interface Connector {
   id: string; sourceType: string | null; name: string; provider: string | null; category: string;
-  authType: 'local_bridge' | 'file_import' | 'oauth' | 'api_key' | 'public_feed';
+  authType: 'local_bridge' | 'file_import' | 'oauth' | 'api_key' | 'public_feed' | 'webhook' | 'link';
+  connect?: { kind: 'oauth' | 'sheet_link' | 'http_api' | 'webhook_in'; path?: string; preset?: string; requiresEnv?: string[] };
   availability: 'available' | 'not_available'; syncMode: string; summary: string;
   unavailableReason?: string; objects: string[]; access: string[]; setup: string[];
   /** What Starlane can do through it: READ, SEARCH, SUBSCRIBE, WRITE, EXECUTE. */

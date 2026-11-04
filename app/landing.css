@@ -233,9 +233,16 @@
 .sl-footer-grid.sl-footer-grid-5 { grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr)); }
 .sl-navmid a[aria-current="page"] { color: var(--sl-ink); }
 .sl-mobile-menu a[aria-current="page"] { font-weight: 600; }
-.sl-footer-col h3 { font-size: 13px; color: var(--sl-ink-faint); margin-bottom: 10px; font-weight: 600; }
+.sl-footer-col h2 { margin: 0 0 10px; font-family: var(--sl-sans); font-size: 13px; line-height: 1.4; letter-spacing: 0; color: var(--sl-ink-faint); font-weight: 600; }
 .sl .sl-footer-col a { display: flex; align-items: center; min-height: 40px; font-size: 13.5px; color: var(--sl-ink-soft); }
 .sl-footer-col a:hover { color: var(--sl-ink); }
+.sl-wordmark-lockup { display: inline-flex; align-items: center; min-height: 44px; color: var(--sl-ink); }
+.sl-foot-legal { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 28px; font-size: 12.5px; color: var(--sl-ink-faint); }
+/* The sign-off: the wordmark at full measure, lit from above and cut by the
+   bottom edge of the page. Decorative; the name is already in the footer. */
+.sl-foot-sign { overflow: hidden; height: clamp(72px, 13.2vw, 196px); margin-top: clamp(24px, 4vw, 56px); pointer-events: none; user-select: none; }
+.sl-foot-sign .sl-foot-sign-mark { -webkit-mask-image: linear-gradient(180deg, #000 0%, rgb(0 0 0 / .55) 45%, transparent 92%); mask-image: linear-gradient(180deg, #000 0%, rgb(0 0 0 / .55) 45%, transparent 92%); color: var(--sl-line-2); }
+.sl-foot-dark .sl-foot-sign .sl-foot-sign-mark { color: #2E2D2A; }
 
 /* ── Access flow (forms, status, download) ────────────────────── */
 .sl-form-wrap { max-width: 760px; margin: 0 auto; padding: clamp(40px, 6vw, 80px) var(--sl-gutter) 96px; }
@@ -321,13 +328,15 @@
   .sl *, .sl *::before, .sl *::after { animation: none !important; transition: none !important; }
 }
 
-/* Cookie consent, matched to the public surface without changing consent. */
-html:has(.sl) [aria-label="Cookie consent"] > div { background: #fbfaf7 !important; border: 1px solid #cfcac0 !important; border-radius: 8px; box-shadow: 0 12px 36px #0f0e0d20 !important; }
-html:has(.sl) [aria-label="Cookie consent"] p,
-html:has(.sl) [aria-label="Cookie consent"] a,
-html:has(.sl) [aria-label="Cookie consent"] button { color: #46443f !important; }
-html:has(.sl) [aria-label="Cookie consent"] button { min-height: 44px; border-radius: 5px; }
-html:has(.sl) [aria-label="Cookie consent"] button:last-child { background: #0f0e0d !important; color: #fafaf9 !important; }
+/* Cookie consent, matched to the public surface without changing consent.
+   The notice reads its colours from --ck-* (globals.css); start.css sets the
+   dark variant for the dark site. */
+html:has(.sl) .cookie-consent {
+  --ck-bg: #fbfaf7; --ck-line: #cfcac0; --ck-text: #46443f; --ck-ink: #0f0e0d; --ck-hover: #f1efe9;
+  --ck-solid: #0f0e0d; --ck-on-solid: #fafaf9; --ck-shadow: 0 12px 36px #0f0e0d20;
+}
+html:has(.sl) .cookie-card { border-radius: 8px; }
+html:has(.sl) .cookie-card button { min-height: 44px; border-radius: 5px; }
 
 /* ── Product guide (/product/*) ─────────────────────────────────
    Docs-style: the left sidebar mirrors the signed-in app's sidebar. */
@@ -423,3 +432,7 @@ html:has(.sl) [aria-label="Cookie consent"] button:last-child { background: #0f0
   .sl-ask-row { grid-template-columns: minmax(0, 1fr) auto 30px; row-gap: 5px; }
   .sl-ask-row .sl-ask-bar { grid-column: 1 / -1; grid-row: 2; }
 }
+
+/* Headings that receive focus programmatically (step changes, results) are
+   announced by screen readers; they need no visible ring. */
+.sl [tabindex="-1"]:focus:not(:focus-visible), .sl h1[tabindex="-1"]:focus { outline: none; }

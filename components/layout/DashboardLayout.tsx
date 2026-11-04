@@ -11,12 +11,17 @@ import { hydrateUserContext } from "@/lib/featureGating";
 import { api, authenticatedFetch, authHeaders, isLoggedIn } from "@/lib/api";
 import { recordRecent } from "@/lib/recents";
 import { useApplyIdentity } from "@/components/identity/useIdentity";
+import { useRegionSync } from "@/components/providers/RegionSync";
 import Link from "next/link";
 
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   pageTitle?: string;
+  /** Harvey's agent view: the rail collapses to icons on desktop. */
+  slimRail?: boolean;
+  /** The page lays itself out edge to edge (no page padding or width cap). */
+  bare?: boolean;
 }
 
 // Convert base64url VAPID key to Uint8Array (required by PushManager)
@@ -71,13 +76,17 @@ async function subscribeToPush() {
   }
 }
 
-export default function DashboardLayout({ children, pageTitle }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, pageTitle, slimRail = false, bare = false }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNotifBanner, setShowNotifBanner] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
   const pathname = usePathname();
   // Keeps the user's colour identity (--id-* CSS variables) on :root.
   useApplyIdentity();
+  // The business's currency, number format and timezone (lib/locale.ts).
+  // Changes only when the backend's region differs from this device's cache;
+  // the page is then re-mounted once so every amount is written the new way.
+  const regionVersion = useRegionSync();
 
   useEffect(() => { setIsDemo(isDemoMode()); }, []);
 
@@ -161,16 +170,16 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-bg">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <div className="hv-app flex h-screen overflow-hidden">
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} slim={slimRail} />
 
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className="hv-canvas flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onMenuToggle={() => setSidebarOpen(true)} pageTitle={pageTitle} />
 
         {/* Demo mode notice — a quiet horizontal disclosure strip, not an
             all-caps terminal-style alert. Truthful, low-key, sentence case. */}
         {isDemo && (
-          <div className="flex items-center justify-between gap-3 px-4 py-1.5 shrink-0" style={{ background: "#F7F7F4", borderBottom: "1px solid #EBEAE6" }}>
+          <div className="flex items-center justify-between gap-3 px-4 py-1.5 shrink-0" style={{ background: "#F1EFE9", borderBottom: "1px solid #E4E1DA" }}>
             <span className="text-xs flex items-center gap-1.5" style={{ color: "#6E6E69" }}>
               <FiInfo size={11} />
               Simulated demonstration — sample data, not your business
@@ -214,9 +223,15 @@ export default function DashboardLayout({ children, pageTitle }: DashboardLayout
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto v32-main">
-          <div key={pathname} className="v32-wrap page-in">{children}</div>
-        </main>
+        {bare ? (
+          <main className="flex-1 min-h-0 overflow-hidden">
+            <div key={`${pathname}:${regionVersion}`} className="h-full page-in">{children}</div>
+          </main>
+        ) : (
+          <main className="flex-1 overflow-y-auto v32-main">
+            <div key={`${pathname}:${regionVersion}`} className="v32-wrap page-in">{children}</div>
+          </main>
+        )}
       </div>
 
       <InstallPrompt />

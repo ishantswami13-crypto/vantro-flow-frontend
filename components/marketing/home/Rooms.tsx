@@ -8,23 +8,23 @@ const strip = (name: string) => BANDS.flatMap((b) => b.rows).find((r) => r.name 
 /* ── Frame 04 · Know what changed ──────────────────────────────── */
 
 const WATCH = [
-  { tone: "risk", cat: "Receivables", what: "Second payment promise missed", who: "Brightwater Retail", fig: "$184,200", figK: "open, 47 days", s: "Brightwater Retail", tags: ["Promise log · 06 Oct", "Ledger · 07:41"] },
-  { tone: "warn", cat: "Payables · FX", what: "EUR up 2.1% on three open bills", who: "Meridian Components", fig: "€412,000", figK: "$4.7k–$14.1k dearer · estimate", s: "Meridian Components", tags: ["ECB · 13 Oct", "Payables"] },
-  { tone: "warn", cat: "Stock", what: "VA-200 below its reorder level", who: "2 open orders depend on it", fig: "9 days", figK: "cover · $58,300 in orders", s: "VA-200 valve assembly", tags: ["Stock · 07:40", "Orders"] },
-  { tone: "info", cat: "Exposure", what: "Above your $250,000 limit", who: "Northfield Labs", fig: "$268,400", figK: "exposure", s: "Northfield Labs", tags: ["Ledger", "Watch rule"] },
+  { tone: "risk", cat: "Receivables", what: "Second payment promise missed", who: "Harbor Supply Co.", fig: "$184,200", figK: "open, 47 days", s: "Harbor Supply Co.", tags: ["Promise log · 06 Oct", "Ledger · 07:41"] },
+  { tone: "warn", cat: "Payables · FX", what: "EUR up 2.1% on three open bills", who: "Brenner Armaturen GmbH", fig: "€41,200", figK: "$4.7K–14.1K dearer · estimate", s: "Brenner Armaturen GmbH", tags: ["ECB rate · 13 Oct", "Payables"] },
+  { tone: "warn", cat: "Stock", what: "PVC pipe 1 in below its reorder level", who: "2 open orders depend on it", fig: "9 days", figK: "cover · $58,300 in orders", s: "PVC pipe 1 in", tags: ["Stock · 07:40", "Orders"] },
+  { tone: "info", cat: "Exposure", what: "Above its $250,000 limit", who: "Ridgeline Builders", fig: "$268,400", figK: "exposure", s: "Ridgeline Builders", tags: ["Ledger", "Watch rule"] },
 ] as const;
 
 export function WatchRoom() {
   return (
     <InView className="w4">
       <div className="w4-bar">
-        <p><b>Watch</b><span>Tue 14 Oct · 07:42</span><span className="w4-ill">Illustrative · Halden Supply Co.</span></p>
-        <p className="w4-bar-r"><span>4 material changes</span><span><i className="sq t-ok" />4 systems current</span></p>
+        <p><b>Watch</b><span>Tue 14 Oct · 07:42</span><span className="w4-ill">Illustrative · Narmada Pipes & Fittings</span></p>
+        <p className="w4-bar-r"><span>4 material changes</span><span>4 systems current</span></p>
       </div>
       <ol className="w4-grid">
         {WATCH.map((c, i) => (
           <li key={c.cat} className={`w4-card t-${c.tone}`} style={{ "--i": i } as React.CSSProperties}>
-            <p className="w4-cat"><i className={`sq t-${c.tone}`} />{c.cat}</p>
+            <p className={`w4-cat t-${c.tone}`}>{c.cat}</p>
             <p className="w4-what">{c.what}</p>
             <p className="w4-who">{c.who}</p>
             <p className="w4-fig num">{c.fig}<span>{c.figK}</span></p>
@@ -52,8 +52,8 @@ export function SimulationRoom() {
   return (
     <InView className="s6">
       <div className="s6-axis" aria-hidden>
-        {[0, 50, 100, 150].map((t) => <span key={t} className={t === 150 ? "s6-axis-150" : undefined} style={{ left: pct(t) }}>${t}k</span>)}
-        <span className="s6-axis-end" style={{ left: "100%" }}>$184.2k owed</span>
+        {[0, 50, 100, 150].map((t) => <span key={t} className={t === 150 ? "s6-axis-150" : undefined} style={{ left: pct(t) }}>${t}K</span>)}
+        <span className="s6-axis-end" style={{ left: "100%" }}>$184.2K owed</span>
       </div>
       <ol className="s6-opts">
         {OPTIONS.map((o, i) => (
@@ -62,12 +62,12 @@ export function SimulationRoom() {
               <p className="s6-o"><span className="s6-n">{String.fromCharCode(65 + i)}</span>{o.o}{o.rec && <span className="s6-rec">Recommended</span>}</p>
               <p className="s6-best">Best in {o.best}% of simulated futures</p>
             </div>
-            <p className="s6-fig num"><span className="s6-cur">$</span>{o.lo}–{o.hi}<span className="s6-k">k</span></p>
+            <p className="s6-fig num"><span className="s6-cur">$</span>{o.lo}–{o.hi}<span className="s6-k">K</span></p>
             <div className="s6-track" aria-hidden>
               <span className="s6-range" style={{ left: pct(o.lo), width: pct(o.hi - o.lo) }} />
               <span className="s6-mid" style={{ left: pct(o.mid) }} />
             </div>
-            <span className="sl-sr">Collected within 30 days, 10th to 90th percentile: ${o.lo},000 to ${o.hi},000; median ${o.mid},000.</span>
+            <span className="sl-sr">Collected within 30 days, 10th to 90th percentile: ${o.lo}K to ${o.hi}K; median ${o.mid}K.</span>
           </li>
         ))}
       </ol>
@@ -81,7 +81,7 @@ export function SimulationRoom() {
 const STATIONS = [
   { g: "gate", k: "Approved", t: "14 Oct · 09:10", b: "By the account owner, on the approval page." },
   { g: "once", k: "Reminder, once", t: "14 Oct · 09:12", b: "Exactly the text approved, and only once." },
-  { g: "system", k: "Books changed", t: "22 Oct", b: "Receipt entered in TallyPrime." },
+  { g: "system", k: "Books changed", t: "22 Oct", b: "Receipt entered in the books." },
   { g: "signal", k: "Observed", t: "22 Oct · 07:40", b: "Picked up on the next sync." },
   { g: "verified", k: "On track", t: "22 Oct · 07:41", b: "Matched to INV-1042. The 30-day check stays open." },
 ];
@@ -102,12 +102,12 @@ export function VerificationRecord() {
       <div className="v7-dim" aria-hidden><span>8 days</span></div>
       <figure className="v7-macro">
         <div className="v7-macro-in">
-          <p className="ui-kicker"><i className="sq t-ok" />Observed · on track · 22 Oct 07:41</p>
-          <p className="v7-macro-fig num">$60,000.00 <span>received</span></p>
+          <p className="ui-kicker t-ok">Observed · on track · 22 Oct 07:41</p>
+          <p className="v7-macro-fig num">$60,000 <span>received</span></p>
           <dl>
             <div><dt>Against</dt><dd>INV-1042 · $2,400 left on it</dd></div>
             <div><dt>After</dt><dd>8 days from the approved reminder</dd></div>
-            <div><dt>Still open</dt><dd className="num">$124,200.00</dd></div>
+            <div><dt>Still open</dt><dd className="num">$124,200</dd></div>
           </dl>
         </div>
         <figcaption>Starlane records what followed. It does not claim the reminder caused it.</figcaption>

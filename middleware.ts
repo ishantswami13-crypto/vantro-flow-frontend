@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PROTECTED = [
+export const PROTECTED = [
   '/dashboard', '/collections', '/whatsapp', '/dunning', '/forecast',
   '/analytics', '/reports', '/inventory', '/crm', '/scanner',
   '/ai-chat', '/billing', '/settings', '/bills', '/khata', '/bank',
@@ -13,7 +13,7 @@ const PROTECTED = [
   '/decisions', '/control', '/approvals', '/connections',
   // The seven surfaces and their supporting pages — guarded server-side so a
   // signed-out visitor never sees a page shell before the client-side bounce.
-  '/bridge', '/scan', '/watch', '/simulate', '/prepared', '/missions', '/memory',
+  '/bridge', '/command', '/scan', '/watch', '/simulate', '/prepared', '/missions', '/memory', '/workflows',
   '/agents', '/sources', '/discover', '/intelligence', '/outreach',
 ];
 

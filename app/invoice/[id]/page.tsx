@@ -3,16 +3,16 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api, type InvoiceDetail, type BusinessProfile } from "@/lib/api";
+import { formatDate, formatMoney } from "@/lib/locale";
 import {
   FiPrinter, FiShare2, FiArrowLeft, FiCheck,
   FiMessageSquare, FiClock, FiCalendar,
 } from "react-icons/fi";
 
-const fmtINR = (n: number) =>
-  "₹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtINR = (n: number) => formatMoney(n, { decimals: 2 });
 
 const fmtDate = (d?: string) =>
-  d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—";
+  d ? formatDate(d, { day: "numeric", month: "long", year: "numeric" }) : "—";
 
 function toWords(n: number): string {
   if (!n || n === 0) return "Zero Rupees Only";
@@ -59,7 +59,7 @@ export default function InvoiceViewPage() {
     if (!invoice) return;
     const phone = invoice.customer_phone;
     const biz_name = biz.business_name || "Starlane";
-    const msg = `${invoice.customer_name.split(" ")[0]} ji 🙏\n\nYour invoice *${invoice.invoice_number || id}* of ${fmtINR(invoice.invoice_amount)} from ${biz_name} is ready.\n\nView it here:\n${window.location.href}\n\n${invoice.payment_link ? `Pay online: ${invoice.payment_link}` : `Please pay at your earliest convenience.`}\n\n— ${biz_name}`;
+    const msg = `Hi ${invoice.customer_name.split(" ")[0]},\n\nYour invoice *${invoice.invoice_number || id}* of ${fmtINR(invoice.invoice_amount)} from ${biz_name} is ready.\n\nView it here:\n${window.location.href}\n\n${invoice.payment_link ? `Pay online: ${invoice.payment_link}` : `Please pay at your earliest convenience.`}\n\n— ${biz_name}`;
     const url = phone
       ? `https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`
       : `https://wa.me/?text=${encodeURIComponent(msg)}`;

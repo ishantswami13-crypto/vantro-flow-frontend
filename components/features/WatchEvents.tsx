@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { request } from "@/lib/api";
 import type { WatchEvent, WatchList } from "../../packages/contracts/src/features";
+import { formatMoney, formatNumber } from "@/lib/locale";
 
 const SEV: Record<string, string> = { critical: "#A23B3B", high: "#A23B3B", normal: "#C7962F", low: "#D9D7D0" };
 const RESOLUTION: Record<string, string> = {
@@ -17,7 +18,7 @@ const RULE = "rgba(25,25,23,0.10)";
 
 function show(v: unknown, unit?: string) {
   if (v === null || v === undefined || v === "") return "—";
-  if (typeof v === "number") return unit === "INR" ? `₹${Math.round(v).toLocaleString("en-IN")}` : v.toLocaleString("en-US");
+  if (typeof v === "number") return unit && /^[A-Z]{3}$/.test(unit) ? formatMoney(v, { currency: unit }) : formatNumber(v);
   return String(v);
 }
 
@@ -72,8 +73,8 @@ export default function WatchEvents() {
                     {e.evidence.facts.map((f, j) => (
                       <div key={j} style={{ display: "contents" }}>
                         <dt>{f.label}</dt>
-                        <dd style={{ margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{show(f.value, f.unit)}</dd>
-                        <dd style={{ margin: 0, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 11, color: "#63635F" }}>{f.kind}</dd>
+                        <dd style={{ margin: 0, fontFamily: "'Inter', system-ui, sans-serif" }}>{show(f.value, f.unit)}</dd>
+                        <dd style={{ margin: 0, fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, color: "#63635F" }}>{f.kind}</dd>
                       </div>
                     ))}
                   </dl>

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import StarlaneMark from "@/components/brand/StarlaneMark";
+import StarlaneWordmark from "@/components/brand/StarlaneWordmark";
 import { useEffect, useRef, useState } from "react";
 
 export function useNavScroll(ref: React.RefObject<HTMLElement | null>) {
@@ -43,7 +43,7 @@ export function Nav({ tone = "light" }: { tone?: "light" | "dark" }) {
   return (
     <>
       <nav aria-label="Main navigation" className={`sl-nav${tone === "dark" ? " sl-nav-dark" : ""}`} ref={navRef}>
-        <Link href="/" aria-label="Starlane home" className="sl-wordmark" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}><StarlaneMark size={22} />Starlane</Link>
+        <Link href="/" aria-label="Starlane home" className="sl-wordmark sl-wordmark-lockup"><StarlaneWordmark height={19} title={null} /></Link>
         <div className="sl-navlinks">
           <div className="sl-navmid">
             {LINKS.map(([href, label]) => (
@@ -64,10 +64,10 @@ export function Nav({ tone = "light" }: { tone?: "light" | "dark" }) {
           </button>
         </div>
       </nav>
-      <div id="sl-mobile-menu" className={`sl-mobile-menu${menuOpen ? " open" : ""}${tone === "dark" ? " sl-menu-dark" : ""}`}>
+      <nav id="sl-mobile-menu" aria-label="Menu" className={`sl-mobile-menu${menuOpen ? " open" : ""}${tone === "dark" ? " sl-menu-dark" : ""}`}>
         {LINKS.map(([href, label]) => <Link key={href} href={href} aria-current={cur(href)} onClick={close}>{label}</Link>)}
         <Link href="/login" onClick={close}>Sign in</Link>
-      </div>
+      </nav>
     </>
   );
 }

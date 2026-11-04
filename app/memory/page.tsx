@@ -7,6 +7,7 @@ import { api, type AuditEvent } from "@/lib/api";
 import { MemoryLearning } from "@/components/os/MemoryPanels";
 import { TeachStarlanePanel } from "@/components/os/BridgePanels";
 import { PageHeader, Subnav, EmptyLine } from "@/components/v32/ui";
+import { formatDate as fmtDate } from "@/lib/locale";
 
 // Memory — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
 //
@@ -84,7 +85,7 @@ function humanize(action: string): string {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return fmtDate(iso, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 function classify(action: string): { outcome: string; color: string } | null {
@@ -94,6 +95,7 @@ function classify(action: string): { outcome: string; color: string } | null {
 }
 
 function reasonFor(e: AuditEvent): string {
+  if (e.title) return e.title;
   if (e.entity_type && e.entity_id) return `${e.entity_type} · ${String(e.entity_id).slice(0, 8)}…`;
   if (e.entity_type) return e.entity_type;
   return "No linked entity recorded";
@@ -121,7 +123,7 @@ const EMPTY_COPY: Record<Exclude<TabKey, "learning">, { title: string; body: str
 function shortDate(iso: string): string {
   const d = new Date(iso);
   const sameYear = d.getFullYear() === new Date().getFullYear();
-  return d.toLocaleDateString("en-IN", sameYear ? { day: "numeric", month: "short" } : { month: "short", year: "numeric" });
+  return fmtDate(d, sameYear ? { day: "numeric", month: "short" } : { month: "short", year: "numeric" });
 }
 
 // V32 memory_event: date column, a dot on a hairline, title, reason and an
@@ -177,13 +179,13 @@ export default function MemoryPage() {
 
   // Entities present in the real data — never a hardcoded demo entity.
   const entities = useMemo(() => {
-    const seen = new Map<string, { entity_type: string; entity_id: string; count: number }>();
+    const seen = new Map<string, { entity_type: string; entity_id: string; count: number; title: string | null }>();
     for (const e of events) {
       if (!e.entity_type || !e.entity_id) continue;
       const key = `${e.entity_type}:${e.entity_id}`;
       const existing = seen.get(key);
-      if (existing) existing.count += 1;
-      else seen.set(key, { entity_type: e.entity_type, entity_id: String(e.entity_id), count: 1 });
+      if (existing) { existing.count += 1; if (!existing.title && e.title) existing.title = e.title; }
+      else seen.set(key, { entity_type: e.entity_type, entity_id: String(e.entity_id), count: 1, title: e.title || null });
     }
     return Array.from(seen.values()).sort((a, b) => b.count - a.count);
   }, [events]);
@@ -268,9 +270,14 @@ export default function MemoryPage() {
                         color: ent.entity_id === activeReplayEntity ? "#191917" : "#63635F",
                         fontSize: 12.5,
                         cursor: "pointer",
+                        maxWidth: 360,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                       }}
+                      title={ent.title || undefined}
                     >
-                      {ent.entity_type} · {ent.entity_id.slice(0, 8)}…
+                      {ent.title || `${ent.entity_type} · ${ent.entity_id.slice(0, 8)}…`}
                     </button>
                   ))}
                 </div>

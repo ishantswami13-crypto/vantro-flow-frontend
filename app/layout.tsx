@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import "./fonts.css";
 import "./globals.css";
 import "./atlas.css";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
@@ -6,52 +7,37 @@ import ReactQueryProvider from "@/components/providers/ReactQueryProvider";
 import { Analytics } from "@vercel/analytics/next";
 import CookieBanner from "@/components/CookieBanner";
 import AuthenticatedRequestBridge from "@/components/providers/AuthenticatedRequestBridge";
-
-const APP_URL = "https://vantro-flow-frontend.vercel.app";
+import { SITE, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(APP_URL),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Starlane | AI BusinessOS",
-    template: "%s | Starlane",
+    default: `${SITE.name} · ${SITE.tagline}`,
+    template: `%s · ${SITE.name}`,
   },
-  description:
-    "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
-  keywords: [
-    "AI business operating system", "decision intelligence", "accounts receivable automation",
-    "collections automation", "cash flow forecasting", "approval workflows",
-    "finance operations software", "enterprise decision automation", "evidence-based AI",
-    "receivables management", "B2B collections", "TallyPrime integration",
-  ],
-  authors: [{ name: "Starlane", url: APP_URL }],
-  creator: "Starlane",
-  publisher: "Starlane",
+  description: SITE.description,
+  applicationName: SITE.name,
+  authors: [{ name: SITE.legalName, url: SITE_URL }],
+  creator: SITE.legalName,
+  publisher: SITE.legalName,
+  formatDetection: { telephone: false, email: false, address: false },
 
+  // Pages that set their own Open Graph data replace this; it covers the rest.
   openGraph: {
     type: "website",
-    locale: "en_US",
-    url: APP_URL,
-    siteName: "Starlane",
-    title: "Starlane — The operating layer every modern business runs on",
-    description:
-      "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
-    images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "Starlane — the operating layer every modern business runs on",
-      },
-    ],
+    locale: SITE.locale,
+    url: SITE_URL,
+    siteName: SITE.name,
+    title: `${SITE.name} · ${SITE.tagline}`,
+    description: SITE.description,
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Starlane — The operating layer every modern business runs on",
-    description:
-      "Starlane helps businesses connect data, understand operations, and run evidence-based, approval-gated workflows across finance, sales, purchases, inventory, customers, suppliers, and operations.",
-    images: ["/opengraph-image"],
-    creator: "@ishantswami13",
+    title: `${SITE.name} · ${SITE.tagline}`,
+    description: SITE.description,
+    creator: SITE.twitter,
+    site: SITE.twitter,
   },
 
   icons: {
@@ -65,7 +51,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Starlane",
+    title: SITE.name,
   },
 
   other: {
@@ -75,11 +61,7 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
-    googleBot: { index: true, follow: true },
-  },
-
-  alternates: {
-    canonical: APP_URL,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
 };
 
@@ -88,29 +70,6 @@ export const viewport: Viewport = { themeColor: "#FAFAF9" };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head>
-        {/* Structured data */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "SoftwareApplication",
-              name: "Starlane",
-              applicationCategory: "BusinessApplication",
-              operatingSystem: "Web",
-              description:
-                "Starlane is AI business automation infrastructure for cashflow, collections, inventory, operations, risk, and intelligent decision-making.",
-              url: APP_URL,
-              inLanguage: ["en", "hi"],
-              audience: {
-                "@type": "Audience",
-                audienceType: "Businesses of every size, from owner-led companies to enterprises",
-              },
-            }),
-          }}
-        />
-      </head>
       <body>
         <AuthenticatedRequestBridge />
         <PostHogProvider>

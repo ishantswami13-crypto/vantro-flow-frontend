@@ -125,7 +125,7 @@ function FromSentence({ onCreated }: { onCreated: () => void }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={500}
-          placeholder="When a customer is 45 days overdue and owes more than ₹50k, prepare a reminder"
+          placeholder="When a customer is 45 days overdue and owes more than 50k, prepare a reminder"
           className="flex-1 text-[13px] rounded-md px-3 py-2"
           style={{ border: `1px solid ${C.line}` }}
           aria-label="Workflow in a sentence"

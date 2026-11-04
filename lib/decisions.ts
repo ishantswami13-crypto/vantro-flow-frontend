@@ -3,6 +3,7 @@
 // the frontend formats, it never calculates financial values.
 
 import { API_BASE, authHeaders, fetchWithRetry } from '@/lib/api';
+import { formatMoneyShort } from './locale';
 
 export type Band = 'KNOWN' | 'LIKELY' | 'POSSIBLE' | 'UNKNOWN' | 'CONTRADICTED';
 export type DecisionStatus =
@@ -361,9 +362,13 @@ export const FEEDBACK_KINDS = [
 ] as const;
 export type FeedbackKind = typeof FEEDBACK_KINDS[number]['kind'];
 
-async function upload<T>(path: string, file: File, options?: ImportOptions | null): Promise<T> {
+/** A file the owner picked, or a Google Sheet share link the backend downloads. */
+export type ImportSource = File | { sheetUrl: string; name: string };
+
+async function upload<T>(path: string, file: ImportSource, options?: ImportOptions | null): Promise<T> {
   const form = new FormData();
-  form.append('file', file);
+  if ('sheetUrl' in file) form.append('sheetUrl', file.sheetUrl);
+  else form.append('file', file);
   if (options) form.append('options', JSON.stringify(options));
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 180_000);
@@ -407,8 +412,8 @@ export const decisionsApi = {
   setControls: (body: { pilotMode?: 'SHADOW' | 'LIVE'; scope?: string; scopeKey?: string; stopped?: boolean; reason?: string }) => call<Record<string, unknown>>('POST', '/controls', body),
   trackRecord: () => call<TrackRecord>('GET', '/track-record'),
   backtest: (horizonDays = 60) => call<BacktestResponse>('POST', '/backtest', { horizonDays }, 120_000),
-  importPreview: (file: File, options?: ImportOptions | null) => upload<ImportPreview>('/import/preview', file, options),
-  importCommit: (file: File, options: ImportOptions) => upload<ImportCommit>('/import/commit', file, options),
+  importPreview: (file: ImportSource, options?: ImportOptions | null) => upload<ImportPreview>('/import/preview', file, options),
+  importCommit: (file: ImportSource, options: ImportOptions) => upload<ImportCommit>('/import/commit', file, options),
   dataProfile: () => call<DataProfile>('GET', '/data-profile'),
   feedback: (id: string, kind: FeedbackKind, note?: string, optionKey?: string) => call<{ recorded: boolean; label: string }>('POST', `/${encodeURIComponent(id)}/feedback`, { kind, note, optionKey }),
   similar: (id: string) => call<SimilarResponse>('GET', `/${encodeURIComponent(id)}/similar`),
@@ -417,14 +422,11 @@ export const decisionsApi = {
 
 // ── Formatting (display only) ─────────────────────────────────────────────
 
-export function money(value: number | null | undefined, currency = 'INR'): string {
+// In the amount's own currency, written the way its market reads it, and
+// shortened from 100,000 ($1.3M, £420K, ₹4.2L). No currency = the business's.
+export function money(value: number | null | undefined, currency?: string | null): string {
   if (value == null || !Number.isFinite(value)) return '—';
-  if (currency !== 'INR') return `${value < 0 ? '−' : ''}${currency} ${Math.round(Math.abs(value)).toLocaleString('en-US')}`;
-  const abs = Math.abs(value);
-  const sign = value < 0 ? '−' : '';
-  if (abs >= 1e7) return `${sign}₹${(abs / 1e7).toFixed(2)}Cr`;
-  if (abs >= 1e5) return `${sign}₹${(abs / 1e5).toFixed(2)}L`;
-  return `${sign}₹${Math.round(abs).toLocaleString('en-IN')}`;
+  return formatMoneyShort(value, { currency });
 }
 
 export function pct(v: number | null | undefined): string {

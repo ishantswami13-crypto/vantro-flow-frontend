@@ -1,81 +1,46 @@
-import Link from "next/link";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import "../landing.css";
+import "../start.css";
+import "../site.css";
+import { SiteShell, PageHero } from "@/components/marketing/site/Site";
+import { LEGAL, pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Terms of Service — Starlane",
-  description: "Terms and conditions for using Starlane.",
-};
+export const metadata: Metadata = pageMetadata({
+  path: "/terms",
+  title: "Terms of service",
+  description: "The terms that apply when you use Starlane.",
+});
 
-function StarlaneMark({ size = 22 }: { size?: number }) {
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        display: "inline-block",
-        width: size,
-        height: size,
-        backgroundImage: 'url("/brand/starlane-icon.jpeg")',
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
-        backgroundSize: "contain",
-        borderRadius: Math.max(4, Math.round(size * 0.18)),
-        flexShrink: 0,
-      }}
-    />
-  );
-}
+export const viewport: Viewport = { themeColor: "#0F0E0D" };
 
+// Entity, address, governing law and contact come from LEGAL in lib/site.ts.
 export default function TermsPage() {
   return (
-    <div className="atlas-page">
-      <div className="grain"/>
-      <div className="draft-banner">⚠ Draft template — to be reviewed by a qualified legal professional before paid public launch</div>
-
-      <nav className="nav on">
-        <div className="wrap nav-inner">
-          <Link href="/" className="brand" style={{display:"flex",alignItems:"center",gap:"9px",textDecoration:"none"}}>
-            <StarlaneMark/> <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13.5px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
-          </Link>
-          <div className="nav-links"><Link href="/#features">Features</Link><Link href="/#pricing">Pricing</Link><Link href="/#faq">FAQ</Link></div>
-          <div className="nav-cta">
-            <Link className="nav-login" href="/login">Log in</Link>
-            <Link className="btn btn-primary" href="/signup">Start free</Link>
-          </div>
-        </div>
-      </nav>
-
-      <section className="legal-header">
-        <div className="wrap">
-          <span className="s-label">Legal</span>
-          <h1>Terms of Service</h1>
-          <div className="lh-meta">Last updated: 31 May 2026 &middot; Starlane</div>
-        </div>
-      </section>
-
-      <div className="legal-body">
-        <div className="wrap">
-          <div className="legal-content">
+    <SiteShell>
+      <PageHero
+        kicker="Legal"
+        title={<>Terms of <em>service.</em></>}
+        lead={<>The terms that apply when you use Starlane.<span className="lg-meta">Last updated {LEGAL.lastUpdated} · Draft, to be reviewed by a qualified legal professional before paid public launch</span></>}
+      />
+      <section className="f f-light lg" aria-label="Terms of service">
+        <div className="f-wrap">
+          <div className="lg-body">
             <h2>Acceptance of terms</h2>
             <p>By creating a Starlane account or using our services, you agree to these Terms of Service. If you are signing up on behalf of a business, you confirm that you have authority to bind that business to these terms.</p>
-            <p>These terms form a binding agreement under the Indian Contract Act, 1872 and the Information Technology Act, 2000.</p>
+            <p>These terms form a binding agreement between you and {LEGAL.entityName}.</p>
 
             <h2>Who operates Starlane</h2>
-            <p><strong>Starlane</strong> builds AI business automation infrastructure for Indian businesses.</p>
+            <p>Starlane is operated by <strong>{LEGAL.entityName}</strong>, {LEGAL.address}. Starlane builds AI business automation infrastructure for businesses in many countries.</p>
 
             <h2>What Starlane does</h2>
-            <p>Starlane is an AI-powered platform for Indian businesses that automates accounts receivable collections, cashflow forecasting, inventory monitoring, and WhatsApp-based customer follow-ups. <strong>Starlane is a software tool — it does not provide legal, financial, tax or accounting advice.</strong></p>
+            <p>Starlane is an AI-powered platform for businesses that automates accounts receivable collections, cashflow forecasting, inventory monitoring, and customer follow-ups over email and messaging channels. <strong>Starlane is a software tool — it does not provide legal, financial, tax or accounting advice.</strong></p>
 
             <h2>Your account</h2>
-            <p>You are responsible for keeping your account credentials secure. Notify us immediately at <a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a> if you suspect unauthorised access. You must provide accurate information when registering. Accounts may not be shared between multiple businesses.</p>
+            <p>You are responsible for keeping your account credentials secure. Notify us immediately at <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a> if you suspect unauthorised access. You must provide accurate information when registering. Accounts may not be shared between multiple businesses.</p>
 
             <h2>Subscription and payment</h2>
-            <p>Starlane offers three plans:</p>
-            <ul>
-              <li><strong>Free:</strong> ₹0/month — up to 5 invoices/month, manual WhatsApp, basic dashboard.</li>
-              <li><strong>Pro:</strong> ₹999/month + applicable GST — unlimited invoices, full AI automation, all integrations.</li>
-              <li><strong>Success:</strong> ₹0/month + 1.5% of Starlane-collected invoices only — everything in Pro, no monthly fee.</li>
-            </ul>
-            <p>Pro subscriptions are billed monthly in advance via Razorpay. You can cancel at any time from Starlane settings. No refunds for partial months except where required by law.</p>
+            <p>Plans, prices and what each includes are shown on our <a href="/pricing">Pricing page</a> and in your order or pilot agreement. Prices are in the currency shown at checkout and exclude applicable taxes (such as sales tax, VAT or GST), which are added where required.</p>
+            <p>Paid subscriptions are billed in advance through our payment processor. You can cancel at any time from Starlane settings. No refunds for partial months except where required by law.</p>
 
             <h2>Your data</h2>
             <p>You own all data you upload to or generate within Starlane. We process it only to provide the service to you. You can export your data in CSV format at any time.</p>
@@ -85,7 +50,7 @@ export default function TermsPage() {
             <ul>
               <li>Use Starlane to send unsolicited messages to customers who have no business relationship with you</li>
               <li>Reverse-engineer, copy, or resell any part of Starlane</li>
-              <li>Use Starlane for any unlawful purpose or in violation of RBI, SEBI, or GST regulations</li>
+              <li>Use Starlane for any unlawful purpose or in violation of applicable laws, including financial, consumer-protection, anti-spam, privacy and tax laws</li>
               <li>Introduce malware, scripts, or automated bots that interfere with Starlane</li>
             </ul>
             <p>Violations may result in immediate account suspension without refund.</p>
@@ -97,7 +62,7 @@ export default function TermsPage() {
             <p>Starlane is provided &ldquo;as is&rdquo;. We work hard to keep it accurate and reliable, but do not warrant that it will be error-free or uninterrupted. The AI-generated action lists and forecasts are decision-support tools — not substitutes for professional judgement.</p>
 
             <h2>Limitation of liability</h2>
-            <p>To the maximum extent permitted by Indian law, Starlane&apos;s total liability for any claim shall not exceed the amounts paid by you in the 3 months preceding the claim.</p>
+            <p>To the maximum extent permitted by applicable law, Starlane&apos;s total liability for any claim shall not exceed the amounts paid by you in the 3 months preceding the claim.</p>
 
             <h2>Termination</h2>
             <p>Either party may terminate this agreement at any time. Close your account in Starlane settings. We may suspend accounts that violate these terms. On termination, your data is retained for 90 days then deleted.</p>
@@ -106,37 +71,16 @@ export default function TermsPage() {
             <p>We will notify you by email at least 14 days before material changes take effect. Continued use after that date constitutes acceptance.</p>
 
             <h2>Governing law and disputes</h2>
-            <p>These terms are governed by the laws of India. Disputes shall be subject to the exclusive jurisdiction of courts in Mumbai. Email <a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a> and we&apos;ll respond within 10 business days.</p>
+            <p>These terms are governed by the laws of {LEGAL.governingLaw}, without regard to its conflict-of-laws rules. Disputes shall be subject to the exclusive jurisdiction of {LEGAL.venue}, except where the law of your country gives you the right to bring a claim locally. Before bringing a claim, email <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a> and we&apos;ll respond within 10 business days.</p>
 
-            <div className="notice">
-              <strong>Starlane</strong><br/>
-              Mumbai, India &middot; <a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a>
+            <div className="lg-notice">
+              <strong>{LEGAL.entityName}</strong><br/>
+              {LEGAL.address} &middot; <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>
             </div>
-            <p style={{marginTop:"16px",fontSize:"13px",color:"rgba(255,255,255,.55)"}}>This is a draft template and should be reviewed by a qualified legal professional before paid public launch.</p>
+            <p className="lg-note">This is a draft template and should be reviewed by a qualified legal professional before paid public launch.</p>
           </div>
         </div>
-      </div>
-
-      <footer className="footer">
-        <div className="wrap">
-          <div className="foot-grid">
-            <div className="foot-brand">
-              <Link href="/" className="brand" style={{display:"flex",alignItems:"center",gap:"9px",textDecoration:"none"}}>
-                <StarlaneMark/> <span style={{fontFamily:"'Space Grotesk',system-ui",fontWeight:700,fontSize:"13px",letterSpacing:".2em",textTransform:"uppercase",color:"white"}}>Starlane</span>
-              </Link>
-              <p>Starlane — the AI business control room for Indian founders.</p>
-              <p className="foot-made">Made in India &middot; Data stays in India</p>
-            </div>
-            <div className="foot-col"><h4>Product</h4><Link href="/#features">Features</Link><Link href="/#pricing">Pricing</Link><Link href="/#faq">FAQ</Link></div>
-            <div className="foot-col"><h4>Contact</h4><a href="mailto:ishantswami13@gmail.com">ishantswami13@gmail.com</a></div>
-          </div>
-          <div className="wm">STARLANE</div>
-          <div className="foot-bottom">
-            <span>&copy; 2026 Starlane.</span>
-            <span className="foot-links"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link></span>
-          </div>
-        </div>
-      </footer>
-    </div>
+      </section>
+    </SiteShell>
   );
 }

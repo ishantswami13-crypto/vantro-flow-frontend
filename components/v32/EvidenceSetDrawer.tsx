@@ -7,13 +7,14 @@
 import React from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import type { EvidenceSet, EvidenceItem } from "../../packages/contracts/src/features";
+import { formatMoney, formatNumber } from "@/lib/locale";
 
 const KIND: Record<string, string> = { fact: "Fact", calculated: "Calculated", assumption: "Assumption", estimate: "Estimate", model: "Model" };
 const SOURCE: Record<string, string> = { invoices: "Invoices in Starlane", payments: "Payments", tally: "Tally", your_books: "Your books" };
 
 export function showValue(v: unknown, unit?: string): string {
   if (v === null || v === undefined || v === "") return "—";
-  if (typeof v === "number") return unit === "INR" ? `₹${Math.round(v).toLocaleString("en-IN")}` : v.toLocaleString("en-US");
+  if (typeof v === "number") return unit && /^[A-Z]{3}$/.test(unit) ? formatMoney(v, { currency: unit }) : formatNumber(v);
   if (Array.isArray(v)) return v.join(", ");
   return String(v);
 }
@@ -23,7 +24,7 @@ function Row({ label, value, mono, note }: { label: string; value: React.ReactNo
     <div style={{ padding: "7px 0", borderBottom: "1px solid #EBEAE6" }}>
       <div className="flex items-baseline justify-between gap-4">
         <span style={{ fontSize: 12.5, color: "#63635F" }}>{label}</span>
-        <span className="text-right" style={{ fontSize: 13, color: "#191917", fontFamily: mono ? "'Plus Jakarta Sans', system-ui, sans-serif" : undefined }}>{value}</span>
+        <span className="text-right" style={{ fontSize: 13, color: "#191917", fontFamily: mono ? "'Inter', system-ui, sans-serif" : undefined }}>{value}</span>
       </div>
       {note && <div style={{ fontSize: 11.5, color: "#6E6E69", marginTop: 2 }}>{note}</div>}
     </div>
