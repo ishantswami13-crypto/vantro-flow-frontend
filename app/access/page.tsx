@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { PublicShell } from "@/components/marketing/PublicShell";
+import { ContactShell } from "@/components/marketing/hx/ContactShell";
 import { accessApi, TIER_TONE, type ApplicationInput, type CatalogConnector, type SubmitResult } from "@/lib/access";
 
 // Request access — three short steps, then an immediate, explained result.
@@ -137,22 +137,22 @@ export default function RequestAccessPage() {
     }
   };
 
-  if (result) return <PublicShell><Result result={result} headingRef={headingRef} /></PublicShell>;
+  if (result) return <ContactShell title={<>Thank You. Here Is<br />Where You Stand.</>} lead="Your application is in. The assessment below comes from fixed, published rules, and a person reviews every application."><Result result={result} headingRef={headingRef} /></ContactShell>;
 
   const err = (k: string) => errors[k] ? <span className="sl-err" id={`e-${k}`}>{errors[k]}</span> : null;
   const aria = (k: string) => ({ "aria-invalid": Boolean(errors[k]), "aria-describedby": errors[k] ? `e-${k}` : undefined, id: `f-${k}` });
 
   return (
-    <PublicShell>
-      <div className="sl-form-wrap">
-        <span className="sl-eyebrow">Request access</span>
-        <h1 className="sl-h2" tabIndex={-1} ref={headingRef}>
+    <ContactShell title={<>See Starlane Run<br />On Your Books.</>} lead="Starlane is onboarding a small number of finance teams and owners at a time. Tell us about your company, the systems you run and what you want to change. It takes about three minutes.">
+      <div>
+        <span className="sl-eyebrow">Request a pilot · Step {step + 1} of 3</span>
+        <h2 className="sl-h2" tabIndex={-1} ref={headingRef}>
           {step === 0 && "Tell us about your company."}
           {step === 1 && "What does your company run on?"}
           {step === 2 && "What should Starlane improve?"}
-        </h1>
+        </h2>
         <p className="sl-p" style={{ marginTop: 12 }}>
-          {step === 0 && "Starlane is onboarding a small number of companies at a time. This takes about three minutes."}
+          {step === 0 && "Who you are and where your company works."}
           {step === 1 && "This decides what Starlane can connect to on day one. We tell you straight away if something isn't supported yet."}
           {step === 2 && "Be specific — the more concrete the problem, the better we can tell whether Starlane will help."}
         </p>
@@ -284,7 +284,7 @@ export default function RequestAccessPage() {
           </div>
         </form>
       </div>
-    </PublicShell>
+    </ContactShell>
   );
 }
 
@@ -298,11 +298,11 @@ function Result({ result, headingRef }: { result: SubmitResult; headingRef: Reac
   const el = result.eligibility;
   const statusHref = result.statusToken ? `/access/status#token=${result.statusToken}` : null;
   return (
-    <div className="sl-form-wrap">
+    <div>
       <span className="sl-eyebrow">Application received</span>
-      <h1 className="sl-h2" tabIndex={-1} ref={headingRef}>
-        {result.duplicate ? "We already have an application for this email." : "Thank you. Here is where you stand."}
-      </h1>
+      <h2 className="sl-h2" tabIndex={-1} ref={headingRef}>
+        {result.duplicate ? "We already have an application for this email." : "Your assessment"}
+      </h2>
 
       {el && (
         <div className="sl-panel" style={{ marginTop: 28 }}>
