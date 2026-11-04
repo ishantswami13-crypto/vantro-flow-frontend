@@ -153,6 +153,9 @@ export default function PreparedPage() {
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // Decisions waiting on the owner are listed under "Needs you" too, so the
+  // tab count and the empty line must include them.
+  const [waitingDecisions, setWaitingDecisions] = useState(0);
 
   const emptyResponse = (): PreparedResponse => ({
     for_you: [], needs_you: [], upcoming: [], completed: [], dismissed: [],
@@ -204,7 +207,8 @@ export default function PreparedPage() {
     }
   }
 
-  const counts = data?.counts ?? { for_you: 0, needs_you: 0, upcoming: 0, completed: 0, dismissed: 0 };
+  const baseCounts = data?.counts ?? { for_you: 0, needs_you: 0, upcoming: 0, completed: 0, dismissed: 0 };
+  const counts = { ...baseCounts, needs_you: baseCounts.needs_you + waitingDecisions };
   const cards: PreparedCard[] = data ? data[tab] : [];
   const copy = EMPTY_COPY[tab];
 
@@ -246,7 +250,7 @@ export default function PreparedPage() {
       ) : data === null ? (
         <SkeletonRows rows={3} />
       ) : cards.length === 0 ? (
-        <EmptyLine title={copy.title} body={copy.body} />
+        tab === "needs_you" && waitingDecisions > 0 ? null : <EmptyLine title={copy.title} body={copy.body} />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {cards.map((card) => (
@@ -266,7 +270,7 @@ export default function PreparedPage() {
           shown under the tab they belong to. */}
       {tab === "needs_you" && (
         <>
-          <DecisionsNeedingYou />
+          <DecisionsNeedingYou onCount={setWaitingDecisions} />
           <ReminderApprovals />
         </>
       )}

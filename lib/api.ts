@@ -320,6 +320,10 @@ export const api = {
   }>('/api/business/control-room'),
 
   // ─── Invoices / Collections ─────────────────────────────
+  payments: {
+    /** Invoices marked paid in the last two days (id, customer, amount). */
+    recent: () => request<{ success: boolean; payments: { id: string; customer_name: string; amount: number; currency: string | null; payment_date: string | null }[] }>('/api/payments/recent'),
+  },
   invoices: {
     list: (userId: string) => request<{ invoices: Invoice[]; summary: Summary }>(`/api/invoices/${userId}`),
     get: (invoiceId: string) => request<{ success: boolean; invoice: InvoiceDetail; business: BusinessProfile }>(`/api/invoice/${invoiceId}`),
