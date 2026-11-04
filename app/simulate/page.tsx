@@ -179,8 +179,7 @@ function SimulatePageInner() {
                         value={invoiceQuery}
                         onChange={(e) => setInvoiceQuery(e.target.value)}
                         placeholder={`Search ${formatNumber(invoiceTotal)} open invoices`}
-                        className="sim-pill"
-                        style={{ ...pill, minWidth: 220 }}
+                        style={{ ...pill, minWidth: 220, paddingRight: 14, cursor: "text" }}
                       />
                     </>
                   )}
