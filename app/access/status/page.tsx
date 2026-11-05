@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { PublicShell } from "@/components/marketing/PublicShell";
+import { ContactShell } from "@/components/marketing/hx/ContactShell";
 import { accessApi, tokenFromHash, TIER_TONE, type ApplicationStatus } from "@/lib/access";
 
 // Application status, via the private link from submission (#token=...).
@@ -39,8 +39,8 @@ export default function AccessStatusPage() {
   }, [load]);
 
   return (
-    <PublicShell>
-      <div className="sl-form-wrap" aria-live="polite">
+    <ContactShell title={<>Your Application,<br />In One Place.</>} lead="Where your pilot request stands, and how it was assessed. This page opens only from your private link.">
+      <div aria-live="polite">
         <span className="sl-eyebrow">Application status</span>
 
         {state.loading && (
@@ -52,7 +52,7 @@ export default function AccessStatusPage() {
 
         {!state.loading && !token && (
           <>
-            <h1 className="sl-h2">Open the link from your application.</h1>
+            <h2 className="sl-h2">Open the link from your application.</h2>
             <p className="sl-p" style={{ marginTop: 14, maxWidth: 560 }}>
               Your status page is private: it opens from the link shown when you applied (and emailed to you, where email is set up).
               For privacy there is no lookup by email address.
@@ -63,7 +63,7 @@ export default function AccessStatusPage() {
 
         {!state.loading && state.error && (
           <>
-            <h1 className="sl-h2">We couldn’t load this application.</h1>
+            <h2 className="sl-h2">We couldn’t load this application.</h2>
             <p className="sl-alert err" role="alert" style={{ marginTop: 20 }}>{state.error}</p>
             {token && <div className="sl-hero-ctas"><button className="sl-btn sl-btn-outline" onClick={() => load(token)}>Try again</button></div>}
           </>
@@ -74,7 +74,7 @@ export default function AccessStatusPage() {
           const c = STATUS_COPY[a.status];
           return (
             <>
-              <h1 className="sl-h2">{a.company}</h1>
+              <h2 className="sl-h2">{a.company}</h2>
               <p className="sl-p" style={{ marginTop: 6 }}>Applied as {a.email} on {new Date(a.submittedAt).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}</p>
               <div className="sl-panel" style={{ marginTop: 28 }}>
                 <span className={`sl-badge ${c.tone}`}>{c.label}</span>
@@ -94,6 +94,6 @@ export default function AccessStatusPage() {
           );
         })()}
       </div>
-    </PublicShell>
+    </ContactShell>
   );
 }

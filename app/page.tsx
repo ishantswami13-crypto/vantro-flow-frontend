@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SITE, SITE_URL, pageMetadata } from "@/lib/site";
 import { JsonLd } from "@/components/marketing/JsonLd";
 import { HxShell, Paint } from "@/components/marketing/hx/Shell";
-import { Hero, Panel, CenterHead, DuoCards, StatRows, Controls } from "@/components/marketing/hx/Blocks";
+import { Hero, CenterHead, DuoCards, StatRows, Controls } from "@/components/marketing/hx/Blocks";
 import { SourceGrid, Accordion, Quotes, Rail } from "@/components/marketing/hx/Interactive";
 import { LedgerMock, DecisionMock, MemoryMock, PlanMock } from "@/components/marketing/hx/Mocks";
 import { HeroDashboard } from "@/components/marketing/hx/HeroDashboard";
@@ -55,9 +55,9 @@ const ACC = [
 // Principles rather than testimonials: Starlane is in private pilots and names
 // no customers.
 const QUOTES = [
-  { text: "If Starlane cannot show where a number came from, it does not show the number.", by: "Evidence before assertion", role: "Starlane operating principle 01", href: "/company", cta: "Our principles", view: <Panel id="q-a" tone="stone" kind="" className="hx-q-art"><DecisionMock /></Panel> },
-  { text: "Agents prepare the work. A person approves it, and the approval is recorded.", by: "People decide", role: "Starlane operating principle 02", href: "/security", cta: "How approvals work", view: <Panel id="q-b" tone="plum" kind="" className="hx-q-art"><PlanMock /></Panel> },
-  { text: "Nothing in your books is created, changed or deleted. Connections are read-only.", by: "Read before write", role: "Starlane operating principle 03", href: "/security#controls", cta: "See every control", view: <Panel id="q-c" tone="moss" kind="" className="hx-q-art"><LedgerMock /></Panel> },
+  { text: "If Starlane cannot show where a number came from, it does not show the number.", by: "Evidence before assertion", role: "Starlane operating principle 01", href: "/company", cta: "Our principles", view: <AccFrame id="q-a" className="q-art"><div className="acc-win"><p className="acc-t">Evidence, record by record</p><DecisionMock className="fit" /></div></AccFrame> },
+  { text: "Agents prepare the work. A person approves it, and the approval is recorded.", by: "People decide", role: "Starlane operating principle 02", href: "/security", cta: "How approvals work", view: <AccFrame id="q-b" className="q-art"><div className="acc-win"><p className="acc-t">Waiting for your approval</p><PlanMock className="fit" /></div></AccFrame> },
+  { text: "Nothing in your books is created, changed or deleted. Connections are read-only.", by: "Read before write", role: "Starlane operating principle 03", href: "/security#controls", cta: "See every control", view: <AccFrame id="q-c" className="q-art"><div className="acc-win"><p className="acc-t">Read-only, as booked</p><LedgerMock className="fit" /></div></AccFrame> },
 ];
 
 const RAIL = [
