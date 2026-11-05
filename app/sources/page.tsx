@@ -9,6 +9,7 @@ import { PageHeader, Subnav, StatusDot, Chevron, EmptyLine, ErrorBanner, Skeleto
 import { IconSources } from "@/components/v32/icons";
 import { BridgeHealthPanel } from "@/components/os/BridgePanels";
 import IntegrationsPanel from "@/components/os/IntegrationsPanel";
+import AppConnectorsPanel from "@/components/connectors/AppConnectorsPanel";
 
 // Sources — every system a business runs on that Starlane can connect to,
 // and its live state. Accounting, ERP, banks, payments, CRM, e-commerce,
@@ -174,6 +175,18 @@ export default function SourcesPage() {
     const q = new URLSearchParams(window.location.search);
     const g = q.get("gmail");
     const t = q.get("tab");
+    // Back from Zoho's or Intuit's consent page (?app=<id>&result=connected|failed|cancelled).
+    const appId = q.get("app");
+    const result = q.get("result");
+    if (appId && result) {
+      const name = ({ zoho_books: "Zoho Books", quickbooks: "QuickBooks Online" } as Record<string, string>)[appId] || "The app";
+      setTab("apps");
+      setBanner(result === "connected" ? { tone: "ok", text: `${name} is connected. Starlane is reading its invoices now; they appear here in a minute.` }
+        : result === "cancelled" ? { tone: "bad", text: `${name} was not connected: the sign-in was cancelled.` }
+          : { tone: "bad", text: `${name} could not be connected. Try again, and allow access when asked.` });
+      window.history.replaceState(null, "", "/sources");
+      return;
+    }
     if (t && TABS.some((x) => x.key === t)) setTab(t as TabKey);
     if (g) {
       setTab("apps");
@@ -343,7 +356,12 @@ export default function SourcesPage() {
             );
           })()}
 
-          {tab === "apps" && <IntegrationsPanel />}
+          {tab === "apps" && (
+            <div style={{ display: "grid", gap: 16 }}>
+              {connectors && <AppConnectorsPanel connectors={connectors} onChanged={load} />}
+              <IntegrationsPanel />
+            </div>
+          )}
 
           {connectors && tab === "sync" && (
             syncEntries.length ? (
