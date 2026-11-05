@@ -14,12 +14,13 @@ const COUNTRIES = ["IN", "AE", "SA", "SG", "MY", "ID", "BD", "LK", "NP", "KE", "
 const CATEGORY_LABEL: Record<string, string> = {
   accounting: "Accounting", spreadsheets: "Spreadsheets", banking: "Banking", crm: "CRM", ecommerce: "E-commerce",
   erp: "ERP", logistics: "Logistics", support: "Support", inventory: "Inventory", communication: "Communication",
+  custom: "Any other app", email: "Email", messaging: "Messaging", payments: "Payments", productivity: "Docs and files", hr_payroll: "HR and payroll",
 };
 const STEPS = ["Company", "Systems", "Goals"] as const;
 
 const EMPTY: ApplicationInput = {
   name: "", email: "", company: "", website: "", role: "", companySize: "", industry: "", country: "",
-  systems: [], otherSystems: "", willConnectSystems: null, problem: "", desiredOutcome: "", notes: "", companyFax: "",
+  systems: [], otherSystems: "", willConnectSystems: true, problem: "", desiredOutcome: "", notes: "", companyFax: "",
 };
 
 // Client-side checks mirror the server's (lib/access/validation.js) for fast
@@ -37,7 +38,6 @@ function stepErrors(step: number, v: ApplicationInput): Record<string, string> {
   }
   if (step === 1) {
     if (!v.systems.length && !v.otherSystems.trim()) e.systems = "Tell us at least one system your company uses";
-    if (v.willConnectSystems === null) e.willConnectSystems = "Choose yes or no";
   }
   if (step === 2) {
     if (v.problem.trim().length < 20) e.problem = "A sentence or two, please (at least 20 characters)";
@@ -68,6 +68,7 @@ export default function RequestAccessPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [catalog, setCatalog] = useState<CatalogConnector[] | null>(null);
   const [catalogError, setCatalogError] = useState(false);
+  const [q, setQ] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Set when the service could not take the application (offline, or a server
@@ -85,10 +86,11 @@ export default function RequestAccessPage() {
   useEffect(() => { headingRef.current?.focus(); }, [step, result]);
 
   const grouped = useMemo(() => {
-    const list = (catalog || []).filter((c) => c.authType !== "public_feed");
-    const order = ["accounting", "spreadsheets", "banking", "erp", "crm", "ecommerce", "logistics", "support"];
+    const term = q.trim().toLowerCase();
+    const list = (catalog || []).filter((c) => c.authType !== "public_feed" && (!term || c.name.toLowerCase().includes(term) || (CATEGORY_LABEL[c.category] || c.category).toLowerCase().includes(term)));
+    const order = ["custom", "accounting", "spreadsheets", "email", "messaging", "banking", "payments", "erp", "crm", "ecommerce", "productivity", "hr_payroll", "logistics", "support"];
     return order.map((cat) => ({ cat, items: list.filter((c) => c.category === cat) })).filter((g) => g.items.length);
-  }, [catalog]);
+  }, [catalog, q]);
 
   const regionNames = useMemo(() => {
     try { return new Intl.DisplayNames(["en"], { type: "region" }); } catch { return null; }
@@ -148,12 +150,12 @@ export default function RequestAccessPage() {
         <span className="sl-eyebrow">Request a pilot · Step {step + 1} of 3</span>
         <h2 className="sl-h2" tabIndex={-1} ref={headingRef}>
           {step === 0 && "Tell us about your company."}
-          {step === 1 && "What does your company run on?"}
+          {step === 1 && "Connect your software."}
           {step === 2 && "What should Starlane improve?"}
         </h2>
         <p className="sl-p" style={{ marginTop: 12 }}>
           {step === 0 && "Who you are and where your company works."}
-          {step === 1 && "This decides what Starlane can connect to on day one. We tell you straight away if something isn't supported yet."}
+          {step === 1 && "Pick every app your business runs on. Starlane links the live ones with one sign-in, read-only, and nothing changes without your approval."}
           {step === 2 && "Be specific — the more concrete the problem, the better we can tell whether Starlane will help."}
         </p>
 
@@ -215,41 +217,37 @@ export default function RequestAccessPage() {
           {step === 1 && (
             <>
               <fieldset className="sl-fieldset" aria-describedby={errors.systems ? "e-systems" : undefined}>
-                <legend className="sl-field" style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 10 }}>Systems your company uses</legend>
+                <legend className="sl-sr">Software your company uses</legend>
+                <input className="sl-input hx-sw-search" type="search" placeholder="Search apps: Tally, Zoho, HDFC, Shopify…" aria-label="Search apps" value={q} onChange={(e) => setQ(e.target.value)} />
                 {catalog === null && !catalogError && (
-                  <div className="sl-choices" aria-busy="true">{[0, 1, 2, 3].map((i) => <div key={i} className="sl-skeleton" style={{ height: 46 }} />)}</div>
+                  <div className="hx-sw-grid" aria-busy="true">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="sl-skeleton" style={{ height: 56 }} />)}</div>
                 )}
-                {catalogError && <p className="sl-alert" style={{ marginBottom: 12 }}>The systems list could not be loaded. Describe what you use below instead.</p>}
+                {catalogError && <p className="sl-alert" style={{ marginBottom: 12 }}>The app list could not be loaded. Type what you use below instead.</p>}
                 {grouped.map((g) => (
-                  <div key={g.cat} style={{ marginBottom: 16 }}>
-                    <p className="sl-hint" style={{ fontSize: 12, marginBottom: 6, color: "var(--sl-ink-faint)" }}>{CATEGORY_LABEL[g.cat] || g.cat}</p>
-                    <div className="sl-choices">
+                  <div key={g.cat} className="hx-sw-group">
+                    <p className="hx-sw-cat">{CATEGORY_LABEL[g.cat] || g.cat}</p>
+                    <div className="hx-sw-grid">
                       {g.items.map((c) => (
-                        <label key={c.id} className="sl-choice">
+                        <label key={c.id} className={"hx-sw" + (v.systems.includes(c.id) ? " on" : "")}>
                           <input type="checkbox" id={c.id === g.items[0].id && g.cat === grouped[0].cat ? "f-systems" : undefined}
                             checked={v.systems.includes(c.id)} onChange={() => toggleSystem(c.id)} />
-                          <span>{c.name}<small>{c.availability === "available" ? "Connects today" : "Not connectable yet"}</small></span>
+                          <span className="hx-sw-mark" aria-hidden>{c.name.slice(0, 1)}</span>
+                          <span className="hx-sw-name">{c.name}</span>
+                          {c.availability === "available" && <span className="hx-sw-live">Live</span>}
                         </label>
                       ))}
                     </div>
                   </div>
                 ))}
+                {catalog !== null && !grouped.length && <p className="sl-p" style={{ fontSize: 14 }}>No match in the list. Add it below.</p>}
                 {err("systems")}
               </fieldset>
               <div className="sl-field">
-                <label htmlFor="f-otherSystems">Anything else? <span className="sl-hint">(optional)</span></label>
+                <label htmlFor="f-otherSystems">Any other apps? <span className="sl-hint">(optional)</span></label>
                 <input className="sl-input" placeholder="e.g. Marg ERP, Busy, an in-house system" value={v.otherSystems} onChange={(e) => set("otherSystems", e.target.value)} {...aria("otherSystems")} />
+                <p className="hx-sw-note">Anything not live yet goes on our connector build list, and we tell you before your pilot starts.</p>
                 {err("otherSystems")}
               </div>
-              <fieldset className="sl-fieldset">
-                <legend style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 6 }}>Are you ready to connect your real company systems?</legend>
-                <p className="sl-hint" style={{ fontSize: 12.5, color: "var(--sl-ink-faint)", marginBottom: 10 }}>Starlane works from your actual books and records, not sample data. Access is read-only unless you approve an action.</p>
-                <div className="sl-choices" id="f-willConnectSystems">
-                  <label className="sl-choice"><input type="radio" name="willConnect" checked={v.willConnectSystems === true} onChange={() => set("willConnectSystems", true)} /><span>Yes, when onboarding starts</span></label>
-                  <label className="sl-choice"><input type="radio" name="willConnect" checked={v.willConnectSystems === false} onChange={() => set("willConnectSystems", false)} /><span>Not yet</span></label>
-                </div>
-                {err("willConnectSystems")}
-              </fieldset>
             </>
           )}
 
