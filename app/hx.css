@@ -815,3 +815,23 @@ html[data-hx-motion] .hx-r.in .hd-peer { stroke-dashoffset: 0; }
 .hx-sw-live::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 4px; border-radius: 50%; background: #3C8A4A; vertical-align: 1px; }
 .hx-sw-note { margin: 8px 0 0; font-size: 13px; color: var(--fg3); }
 @media (max-width: 809px) { .hx-sw-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hx-c-band { padding: 32px 16px 48px; } }
+.hx-c-card.wide { max-width: 860px; }
+/* sl tokens for the reused form and panel pieces inside the contact shell */
+.hx-contact {
+  --sl-bg: #FAFAF9; --sl-bg-raised: #FFFFFF; --sl-bg-sunk: #F2F1F0;
+  --sl-ink: #0F0E0D; --sl-ink-soft: #33312C; --sl-ink-faint: #6F6B65;
+  --sl-line: #E4E2DE; --sl-line-2: #CCCAC6; --sl-accent: #0F0E0D; --sl-accent-2: #33312C;
+  --sl-ok: #2E7451; --sl-warn: #8A5A12; --sl-danger: #A23B3B;
+  --sl-serif: var(--serif); --sl-sans: var(--sans); --sl-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --sl-type-h2: 32px; --sl-type-h3: 18px; --sl-type-body-lg: 16px; --sl-type-body: 16px; --sl-ease: var(--hx-out);
+}
+.hx-contact .hx-c-card *, .hx-contact .hx-c-card *::before { box-sizing: border-box; }
+.hx-contact .hx-c-card a { color: inherit; }
+.hx-contact .sl-h3 { margin: 0; font-family: var(--sans); font-weight: 500; font-size: 18px; line-height: 1.3; color: var(--fg); }
+.hx-contact .sl-sub { font-size: 16px; line-height: 1.5; color: var(--fg2); }
+.hx-contact .sl-hero-ctas { margin-top: 28px; gap: 20px; }
+.hx-contact .sl-link-arrow { font-size: 14px; font-weight: 500; }
+.hx-contact .sl-panel .sl-eyebrow { display: block; }
+.hx-contact details summary { font-weight: 500 !important; }
+.hx-contact .hx-c-card a.sl-btn-solid { color: var(--paper); }
+.hx-contact .sl-panel .sl-badge + .sl-reasons { margin-top: 16px; }

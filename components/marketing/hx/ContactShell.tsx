@@ -6,7 +6,7 @@ import StarlaneMark from "@/components/brand/StarlaneMark";
 // Frame for the pilot request flow, laid out like the reference contact page:
 // a bare header with a way back, a serif headline, then the form in a white
 // card on a plain light band, and a one-line footer.
-export function ContactShell({ title, lead, children }: { title: React.ReactNode; lead: string; children: React.ReactNode }) {
+export function ContactShell({ title, lead, children, wide }: { title: React.ReactNode; lead: string; children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="hx hx-contact">
       <a className="hx-skip" href="#main">Skip to content</a>
@@ -20,7 +20,7 @@ export function ContactShell({ title, lead, children }: { title: React.ReactNode
           <p className="hx-c-lead">{lead}</p>
         </section>
         <section className="hx-c-band">
-          <div className="hx-c-card">{children}</div>
+          <div className={"hx-c-card" + (wide ? " wide" : "")}>{children}</div>
         </section>
       </main>
       <footer className="hx-c-foot">
