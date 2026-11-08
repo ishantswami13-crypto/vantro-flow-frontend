@@ -13,6 +13,7 @@ import { isPromptSaved, removeSavedPrompt, savePrompt } from "@/lib/promptStore"
 import { api, getUser } from "@/lib/api";
 import { getModelChoice } from "@/lib/modelChoice";
 import { appendTurn, createThread, getThread, messagesFor, takePendingQuestion, type ScanThread, type ScanTurn } from "@/lib/scanStore";
+import { humaneError } from "@/components/scan/humaneError";
 
 // A Scan conversation: every question and answer in order, with the box
 // docked underneath for the next one. POST /api/ai-chat (server.js) returns
@@ -67,7 +68,7 @@ export default function ScanThreadPage() {
         setFresh(false);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't reach Starlane to answer that.");
+      setError(humaneError(e));
       setFollowUp(q);
     } finally {
       setPending(null);
