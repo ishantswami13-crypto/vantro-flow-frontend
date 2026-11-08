@@ -142,6 +142,7 @@ export default function CollectionsPage() {
 
   // Payment celebration toast
   const [paidToast, setPaidToast]     = useState<{name: string; amount: number} | null>(null);
+  const [paidError, setPaidError]     = useState<string | null>(null);
 
   // One-click reminder state
   // "loading" | "sent" | "manual" | null
@@ -331,8 +332,13 @@ export default function CollectionsPage() {
       setPaidToast({ name: c.name.split(" ")[0], amount: c.outstanding });
       const user = getUser();
       if (user?.id) loadInvoices(user.id);
-    } catch { /* noop */ }
-    finally { setMarkingPaid(null); }
+    } catch (e) {
+      // 503: hand-entered settlements are switched off on the server (the
+      // books are the record), so "try again" would never work.
+      setPaidError((e as { status?: number })?.status === 503
+        ? "Payments come from your books, not from here. Record it in Tally and it shows up after the next sync."
+        : "Couldn't mark this invoice as paid. Try again.");
+    } finally { setMarkingPaid(null); }
   };
 
   const handleUpload = async (file: File) => {
@@ -525,6 +531,15 @@ export default function CollectionsPage() {
                 <p className="text-xs font-normal opacity-90">₹{paidToast.amount.toLocaleString("en-IN")} received</p>
               </div>
               <button aria-label="Close" onClick={() => setPaidToast(null)} className="ml-2 opacity-70 hover:opacity-100"><FiX size={14} /></button>
+            </div>
+          </div>
+        )}
+
+        {paidError && (
+          <div role="alert" className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-fade-in">
+            <div className="flex items-center gap-3 px-5 py-3.5 bg-surface border border-border rounded-2xl shadow-2xl text-sm text-primary">
+              <p>{paidError}</p>
+              <button aria-label="Close" onClick={() => setPaidError(null)} className="ml-2 opacity-70 hover:opacity-100"><FiX size={14} /></button>
             </div>
           </div>
         )}

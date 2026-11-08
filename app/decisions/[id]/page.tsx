@@ -128,7 +128,7 @@ function OptionCard({ o, d, max, recommended, selected, canChoose, onChoose, bus
           {o.executableAs && <Pill>{o.executableAs}</Pill>}
         </div>
       )}
-      {!o.isDoNothing && o.blastRadius?.summary && <p className="text-[12px] mt-2" style={{ color: C.muted }}>Touches: {o.blastRadius.summary}</p>}
+      {!o.isDoNothing && o.blastRadius?.summary && <p className="text-[12px] mt-2" style={{ color: C.muted }}>Affects: {o.blastRadius.summary}</p>}
       {!o.isDoNothing && o.approval?.reason && <p className="text-[12px] mt-1" style={{ color: C.faint }}>{o.approval.reason}</p>}
     </div>
   );
@@ -572,9 +572,9 @@ export default function DecisionDetailPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <Pill tone={r.status === "SUCCEEDED" || r.status === "PREPARED" ? "good" : r.status === "SHADOWED" ? "accent" : r.status === "FAILED" || r.status === "BLOCKED" ? "bad" : "neutral"}>{r.status.toLowerCase()}</Pill>
                       <span>{INTENT_WORDS[r.intent_type] || r.intent_type}</span>
-                      <span className="text-[12px]" style={{ color: C.faint }}>via {r.adapter}</span>
                     </div>
-                    {r.status === "SHADOWED" && r.would_have && <p className="text-[12px] mt-1" style={{ color: C.faint }}>Would have written: {String((r.would_have as { write?: string }).write || "")}</p>}
+                    {/* The adapter and table write are support detail, kept in the tooltip, not owner copy. */}
+                    {r.status === "SHADOWED" && <p className="text-[12px] mt-1" style={{ color: C.faint }} title={[r.adapter, (r.would_have as { write?: string } | null)?.write].filter(Boolean).join(" · ")}>Recorded only: shadow mode changed nothing. With shadow mode off, this step would run as described.</p>}
                     {r.postcondition?.note && <p className="text-[12px] mt-1" style={{ color: C.faint }}>{r.postcondition.note}</p>}
                     {r.error && <p className="text-[12px] mt-1" style={{ color: C.bad }}>{r.error}</p>}
                   </div>
