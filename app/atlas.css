@@ -757,10 +757,6 @@
 }
 .atlas-page.auth-page .so-btn:hover:not(:disabled) { background: rgba(255,255,255,.11); border-color: rgba(255,255,255,.28) }
 .atlas-page.auth-page .so-btn:disabled { opacity: .5; cursor: default }
-.atlas-page.auth-page .so-soon {
-  font-style: normal; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase;
-  padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.7); margin-left: 4px;
-}
 .atlas-page.auth-page .so-google { display: flex; justify-content: center; min-height: 44px }
 .atlas-page.auth-page .so-phone { display: flex; gap: 8px; flex-wrap: wrap }
 .atlas-page.auth-page .so-phone input {
