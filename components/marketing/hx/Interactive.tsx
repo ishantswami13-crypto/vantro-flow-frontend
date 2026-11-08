@@ -121,12 +121,12 @@ export function Quotes({ items, ms = 8000, wide = false }: { items: Quote[]; ms?
     <div ref={ref} className={`${wide ? "hx-q-wide " : ""}${paused ? "hx-q paused" : "hx-q"}`} style={{ display: "block", "--dur": `${ms}ms` } as React.CSSProperties}>
       <div className="hx-q-stage" aria-live="polite">
         {items.map((q, i) => (
-          <figure key={q.by + i} className={`hx-q-slide${i === on ? " on" : ""}`} aria-hidden={i !== on}>
+          <figure key={q.by + i} className={`hx-q-slide${i === on ? " on" : i < on ? " prev" : " next"}`} aria-hidden={i !== on}>
             {wide ? (
               <figcaption className="hx-q-by" style={{ marginTop: 0, paddingLeft: 0 }}><b>{q.by}</b><span>{q.role}</span></figcaption>
             ) : (q.view ?? <div />)}
             <div>
-              <blockquote>“{q.text}”</blockquote>
+              <blockquote><span aria-hidden className="hx-q-open">“</span>{q.text}”</blockquote>
               {!wide && (
                 <figcaption className="hx-q-by">
                   <b>{q.by}</b><span>{q.role}</span>

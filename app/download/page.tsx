@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PublicShell } from "@/components/marketing/PublicShell";
+import { ContactShell } from "@/components/marketing/hx/ContactShell";
 import { accessApi, tokenFromHash, type Artifact } from "@/lib/access";
 
 // Private setup page for approved applicants (#token=<entitlement>).
@@ -57,14 +57,14 @@ export default function DownloadPage() {
   const otherApps = (state.data?.artifacts || []).filter((a) => (a.kind === "desktop" || a.kind === "mobile") && a.available && a !== windowsApp);
 
   return (
-    <PublicShell>
-      <div className="sl-form-wrap" style={{ maxWidth: 860 }}>
+    <ContactShell title={<>Set Up<br />Starlane.</>} lead="Connect your books in a few minutes. Starlane only reads from your systems, and nothing changes without your approval." wide>
+      <div>
         <span className="sl-eyebrow">Setup</span>
         {state.loading && <div aria-busy="true"><div className="sl-skeleton" style={{ height: 44, width: "60%", marginBottom: 20 }} /><div className="sl-skeleton" style={{ height: 200 }} /></div>}
 
         {!state.loading && state.error && (
           <>
-            <h1 className="sl-h2">This setup link can’t be used.</h1>
+            <h2 className="sl-h2">This setup link can’t be used.</h2>
             <p className="sl-alert err" role="alert" style={{ marginTop: 20 }}>{state.error}</p>
             <p className="sl-p" style={{ marginTop: 16 }}>Links expire and are replaced when a new one is issued. <Link href="/access/status" style={{ textDecoration: "underline" }}>Check your application</Link> or ask us for a new link.</p>
           </>
@@ -72,7 +72,7 @@ export default function DownloadPage() {
 
         {!state.loading && state.data && (
           <>
-            <h1 className="sl-h2">Welcome{state.data.name ? `, ${state.data.name.split(" ")[0]}` : ""}. Let’s connect {state.data.company}.</h1>
+            <h2 className="sl-h2">Welcome{state.data.name ? `, ${state.data.name.split(" ")[0]}` : ""}. Let’s connect {(state.data.company || "your company").replace(/\.$/, "")}.</h2>
             <p className="sl-p" style={{ marginTop: 12 }}>
               This page is private to you{state.data.expiresAt ? ` and works until ${new Date(state.data.expiresAt).toLocaleDateString(undefined, { day: "numeric", month: "long" })}` : ""}.
             </p>
@@ -154,6 +154,6 @@ export default function DownloadPage() {
           </>
         )}
       </div>
-    </PublicShell>
+    </ContactShell>
   );
 }
