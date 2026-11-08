@@ -717,6 +717,14 @@ export const api = {
       request<{ success: boolean; pairing: { connectorId: string; code: string; expiresAt: string; command: string } }>(`/api/connectors/${id}/pairing`, { method: 'POST' }),
     revokeTallyDevice: (deviceId: string) =>
       request<{ success: boolean }>(`/api/connectors/tally/devices/${deviceId}/revoke`, { method: 'POST' }),
+    // Live app connectors (Zoho Books, QuickBooks, Razorpay, WhatsApp Business).
+    // Each exists only while the backend reports it available (lib/connectors/apps).
+    appConnectUrl: (id: string, returnTo = 'sources') =>
+      request<{ success: boolean; url: string; scopes: string[] }>(`/api/connectors/${id}/connect-url?returnTo=${encodeURIComponent(returnTo)}`),
+    appSaveKey: (id: string, values: Record<string, string>) =>
+      request<{ success: boolean; account: AppConnectorAccount; sync: AppSyncResult | { error: string } | null }>(`/api/connectors/${id}/credentials`, { method: 'POST', body: JSON.stringify(values) }),
+    appSync: (id: string) => request<{ success: boolean } & AppSyncResult>(`/api/connectors/${id}/sync`, { method: 'POST' }),
+    appDisconnect: (id: string) => request<{ success: boolean }>(`/api/connectors/${id}/connection`, { method: 'DELETE' }),
     /** Downloads the bridge program as a file (authenticated). */
     async downloadBridge(id: string): Promise<{ filename: string; sha256: string | null }> {
       const res = await fetch(`${API_BASE}/api/connectors/${id}/bridge`, { headers: authHeaders(), credentials: 'include' });
@@ -909,7 +917,9 @@ export type ConnectorHealth = 'not_connected' | 'pairing' | 'connected' | 'synci
 export interface Connector {
   id: string; sourceType: string | null; name: string; provider: string | null; category: string;
   authType: 'local_bridge' | 'file_import' | 'oauth' | 'api_key' | 'public_feed' | 'webhook' | 'link';
-  connect?: { kind: 'oauth' | 'sheet_link' | 'http_api' | 'webhook_in'; path?: string; preset?: string; requiresEnv?: string[] };
+  connect?: { kind: 'oauth' | 'sheet_link' | 'http_api' | 'webhook_in' | 'api_key'; path?: string; preset?: string; requiresEnv?: string[]; fields?: AppConnectorField[] };
+  /** A live app connector (backend lib/connectors/apps): read-only, behind a feature flag. */
+  app?: boolean;
   availability: 'available' | 'not_available'; syncMode: string; summary: string;
   unavailableReason?: string; objects: string[]; access: string[]; setup: string[];
   /** What Starlane can do through it: READ, SEARCH, SUBSCRIBE, WRITE, EXECUTE. */
@@ -923,7 +933,18 @@ export interface Connector {
     lastAttempt?: { id: string; status: 'running' | 'succeeded' | 'failed'; startedAt: string; finishedAt: string | null; error: string | null; errorCode?: string | null } | null;
     devices: Array<{ id: string; name: string; status: 'ACTIVE' | 'REVOKED'; pairedAt: string; lastSeenAt: string | null; revokedAt: string | null }>;
     lastImport: { filename: string | null; status: string; completedAt: string | null; rowsAccepted: number; rowsRejected: number } | null;
+    /** App connectors: the connected account, and (WhatsApp) messages received. */
+    account?: { label: string | null; status: 'CONNECTED' | 'AUTH_REQUIRED'; connectedAt: string } | null;
+    messagesReceived?: number;
   };
+}
+
+export interface AppConnectorField { name: string; label: string; secret: boolean; placeholder?: string; help?: string }
+export interface AppConnectorAccount { id: string; connectorId: string; status: 'CONNECTED' | 'AUTH_REQUIRED'; statusReason: string | null; label: string | null; lastSyncAt: string | null; lastSuccessAt: string | null; lastError: string | null; connectedAt: string }
+export interface AppSyncResult {
+  runId: string;
+  counts: { inserted: number; updated: number; unchanged: number; skippedOtherSource: number; rejected: number; customersCreated: number; customersMatched: number };
+  rejected: Array<{ sourceId: string | null; reason: string }>;
 }
 
 export interface AccessEligibility { tier: 'ready' | 'review' | 'unsupported' | 'waitlist'; label: string; reasons: string[]; rules_version: string }
