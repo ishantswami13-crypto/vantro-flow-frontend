@@ -21,6 +21,7 @@ export const V32_NAV_ITEMS: PrimaryNavItem[] = [
 
 // The working apps, like the site's "Collections Intelligence".
 export const V32_APPS_NAV_ITEMS: PrimaryNavItem[] = [
+  { href: "/review",    label: "Receivables Review", icon: IconChart },
   { href: "/decisions", label: "Decisions", icon: IconDecision },
   { href: "/prepared",  label: "Approvals", icon: IconPrepared },
   { href: "/watch",     label: "Monitors",  icon: IconWatch },
