@@ -12,6 +12,8 @@ import StarlaneMark from "@/components/brand/StarlaneMark";
 import { IdentityPicker } from "@/components/identity/IdentityPicker";
 import { V32_NAV_ITEMS, V32_APPS_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, V32_WORKSPACE_NAV_ITEMS, HISTORY_NAV_ITEM, HOME_NAV_ITEM, type PrimaryNavItem } from "@/lib/navigation";
 import { listThreads, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
+import { useQuery } from "@tanstack/react-query";
+import { decisionsApi } from "@/lib/decisions";
 import { IconBell, IconSearch, IconMore, IconPlus } from "@/components/v32/icons";
 
 // Everything real that sits outside the Version 32 nav lives in the "More"
@@ -37,6 +39,7 @@ interface SidebarProps { open: boolean; onClose: () => void; slim?: boolean; }
 export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
   const pathname = usePathname();
   const [userName, setUserName]           = useState("User");
+  const [businessName, setBusinessName]   = useState("");
   const [isAdmin, setIsAdmin]             = useState(false);
   const [hiddenRoutes, setHiddenRoutes]   = useState<Set<string>>(new Set());
   const [grantedFeatures, setGrantedFeatures] = useState<Set<FeatureKey>>(new Set());
@@ -106,7 +109,9 @@ export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
     const u = getUser();
     if (u) {
       const emailName = u.email?.split("@")[0] || "User";
-      setUserName(u.business_name || emailName);
+      const person = (u as { name?: string; full_name?: string }).name || (u as { full_name?: string }).full_name || "";
+      setUserName(person || u.business_name || emailName);
+      setBusinessName(u.business_name || "");
       setIsAdmin(u.email === "ishantswami13@gmail.com");
       api.metrics(u.id).then(d => {
         const count = d.metrics?.pending_invoices;
@@ -160,6 +165,18 @@ export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
       </Link>
     );
   }
+
+  // Recents, as on the public site's product views: recent conversations
+  // first, then the open decisions, so the list shows real work even before
+  // the first question. Same cached query as Decisions and Approvals.
+  const openDecisions = useQuery({ queryKey: ["decisions", "active"], queryFn: () => decisionsApi.list("active"), staleTime: 60_000 });
+  const recentDecisions = (openDecisions.data?.decisions || [])
+    .filter(d => ["OPEN", "NEEDS_INFORMATION", "SELECTED", "APPROVED"].includes(d.status))
+    .slice(0, Math.max(0, 3 - recent.length))
+    .map(d => {
+      const who = /from (.+?)\??$/.exec(d.title)?.[1];
+      return { id: d.id, title: d.title, label: who ? `Overdue, ${who}` : d.title };
+    });
 
   const isActive = (href: string) => {
     // Home is the chat: it owns /scan and each conversation; History owns /scan/history.
@@ -256,11 +273,32 @@ export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
                 </Link>
               );
             })}
+            {recentDecisions.map(d => {
+              const active = pathname === `/decisions/${d.id}`;
+              return (
+                <Link
+                  key={d.id}
+                  href={`/decisions/${d.id}`}
+                  onClick={onClose}
+                  aria-current={active ? "page" : undefined}
+                  title={d.title}
+                  className={`sb-recent truncate ${active ? "is-active" : ""}`}
+                >
+                  {d.label}
+                </Link>
+              );
+            })}
             <NavRow href={HISTORY_NAV_ITEM.href} label={HISTORY_NAV_ITEM.label} Icon={HISTORY_NAV_ITEM.icon} active={isActive(HISTORY_NAV_ITEM.href)} onClick={onClose} />
           </nav>
 
-          <nav aria-label="Workspace" className="sb-group flex flex-col" style={{ gap: 1 }}>
-            <p className="sb-label">Workspace</p>
+          <nav aria-label="Spaces" className="sb-group flex flex-col" style={{ gap: 1 }}>
+            <p className="sb-label">Spaces</p>
+            {businessName && (
+              <Link href="/settings?tab=business" onClick={onClose} title={businessName} className="sb-row">
+                <span className="sb-space" aria-hidden="true">{businessName.trim()[0]?.toUpperCase()}</span>
+                <span className="flex-1 truncate">{businessName}</span>
+              </Link>
+            )}
             {V32_SECONDARY_NAV_ITEMS.map(n => (
               <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
             ))}
