@@ -375,9 +375,35 @@ export default function DecisionDetailPage() {
           <span>·</span>
           <span>Analysed {relTime(d.updatedAt)} from data as of {shortDate(d.asOf)}</span>
           {detail.pilotMode === "SHADOW" && <Pill tone="accent">Shadow mode</Pill>}
+          {d.evidence.length > 0 && <span className="dd-chip">Evidence · {d.evidence.length} record{d.evidence.length === 1 ? "" : "s"}</span>}
         </div>
         <h1 className="text-[28px] lg:text-[34px] max-w-[820px]" style={{ color: C.ink }}>{d.title}</h1>
-        {d.description && <p className="text-[15px] mt-3 max-w-[760px] leading-[1.55]" style={{ color: C.body }}>{d.description}</p>}
+        {d.description && <p className="text-[15px] mt-3 max-w-[760px] leading-[1.55]" style={{ color: C.body }}><mark className="dd-bottom">Bottom line:</mark> {d.description}</p>}
+
+        {/* The evidence behind the headline, one card per kind of figure, as
+            on the public site: a ledger fact, a calculation, an assumption and
+            an estimate. Only kinds this decision actually has are shown. */}
+        {(() => {
+          const pick = (kind: string) => d.evidence.find((e) => e.kind === kind);
+          const cards = [
+            { k: "Fact · ledger", e: pick("OBSERVED_FACT") },
+            { k: "Calculation", e: pick("CALCULATED_FACT") },
+            { k: "Assumption", e: d.assumptions[0] ? { detail: d.assumptions[0].label, label: "" } : undefined },
+            { k: "Estimate", e: pick("SIMULATED") },
+          ].filter((c) => c.e);
+          if (cards.length === 0) return null;
+          return (
+            <div className="dd-grid">
+              {cards.map((c) => (
+                <div key={c.k} className="dd-card">
+                  <small>{c.k}</small>
+                  <b>{c.e!.detail || c.e!.label}</b>
+                  {c.e!.detail && c.e!.label && <span>{c.e!.label}</span>}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         <div className="flex flex-wrap gap-x-8 gap-y-3 mt-6">
           {days != null && (
