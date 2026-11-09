@@ -71,9 +71,11 @@ export function MissionsList({ all, filter, loading, error, agentNames }: { all:
     );
   }
   if (list.length === 0) return <EmptyLine title={filter === "at_risk" ? "No task is at risk." : filter === "completed" ? "No task has finished yet." : "No active task."} />;
+  // A review table, like the receivables review on the public site.
   return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-      {list.map((m) => <MissionCard key={m.id} m={m} agentNames={agentNames} />)}
+    <div className="sp-table">
+      <div className="sp-tr sp-th sp-tr-task"><span>Task</span><span>Status</span><span>Agent</span><span>Progress</span><span className="sp-right">Updated</span></div>
+      {list.map((m) => <MissionRow key={m.id} m={m} agentNames={agentNames} />)}
     </div>
   );
 }
@@ -81,53 +83,27 @@ export function MissionsList({ all, filter, loading, error, agentNames }: { all:
 // decision_action_runs statuses that count as a finished step (060_decision_core.sql).
 const STEP_DONE = new Set(["SUCCEEDED", "SHADOWED", "PREPARED"]);
 
-function MissionCard({ m, agentNames }: { m: Mission; agentNames?: Record<string, string> }) {
-  const tools = missionTools(m);
+function MissionRow({ m, agentNames }: { m: Mission; agentNames?: Record<string, string> }) {
   const total = m.steps.length;
   const done = m.steps.filter((s) => STEP_DONE.has((s.status || "").toUpperCase())).length;
   const pct = m.state === "COMPLETED" ? 100 : total ? Math.round((done / total) * 100) : 0;
-  const blockers = m.steps.filter((s) => s.error).length + (m.state === "BLOCKED" ? 1 : 0);
   const color = stateColor(m.state);
+  const sub = m.stateReason || m.outcome.detail || (m.objective ? `${m.source === "DECISION" ? "Chosen option: " : ""}${m.objective}` : null);
   const body = (
     <>
-      <div>
-        <span className="meta inline-flex items-center" style={{ gap: 7, fontSize: 10, color, whiteSpace: "nowrap", marginBottom: 10 }}>
-          <span className="sq" aria-hidden="true" />
-          {MISSION_STATE_LABEL[m.state]}
-        </span>
-        <div style={{ fontFamily: V.serif, fontSize: 18, lineHeight: 1.35, color: V.ink, marginBottom: 4 }}>{m.title}</div>
-        {m.objective && <div style={{ fontSize: 12.5, color: V.secondary }}>{m.source === "DECISION" ? "Chosen option: " : ""}{m.objective}</div>}
-      </div>
-      {(m.stateReason || m.outcome.detail) && (
-        <div style={{ fontSize: 13, color: V.body, lineHeight: 1.55 }}>{m.stateReason || m.outcome.detail}</div>
-      )}
-      {m.assigned && (
-        <div style={{ fontSize: 12, color: V.secondary, lineHeight: 1.5 }}>
-          Agent: <span style={{ color: V.body }}>{agentLabel(m.assigned.agent, agentNames)}</span>
-          {tools.length ? <> · Tools: <span style={{ color: V.body }}>{tools.join(", ")}</span></> : null}
-          {" "}· You approve
-        </div>
-      )}
-      <div>
-        <div style={{ height: 3, background: "rgba(25,25,23,0.08)", borderRadius: 0, overflow: "hidden" }}>
-          <div style={{ width: `${pct}%`, height: "100%", background: V.ink }} />
-        </div>
-        <div className="flex items-center justify-between" style={{ marginTop: 6, fontSize: 11.5, color: V.tertiary }}>
-          <span>{total ? `${done} of ${total} steps` : "No step has run yet"}</span>
-          <span style={{ color: outcomeColor(m.outcome.status) }}>{MISSION_OUTCOME_LABEL[m.outcome.status]}</span>
-        </div>
-      </div>
-      <div className="flex items-center justify-between" style={{ marginTop: "auto", fontSize: 12, color: V.secondary }}>
-        <span>{blockers > 0 ? `${blockers} blocker${blockers === 1 ? "" : "s"}` : m.source === "DECISION" ? "From a decision" : m.source === "COLLECTION" ? "Collection task" : "Deployed workflow"}</span>
-        <span style={{ color: V.tertiary }}>
-          {m.mode === "SHADOW" ? "Shadow" : m.mode === "WITH_APPROVAL" ? "Waits for approval" : m.mode ? "Live" : ""}
-          {m.updatedAt ? `${m.mode ? " · " : ""}${ago(m.updatedAt)}` : ""}
-        </span>
-      </div>
+      <span className="sp-td-main">
+        <span className="sp-doc"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="2" /><path d="M5.3 8.2l1.8 1.8 3.6-3.8" /></svg></span>
+        <span className="min-w-0"><span className="block truncate" style={{ fontWeight: 500 }}>{m.title}</span>{sub && <span className="sp-td-sub">{sub}</span>}</span>
+      </span>
+      <span className="sp-td"><span className="inline-flex items-center" style={{ gap: 6, color }}><span className="sq" aria-hidden="true" />{MISSION_STATE_LABEL[m.state]}</span></span>
+      <span className="sp-td truncate">{m.assigned ? agentLabel(m.assigned.agent, agentNames) : "—"}</span>
+      <span className="sp-td">
+        <span className="block" style={{ height: 3, background: "rgba(25,25,23,0.08)", overflow: "hidden", maxWidth: 110 }}><span className="block" style={{ width: `${pct}%`, height: "100%", background: V.ink }} /></span>
+        <span className="block" style={{ marginTop: 5, fontSize: 11.5, color: outcomeColor(m.outcome.status) }}>{total ? `${done} of ${total} steps` : "Not started"} · {MISSION_OUTCOME_LABEL[m.outcome.status]}</span>
+      </span>
+      <span className="sp-td sp-right">{m.mode === "SHADOW" ? "Shadow" : m.mode === "WITH_APPROVAL" ? "Waits for you" : m.mode ? "Live" : ""}{m.updatedAt ? `${m.mode ? " · " : ""}${ago(m.updatedAt)}` : ""}</span>
     </>
   );
-  const cls = "card-in hover-lift flex flex-col";
-  const style: React.CSSProperties = { boxSizing: "border-box", background: "#FFFFFF", border: `1px solid ${V.card}`, borderRadius: 12, boxShadow: "0 1px 2px rgba(15,14,13,0.03)", padding: 22, gap: 12, minHeight: 200 };
-  if (m.source !== "WORKFLOW") return <Link href={m.href} className={cls} style={style}>{body}</Link>;
-  return <div className={cls} style={style}>{body}</div>;
+  if (m.source !== "WORKFLOW") return <Link href={m.href} className="sp-tr sp-tr-task">{body}</Link>;
+  return <div className="sp-tr sp-tr-task">{body}</div>;
 }

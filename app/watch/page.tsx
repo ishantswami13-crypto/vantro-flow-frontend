@@ -5,7 +5,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, Watch, WatchConditionConfig } from "@/lib/api";
 import { WatchBrief, ObjectivesPanel } from "@/components/os/WatchPanels";
-import { Button, formatAmount } from "@/components/v32/ui";
+import { Button, PageHeader, formatAmount } from "@/components/v32/ui";
+import StarlaneMark from "@/components/brand/StarlaneMark";
+import { api as apiAll, getUser } from "@/lib/api";
+import { money } from "@/lib/decisions";
 import { IconPlus } from "@/components/v32/icons";
 
 // Watch — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
@@ -171,46 +174,39 @@ function WatchPageInner() {
   return (
     <DashboardLayout pageTitle="Monitors">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 40, lineHeight: 1.05, letterSpacing: "-0.03em", color: "#191917" }}>
-            Monitors
-          </h1>
-          <Button primary small onClick={() => setShowModal(true)}><IconPlus size={13} />New monitor</Button>
-        </div>
+        <PageHeader
+          title="Monitors"
+          subtitle="Conditions Starlane re-checks against your own data every 15 minutes"
+          right={<Button primary small onClick={() => setShowModal(true)}><IconPlus size={13} />New monitor</Button>}
+        />
 
-        <div style={{ fontSize: 13.5, color: "#63635F", marginTop: -16 }}>
+        <div className="sp-summary" style={{ marginBottom: 0 }}>
+          <span className="sp-summary-m"><StarlaneMark variant="glyph" size={9} /></span>
           {loading
             ? "Loading what Starlane is watching…"
             : list.length === 0
-              ? "Starlane is not watching any of your own conditions yet."
+              ? "Starlane is not watching any of your own conditions yet. Add one below in a click."
               : `Starlane is watching ${list.length} condition${list.length === 1 ? "" : "s"} for you. ${triggeredCount === 0 ? "None need a look." : `${triggeredCount} need${triggeredCount === 1 ? "s" : ""} a look.`}`}
         </div>
 
-        <nav
-          aria-label="Secondary"
-          className="hv-tabs"
-          style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 6 }}
-        >
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              aria-pressed={t.key === tab}
-              className="hv-tab"
-              style={{
-                padding: "5px 11px",
-                borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 500,
-                color: t.key === tab ? "#0F0E0D" : "#6E6A63",
-                background: t.key === tab ? "#ECEAE4" : "transparent",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="sp-stats" style={{ marginBottom: 0 }}>
+          <div className="sp-stat"><div className="sp-stat-n">{loading ? "—" : list.filter((w) => w.status === "active").length}</div><div className="sp-stat-l">Watching</div></div>
+          <div className="sp-stat"><div className="sp-stat-n">{loading ? "—" : triggeredCount}</div><div className="sp-stat-l">Triggered now</div></div>
+          <div className="sp-stat"><div className="sp-stat-n">{loading ? "—" : list.filter((w) => w.status === "paused").length}</div><div className="sp-stat-l">Paused</div></div>
+        </div>
+
+        <nav aria-label="Secondary" className="sp-pills" style={{ marginBottom: -8 }}>
+          {TABS.map((t) => {
+            const n = t.key === "active" ? list.filter((w) => w.status === "active").length
+              : t.key === "paused" ? list.filter((w) => w.status === "paused").length
+              : t.key === "changed" ? list.filter((w) => w.status === "active" && w.last_triggered_at).length
+              : list.length;
+            return (
+              <button key={t.key} type="button" onClick={() => setTab(t.key)} aria-pressed={t.key === tab} className={`sp-pill ${t.key === tab ? "is-on" : ""}`}>
+                {t.label}{watches ? ` (${n})` : ""}
+              </button>
+            );
+          })}
         </nav>
 
         <div
@@ -329,6 +325,8 @@ function WatchPageInner() {
             );
           })}
         </div>
+
+        {!loading && !error && <SuggestedMonitors existing={list} onCreated={load} />}
 
         <WatchBrief />
         <ObjectivesPanel />
@@ -501,3 +499,66 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 6,
   boxSizing: "border-box",
 };
+
+// Ready monitors built from the tenant's own invoices: the overdue total and
+// the largest customer's balance today, so a rise from here triggers. One
+// click creates the real watch through the same API as "New monitor".
+function SuggestedMonitors({ existing, onCreated }: { existing: Watch[]; onCreated: () => void }) {
+  const [rows, setRows] = useState<{ key: string; name: string; metric: Watch["metric_key"]; cfg: WatchConditionConfig; why: string }[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    const u = getUser();
+    if (!u?.id) { setRows([]); return; }
+    apiAll.invoices.list(u.id).then((r) => {
+      const today = Date.now();
+      const open = (r.invoices || []).filter((i) => i.payment_status !== "Paid").map((i) => ({
+        name: i.customer_name || "",
+        amt: Math.max(0, Number(i.invoice_amount) - Number(i.payment_amount || 0)),
+        late: i.due_date ? (today - Date.parse(i.due_date.slice(0, 10))) / 86_400_000 : Number(i.days_overdue || 0),
+      }));
+      const overdue = open.filter((o) => o.late > 0).reduce((s, o) => s + o.amt, 0);
+      const by = new Map<string, number>();
+      for (const o of open) by.set(o.name, (by.get(o.name) || 0) + o.amt);
+      const top = [...by.entries()].sort((a, b) => b[1] - a[1])[0];
+      const step = 100_000;
+      const out = [];
+      if (overdue > 0) {
+        const t = Math.ceil(overdue / step) * step;
+        out.push({ key: "overdue", name: `Overdue above ${money(t)}`, metric: "receivables_overdue_amount" as const, cfg: { operator: "gt" as const, threshold: t }, why: `Overdue is ${money(overdue)} today` });
+      }
+      out.push({ key: "runway", name: "Cash runway under 30 days", metric: "cash_forecast_runway_days" as const, cfg: { operator: "lt" as const, threshold: 30 }, why: "From the cash forecast" });
+      if (top && top[1] > 0) {
+        const t = Math.ceil(top[1] / step) * step;
+        out.push({ key: "top", name: `${top[0]} owes more than ${money(t)}`, metric: "customer_exposure_amount" as const, cfg: { operator: "gt" as const, threshold: t, entity_name: top[0] }, why: `Owes ${money(top[1])} today, the most of any customer` });
+      }
+      setRows(out);
+    }).catch(() => setRows([]));
+  }, []);
+  const have = new Set(existing.map((w) => `${w.metric_key}|${w.condition_config?.entity_name || ""}`));
+  const shown = (rows || []).filter((r) => !have.has(`${r.metric}|${r.cfg.entity_name || ""}`));
+  if (!shown.length) return null;
+  async function add(r: (typeof shown)[number]) {
+    setBusy(r.key); setErr(null);
+    try { await api.watches.create({ name: r.name, metric_key: r.metric, condition_config: r.cfg }); onCreated(); }
+    catch (e) { setErr(e instanceof Error ? e.message : "Could not add the monitor"); }
+    finally { setBusy(null); }
+  }
+  return (
+    <section>
+      <h2 className="sp-h">Suggested monitors</h2>
+      <p className="sp-sub">Worked out from your invoices today. Add one and Starlane checks it every 15 minutes.</p>
+      {err && <p role="alert" style={{ color: "#A64F4B", fontSize: 12.5, margin: "0 0 8px" }}>{err}</p>}
+      <div className="sp-table">
+        <div className="sp-tr sp-th sp-tr-3 sp-tr-why"><span>Monitor</span><span>Why</span><span className="sp-right" /></div>
+        {shown.map((r) => (
+          <div key={r.key} className="sp-tr sp-tr-3 sp-tr-why">
+            <span className="sp-td-main"><span className="sp-doc"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M1.5 8h3l2-4.5 3 9 2-4.5h3" /></svg></span><span className="truncate">{r.name}</span></span>
+            <span className="sp-td">{r.why}</span>
+            <span className="sp-right"><button type="button" className="sp-btn" disabled={busy === r.key} onClick={() => add(r)}>{busy === r.key ? "Adding…" : "Add"}</button></span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
