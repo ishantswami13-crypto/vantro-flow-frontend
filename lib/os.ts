@@ -408,7 +408,8 @@ export const osApi = {
   agents: () => call<{ agents: AgentInfo[]; notBuilt: { name: string; reason: string }[] }>('GET', '/agents'),
   agentRuns: (key: string, before?: string | null) => call<AgentRunList>('GET', `/agents/${encodeURIComponent(key)}/runs${before ? `?before=${encodeURIComponent(before)}` : ''}`),
   agentRun: (key: string, runId: string) => call<{ run: AgentRun }>('GET', `/agents/${encodeURIComponent(key)}/runs/${encodeURIComponent(runId)}`),
-  runAgent: (key: string) => call<Record<string, unknown> & { runId?: string | null; status?: string }>('POST', `/agents/${encodeURIComponent(key)}/run`, {}, 120_000),
+  /** Start an agent now, optionally with the work the person typed. */
+  runAgent: (key: string, instruction?: string | null) => call<Record<string, unknown> & { runId?: string | null; status?: string; understood?: string | null }>('POST', `/agents/${encodeURIComponent(key)}/run`, instruction ? { instruction } : {}, 120_000),
 };
 
 export const HEALTH_LABEL: Record<string, string> = {

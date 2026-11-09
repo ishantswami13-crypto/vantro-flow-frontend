@@ -20,6 +20,7 @@ import { osApi, type AgentInfo, type AgentRun } from "@/lib/os";
 import { useLoad, errorText } from "@/components/os/shared";
 import { startThread } from "@/lib/scanStore";
 import { savePrompt } from "@/lib/promptStore";
+import { queueAgentWork } from "@/lib/agentWork";
 import { downloadCsv } from "@/components/command/Charts";
 import { formatMoney, formatDate } from "@/lib/locale";
 
@@ -113,6 +114,7 @@ function describe(run: AgentRun, agent: AgentInfo | null) {
     knowledge.push("Receivables", "Purchases");
   } else {
     if (run.summary) paragraphs.push(run.summary);
+    if (run.agentKey === "starlane.decision_engine" && run.status === "completed") paragraphs.push("Anything it prepared waits for you on Decisions. Nothing is approved or sent without you.");
     sources.push({ name: "Your workspace ledger", detail: asOf ? `as of ${day(asOf)}` : "" });
     knowledge.push("Ledger");
   }
@@ -130,11 +132,13 @@ function describe(run: AgentRun, agent: AgentInfo | null) {
   if (run.status === "completed") paragraphs.push(files.length > 1 ? `Done in ${dur(run.durationMs)}. The results are ready for you to review in the panel.` : `Done in ${dur(run.durationMs)}.`);
   if (run.status === "running") paragraphs.push("Still running. This page shows the result once it is recorded.");
 
-  const request = run.agentKey === WORKING_CAPITAL
+  const given = typeof input.instruction === "string" && input.instruction.trim() ? input.instruction.trim() : null;
+  const understood = typeof input.understood === "string" ? input.understood : null;
+  const request = given ? given : run.agentKey === WORKING_CAPITAL
     ? `Run the ${name.toLowerCase()} for the next ${String(input.horizonDays ?? out.horizonDays ?? 30)} days: what comes in, what goes out, and which week runs short.`
     : `Run the ${name.toLowerCase()}${asOf ? ` on my data as of ${day(asOf)}` : ""}.`;
 
-  return { request, paragraphs, files, sources, knowledge, name };
+  return { request, understood, paragraphs, files, sources, knowledge, name };
 }
 
 function Section({ title, aside, open, onToggle, children }: { title: string; aside?: React.ReactNode; open: boolean; onToggle: () => void; children: React.ReactNode }) {
@@ -171,6 +175,8 @@ export default function AgentRunDetail() {
 
 
   const d = useMemo(() => (r ? describe(r, agent) : null), [r, agent]);
+  const canGiveWork = !!agent?.runnable && agent.status !== "STOPPED";
+  const askLabel = canGiveWork ? `Give the ${agent!.name.toLowerCase()} more work…` : "Ask Starlane anything…";
   const steps = agent?.performs || [];
   const done = r?.status === "completed";
   const files = (d?.files || []).filter((f) => f.name.toLowerCase().includes(filter.toLowerCase()));
@@ -189,6 +195,11 @@ export default function AgentRunDetail() {
     e.preventDefault();
     const q = ask.trim();
     if (!q) return;
+    // A runnable agent takes the next task itself; otherwise ask Starlane.
+    if (canGiveWork) {
+      router.push(`/agents/${encodeURIComponent(id)}/run/new?t=${encodeURIComponent(queueAgentWork(id, q))}`);
+      return;
+    }
     router.push(`/scan/${startThread(q)}`);
   };
 
@@ -213,6 +224,7 @@ export default function AgentRunDetail() {
               {d && r && (
                 <>
                   <div className="ar-bubble">{d.request}</div>
+                  {d.understood && <p className="ar-understood">{d.understood}</p>}
                   {d.paragraphs.map((p, i) => <p key={i} className="ar-text" style={{ animationDelay: `${120 + i * 90}ms` }}>{p}</p>)}
                   {r.error && <p className="ar-text" role="alert" style={{ color: "#A3392E" }}>The run failed: {r.error}</p>}
                 </>
@@ -221,13 +233,13 @@ export default function AgentRunDetail() {
           </div>
 
           <form className="ar-ask" onSubmit={submit}>
-            <label htmlFor="ar-ask" className="sr-only">Ask Starlane anything</label>
-            <textarea id="ar-ask" rows={1} value={ask} placeholder="Ask Starlane anything…" onChange={(e) => setAsk(e.target.value)}
+            <label htmlFor="ar-ask" className="sr-only">{askLabel}</label>
+            <textarea id="ar-ask" rows={1} value={ask} placeholder={askLabel} onChange={(e) => setAsk(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); (e.currentTarget.form as HTMLFormElement).requestSubmit(); } }} />
             <div className="ar-ask-row">
               <Link href="/decisions/import" className="ar-ask-plus" aria-label="Add data">{I.plus}</Link>
               <span className="flex-1" />
-              <button type="submit" className="ar-send" disabled={!ask.trim()} aria-label="Ask">{I.arrow}</button>
+              <button type="submit" className="ar-send" disabled={!ask.trim()} aria-label={canGiveWork ? "Start agent" : "Ask"}>{I.arrow}</button>
             </div>
           </form>
         </div>
