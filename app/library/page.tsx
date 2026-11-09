@@ -11,6 +11,7 @@ import { relTime } from "@/lib/decisions";
 import { PROMPTS } from "@/lib/libraryPrompts";
 import { listSavedPrompts, SAVED_PROMPTS_EVENT, type SavedPrompt } from "@/lib/promptStore";
 import { startThread } from "@/lib/scanStore";
+import { PageHeader } from "@/components/v32/ui";
 
 // Vault, laid out like Harvey's: a prompt box over this company's files.
 // The files are real rows from GET /api/vault (backend lib/domain/vault):
@@ -146,6 +147,7 @@ export default function VaultPage() {
   return (
     <DashboardLayout pageTitle="Vault">
       <div className="vt">
+        <PageHeader title="Vault" subtitle="Your files, customer ledgers and agent outputs, ready to ask about" />
         <div className="vt-modes">
           {(Object.keys(MODES) as Mode[]).map((m) => (
             <button key={m} type="button" className="vt-pill" aria-pressed={mode === m} onClick={() => setMode(mode === m ? null : m)}>

@@ -1714,3 +1714,31 @@ button:disabled { cursor: default; }
 @media (min-width: 1440px) { :root { --app-zoom: 0.86; } }
 @media (min-width: 1536px) { :root { --app-zoom: 0.92; } }
 @media (min-width: 1680px) { :root { --app-zoom: 1; } }
+
+/* Every page sits on the same frame as the landing product views: the
+   canvas runs full width, 46px in from the rail, the serif title at the top
+   left with its actions on the same row, white 12px cards with no visible
+   border on the warm paper. */
+.hv-app { --hv-paper: #F7F5F4; }
+@media (min-width: 1024px) {
+  .hv-app .v32-wrap { max-width: none; margin: 0; padding: 34px 46px 56px; gap: 22px; }
+}
+.hv-app .v32-wrap .hv-title { font-size: 37px !important; letter-spacing: -0.012em !important; }
+.hv-app .card, .hv-app .card-premium, .hv-app .card-metric, .hv-app .card-base,
+.hv-app .br-panel, .hv-app .agent-card, .hv-app .lib-card, .hv-app .v32-card {
+  border-color: #EEEBE6; border-radius: 12px; box-shadow: none;
+}
+.hv-app .v32-card:hover, .hv-app .lib-card:hover { border-color: #E2DED8; }
+/* Empty states read as a white card, like the mock's notice line. */
+.v32-empty { padding: 18px 0; }
+.hv-app .v32-empty { padding: 18px 20px; background: #FFFFFF; border: 1px solid #EEEBE6; border-radius: 12px; }
+.hv-app .v32-card .v32-empty, .hv-app .lib-card .v32-empty { border: 0; padding: 18px 0; }
+.hv-app .vt { max-width: none; margin: 0; padding-top: 0; }
+.hv-app .vt > .fade-once:first-child { margin-bottom: 26px; }
+.hv-app .lib-card { background: #FFFFFF !important; border-color: #EEEBE6 !important; border-radius: 12px !important; }
+.hv-app .lib-card:hover, .hv-app .lib-card:focus-visible { background: #FFFFFF !important; border-color: #DCD8D1 !important; }
+.hv-app .agent-card-muted, .hv-app .agent-card-muted:hover { background: rgba(255,255,255,0.55) !important; }
+/* A white panel for lists and tables, as the mock's "Largest overdue" card. */
+.hv-panel { background: #FFFFFF; border: 1px solid #EEEBE6; border-radius: 12px; padding: 4px 12px; }
+.hv-panel > div:last-child, .hv-panel > a:last-child { border-bottom: 0 !important; }
+.hv-stat { background: #FFFFFF; border: 1px solid #EEEBE6; border-radius: 12px; padding: 18px 18px 16px; }

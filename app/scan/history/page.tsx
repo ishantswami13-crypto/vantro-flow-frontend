@@ -40,7 +40,7 @@ export default function ScanHistoryPage() {
 
   return (
     <DashboardLayout pageTitle="History">
-      <div style={{ width: 760, maxWidth: "100%", margin: "0 auto" }}>
+      <div className="flex flex-col" style={{ gap: 22 }}>
         <PageHeader
           title="History"
           subtitle="Your Scan conversations on this device"

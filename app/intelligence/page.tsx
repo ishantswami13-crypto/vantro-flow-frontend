@@ -9,6 +9,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import Button from "@/components/ui/Button";
 import { formatDateTime, confidenceFromScore } from "@/components/intelligence/format";
 import { api, type IntelligenceSignal } from "@/lib/api";
+import { PageHeader, EmptyLine } from "@/components/v32/ui";
 
 // Real-status labels only — CANDIDATE/ACTIVE/UPDATED are the only statuses
 // the backend actually emits today (see IntelligenceSignal in lib/api.ts).
@@ -113,13 +114,11 @@ export default function IntelligencePage() {
 
   return (
     <DashboardLayout pageTitle="Intelligence">
-      <div className="max-w-[1100px] mx-auto px-6 lg:px-10 py-8">
-        <h1 className="text-[28px] lg:text-[32px] leading-[1.15] mb-2" style={{ color: "#191917", fontWeight: 500, letterSpacing: "-0.01em" }}>
-          Intelligence
-        </h1>
-        <p className="text-[14px] max-w-[700px] mb-9" style={{ color: "#686868" }}>
-          Changes, risks and opportunities Starlane has detected across your organization and the external environment.
-        </p>
+      <div className="flex flex-col" style={{ gap: 22 }}>
+        <PageHeader
+          title="Intelligence"
+          subtitle="Changes, risks and opportunities Starlane has detected across your organization and the external environment."
+        />
 
         {isLoading && (
           <div>
@@ -142,14 +141,10 @@ export default function IntelligencePage() {
         )}
 
         {!isLoading && !isError && signals.length === 0 && (
-          <div className="py-16 text-center">
-            <div>
-              <p className="text-[15px] font-medium" style={{ color: "#191917" }}>No material changes detected</p>
-              <p className="text-[13px] mt-1.5 max-w-[440px] mx-auto" style={{ color: "#6E6E69" }}>
-                Starlane hasn't identified a material change from the evidence currently available.
-              </p>
-            </div>
-          </div>
+          <EmptyLine
+            title="No material changes detected"
+            body="Starlane hasn't identified a material change from the evidence currently available."
+          />
         )}
 
         {!isLoading && !isError && signals.length > 0 && (
@@ -166,7 +161,7 @@ export default function IntelligencePage() {
           with DEMO_RESET_ENABLED=true, so it is rendered only where the
           deployment opts in; otherwise it would be a dead control. */}
       {DEMO_CONTROLS_ENABLED && (<>
-      <div className="max-w-[1100px] mx-auto px-6 lg:px-10 pb-8 mt-2 pt-4 border-t border-border flex items-center justify-between">
+      <div className="pb-8 mt-2 pt-4 border-t border-border flex items-center justify-between">
         <p className="text-2xs text-muted">Internal — 2xA meeting demo control</p>
         <Button
           variant="ghost"
