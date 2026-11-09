@@ -10,6 +10,7 @@ import Link from "next/link";
 import { FiChevronRight } from "react-icons/fi";
 import { IconSearch, IconSparkle } from "./icons";
 import { formatMoney, formatNumber } from "@/lib/locale";
+import StarlaneMark from "@/components/brand/StarlaneMark";
 
 export const V = {
   ink: "#191917",
@@ -74,7 +75,8 @@ export function Subnav({ items, active, onChange, label = "Secondary" }: {
         const on = it.key === active;
         const style: React.CSSProperties = {
           padding: "5px 11px", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", borderRadius: 6,
-          color: on ? "#0F0E0D" : "#6E6A63", background: on ? "#ECEAE4" : "transparent",
+          color: on ? "#0F0E0D" : "#6E6A63", background: on ? "#FFFFFF" : "transparent",
+          boxShadow: on ? "inset 0 0 0 1px #E2DFD8" : "none",
         };
         const content = (
           <>
@@ -338,5 +340,27 @@ export function SearchField({ value, onChange, placeholder, id }: { value: strin
       <span className="sr-only">{placeholder}</span>
       <input id={id} type="search" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} autoComplete="off" />
     </label>
+  );
+}
+
+/** The one-line Starlane summary from the landing product views
+ *  ("Starlane reviewed 14 overdue invoices for you since yesterday"). */
+export function ReviewLine({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="sp-summary" style={{ marginBottom: 0 }}>
+      <span className="sp-summary-m"><StarlaneMark variant="glyph" size={9} /></span>
+      <span>{children}</span>
+    </div>
+  );
+}
+
+/** The big-number tiles under the summary line ("31 Ready to approve"). */
+export function StatTiles({ items, loading }: { items: { label: React.ReactNode; value: React.ReactNode }[]; loading?: boolean }) {
+  return (
+    <div className={`sp-stats st-${Math.min(items.length, 4)}`} style={{ marginBottom: 0 }}>
+      {items.map((it, i) => (
+        <div key={i} className="sp-stat"><div className="sp-stat-n">{loading ? "—" : it.value}</div><div className="sp-stat-l">{it.label}</div></div>
+      ))}
+    </div>
   );
 }

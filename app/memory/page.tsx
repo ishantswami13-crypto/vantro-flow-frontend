@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type AuditEvent } from "@/lib/api";
 import { MemoryLearning } from "@/components/os/MemoryPanels";
 import { TeachStarlanePanel } from "@/components/os/BridgePanels";
-import { PageHeader, Subnav, EmptyLine } from "@/components/v32/ui";
+import { ReviewLine, StatTiles, PageHeader, Subnav, EmptyLine } from "@/components/v32/ui";
 import { formatDate as fmtDate } from "@/lib/locale";
 
 // Memory — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
@@ -203,6 +203,13 @@ export default function MemoryPage() {
     <DashboardLayout pageTitle="Memory">
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <PageHeader title="Memory" subtitle="How each item reached its current state" />
+        <ReviewLine>{isLoading ? "Reading the record…" : events.length === 0 ? "Nothing is recorded yet. Every step Starlane takes, and every decision you make, is written here." : `Starlane has recorded ${events.length} step${events.length === 1 ? "" : "s"} across ${entities.length} item${entities.length === 1 ? "" : "s"}, each with who did it and when.`}</ReviewLine>
+        <StatTiles loading={isLoading} items={[
+          { value: events.length, label: "Steps recorded" },
+          { value: entities.length, label: "Items tracked" },
+          { value: decisions.length, label: "Decision steps" },
+          { value: turningPoints.length, label: "Turning points" },
+        ]} />
         <Subnav items={TABS} active={tab} onChange={(k) => setTab(k as TabKey)} />
 
         {tab === "learning" && (
