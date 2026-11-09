@@ -182,7 +182,7 @@ function SignupForm() {
                 <span className="sl-prefix">+91</span>
                 <FocusInput id="su-phone" type="tel" placeholder="9876543210" value={form.phone} onChange={set("phone")} required maxLength={10} pattern="\d{10}" autoComplete="tel"/>
               </div>
-              <p className="sl-hint">We send a one-time code here on WhatsApp.</p>
+              <p className="sl-hint">For payment alerts on WhatsApp.</p>
             </div>
             <div className="sl-field">
               <label htmlFor="su-pass">Password</label>
