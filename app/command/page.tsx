@@ -161,6 +161,35 @@ export default function CommandCenterPage() {
       .filter((r) => r.value > 0).sort((a, b) => b.value - a.value).slice(0, 6);
   }, [open, rankBy]);
 
+  // Money in, as on the public site's Command Center: what was collected this
+  // quarter (against the same stretch of last quarter), the share of invoices
+  // paid by their due date over six months, and how long payment takes.
+  const collected = useMemo(() => {
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const qStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+    const pStart = new Date(qStart.getFullYear(), qStart.getMonth() - 3, 1);
+    const pEnd = pStart.getTime() + (now.getTime() - qStart.getTime());
+    const sixAgo = now.getTime() - 182 * DAY;
+    let thisQ = 0, lastQ = 0, onTime = 0, judged = 0, daysSum = 0, daysN = 0, dueSoon = 0;
+    for (const inv of invoices) {
+      const due = inv.due_date ? Date.parse(inv.due_date.slice(0, 10) + "T00:00:00") : NaN;
+      if (inv.payment_status !== "Paid") {
+        const owed = Math.max(0, Number(inv.invoice_amount) - Number(inv.payment_amount || 0));
+        if (Number.isFinite(due) && due >= now.getTime() && due < now.getTime() + 30 * DAY) dueSoon += owed;
+        continue;
+      }
+      const paid = inv.payment_date ? Date.parse(inv.payment_date.slice(0, 10) + "T00:00:00") : NaN;
+      if (!Number.isFinite(paid)) continue;
+      const amt = Number(inv.payment_amount || inv.invoice_amount) || 0;
+      if (paid >= qStart.getTime() && paid <= now.getTime()) thisQ += amt;
+      else if (paid >= pStart.getTime() && paid <= pEnd) lastQ += amt;
+      if (paid >= sixAgo && Number.isFinite(due)) { judged++; if (paid <= due) onTime++; }
+      const issued = inv.invoice_date ? Date.parse(inv.invoice_date.slice(0, 10) + "T00:00:00") : NaN;
+      if (paid >= sixAgo && Number.isFinite(issued) && paid >= issued) { daysSum += (paid - issued) / DAY; daysN++; }
+    }
+    return { thisQ, lastQ, onTimePct: judged ? (onTime / judged) * 100 : null, judged, avgDays: daysN ? Math.round(daysSum / daysN) : null, dueSoon };
+  }, [invoices]);
+
   const pending = decisionsQ.data?.decisions?.length ?? 0;
   const bizName = (user?.business_name || "").trim();
   const short = bizName.replace(/\s+(Pvt\.?\s*Ltd\.?|Private Limited|Ltd\.?|LLP)$/i, "");
@@ -178,6 +207,7 @@ export default function CommandCenterPage() {
               onClick={() => { setLine1(!compare); setLine2(!compare); }}>
               <span className="cc-switch" aria-hidden="true" /> Compare
             </button>
+            <Link href="/space?tab=reports" className="cc-btn">View all reports</Link>
             <Link href="/decisions" className="cc-btn">View all decisions</Link>
             <Link href="/bridge" className="cc-btn cc-btn-ink"><StarlaneMark variant="glyph" size={12} /> Ask Starlane</Link>
           </div>
@@ -191,6 +221,25 @@ export default function CommandCenterPage() {
         </Link>
 
         {invoicesQ.isError && <p role="alert" className="cc-note" style={{ color: "#A3392E" }}>Couldn&rsquo;t load your invoices. {(invoicesQ.error as Error).message}</p>}
+
+        <div className="rv-stats cc-money" aria-label="Money in">
+          <div className="sp-stat">
+            <div className="sp-stat-n">{loading ? "—" : money(collected.thisQ)} <Delta now={collected.thisQ} before={collected.lastQ} upIsGood /></div>
+            <div className="sp-stat-l">Collected this quarter</div>
+          </div>
+          <div className="sp-stat" title={collected.judged ? `${collected.judged} invoices paid in the last 6 months` : undefined}>
+            <div className="sp-stat-n">{loading ? "—" : collected.onTimePct == null ? "—" : `${collected.onTimePct.toFixed(1)}%`}</div>
+            <div className="sp-stat-l">Collected on time, last 6 months</div>
+          </div>
+          <div className="sp-stat">
+            <div className="sp-stat-n">{loading ? "—" : collected.avgDays == null ? "—" : `${collected.avgDays} days`}</div>
+            <div className="sp-stat-l">Average time to get paid</div>
+          </div>
+          <div className="sp-stat">
+            <div className="sp-stat-n">{loading ? "—" : money(collected.dueSoon)}</div>
+            <div className="sp-stat-l">Falls due in the next 30 days</div>
+          </div>
+        </div>
 
         <div className="cc-grid">
           {/* Owed to you */}
@@ -275,7 +324,7 @@ export default function CommandCenterPage() {
           </section>
         </div>
 
-        <p className="cc-note">From your own invoices: history is rebuilt from invoice, due and payment dates. Changes compare today with 30 days ago.</p>
+        <p className="cc-note">From your own invoices: history is rebuilt from invoice, due and payment dates. Changes on the charts compare today with 30 days ago; the quarter compares with the same stretch of last quarter.</p>
       </div>
     </DashboardLayout>
   );
