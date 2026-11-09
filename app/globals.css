@@ -1768,7 +1768,7 @@ button:disabled { cursor: default; }
 .sp-file-i.is-sheet { color: #B5543C; }
 .sp-sentence { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 24px; font-size: 13px; color: #2B2A27; }
 .sp-task-wrap { position: relative; }
-.sp-task { display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 10px; border-radius: 6px; background: #F1F0EC; border: 1px solid #E8E6E0; font-size: 12px; color: #2B2A27; cursor: pointer; }
+.sp-task { display: inline-flex; align-items: center; gap: 7px; min-height: 26px; padding: 4px 10px; text-align: left; border-radius: 6px; background: #F1F0EC; border: 1px solid #E8E6E0; font-size: 12px; color: #2B2A27; cursor: pointer; }
 .sp-task:hover { background: #ECEAE4; }
 .sp-task-dot { width: 7px; height: 7px; border-radius: 99px; background: #4F7A5A; }
 .sp-menu { position: absolute; z-index: 20; top: 32px; left: 0; min-width: 340px; list-style: none; margin: 0; padding: 4px; background: #FFFFFF; border: 1px solid #E4E2DC; border-radius: 8px; box-shadow: 0 8px 24px rgba(20,20,18,0.08); }
@@ -1802,6 +1802,7 @@ button:disabled { cursor: default; }
 .sp-tr-4 { grid-template-columns: minmax(0, 1fr) 170px 110px 130px; }
 .sp-tr-why { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 90px; }
 .sp-tr-task { grid-template-columns: minmax(0, 1fr) 150px 150px 170px 130px; }
+.sp-tr-hist { grid-template-columns: minmax(0, 1fr) 130px 170px 140px; }
 a.sp-tr:hover, button.sp-tr:hover { background: #F8F7F4; }
 .sp-th { padding-top: 10px; padding-bottom: 10px; background: #FAF9F7; font-size: 11.5px; color: #8F8A81; }
 .sp-td-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -1838,8 +1839,20 @@ a.sp-tr:hover, button.sp-tr:hover { background: #F8F7F4; }
   .sp-tr > :nth-child(3), .sp-tr-4 > :nth-child(2) { display: none; }
   .sp-tr-3 > :nth-child(2) { display: none; }
   .sp-tr-task { grid-template-columns: minmax(0, 1fr) auto; }
+  .sp-tr-hist { grid-template-columns: minmax(0, 1fr) auto; }
+  .sp-tr-hist > :nth-child(2), .sp-tr-hist > :nth-child(3) { display: none; }
   .sp-tr-task > :nth-child(3), .sp-tr-task > :nth-child(4), .sp-tr-task > :nth-child(5) { display: none; }
   .sp-tr-task > :nth-child(2) { display: block; }
   .sp-tr-3 > :nth-child(3) { display: block; }
   .sp-menu { min-width: 260px; }
+}
+/* Receivables Review: the owner's view, like the "For Owners" product view. */
+.rv-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.sp-tr-rv { grid-template-columns: minmax(0, 1fr) 150px minmax(0, 0.8fr) 110px; }
+.rv-sum { display: flex; align-items: center; gap: 7px; min-width: 0; color: #3F3D39; }
+@media (max-width: 1023px) {
+  .rv-stats { grid-template-columns: 1fr 1fr; }
+  .sp-tr-rv { grid-template-columns: minmax(0, 1fr) auto; }
+  .sp-tr-rv > :nth-child(2), .sp-tr-rv > :nth-child(3) { display: none; }
+  .sp-tr-rv > :nth-child(4) { display: block; }
 }
