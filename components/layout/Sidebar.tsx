@@ -146,6 +146,7 @@ export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
     ...V32_APPS_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
     { href: HISTORY_NAV_ITEM.href, label: "History", type: "Page" as const },
     ...V32_SECONDARY_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
+    { href: "/space", label: businessName || "Space", type: "Page" as const },
     { href: "/settings", label: "Settings", type: "Page" as const },
     ...V32_WORKSPACE_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
     ...MORE_GROUPS.flatMap(g => g.items.map(i => ({ href: i.href, label: i.label, type: "Page" as const }))),
@@ -294,7 +295,7 @@ export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
           <nav aria-label="Spaces" className="sb-group flex flex-col" style={{ gap: 1 }}>
             <p className="sb-label">Spaces</p>
             {businessName && (
-              <Link href="/settings?tab=business" onClick={onClose} title={businessName} className="sb-row">
+              <Link href="/space" onClick={onClose} title={businessName} aria-current={isActive("/space") ? "page" : undefined} className={`sb-row ${isActive("/space") ? "is-active" : ""}`}>
                 <span className="sb-space" aria-hidden="true">{businessName.trim()[0]?.toUpperCase()}</span>
                 <span className="flex-1 truncate">{businessName}</span>
               </Link>
