@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { AutomationProposals, ReminderApprovals, DecisionsNeedingYou } from "@/components/os/PreparedPanels";
+import { useQuery } from "@tanstack/react-query";
+import { AutomationProposals, ReminderApprovals } from "@/components/os/PreparedPanels";
+import StarlaneMark from "@/components/brand/StarlaneMark";
+import { DecisionTable } from "@/components/decisions/DecisionTable";
+import { Stat } from "@/components/decisions/ui";
+import { decisionsApi, money, relTime } from "@/lib/decisions";
 import { OutreachSummary } from "@/components/outreach/OutreachPanels";
 import { api, getUser, type PreparedCard, type PreparedResponse } from "@/lib/api";
 import { PageHeader, EmptyLine, ErrorBanner, SkeletonRows } from "@/components/v32/ui";
@@ -155,7 +160,10 @@ export default function PreparedPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   // Decisions waiting on the owner are listed under "Needs you" too, so the
   // tab count and the empty line must include them.
-  const [waitingDecisions, setWaitingDecisions] = useState(0);
+  const decisionList = useQuery({ queryKey: ["decisions", "active"], queryFn: () => decisionsApi.list("active"), staleTime: 15_000 });
+  const today = useQuery({ queryKey: ["decisions-today"], queryFn: decisionsApi.today, staleTime: 15_000 });
+  const waiting = (decisionList.data?.decisions || []).filter((d) => ["OPEN", "NEEDS_INFORMATION", "SELECTED", "APPROVED"].includes(d.status));
+  const waitingDecisions = waiting.length;
 
   const emptyResponse = (): PreparedResponse => ({
     for_you: [], needs_you: [], upcoming: [], completed: [], dismissed: [],
@@ -243,6 +251,23 @@ export default function PreparedPage() {
         })}
       </div>
 
+      {tab === "needs_you" && (
+        <ReviewSummary
+          reviewedAt={today.data?.lastDiscovery?.at ?? null}
+          overdue={today.data ? Object.values(today.data.receivables.totalsByCurrency).reduce((n, t) => n + (t.overdueCount || 0), 0) : null}
+          waiting={waitingDecisions}
+          prepared={baseCounts.needs_you}
+          deadlines={today.data?.command.deadlinesThisWeek ?? null}
+          atStake={today.data ? Object.entries(today.data.command.expectedUncollectedIfIgnored) : null}
+        />
+      )}
+
+      {tab === "needs_you" && waiting.length > 0 && (
+        <section style={{ marginBottom: 28 }}>
+          <DecisionTable decisions={waiting} onOpen={(d) => router.push(`/decisions/${d.id}`)} />
+        </section>
+      )}
+
       {actionError && <ErrorBanner>{actionError}</ErrorBanner>}
 
       {error ? (
@@ -270,7 +295,6 @@ export default function PreparedPage() {
           shown under the tab they belong to. */}
       {tab === "needs_you" && (
         <>
-          <DecisionsNeedingYou onCount={setWaitingDecisions} />
           <ReminderApprovals />
         </>
       )}
@@ -281,5 +305,33 @@ export default function PreparedPage() {
         </>
       )}
     </DashboardLayout>
+  );
+}
+
+// The top of "Needs you", as on the public site's receivables review: one
+// line on what Starlane reviewed, then light tiles. Every figure comes from
+// the same decisions summary the Decisions page shows.
+function ReviewSummary({ reviewedAt, overdue, waiting, prepared, deadlines, atStake }: {
+  reviewedAt: string | null;
+  overdue: number | null;
+  waiting: number;
+  prepared: number;
+  deadlines: number | null;
+  atStake: [string, number][] | null;
+}) {
+  return (
+    <section style={{ margin: "6px 0 22px" }}>
+      <p className="ds-line">
+        <span className="cc-banner-mark"><StarlaneMark variant="glyph" size={10} /></span>
+        <b>{overdue != null && overdue > 0 ? `Starlane reviewed ${overdue} overdue invoice${overdue === 1 ? "" : "s"} for you` : "Starlane reviewed your ledger"}</b>
+        {reviewedAt ? <span>&nbsp;{relTime(reviewedAt)}</span> : null}
+      </p>
+      <div className="ds-tiles">
+        <div className="ds-tile"><Stat label="Need your decision" value={waiting} /></div>
+        <div className="ds-tile"><Stat label="Prepared actions to approve" value={prepared} /></div>
+        <div className="ds-tile"><Stat label="Deadline this week" value={deadlines ?? "—"} tone={deadlines ? "warn" : undefined} /></div>
+        <div className="ds-tile"><Stat label="At stake if ignored, next 90 days" value={atStake ? (atStake.length ? atStake.map(([cur, v]) => money(v, cur)).join(" + ") : money(0)) : "—"} /></div>
+      </div>
+    </section>
   );
 }

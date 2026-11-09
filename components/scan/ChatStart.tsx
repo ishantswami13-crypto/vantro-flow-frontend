@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { IconPlus, IconUpload, IconLink, IconSparkle } from "@/components/v32/icons";
 import { ScanFindings } from "@/components/os/ScanFindings";
 import { ScanComposer } from "@/components/scan/ScanComposer";
+import { HomeWorkspace } from "@/components/scan/HomeWorkspace";
 import { greeting, firstName } from "@/lib/greeting";
 import { startThread, listThreads } from "@/lib/scanStore";
 
@@ -13,7 +14,7 @@ import { startThread, listThreads } from "@/lib/scanStore";
 // nothing else until the person asks. Sending opens the conversation at once
 // and the answer arrives there, so there is no wait on this screen. The
 // ledger scan (POST /api/os/scan) stays behind the box's plus menu.
-export function ChatStart() {
+export function ChatStart({ workspace = false }: { workspace?: boolean } = {}) {
   const router = useRouter();
   const [question, setQuestion] = useState("");
   const [hello, setHello] = useState("");
@@ -51,7 +52,7 @@ export function ChatStart() {
 
   return (
     <>
-      <div className={`chat-start ${showFindings ? "has-findings" : ""}`}>
+      <div className={`chat-start ${showFindings ? "has-findings" : ""} ${workspace ? "has-workspace" : ""}`}>
         <div className="chat-start-inner fade-once">
           <h1 className="chat-hello" suppressHydrationWarning>{hello || " "}</h1>
           <ScanComposer
@@ -89,6 +90,8 @@ export function ChatStart() {
           </p>
         </div>
       </div>
+
+      {workspace && !showFindings && <HomeWorkspace />}
 
       {showFindings && (
         <div className="fade-once" style={{ width: 880, maxWidth: "100%", margin: "0 auto" }}>
