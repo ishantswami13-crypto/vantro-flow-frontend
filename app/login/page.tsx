@@ -7,6 +7,7 @@ import { FiEye, FiEyeOff, FiArrowRight, FiCheck } from "react-icons/fi";
 import { api, saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import { SignInOptions } from "@/components/auth/SignInOptions";
+import { AuthShell, AuthHead, AuthError, Spinner } from "@/components/auth/AuthShell";
 
 // /login?app=<state> is the desktop app asking to sign in through the browser.
 const APP_STATE_RE = /^[A-Za-z0-9_-]{16,64}$/;
@@ -20,8 +21,6 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
   const [form, setForm]             = useState({ email: "", password: "" });
   const [emailValid, setEmailValid] = useState(false);
-  const [emailFocused, setEmailFocused] = useState(false);
-  const [passFocused, setPassFocused]   = useState(false);
   const passRef = useRef<HTMLInputElement>(null);
   const [appState, setAppState]     = useState<string | null>(null);
   const [signedInAs, setSignedInAs] = useState<string | null>(null);
@@ -85,119 +84,85 @@ export default function LoginPage() {
     } finally { setLoading(false); }
   };
 
-  const iBase = { background:"rgba(255,255,255,.05)", borderWidth:"1px", borderStyle:"solid", borderColor:"rgba(255,255,255,.12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Geist', 'Plus Jakarta Sans',system-ui", fontSize:"15px", color:"#F5F4F0", outline:"none", width:"100%", transition:"border-color .2s,background .2s" };
-  const iFocus = { ...iBase, borderColor:"rgba(255,255,255,.34)", background:"rgba(255,255,255,.08)" };
-
   return (
-    <div className="atlas-page auth-page">
-      <header className="topbar">
-        <Link href="/" style={{display:"flex",alignItems:"center",textDecoration:"none",color:"#fff"}}>
-          <span className="brand-wm">Starlane</span>
-        </Link>
-        <div className="topbar-right">No account? <Link href="/signup">Start free</Link></div>
-      </header>
+    <AuthShell aside={<>No account? <Link href="/signup">Create one</Link></>}>
+      <AuthHead
+        title={appState ? "Sign in to the app" : "Welcome back"}
+        lead={step === "email"
+          ? (appState ? "Sign in here and Starlane on your computer opens signed in." : "Sign in to your Starlane workspace.")
+          : "Enter your password to continue."}
+      />
 
-      <main className="center fade-once">
-        <div className="auth-head">
-          <h1>{appState ? "Sign in to the app." : "Welcome back."}</h1>
-          <p style={{fontFamily:"'Hanken Grotesk',system-ui"}}>{step === "email" ? (appState ? "Sign in here and Starlane on your computer opens signed in." : "Sign in to your Starlane workspace.") : form.email}</p>
+      {error && <AuthError>{error}</AuthError>}
+
+      {handedOff && (
+        <div className="sl-auth-note good">
+          You are signed in. Starlane should open on your computer now. If it did not, open it again here.
+          <a className="sl-btn" href={handedOff}>Open Starlane <FiArrowRight size={16}/></a>
         </div>
+      )}
 
-        {error && (
-          <div style={{marginBottom:"16px",padding:"12px 16px",borderRadius:"6px",background:"rgba(255,80,80,.08)",border:"1px solid rgba(255,80,80,.2)",fontSize:"13px",color:"rgba(255,100,100,.9)",fontFamily:"'JetBrains Mono',monospace",letterSpacing:".04em"}}>
-            {error}
-          </div>
-        )}
-
-        {handedOff && (
-          <div className="app-handoff">
-            <p>You are signed in. Starlane should open on your computer now. If it did not, open it again here.</p>
-            <a className="btn-login" href={handedOff} style={{textDecoration:"none"}}><span className="btn-txt">Open Starlane</span><FiArrowRight size={16}/></a>
-          </div>
-        )}
-
-        {!handedOff && appState && signedInAs && (
-          <div className="app-handoff">
-            <p>You are already signed in as {signedInAs}.</p>
-            <button type="button" className="btn-login" onClick={openApp} disabled={loading}><span className="btn-txt">Continue to the app</span><FiArrowRight size={16}/></button>
-          </div>
-        )}
-
-        {!handedOff && step === "email" && (
-          <SignInOptions disabled={loading} onSession={(d) => { setError(""); finishSignIn(d).catch((e) => setError(e instanceof Error ? e.message : "Sign-in failed.")); }} onError={setError} />
-        )}
-
-        {!handedOff && step === "email" && (
-          <form className="auth-form" onSubmit={handleEmailNext} noValidate>
-            <div className="field">
-              <label htmlFor="email">Work Email</label>
-              <div style={{position:"relative"}}>
-                <input id="email" type="email" autoFocus autoComplete="email" placeholder="you@company.com"
-                  value={form.email}
-                  onChange={e=>{setForm(f=>({...f,email:e.target.value}));setEmailValid(validateEmail(e.target.value));setError("");}}
-                  onFocus={()=>setEmailFocused(true)} onBlur={()=>setEmailFocused(false)}
-                  style={emailFocused?iFocus:iBase}
-                />
-                {emailValid&&<div style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",width:"20px",height:"20px",borderRadius:"50%",background:"rgba(16,217,138,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><FiCheck size={11} style={{color:"#10D98A"}}/></div>}
-              </div>
-            </div>
-            <button type="submit" className="btn-login" disabled={!emailValid} style={{marginTop:"8px",opacity:emailValid?1:0.4}}>
-              <span className="btn-txt">Continue</span>
-              <FiArrowRight size={16}/>
-            </button>
-          </form>
-        )}
-
-        {!handedOff && step === "password" && (
-          <form className="auth-form" onSubmit={handleLogin}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",borderRadius:"6px",background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.08)"}}>
-              <span style={{fontSize:"13px",color:"rgba(255,255,255,.7)"}}>{form.email}</span>
-              <button type="button" onClick={()=>{setStep("email");setForm(f=>({...f,password:""}));setError("");}}
-                style={{fontSize:"12px",color:"rgba(255,255,255,.62)",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>Change</button>
-            </div>
-            <div className="field">
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:"8px"}}>
-                <label htmlFor="password">Password</label>
-                <Link href="/forgot-password" style={{fontSize:"12px",color:"rgba(255,255,255,.62)",textDecoration:"none"}}>Forgot password?</Link>
-              </div>
-              <div style={{position:"relative"}}>
-                <input ref={passRef} id="password" type={showPass?"text":"password"} placeholder="••••••••••••"
-                  value={form.password} onChange={e=>{setForm(f=>({...f,password:e.target.value}));setError("");}}
-                  onFocus={()=>setPassFocused(true)} onBlur={()=>setPassFocused(false)}
-                  autoComplete="current-password" required style={{...(passFocused?iFocus:iBase),paddingRight:"44px"}}
-                />
-                <button type="button" onClick={()=>setShowPass(!showPass)} aria-label={showPass?"Hide password":"Show password"}
-                  style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.55)"}}>
-                  {showPass?<FiEyeOff size={14}/>:<FiEye size={14}/>}
-                </button>
-              </div>
-            </div>
-            <label style={{display:"flex",alignItems:"center",gap:"12px",cursor:"pointer"}}>
-              <div onClick={()=>setRememberMe(r=>!r)} style={{width:"36px",height:"20px",borderRadius:"10px",background:rememberMe?"rgba(255,255,255,.9)":"rgba(255,255,255,.1)",position:"relative",transition:"background .2s",cursor:"pointer",flexShrink:0}}>
-                <div style={{position:"absolute",top:"2px",width:"16px",height:"16px",background:"#000",borderRadius:"50%",transition:"transform .2s",transform:rememberMe?"translateX(18px)":"translateX(2px)"}}/>
-              </div>
-              <span style={{fontSize:"13px",color:"rgba(255,255,255,.66)"}}>Stay signed in for 30 days</span>
-            </label>
-            <button type="submit" className="btn-login" disabled={loading||!form.password} style={{marginTop:"8px",opacity:loading||!form.password?0.4:1,position:"relative"}}>
-              {loading
-                ? <><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid #F5F4F0",borderRadius:"50%",animation:"lspin .7s linear infinite"}}/> Signing in…</>
-                : <><span className="btn-txt">Sign in</span><FiArrowRight size={16}/></>}
-            </button>
-          </form>
-        )}
-
-        <div className="auth-foot" style={{marginTop:"36px"}}>
-          By signing in, you agree to our <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.
+      {!handedOff && appState && signedInAs && (
+        <div className="sl-auth-note">
+          You are already signed in as {signedInAs}.
+          <button type="button" className="sl-btn" onClick={openApp} disabled={loading}>Continue to the app <FiArrowRight size={16}/></button>
         </div>
-      </main>
+      )}
 
-      <footer className="page-foot">
-        <span>&copy; 2026 Starlane</span>
-        <div style={{display:"flex",gap:"24px"}}>
-          <Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link>
-        </div>
-      </footer>
-      <style>{`@keyframes lspin{to{transform:rotate(360deg)}}`}</style>
-    </div>
+      {!handedOff && step === "email" && (
+        <SignInOptions disabled={loading} onSession={(d) => { setError(""); finishSignIn(d).catch((e) => setError(e instanceof Error ? e.message : "Sign-in failed.")); }} onError={setError} />
+      )}
+
+      {!handedOff && step === "email" && (
+        <form className="sl-auth-form" onSubmit={handleEmailNext} noValidate>
+          <div className="sl-field">
+            <label htmlFor="email">Work email</label>
+            <div className="sl-input-wrap">
+              <input id="email" className="sl-input" type="email" autoFocus autoComplete="email" placeholder="you@company.com"
+                value={form.email}
+                onChange={e=>{setForm(f=>({...f,email:e.target.value}));setEmailValid(validateEmail(e.target.value));setError("");}}
+              />
+              {emailValid && <span className="sl-ok" aria-hidden><FiCheck size={15}/></span>}
+            </div>
+          </div>
+          <button type="submit" className="sl-btn" disabled={!emailValid}>Continue <FiArrowRight size={16}/></button>
+        </form>
+      )}
+
+      {!handedOff && step === "password" && (
+        <form className="sl-auth-form" onSubmit={handleLogin}>
+          <div className="sl-chip">
+            <span>{form.email}</span>
+            <button type="button" onClick={()=>{setStep("email");setForm(f=>({...f,password:""}));setError("");}}>Change</button>
+          </div>
+          <div className="sl-field">
+            <div className="sl-field-row">
+              <label htmlFor="password">Password</label>
+              <Link href="/forgot-password">Forgot password?</Link>
+            </div>
+            <div className="sl-input-wrap">
+              <input ref={passRef} id="password" className="sl-input has-btn" type={showPass?"text":"password"} placeholder="Your password"
+                value={form.password} onChange={e=>{setForm(f=>({...f,password:e.target.value}));setError("");}}
+                autoComplete="current-password" required
+              />
+              <button type="button" className="sl-eye" onClick={()=>setShowPass(!showPass)} aria-label={showPass?"Hide password":"Show password"}>
+                {showPass?<FiEyeOff size={15}/>:<FiEye size={15}/>}
+              </button>
+            </div>
+          </div>
+          <label className="sl-check">
+            <input type="checkbox" checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)} />
+            Stay signed in for 30 days
+          </label>
+          <button type="submit" className="sl-btn" disabled={loading||!form.password}>
+            {loading ? <><Spinner/> Signing in…</> : <>Sign in <FiArrowRight size={16}/></>}
+          </button>
+        </form>
+      )}
+
+      <p className="sl-auth-legal">
+        By signing in, you agree to our <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.
+      </p>
+    </AuthShell>
   );
 }

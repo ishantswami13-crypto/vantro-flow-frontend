@@ -28,7 +28,7 @@ export function Footer({ tone = "light" }: { tone?: "light" | "dark" }) {
           ))}
         </div>
         <div className="sl-foot-legal">
-          <span>© {new Date().getFullYear()} Vantro Technologies</span>
+          <span>© {new Date().getFullYear()} Starlane</span>
           <span>Product figures on this site are illustrative, on a fictional company.</span>
         </div>
       </div>

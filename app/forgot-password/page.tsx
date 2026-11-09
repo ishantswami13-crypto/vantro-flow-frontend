@@ -3,10 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  FiMail, FiLock, FiEye, FiEyeOff,
-  FiArrowRight, FiCheckCircle, FiRefreshCw,
-} from "react-icons/fi";
+import { FiEye, FiEyeOff, FiArrowRight, FiRefreshCw } from "react-icons/fi";
+import { AuthShell, AuthHead, AuthError, Spinner } from "@/components/auth/AuthShell";
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
 type Step = "email" | "otp" | "done";
@@ -124,213 +122,92 @@ export default function ForgotPasswordPage() {
   const maskedEmail = email.replace(/(.{2})(.*)(@.*)/, "$1****$3");
 
   return (
-    <div className="min-h-screen bg-bg bg-grid-pattern flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm fade-once">
+    <AuthShell aside={<>Remembered it? <Link href="/login">Sign in</Link></>}>
+      {step === "done" && (
+        <>
+          <AuthHead title="Password reset" lead="Your password has been updated. Sign in with your new password." />
+          <button type="button" className="sl-btn" onClick={() => router.push("/login")}>Go to sign in <FiArrowRight size={16} /></button>
+        </>
+      )}
 
-        {/* Wordmark */}
-        <div className="flex items-center justify-center mb-8">
-          <span style={{ fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: "22px", letterSpacing: "-0.3px", color: "#191917" }}>
-            Starlane
-          </span>
-        </div>
-
-        <div className="card-premium p-6">
-
-          {/* ── Done ── */}
-          {step === "done" && (
-            <div className="text-center py-4 space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center mx-auto">
-                <FiCheckCircle size={28} className="text-success" />
-              </div>
-              <h1 className="text-xl text-primary" style={{fontFamily:"'Newsreader', Georgia, serif", fontWeight:400}}>Password reset!</h1>
-              <p className="text-sm text-secondary leading-relaxed">
-                Your password has been updated. Sign in with your new password.
-              </p>
-              <button
-                onClick={() => router.push("/login")}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg btn-primary font-bold text-sm transition-all"
-              >
-                Go to Sign In <FiArrowRight size={14} />
-              </button>
+      {step === "email" && (
+        <>
+          <AuthHead title="Reset your password" lead="Enter the email you sign in with and we'll send you a 6-digit code." />
+          {error && <AuthError>{error}</AuthError>}
+          <form onSubmit={handleSendOTP} className="sl-auth-form">
+            <div className="sl-field">
+              <label htmlFor="fp-email">Work email</label>
+              <input id="fp-email" className="sl-input" type="email" autoFocus autoComplete="email"
+                placeholder="you@company.com" value={email}
+                onChange={e => { setEmail(e.target.value); setError(""); }} required />
             </div>
-          )}
+            <button type="submit" className="sl-btn" disabled={loading || !email}>
+              {loading ? <><Spinner /> Sending…</> : <>Send code <FiArrowRight size={16} /></>}
+            </button>
+          </form>
+        </>
+      )}
 
-          {/* ── Step 1: Email ── */}
-          {step === "email" && (
-            <>
-              <div className="mb-6">
-                <h1 className="text-xl text-primary" style={{fontFamily:"'Newsreader', Georgia, serif", fontWeight:400}}>Forgot password?</h1>
-                <p className="text-sm text-secondary mt-1">
-                  Enter your email — we&apos;ll send a reset OTP.
-                </p>
+      {step === "otp" && (
+        <>
+          <AuthHead title="Choose a new password" lead={<>We sent a 6-digit code to <strong>{maskedEmail}</strong>. Check your inbox and spam folder.</>} />
+          {error && <AuthError>{error}</AuthError>}
+          <form onSubmit={handleReset} className="sl-auth-form">
+            <div className="sl-field">
+              <span className="sl-label">6-digit code</span>
+              <div className="sl-otp" onPaste={handlePaste}>
+                {otp.map((digit, i) => (
+                  <input key={i} ref={el => { inputs.current[i] = el; }} aria-label={`Digit ${i + 1}`}
+                    type="tel" inputMode="numeric" maxLength={1} value={digit} className={digit ? "filled" : ""}
+                    onChange={e => handleDigit(i, e.target.value)} onKeyDown={e => handleKeyDown(i, e)} />
+                ))}
               </div>
-
-              {error && (
-                <div className="mb-4 px-3 py-2.5 bg-danger-dim border border-danger/30 rounded-lg text-sm text-danger">
-                  {error}
-                </div>
-              )}
-
-              <form onSubmit={handleSendOTP} className="space-y-4">
-                <div>
-                  <label className="text-xs font-semibold text-secondary uppercase tracking-wider block mb-1.5">Email</label>
-                  <div className="relative">
-                    <FiMail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
-                    <input
-                      type="email" autoFocus
-                      placeholder="rajesh@kumartraders.com"
-                      value={email}
-                      onChange={e => { setEmail(e.target.value); setError(""); }}
-                      required
-                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary pl-9 pr-4 py-3 focus:outline-none focus:border-accent transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <button type="submit" disabled={loading || !email}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-lg btn-primary font-bold text-sm transition-all disabled:opacity-40">
-                  {loading
-                    ? <><div className="w-4 h-4 border-2 border-border border-t-white rounded-full animate-spin" /> Sending…</>
-                    : <>Send OTP <FiArrowRight size={14} /></>}
-                </button>
-              </form>
-            </>
-          )}
-
-          {/* ── Step 2: OTP + New Password ── */}
-          {step === "otp" && (
-            <>
-              <div className="mb-6">
-                <h1 className="text-xl text-primary" style={{fontFamily:"'Newsreader', Georgia, serif", fontWeight:400}}>Reset password</h1>
-                <p className="text-sm text-secondary mt-1">
-                  We sent a 6-digit OTP to{" "}
-                  <span className="font-semibold text-primary">{maskedEmail}</span>.
-                  Check your inbox and spam folder.
-                </p>
+              <div className="sl-otp-meta">
+                <span>Didn&apos;t get it?</span>
+                {countdown > 0
+                  ? <span>Resend in {countdown}s</span>
+                  : <button type="button" className="sl-link-btn" onClick={handleResend} disabled={resending}>
+                      {resending ? <><FiRefreshCw size={11} style={{ display: "inline", marginRight: 4 }} />Sending…</> : "Resend code"}
+                    </button>}
               </div>
-
-              {error && (
-                <div className="mb-4 px-3 py-2.5 bg-danger-dim border border-danger/30 rounded-lg text-sm text-danger">
-                  {error}
-                </div>
-              )}
-
-              <form onSubmit={handleReset} className="space-y-5">
-                {/* OTP boxes */}
-                <div>
-                  <label className="text-xs font-semibold text-secondary uppercase tracking-wider block mb-3">6-Digit OTP</label>
-                  <div className="flex justify-between gap-2" onPaste={handlePaste}>
-                    {otp.map((digit, i) => (
-                      <input
-                        key={i}
-                        ref={el => { inputs.current[i] = el; }}
-                        type="tel" inputMode="numeric" maxLength={1}
-                        value={digit}
-                        onChange={e => handleDigit(i, e.target.value)}
-                        onKeyDown={e => handleKeyDown(i, e)}
-                        className={[
-                          "w-11 h-14 text-center text-xl font-bold rounded-lg border transition-all",
-                          "bg-surface-2 text-primary focus:outline-none",
-                          digit ? "border-accent bg-accent-dim" : "border-border focus:border-accent",
-                        ].join(" ")}
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-2 text-right">
-                    {countdown > 0 ? (
-                      <p className="text-xs text-muted">Resend in {countdown}s</p>
-                    ) : (
-                      <button type="button" onClick={handleResend} disabled={resending}
-                        className="text-xs text-accent hover:underline flex items-center gap-1 ml-auto disabled:opacity-50">
-                        {resending
-                          ? <><FiRefreshCw size={11} className="animate-spin" /> Sending…</>
-                          : "Resend OTP"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* New Password */}
-                <div>
-                  <label className="text-xs font-semibold text-secondary uppercase tracking-wider block mb-1.5">New Password</label>
-                  <div className="relative">
-                    <FiLock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
-                    <input
-                      type={showPass ? "text" : "password"}
-                      placeholder="Min 8 characters"
-                      value={newPass}
-                      onChange={e => { setNewPass(e.target.value); setError(""); }}
-                      required minLength={8}
-                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary pl-9 pr-10 py-3 focus:outline-none focus:border-accent transition-colors"
-                    />
-                    <button type="button" onClick={() => setShowPass(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors">
-                      {showPass ? <FiEyeOff size={15} /> : <FiEye size={15} />}
-                    </button>
-                  </div>
-                  {newPass.length > 0 && newPass.length < 8 && (
-                    <p className="text-2xs text-danger mt-1">At least 8 characters</p>
-                  )}
-                </div>
-
-                {/* Confirm Password */}
-                <div>
-                  <label className="text-xs font-semibold text-secondary uppercase tracking-wider block mb-1.5">Confirm Password</label>
-                  <div className="relative">
-                    <FiLock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
-                    <input
-                      type={showConf ? "text" : "password"}
-                      placeholder="Re-enter password"
-                      value={confirm}
-                      onChange={e => { setConfirm(e.target.value); setError(""); }}
-                      required
-                      className="w-full bg-surface-2 border border-border rounded-lg text-sm text-primary pl-9 pr-10 py-3 focus:outline-none focus:border-accent transition-colors"
-                    />
-                    <button type="button" onClick={() => setShowConf(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors">
-                      {showConf ? <FiEyeOff size={15} /> : <FiEye size={15} />}
-                    </button>
-                  </div>
-                  {confirm.length > 0 && confirm !== newPass && (
-                    <p className="text-2xs text-danger mt-1">Passwords do not match</p>
-                  )}
-                  {confirm.length > 0 && confirm === newPass && newPass.length >= 8 && (
-                    <p className="text-2xs text-success mt-1">✓ Passwords match</p>
-                  )}
-                </div>
-
-                <button type="submit"
-                  disabled={loading || otp.join("").length < 6 || newPass.length < 8 || newPass !== confirm}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-lg btn-primary font-bold text-sm transition-all disabled:opacity-40">
-                  {loading
-                    ? <><div className="w-4 h-4 border-2 border-border border-t-white rounded-full animate-spin" /> Resetting…</>
-                    : <>Reset Password <FiArrowRight size={14} /></>}
-                </button>
-
-                <button type="button"
-                  onClick={() => { setStep("email"); setError(""); setOtp(["","","","","",""]); }}
-                  className="w-full text-center text-xs text-muted hover:text-secondary transition-colors">
-                  ← Use a different email
-                </button>
-              </form>
-            </>
-          )}
-
-          {step !== "done" && (
-            <div className="mt-5 pt-4 border-t border-border text-center">
-              <p className="text-sm text-secondary">
-                Remembered it?{" "}
-                <Link href="/login" className="text-accent hover:underline font-semibold">Sign in</Link>
-              </p>
             </div>
-          )}
-        </div>
 
-        <p className="mt-6 text-center text-xs text-muted">
-          <Link href="/" className="hover:text-secondary transition-colors">Starlane</Link>
-          {" "}— the morning cash brief for business owners
-        </p>
-      </div>
-    </div>
+            <div className="sl-field">
+              <label htmlFor="fp-new">New password</label>
+              <div className="sl-input-wrap">
+                <input id="fp-new" className="sl-input has-btn" type={showPass ? "text" : "password"} placeholder="At least 8 characters"
+                  value={newPass} onChange={e => { setNewPass(e.target.value); setError(""); }} required minLength={8} autoComplete="new-password" />
+                <button type="button" className="sl-eye" onClick={() => setShowPass(v => !v)} aria-label={showPass ? "Hide password" : "Show password"}>
+                  {showPass ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+                </button>
+              </div>
+              {newPass.length > 0 && newPass.length < 8 && <p className="sl-hint bad">At least 8 characters</p>}
+            </div>
+
+            <div className="sl-field">
+              <label htmlFor="fp-conf">Confirm password</label>
+              <div className="sl-input-wrap">
+                <input id="fp-conf" className="sl-input has-btn" type={showConf ? "text" : "password"} placeholder="Type it again"
+                  value={confirm} onChange={e => { setConfirm(e.target.value); setError(""); }} required autoComplete="new-password" />
+                <button type="button" className="sl-eye" onClick={() => setShowConf(v => !v)} aria-label={showConf ? "Hide password" : "Show password"}>
+                  {showConf ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+                </button>
+              </div>
+              {confirm.length > 0 && confirm !== newPass && <p className="sl-hint bad">Passwords do not match</p>}
+              {confirm.length > 0 && confirm === newPass && newPass.length >= 8 && <p className="sl-hint good">Passwords match</p>}
+            </div>
+
+            <button type="submit" className="sl-btn"
+              disabled={loading || otp.join("").length < 6 || newPass.length < 8 || newPass !== confirm}>
+              {loading ? <><Spinner /> Resetting…</> : <>Reset password <FiArrowRight size={16} /></>}
+            </button>
+            <button type="button" className="sl-link-btn" style={{ alignSelf: "center" }}
+              onClick={() => { setStep("email"); setError(""); setOtp(["", "", "", "", "", ""]); }}>
+              Use a different email
+            </button>
+          </form>
+        </>
+      )}
+    </AuthShell>
   );
 }

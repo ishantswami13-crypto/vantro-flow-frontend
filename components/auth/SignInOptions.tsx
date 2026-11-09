@@ -80,7 +80,7 @@ export function SignInOptions({ onSession, onError, disabled }: { onSession: (s:
           finally { setBusy(""); }
         },
       });
-      window.google.accounts.id.renderButton(googleBox.current, { type: "standard", theme: "filled_black", size: "large", shape: "pill", text: "continue_with", width: googleBox.current.offsetWidth || 320 });
+      window.google.accounts.id.renderButton(googleBox.current, { type: "standard", theme: "outline", size: "large", shape: "rectangular", text: "continue_with", width: googleBox.current.offsetWidth || 320 });
     }).catch((e) => onErrorRef.current(e.message));
     return () => { cancelled = true; };
   }, [providers?.google?.clientId]);

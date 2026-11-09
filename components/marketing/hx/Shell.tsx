@@ -31,7 +31,7 @@ export function HxFooter({ cta = "Put agents to work on your finance operations"
         <div className="hx-foot-g">
           <div className="hx-foot-mark">
             <Link href="/" aria-label="Starlane home"><StarlaneMark variant="glyph" size={38} /></Link>
-            <p>© {new Date().getFullYear()} Vantro Technologies. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Starlane. All rights reserved.</p>
           </div>
           {FOOT.map((c) => (
             <nav key={c.h} className="hx-foot-col" aria-label={c.h}>
@@ -42,7 +42,6 @@ export function HxFooter({ cta = "Put agents to work on your finance operations"
         </div>
         <div className="hx-foot-legal">
           <span>Product views on this site show sample data on a fictional business.</span>
-          <span>Starlane is built by Vantro Technologies.</span>
         </div>
       </div>
     </footer>

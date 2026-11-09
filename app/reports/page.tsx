@@ -123,7 +123,7 @@ export default function ReportsPage() {
       }
       const blob = await res.blob();
       const filename = res.headers.get("Content-Disposition")?.match(/filename="?([^"]+)"?/)?.[1]
-        || `vantro-${reportId}.${fmt}`;
+        || `starlane-${reportId}.${fmt}`;
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = filename;

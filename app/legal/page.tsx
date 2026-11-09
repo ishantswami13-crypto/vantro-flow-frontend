@@ -24,7 +24,7 @@ export default function LegalPage() {
   return (
     <HxShell>
       <JsonLd data={breadcrumb("/legal", "Legal")} />
-      <Hero variant="stack" kicker="Legal" title="Legal" lead="Starlane is built by Vantro Technologies. These documents govern how you use Starlane and how we handle your data." cta={null} />
+      <Hero variant="stack" kicker="Legal" title="Legal" lead="These documents govern how you use Starlane and how we handle your data." cta={null} />
       <section className="hx-s pt96 pb160" aria-label="Documents">
         <div className="hx-w hx-2">
           <h2 className="hx-h2 hx-r">Policies and Terms</h2>
