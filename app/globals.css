@@ -1879,3 +1879,6 @@ a.sp-tr:hover, button.sp-tr:hover { background: #F8F7F4; }
 }
 .hv-app .sb-pin-here::before { display: none; }
 .hv-app .sb-pin-here { padding-left: 14px; }
+.sp-stats.st-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sp-stats.st-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1023px) { .sp-stats.st-3, .sp-stats.st-4, .sp-stats.st-2 { grid-template-columns: 1fr 1fr; } }

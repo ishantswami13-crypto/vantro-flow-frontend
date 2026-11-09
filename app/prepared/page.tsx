@@ -243,7 +243,7 @@ export default function PreparedPage() {
               aria-selected={on}
               onClick={() => setTab(t.key)}
               className="hv-tab"
-              style={{ fontSize: 13, fontWeight: 500, padding: "5px 11px", borderRadius: 6, color: on ? "#0F0E0D" : "#6E6A63", whiteSpace: "nowrap", background: on ? "#ECEAE4" : "transparent" }}
+              style={{ fontSize: 13, fontWeight: 500, padding: "5px 11px", borderRadius: 6, color: on ? "#0F0E0D" : "#6E6A63", whiteSpace: "nowrap", background: on ? "#FFFFFF" : "transparent", boxShadow: on ? "inset 0 0 0 1px #E2DFD8" : "none" }}
             >
               {t.label}{data ? <span style={{ fontSize: 12, fontWeight: 500, color: on ? "#3F3D39" : "#8F8A81", marginLeft: 5 }}>({counts[t.key]})</span> : null}
             </button>

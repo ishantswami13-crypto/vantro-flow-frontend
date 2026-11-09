@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, getUser, type ScenarioInvoice, type SimulateScenarioResponse } from "@/lib/api";
 import { SalesWhatIf, WorkflowReplays } from "@/components/os/SimulatePanels";
-import { PageHeader, Subnav } from "@/components/v32/ui";
+import { PageHeader, Subnav, ReviewLine, StatTiles } from "@/components/v32/ui";
+import { useQuery } from "@tanstack/react-query";
 import { formatMoneyShort, formatNumber } from "@/lib/locale";
 
 // Simulate — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§6/§14/§16.
@@ -149,6 +150,7 @@ function SimulatePageInner() {
   return (
     <DashboardLayout pageTitle="Scenarios">
       <PageHeader title="Scenarios" subtitle="Try a what-if against your own open invoices" />
+      <ScenarioSummary userId={userId} />
       <Subnav
         active={tab}
         onChange={(k) => setTab(k as "new" | "sales" | "replays")}
@@ -253,6 +255,32 @@ function SimCard({ label, value, color, note }: { label: string; value: string; 
       <div style={{ fontSize: 12, color: "#63635F", marginBottom: 8 }}>{label}</div>
       <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 22, color, marginBottom: 6 }}>{value}</div>
       <div style={{ fontSize: 12, color: "#63635F", lineHeight: 1.5 }}>{note}</div>
+    </div>
+  );
+}
+
+// The summary line and tiles from the landing product views, over the same
+// open invoices the scenarios run on.
+function ScenarioSummary({ userId }: { userId: string | null }) {
+  const q = useQuery({ queryKey: ["command-invoices", userId], queryFn: () => api.invoices.list(userId!), enabled: !!userId, staleTime: 60_000 });
+  const today = Date.now();
+  const open = (q.data?.invoices || []).filter((i) => i.payment_status !== "Paid").map((i) => ({
+    amt: Math.max(0, Number(i.invoice_amount) - Number(i.payment_amount || 0)),
+    late: i.due_date ? Math.floor((today - Date.parse(i.due_date.slice(0, 10))) / 86_400_000) : Number(i.days_overdue || 0),
+  }));
+  const overdue = open.filter((o) => o.late > 0);
+  const total = open.reduce((s, o) => s + o.amt, 0);
+  const late90 = open.filter((o) => o.late > 90).reduce((s, o) => s + o.amt, 0);
+  const loading = !userId || q.isLoading;
+  return (
+    <div className="flex flex-col" style={{ gap: 18, margin: "4px 0 10px" }}>
+      <ReviewLine>{loading ? "Reading your open invoices…" : open.length === 0 ? "No open invoices to test yet. Import your bills and try a what-if on any of them." : `Starlane can test ${open.length} open invoice${open.length === 1 ? "" : "s"}; ${overdue.length} ${overdue.length === 1 ? "is" : "are"} overdue. Pick one and see what changes if it is paid, or never is.`}</ReviewLine>
+      <StatTiles loading={loading} items={[
+        { value: open.length, label: "Open invoices" },
+        { value: overdue.length, label: "Overdue" },
+        { value: formatMoneyShort(total), label: "Owed to you" },
+        { value: formatMoneyShort(late90), label: "Over 90 days late" },
+      ]} />
     </div>
   );
 }

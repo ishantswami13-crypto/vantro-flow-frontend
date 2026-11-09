@@ -7,7 +7,7 @@ import { EvidenceDrawer } from "@/components/intelligence/EvidenceDrawer";
 import { formatDateTime } from "@/components/intelligence/format";
 import { api, getUser, type IntelligenceSignal, type IntelligenceEvidenceItem, type IntelligenceOpportunity } from "@/lib/api";
 import { IconDiscover, IconSparkle } from "@/components/v32/icons";
-import { PageHeader, Subnav, Sep, IconTile, Mono, Chevron, EvMark, EmptyLine, ErrorBanner } from "@/components/v32/ui";
+import { ReviewLine, StatTiles, PageHeader, Subnav, Sep, IconTile, Mono, Chevron, EvMark, EmptyLine, ErrorBanner } from "@/components/v32/ui";
 
 // Discover — STARLANE_FRONTEND_HANDOFF.md §1/§4/§5/§14/§16.
 //
@@ -176,17 +176,15 @@ export default function DiscoverPage() {
         ) : undefined}
       />
 
-      {!loading && (all.length > 0 || oppCount > 0) && (
-        <div className="flex items-center flex-wrap" style={{ gap: 10, fontSize: 13, color: "#43433F", paddingBottom: 4 }}>
-          <span>{all.length} worth investigating</span>
-          <Sep />
-          <span>{oppCount} opportunit{oppCount === 1 ? "y" : "ies"}</span>
-          <Sep />
-          <span style={{ color: risks.length ? "#A64F4B" : undefined }}>{risks.length} risk{risks.length === 1 ? "" : "s"}</span>
-          <Sep />
-          <span style={{ color: "#63635F" }}>{changed.length} changed</span>
-        </div>
-      )}
+      <div className="flex flex-col" style={{ gap: 18, marginBottom: 6 }}>
+        <ReviewLine>{loading ? "Looking through your signals…" : all.length + oppCount === 0 ? "Starlane checked your data and the outside signals it follows. Nothing needs a look right now." : `Starlane found ${all.length} thing${all.length === 1 ? "" : "s"} worth investigating and ${oppCount} opportunit${oppCount === 1 ? "y" : "ies"}.`}</ReviewLine>
+        <StatTiles loading={loading} items={[
+          { value: all.length, label: "Worth investigating" },
+          { value: oppCount, label: "Opportunities" },
+          { value: risks.length, label: "Risks" },
+          { value: changed.length, label: "Changed" },
+        ]} />
+      </div>
       {loadError && <ErrorBanner>{loadError}</ErrorBanner>}
 
       <Subnav
