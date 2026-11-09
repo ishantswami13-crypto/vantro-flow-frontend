@@ -5,7 +5,7 @@ import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type Connector, type ConnectorHealth } from "@/lib/api";
 import { FiUploadCloud } from "react-icons/fi";
-import { PageHeader, Subnav, StatusDot, Chevron, EmptyLine, ErrorBanner, SkeletonRows, SearchField } from "@/components/v32/ui";
+import { ReviewLine, StatTiles, PageHeader, Subnav, StatusDot, Chevron, EmptyLine, ErrorBanner, SkeletonRows, SearchField } from "@/components/v32/ui";
 import { IconSources } from "@/components/v32/icons";
 import { BridgeHealthPanel } from "@/components/os/BridgePanels";
 import IntegrationsPanel from "@/components/os/IntegrationsPanel";
@@ -259,6 +259,16 @@ export default function SourcesPage() {
           </div>
         )}
 
+        <ReviewLine>
+          {connectors === null ? "Checking your connections…"
+            : connected.length === 0 ? "Nothing is connected yet. Upload a ledger or connect your books and Starlane starts from your own data."
+            : `${connected.length} source${connected.length === 1 ? " feeds" : "s feed"} Starlane${allHealthy ? ", all healthy" : ""}${lastSync ? `; last sync ${relSync(lastSync)}` : ""}.`}
+        </ReviewLine>
+        <StatTiles loading={connectors === null} items={[
+          { value: connected.length, label: "Connected" },
+          { value: available.length, label: "Ready to connect" },
+          { value: world.filter(isConnected).length, label: "External signals on" },
+        ]} />
         <Subnav items={TABS} active={tab} onChange={(k) => setTab(k as TabKey)} />
 
         <div className="fade-once">
@@ -377,4 +387,12 @@ export default function SourcesPage() {
       </div>
     </DashboardLayout>
   );
+}
+
+function relSync(iso: string): string {
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  return h < 24 ? `${h}h ago` : `${Math.round(h / 24)}d ago`;
 }

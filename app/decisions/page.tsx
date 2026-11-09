@@ -119,7 +119,7 @@ export default function DecisionsPage() {
               aria-pressed={scope === s}
               onClick={() => setScope(s)}
               className="hv-tab text-[13px]"
-              style={{ padding: "5px 11px", borderRadius: 6, fontWeight: 500, color: scope === s ? "#0F0E0D" : "#6E6A63", background: scope === s ? "#ECEAE4" : "transparent" }}
+              style={{ padding: "5px 11px", borderRadius: 6, fontWeight: 500, color: scope === s ? "#0F0E0D" : "#6E6A63", background: scope === s ? "#FFFFFF" : "transparent", boxShadow: scope === s ? "inset 0 0 0 1px #E2DFD8" : "none" }}
             >
               {s === "active" ? "Open" : "Closed"}{scope === s && list.data ? ` (${decisions.length})` : ""}
             </button>
