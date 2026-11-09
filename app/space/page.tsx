@@ -17,7 +17,7 @@ import StarlaneMark from "@/components/brand/StarlaneMark";
 import { Pill } from "@/components/decisions/ui";
 import { MissionsList } from "@/components/os/MissionsList";
 import { RankBars, PairedBars, Legend, ALERT } from "@/components/command/Charts";
-import { api, getUser, request } from "@/lib/api";
+import { api, getUser, request, authHeaders, API_BASE } from "@/lib/api";
 import { osApi } from "@/lib/os";
 import { decisionsApi, money, relTime, STATUS_LABEL } from "@/lib/decisions";
 import { PROMPTS } from "@/lib/libraryPrompts";
@@ -395,7 +395,79 @@ function ReportsTab({ userId, onAsk }: { userId?: string; onAsk: (q: string) => 
           </footer>
         </article>
       </div>
+      <ReportDownloads />
     </section>
+  );
+}
+
+/* ── Report downloads: GET /api/reports/export, as Excel, CSV or a printable page ── */
+
+const EXPORTS = [
+  { id: "outstanding", name: "Outstanding receivables", desc: "Every unpaid invoice with the customer, amount, due date and days overdue" },
+  { id: "collection", name: "Collection performance", desc: "Invoices raised and collected in the period, and the calls logged" },
+  { id: "cashflow", name: "Cash coming in", desc: "Open invoices by when they fall due" },
+  { id: "customer", name: "Customer statements", desc: "Invoices, payments and balance for each customer" },
+] as const;
+const PERIODS = [{ v: 30, l: "Last 30 days" }, { v: 90, l: "Last 3 months" }, { v: 365, l: "Last 12 months" }];
+
+function ReportDownloads() {
+  const [days, setDays] = useState(90);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const iso = (t: number) => new Date(t).toISOString().slice(0, 10);
+
+  const get = async (id: string, fmt: "xlsx" | "csv" | "html") => {
+    setBusy(`${id}:${fmt}`); setErr(null);
+    // A printable page opens in a tab of its own; the window is claimed before the
+    // request so a pop-up blocker treats it as the click it came from.
+    const win = fmt === "html" ? window.open("", "_blank") : null;
+    try {
+      const to = iso(Date.now()), from = iso(Date.now() - days * DAY);
+      const res = await fetch(`${API_BASE}/api/reports/export?report=${id}&format=${fmt}&from=${from}&to=${to}`, { headers: { ...authHeaders() }, credentials: "include" });
+      if (!res.ok) throw new Error(res.status === 401 ? "Sign in again to download." : "The report couldn’t be built. Try again in a moment.");
+      if (fmt === "html") {
+        const html = await res.text();
+        if (win) { win.document.open(); win.document.write(html); win.document.close(); }
+        else throw new Error("Allow pop-ups for this site to open the printable report.");
+        return;
+      }
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `starlane-${id}-${from}-to-${to}.${fmt}`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    } catch (e) {
+      win?.close();
+      setErr((e as Error).message);
+    } finally { setBusy(null); }
+  };
+
+  return (
+    <div style={{ marginTop: 28 }}>
+      <div className="sp-head">
+        <div><h2 className="sp-h">Download reports</h2><p className="sp-sub">Built from this space&rsquo;s invoices for the period you choose</p></div>
+        <nav aria-label="Period" className="sp-pills" style={{ margin: 0 }}>
+          {PERIODS.map((p) => <button key={p.v} type="button" aria-pressed={days === p.v} className={`sp-pill ${days === p.v ? "is-on" : ""}`} onClick={() => setDays(p.v)}>{p.l}</button>)}
+        </nav>
+      </div>
+      {err && <p role="alert" className="cc-note" style={{ color: "#A3392E", marginTop: 0 }}>{err}</p>}
+      <div className="sp-table">
+        {EXPORTS.map((r) => (
+          <div key={r.id} className="sp-tr sp-tr-dl">
+            <span className="sp-td-main">
+              <span className="sp-doc"><SheetIcon /></span>
+              <span className="min-w-0"><span className="block truncate">{r.name}</span><span className="sp-td-sub">{r.desc}</span></span>
+            </span>
+            <span className="sp-dl">
+              {([["xlsx", "Excel"], ["csv", "CSV"], ["html", "Print"]] as const).map(([f, l]) => (
+                <button key={f} type="button" className="sp-btn" disabled={!!busy} onClick={() => get(r.id, f)}>{busy === `${r.id}:${f}` ? "…" : l}</button>
+              ))}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

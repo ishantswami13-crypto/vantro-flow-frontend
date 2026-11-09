@@ -1777,7 +1777,7 @@ button:disabled { cursor: default; }
 .sp-run-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; }
 .sp-plus { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 17px; color: #55524D; }
 .sp-plus:hover { background: #F3F2EE; }
-.sp-go { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 6px; background: #0F0E0D; color: #FFFFFF; font-size: 12.5px; font-weight: 500; }
+.sp-go { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; height: 28px; padding: 0 12px; border-radius: 6px; background: #0F0E0D; color: #FFFFFF; font-size: 12.5px; font-weight: 500; }
 .sp-go:hover { background: #2B2A27; }
 .sp-sec { margin-top: 34px; }
 .sp-sec-first { margin-top: 0; }
@@ -1856,6 +1856,29 @@ a.sp-tr:hover, button.sp-tr:hover { background: #F8F7F4; }
   .sp-tr-rv > :nth-child(2), .sp-tr-rv > :nth-child(3) { display: none; }
   .sp-tr-rv > :nth-child(4) { display: block; }
 }
+/* Bank matching */
+.sp-tr-bmp { grid-template-columns: 120px minmax(0, 1fr) 120px; }
+@media (max-width: 1023px) {
+  .sp-tr-bmp { grid-template-columns: 90px minmax(0, 1fr) auto; }
+  .sp-tr-bmp > :nth-child(2), .sp-tr-bmp > :nth-child(3) { display: block; }
+}
+/* Pinned: a pin toggle that appears on hover beside each Recents and Pinned row. */
+.sb-pinrow { position: relative; }
+.sb-pinrow .sb-recent { padding-right: 28px; }
+.sb-pin { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 5px; color: #8F8A81; opacity: 0; transition: opacity 120ms ease, background 120ms ease; }
+.sb-pinrow:hover .sb-pin, .sb-pin:focus-visible { opacity: 1; }
+.sb-pin:hover { background: rgba(25,25,23,0.07); color: #191917; }
+@media (hover: none) { .sb-pin.is-on { opacity: 1; } }
+.sb-pin-here { display: flex; align-items: center; gap: 7px; width: 100%; color: #8F8A81; }
+/* Space reports: downloads */
+.sp-tr-dl { grid-template-columns: minmax(0, 1fr) auto; }
+.sp-dl { display: flex; gap: 6px; }
+@media (max-width: 1023px) {
+  .sp-tr-dl { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .sp-tr-dl > :nth-child(2) { display: flex; }
+}
+.hv-app .sb-pin-here::before { display: none; }
+.hv-app .sb-pin-here { padding-left: 14px; }
 .sp-stats.st-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .sp-stats.st-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 1023px) { .sp-stats.st-3, .sp-stats.st-4, .sp-stats.st-2 { grid-template-columns: 1fr 1fr; } }

@@ -171,7 +171,7 @@ export default function DashboardLayout({ children, pageTitle, slimRail = false,
 
   return (
     <div className="hv-app flex h-screen overflow-hidden">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} slim={slimRail} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} slim={slimRail} pageTitle={pageTitle} />
 
       <div className="hv-canvas flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onMenuToggle={() => setSidebarOpen(true)} pageTitle={pageTitle} />
