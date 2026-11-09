@@ -77,7 +77,7 @@ export default function BadDebtPage() {
     const csv = rows.map(r => r.map(cell).join(",")).join("\n");
     const a = document.createElement("a");
     a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
-    a.download = "vantro-bad-debt.csv";
+    a.download = "starlane-bad-debt.csv";
     a.click();
   }
 

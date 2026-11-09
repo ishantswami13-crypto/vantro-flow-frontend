@@ -8,7 +8,7 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://vantro-flo
 
 export const SITE = {
   name: "Starlane",
-  legalName: "Vantro Technologies",
+  legalName: "Starlane",
   tagline: "Know what changed before it costs you",
   description:
     "Starlane reads the systems your business already runs, raises the few changes that matter each morning with the evidence behind every figure, and leaves every decision to a person.",

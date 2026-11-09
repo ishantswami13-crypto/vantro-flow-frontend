@@ -7,17 +7,14 @@ import { FiEye, FiEyeOff, FiRefreshCw, FiCheckCircle, FiArrowRight } from "react
 import { saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import { INDUSTRY_OPTIONS } from "@/lib/businessTypes";
+import { AuthShell, AuthHead, AuthError, Spinner } from "@/components/auth/AuthShell";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "https://vantro-flow-backend-production.up.railway.app";
 
 const businessTypes = [{ value: "", label: "Select type" }, ...INDUSTRY_OPTIONS];
 
-const iBase = { background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.12)", borderRadius:"7px", padding:"13px 16px", fontFamily:"'Geist', 'Plus Jakarta Sans',system-ui", fontSize:"15px", color:"#F5F4F0", outline:"none", width:"100%", transition:"border-color .2s,background .2s", WebkitAppearance:"none" as const };
-const iFocus = { ...iBase, borderColor:"rgba(255,255,255,.34)", background:"rgba(255,255,255,.08)" };
-
-function FocusInput(p: React.InputHTMLAttributes<HTMLInputElement>) {
-  const [f, setF] = useState(false);
-  return <input {...p} style={f?iFocus:iBase} onFocus={()=>setF(true)} onBlur={()=>setF(false)}/>;
+function FocusInput({ className = "", ...p }: React.InputHTMLAttributes<HTMLInputElement>) {
+  return <input {...p} className={`sl-input ${className}`.trim()} />;
 }
 
 /* ── OTP Step ─────────────────────────────────────────────────── */
@@ -68,32 +65,30 @@ function OTPStep({ preToken, userEmail, userPhone, onVerified }: {
 
   return (
     <div>
-      <div className="step-head">
-        <div className="step-num">Step 3 of 3</div>
-        <h2>Check your phone</h2>
-        <p>6-digit code sent to{maskedPhone&&<> <strong style={{color:"#fff"}}>{maskedPhone}</strong></>}{maskedPhone&&maskedEmail&&" and"}{maskedEmail&&<> <strong style={{color:"#fff"}}>{maskedEmail}</strong></>}</p>
-      </div>
-      <div style={{display:"flex",justifyContent:"center",gap:"10px",marginBottom:"24px"}} onPaste={handlePaste}>
-        {otp.map((d,i)=>(
-          <input key={i} ref={el=>{inputs.current[i]=el;}} type="tel" inputMode="numeric" maxLength={1}
-            value={d} autoFocus={i===0}
-            onChange={e=>handleDigit(i,e.target.value)} onKeyDown={e=>handleKeyDown(i,e)}
-            style={{width:"44px",height:"52px",textAlign:"center",fontSize:"20px",fontWeight:700,background:d?"rgba(255,255,255,.09)":"rgba(255,255,255,.05)",border:`1px solid ${d?"rgba(255,255,255,.34)":"rgba(255,255,255,.12)"}`,borderRadius:"7px",color:"#F5F4F0",outline:"none",opacity:loading?.5:1,fontFamily:"'Geist', 'Plus Jakarta Sans',system-ui"}}
-          />
-        ))}
-      </div>
-      {error&&<p style={{textAlign:"center",fontSize:"12px",color:"rgba(255,100,100,.9)",fontFamily:"'JetBrains Mono',monospace",marginBottom:"16px"}}>{error}</p>}
-      {resent&&<div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"6px",fontSize:"12px",color:"#10D98A",marginBottom:"16px"}}><FiCheckCircle size={13}/> New code sent</div>}
-      <button disabled={loading||otp.join("").length<6} onClick={()=>handleVerify()}
-        className="btn-main" style={{opacity:loading||otp.join("").length<6?.4:1}}>
-        {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid #F5F4F0",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Verifying…</>:<><span className="btn-txt">Verify &amp; continue</span><FiArrowRight size={16}/></>}
-      </button>
-      <div style={{textAlign:"center",marginTop:"20px"}}>
-        {countdown>0
-          ? <p style={{fontSize:"11px",color:"rgba(255,255,255,.55)",fontFamily:"'JetBrains Mono',monospace"}}>Resend in {countdown}s</p>
-          : <button onClick={handleResend} disabled={resending} style={{fontSize:"12px",color:"rgba(255,255,255,.66)",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>
-              {resending?<><FiRefreshCw size={11} style={{display:"inline",marginRight:"4px",animation:"sspin .7s linear infinite"}}/>Sending…</>:"Resend code"}
-            </button>}
+      <AuthHead step="Last step" title="Check your phone"
+        lead={<>We sent a 6-digit code to{maskedPhone&&<> <strong>{maskedPhone}</strong></>}{maskedPhone&&maskedEmail&&" and"}{maskedEmail&&<> <strong>{maskedEmail}</strong></>}.</>} />
+      {error&&<AuthError>{error}</AuthError>}
+      {resent&&<div className="sl-auth-note good"><FiCheckCircle size={13} style={{display:"inline",verticalAlign:"-2px",marginRight:6}}/>New code sent</div>}
+      <div className="sl-auth-form">
+        <div className="sl-otp" onPaste={handlePaste}>
+          {otp.map((d,i)=>(
+            <input key={i} ref={el=>{inputs.current[i]=el;}} type="tel" inputMode="numeric" maxLength={1} aria-label={`Digit ${i+1}`}
+              value={d} autoFocus={i===0} disabled={loading} className={d?"filled":""}
+              onChange={e=>handleDigit(i,e.target.value)} onKeyDown={e=>handleKeyDown(i,e)}
+            />
+          ))}
+        </div>
+        <div className="sl-otp-meta">
+          <span>Didn&apos;t get it?</span>
+          {countdown>0
+            ? <span>Resend in {countdown}s</span>
+            : <button type="button" className="sl-link-btn" onClick={handleResend} disabled={resending}>
+                {resending?<><FiRefreshCw size={11} style={{display:"inline",marginRight:4}}/>Sending…</>:"Resend code"}
+              </button>}
+        </div>
+        <button type="button" className="sl-btn" disabled={loading||otp.join("").length<6} onClick={()=>handleVerify()}>
+          {loading?<><Spinner/> Verifying…</>:<>Verify and continue <FiArrowRight size={16}/></>}
+        </button>
       </div>
     </div>
   );
@@ -153,100 +148,69 @@ function SignupForm() {
 
   return (
     <div>
-      {/* Progress dots */}
-      <div className="progress">
-        {[1,2].map(n=>(
-          <>
-            <div key={`d${n}`} className={`p-dot${step>=n?" active":""}${step>n?" done":""}`}/>
-            {n<2&&<div key={`l${n}`} className="p-line"/>}
-          </>
-        ))}
-      </div>
-
-      {error&&<div style={{marginBottom:"16px",padding:"12px 16px",borderRadius:"6px",background:"rgba(255,80,80,.08)",border:"1px solid rgba(255,80,80,.2)",fontSize:"13px",color:"rgba(255,100,100,.9)",fontFamily:"'JetBrains Mono',monospace"}}>{error}</div>}
-      {referredBy&&step===1&&<div style={{marginBottom:"16px",padding:"12px 16px",borderRadius:"6px",background:"rgba(16,217,138,.08)",border:"1px solid rgba(16,217,138,.2)",fontSize:"12px",color:"#10D98A"}}>🎉 You were invited — join free</div>}
-
-      {/* Step 1 */}
       {step===1&&(
-        <form onSubmit={goStep2}>
-          <div className="step-head">
-            <div className="step-num">Step 1 of 2</div>
-            <h2>Create your<br/>free account.</h2>
-            <p>No credit card required. Up and running in 8 minutes.</p>
-          </div>
-          <div className="form-grid" style={{display:"flex",flexDirection:"column",gap:"14px"}}>
-            <div className="row-2">
-              <div className="field"><label>First name</label><FocusInput type="text" placeholder="Rahul" value={form.name} onChange={set("name")} required/></div>
-              <div className="field"><label>Company name</label><FocusInput type="text" placeholder="Kumar Traders" value={form.business_name} onChange={set("business_name")} required/></div>
+        <form onSubmit={goStep2} noValidate>
+          <AuthHead step="Step 1 of 2" title="Create your account" lead="No credit card required. You can be set up in a few minutes." />
+          {error&&<AuthError>{error}</AuthError>}
+          {referredBy&&<div className="sl-auth-note good">You were invited. Your account is free.</div>}
+          <div className="sl-auth-form">
+            <div className="sl-row-2">
+              <div className="sl-field"><label htmlFor="su-name">First name</label><FocusInput id="su-name" type="text" placeholder="Rahul" value={form.name} onChange={set("name")} required autoComplete="given-name"/></div>
+              <div className="sl-field"><label htmlFor="su-co">Company name</label><FocusInput id="su-co" type="text" placeholder="Kumar Traders" value={form.business_name} onChange={set("business_name")} required autoComplete="organization"/></div>
             </div>
-            <div className="field"><label>Work email</label><FocusInput type="email" placeholder="you@company.com" value={form.email} onChange={set("email")} required autoComplete="email"/></div>
-            <div className="field">
-              <label>Business type</label>
-              <select value={form.business_type} onChange={set("business_type")}
-                style={{...iBase,backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")",backgroundRepeat:"no-repeat",backgroundPosition:"right 14px center",paddingRight:"38px",cursor:"pointer",color:form.business_type?"#fff":"rgba(255,255,255,.55)"}} aria-label="Business type">
-                {businessTypes.map(o=><option key={o.value} value={o.value} style={{background:"#1B1B18",color:"#F5F4F0"}}>{o.label}</option>)}
+            <div className="sl-field"><label htmlFor="su-email">Work email</label><FocusInput id="su-email" type="email" placeholder="you@company.com" value={form.email} onChange={set("email")} required autoComplete="email"/></div>
+            <div className="sl-field">
+              <label htmlFor="su-type">Business type</label>
+              <select id="su-type" className="sl-input" value={form.business_type} onChange={set("business_type")} style={{color:form.business_type?undefined:"var(--mute)"}}>
+                {businessTypes.map(o=><option key={o.value} value={o.value} style={{color:"#0F0E0D"}}>{o.label}</option>)}
               </select>
             </div>
-            <button type="submit" className="btn-main">
-              <span className="btn-txt">Continue</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-            </button>
+            <button type="submit" className="sl-btn">Continue <FiArrowRight size={16}/></button>
           </div>
-          <div className="trust">
-            <div className="trust-item">Free forever plan</div>
-            <div className="trust-item">No credit card</div>
-            <div className="trust-item">Cancel anytime</div>
-          </div>
-          <div className="auth-foot" style={{marginTop:"24px"}}>Already have an account? <Link href="/login">Log in</Link></div>
+          <p className="sl-auth-alt">Already have an account? <Link href="/login">Sign in</Link></p>
         </form>
       )}
 
-      {/* Step 2 */}
       {step===2&&(
         <form onSubmit={handleSubmit}>
-          <div className="step-head">
-            <div className="step-num">Step 2 of 2</div>
-            <h2>Create your<br/>workspace.</h2>
-            <p>Starlane will learn how your business works once you're inside.</p>
-          </div>
-          <div style={{display:"flex",flexDirection:"column",gap:"14px"}}>
-            {/* Phone */}
-            <div className="field">
-              <label>Phone (WhatsApp — OTP sent here)</label>
-              <div style={{display:"flex"}}>
-                <span style={{display:"flex",alignItems:"center",padding:"0 14px",background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.1)",borderRight:"none",borderRadius:"6px 0 0 6px",fontSize:"13px",fontFamily:"'JetBrains Mono',monospace",color:"rgba(255,255,255,.66)",flexShrink:0}}>+91</span>
-                <FocusInput type="tel" placeholder="9876543210" value={form.phone} onChange={set("phone")} required maxLength={10} pattern="\d{10}" autoComplete="tel" style={{borderRadius:"0 6px 6px 0"} as React.CSSProperties}/>
+          <AuthHead step="Step 2 of 2" title="Secure your workspace" lead="Starlane learns how your business works once you're inside." />
+          {error&&<AuthError>{error}</AuthError>}
+          <div className="sl-auth-form">
+            <div className="sl-field">
+              <label htmlFor="su-phone">Phone number</label>
+              <div className="sl-input-wrap">
+                <span className="sl-prefix">+91</span>
+                <FocusInput id="su-phone" type="tel" placeholder="9876543210" value={form.phone} onChange={set("phone")} required maxLength={10} pattern="\d{10}" autoComplete="tel"/>
               </div>
+              <p className="sl-hint">For payment alerts on WhatsApp.</p>
             </div>
-            {/* Password */}
-            <div className="field">
-              <label>Password</label>
-              <div style={{position:"relative"}}>
-                <FocusInput type={showPassword?"text":"password"} placeholder="Min 8 characters" value={form.password} onChange={set("password")} required minLength={8} style={{paddingRight:"44px"} as React.CSSProperties}/>
-                <button type="button" onClick={()=>setShowPassword(v=>!v)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.55)"}} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>
+            <div className="sl-field">
+              <label htmlFor="su-pass">Password</label>
+              <div className="sl-input-wrap">
+                <FocusInput id="su-pass" className="has-btn" type={showPassword?"text":"password"} placeholder="At least 8 characters" value={form.password} onChange={set("password")} required minLength={8} autoComplete="new-password"/>
+                <button type="button" className="sl-eye" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?<FiEyeOff size={15}/>:<FiEye size={15}/>}</button>
               </div>
-              {form.password.length>0&&form.password.length<8&&<p style={{fontSize:"10px",marginTop:"4px",color:"rgba(255,80,80,.8)",fontFamily:"'JetBrains Mono',monospace"}}>At least 8 characters</p>}
+              {form.password.length>0&&form.password.length<8&&<p className="sl-hint bad">At least 8 characters</p>}
             </div>
-            {/* Confirm */}
-            <div className="field">
-              <label>Confirm password</label>
-              <div style={{position:"relative"}}>
-                <FocusInput type={showConfirm?"text":"password"} placeholder="Re-enter password" value={form.confirm_password} onChange={set("confirm_password")} required style={{paddingRight:"44px"} as React.CSSProperties}/>
-                <button type="button" onClick={()=>setShowConfirm(v=>!v)} style={{position:"absolute",right:"12px",top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.55)"}} aria-label={showConfirm?"Hide password":"Show password"}>{showConfirm?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>
+            <div className="sl-field">
+              <label htmlFor="su-conf">Confirm password</label>
+              <div className="sl-input-wrap">
+                <FocusInput id="su-conf" className="has-btn" type={showConfirm?"text":"password"} placeholder="Type it again" value={form.confirm_password} onChange={set("confirm_password")} required autoComplete="new-password"/>
+                <button type="button" className="sl-eye" onClick={()=>setShowConfirm(v=>!v)} aria-label={showConfirm?"Hide password":"Show password"}>{showConfirm?<FiEyeOff size={15}/>:<FiEye size={15}/>}</button>
               </div>
-              {form.confirm_password.length>0&&form.password!==form.confirm_password&&<p style={{fontSize:"10px",marginTop:"4px",color:"rgba(255,80,80,.8)",fontFamily:"'JetBrains Mono',monospace"}}>Passwords do not match</p>}
-              {form.confirm_password.length>0&&form.password===form.confirm_password&&form.password.length>=8&&<p style={{fontSize:"10px",marginTop:"4px",color:"#10D98A",fontFamily:"'JetBrains Mono',monospace"}}>✓ Looks good</p>}
+              {form.confirm_password.length>0&&form.password!==form.confirm_password&&<p className="sl-hint bad">Passwords do not match</p>}
+              {form.confirm_password.length>0&&form.password===form.confirm_password&&form.password.length>=8&&<p className="sl-hint good">Passwords match</p>}
             </div>
-            <div className="btn-row">
-              <button type="button" className="btn-back" onClick={()=>{setStep(1);setError("");}}>Back</button>
-              <button type="submit" className="btn-main" disabled={loading} style={{opacity:loading?.6:1,position:"relative"}}>
-                {loading?<><div style={{width:"16px",height:"16px",border:"2px solid rgba(245,244,240,.25)",borderTop:"2px solid #F5F4F0",borderRadius:"50%",animation:"sspin .7s linear infinite",marginRight:"8px"}}/> Creating workspace…</>:<><span className="btn-txt">Create workspace</span><FiArrowRight size={16}/></>}
+            <div className="sl-btn-row">
+              <button type="button" className="sl-btn ghost" onClick={()=>{setStep(1);setError("");}}>Back</button>
+              <button type="submit" className="sl-btn" disabled={loading}>
+                {loading?<><Spinner/> Creating…</>:<>Create workspace <FiArrowRight size={16}/></>}
               </button>
             </div>
-            <p style={{marginTop:"8px",fontSize:"12px",color:"rgba(255,255,255,.55)",textAlign:"center",lineHeight:1.6}}>
-              By creating an account you agree to our <Link href="/terms" style={{color:"rgba(255,255,255,.55)"}}>Terms</Link> and <Link href="/privacy" style={{color:"rgba(255,255,255,.55)"}}>Privacy Policy</Link>.
-            </p>
           </div>
+          <p className="sl-auth-legal">
+            By creating an account you agree to our <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.
+          </p>
         </form>
       )}
     </div>
@@ -255,23 +219,8 @@ function SignupForm() {
 
 export default function SignupPage() {
   return (
-    <div className="atlas-page auth-page">
-      <header className="topbar">
-        <Link href="/" style={{display:"flex",alignItems:"center",textDecoration:"none",color:"#fff"}}>
-          <span className="brand-wm">Starlane</span>
-        </Link>
-        <div className="topbar-right">Already have an account? <Link href="/login">Log in</Link></div>
-      </header>
-      <main className="center fade-once">
-        <Suspense fallback={null}><SignupForm/></Suspense>
-      </main>
-      <footer className="page-foot">
-        <span>&copy; 2026 Starlane</span>
-        <div style={{display:"flex",gap:"24px"}}>
-          <Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/security">Security</Link>
-        </div>
-      </footer>
-      <style>{`@keyframes sspin{to{transform:rotate(360deg)}}`}</style>
-    </div>
+    <AuthShell aside={<>Have an account? <Link href="/login">Sign in</Link></>}>
+      <Suspense fallback={null}><SignupForm/></Suspense>
+    </AuthShell>
   );
 }

@@ -26,7 +26,7 @@ export function ContactShell({ title, lead, children, wide }: { title: React.Rea
       <footer className="hx-c-foot">
         <Link href="/security">Security</Link>
         <Link href="/legal">Legal</Link>
-        <span>© {new Date().getFullYear()} Vantro Technologies</span>
+        <span>© {new Date().getFullYear()} Starlane</span>
       </footer>
     </div>
   );

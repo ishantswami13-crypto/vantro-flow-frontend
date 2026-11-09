@@ -12,7 +12,7 @@ export const metadata: Metadata = pageMetadata({
   path: "/company",
   title: "Company",
   description:
-    "Why Starlane exists, the principles it is built on, and where it is today. Starlane is built by Vantro Technologies.",
+    "Why Starlane exists, the principles it is built on, and where it is today.",
 });
 
 export const viewport: Viewport = { themeColor: "#0F0E0D" };
@@ -85,7 +85,7 @@ export default function CompanyPage() {
           <ul>
             <li className="hx-r"><small>Status</small><b>Private pilots with selected organisations</b><p>You will not find customer logos or results on this site yet. We will show them when they are real and the businesses behind them agree.</p><Link href="/pilots" className="hx-arrow hx-b2">How a pilot runs <i>→</i></Link></li>
             <li className="hx-r"><small>Product</small><b>Every figure on this site is sample data</b><p>Product views show a fictional business, and are labelled so.</p><Link href="/platform" className="hx-arrow hx-b2">See the platform <i>→</i></Link></li>
-            <li className="hx-r"><small>Builder</small><b>Starlane is built by Vantro Technologies</b><p>Questions about pilots, security or an existing account all start with the links below.</p><Link href="/security#disclosure" className="hx-arrow hx-b2">Report a vulnerability <i>→</i></Link></li>
+            <li className="hx-r"><small>Contact</small><b>One team behind Starlane</b><p>Questions about pilots, security or an existing account all start with the links below.</p><Link href="/security#disclosure" className="hx-arrow hx-b2">Report a vulnerability <i>→</i></Link></li>
           </ul>
         </div>
       </section>

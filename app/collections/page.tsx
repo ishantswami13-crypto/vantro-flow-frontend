@@ -915,7 +915,7 @@ export default function CollectionsPage() {
             <span className="font-semibold text-primary">CSV format:</span> customer_name, invoice_amount, invoice_date, payment_status
             {" "}—{" "}
             <a href="data:text/csv;charset=utf-8,customer_name%2Cinvoice_amount%2Cinvoice_date%2Cpayment_status%0AMehta%20Fabrics%2C840000%2C2025-03-01%2CPending"
-              download="vantro-sample.csv" className="text-accent underline">Download sample</a>
+              download="starlane-sample.csv" className="text-accent underline">Download sample</a>
           </div>
         )}
 

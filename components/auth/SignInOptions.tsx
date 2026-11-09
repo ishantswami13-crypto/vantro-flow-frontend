@@ -48,6 +48,10 @@ const PhoneIcon = () => (
   </svg>
 );
 
+// Phone-number sign-in by one-time code is turned off for now. Flip this to
+// bring the button back; the flow below is unchanged.
+const SHOW_PHONE_SIGN_IN = false;
+
 export function SignInOptions({ onSession, onError, disabled }: { onSession: (s: Session) => void; onError: (msg: string) => void; disabled?: boolean }) {
   const [providers, setProviders] = useState<Providers | null>(null);
   const [busy, setBusy] = useState<"" | "google" | "apple" | "phone">("");
@@ -80,7 +84,7 @@ export function SignInOptions({ onSession, onError, disabled }: { onSession: (s:
           finally { setBusy(""); }
         },
       });
-      window.google.accounts.id.renderButton(googleBox.current, { type: "standard", theme: "filled_black", size: "large", shape: "pill", text: "continue_with", width: googleBox.current.offsetWidth || 320 });
+      window.google.accounts.id.renderButton(googleBox.current, { type: "standard", theme: "outline", size: "large", shape: "rectangular", text: "continue_with", width: googleBox.current.offsetWidth || 320 });
     }).catch((e) => onErrorRef.current(e.message));
     return () => { cancelled = true; };
   }, [providers?.google?.clientId]);
@@ -127,11 +131,11 @@ export function SignInOptions({ onSession, onError, disabled }: { onSession: (s:
       <button type="button" className="so-btn" onClick={apple} disabled={off || !providers?.apple || !!busy || disabled}>
         <AppleLogo /><span>{busy === "apple" ? "Opening Apple…" : "Continue with Apple"}</span>{providers && !providers.apple && <em className="so-soon">Soon</em>}
       </button>
-      <button type="button" className="so-btn" onClick={() => setPhoneOpen((o) => !o)} disabled={off || !providers?.phone || disabled} aria-expanded={phoneOpen}>
+      {SHOW_PHONE_SIGN_IN && <button type="button" className="so-btn" onClick={() => setPhoneOpen((o) => !o)} disabled={off || !providers?.phone || disabled} aria-expanded={phoneOpen}>
         <PhoneIcon /><span>Continue with phone number</span>{providers && !providers.phone && <em className="so-soon">Soon</em>}
-      </button>
+      </button>}
 
-      {phoneOpen && providers?.phone && (
+      {SHOW_PHONE_SIGN_IN && phoneOpen && providers?.phone && (
         <form className="so-phone" onSubmit={codeSent ? verifyCode : sendCode}>
           {!codeSent ? (
             <input type="tel" inputMode="tel" autoComplete="tel" placeholder="+91 98765 43210" value={phone} onChange={(e) => setPhone(e.target.value)} autoFocus />
