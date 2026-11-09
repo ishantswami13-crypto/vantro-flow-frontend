@@ -52,9 +52,9 @@ export default function DecisionsPage() {
 
   return (
     <DashboardLayout pageTitle="Decisions">
-      <div className="max-w-[1100px] mx-auto px-2 sm:px-6 lg:px-10 py-8">
+      <div>
         <div className="flex flex-wrap items-end justify-between gap-4 mb-2">
-          <h1 className="hv-title" style={{ color: "#0F0E0D", fontSize: 38, lineHeight: 1.05, letterSpacing: "-0.02em", fontFamily: "var(--serif, 'Newsreader', Georgia, serif)", fontWeight: 400 }}>Decisions</h1>
+          <h1 className="hv-title" style={{ color: "#0F0E0D", fontSize: 37, lineHeight: 1.08, letterSpacing: "-0.012em", fontFamily: "var(--serif, 'Newsreader', Georgia, serif)", fontWeight: 400 }}>Decisions</h1>
           <div className="flex items-center gap-3">
             <Link href="/decisions/import" className="text-[13px] hover-dim" style={{ color: C.muted }}>Bring data</Link>
             <Link href="/decisions/proof" className="text-[13px] hover-dim" style={{ color: C.muted }}>Track record</Link>

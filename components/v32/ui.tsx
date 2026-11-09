@@ -47,8 +47,8 @@ export function PageHeader({ title, subtitle, right, children }: {
     <div className="fade-once">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 className="hv-title" style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 38, lineHeight: 1.08, letterSpacing: "-0.02em", color: "#0F0E0D" }}>{title}</h1>
-          {subtitle && <div style={{ fontSize: 14.5, color: "#6E6A63", marginTop: 8, lineHeight: 1.5 }}>{subtitle}</div>}
+          <h1 className="hv-title" style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 37, lineHeight: 1.08, letterSpacing: "-0.012em", color: "#0F0E0D" }}>{title}</h1>
+          {subtitle && <div style={{ fontSize: 14, color: "#6E6A64", marginTop: 8, lineHeight: 1.5 }}>{subtitle}</div>}
         </div>
         {right && <div className="flex items-center gap-4 shrink-0">{right}</div>}
       </div>
@@ -151,7 +151,7 @@ export function Chevron({ size = 14 }: { size?: number }) {
 /** White card: 1px rgba(25,25,23,0.10) border, 8px radius, no shadow. */
 export function Card({ children, className = "", style, lift = false }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; lift?: boolean }) {
   return (
-    <div className={`${lift ? "hover-lift" : ""} ${className}`} style={{ background: "#FFFFFF", border: "1px solid #E4E1DA", borderRadius: 10, boxShadow: "0 1px 2px rgba(15,14,13,0.03)", ...style }}>
+    <div className={`v32-card ${lift ? "hover-lift" : ""} ${className}`} style={{ background: "#FFFFFF", border: "1px solid #EEEBE6", borderRadius: 12, ...style }}>
       {children}
     </div>
   );
@@ -240,7 +240,7 @@ export function Lettermark({ letter, size = 30 }: { letter: string; color?: stri
 /** Empty state: a quiet icon tile beside the title and one line of help. */
 export function EmptyLine({ title, body, action, icon }: { title?: React.ReactNode; body?: React.ReactNode; action?: React.ReactNode; icon?: React.ReactNode }) {
   return (
-    <div className="fade-once flex items-start" style={{ padding: "18px 0", gap: 14 }}>
+    <div className="fade-once flex items-start v32-empty" style={{ gap: 14 }}>
       <IconTile size={38}>{icon || <IconSparkle size={17} />}</IconTile>
       <div className="min-w-0" style={{ paddingTop: 1 }}>
         {title && <div style={{ fontSize: 14, color: V.ink, marginBottom: 3 }}>{title}</div>}

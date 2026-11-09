@@ -270,7 +270,7 @@ export default function SourcesPage() {
 
           {connectors && tab === "connected" && (
             connected.length || world.length ? (
-              <div>
+              <div className="hv-panel">
                 {connected.length > 0 && <TableHeader />}
                 {connected.map((c) => <Row key={c.id} c={c} action={actionFor(c)} />)}
                 {!connected.length && (

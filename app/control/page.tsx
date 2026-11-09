@@ -68,7 +68,7 @@ function ConnectionSection({ connections }: { connections: Connector[] }) {
     );
   }
   return (
-    <div>
+    <div className="hv-panel">
       {connections.map(c => {
         const h = HEALTH_LABEL[c.state.health] || HEALTH_LABEL.connected;
         const err = c.state.lastError || c.state.lastAttempt?.error || null;
@@ -99,16 +99,16 @@ function Stat({ value, label, tone }: { value: React.ReactNode; label: string; t
   const empty = value === 0 || value === null || value === undefined || value === "—";
   const color = empty ? "#191917" : tone === "danger" ? "#A64F4B" : tone === "warning" ? "#8C6826" : tone === "success" ? "#477054" : "#191917";
   return (
-    <div>
-      <div style={{ fontSize: 12, color: "#63635F", marginBottom: 6 }}>{label}</div>
-      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 22, color, lineHeight: 1 }}>{value}</div>
+    <div className="hv-stat">
+      <div style={{ fontFamily: "var(--serif, 'Newsreader', Georgia, serif)", fontSize: 30, color, lineHeight: 1, letterSpacing: "-0.02em" }}>{value}</div>
+      <div style={{ fontSize: 12.5, color: "#6E6A64", marginTop: 8 }}>{label}</div>
     </div>
   );
 }
 
 function IntelligenceSection({ stats }: { stats: CortexHealthResponse["stats"] }) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
       <Stat value={stats.pending_actions} label="Pending actions" />
       <Stat value={stats.pending_by_priority.urgent} label="Urgent" tone="danger" />
       <Stat value={stats.pending_by_priority.high} label="High priority" tone="warning" />
@@ -121,7 +121,7 @@ function IntelligenceSection({ stats }: { stats: CortexHealthResponse["stats"] }
 function OutcomesSection({ stats }: { stats: CortexHealthResponse["stats"] }) {
   const enough = stats.evaluated_actions >= MIN_EVALUATED_FOR_RATE;
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <Stat value={stats.evaluated_actions} label="Actions evaluated" />
       <Stat
         value={enough && stats.effectiveness_rate !== null ? `${stats.effectiveness_rate}%` : "—"}
@@ -140,7 +140,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function PolicyRows() {
   return (
-    <div>
+    <div className="hv-panel">
       {POLICY_LEVELS.map((p) => (
         <div key={p.level} className="flex items-start flex-wrap md:flex-nowrap" style={{ gap: 14, padding: "12px 10px", borderBottom: "1px solid #EBEAE6" }}>
           <span style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 11, color: "#6E6E69", width: 20, paddingTop: 1, flexShrink: 0 }}>{p.level}</span>
