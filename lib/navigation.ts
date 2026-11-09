@@ -10,27 +10,25 @@ export interface PrimaryNavItem {
   icon: (p: { size?: number; className?: string; style?: React.CSSProperties }) => React.ReactElement;
 }
 
-// The rail follows Harvey's layout: a short top group (New question sits
-// above it in the sidebar and is Home), then Apps, Recents and Workspace.
-// Routes are unchanged; only where they sit is.
+// The rail follows the product view on the public site: a short top group
+// (New question sits above it and is Home), then Apps, Recents and Spaces,
+// with everything else under More. Routes are unchanged; only where they sit.
 export const V32_NAV_ITEMS: PrimaryNavItem[] = [
-  { href: "/prepared",  label: "Approvals",  icon: IconPrepared },
-  { href: "/decisions", label: "Decisions",  icon: IconDecision },
-  { href: "/command",   label: "Command Center", icon: IconChart },
+  { href: "/agents",  label: "Agents",         icon: IconAgents },
+  { href: "/library", label: "Vault",          icon: IconLibrary },
+  { href: "/command", label: "Command Center", icon: IconChart },
 ];
 
-// What Starlane keeps running, like Harvey's "Apps".
+// The working apps, like the site's "Collections Intelligence".
 export const V32_APPS_NAV_ITEMS: PrimaryNavItem[] = [
-  { href: "/watch",    label: "Monitors",  icon: IconWatch },
-  { href: "/missions", label: "Tasks",     icon: IconMissions },
-  { href: "/workflows", label: "Workflows", icon: IconAgents },
-  { href: "/simulate", label: "Scenarios", icon: IconSimulate },
+  { href: "/decisions", label: "Decisions", icon: IconDecision },
+  { href: "/prepared",  label: "Approvals", icon: IconPrepared },
+  { href: "/watch",     label: "Monitors",  icon: IconWatch },
 ];
 
-// Reference material, like Harvey's "Spaces".
+// Under Spaces, after the business itself.
 export const V32_SECONDARY_NAV_ITEMS: PrimaryNavItem[] = [
-  { href: "/library",      label: "Vault",        icon: IconLibrary },
-  { href: "/sources",      label: "Data sources", icon: IconSources },
+  { href: "/sources", label: "Data sources", icon: IconSources },
 ];
 
 export const HISTORY_NAV_ITEM: PrimaryNavItem = { href: "/scan/history", label: "View history", icon: IconHistory };
@@ -38,8 +36,10 @@ export const HOME_NAV_ITEM: PrimaryNavItem = { href: "/bridge", label: "Home", i
 
 // The rest of the workspace, first in the "All tools" flyout.
 export const V32_WORKSPACE_NAV_ITEMS: PrimaryNavItem[] = [
-  { href: "/discover", label: "Discover", icon: IconDiscover },
-  { href: "/memory",   label: "Memory",   icon: IconMemory },
-  { href: "/agents",   label: "Agents",   icon: IconAgents },
-  { href: "/control",  label: "Controls", icon: IconControl },
+  { href: "/missions",  label: "Tasks",     icon: IconMissions },
+  { href: "/workflows", label: "Workflows", icon: IconAgents },
+  { href: "/simulate",  label: "Scenarios", icon: IconSimulate },
+  { href: "/discover",  label: "Discover",  icon: IconDiscover },
+  { href: "/memory",    label: "Memory",    icon: IconMemory },
+  { href: "/control",   label: "Controls",  icon: IconControl },
 ];

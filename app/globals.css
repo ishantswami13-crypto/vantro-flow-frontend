@@ -1680,3 +1680,37 @@ button:disabled { cursor: default; }
 .dd-card b { font-size: 14px; font-weight: 500; color: #0F0E0D; line-height: 1.4; }
 .dd-card span { font-size: 12px; color: #8F8A81; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 640px) { .dd-grid { grid-template-columns: 1fr; } }
+
+/* Sidebar, measured from the product view on the public site (HeroDashboard,
+   a 1663px-wide window): 301px rail, 16.5px rows 32px tall, 14px section
+   labels, square bullets for recents, square initials for spaces and the
+   account. */
+.hv-app .sb { width: 301px; padding: 20px 19px 16px; background: #100E0A; }
+.hv-app .sb-mark { font-size: 31px; }
+.hv-app .sb .sb-row { height: 32px; padding: 0 12px; gap: 16px; font-size: 16.5px; letter-spacing: -0.005em; color: #D9D6D1; }
+.hv-app .sb .sb-row svg { width: 17px; height: 17px; color: #9E9A94; }
+.hv-app .sb .sb-row.is-active { background: #33312D; }
+.hv-app .sb nav { gap: 0 !important; }
+.hv-app .sb-group { margin-top: 24px; }
+.hv-app .sb-label { padding: 0 12px 6px; font-size: 14px; color: #A9A59F; }
+.hv-app .sb-recent { padding: 0 12px 0 45px; height: 32px; line-height: 32px; font-size: 16.5px; color: #D9D6D1; }
+.hv-app .sb-recent::before { left: 18px; width: 5px; height: 5px; margin-top: -2.5px; border-radius: 0; background: #B9B5AF; }
+.hv-app .sb-space { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 15px; height: 15px; margin: 0 1px; border-radius: 2px; background: #4F6B5E; color: #E9E6E1; font-family: var(--serif); font-style: italic; font-size: 10px; }
+.hv-app .sb-avatar { width: 19px; height: 19px; border-radius: 3px; background: #E9E6F2; color: #1E1D1B; font-family: var(--serif); font-weight: 400; font-size: 14px; }
+.hv-app .sb .sb-user { height: 36px; }
+.hv-app .sb .sb-flyout .sb-row { font-size: 14px; color: var(--hv-body); }
+.hv-app .sb .sb-flyout .sb-row svg { width: 15px; height: 15px; color: var(--hv-muted); }
+
+/* Density: the product view on the public site is drawn for a 1663px-wide
+   window and scales with the screen. The app does the same on desktop, so a
+   laptop shows it at the photo's size instead of zoomed in. The shell's
+   height is divided by the same factor so it still fills the window. */
+@media (min-width: 1024px) {
+  :root { --app-zoom: 0.72; }
+  .hv-app { zoom: var(--app-zoom); height: calc(100vh / var(--app-zoom)) !important; }
+}
+@media (min-width: 1280px) { :root { --app-zoom: 0.78; } }
+@media (min-width: 1366px) { :root { --app-zoom: 0.82; } }
+@media (min-width: 1440px) { :root { --app-zoom: 0.86; } }
+@media (min-width: 1536px) { :root { --app-zoom: 0.92; } }
+@media (min-width: 1680px) { :root { --app-zoom: 1; } }
