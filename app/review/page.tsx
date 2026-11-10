@@ -18,6 +18,7 @@ import { useActiveEntity } from "@/lib/entities";
 import { currencyOf, useCurrencyView } from "@/lib/currency";
 import { CurrencyPicker, CurrencyLine } from "@/components/entities/CurrencyPicker";
 import { Pill } from "@/components/decisions/ui";
+import DashboardSwitch from "@/components/dashboards/DashboardSwitch";
 import { api, getUser } from "@/lib/api";
 import { osApi } from "@/lib/os";
 import { decisionsApi, money } from "@/lib/decisions";
@@ -65,7 +66,7 @@ export default function ReceivablesReviewPage() {
       const link = byCustomer.get((i.customer_name || "").trim());
       // Each row in the currency it was booked in; never converted.
       const cur = currencyOf(i, customerEntity(i.customer_name));
-      return { i, late, owed, link, cur };
+      return { i, late, owed, link, cur, company: customerEntity(i.customer_name)?.name || null };
     }).filter((r) => r.late > 0).sort((a, b) => b.late - a.late);
   }, [invoicesQ.data, byCustomer, keepCustomer, customerEntity]);
   type Row = (typeof rows)[number];
@@ -85,7 +86,8 @@ export default function ReceivablesReviewPage() {
       <div className="flex flex-col" style={{ gap: 20 }}>
         <div className="flex items-start justify-between gap-4 flex-wrap fade-once">
           <h1 className="hv-title" style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 37, lineHeight: 1.08, letterSpacing: "-0.012em", color: "#0F0E0D" }}>Receivables Review</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <DashboardSwitch current="owner" />
             <EntityPicker />
             <CurrencyPicker totals={curView.totals} cur={curView.cur} setCur={curView.setCur} />
             <Link href="/command" className="sp-btn">Command Center</Link>
@@ -119,7 +121,7 @@ export default function ReceivablesReviewPage() {
           <div className="sp-tr sp-th sp-tr-rv"><span>Invoice</span><span>Status</span><span>Starlane summary</span><span className="sp-right">Owed</span></div>
           {loading && <div className="sp-empty">Loading…</div>}
           {!loading && shown.length === 0 && <div className="sp-empty">{tab === "mine" ? "Nothing is waiting on you. Every overdue invoice is either being handled or under watch." : "Nothing is overdue."}</div>}
-          {shown.map(({ i, late, owed, link, cur }) => {
+          {shown.map(({ i, late, owed, link, cur, company }) => {
             const href = link?.decisionId ? `/decisions/${link.decisionId}` : link?.taskHref || null;
             const status = link?.decisionId ? <Pill tone="accent">Ready for review</Pill> : link?.task ? <Pill tone="warn">In progress</Pill> : <Pill>Watching</Pill>;
             const summary = link?.decisionId ? (link.suggestion || "Weighing options…") : link?.task ? link.task : late > 90 ? "Past 90 days; raise it" : "Within terms of follow-up";
@@ -129,7 +131,7 @@ export default function ReceivablesReviewPage() {
                   <span className="sp-doc"><DocIcon /></span>
                   <span className="min-w-0">
                     <span className="block truncate">{i.invoice_number || "Invoice"} <span style={{ color: "#8F8A81" }}>·</span> {i.customer_name}</span>
-                    <span className="sp-td-sub">{late} day{late === 1 ? "" : "s"} overdue</span>
+                    <span className="sp-td-sub">{company ? `${company} · ` : ""}{late} day{late === 1 ? "" : "s"} overdue</span>
                   </span>
                 </span>
                 <span className="sp-td">{status}</span>

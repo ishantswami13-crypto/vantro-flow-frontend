@@ -1925,3 +1925,10 @@ a.sp-tr:hover, button.sp-tr:hover { background: #F8F7F4; }
   .sp-tr-pr > :nth-child(3) { display: none; }
   .sp-tr-pr > :nth-child(4) { display: block; }
 }
+/* The two views from the home cards: For finance teams / For owners. */
+.db-switch { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid #E2DFD8; border-radius: 7px; background: #F4F3EF; }
+.db-switch-o { height: 24px; display: inline-flex; align-items: center; padding: 0 10px; border-radius: 5px; font-size: 12px; color: #6E6A63; white-space: nowrap; }
+.db-switch-o:hover { color: #0F0E0D; }
+.db-switch-o.is-on { background: #FFFFFF; color: #0F0E0D; box-shadow: 0 0 0 1px #E2DFD8; }
+.sp-entity { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 1023px) { .sp-entity { margin-left: 0; width: 100%; } }

@@ -23,6 +23,7 @@ import { decisionsApi, money, relTime, STATUS_LABEL } from "@/lib/decisions";
 import { PROMPTS } from "@/lib/libraryPrompts";
 import { useActiveEntity } from "@/lib/entities";
 import { EntityPicker } from "@/components/entities/EntityPicker";
+import DashboardSwitch from "@/components/dashboards/DashboardSwitch";
 import { currencyOf, useCurrencyView } from "@/lib/currency";
 import { CurrencyPicker, CurrencyLine } from "@/components/entities/CurrencyPicker";
 import { listThreads, startThread, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
@@ -46,10 +47,17 @@ type Tab = (typeof TABS)[number]["key"];
 
 // The tasks the run box offers, each a question Starlane answers from the attached files.
 const RUNS = [
-  { label: "Match open invoices against payments and flag the gaps", text: "Match my open invoices against the payments recorded and list every gap: unpaid, part-paid or paid without an invoice." },
+  { label: "Match bank lines against open invoices and flag the gaps", text: "Match the bank lines against my open invoices and list every gap: unpaid, part-paid, or money received without an invoice." },
   { label: "Rank who to chase first and draft the reminders", text: "Rank the customers I should chase first, with how much each owes and how late, and draft a polite reminder for the top three." },
   { label: "Build the ageing report by customer", text: "Build an ageing report by customer: not due, 1–30, 31–60, 61–90 and over 90 days, with totals." },
   { label: "Forecast the cash coming in over 30 days", text: "From the due dates and how each customer has paid, how much cash should come in over the next 30 days, week by week?" },
+];
+
+// The close playbooks, like the Library cards on the public site.
+const PLAYBOOKS = [
+  { title: "Reconcile bank lines", sub: "Match receipts to the invoices they settle", text: "Reconcile this month's bank lines: match each receipt to the invoice it settles, and list what is unmatched on either side." },
+  { title: "Chase overdue invoices", sub: "Rank by cash at risk and draft reminders", text: "List every overdue invoice ranked by cash at risk, and draft a reminder for the top five for me to approve." },
+  { title: "Review FX revaluation", sub: "Open items in other currencies, as booked", text: "List the open invoices and bills booked in other currencies, what each is owed in its own currency, and which need a revaluation at month end." },
 ];
 
 const DAY = 86_400_000;
@@ -86,9 +94,11 @@ function SpaceInner() {
 
   const { entity } = useActiveEntity();
   const biz = entity?.name || (user?.business_name || "").trim().replace(/\s+(Pvt\.?\s*Ltd\.?|Private Limited|Ltd\.?|LLP)$/i, "") || "Your business";
+  // The close is for the month just ended, like "October Close" in November.
   const now = new Date();
-  const month = now.toLocaleDateString("en-IN", { month: "long" });
-  const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const closing = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const month = closing.toLocaleDateString("en-IN", { month: "long" });
+  const period = `${closing.getFullYear()}-${String(closing.getMonth() + 1).padStart(2, "0")}`;
 
   const ask = (q: string) => router.push(`/scan/${startThread(q)}`);
 
@@ -96,12 +106,12 @@ function SpaceInner() {
     <DashboardLayout pageTitle={biz}>
       <div className="sp">
         <header className="sp-band">
-          <p className="sp-meta">Review period #: {period} <span aria-hidden="true">·</span> {biz}</p>
+          <p className="sp-meta">Close period #: {period} <span aria-hidden="true">·</span> {biz}</p>
           <div className="sp-titlerow">
             <span className="sp-initial" aria-hidden="true">{month.charAt(0)}</span>
-            <h1 className="sp-title">{month} Review <span className="sp-dash">—</span> {biz}</h1>
+            <h1 className="sp-title">{month} Close <span className="sp-dash">—</span> {biz}</h1>
             <span className="sp-chip"><LockIcon /> Internal</span>
-            <span className="sp-entity"><EntityPicker /></span>
+            <span className="sp-entity"><DashboardSwitch current="finance" /><EntityPicker /></span>
           </div>
           <nav className="sp-tabs" aria-label="Space">
             {TABS.map((t) => (
@@ -182,7 +192,7 @@ function HomeTab({ uploads, folders, loading, onRun }: { uploads: Item[]; folder
 
       <section className="sp-sec">
         <h2 className="sp-h">Vaults</h2>
-        <p className="sp-sub">Ledgers and files for this review</p>
+        <p className="sp-sub">Ledgers and statements for this close</p>
         <div className="sp-tiles">
           {(folders.length ? folders : [{ id: "a", name: "Uploaded files", count: 0 }, { id: "b", name: "Customer ledgers", count: 0 }, { id: "c", name: "Agent outputs", count: 0 }] as Folder[]).slice(0, 3).map((f) => (
             <Link key={f.id} href="/space?tab=vault" className="sp-tile">
@@ -196,7 +206,21 @@ function HomeTab({ uploads, folders, loading, onRun }: { uploads: Item[]; folder
 
       <section className="sp-sec">
         <h2 className="sp-h">Library</h2>
-        <p className="sp-sub">Ready questions Starlane answers from this space</p>
+        <p className="sp-sub">Agent playbooks for close work</p>
+        <div className="sp-tiles">
+          {PLAYBOOKS.map((p) => (
+            <button key={p.title} type="button" className="sp-tile" onClick={() => onRun(p.text)}>
+              <span className="sp-tile-i"><FolderIcon /></span>
+              <span className="sp-tile-t">{p.title}</span>
+              <span className="sp-tile-s">{p.sub}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="sp-sec">
+        <h2 className="sp-h">Ready questions</h2>
+        <p className="sp-sub">Questions Starlane answers from this close</p>
         <div className="sp-table">
           <div className="sp-tr sp-th"><span>Question</span><span>Area</span><span /></div>
           {PROMPTS.slice(0, 6).map((p) => (
