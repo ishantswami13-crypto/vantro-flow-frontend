@@ -10,6 +10,8 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StarlaneMark from "@/components/brand/StarlaneMark";
+import { EntityPicker, EntityNote } from "@/components/entities/EntityPicker";
+import { useActiveEntity } from "@/lib/entities";
 import { api, getUser, type Invoice } from "@/lib/api";
 import { decisionsApi, money } from "@/lib/decisions";
 import {
@@ -110,7 +112,9 @@ export default function CommandCenterPage() {
   });
   const decisionsQ = useQuery({ queryKey: ["decisions", "active"], queryFn: () => decisionsApi.list("active"), staleTime: 30_000 });
 
-  const invoices = useMemo(() => invoicesQ.data?.invoices ?? [], [invoicesQ.data]);
+  // Spaces: only the chosen company's customers, or everyone under All companies.
+  const { entity, keepCustomer } = useActiveEntity();
+  const invoices = useMemo(() => (invoicesQ.data?.invoices ?? []).filter((i) => keepCustomer(i.customer_name)), [invoicesQ.data, keepCustomer]);
   // One year plus the 30-day comparison window, sliced per card.
   const full = useMemo(() => buildSeries(invoices, 395), [invoices]);
   const last = full.dates.length - 1;
@@ -193,7 +197,8 @@ export default function CommandCenterPage() {
   const pending = decisionsQ.data?.decisions?.length ?? 0;
   const bizName = (user?.business_name || "").trim();
   const short = bizName.replace(/\s+(Pvt\.?\s*Ltd\.?|Private Limited|Ltd\.?|LLP)$/i, "");
-  const owner = short ? `${short}${/s$/i.test(short) ? "’" : "’s"}` : "Your";
+  const who = entity?.name || short;
+  const owner = who ? `${who}${/s$/i.test(who) ? "’" : "’s"}` : "Your";
   const loading = invoicesQ.isLoading;
   const empty = !loading && invoices.length === 0;
 
@@ -203,6 +208,7 @@ export default function CommandCenterPage() {
         <header className="cc-head">
           <h1 className="cc-title">{owner} Command Center</h1>
           <div className="cc-actions">
+            <EntityPicker />
             <button type="button" role="switch" aria-checked={compare} className="cc-toggle"
               onClick={() => { setLine1(!compare); setLine2(!compare); }}>
               <span className="cc-switch" aria-hidden="true" /> Compare
@@ -219,6 +225,8 @@ export default function CommandCenterPage() {
             ? <>There {pending === 1 ? "is" : "are"} {pending} decision{pending === 1 ? "" : "s"} waiting on you to recover what you&rsquo;re owed</>
             : empty ? <>Bring your receivables in to fill this page</> : <>Nothing is waiting on a decision right now</>}
         </Link>
+
+        <EntityNote />
 
         {invoicesQ.isError && <p role="alert" className="cc-note" style={{ color: "#A3392E" }}>Couldn&rsquo;t load your invoices. {(invoicesQ.error as Error).message}</p>}
 

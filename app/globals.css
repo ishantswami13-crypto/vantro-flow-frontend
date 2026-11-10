@@ -1882,3 +1882,28 @@ a.sp-tr:hover, button.sp-tr:hover { background: #F8F7F4; }
 .sp-stats.st-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .sp-stats.st-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 1023px) { .sp-stats.st-3, .sp-stats.st-4, .sp-stats.st-2 { grid-template-columns: 1fr 1fr; } }
+/* Spaces: companies under one account */
+.es-badge { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 5px; color: #FFFFFF; font-family: var(--serif, Georgia, serif); line-height: 1; }
+.es-tr { grid-template-columns: minmax(0, 1fr) 130px 90px 90px 150px; }
+.es-tr.es-on { background: #FBFAF7; }
+.es-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.es-new { padding-bottom: 18px; }
+.es-fields { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-top: 12px; }
+.es-f { display: flex; flex-direction: column; gap: 5px; flex: 1 1 220px; font-size: 11.5px; color: #77736C; }
+.es-f.es-sm { flex: 0 0 150px; }
+.es-f input, .es-f select, .es-search { height: 32px; padding: 0 10px; border: 1px solid #E2DFD8; border-radius: 6px; background: #FFFFFF; font-size: 13px; color: #191917; }
+.es-edit { display: flex; flex-direction: column; gap: 14px; padding: 4px 18px 20px; border-bottom: 1px solid #F0EEEA; background: #FBFAF7; }
+.es-picks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.es-pick { min-width: 0; border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.es-list { max-height: 240px; overflow-y: auto; border: 1px solid #ECEAE4; border-radius: 8px; background: #FFFFFF; }
+.es-opt { display: flex; align-items: center; gap: 9px; padding: 7px 10px; border-bottom: 1px solid #F4F2EE; font-size: 13px; color: #2B2A27; cursor: pointer; }
+.es-opt:last-child { border-bottom: 0; }
+.es-in { margin-left: auto; flex-shrink: 0; font-size: 11px; color: #8F8A81; }
+@media (max-width: 1023px) {
+  .es-tr { grid-template-columns: minmax(0, 1fr) auto; }
+  .es-tr > :nth-child(2), .es-tr > :nth-child(3), .es-tr > :nth-child(4) { display: none; }
+  .es-tr > :nth-child(5) { display: flex; }
+  .es-picks { grid-template-columns: 1fr; }
+  .es-edit { padding: 4px 16px 18px; }
+}
+.sp-entity { margin-left: auto; }
