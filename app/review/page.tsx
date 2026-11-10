@@ -13,6 +13,8 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StarlaneMark from "@/components/brand/StarlaneMark";
+import { EntityPicker, EntityNote } from "@/components/entities/EntityPicker";
+import { useActiveEntity } from "@/lib/entities";
 import { Pill } from "@/components/decisions/ui";
 import { api, getUser } from "@/lib/api";
 import { osApi } from "@/lib/os";
@@ -51,16 +53,17 @@ export default function ReceivablesReviewPage() {
     return m;
   }, [decisionsQ.data, missionsQ.data]);
 
+  const { keepCustomer } = useActiveEntity();
   const rows = useMemo(() => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    return (invoicesQ.data?.invoices || []).filter((i) => i.payment_status !== "Paid").map((i) => {
+    return (invoicesQ.data?.invoices || []).filter((i) => i.payment_status !== "Paid" && keepCustomer(i.customer_name)).map((i) => {
       const due = i.due_date ? Date.parse(i.due_date.slice(0, 10) + "T00:00:00") : NaN;
       const late = Number.isFinite(due) ? Math.floor((today.getTime() - due) / DAY) : Number(i.days_overdue || 0);
       const owed = Math.max(0, Number(i.invoice_amount) - Number(i.payment_amount || 0));
       const link = byCustomer.get((i.customer_name || "").trim());
       return { i, late, owed, link };
     }).filter((r) => r.late > 0).sort((a, b) => b.late - a.late);
-  }, [invoicesQ.data, byCustomer]);
+  }, [invoicesQ.data, byCustomer, keepCustomer]);
 
   const mine = rows.filter((r) => r.link?.decisionId);
   const shown = tab === "mine" ? mine : rows;
@@ -77,10 +80,13 @@ export default function ReceivablesReviewPage() {
         <div className="flex items-start justify-between gap-4 flex-wrap fade-once">
           <h1 className="hv-title" style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 37, lineHeight: 1.08, letterSpacing: "-0.012em", color: "#0F0E0D" }}>Receivables Review</h1>
           <div className="flex items-center gap-2">
+            <EntityPicker />
             <Link href="/command" className="sp-btn">Command Center</Link>
             <button type="button" className="sp-go" onClick={() => ask("Who owes us the most right now, and who should I call first today?")}><StarlaneMark variant="glyph" size={10} /> Ask Starlane</button>
           </div>
         </div>
+
+        <EntityNote />
 
         <div className="sp-summary" style={{ marginBottom: 0 }}>
           <span className="sp-summary-m"><StarlaneMark variant="glyph" size={9} /></span>

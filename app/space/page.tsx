@@ -21,6 +21,8 @@ import { api, getUser, request, authHeaders, API_BASE } from "@/lib/api";
 import { osApi } from "@/lib/os";
 import { decisionsApi, money, relTime, STATUS_LABEL } from "@/lib/decisions";
 import { PROMPTS } from "@/lib/libraryPrompts";
+import { useActiveEntity } from "@/lib/entities";
+import { EntityPicker } from "@/components/entities/EntityPicker";
 import { listThreads, startThread, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
 
 type Item = {
@@ -80,7 +82,8 @@ function SpaceInner() {
   const uploads = folders.find((f) => f.id === "uploads")?.items || [];
   const ledgers = folders.find((f) => f.id === "customers")?.items || [];
 
-  const biz = (user?.business_name || "").trim().replace(/\s+(Pvt\.?\s*Ltd\.?|Private Limited|Ltd\.?|LLP)$/i, "") || "Your business";
+  const { entity } = useActiveEntity();
+  const biz = entity?.name || (user?.business_name || "").trim().replace(/\s+(Pvt\.?\s*Ltd\.?|Private Limited|Ltd\.?|LLP)$/i, "") || "Your business";
   const now = new Date();
   const month = now.toLocaleDateString("en-IN", { month: "long" });
   const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -96,6 +99,7 @@ function SpaceInner() {
             <span className="sp-initial" aria-hidden="true">{month.charAt(0)}</span>
             <h1 className="sp-title">{month} Review <span className="sp-dash">—</span> {biz}</h1>
             <span className="sp-chip"><LockIcon /> Internal</span>
+            <span className="sp-entity"><EntityPicker /></span>
           </div>
           <nav className="sp-tabs" aria-label="Space">
             {TABS.map((t) => (
@@ -339,14 +343,15 @@ function LedgersTab({ ledgers, loading, onAsk }: { ledgers: Item[]; loading: boo
 
 function ReportsTab({ userId, onAsk }: { userId?: string; onAsk: (q: string) => void }) {
   const invoicesQ = useQuery({ queryKey: ["command-invoices", userId], queryFn: () => api.invoices.list(userId!), enabled: !!userId, staleTime: 60_000 });
+  const { keepCustomer } = useActiveEntity();
   const open = useMemo(() => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    return (invoicesQ.data?.invoices || []).filter((i) => i.payment_status !== "Paid").map((i) => {
+    return (invoicesQ.data?.invoices || []).filter((i) => i.payment_status !== "Paid" && keepCustomer(i.customer_name)).map((i) => {
       const due = i.due_date ? Date.parse(i.due_date.slice(0, 10) + "T00:00:00") : NaN;
       const late = Number.isFinite(due) ? Math.floor((today.getTime() - due) / DAY) : Number(i.days_overdue || 0);
       return { name: i.customer_name || "Unnamed customer", amount: Math.max(0, Number(i.invoice_amount) - Number(i.payment_amount || 0)), late };
     });
-  }, [invoicesQ.data]);
+  }, [invoicesQ.data, keepCustomer]);
   const total = open.reduce((s, o) => s + o.amount, 0);
   const overdue = open.filter((o) => o.late > 0).reduce((s, o) => s + o.amount, 0);
   const next30 = open.filter((o) => o.late <= 0 && o.late > -30).reduce((s, o) => s + o.amount, 0);
@@ -411,6 +416,7 @@ const EXPORTS = [
 const PERIODS = [{ v: 30, l: "Last 30 days" }, { v: 90, l: "Last 3 months" }, { v: 365, l: "Last 12 months" }];
 
 function ReportDownloads() {
+  const { entity } = useActiveEntity();
   const [days, setDays] = useState(90);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -446,7 +452,7 @@ function ReportDownloads() {
   return (
     <div style={{ marginTop: 28 }}>
       <div className="sp-head">
-        <div><h2 className="sp-h">Download reports</h2><p className="sp-sub">Built from this space&rsquo;s invoices for the period you choose</p></div>
+        <div><h2 className="sp-h">Download reports</h2><p className="sp-sub">{entity ? "Built from every company’s invoices for the period you choose" : "Built from this space’s invoices for the period you choose"}</p></div>
         <nav aria-label="Period" className="sp-pills" style={{ margin: 0 }}>
           {PERIODS.map((p) => <button key={p.v} type="button" aria-pressed={days === p.v} className={`sp-pill ${days === p.v ? "is-on" : ""}`} onClick={() => setDays(p.v)}>{p.l}</button>)}
         </nav>

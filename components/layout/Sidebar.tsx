@@ -14,8 +14,9 @@ import { V32_NAV_ITEMS, V32_APPS_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, V32_WORKSPA
 import { listThreads, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
 import { useQuery } from "@tanstack/react-query";
 import { decisionsApi } from "@/lib/decisions";
-import { IconBell, IconSearch, IconMore, IconPlus, IconBookmark, IconBookmarkFilled } from "@/components/v32/icons";
+import { IconBell, IconSearch, IconMore, IconPlus, IconBookmark, IconBookmarkFilled, IconSpaces } from "@/components/v32/icons";
 import { listPins, togglePin, PINS_EVENT, type Pin } from "@/lib/pins";
+import { useActiveEntity } from "@/lib/entities";
 
 // Everything real that sits outside the Version 32 nav lives in the "More"
 // flyout: it is still reachable, but the rail stays as quiet as the design.
@@ -51,6 +52,7 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [recent, setRecent]               = useState<ScanThread[]>([]);
   const [pins, setPins]                   = useState<Pin[]>([]);
+  const spaces                            = useActiveEntity();
   const [here, setHere]                   = useState("");
   const accountRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
@@ -346,12 +348,26 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
 
           <nav aria-label="Spaces" className="sb-group flex flex-col" style={{ gap: 1 }}>
             <p className="sb-label">Spaces</p>
-            {businessName && (
+            {spaces.entities.length === 0 && businessName && (
               <Link href="/space" onClick={onClose} title={businessName} aria-current={isActive("/space") ? "page" : undefined} className={`sb-row ${isActive("/space") ? "is-active" : ""}`}>
                 <span className="sb-space" aria-hidden="true">{businessName.trim()[0]?.toUpperCase()}</span>
                 <span className="flex-1 truncate">{businessName}</span>
               </Link>
             )}
+            {/* One row per company (lib/entities.ts); opening one narrows every view to it. */}
+            {spaces.entities.map(e => {
+              const on = isActive("/space") && spaces.entity?.id === e.id;
+              return (
+                <Link key={e.id} href="/space" onClick={() => { spaces.setActive(e.id); onClose(); }} title={e.name} aria-current={on ? "page" : undefined} className={`sb-row ${on ? "is-active" : ""}`}>
+                  <span className="sb-space" aria-hidden="true" style={e.color ? { background: e.color } : undefined}>{e.name.trim()[0]?.toUpperCase()}</span>
+                  <span className="flex-1 truncate">{e.name}</span>
+                </Link>
+              );
+            })}
+            <Link href="/spaces" onClick={onClose} title={slim ? "View Spaces" : undefined} aria-current={isActive("/spaces") ? "page" : undefined} className={`sb-row ${isActive("/spaces") ? "is-active" : ""}`}>
+              <IconSpaces size={16} />
+              <span className="flex-1 truncate">View Spaces</span>
+            </Link>
             {V32_SECONDARY_NAV_ITEMS.map(n => (
               <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
             ))}
