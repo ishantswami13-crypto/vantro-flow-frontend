@@ -7,7 +7,7 @@
 // what is waiting on the owner from GET /api/decisions and the tasks in
 // hand from GET /api/os/missions. Nothing here is a sample.
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +15,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import StarlaneMark from "@/components/brand/StarlaneMark";
 import { EntityPicker, EntityNote } from "@/components/entities/EntityPicker";
 import { useActiveEntity } from "@/lib/entities";
+import { currencyOf, useCurrencyView } from "@/lib/currency";
+import { CurrencyPicker, CurrencyLine } from "@/components/entities/CurrencyPicker";
 import { Pill } from "@/components/decisions/ui";
 import { api, getUser } from "@/lib/api";
 import { osApi } from "@/lib/os";
@@ -53,7 +55,7 @@ export default function ReceivablesReviewPage() {
     return m;
   }, [decisionsQ.data, missionsQ.data]);
 
-  const { keepCustomer } = useActiveEntity();
+  const { keepCustomer, customerEntity } = useActiveEntity();
   const rows = useMemo(() => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     return (invoicesQ.data?.invoices || []).filter((i) => i.payment_status !== "Paid" && keepCustomer(i.customer_name)).map((i) => {
@@ -61,13 +63,17 @@ export default function ReceivablesReviewPage() {
       const late = Number.isFinite(due) ? Math.floor((today.getTime() - due) / DAY) : Number(i.days_overdue || 0);
       const owed = Math.max(0, Number(i.invoice_amount) - Number(i.payment_amount || 0));
       const link = byCustomer.get((i.customer_name || "").trim());
-      return { i, late, owed, link };
+      // Each row in the currency it was booked in; never converted.
+      const cur = currencyOf(i, customerEntity(i.customer_name));
+      return { i, late, owed, link, cur };
     }).filter((r) => r.late > 0).sort((a, b) => b.late - a.late);
-  }, [invoicesQ.data, byCustomer, keepCustomer]);
+  }, [invoicesQ.data, byCustomer, keepCustomer, customerEntity]);
+  type Row = (typeof rows)[number];
+  const curView = useCurrencyView(rows, useCallback((r: Row) => r.cur, []), useCallback((r: Row) => r.owed, []));
 
   const mine = rows.filter((r) => r.link?.decisionId);
   const shown = tab === "mine" ? mine : rows;
-  const atRisk = rows.filter((r) => r.late > 90).reduce((s, r) => s + r.owed, 0);
+  const atRisk = curView.inCur.filter((r) => r.late > 90).reduce((s, r) => s + r.owed, 0);
   const inHand = rows.filter((r) => r.link?.task && !r.link?.decisionId).length;
   const waitingCount = (decisionsQ.data?.decisions || []).filter((d) => WAITING.has(d.status)).length;
   const loading = !user?.id || invoicesQ.isLoading;
@@ -81,12 +87,14 @@ export default function ReceivablesReviewPage() {
           <h1 className="hv-title" style={{ margin: 0, fontFamily: "'Newsreader', Georgia, serif", fontWeight: 400, fontSize: 37, lineHeight: 1.08, letterSpacing: "-0.012em", color: "#0F0E0D" }}>Receivables Review</h1>
           <div className="flex items-center gap-2">
             <EntityPicker />
+            <CurrencyPicker totals={curView.totals} cur={curView.cur} setCur={curView.setCur} />
             <Link href="/command" className="sp-btn">Command Center</Link>
             <button type="button" className="sp-go" onClick={() => ask("Who owes us the most right now, and who should I call first today?")}><StarlaneMark variant="glyph" size={10} /> Ask Starlane</button>
           </div>
         </div>
 
         <EntityNote />
+        <CurrencyLine totals={curView.totals} cur={curView.cur} setCur={curView.setCur} what="Overdue" />
 
         <div className="sp-summary" style={{ marginBottom: 0 }}>
           <span className="sp-summary-m"><StarlaneMark variant="glyph" size={9} /></span>
@@ -99,7 +107,7 @@ export default function ReceivablesReviewPage() {
           <div className="sp-stat"><div className="sp-stat-n">{decisionsQ.isLoading ? "—" : waitingCount}</div><div className="sp-stat-l">Ready to approve</div></div>
           <div className="sp-stat"><div className="sp-stat-n">{loading ? "—" : mine.length}</div><div className="sp-stat-l">Invoices assigned to you</div></div>
           <div className="sp-stat"><div className="sp-stat-n">{loading ? "—" : inHand}</div><div className="sp-stat-l">Being handled</div></div>
-          <div className="sp-stat"><div className="sp-stat-n">{loading ? "—" : money(atRisk)}</div><div className="sp-stat-l">Cash at risk, over 90 days</div></div>
+          <div className="sp-stat"><div className="sp-stat-n">{loading ? "—" : money(atRisk, curView.cur)}</div><div className="sp-stat-l">Cash at risk, over 90 days{curView.mixed ? ` (${curView.cur})` : ""}</div></div>
         </div>
 
         <nav aria-label="Filter" className="sp-pills" style={{ marginBottom: -8 }}>
@@ -111,7 +119,7 @@ export default function ReceivablesReviewPage() {
           <div className="sp-tr sp-th sp-tr-rv"><span>Invoice</span><span>Status</span><span>Starlane summary</span><span className="sp-right">Owed</span></div>
           {loading && <div className="sp-empty">Loading…</div>}
           {!loading && shown.length === 0 && <div className="sp-empty">{tab === "mine" ? "Nothing is waiting on you. Every overdue invoice is either being handled or under watch." : "Nothing is overdue."}</div>}
-          {shown.map(({ i, late, owed, link }) => {
+          {shown.map(({ i, late, owed, link, cur }) => {
             const href = link?.decisionId ? `/decisions/${link.decisionId}` : link?.taskHref || null;
             const status = link?.decisionId ? <Pill tone="accent">Ready for review</Pill> : link?.task ? <Pill tone="warn">In progress</Pill> : <Pill>Watching</Pill>;
             const summary = link?.decisionId ? (link.suggestion || "Weighing options…") : link?.task ? link.task : late > 90 ? "Past 90 days; raise it" : "Within terms of follow-up";
@@ -126,7 +134,7 @@ export default function ReceivablesReviewPage() {
                 </span>
                 <span className="sp-td">{status}</span>
                 <span className="sp-td rv-sum"><span className="sp-summary-m" style={{ width: 14, height: 14 }}><StarlaneMark variant="glyph" size={7} /></span><span className="truncate">{summary}</span></span>
-                <span className="sp-td sp-right tabular-nums" style={{ color: late > 90 ? "#A3392E" : undefined }}>{money(owed)}</span>
+                <span className="sp-td sp-right tabular-nums" style={{ color: late > 90 ? "#A3392E" : undefined }}>{money(owed, cur)}</span>
               </>
             );
             return href

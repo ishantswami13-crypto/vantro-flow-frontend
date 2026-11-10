@@ -8,7 +8,7 @@
 // GET /api/os/missions, agents from GET /api/os/agents, figures from the
 // tenant's own invoices and conversations from this browser's Scan store.
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -23,6 +23,8 @@ import { decisionsApi, money, relTime, STATUS_LABEL } from "@/lib/decisions";
 import { PROMPTS } from "@/lib/libraryPrompts";
 import { useActiveEntity } from "@/lib/entities";
 import { EntityPicker } from "@/components/entities/EntityPicker";
+import { currencyOf, useCurrencyView } from "@/lib/currency";
+import { CurrencyPicker, CurrencyLine } from "@/components/entities/CurrencyPicker";
 import { listThreads, startThread, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
 
 type Item = {
@@ -343,15 +345,19 @@ function LedgersTab({ ledgers, loading, onAsk }: { ledgers: Item[]; loading: boo
 
 function ReportsTab({ userId, onAsk }: { userId?: string; onAsk: (q: string) => void }) {
   const invoicesQ = useQuery({ queryKey: ["command-invoices", userId], queryFn: () => api.invoices.list(userId!), enabled: !!userId, staleTime: 60_000 });
-  const { keepCustomer } = useActiveEntity();
-  const open = useMemo(() => {
+  const { keepCustomer, customerEntity } = useActiveEntity();
+  const openAll = useMemo(() => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     return (invoicesQ.data?.invoices || []).filter((i) => i.payment_status !== "Paid" && keepCustomer(i.customer_name)).map((i) => {
       const due = i.due_date ? Date.parse(i.due_date.slice(0, 10) + "T00:00:00") : NaN;
       const late = Number.isFinite(due) ? Math.floor((today.getTime() - due) / DAY) : Number(i.days_overdue || 0);
-      return { name: i.customer_name || "Unnamed customer", amount: Math.max(0, Number(i.invoice_amount) - Number(i.payment_amount || 0)), late };
+      return { name: i.customer_name || "Unnamed customer", amount: Math.max(0, Number(i.invoice_amount) - Number(i.payment_amount || 0)), late, cur: currencyOf(i, customerEntity(i.customer_name)) };
     });
-  }, [invoicesQ.data, keepCustomer]);
+  }, [invoicesQ.data, keepCustomer, customerEntity]);
+  type Open = (typeof openAll)[number];
+  // One currency at a time; amounts in different currencies are never added.
+  const curView = useCurrencyView(openAll, useCallback((o: Open) => o.cur, []), useCallback((o: Open) => o.amount, []));
+  const { inCur: open, fmt: money } = curView;
   const total = open.reduce((s, o) => s + o.amount, 0);
   const overdue = open.filter((o) => o.late > 0).reduce((s, o) => s + o.amount, 0);
   const next30 = open.filter((o) => o.late <= 0 && o.late > -30).reduce((s, o) => s + o.amount, 0);
@@ -373,8 +379,12 @@ function ReportsTab({ userId, onAsk }: { userId?: string; onAsk: (q: string) => 
     <section className="sp-sec sp-sec-first">
       <div className="sp-head">
         <div><h2 className="sp-h">Reports</h2><p className="sp-sub">Worked out from this space&rsquo;s invoices, as of today</p></div>
-        <Link href="/command" className="sp-btn">Command Center</Link>
+        <div className="flex items-center gap-2">
+          <CurrencyPicker totals={curView.totals} cur={curView.cur} setCur={curView.setCur} />
+          <Link href="/command" className="sp-btn">Command Center</Link>
+        </div>
       </div>
+      <CurrencyLine totals={curView.totals} cur={curView.cur} setCur={curView.setCur} />
       <div className="sp-stats">
         <div className="sp-stat"><div className="sp-stat-n">{loading ? "—" : money(total)}</div><div className="sp-stat-l">Owed to you</div></div>
         <div className="sp-stat"><div className="sp-stat-n">{loading ? "—" : money(overdue)}</div><div className="sp-stat-l">Overdue</div></div>

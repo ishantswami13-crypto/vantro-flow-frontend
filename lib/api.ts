@@ -1143,6 +1143,8 @@ export interface Invoice {
   payment_date?: string;
   payment_amount?: number;
   payment_method?: string;
+  // ISO code the invoice was booked in; null means the business currency.
+  currency?: string | null;
   priority_score?: number;
   urgency?: string;
   notes?: string;
