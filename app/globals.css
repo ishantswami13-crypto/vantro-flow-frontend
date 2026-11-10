@@ -1912,3 +1912,16 @@ a.sp-tr:hover, button.sp-tr:hover { background: #F8F7F4; }
 .cur-chip { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #E2DFD8; border-radius: 999px; background: #FFFFFF; font-size: 12px; color: #2B2A27; font-variant-numeric: tabular-nums; }
 .cur-chip span { color: #8F8A81; font-size: 10.5px; letter-spacing: .04em; }
 .cur-chip.is-on { border-color: #0F0E0D; }
+/* Supplier run */
+.sp-tr-pr { grid-template-columns: 22px minmax(0, 1fr) 150px 120px; cursor: pointer; }
+.sp-tr-pr:not(.sp-th):hover { background: #F8F7F4; }
+.sp-tr-pr input[type="checkbox"] { width: 14px; height: 14px; accent-color: #0F0E0D; }
+.sp-tr-pr.is-out .sp-td-main, .sp-tr-pr.is-out .sp-right { color: #8F8A81; }
+.pr-cash input { width: 100%; border: 0; border-bottom: 1px dashed #C9C5BD; background: transparent; padding: 0 0 2px; font-family: 'Newsreader', Georgia, serif; font-size: 28px; line-height: 1; color: #0F0E0D; font-variant-numeric: tabular-nums; outline: none; }
+.pr-cash input:focus { border-bottom-color: #0F0E0D; }
+.pr-cash input::placeholder { color: #A9A49B; }
+@media (max-width: 1023px) {
+  .sp-tr-pr { grid-template-columns: 22px minmax(0, 1fr) auto; }
+  .sp-tr-pr > :nth-child(3) { display: none; }
+  .sp-tr-pr > :nth-child(4) { display: block; }
+}
