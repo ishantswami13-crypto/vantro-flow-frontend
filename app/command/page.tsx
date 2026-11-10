@@ -5,15 +5,17 @@
 // daily history is rebuilt from invoice, due and payment dates, so nothing
 // here is estimated or invented.
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StarlaneMark from "@/components/brand/StarlaneMark";
 import { EntityPicker, EntityNote } from "@/components/entities/EntityPicker";
 import { useActiveEntity } from "@/lib/entities";
+import { currencyOf, useCurrencyView } from "@/lib/currency";
+import { CurrencyPicker, CurrencyLine } from "@/components/entities/CurrencyPicker";
 import { api, getUser, type Invoice } from "@/lib/api";
-import { decisionsApi, money } from "@/lib/decisions";
+import { decisionsApi } from "@/lib/decisions";
 import {
   ALERT, BAR, BarcodeChart, INK, LINE, Legend, PairedBars, PillSelect, RankBars, SOFT, downloadCsv, type DayPoint,
 } from "@/components/command/Charts";
@@ -113,8 +115,13 @@ export default function CommandCenterPage() {
   const decisionsQ = useQuery({ queryKey: ["decisions", "active"], queryFn: () => decisionsApi.list("active"), staleTime: 30_000 });
 
   // Spaces: only the chosen company's customers, or everyone under All companies.
-  const { entity, keepCustomer } = useActiveEntity();
-  const invoices = useMemo(() => (invoicesQ.data?.invoices ?? []).filter((i) => keepCustomer(i.customer_name)), [invoicesQ.data, keepCustomer]);
+  const { entity, keepCustomer, customerEntity } = useActiveEntity();
+  const scoped = useMemo(() => (invoicesQ.data?.invoices ?? []).filter((i) => keepCustomer(i.customer_name)), [invoicesQ.data, keepCustomer]);
+  // Currencies: every figure below is in one currency, never converted or mixed.
+  const curOf = useCallback((i: Invoice) => currencyOf(i, customerEntity(i.customer_name)), [customerEntity]);
+  const owedOf = useCallback((i: Invoice) => (i.payment_status === "Paid" ? 0 : Number(i.invoice_amount) - Number(i.payment_amount || 0)), []);
+  const curView = useCurrencyView(scoped, curOf, owedOf);
+  const { inCur: invoices, fmt: money } = curView;
   // One year plus the 30-day comparison window, sliced per card.
   const full = useMemo(() => buildSeries(invoices, 395), [invoices]);
   const last = full.dates.length - 1;
@@ -200,7 +207,7 @@ export default function CommandCenterPage() {
   const who = entity?.name || short;
   const owner = who ? `${who}${/s$/i.test(who) ? "’" : "’s"}` : "Your";
   const loading = invoicesQ.isLoading;
-  const empty = !loading && invoices.length === 0;
+  const empty = !loading && scoped.length === 0;
 
   return (
     <DashboardLayout pageTitle="Command Center">
@@ -209,6 +216,7 @@ export default function CommandCenterPage() {
           <h1 className="cc-title">{owner} Command Center</h1>
           <div className="cc-actions">
             <EntityPicker />
+            <CurrencyPicker totals={curView.totals} cur={curView.cur} setCur={curView.setCur} />
             <button type="button" role="switch" aria-checked={compare} className="cc-toggle"
               onClick={() => { setLine1(!compare); setLine2(!compare); }}>
               <span className="cc-switch" aria-hidden="true" /> Compare
@@ -227,6 +235,7 @@ export default function CommandCenterPage() {
         </Link>
 
         <EntityNote />
+        <CurrencyLine totals={curView.totals} cur={curView.cur} setCur={curView.setCur} />
 
         {invoicesQ.isError && <p role="alert" className="cc-note" style={{ color: "#A3392E" }}>Couldn&rsquo;t load your invoices. {(invoicesQ.error as Error).message}</p>}
 
