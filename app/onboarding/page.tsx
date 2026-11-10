@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { DASHBOARDS, dashboardForRole, landingPath, rememberDashboard } from "@/lib/dashboardChoice";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FiArrowRight, FiCheck, FiLoader } from "react-icons/fi";
@@ -127,7 +128,7 @@ export default function OnboardingPage() {
         if (res.onboarding_done || res.hasBusinessData) {
           // Already onboarded, or an existing account with real data
           // (e.g. Kumar Traders) — never force this flow on them.
-          router.replace("/bridge");
+          router.replace(await landingPath());
           return;
         }
         if (res.profile.company_name) setCompanyName(res.profile.company_name);
@@ -234,7 +235,12 @@ export default function OnboardingPage() {
     finally { setLoading(false); }
   }
 
-  const goToWorkspace = () => router.push("/bridge");
+  // Finance roles start in the month-end close, owners in Receivables Review.
+  const goToWorkspace = () => {
+    const kind = dashboardForRole(role);
+    if (kind) rememberDashboard(kind);
+    router.push(kind ? DASHBOARDS[kind].href : "/bridge");
+  };
 
   if (!ready) {
     return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { landingPath } from "@/lib/dashboardChoice";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FiEye, FiEyeOff, FiArrowRight, FiCheck } from "react-icons/fi";
@@ -55,7 +56,7 @@ export default function LoginPage() {
     posthog.identify(data.user.id, { email: data.user.email, name: data.user.business_name, plan: data.user.plan });
     posthog.capture("user_logged_in");
     if (appState) { setSignedInAs(data.user.email); await openApp(); }
-    else router.push("/bridge");
+    else router.push(await landingPath());
   };
 
   useEffect(() => {
