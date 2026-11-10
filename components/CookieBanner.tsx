@@ -2,11 +2,33 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+// The cookie notice belongs to the public website only. Inside the signed-in
+// app (and on sign-in pages) it never shows. This is an allowlist, so any new
+// app page stays clean by default.
+const MARKETING_PREFIXES = [
+  "/platform", "/integrations", "/security", "/pricing", "/company",
+  "/solutions", "/pilots", "/access", "/product", "/resources",
+  "/legal", "/privacy", "/terms",
+];
+
+export function isMarketingPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (pathname === "/") return true;
+  return MARKETING_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
 
 export default function CookieBanner() {
+  const pathname = usePathname();
+  const onMarketing = isMarketingPath(pathname);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (!onMarketing) {
+      setVisible(false);
+      return;
+    }
     try {
       const consent = localStorage.getItem("vantro_cookie_consent");
       if (!consent) {
@@ -17,7 +39,7 @@ export default function CookieBanner() {
     } catch {
       // localStorage unavailable (SSR / private mode) — do nothing
     }
-  }, []);
+  }, [onMarketing]);
 
   const accept = () => {
     try { localStorage.setItem("vantro_cookie_consent", "accepted"); } catch {}
@@ -29,7 +51,7 @@ export default function CookieBanner() {
     setVisible(false);
   };
 
-  if (!visible) return null;
+  if (!visible || !onMarketing) return null;
 
   // A centred card that rises in over the page. Colours come from --ck-*
   // variables so a page can restyle the notice to its own surface.
