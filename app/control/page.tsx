@@ -2,12 +2,14 @@
 
 import { Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { decisionsApi } from "@/lib/decisions";
+import { osApi } from "@/lib/os";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { PageHeader, StatusDot, Sep, Lettermark, EmptyLine, Button } from "@/components/v32/ui";
+import { ReviewLine, StatTiles, PageHeader, StatusDot, Sep, Lettermark, EmptyLine, Button } from "@/components/v32/ui";
 import { ControlSubnav, type ControlTab } from "@/components/control/ControlSubnav";
 import { api, type Connector, type CortexHealthResponse, type UserSettings } from "@/lib/api";
 
@@ -307,6 +309,7 @@ function ControlPageInner() {
     <DashboardLayout pageTitle="Control">
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 18 }}>
         <PageHeader title="Control" subtitle="What Starlane may see, prepare and do" />
+        <ControlSummary />
 
         <ControlSubnav active={tab} />
 
@@ -326,5 +329,28 @@ export default function ControlPage() {
     <Suspense fallback={null}>
       <ControlPageInner />
     </Suspense>
+  );
+}
+
+// The summary line and tiles from the landing product views: what Starlane
+// is connected to, what waits on the owner and what it ran without acting.
+function ControlSummary() {
+  const connections = useQuery<{ success: boolean; connectors: Connector[] }>({ queryKey: ["control-connectors"], queryFn: () => api.connectors.list(), staleTime: 25_000 });
+  const decisions = useQuery({ queryKey: ["decisions", "active"], queryFn: () => decisionsApi.list("active"), staleTime: 30_000 });
+  const missions = useQuery({ queryKey: ["os-missions"], queryFn: () => osApi.missions(), staleTime: 30_000 });
+  const connected = (connections.data?.connectors || []).filter((c) => c.authType !== "public_feed" && ["healthy", "syncing", "connected", "delayed", "stale", "error"].includes(c.state.health)).length;
+  const waiting = (decisions.data?.decisions || []).filter((d) => ["OPEN", "NEEDS_INFORMATION", "SELECTED", "APPROVED"].includes(d.status)).length;
+  const shadow = (missions.data?.missions || []).filter((m) => m.mode === "SHADOW").length;
+  const loading = connections.isLoading || decisions.isLoading;
+  return (
+    <>
+      <ReviewLine>Starlane may observe, prepare and propose. Anything that changes your business waits for your approval{waiting ? `, and ${waiting} decision${waiting === 1 ? " is" : "s are"} waiting now` : ""}.</ReviewLine>
+      <StatTiles loading={loading} items={[
+        { value: connected, label: "Connected sources" },
+        { value: waiting, label: "Waiting for your approval" },
+        { value: shadow, label: "Tasks recorded in shadow mode" },
+        { value: "L4", label: "Execute needs you every time" },
+      ]} />
+    </>
   );
 }

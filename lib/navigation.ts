@@ -1,7 +1,7 @@
 import type React from "react";
 import {
   IconBridge, IconWatch, IconMissions, IconLibrary, IconHistory,
-  IconDiscover, IconPrepared, IconSimulate, IconMemory, IconSources, IconAgents, IconControl, IconDecision, IconChart,
+  IconDiscover, IconPrepared, IconSimulate, IconMemory, IconSources, IconAgents, IconControl, IconDecision, IconChart, IconBank, IconBill,
 } from "@/components/v32/icons";
 
 export interface PrimaryNavItem {
@@ -21,9 +21,12 @@ export const V32_NAV_ITEMS: PrimaryNavItem[] = [
 
 // The working apps, like the site's "Collections Intelligence".
 export const V32_APPS_NAV_ITEMS: PrimaryNavItem[] = [
+  { href: "/review",    label: "Receivables Review", icon: IconChart },
   { href: "/decisions", label: "Decisions", icon: IconDecision },
   { href: "/prepared",  label: "Approvals", icon: IconPrepared },
   { href: "/watch",     label: "Monitors",  icon: IconWatch },
+  { href: "/reconcile", label: "Bank matching", icon: IconBank },
+  { href: "/payables",  label: "Supplier run",  icon: IconBill },
 ];
 
 // Under Spaces, after the business itself.

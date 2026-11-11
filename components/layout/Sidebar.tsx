@@ -14,7 +14,9 @@ import { V32_NAV_ITEMS, V32_APPS_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, V32_WORKSPA
 import { listThreads, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
 import { useQuery } from "@tanstack/react-query";
 import { decisionsApi } from "@/lib/decisions";
-import { IconBell, IconSearch, IconMore, IconPlus } from "@/components/v32/icons";
+import { IconBell, IconSearch, IconMore, IconPlus, IconBookmark, IconBookmarkFilled, IconSpaces } from "@/components/v32/icons";
+import { listPins, togglePin, PINS_EVENT, type Pin } from "@/lib/pins";
+import { useActiveEntity } from "@/lib/entities";
 
 // Everything real that sits outside the Version 32 nav lives in the "More"
 // flyout: it is still reachable, but the rail stays as quiet as the design.
@@ -34,9 +36,9 @@ const MORE_HREFS = new Set([
   ...MORE_GROUPS.flatMap(g => g.items.map(i => i.href)),
 ]);
 
-interface SidebarProps { open: boolean; onClose: () => void; slim?: boolean; }
+interface SidebarProps { open: boolean; onClose: () => void; slim?: boolean; pageTitle?: string; }
 
-export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
+export default function Sidebar({ open, onClose, slim = false, pageTitle }: SidebarProps) {
   const pathname = usePathname();
   const [userName, setUserName]           = useState("User");
   const [businessName, setBusinessName]   = useState("");
@@ -49,6 +51,9 @@ export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
   const [searchOpen, setSearchOpen]       = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [recent, setRecent]               = useState<ScanThread[]>([]);
+  const [pins, setPins]                   = useState<Pin[]>([]);
+  const spaces                            = useActiveEntity();
+  const [here, setHere]                   = useState("");
   const accountRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
   const moreBtnRef = useRef<HTMLButtonElement>(null);
@@ -73,6 +78,17 @@ export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
     window.addEventListener("storage", load);
     return () => { window.removeEventListener(SCAN_THREADS_EVENT, load); window.removeEventListener("storage", load); };
   }, []);
+
+  // Pinned pages: kept in this browser for the signed-in user (lib/pins.ts).
+  useEffect(() => {
+    const load = () => setPins(listPins());
+    load();
+    window.addEventListener(PINS_EVENT, load);
+    window.addEventListener("storage", load);
+    return () => { window.removeEventListener(PINS_EVENT, load); window.removeEventListener("storage", load); };
+  }, []);
+  // The page being viewed, with its query (a Space tab), so it can be pinned as seen.
+  useEffect(() => { setHere(pathname + window.location.search); }, [pathname, pageTitle]);
 
   // Global search shortcut
   useEffect(() => {
@@ -146,6 +162,7 @@ export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
     ...V32_APPS_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
     { href: HISTORY_NAV_ITEM.href, label: "History", type: "Page" as const },
     ...V32_SECONDARY_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
+    { href: "/space", label: businessName || "Space", type: "Page" as const },
     { href: "/settings", label: "Settings", type: "Page" as const },
     ...V32_WORKSPACE_NAV_ITEMS.map(n => ({ href: n.href, label: n.label, type: "Page" as const })),
     ...MORE_GROUPS.flatMap(g => g.items.map(i => ({ href: i.href, label: i.label, type: "Page" as const }))),
@@ -177,6 +194,19 @@ export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
       const who = /from (.+?)\??$/.exec(d.title)?.[1];
       return { id: d.id, title: d.title, label: who ? `Overdue, ${who}` : d.title };
     });
+
+  const pinned = (href: string) => pins.some(p => p.href === href);
+  function PinToggle({ href, label }: { href: string; label: string }) {
+    const on = pinned(href);
+    return (
+      <button type="button" className={`sb-pin ${on ? "is-on" : ""}`} aria-pressed={on}
+        aria-label={on ? `Unpin ${label}` : `Pin ${label}`} title={on ? "Unpin" : "Pin"}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePin(href, label); }}>
+        {on ? <IconBookmarkFilled size={12} /> : <IconBookmark size={12} />}
+      </button>
+    );
+  }
+  const canPinHere = !!pageTitle && !!here && !pinned(here) && !here.startsWith("/bridge");
 
   const isActive = (href: string) => {
     // Home is the chat: it owns /scan and each conversation; History owns /scan/history.
@@ -256,36 +286,61 @@ export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
             ))}
           </nav>
 
+          {!slim && (pins.length > 0 || canPinHere) && (
+            <nav aria-label="Pinned" className="sb-group flex flex-col" style={{ gap: 1 }}>
+              <p className="sb-label">Pinned</p>
+              {pins.map(p => {
+                const active = here === p.href;
+                return (
+                  <div key={p.href} className="sb-pinrow">
+                    <Link href={p.href} onClick={onClose} aria-current={active ? "page" : undefined} title={p.label}
+                      className={`sb-recent truncate ${active ? "is-active" : ""}`}>{p.label}</Link>
+                    <PinToggle href={p.href} label={p.label} />
+                  </div>
+                );
+              })}
+              {canPinHere && (
+                <button type="button" className="sb-recent sb-pin-here text-left" onClick={() => togglePin(here, pageTitle!)}>
+                  <IconBookmark size={12} /> Pin this page
+                </button>
+              )}
+            </nav>
+          )}
+
           <nav aria-label="Recent conversations" className="sb-group flex flex-col" style={{ gap: 1 }}>
             <p className="sb-label">Recents</p>
             {recent.map(t => {
               const active = pathname === `/scan/${t.id}`;
               return (
-                <Link
-                  key={t.id}
-                  href={`/scan/${t.id}`}
-                  onClick={onClose}
-                  aria-current={active ? "page" : undefined}
-                  title={t.title}
-                  className={`sb-recent truncate ${active ? "is-active" : ""}`}
-                >
-                  {t.title}
-                </Link>
+                <div key={t.id} className="sb-pinrow">
+                  <Link
+                    href={`/scan/${t.id}`}
+                    onClick={onClose}
+                    aria-current={active ? "page" : undefined}
+                    title={t.title}
+                    className={`sb-recent truncate ${active ? "is-active" : ""}`}
+                  >
+                    {t.title}
+                  </Link>
+                  {!slim && <PinToggle href={`/scan/${t.id}`} label={t.title} />}
+                </div>
               );
             })}
             {recentDecisions.map(d => {
               const active = pathname === `/decisions/${d.id}`;
               return (
-                <Link
-                  key={d.id}
-                  href={`/decisions/${d.id}`}
-                  onClick={onClose}
-                  aria-current={active ? "page" : undefined}
-                  title={d.title}
-                  className={`sb-recent truncate ${active ? "is-active" : ""}`}
-                >
-                  {d.label}
-                </Link>
+                <div key={d.id} className="sb-pinrow">
+                  <Link
+                    href={`/decisions/${d.id}`}
+                    onClick={onClose}
+                    aria-current={active ? "page" : undefined}
+                    title={d.title}
+                    className={`sb-recent truncate ${active ? "is-active" : ""}`}
+                  >
+                    {d.label}
+                  </Link>
+                  {!slim && <PinToggle href={`/decisions/${d.id}`} label={d.label} />}
+                </div>
               );
             })}
             <NavRow href={HISTORY_NAV_ITEM.href} label={HISTORY_NAV_ITEM.label} Icon={HISTORY_NAV_ITEM.icon} active={isActive(HISTORY_NAV_ITEM.href)} onClick={onClose} />
@@ -293,12 +348,26 @@ export default function Sidebar({ open, onClose, slim = false }: SidebarProps) {
 
           <nav aria-label="Spaces" className="sb-group flex flex-col" style={{ gap: 1 }}>
             <p className="sb-label">Spaces</p>
-            {businessName && (
-              <Link href="/settings?tab=business" onClick={onClose} title={businessName} className="sb-row">
+            {spaces.entities.length === 0 && businessName && (
+              <Link href="/space" onClick={onClose} title={businessName} aria-current={isActive("/space") ? "page" : undefined} className={`sb-row ${isActive("/space") ? "is-active" : ""}`}>
                 <span className="sb-space" aria-hidden="true">{businessName.trim()[0]?.toUpperCase()}</span>
                 <span className="flex-1 truncate">{businessName}</span>
               </Link>
             )}
+            {/* One row per company (lib/entities.ts); opening one narrows every view to it. */}
+            {spaces.entities.map(e => {
+              const on = isActive("/space") && spaces.entity?.id === e.id;
+              return (
+                <Link key={e.id} href="/space" onClick={() => { spaces.setActive(e.id); onClose(); }} title={e.name} aria-current={on ? "page" : undefined} className={`sb-row ${on ? "is-active" : ""}`}>
+                  <span className="sb-space" aria-hidden="true" style={e.color ? { background: e.color } : undefined}>{e.name.trim()[0]?.toUpperCase()}</span>
+                  <span className="flex-1 truncate">{e.name}</span>
+                </Link>
+              );
+            })}
+            <Link href="/spaces" onClick={onClose} title={slim ? "View Spaces" : undefined} aria-current={isActive("/spaces") ? "page" : undefined} className={`sb-row ${isActive("/spaces") ? "is-active" : ""}`}>
+              <IconSpaces size={16} />
+              <span className="flex-1 truncate">View Spaces</span>
+            </Link>
             {V32_SECONDARY_NAV_ITEMS.map(n => (
               <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
             ))}

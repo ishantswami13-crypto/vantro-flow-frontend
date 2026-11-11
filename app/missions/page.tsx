@@ -5,7 +5,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { MissionsList, missionCount, type MissionFilter } from "@/components/os/MissionsList";
 import { WorkflowsPanel } from "@/components/os/MissionsPanels";
 import { OutreachSummary } from "@/components/outreach/OutreachPanels";
-import { PageHeader, Subnav, Button } from "@/components/v32/ui";
+import { PageHeader, Button } from "@/components/v32/ui";
+import StarlaneMark from "@/components/brand/StarlaneMark";
 import { IconPlus } from "@/components/v32/icons";
 import { useLoad } from "@/components/os/shared";
 import { osApi } from "@/lib/os";
@@ -31,16 +32,24 @@ export default function MissionsPage() {
         subtitle="What Starlane is handling, and whether it worked."
         right={<Button primary small href="/missions/new"><IconPlus size={13} />New task</Button>}
       />
-      <Subnav
-        active={tab}
-        onChange={(k) => setTab(k as Tab)}
-        items={[
-          { key: "active", label: "Active", count: n("active") },
-          { key: "at_risk", label: "At risk", count: n("at_risk") },
-          { key: "completed", label: "Completed", count: n("completed") },
-          { key: "workflows", label: "Workflows" },
-        ]}
-      />
+      <div className="sp-summary" style={{ margin: "4px 0 0" }}>
+        <span className="sp-summary-m"><StarlaneMark variant="glyph" size={9} /></span>
+        {loading ? "Loading what Starlane is handling…"
+          : all.length === 0 ? "Starlane is not handling anything yet. Choose Handle it on a decision and it shows here."
+          : `Starlane is handling ${n("active")} task${n("active") === 1 ? "" : "s"} for you${(n("at_risk") || 0) > 0 ? `; ${n("at_risk")} need${n("at_risk") === 1 ? "s" : ""} you` : ""}.`}
+      </div>
+      <div className="sp-stats" style={{ marginBottom: 0 }}>
+        <div className="sp-stat"><div className="sp-stat-n">{n("active") ?? "—"}</div><div className="sp-stat-l">Active</div></div>
+        <div className="sp-stat"><div className="sp-stat-n">{n("at_risk") ?? "—"}</div><div className="sp-stat-l">Need you</div></div>
+        <div className="sp-stat"><div className="sp-stat-n">{n("completed") ?? "—"}</div><div className="sp-stat-l">Completed</div></div>
+      </div>
+      <nav aria-label="Secondary" className="sp-pills" style={{ marginBottom: -6 }}>
+        {([["active", "Active"], ["at_risk", "At risk"], ["completed", "Completed"], ["workflows", "Workflows"]] as [Tab, string][]).map(([k, label]) => (
+          <button key={k} type="button" aria-pressed={tab === k} className={`sp-pill ${tab === k ? "is-on" : ""}`} onClick={() => setTab(k)}>
+            {label}{k !== "workflows" && n(k as MissionFilter) != null ? ` (${n(k as MissionFilter)})` : ""}
+          </button>
+        ))}
+      </nav>
       {tab === "workflows" ? (
         <WorkflowsPanel />
       ) : (
