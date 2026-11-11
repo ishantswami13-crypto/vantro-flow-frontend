@@ -12,6 +12,7 @@ import Link from "next/link";
 import { Mission, MissionState, MISSION_STATE_LABEL, MISSION_OUTCOME_LABEL } from "@/lib/os";
 import { V, SkeletonRows, EmptyLine, ErrorBanner, ago } from "@/components/v32/ui";
 import { errorText } from "./shared";
+import { StepPips } from "@/components/hv/Pieces";
 
 export type MissionFilter = "active" | "at_risk" | "completed";
 const FILTERS: { key: MissionFilter; label: string; states: MissionState[] }[] = [
@@ -86,7 +87,6 @@ const STEP_DONE = new Set(["SUCCEEDED", "SHADOWED", "PREPARED"]);
 function MissionRow({ m, agentNames }: { m: Mission; agentNames?: Record<string, string> }) {
   const total = m.steps.length;
   const done = m.steps.filter((s) => STEP_DONE.has((s.status || "").toUpperCase())).length;
-  const pct = m.state === "COMPLETED" ? 100 : total ? Math.round((done / total) * 100) : 0;
   const color = stateColor(m.state);
   const sub = m.stateReason || m.outcome.detail || (m.objective ? `${m.source === "DECISION" ? "Chosen option: " : ""}${m.objective}` : null);
   const body = (
@@ -98,7 +98,7 @@ function MissionRow({ m, agentNames }: { m: Mission; agentNames?: Record<string,
       <span className="sp-td"><span className="inline-flex items-center" style={{ gap: 6, color }}><span className="sq" aria-hidden="true" />{MISSION_STATE_LABEL[m.state]}</span></span>
       <span className="sp-td truncate">{m.assigned ? agentLabel(m.assigned.agent, agentNames) : "—"}</span>
       <span className="sp-td">
-        <span className="block" style={{ height: 3, background: "rgba(25,25,23,0.08)", overflow: "hidden", maxWidth: 110 }}><span className="block" style={{ width: `${pct}%`, height: "100%", background: V.ink }} /></span>
+        {total ? <StepPips done={m.state === "COMPLETED" ? total : done} total={total} failed={m.state === "FAILED"} /> : null}
         <span className="block" style={{ marginTop: 5, fontSize: 11.5, color: outcomeColor(m.outcome.status) }}>{total ? `${done} of ${total} steps` : "Not started"} · {MISSION_OUTCOME_LABEL[m.outcome.status]}</span>
       </span>
       <span className="sp-td sp-right">{m.mode === "SHADOW" ? "Shadow" : m.mode === "WITH_APPROVAL" ? "Waits for you" : m.mode ? "Live" : ""}{m.updatedAt ? `${m.mode ? " · " : ""}${ago(m.updatedAt)}` : ""}</span>

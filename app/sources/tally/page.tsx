@@ -1,9 +1,10 @@
 "use client";
 
+import { StepRail, type RailStep } from "@/components/hv/Pieces";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { api, type Connector, type DataConnection } from "@/lib/api";
+import { api, type Connector, type ConnectorHealth, type DataConnection } from "@/lib/api";
 import { FiChevronLeft } from "react-icons/fi";
 import { Button, Sep, StatusDot, ErrorBanner, SkeletonRows } from "@/components/v32/ui";
 import { IconSources } from "@/components/v32/icons";
@@ -47,6 +48,19 @@ function timeAgo(iso: string | null): string {
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+// Connecting Tally, step by step, read from the bridge's own health: download
+// the bridge, pair this computer, first sync, then syncing on schedule.
+function tallySteps(h: ConnectorHealth | undefined, hasRow: boolean): RailStep[] {
+  const stage = h === "healthy" || h === "syncing" ? 4 : h === "delayed" || h === "stale" || h === "error" ? 3 : h === "connected" ? 2 : h === "pairing" ? 1 : hasRow ? 2 : 0;
+  const st = (i: number): RailStep["state"] => (i < stage ? "done" : i === stage ? (h === "error" && i === 3 ? "failed" : "active") : "waiting");
+  return [
+    { key: "dl", label: "Download the Starlane bridge", detail: "Runs on the computer that has TallyPrime", state: st(0) },
+    { key: "pair", label: "Pair it with a one-time code", detail: "From Sources, Connect Tally", state: st(1) },
+    { key: "first", label: "First sync", detail: "Sales, purchases, receipts and payments, read only", state: st(2) },
+    { key: "sched", label: h === "error" ? "Sync failed" : h === "delayed" || h === "stale" ? "Sync is late" : "Syncing on schedule", state: stage >= 4 ? "done" : st(3) },
+  ];
 }
 
 function OverviewRow({ label, value, tone, mono = true }: { label: string; value: string; tone?: "warn"; mono?: boolean }) {
@@ -126,6 +140,9 @@ export default function SourcesTallyPage() {
 
       <div className="fade-once flex flex-col lg:flex-row" style={{ gap: 32 }}>
         <div className="flex flex-col" style={{ flex: 1.3, minWidth: 0, gap: 22 }}>
+          <Section label="Setup">
+            {loading ? <SkeletonRows rows={2} height={28} /> : <StepRail label="Tally setup" steps={tallySteps(h, !!tally)} />}
+          </Section>
           <Section label="Overview">
             {loading ? <SkeletonRows rows={3} height={36} /> : !tally ? (
               <Quiet>Tally is not connected yet. Connect it to see its sync history and what Starlane reads from it.</Quiet>

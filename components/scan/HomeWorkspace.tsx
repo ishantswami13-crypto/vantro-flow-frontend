@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { request } from "@/lib/api";
 import { osApi } from "@/lib/os";
+import { HistoryTable, StatusText } from "@/components/hv/Pieces";
+import { Lettermark } from "@/components/v32/ui";
 import { decisionsApi, money, daysUntil, shortDate, relTime } from "@/lib/decisions";
 import { startThread } from "@/lib/scanStore";
 
@@ -50,6 +52,19 @@ export function HomeWorkspace() {
     .slice(0, 4);
   const folders = (vault.data?.folders || []).filter((f) => f.count > 0).slice(0, 3);
   const runnable = (agents.data?.agents || []).slice(0, 3);
+  const tracked = (agents.data?.agents || []).filter((a) => a.runHistory);
+  const runs = useQuery({
+    queryKey: ["os-agent-runs-recent", tracked.map((a) => a.key).join(",")],
+    enabled: tracked.length > 0,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const lists = await Promise.all(tracked.map((a) => osApi.agentRuns(a.key).catch(() => null)));
+      return lists.flatMap((l) => l?.runs || [])
+        .sort((x, y) => new Date(y.startedAt || 0).getTime() - new Date(x.startedAt || 0).getTime())
+        .slice(0, 5);
+    },
+  });
+  const agentName = new Map((agents.data?.agents || []).map((a) => [a.key, a.name]));
 
   const ask = (q: string) => router.push(`/scan/${startThread(q)}`);
 
@@ -131,6 +146,36 @@ export function HomeWorkspace() {
               </Link>
             ))}
           </div>
+        </section>
+      )}
+
+      {(runs.data?.length || 0) > 0 && (
+        <section className="hw-sec">
+          <div className="hw-head">
+            <div>
+              <h2 className="hw-h">Recent runs</h2>
+              <p className="hw-sub">What your agents did last, newest first</p>
+            </div>
+            <Link href="/agents" className="hw-link">All runs</Link>
+          </div>
+          <HistoryTable
+            columns={[{ label: "Task" }, { label: "Agent" }, { label: "Status" }, { label: "When", align: "right" }]}
+            template="minmax(0, 2.2fr) minmax(0, 1.2fr) 104px 96px"
+            rows={(runs.data || []).map((r) => {
+              const name = agentName.get(r.agentKey) || r.agentKey;
+              return {
+                key: r.id,
+                href: `/agents/${encodeURIComponent(r.agentKey)}/run/${r.id}`,
+                title: r.instruction || r.summary || undefined,
+                cells: [
+                  <span key="t" className="truncate">{r.instruction || r.summary || `Run the ${name.toLowerCase()}`}</span>,
+                  <span key="a" className="ag-who"><Lettermark letter={name} size={20} />{name}</span>,
+                  <StatusText key="s" label={r.status === "completed" ? "Completed" : r.status === "failed" ? "Failed" : "Running"} tone={r.status === "completed" ? "positive" : r.status === "failed" ? "critical" : "neutral"} />,
+                  <span key="w" style={{ color: "#6E6E69" }}>{r.startedAt ? relTime(r.startedAt) : ""}</span>,
+                ],
+              };
+            })}
+          />
         </section>
       )}
     </div>

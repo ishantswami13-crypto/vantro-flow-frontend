@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -8,75 +7,12 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ControlSubnav } from "@/components/control/ControlSubnav";
 import { api, type AuditEvent } from "@/lib/api";
-import { formatDateTime } from "@/lib/locale";
+import { HistoryTable } from "@/components/hv/Pieces";
+import { auditRows, AUDIT_COLUMNS, AUDIT_TEMPLATE } from "@/components/control/AuditHistory";
 
-// A real, chronological, per-user audit trail — sourced from audit_logs, a
-// table that already existed and was already being written to on every
-// financial change (see audit.service.js on the backend), but had no read
-// path anywhere in the product until this page. Nothing here is invented:
-// no severity coloring, no synthetic categorization beyond what the raw
-// action/entity_type fields already say.
-//
-// Column layout per STARLANE_FRONTEND_HANDOFF.md §17 (audit_row):
-// grid-template-columns: 90px 150px 2fr 140px 160px 1fr = Time/Actor/
-// Action/Object/Source/Result. Decision steps (from decision_events) carry
-// actor, agent/model and result; ledger rows (audit_logs) do not, and those
-// cells render an honest "—" rather than fabricated values.
-function humanizeAction(action: string): string {
-  return action.replace(/_/g, " ").toLowerCase().replace(/^./, c => c.toUpperCase());
-}
-
-function formatTime(iso: string): string {
-  return formatDateTime(iso);
-}
-
-const GRID_COLS = "90px 150px 2fr 140px 160px 1fr";
-
-function AuditHeaderRow() {
-  return (
-    <div
-      style={{
-        display: "grid", gridTemplateColumns: GRID_COLS, gap: 12, padding: "10px 4px",
-        borderBottom: "1px solid #EBEAE6", fontSize: 11, fontWeight: 600, color: "#6E6E69",
-        letterSpacing: 0,
-      }}
-    >
-      <span>Time</span>
-      <span>Actor</span>
-      <span>Action</span>
-      <span>Object</span>
-      <span>Source</span>
-      <span>Result</span>
-    </div>
-  );
-}
-
-function AuditRow({ event }: { event: AuditEvent }) {
-  return (
-    <div
-      className="row-hover"
-      style={{
-        display: "grid", gridTemplateColumns: GRID_COLS, gap: 12, padding: "12px 4px",
-        borderBottom: "1px solid #EBEAE6", alignItems: "start",
-      }}
-    >
-      <span className="text-2xs" style={{ color: "#6E6E69" }}>{formatTime(event.created_at)}</span>
-      <span className="text-2xs" style={{ color: "#6E6E69" }}>{event.actor || "—"}</span>
-      <span className="text-sm font-medium" style={{ color: "#191917" }}>
-        {humanizeAction(event.action)}
-        {event.title && <span className="block text-2xs font-normal" style={{ color: "#63635F" }}>{event.title}</span>}
-      </span>
-      <span className="text-2xs" style={{ color: "#6E6E69" }}>
-        {event.source === "decision" && event.entity_id
-          ? <Link className="underline" href={`/decisions/${event.entity_id}`}>Decision</Link>
-          : event.entity_type ? `${event.entity_type}${event.entity_id ? ` · ${event.entity_id.slice(0, 8)}…` : ""}` : "—"}
-      </span>
-      <span className="text-2xs" style={{ color: "#6E6E69" }}>{event.source === "decision" ? (event.model || "Starlane") : "Ledger"}</span>
-      <span className="text-2xs" style={{ color: "#6E6E69" }}>{event.result ? humanizeAction(event.result) : "—"}</span>
-    </div>
-  );
-}
-
+// A real, chronological, per-user audit trail from audit_logs and
+// decision_events. Nothing here is invented. Shown as a history table
+// (components/control/AuditHistory.tsx).
 export default function AuditPage() {
   const { data, isLoading, isError, refetch } = useQuery<{ success: boolean; events: AuditEvent[] }>({
     queryKey: ["control-audit"],
@@ -113,10 +49,7 @@ export default function AuditPage() {
           )}
 
           {!isLoading && !isError && (data?.events.length ?? 0) > 0 && (
-            <div>
-              <AuditHeaderRow />
-              {data!.events.map(e => <AuditRow key={e.id} event={e} />)}
-            </div>
+            <HistoryTable title="History" columns={AUDIT_COLUMNS} template={AUDIT_TEMPLATE} rows={auditRows(data!.events)} />
           )}
         </div>
       </div>

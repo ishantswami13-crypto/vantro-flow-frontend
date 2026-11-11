@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { FileChip } from "@/components/hv/Pieces";
+import { downloadCsv } from "@/components/command/Charts";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -134,11 +136,35 @@ export default function ScanThreadPage() {
   );
 }
 
+// Tables in an answer (GitHub-style Markdown) become output files, like an
+// agent run's outputs: each downloads as CSV with the same rows as shown.
+function markdownTables(md: string): { header: string[]; rows: string[][] }[] {
+  const out: { header: string[]; rows: string[][] }[] = [];
+  const lines = md.split("\n");
+  const cells = (l: string) => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim().replace(/\*\*/g, ""));
+  for (let i = 0; i < lines.length - 1; i++) {
+    if (!/^\s*\|.*\|\s*$/.test(lines[i]) || !/^\s*\|?\s*:?-{2,}/.test(lines[i + 1])) continue;
+    const header = cells(lines[i]);
+    const rows: string[][] = [];
+    let j = i + 2;
+    while (j < lines.length && /^\s*\|.*\|\s*$/.test(lines[j])) { rows.push(cells(lines[j])); j++; }
+    if (rows.length) out.push({ header, rows });
+    i = j;
+  }
+  return out;
+}
+
+function fileSlug(q: string, i: number): string {
+  const base = q.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || "answer";
+  return i ? `${base}-${i + 1}` : base;
+}
+
 function Turn({ turn }: { turn: ScanTurn }) {
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
   const { message, actions, waLinks } = turn.response;
   const answeredBy = turn.response.model || null;
+  const tables = useMemo(() => markdownTables(message), [message]);
   const fellBack = !!answeredBy && !!turn.response.requested_model && turn.response.requested_model !== "auto" && !answeredBy.picked;
 
   useEffect(() => { setSaved(isPromptSaved(turn.question)); }, [turn.question]);
@@ -162,6 +188,15 @@ function Turn({ turn }: { turn: ScanTurn }) {
 
       <div>
         <AnswerMarkdown>{message}</AnswerMarkdown>
+
+        {tables.length > 0 && (
+          <div className="hv-chips" style={{ marginTop: 10 }} aria-label="Outputs">
+            {tables.map((t, i) => (
+              <FileChip key={i} name={`${tables.length > 1 ? `Table ${i + 1}, ` : ""}${turn.question.slice(0, 48).replace(/[?.!\s]+$/, "")}.csv`} meta={`${t.rows.length} row${t.rows.length === 1 ? "" : "s"}`}
+                title="Download this table" onClick={() => downloadCsv(fileSlug(turn.question, i), t.header, t.rows)} />
+            ))}
+          </div>
+        )}
 
         {waLinks.length > 0 && (
           <div className="flex flex-wrap" style={{ gap: 8, marginTop: 6 }}>

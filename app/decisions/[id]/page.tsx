@@ -1,5 +1,6 @@
 "use client";
 
+import { StepRail, type RailStep } from "@/components/hv/Pieces";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -292,6 +293,21 @@ function Verification({ detail, onVerify, busy }: { detail: DecisionDetail; onVe
 
 // ── page ──────────────────────────────────────────────────────────────────
 
+// Where the decision is in its life, on the shared step rail: found in the
+// ledger, your choice, your approval, carried out (or recorded, in shadow
+// mode), and the outcome checked against the books.
+function decisionSteps(status: string, shadow: boolean): RailStep[] {
+  const labels = ["Found in your ledger", "You choose an option", "You approve it", shadow ? "Recorded in shadow mode" : "Starlane carries it out", "Outcome checked in your books"];
+  const stage: Record<string, number> = { OPEN: 1, NEEDS_INFORMATION: 1, SELECTED: 2, APPROVED: 3, EXECUTING: 3, SHADOWED: 4, EXECUTED: 4, VERIFIED: 5, RESOLVED: 5 };
+  const stopped = ["REJECTED", "EXPIRED", "SUPERSEDED"].includes(status);
+  const at = stopped ? 1 : stage[status] ?? 1;
+  return labels.map((label, i) => ({
+    key: String(i),
+    label: stopped && i === 1 ? (status === "REJECTED" ? "Rejected" : status === "EXPIRED" ? "Window closed" : "Replaced by a newer decision") : label,
+    state: i < at ? "done" : i === at ? (stopped ? "failed" : "active") : "waiting",
+  }));
+}
+
 export default function DecisionDetailPage() {
   const params = useParams<{ id: string }>();
   const id = String(params?.id || "");
@@ -378,6 +394,7 @@ export default function DecisionDetailPage() {
           {d.evidence.length > 0 && <span className="dd-chip">Evidence · {d.evidence.length} record{d.evidence.length === 1 ? "" : "s"}</span>}
         </div>
         <h1 className="text-[28px] lg:text-[34px] max-w-[820px]" style={{ color: C.ink }}>{d.title}</h1>
+        <StepRail className="is-row mt-4 mb-1" label="Where this decision is" steps={decisionSteps(d.status, detail.pilotMode === "SHADOW")} />
         {d.description && <p className="text-[15px] mt-3 max-w-[760px] leading-[1.55]" style={{ color: C.body }}><mark className="dd-bottom">Bottom line:</mark> {d.description}</p>}
 
         {/* The evidence behind the headline, one card per kind of figure, as
@@ -593,18 +610,21 @@ export default function DecisionDetailPage() {
             )}
             {["SHADOWED", "EXECUTED", "VERIFIED", "EXECUTING"].includes(d.status) && detail.runs.length > 0 && (
               <div className="space-y-3">
-                {detail.runs.map((r) => (
-                  <div key={r.id} className="text-[13px]" style={{ color: C.body }}>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Pill tone={r.status === "SUCCEEDED" || r.status === "PREPARED" ? "good" : r.status === "SHADOWED" ? "accent" : r.status === "FAILED" || r.status === "BLOCKED" ? "bad" : "neutral"}>{r.status.toLowerCase()}</Pill>
-                      <span>{INTENT_WORDS[r.intent_type] || r.intent_type}</span>
-                      <span className="text-[12px]" style={{ color: C.faint }}>via {r.adapter}</span>
-                    </div>
-                    {r.status === "SHADOWED" && r.would_have && <p className="text-[12px] mt-1" style={{ color: C.faint }}>Would have written: {String((r.would_have as { write?: string }).write || "")}</p>}
-                    {r.postcondition?.note && <p className="text-[12px] mt-1" style={{ color: C.faint }}>{r.postcondition.note}</p>}
-                    {r.error && <p className="text-[12px] mt-1" style={{ color: C.bad }}>{r.error}</p>}
-                  </div>
-                ))}
+                <StepRail
+                  label="What Starlane carried out"
+                  steps={detail.runs.map((r) => ({
+                    key: r.id,
+                    state: r.status === "SUCCEEDED" || r.status === "PREPARED" || r.status === "SHADOWED" ? "done" : r.status === "FAILED" || r.status === "BLOCKED" ? "failed" : r.status === "RUNNING" || r.status === "PENDING" ? "active" : "waiting",
+                    label: <span className="inline-flex flex-wrap items-center gap-2" style={{ color: C.ink }}>{INTENT_WORDS[r.intent_type] || r.intent_type}<span className="text-[12px]" style={{ color: r.status === "FAILED" || r.status === "BLOCKED" ? C.bad : C.faint }}>{r.status === "SHADOWED" ? "recorded in shadow mode" : r.status.toLowerCase()} · via {r.adapter}</span></span>,
+                    detail: (r.status === "SHADOWED" && r.would_have) || r.postcondition?.note || r.error ? (
+                      <>
+                        {r.status === "SHADOWED" && r.would_have && <span className="block">Would have written: {String((r.would_have as { write?: string }).write || "")}</span>}
+                        {r.postcondition?.note && <span className="block">{r.postcondition.note}</span>}
+                        {r.error && <span className="block" style={{ color: C.bad }}>{r.error}</span>}
+                      </>
+                    ) : null,
+                  }))}
+                />
                 {steps.includes("CONTACT_CUSTOMER") && ["EXECUTED"].includes(d.status) && (
                   <p className="text-[12px]" style={{ color: C.muted }}>The reminder is waiting in <Link className="underline" href="/control/approvals">Control › Approvals</Link>.</p>
                 )}

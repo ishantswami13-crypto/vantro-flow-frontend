@@ -4,6 +4,7 @@
 // validation and whether START is allowed are all decided by the backend
 // (lib/domain/outbound). Nothing here sends anything by itself.
 
+import { StepRail } from "@/components/hv/Pieces";
 import React, { useCallback, useEffect, useState } from "react";
 import { C, Pill } from "@/components/decisions/ui";
 import { Panel, Btn, Row, Muted, ErrorLine, errorText, isNotReady } from "@/components/os/shared";
@@ -144,14 +145,15 @@ export function PreflightPanel({ refreshKey }: { refreshKey: number }) {
       {pre && (
         <>
           <p className="text-[13px] mb-2" style={{ color: pre.ready ? C.good : C.warn, fontWeight: 500 }}>{pre.verdict}</p>
-          {pre.checks.map((c) => (
-            <div key={c.name} className="flex items-start gap-3 py-[6px]" style={{ borderTop: `1px solid ${C.line}` }}>
-              <div style={{ width: 130, flexShrink: 0 }}><Pill tone={checkTone(c.status)}>{c.status}</Pill></div>
-              <div className="text-[12.5px]" style={{ color: C.body }}>
-                <span style={{ color: C.ink, fontWeight: 500 }}>{c.name}</span> {c.detail}
-              </div>
-            </div>
-          ))}
+          <StepRail
+            label="Readiness checks"
+            steps={pre.checks.map((c) => ({
+              key: c.name,
+              state: c.status === "PASS" ? "done" : c.status === "FAIL" || c.status === "BLOCKED" ? "failed" : "waiting",
+              label: <span style={{ color: C.ink, fontWeight: 500 }}>{c.name.charAt(0) + c.name.slice(1).toLowerCase()} <span style={{ fontWeight: 400, color: c.status === "PASS" ? "#2F6B45" : c.status === "WARN" ? "#8A5A12" : c.status === "FAIL" || c.status === "BLOCKED" ? "#A64F4B" : C.body }}>· {c.status === "PASS" ? "Passed" : c.status === "WARN" ? "Warning" : c.status === "BLOCKED" ? "Blocked" : c.status === "FAIL" ? "Failed" : c.status}</span></span>,
+              detail: c.detail,
+            }))}
+          />
         </>
       )}
     </Panel>

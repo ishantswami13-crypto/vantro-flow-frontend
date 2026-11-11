@@ -1,11 +1,12 @@
 "use client";
 
+import { HistoryTable } from "@/components/hv/Pieces";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type Connector, type ConnectorHealth } from "@/lib/api";
 import { FiUploadCloud } from "react-icons/fi";
-import { ReviewLine, StatTiles, PageHeader, Subnav, StatusDot, Chevron, EmptyLine, ErrorBanner, SkeletonRows, SearchField } from "@/components/v32/ui";
+import { ReviewLine, StatTiles, PageHeader, Subnav, StatusDot, Lettermark, Chevron, EmptyLine, ErrorBanner, SkeletonRows, SearchField } from "@/components/v32/ui";
 import { IconSources } from "@/components/v32/icons";
 import { BridgeHealthPanel } from "@/components/os/BridgePanels";
 import IntegrationsPanel from "@/components/os/IntegrationsPanel";
@@ -375,7 +376,24 @@ export default function SourcesPage() {
 
           {connectors && tab === "sync" && (
             syncEntries.length ? (
-              <div><TableHeader />{syncEntries.map((c) => <Row key={c.id} c={c} />)}</div>
+              <HistoryTable
+                title="Sync activity"
+                columns={[{ label: "Source" }, { label: "Status" }, { label: "Note" }, { label: "Last sync", align: "right" }]}
+                template="minmax(0, 1.4fr) 150px minmax(0, 2fr) 110px"
+                rows={[...syncEntries].sort((a, b) => new Date(b.state.lastSyncAt || 0).getTime() - new Date(a.state.lastSyncAt || 0).getTime()).map((c) => {
+                  const st = STATUS[c.state.health] || { label: c.state.health.replace(/_/g, " "), color: "rgba(25,25,23,0.25)" };
+                  return {
+                    key: c.id,
+                    href: c.authType === "local_bridge" ? "/sources/tally" : undefined,
+                    cells: [
+                      <span key="n" className="ag-who"><Lettermark letter={c.name} size={20} />{c.name}</span>,
+                      <StatusDot key="s" label={st.label} color={st.color} />,
+                      <span key="o" className="truncate" style={{ color: SOFT }}>{noteFor(c)}</span>,
+                      <span key="w" style={{ color: "#6E6E69" }}>{timeAgo(c.state.lastSyncAt) || "—"}</span>,
+                    ],
+                  };
+                })}
+              />
             ) : <Empty title="No sync activity yet" body="The last sync of each connected source appears here. Nothing has synced yet." />
           )}
 
