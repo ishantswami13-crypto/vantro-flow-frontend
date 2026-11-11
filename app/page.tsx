@@ -8,7 +8,8 @@ import { SourceGrid, Accordion, Quotes, Rail } from "@/components/marketing/hx/I
 import { LedgerMock, DecisionMock, MemoryMock, PlanMock } from "@/components/marketing/hx/Mocks";
 import { HeroDashboard } from "@/components/marketing/hx/HeroDashboard";
 import { CloseWindow, ReviewWindow, DuoPaint, AgentRunView, AccFrame } from "@/components/marketing/hx/DuoViews";
-import { CommandCenterVideo } from "@/components/marketing/site/CommandCenterVideo";
+import { IntroducingFilm } from "@/components/marketing/site/CommandCenterVideo";
+import StarlaneWordmark from "@/components/brand/StarlaneWordmark";
 import "./ccv.css";
 
 // Starlane, public homepage. Product views are sample data on a fictional
@@ -117,10 +118,14 @@ export default function HomePage() {
 
       <section className="hx-s pt160" aria-labelledby="film-h">
         <div className="hx-w">
-          <CenterHead pill="New" title={<span id="film-h">Introducing the Command Center</span>} body="One morning in Starlane, from the overnight review to an approved reminder, in 38 seconds.">
+          <CenterHead
+            pill="New"
+            title={<span id="film-h" className="hx-film-h">Introducing <StarlaneWordmark className="hx-film-wm" title="Starlane" /> Agents</span>}
+            body="The most capable Starlane yet. Give an agent a piece of finance work and get back a result you can check, figure by figure."
+          >
             <Link href="/access" className="hx-btn">Request a Demo</Link>
           </CenterHead>
-          <div className="hx-film hx-r scale" id="film"><CommandCenterVideo /></div>
+          <div className="hx-film hx-r scale" id="film"><IntroducingFilm /></div>
         </div>
       </section>
 

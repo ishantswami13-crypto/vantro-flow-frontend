@@ -1,0 +1,637 @@
+<!doctype html>
+<!--
+  "Introducing Starlane Agents", the homepage film, the composition.
+  One 1920x1080 stage, 60 seconds. Every frame is a pure function of time:
+  render(t) places everything, so render.mjs can step through it frame by frame
+  and encode a real video (public/film/). The Starlane S and wordmark are
+  injected by render.mjs from components/brand. Scenes: title card, the Command
+  Center, giving an agent work and watching it run, the review it produced, the
+  owner's approval, end card. Sample data on fictional businesses.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Introducing Starlane Agents film</title>
+<style>
+@font-face { font-family: "Newsreader"; src: url(../../public/fonts/newsreader-normal-latin.woff2) format("woff2"); font-weight: 200 800; }
+@font-face { font-family: "Jakarta"; src: url(../../public/fonts/plus-jakarta-sans-normal-latin.woff2) format("woff2"); font-weight: 200 800; }
+@font-face { font-family: "Hanken"; src: url(../../public/fonts/hanken-grotesk-normal-latin.woff2) format("woff2"); font-weight: 100 900; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+body { font-family: "Hanken", "Jakarta", system-ui, sans-serif; color: #1A1916; -webkit-font-smoothing: antialiased; }
+.abs { position: absolute; }
+.stage { position: absolute; inset: 0; overflow: hidden; background: #000; }
+svg.s { display: block; flex-shrink: 0; }
+
+/* Painted texture behind the app */
+#texwrap { position: absolute; inset: 0; }
+#tex { position: absolute; left: 0; top: 0; width: 1120px; height: 660px; transform-origin: 0 0; }
+#vignette { position: absolute; inset: 0; background: radial-gradient(90% 85% at 50% 45%, transparent 50%, rgb(0 0 0 / .5)); }
+
+/* Title card */
+#tw { left: 0; right: 0; display: flex; justify-content: center; }
+#tw svg path { fill: #fff; }
+#tc { left: 0; right: 0; text-align: center; font-family: "Jakarta"; font-weight: 800; font-size: 176px; letter-spacing: -0.035em; line-height: 1; color: #fff; }
+#es { left: 0; right: 0; text-align: center; font-size: 30px; color: rgb(255 255 255 / .7); }
+#fine { left: 0; right: 0; bottom: 54px; text-align: center; font-size: 17px; letter-spacing: .08em; text-transform: uppercase; color: rgb(255 255 255 / .42); }
+
+/* Camera: the whole product moves as one */
+#cam { position: absolute; inset: 0; transform-origin: 0 0; }
+#app { left: 96px; top: 96px; width: 1728px; height: 1040px; display: grid; grid-template-columns: 88px 1fr; border-radius: 12px 12px 0 0; overflow: hidden; background: #F4F2EE; box-shadow: 0 50px 120px -20px rgb(0 0 0 / .75), 0 0 0 1px rgb(255 255 255 / .06); }
+
+/* Rail, like a compact icon sidebar */
+.rail { background: #151513; display: flex; flex-direction: column; align-items: center; padding-top: 22px; gap: 4px; }
+.rail .logo { margin-bottom: 18px; }
+.ri { width: 70px; padding: 9px 0 8px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; color: #9C988F; font-size: 13px; }
+.ri svg { width: 22px; height: 22px; }
+.ri.on { background: #2A2926; color: #fff; }
+.rail hr { width: 40px; border: 0; border-top: 1px solid #2E2D2A; margin: 10px 0; }
+
+.main { position: relative; overflow: hidden; }
+.scr { position: absolute; inset: 0; padding: 44px 58px; }
+.h1 { font-family: "Newsreader"; font-weight: 400; font-size: 60px; letter-spacing: -0.015em; line-height: 1.05; color: #161513; }
+.auto { display: flex; align-items: center; gap: 12px; margin-top: 30px; font-size: 25px; font-weight: 500; color: #1A1916; }
+.auto em { font-style: normal; color: #8A867E; font-weight: 400; }
+.auto .car { width: 12px; height: 12px; border-left: 2px solid #8A867E; border-top: 2px solid #8A867E; transform: rotate(45deg) translate(3px, 3px); margin-left: 6px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 24px; }
+.stat { height: 118px; border-radius: 10px; background: #EAE7E1; padding: 18px 20px; }
+.stat .v { font-family: "Newsreader"; font-size: 50px; line-height: 1; color: #161513; }
+.stat .l { margin-top: 12px; font-size: 18px; color: #6E6A62; }
+.tabs { display: flex; gap: 10px; margin-top: 44px; }
+.tabs span { padding: 10px 16px; border-radius: 8px; font-size: 18px; color: #6E6A62; }
+.tabs span.on { background: #EAE7E1; color: #1A1916; font-weight: 600; }
+
+.tbl { margin-top: 22px; position: relative; }
+.th, .tr { display: grid; grid-template-columns: 1.55fr 1fr 1fr .62fr; align-items: center; padding: 0 20px; }
+.th { height: 54px; border-radius: 10px; background: #EAE7E1; font-size: 17px; color: #6E6A62; }
+.tr { height: 92px; border-bottom: 1px solid #E3E0D9; position: relative; }
+.tr .doc { display: flex; gap: 16px; align-items: center; }
+.tr .doc i { width: 22px; height: 26px; border-radius: 4px; background: #DDE6F7; position: relative; }
+.tr .doc i::after { content: ""; position: absolute; left: 5px; right: 5px; top: 8px; height: 2px; background: #6E8FD0; box-shadow: 0 5px 0 #6E8FD0; }
+.tr .n { font-size: 20px; color: #1A1916; }
+.tr .c { margin-top: 3px; font-size: 16px; color: #77736B; }
+.tr .up { font-size: 17px; color: #6E6A62; }
+.tr.sel { background: #fff; border-radius: 10px; border-bottom-color: transparent; box-shadow: 0 10px 30px -10px rgb(30 20 10 / .25); z-index: 3; }
+.pill { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; border-radius: 6px; font-size: 15px; font-weight: 500; white-space: nowrap; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.p-ready { background: #DCE5F8; color: #2A55B8; }
+.p-prog { background: #F6E9CF; color: #8F5E10; }
+.p-ok { background: #DDEEE3; color: #2D6B47; }
+.p-wait { background: #ECE9E3; color: #6E6A62; }
+.cnt { display: flex; gap: 14px; font-size: 18px; font-weight: 600; }
+.cnt span { display: inline-flex; align-items: center; gap: 5px; }
+.g { color: #2E7D4F; } .o { color: #C7701A; } .r { color: #C2362B; }
+.ic-ok, .ic-half, .ic-bad { width: 15px; height: 15px; border-radius: 50%; display: inline-block; }
+.ic-ok { background: #2E7D4F; } .ic-half { border: 2px solid #C7701A; background: linear-gradient(90deg, #C7701A 50%, transparent 50%); } .ic-bad { background: #C2362B; }
+.draft { display: inline-flex; align-items: center; gap: 8px; font-size: 17px; color: #77736B; }
+#scrim { position: absolute; inset: 0; background: rgb(60 45 35 / .16); z-index: 2; pointer-events: none; }
+
+/* Right-hand detail panel */
+#panel { position: absolute; top: 0; right: 0; bottom: 0; width: 600px; background: #fff; z-index: 4; box-shadow: -30px 0 60px -30px rgb(30 20 10 / .35); padding: 0 34px; }
+.pbar { display: flex; justify-content: space-between; align-items: center; height: 58px; border-bottom: 1px solid #ECE9E3; margin: 0 -34px; padding: 0 30px; color: #6E6A62; font-size: 22px; }
+.ptitle { margin-top: 36px; font-size: 27px; font-weight: 500; color: #161513; }
+.props { margin-top: 26px; display: grid; grid-template-columns: 140px 1fr; row-gap: 20px; font-size: 17px; align-items: center; }
+.props dt { color: #6E6A62; } .props dd { color: #1A1916; display: flex; align-items: center; gap: 8px; }
+.av { width: 22px; height: 22px; border-radius: 50%; background: #ECE9E3; display: inline-grid; place-items: center; font-size: 12px; color: #6E6A62; }
+.lnk { text-decoration: underline; text-underline-offset: 3px; }
+.ptabs { display: flex; gap: 10px; margin-top: 40px; }
+.ptabs span { padding: 9px 14px; border-radius: 8px; font-size: 17px; color: #6E6A62; }
+.ptabs span.on { background: #F1EFEA; color: #1A1916; font-weight: 600; }
+.trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
+.trio div { height: 96px; border-radius: 10px; background: #F4F2EE; padding: 14px 14px; }
+.trio b { display: block; font-family: "Newsreader"; font-weight: 400; font-size: 36px; line-height: 1; color: #161513; }
+.trio span { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 16px; font-weight: 500; }
+.psum { margin-top: 22px; font-size: 17px; line-height: 1.55; color: #2B2926; min-height: 110px; }
+.act { margin-top: 26px; font-size: 15px; color: #6E6A62; }
+.feed { margin-top: 14px; display: grid; gap: 14px; }
+.feed p { display: flex; align-items: center; gap: 10px; font-size: 15px; color: #6E6A62; }
+.feed b { color: #1A1916; font-weight: 600; }
+
+/* Ask Starlane */
+#ask { right: 64px; bottom: 44px; height: 76px; padding: 0 30px 0 12px; border-radius: 999px; background: #1E1D1B; display: flex; align-items: center; gap: 16px; color: #fff; font-size: 26px; font-weight: 500; box-shadow: 0 16px 40px -10px rgb(0 0 0 / .5); z-index: 9; }
+#ask .disc { width: 54px; height: 54px; border-radius: 50%; background: #F3F1EC; display: grid; place-items: center; }
+
+/* Agents screen */
+.sub { margin-top: 14px; font-size: 21px; color: #6E6A62; }
+.run { margin-top: 34px; display: grid; grid-template-columns: 1fr 520px; gap: 28px; }
+.card { background: #fff; border-radius: 12px; border: 1px solid #E6E3DC; padding: 10px 28px; }
+.step { display: grid; grid-template-columns: 40px 1fr auto; gap: 16px; align-items: center; height: 84px; border-bottom: 1px solid #EFEDE8; }
+.step:last-child { border-bottom: 0; }
+.step .dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #D6D2C9; display: grid; place-items: center; }
+.step .dot svg { width: 16px; height: 16px; }
+.step p { font-size: 21px; } .step small { display: block; margin-top: 3px; font-size: 15px; color: #8A867E; }
+.step > span { font-size: 15px; color: #8A867E; }
+.step.done .dot { background: #161513; border-color: #161513; }
+.step.live .dot { border-color: #161513; border-top-color: transparent; }
+.meta { padding: 24px 28px; }
+.meta h3 { font-size: 15px; font-weight: 500; color: #6E6A62; }
+.meta dl { margin-top: 16px; display: grid; grid-template-columns: 1fr auto; row-gap: 18px; font-size: 18px; }
+.meta dt { color: #6E6A62; }
+.meta dd { text-align: right; }
+
+/* Approval screen */
+.apv { margin-top: 34px; display: grid; grid-template-columns: 640px 1fr; gap: 34px; }
+.phone { border-radius: 22px; background: #E9E2D6; padding: 30px; height: 470px; }
+.to { font-size: 16px; color: #5F5B53; margin-bottom: 14px; }
+.bub { background: #fff; border-radius: 4px 16px 16px 16px; padding: 20px 22px; font-size: 20px; line-height: 1.5; box-shadow: 0 1px 1px rgb(0 0 0 / .08); }
+.bub small { display: block; margin-top: 10px; text-align: right; font-size: 14px; color: #8A857C; }
+.btn { display: inline-flex; align-items: center; height: 62px; padding: 0 28px; border-radius: 6px; background: #161513; color: #fff; font-size: 20px; font-weight: 600; }
+.btn2 { display: inline-flex; align-items: center; height: 62px; padding: 0 24px; border-radius: 6px; border: 1.5px solid #D6D2C9; font-size: 19px; color: #3F3D39; margin-left: 12px; }
+.res { margin-top: 18px; display: grid; gap: 12px; }
+.res div { display: flex; justify-content: space-between; align-items: center; height: 76px; padding: 0 24px; border-radius: 12px; background: #fff; border: 1px solid #E6E3DC; font-size: 19px; }
+.res div p { display: flex; align-items: center; gap: 12px; }
+
+#cursor { left: 0; top: 0; width: 34px; height: 34px; z-index: 20; }
+#ripple { left: 0; top: 0; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; border: 2px solid rgb(22 21 19 / .5); z-index: 20; }
+
+/* ── Introducing Starlane Agents: the scenes this film adds ─────────────── */
+#tc { font-size: 196px; }
+
+/* Scene 1: Command Center */
+.cch { display: flex; justify-content: space-between; align-items: center; }
+.cch .tools { display: flex; align-items: center; gap: 14px; font-size: 17px; color: #3F3D39; }
+.tog { width: 34px; height: 20px; border-radius: 99px; background: #161513; position: relative; display: inline-block; vertical-align: middle; margin-right: 8px; }
+.tog::after { content: ""; position: absolute; left: 3px; top: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+.ghost { height: 40px; padding: 0 14px; border-radius: 6px; border: 1px solid #DEDAD2; background: #fff; display: inline-flex; align-items: center; }
+.askb { height: 40px; padding: 0 14px 0 8px; border-radius: 6px; background: #161513; color: #fff; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
+.rec { margin-top: 26px; height: 56px; border-radius: 10px; background: #fff; border: 1px solid #E6E3DC; display: flex; align-items: center; gap: 12px; padding: 0 16px; font-size: 18px; color: #2B2926; }
+.grid2 { margin-top: 22px; display: grid; grid-template-columns: 1fr 1.2fr; gap: 22px; }
+.ccard { background: #fff; border-radius: 12px; border: 1px solid #E6E3DC; padding: 22px 26px 16px; height: 386px; position: relative; overflow: hidden; }
+.ccard .big { font-family: "Newsreader"; font-size: 64px; line-height: 1; color: #161513; display: flex; align-items: baseline; gap: 12px; }
+.ccard .big em { font-family: "Hanken"; font-style: normal; font-size: 17px; color: #2E7D4F; font-weight: 600; }
+.ccard .lab { margin-top: 8px; font-size: 16px; color: #6E6A62; }
+.ccard h4 { font-size: 21px; font-weight: 500; color: #161513; }
+.ccard .lab2 { margin-top: 4px; font-size: 15px; color: #77736B; }
+.sel2 { position: absolute; right: 22px; top: 20px; display: flex; gap: 8px; }
+.sel2 span { height: 34px; padding: 0 12px; border-radius: 6px; border: 1px solid #DEDAD2; font-size: 14px; color: #3F3D39; display: inline-flex; align-items: center; gap: 6px; }
+.ccard svg.ch { position: absolute; left: 26px; right: 26px; bottom: 44px; }
+.leg { position: absolute; left: 26px; bottom: 14px; display: flex; gap: 18px; font-size: 13px; color: #77736B; }
+.leg i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.ccard2 { height: 300px; }
+.hbar { display: grid; grid-template-columns: 210px 1fr 90px; align-items: center; gap: 14px; height: 36px; font-size: 16px; color: #3F3D39; }
+.hbar b { display: block; height: 14px; border-radius: 3px; background: #2F3433; transform-origin: 0 50%; }
+.hbar span:last-child { text-align: right; color: #77736B; font-size: 15px; }
+
+/* Scene 2: Agents */
+.prompt { margin: 70px auto 0; width: 1080px; border-radius: 16px; background: #fff; border: 1px solid #E2DED6; box-shadow: 0 24px 60px -30px rgb(30 20 10 / .35); padding: 28px 30px 22px; }
+.prompt .q { min-height: 120px; font-size: 27px; line-height: 1.45; color: #161513; }
+.prompt .q .caret { display: inline-block; width: 2px; height: 30px; background: #161513; vertical-align: -5px; margin-left: 2px; }
+.prompt .row { margin-top: 18px; display: flex; align-items: center; gap: 10px; }
+.chip { height: 38px; padding: 0 14px; border-radius: 8px; background: #F1EFEA; font-size: 16px; color: #3F3D39; display: inline-flex; align-items: center; gap: 8px; }
+.runb { margin-left: auto; height: 46px; padding: 0 22px; border-radius: 8px; background: #161513; color: #fff; font-size: 18px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; }
+.sugg { width: 1080px; margin: 26px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.sugg div { border-radius: 12px; border: 1px solid #E2DED6; padding: 18px 20px; font-size: 17px; line-height: 1.4; color: #3F3D39; background: #F8F7F4; }
+.sugg small { display: block; margin-bottom: 8px; font-size: 13px; color: #8A867E; text-transform: uppercase; letter-spacing: .06em; }
+.agh { text-align: center; }
+.agh .h1 { font-size: 64px; }
+.agh .sub { margin-top: 12px; }
+
+#runv { position: absolute; inset: 0; padding: 44px 58px; }
+.rgrid { margin-top: 30px; display: grid; grid-template-columns: 1fr 560px; gap: 28px; height: 800px; }
+.thread { padding: 6px 4px; }
+.ubub { margin-left: auto; max-width: 720px; border-radius: 14px; background: #ECE9E3; padding: 18px 22px; font-size: 20px; line-height: 1.5; color: #1A1916; }
+.sreply { margin-top: 30px; display: grid; grid-template-columns: 40px 1fr; gap: 16px; }
+.sreply p { font-size: 21px; line-height: 1.55; color: #2B2926; min-height: 100px; }
+.files { margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-left: 56px; }
+.file { border-radius: 12px; border: 1px solid #E2DED6; background: #fff; padding: 16px 18px; display: grid; grid-template-columns: 38px 1fr; gap: 12px; align-items: center; }
+.file p { font-size: 16px; color: #161513; font-weight: 500; line-height: 1.3; }
+.file small { display: block; margin-top: 2px; font-size: 13px; color: #8A867E; font-weight: 400; }
+.fi { width: 38px; height: 46px; border-radius: 6px; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+.fi.x { background: #2E7D4F; } .fi.w { background: #2F5DB8; } .fi.p { background: #B8432F; }
+.prog { background: #fff; border-radius: 12px; border: 1px solid #E6E3DC; padding: 22px 26px; }
+.prog h3 { font-size: 15px; font-weight: 500; color: #6E6A62; display: flex; justify-content: space-between; }
+.pst { display: grid; grid-template-columns: 30px 1fr; gap: 14px; padding: 13px 0; align-items: start; }
+.pst .dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #D6D2C9; display: grid; place-items: center; margin-top: 1px; }
+.pst .dot svg { width: 13px; height: 13px; }
+.pst p { font-size: 18px; line-height: 1.4; color: #1A1916; }
+.pst.done p { color: #9A968E; text-decoration: line-through; text-decoration-color: #B9B5AC; }
+.pst.done .dot { background: #2E7D4F; border-color: #2E7D4F; }
+.pst.live .dot { border-color: #161513; border-top-color: transparent; }
+.pst.todo p { color: #B3AFA6; }
+.outs { margin-top: 18px; border-top: 1px solid #EFEDE8; padding-top: 16px; }
+.outs h3 { margin-bottom: 8px; }
+.orow { display: flex; align-items: center; gap: 12px; height: 46px; font-size: 16px; color: #2B2926; }
+.orow .fi { width: 26px; height: 32px; font-size: 8px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div id="texwrap"><canvas id="tex" width="1120" height="660"></canvas><div id="vignette"></div></div>
+
+  <div id="cam">
+    <div class="abs" id="app">
+      <aside class="rail">
+        <span class="logo" data-mark="tile" data-size="40"></span>
+        <div class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"/></svg>New</div>
+        <div class="ri" data-rail="cc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>Home</div>
+        <div class="ri" data-rail="ag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="9" r="4"/><path d="M5 20c1-3.5 3.8-5 7-5s6 1.5 7 5"/></svg>Agents</div>
+        <div class="ri" data-rail="ap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12.5 10 17l9-10"/></svg>Approvals</div>
+        <div class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3Zm0 0v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Books</div>
+        <hr>
+        <div class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 4h8l-1 6 3 3H6l3-3zM12 13v7"/></svg>Pinned</div>
+        <div class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>Recent</div>
+      </aside>
+
+      <div class="main">
+        <!-- Scene 1: Command Center -->
+        <section class="scr" id="scr1">
+          <div class="cch">
+            <h1 class="h1">Halden's Command Center</h1>
+            <div class="tools" data-a="5.4"><span><i class="tog"></i>Peers</span><span class="ghost">View all analytics</span><span class="askb"><span data-mark="glyph-w" data-size="22"></span>Ask Starlane</span></div>
+          </div>
+          <p class="rec" data-a="5.7"><span data-mark="tile" data-size="26"></span>There are 4 recommended actions to protect this month's cash</p>
+          <div class="grid2">
+            <div class="ccard" data-a="6.0">
+              <p class="big"><span data-pct="86.4 6.4 8.4"></span><em>↑ 4%</em></p>
+              <p class="lab">Collected on time</p>
+              <div class="sel2"><span>6 months ⌄</span><span>2026 ⌄</span></div>
+              <svg class="ch" id="hair" width="740" height="210" viewBox="0 0 740 210"></svg>
+              <div class="leg"><span><i style="background:#2F3433"></i>Halden</span><span><i style="background:#C9C5BC"></i>Last year</span></div>
+            </div>
+            <div class="ccard" data-a="6.2">
+              <h4>Cash at risk by customer group</h4>
+              <p class="lab2">Share of overdue value in each group</p>
+              <div class="sel2"><span>This week ⌄</span></div>
+              <svg class="ch" id="bars" width="890" height="250" viewBox="0 0 890 250"></svg>
+              <div class="leg"><span><i style="background:#2F3433"></i>Overdue</span><span><i style="background:#C9C5BC"></i>Last quarter</span><span><i style="background:#7A4B3C"></i>Needs attention</span></div>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="ccard ccard2" data-a="6.5">
+              <p class="big"><span data-inr="1460000 6.9 8.9"></span><em style="color:#C2362B">↑ 6%</em></p>
+              <p class="lab">Overdue across customers</p>
+              <svg class="ch" id="hair2" width="740" height="130" viewBox="0 0 740 130"></svg>
+            </div>
+            <div class="ccard ccard2" data-a="6.7">
+              <h4>Top overdue customers</h4>
+              <p class="lab2">By days past due</p>
+              <div style="margin-top:22px" id="hbars"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Scene 2: Agents -->
+        <section class="scr" id="scr2">
+          <div id="ask0">
+            <div class="agh"><h1 class="h1" style="margin-top:60px">What should Starlane work on?</h1><p class="sub">Agents plan the work, read your records and hand back a result you can check.</p></div>
+            <div class="prompt">
+              <p class="q"><span id="qtext"></span><span class="caret" id="caret"></span></p>
+              <div class="row"><span class="chip"><span data-mark="tile" data-size="20"></span>Halden UK</span><span class="chip">Ledgers · Bank · Promise log</span><span class="runb" id="runbtn">Run <span style="font-size:20px">→</span></span></div>
+            </div>
+            <div class="sugg">
+              <div><small>Collections</small>Chase every invoice over 30 days and draft reminders for approval</div>
+              <div><small>Close</small>Match October bank lines to the ledger and list what is left</div>
+              <div><small>Suppliers</small>Which supplier bills should we pay this week, and why</div>
+            </div>
+          </div>
+          <div id="runv">
+            <h1 class="h1">Overdue review, Halden UK</h1>
+            <p class="sub">Collections agent · started by you · read-only</p>
+            <div class="rgrid">
+              <div class="thread">
+                <p class="ubub" id="ubub"></p>
+                <div class="sreply" data-a="22.4"><span data-mark="tile" data-size="40"></span><p id="reply"></p></div>
+                <div class="files">
+                  <div class="file" data-a="28.6"><span class="fi x">XLSX</span><p>Overdue_review_UK.xlsx<small>14 invoices · 3 sources</small></p></div>
+                  <div class="file" data-a="28.8"><span class="fi w">DOCX</span><p>Reminder_drafts.docx<small>6 drafts · waiting for you</small></p></div>
+                  <div class="file" data-a="29.0"><span class="fi p">PDF</span><p>Cash_at_risk_memo.pdf<small>2 pages · every figure sourced</small></p></div>
+                </div>
+              </div>
+              <div class="prog" data-a="21.9">
+                <h3><span>Progress</span><span id="pcount"></span></h3>
+                <div style="margin-top:8px">
+                  <div class="pst" data-ps="22.6 23.6"><span class="dot"></span><p>Read 14 open invoices from TallyPrime</p></div>
+                  <div class="pst" data-ps="23.6 24.6"><span class="dot"></span><p>Match bank lines and find what is still unpaid</p></div>
+                  <div class="pst" data-ps="24.6 25.6"><span class="dot"></span><p>Check the promise log for missed dates</p></div>
+                  <div class="pst" data-ps="25.6 26.8"><span class="dot"></span><p>Draft reminders in each customer's language</p></div>
+                  <div class="pst" data-ps="26.8 27.9"><span class="dot"></span><p>Write the cash-at-risk memo with sources</p></div>
+                </div>
+                <div class="outs" data-a="28.2">
+                  <h3><span>Outputs</span></h3>
+                  <p class="orow"><span class="fi x">XLS</span>Overdue_review_UK.xlsx</p>
+                  <p class="orow"><span class="fi w">DOC</span>Reminder_drafts.docx</p>
+                  <p class="orow"><span class="fi p">PDF</span>Cash_at_risk_memo.pdf</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+<!-- Scene A: Collections Intelligence -->
+        <section class="scr" id="scrA">
+          <h1 class="h1">Collections Intelligence</h1>
+          <p class="auto" data-a="31.3"><span data-mark="tile" data-size="30"></span>Starlane auto-reviewed 12 invoices for you <em>since your last visit.</em><span class="car"></span></p>
+          <div class="stats">
+            <div class="stat" data-a="31.6"><p class="v" data-count="24 31.7 32.9"></p><p class="l">Ready to review</p></div>
+            <div class="stat" data-a="31.75"><p class="v" data-count="7 31.8 32.7"></p><p class="l">Assigned to you</p></div>
+            <div class="stat" data-a="31.9"><p class="v" data-count="4 31.9 32.6"></p><p class="l">Sources connected</p></div>
+            <div class="stat" data-a="32.05"><p class="v" data-inr="1460000 32.0 33.3"></p><p class="l">Overdue across customers</p></div>
+          </div>
+          <div class="tabs" data-a="32.3"><span class="on">My reviews (17)</span><span>All (24)</span></div>
+          <div class="tbl">
+            <div class="th" data-a="32.5"><span>Reviewed invoice</span><span>Status</span><span>Starlane summary</span><span>Last updated</span></div>
+            <div class="tr" data-a="32.7"><div class="doc"><i></i><div><p class="n">Shree Hardware · INV-0987</p><p class="c">Shree Hardware</p></div></div><span><span class="pill p-ready">Ready for review</span></span><span class="cnt"><span class="g"><i class="ic-ok"></i>6</span><span class="o"><i class="ic-half"></i>4</span><span class="r"><i class="ic-bad"></i>1</span></span><span class="up">Just now</span></div>
+            <div class="tr" id="rowG" data-a="32.85"><div class="doc"><i></i><div><p class="n">Gupta Traders · INV-1042</p><p class="c">Gupta Traders</p></div></div><span><span class="pill p-ready">Ready for review</span></span><span class="cnt"><span class="g"><i class="ic-ok"></i>8</span><span class="o"><i class="ic-half"></i>6</span><span class="r"><i class="ic-bad"></i>3</span></span><span class="up">Just now</span></div>
+            <div class="tr" data-a="33.0"><div class="doc"><i></i><div><p class="n">Patel Plumbing · INV-1051</p><p class="c">Patel Plumbing Works</p></div></div><span data-prog="43.1"></span><span data-sum="43.3 5 2 0"></span><span class="up">Just now</span></div>
+            <div class="tr" data-a="33.15"><div class="doc"><i></i><div><p class="n">Om Sanitary · INV-1058</p><p class="c">Om Sanitary Stores</p></div></div><span data-prog="43.7"></span><span data-sum="43.9 7 1 1"></span><span class="up">Just now</span></div>
+            <div class="tr" data-a="33.3"><div class="doc"><i></i><div><p class="n">Kaveri Builders · INV-1063</p><p class="c">Kaveri Builders</p></div></div><span data-prog="99"></span><span data-sum="99 0 0 0"></span><span class="up">Just now</span></div>
+            <div class="tr" data-a="33.45"><div class="doc"><i></i><div><p class="n">Mehta Industries · INV-1066</p><p class="c">Mehta Industries</p></div></div><span data-prog="99"></span><span data-sum="99 0 0 0"></span><span class="up">Just now</span></div>
+            <div id="scrim"></div>
+          </div>
+
+          <aside id="panel">
+            <div class="pbar"><span>···</span><span>✕</span></div>
+            <p class="ptitle">Gupta Traders · INV-1042</p>
+            <dl class="props">
+              <dt data-p="37.1">Customer</dt><dd data-p="37.1">Gupta Traders</dd>
+              <dt data-p="37.25">Status</dt><dd data-p="37.25"><span class="pill p-prog">In progress</span></dd>
+              <dt data-p="37.4">Assignee</dt><dd data-p="37.4"><span class="av">R</span>Ravi Mehta</dd>
+              <dt data-p="37.55">Source</dt><dd data-p="37.55"><span data-mark="tile" data-size="20"></span><span class="lnk">TallyPrime · Voucher 1042</span></dd>
+              <dt data-p="37.7">Due date</dt><dd data-p="37.7">17 September 2026</dd>
+            </dl>
+            <div class="ptabs" data-p="38.0"><span class="on">Summary</span><span>Request</span></div>
+            <div class="trio">
+              <div data-p="38.2"><b data-count="8 38.3 38.9"></b><span class="g">Matched <i class="ic-ok"></i></span></div>
+              <div data-p="38.35"><b data-count="6 38.4 39.0"></b><span class="o">Needs review <i class="ic-half"></i></span></div>
+              <div data-p="38.5"><b data-count="3 38.5 39.1"></b><span class="r">At risk <i class="ic-bad"></i></span></div>
+            </div>
+            <p class="psum" id="psum"></p>
+            <p class="act" data-p="41.1">Activity</p>
+            <div class="feed">
+              <p data-p="41.3"><span class="av">R</span><b>Ravi</b> started a thread · 5m ago</p>
+              <p data-p="41.6"><span data-mark="tile" data-size="22"></span><b>Collections agent</b> drafted a reminder · 1h ago</p>
+              <p data-p="41.9"><span data-mark="tile" data-size="22"></span><b>Assignment agent</b> assigned to Ravi · 2h ago</p>
+            </div>
+          </aside>
+        </section>
+
+                <!-- Scene C: Approval -->
+        <section class="scr" id="scrC">
+          <h1 class="h1">Approve the reminder</h1>
+          <p class="sub">Exactly this text, sent once. Starlane will not change it or send again without you.</p>
+          <div class="apv">
+            <div class="phone" data-a="44.9">
+              <p class="to">To Gupta Traders · WhatsApp</p>
+              <div class="bub"><span id="typed"></span><small id="tick">10:14</small></div>
+            </div>
+            <div>
+              <div class="card meta" data-a="45.2">
+                <h3>Waiting for you</h3>
+                <dl><dt>Customer</dt><dd>Gupta Traders</dd><dt>Amount</dt><dd>₹6,00,000</dd><dt>Drafted by</dt><dd>Collections agent</dd></dl>
+                <div style="margin-top:26px"><span class="btn" id="approve">Approve and send once</span><span class="btn2">Edit</span></div>
+              </div>
+              <div class="res">
+                <div data-a="48.1"><p><span data-mark="tile" data-size="26"></span>Sent once, as written · 10:14</p><span class="pill p-ok">Sent</span></div>
+                <div data-a="49.1"><p><span data-mark="tile" data-size="26"></span>₹6,00,000 received against INV-1042</p><span class="pill p-ok">In TallyPrime</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="abs" id="ask"><span class="disc"><span data-mark="glyph" data-size="30"></span></span>Ask Starlane</div>
+  <svg class="abs" id="cursor" viewBox="0 0 24 24"><path d="M4 2.5 19.5 12l-7 1.6L9.4 20.5z" fill="#161513" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>
+  <div class="abs" id="ripple"></div>
+
+  <div class="abs" id="tw"></div>
+  <div class="abs" id="tc">Agents</div>
+  <p class="abs" id="es">Finance work, done and shown.</p>
+  <p class="abs" id="fine">Sample data · Fictional business</p>
+</div>
+
+<script>
+const DURATION = 60;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ramp = (t, a, b) => clamp((t - a) / (b - a));
+const ease = (x) => 1 - Math.pow(1 - x, 3);
+const inOut = (x) => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+// Brand: the S and the wordmark, from components/brand (injected by render.mjs).
+const BRAND = window.__BRAND || { m: "M0 0h1000v1000H0z", w: "M0 0h5338v1126H0z" };
+const markTile = (s) => `<svg class="s" width="${s}" height="${s}" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#1B1B18"/><path transform="translate(22 22.56) scale(0.056)" d="${BRAND.m}" fill="#F2F1EC"/></svg>`;
+for (const el of $$("[data-mark]")) {
+  const s = Number(el.dataset.size), k = el.dataset.mark;
+  el.style.display = "inline-flex";
+  el.innerHTML = k === "tile" ? markTile(s)
+    : `<svg class="s" width="${s}" height="${s}" viewBox="0 0 1000 1000"><path d="${BRAND.m}" fill="${k === "glyph-w" ? "#F2F1EC" : "#1B1B18"}"/></svg>`;
+}
+$("#tw").innerHTML = `<svg width="${5338 * .118}" height="${1126 * .118}" viewBox="0 0 5338 1126"><path d="${BRAND.w}"/></svg>`;
+
+// Painted texture: dark moss, olive and earth, with grain. Seeded, drawn once.
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+(function paintTexture() {
+  const c = $("#tex"), g = c.getContext("2d"), r = rng(23), w = c.width, h = c.height;
+  g.fillStyle = "#171A19"; g.fillRect(0, 0, w, h);
+  const blots = [["58 72 70", .9], ["150 168 164", .45], ["36 48 46", .9], ["96 112 108", .6], ["22 26 25", .9], ["186 198 194", .3]];
+  for (let i = 0; i < 90; i++) {
+    const [col, a] = blots[i % blots.length], x = r() * w, y = r() * h, rad = 50 + r() * 240;
+    const gr = g.createRadialGradient(x, y, 0, x, y, rad);
+    gr.addColorStop(0, `rgb(${col} / ${a * (.25 + r() * .35)})`); gr.addColorStop(1, `rgb(${col} / 0)`);
+    g.fillStyle = gr; g.beginPath(); g.ellipse(x, y, rad * (1 + r()), rad, r() * Math.PI, 0, Math.PI * 2); g.fill();
+  }
+  const img = g.getImageData(0, 0, w, h), d = img.data;
+  for (let i = 0; i < d.length; i += 4) { const n = (r() - .5) * 34 + (r() < .014 ? 40 : 0); d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+  g.putImageData(img, 0, 0);
+})();
+
+// Scene 1 charts, built once; render(t) only grows them.
+const NS = "http://www.w3.org/2000/svg";
+const N = 120;
+function hairChart(svg, w, h, fn, line) {
+  const out = [];
+  for (let i = 0; i < N; i++) {
+    const x = 6 + i * (w - 12) / (N - 1), v = fn(i / (N - 1)) * (h - 14);
+    const l = document.createElementNS(NS, "line");
+    l.setAttribute("x1", x); l.setAttribute("x2", x); l.setAttribute("y1", h); l.setAttribute("y2", h - v);
+    l.setAttribute("stroke", "#8E918F"); l.setAttribute("stroke-width", "1.4");
+    svg.appendChild(l); out.push({ l, v, i });
+  }
+  let path = null;
+  if (line) {
+    path = document.createElementNS(NS, "path");
+    let d = "";
+    for (let i = 0; i <= 60; i++) { const x = 6 + i * (w - 12) / 60, y = h - line(i / 60) * (h - 14); d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1); }
+    path.setAttribute("d", d); path.setAttribute("fill", "none"); path.setAttribute("stroke", "#C9C5BC"); path.setAttribute("stroke-width", "2.2");
+    svg.appendChild(path);
+    const len = path.getTotalLength(); path.style.strokeDasharray = len; path.dataset.len = len;
+  }
+  return { hairs: out, h, path };
+}
+const H1 = hairChart($("#hair"), 740, 210,
+  (t) => Math.min(1, .08 + .3 * Math.pow(t, 1.5) + (t > .45 ? .16 * (1 - Math.exp(-(t - .45) * 12)) : 0) + (t > .8 ? .5 * Math.pow((t - .8) / .2, 1.6) : 0)),
+  (t) => .12 + .42 / (1 + Math.exp(-(t - .4) * 7)) + .1 * t);
+const H2 = hairChart($("#hair2"), 740, 130, (t) => clamp(.15 + .55 / (1 + Math.exp(-(t - .3) * 14)) + .25 / (1 + Math.exp(-(t - .7) * 12))));
+const GROUPS = [["Distributors", .72, .86, 0], ["Retail", .6, .4, 0], ["Exporters", .5, .41, 0], ["Wholesale", .48, .52, 0], ["Projects", .33, .28, 0], ["Online", .24, .47, 1], ["Other", .16, .28, 1]];
+const BARS = [];
+(function bars() {
+  const svg = $("#bars"), w = 890, h = 250, top = 10, bot = 26, gw = (w - 60) / GROUPS.length;
+  for (let k = 0; k <= 4; k++) {
+    const y = top + (h - top - bot) * k / 4, l = document.createElementNS(NS, "line");
+    l.setAttribute("x1", 40); l.setAttribute("x2", w); l.setAttribute("y1", y); l.setAttribute("y2", y); l.setAttribute("stroke", "#EFEDE8"); svg.appendChild(l);
+    const tx = document.createElementNS(NS, "text"); tx.setAttribute("x", 0); tx.setAttribute("y", y + 4); tx.setAttribute("font-size", "12"); tx.setAttribute("fill", "#9A968E"); tx.textContent = (100 - k * 25) + "%"; svg.appendChild(tx);
+  }
+  GROUPS.forEach(([name, a, b, warn], i) => {
+    const cx = 60 + gw * i + gw / 2, H = h - top - bot;
+    [[a, warn ? "#7A4B3C" : "#2F3433", -11], [b, "#C9C5BC", 3]].forEach(([v, col, dx], j) => {
+      const r = document.createElementNS(NS, "rect");
+      r.setAttribute("x", cx + dx); r.setAttribute("width", 9); r.setAttribute("fill", col); r.setAttribute("rx", 1.5);
+      svg.appendChild(r); BARS.push({ r, v: v * H, base: h - bot, i: i * 2 + j });
+    });
+    const tx = document.createElementNS(NS, "text"); tx.setAttribute("x", cx); tx.setAttribute("y", h - 6); tx.setAttribute("font-size", "12"); tx.setAttribute("fill", "#77736B"); tx.setAttribute("text-anchor", "middle"); tx.textContent = name; svg.appendChild(tx);
+  });
+})();
+const TOP = [["Arlo Freight", 41], ["Meridian GmbH", 37], ["Kestrel Retail", 26], ["Sora Imports", 22]];
+$("#hbars").innerHTML = TOP.map(([n, d]) => `<div class="hbar"><span>${n}</span><span><b data-w="${d / 45}"></b></span><span>${d} days</span></div>`).join("");
+const HB = $$("#hbars b");
+
+const inr = (n) => "₹" + Math.round(n).toLocaleString("en-IN");
+const fades = $$("[data-a]").map((el) => ({ el, a: Number(el.dataset.a) }));
+const pfades = $$("[data-p]").map((el) => ({ el, a: Number(el.dataset.p) }));
+const counts = $$("[data-count]").map((el) => { const [v, a, b] = el.dataset.count.split(" ").map(Number); return { el, v, a, b, f: (n) => String(Math.round(n)) }; })
+  .concat($$("[data-inr]").map((el) => { const [v, a, b] = el.dataset.inr.split(" ").map(Number); return { el, v, a, b, f: inr }; }))
+  .concat($$("[data-pct]").map((el) => { const [v, a, b] = el.dataset.pct.split(" ").map(Number); return { el, v, a, b, f: (n) => n.toFixed(1) + "%" }; }));
+const progs = $$("[data-prog]").map((el) => ({ el, t: Number(el.dataset.prog) }));
+const sums = $$("[data-sum]").map((el) => { const [t, g, o, r] = el.dataset.sum.split(" ").map(Number); return { el, t, g, o, r }; });
+const psteps = $$("[data-ps]").map((el) => { const [a, b] = el.dataset.ps.split(" ").map(Number); return { el, a, b }; });
+const rails = $$("[data-rail]");
+const CHECK = '<svg viewBox="0 0 16 16"><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ASK = "Review every invoice more than 30 days overdue in Halden UK, draft reminders for my approval, and write me a cash-at-risk memo.";
+const REPLY = "I'll read the open invoices and bank lines, check the promise log, then prepare the review, the reminder drafts and a short memo. Nothing is sent and nothing in your books changes.";
+const SUMMARY = "Three invoices totalling ₹6,00,000 are 47 days overdue on average, and two payment promises were missed. Bank lines show no payment since 2 September. Gupta Traders usually pays within a week of a firm reminder from the owner.";
+const MSG = "Namaste Gupta ji. Three invoices totalling ₹6,00,000 are now 47 days overdue (INV-1042, 1057, 1063). Please share a payment date today. Thank you, Narmada Pipes & Fittings.";
+
+// Cursor path: [time, target, press]
+const CURSOR = [
+  [14.4, [1300, 980]], [15.6, '[data-rail="ag"]'], [15.85, '[data-rail="ag"]', 1], [16.4, '[data-rail="ag"]'],
+  [19.9, [1500, 980]], [20.9, "#runbtn"], [21.1, "#runbtn", 1], [21.6, "#runbtn"],
+  [34.3, [1500, 1060]], [35.7, "#rowG"], [35.95, "#rowG", 1], [36.6, "#rowG"],
+  [46.3, [1500, 1000]], [47.5, "#approve"], [47.75, "#approve", 1], [48.5, "#approve"]];
+const CURSOR_SEGS = [[14.4, 16.4], [19.9, 21.6], [34.3, 36.6], [46.3, 48.5]];
+const center = (sel) => { const r = $(sel).getBoundingClientRect(); return [r.left + r.width * .32, r.top + r.height * .5]; };
+
+function render(t) {
+  // Texture.
+  const texA = ease(ramp(t, 3.4, 5.0)) * (1 - ramp(t, 52.2, 53.2));
+  $("#texwrap").style.opacity = texA;
+  $("#tex").style.transform = `translate(${-140 - 90 * Math.sin(t / 13)}px, ${-110 + 40 * Math.sin(t / 17 + 1)}px) scale(${2.05 + .06 * Math.sin(t / 10)})`;
+
+  // Title and end cards.
+  const tIn = ease(ramp(t, .3, 1.5)), cIn = ease(ramp(t, .8, 2.0)), tOut = inOut(ramp(t, 3.0, 3.9));
+  const eW = ease(ramp(t, 53.2, 54.4)), eC = ease(ramp(t, 53.5, 54.7)), eS = ease(ramp(t, 54.2, 55.1));
+  const end = t > 30;
+  const tw = $("#tw"), tc = $("#tc");
+  tw.style.top = (end ? 250 : 290) + "px"; tc.style.top = (end ? 430 : 470) + "px";
+  tw.style.opacity = end ? eW : tIn * (1 - tOut);
+  tc.style.opacity = end ? eC : cIn * (1 - tOut);
+  tw.style.transform = `translateY(${end ? (1 - eW) * 22 : (1 - tIn) * 22 - tOut * 26}px)`;
+  tc.style.transform = `translateY(${end ? (1 - eC) * 30 : (1 - cIn) * 30 - tOut * 26}px) scale(${1 + tOut * .03})`;
+  $("#es").style.opacity = eS; $("#es").style.top = "680px"; $("#es").style.transform = `translateY(${(1 - eS) * 14}px)`;
+  $("#fine").style.opacity = Math.max(ease(ramp(t, 1.4, 2.2)) * (1 - tOut), eS) * .9;
+
+  // App rises in, sinks out.
+  const aIn = ease(ramp(t, 3.8, 5.4)), aOut = inOut(ramp(t, 51.6, 52.6));
+  const app = $("#app");
+  app.style.opacity = aIn * (1 - aOut);
+  app.style.transform = `translateY(${(1 - aIn) * 240 + aOut * 180}px)`;
+  const askOn = ease(ramp(t, 6.0, 6.8)) * (1 - aOut);
+  $("#ask").style.opacity = askOn;
+  $("#ask").style.transform = `translateY(${(1 - ease(ramp(t, 6.0, 6.8))) * 20}px)`;
+
+  // Camera: a slow drift on the Command Center, then a push in on the review panel.
+  const drift = inOut(ramp(t, 5.0, 15.6)) * (1 - inOut(ramp(t, 15.6, 16.6)));
+  const push = inOut(ramp(t, 36.7, 39.2)) * (1 - inOut(ramp(t, 42.3, 43.9)));
+  const s = 1 + .06 * drift + .13 * push;
+  const ox = drift > 0 && t < 17 ? 900 : 1700, oy = drift > 0 && t < 17 ? 300 : 560;
+  $("#cam").style.transform = `translate(${-ox * (s - 1)}px, ${-oy * (s - 1)}px) scale(${s})`;
+
+  // Scenes.
+  const s1 = 1 - ramp(t, 16.0, 16.5);
+  const s2 = ramp(t, 16.1, 16.6) * (1 - ramp(t, 30.8, 31.3));
+  const sA = ramp(t, 30.9, 31.4) * (1 - ramp(t, 43.9, 44.4));
+  const sC = ramp(t, 44.0, 44.5);
+  $("#scr1").style.opacity = s1; $("#scr2").style.opacity = s2; $("#scrA").style.opacity = sA; $("#scrC").style.opacity = sC;
+  $("#scr2").style.transform = `translateX(${(1 - s2) * (t < 24 ? 30 : -30)}px)`;
+  $("#scrA").style.transform = `translateX(${(1 - sA) * (t < 38 ? 30 : -30)}px)`;
+  $("#scrC").style.transform = `translateX(${(1 - sC) * 30}px)`;
+  const railOn = t < 15.9 ? "cc" : t < 31 ? "ag" : t < 44.2 ? "cc" : "ap";
+  rails.forEach((r) => r.classList.toggle("on", r.dataset.rail === railOn));
+
+  for (const { el, a } of fades) { const i = ease(ramp(t, a, a + .6)); el.style.opacity = i; el.style.transform = `translateY(${(1 - i) * 18}px)`; }
+  for (const { el, a } of pfades) { const i = ease(ramp(t, a, a + .5)); el.style.opacity = i; el.style.transform = `translateY(${(1 - i) * 10}px)`; }
+  for (const c of counts) c.el.textContent = c.f(c.v * ease(ramp(t, c.a, c.b)));
+
+  // Scene 1 charts grow.
+  for (const { l, v, i } of H1.hairs) { const k = ease(ramp(t, 6.6 + i * .012, 7.6 + i * .012)); l.setAttribute("y2", H1.h - v * k); }
+  for (const { l, v, i } of H2.hairs) { const k = ease(ramp(t, 7.2 + i * .01, 8.2 + i * .01)); l.setAttribute("y2", H2.h - v * k); }
+  if (H1.path) H1.path.style.strokeDashoffset = H1.path.dataset.len * (1 - inOut(ramp(t, 7.4, 9.6)));
+  for (const b of BARS) { const k = ease(ramp(t, 6.8 + b.i * .07, 7.8 + b.i * .07)); b.r.setAttribute("y", b.base - b.v * k); b.r.setAttribute("height", Math.max(0, b.v * k)); }
+  HB.forEach((b, i) => { b.style.width = (Number(b.dataset.w) * 100) + "%"; b.style.transform = `scaleX(${ease(ramp(t, 7.4 + i * .12, 8.6 + i * .12))})`; });
+
+  // Scene 2: the ask, then the run.
+  const q = ASK.slice(0, Math.round(ASK.length * ramp(t, 17.0, 20.2)));
+  $("#qtext").textContent = q; $("#caret").style.opacity = t < 21.1 && Math.floor(t * 2.4) % 2 === 0 ? 1 : 0;
+  const rv = ramp(t, 21.4, 21.9);
+  $("#ask0").style.opacity = 1 - rv; $("#ask0").style.transform = `translateY(${-rv * 30}px)`;
+  $("#runv").style.opacity = rv; $("#runv").style.transform = `translateY(${(1 - rv) * 30}px)`;
+  $("#ubub").textContent = ASK;
+  $("#reply").textContent = REPLY.slice(0, Math.round(REPLY.length * ramp(t, 22.6, 25.2)));
+  let doneN = 0;
+  for (const p of psteps) {
+    const done = t >= p.b, live = t >= p.a && !done, dot = p.el.querySelector(".dot");
+    if (done) doneN++;
+    p.el.className = "pst" + (done ? " done" : live ? " live" : " todo");
+    dot.innerHTML = done ? CHECK : ""; dot.style.transform = live ? `rotate(${t * 540}deg)` : "";
+  }
+  $("#pcount").textContent = `${doneN} of ${psteps.length}`;
+
+  // Scene 3: the review table and panel.
+  for (const p of progs) p.el.innerHTML = t >= p.t ? '<span class="pill p-ready">Ready for review</span>' : '<span class="pill p-prog">In progress</span>';
+  for (const x of sums) x.el.innerHTML = t >= x.t
+    ? `<span class="cnt"><span class="g"><i class="ic-ok"></i>${x.g}</span><span class="o"><i class="ic-half"></i>${x.o}</span><span class="r"><i class="ic-bad"></i>${x.r}</span></span>`
+    : `<span class="draft">${markTile(18)}Drafting reminder${".".repeat(1 + Math.floor(t * 3) % 3)}</span>`;
+  const picked = t >= 35.95;
+  $("#rowG").classList.toggle("sel", picked);
+  const pIn = inOut(ramp(t, 36.2, 37.0));
+  $("#panel").style.transform = `translateX(${(1 - pIn) * 105}%)`;
+  $("#scrim").style.opacity = pIn;
+  $("#psum").textContent = SUMMARY.slice(0, Math.round(SUMMARY.length * ramp(t, 39.1, 41.0)));
+
+  // Scene 4: approval.
+  $("#typed").textContent = MSG.slice(0, Math.round(MSG.length * ramp(t, 45.3, 47.1)));
+  const ok = t >= 47.75;
+  $("#tick").textContent = t >= 48.0 ? "10:14 ✓✓" : "10:14";
+  $("#approve").textContent = ok ? "Approved" : "Approve and send once";
+  $("#approve").style.background = ok ? "#2D6B47" : "#161513";
+
+  // Cursor (in stage space; targets are measured after the camera moves).
+  let x = 0, y = 0, rp = -1;
+  for (let i = 0; i < CURSOR.length - 1; i++) {
+    const [t0, p0, pr0] = CURSOR[i], [t1, p1] = CURSOR[i + 1];
+    if (t >= t0 && t <= t1) {
+      const a0 = typeof p0 === "string" ? center(p0) : p0, a1 = typeof p1 === "string" ? center(p1) : p1, k = inOut(ramp(t, t0, t1));
+      x = a0[0] + (a1[0] - a0[0]) * k; y = a0[1] + (a1[1] - a0[1]) * k;
+    }
+    if (pr0 && t >= t0 && t < t0 + .6) rp = (t - t0) / .6;
+  }
+  const seg = CURSOR_SEGS.find(([a, b]) => t >= a && t <= b + .4);
+  if (seg && t > seg[1]) { const p = CURSOR.filter((c) => c[0] === seg[1])[0][1]; [x, y] = typeof p === "string" ? center(p) : p; }
+  const vis = seg ? Math.min(ramp(t, seg[0], seg[0] + .3), 1 - ramp(t, seg[1], seg[1] + .4)) : 0;
+  $("#cursor").style.opacity = vis; $("#cursor").style.transform = `translate(${x}px, ${y}px)`;
+  $("#ripple").style.opacity = rp >= 0 ? (1 - rp) * vis : 0;
+  $("#ripple").style.transform = `translate(${x + 6}px, ${y + 6}px) scale(${.4 + Math.max(rp, 0) * .8})`;
+}
+
+window.__film = { DURATION, render };
+if (!/[?&]drive/.test(location.search)) {
+  const t0 = performance.now();
+  const tick = () => { render(((performance.now() - t0) / 1000) % DURATION); requestAnimationFrame(tick); };
+  document.fonts.ready.then(() => requestAnimationFrame(tick));
+} else render(0);
+</script>
+</body>
+</html>

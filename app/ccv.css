@@ -1,6 +1,8 @@
-/* ── Command Center film: a dark, rounded video player ─────────────────────
- * Black frame, square translucent buttons, a thin white scrub line. Used on
- * the product page. The video file itself is in public/film/.
+/* ── Film player, the launch-video pattern ───────────────────────────────────
+ * Preview: the film loops silently under a light scrim with a frosted round
+ * play button. Pressed: the film plays from the start with sound and a full
+ * player (square translucent buttons, a thin white scrub line). Used on the
+ * homepage, product and resources pages. The files are in public/film/.
  */
 .ccv-sec { background: #F8F7F4; color: #0F0E0D; padding: clamp(40px, 5vw, 88px) 0 clamp(56px, 6vw, 104px); }
 .ccv-wrap { width: min(1820px, 100% - 2 * clamp(16px, 2.6vw, 48px)); margin: 0 auto; }
@@ -10,6 +12,8 @@
 
 .ccv-fig { margin: 0; }
 .ccv { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: clamp(8px, .8vw, 14px); background: #000; isolation: isolate; }
+.ccv[data-mode="preview"] { cursor: pointer; }
+.ccv[data-idle] { cursor: none; }
 .ccv:fullscreen { border-radius: 0; aspect-ratio: auto; display: grid; place-items: center; }
 .ccv-v { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; cursor: pointer; }
 
@@ -20,8 +24,8 @@
   background: linear-gradient(to top, rgb(0 0 0 / .45), transparent);
   transition: opacity .3s ease;
 }
-.ccv[data-playing] .ccv-bar { opacity: 0; }
-.ccv[data-playing]:hover .ccv-bar, .ccv[data-playing]:focus-within .ccv-bar { opacity: 1; }
+.ccv[data-idle] .ccv-bar { opacity: 0; }
+.ccv[data-idle]:has(:focus-visible) .ccv-bar { opacity: 1; }
 @media (hover: none) { .ccv[data-playing] .ccv-bar { opacity: 1; } }
 
 .ccv-btn {
@@ -53,12 +57,32 @@
 }
 .ccv-replay:hover { background: rgb(255 255 255 / .32); }
 
+/* Preview scrim and the frosted round play button */
+.ccv-scrim { position: absolute; inset: 0; z-index: 1; background: rgb(15 14 13 / .2); pointer-events: none; transition: opacity .5s ease; }
+.ccv-big {
+  position: absolute; left: 50%; top: 50%; z-index: 2; translate: -50% -50%;
+  display: grid; place-items: center; width: 72px; aspect-ratio: 1; padding: 0;
+  border: 1px solid rgb(250 250 249 / .3); border-radius: 50%; color: rgb(250 250 249 / .9); cursor: pointer;
+  background: rgb(250 250 249 / .2); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transition: opacity .5s ease, transform .3s ease, background-color .3s ease;
+}
+.ccv-big:hover { background: rgb(250 250 249 / .3); transform: scale(1.06); }
+.ccv-big:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.ccv[data-mode="full"] .ccv-scrim, .ccv[data-mode="full"] .ccv-big { opacity: 0; pointer-events: none; }
+.ccv[data-mode="full"] .ccv-bar { animation: ccv-in .4s ease both; }
+@keyframes ccv-in { from { opacity: 0; } }
+
 .ccv-cap { margin-top: 12px; font-size: 13px; color: #77736C; }
 
+@media (max-width: 767px) {
+  .ccv-big { width: 48px; }
+  .ccv-big svg { width: 18px; height: 18px; }
+}
 @media (max-width: 640px) {
   .ccv-bar { gap: 10px; padding: 10px; }
   .ccv-time { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ccv-bar, .ccv-btn { transition: none; }
+  .ccv-bar, .ccv-btn, .ccv-big, .ccv-scrim { transition: none; }
+  .ccv[data-mode="full"] .ccv-bar { animation: none; }
 }
