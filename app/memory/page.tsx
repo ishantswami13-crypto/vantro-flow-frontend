@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { StepRail } from "@/components/hv/Pieces";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { api, type AuditEvent } from "@/lib/api";
 import { MemoryLearning } from "@/components/os/MemoryPanels";
@@ -126,25 +127,24 @@ function shortDate(iso: string): string {
   return fmtDate(d, sameYear ? { day: "numeric", month: "short" } : { month: "short", year: "numeric" });
 }
 
-// V32 memory_event: date column, a dot on a hairline, title, reason and an
-// outlined outcome pill. The outcome comes only from the action string.
-function TimelineNode({ e }: { e: AuditEvent }) {
-  const cls = classify(e.action);
+// Recorded steps on the shared step rail (components/hv/Pieces): each is a
+// done step with what happened, its record and when. The outcome label comes
+// only from the action string.
+function Timeline({ list }: { list: AuditEvent[] }) {
   return (
-    <div className="card-in" style={{ display: "flex", gap: 16 }}>
-      <div title={formatDate(e.created_at)} style={{ width: 70, flexShrink: 0, fontSize: 12, color: "#63635F", paddingTop: 2 }}>{shortDate(e.created_at)}</div>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-        <span style={{ width: 1, flex: 1, background: "rgba(25,25,23,0.12)", marginTop: 4 }} />
-      </div>
-      <div style={{ paddingBottom: 20, minWidth: 0 }}>
-        <div style={{ fontSize: 14, color: "#191917", marginBottom: 4 }}>{humanize(e.action)}</div>
-        <div style={{ fontSize: 12.5, color: "#63635F", marginBottom: cls ? 6 : 0 }}>{reasonFor(e)}</div>
-        {cls && (
-          <span style={{ fontSize: 11, color: cls.color, border: `1px solid ${cls.color}`, borderRadius: 20, padding: "3px 9px", display: "inline-block" }}>
-            {cls.outcome}
-          </span>
-        )}
-      </div>
+    <div className="hv-stat" style={{ padding: "18px 20px" }}>
+      <StepRail
+        label="Recorded steps"
+        steps={list.map((e) => {
+          const cls = classify(e.action);
+          return {
+            key: e.id,
+            state: "done" as const,
+            label: <span className="inline-flex items-center flex-wrap" style={{ gap: 8 }}>{humanize(e.action)}{cls && <span style={{ fontSize: 11.5, color: cls.color }}>· {cls.outcome}</span>}</span>,
+            detail: <span title={formatDate(e.created_at)}>{reasonFor(e)} · {shortDate(e.created_at)}</span>,
+          };
+        })}
+      />
     </div>
   );
 }
@@ -236,9 +236,7 @@ export default function MemoryPage() {
           events.length === 0 ? (
             <EmptyPanel {...EMPTY_COPY.timeline} />
           ) : (
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {events.map((e) => <TimelineNode key={e.id} e={e} />)}
-            </div>
+<Timeline list={events} />
           )
         )}
 
@@ -246,9 +244,7 @@ export default function MemoryPage() {
           decisions.length === 0 ? (
             <EmptyPanel {...EMPTY_COPY.decisions} />
           ) : (
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {decisions.map((e) => <TimelineNode key={e.id} e={e} />)}
-            </div>
+<Timeline list={decisions} />
           )
         )}
 
@@ -289,9 +285,7 @@ export default function MemoryPage() {
                   ))}
                 </div>
               )}
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                {replaySequence.map((e) => <TimelineNode key={e.id} e={e} />)}
-              </div>
+<Timeline list={replaySequence} />
             </div>
           )
         )}
@@ -300,9 +294,7 @@ export default function MemoryPage() {
           turningPoints.length === 0 ? (
             <EmptyPanel {...EMPTY_COPY["turning-points"]} />
           ) : (
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {turningPoints.map(({ e }) => <TimelineNode key={e.id} e={e} />)}
-            </div>
+<Timeline list={turningPoints.map(({ e }) => e)} />
           )
         )}
       </div>

@@ -2001,3 +2001,67 @@ a.ag-row:hover { background: rgba(255,255,255,0.7); }
   .ag-row .ag-st { grid-column: 2; grid-row: 1; }
   .ag-row .ag-when { grid-column: 2; grid-row: 2; }
 }
+
+/* ── Shared Harvey pieces (components/hv/Pieces.tsx): step rail, typed file
+   chips, history tables and side panes, used on every app page the way the
+   Agents run view uses them. ── */
+.hv-app .hv-rail .hv-rail-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hv-app .hv-rail .hv-rail-detail { font-size: 11.5px; color: #8F8A81; text-decoration: none; display: block; }
+.hv-app .hv-rail.no-strike li.is-done { color: #3F3D39; text-decoration: none; }
+.hv-app .hv-rail li.is-failed { color: #A3392E; }
+.hv-app .hv-rail li.is-failed .ar-step-dot { color: #A3392E; }
+.hv-app .hv-rail li.is-failed .ar-step-dot::before { border: 1.3px solid #D9A39A; }
+.hv-app .hv-rail li.is-failed .ar-step-dot svg { position: relative; }
+.hv-app .hv-rail li.is-active > span:last-child { background: none; -webkit-background-clip: border-box; background-clip: border-box; color: inherit; animation: none; }
+.hv-app .hv-rail li.is-active .hv-rail-label { background: linear-gradient(90deg, #0F0E0D 0 35%, #C9C6C1 45%, #0F0E0D 55% 100%) 0 0 / 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: ar-shim 2.4s linear infinite; }
+.hv-app .hv-rail li.is-waiting { color: #8F8B85; }
+@media (prefers-reduced-motion: reduce) { .hv-app .hv-rail li.is-active .hv-rail-label { animation: none !important; color: #0F0E0D; } }
+.hv-pips { display: inline-flex; gap: 3px; align-items: center; }
+.hv-pips i { width: 10px; height: 4px; border-radius: 2px; background: #E4E1DA; }
+.hv-pips i.is-done { background: #2E7D6B; }
+.hv-pips i.is-failed { background: #D9A39A; }
+.hv-app .ar-file-ic.is-folder { color: #6E6A63; background: #EFEDE8; }
+.hv-fname { display: inline-flex; align-items: baseline; gap: 6px; min-width: 0; }
+.hv-fname .ar-ext { margin-left: 0; }
+.hv-chip { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; padding: 5px 9px 5px 6px; border: 1px solid #E4E1DA; border-radius: 8px; background: #FFFFFF; font-size: 12.5px; color: #1F1D1A; text-align: left; }
+a.hv-chip:hover, button.hv-chip:hover { background: #FBFAF8; border-color: #CFCBC2; }
+button.hv-chip { cursor: pointer; font: inherit; font-size: 12.5px; }
+.hv-chip-meta { color: #8F8A81; font-size: 11.5px; margin-left: 2px; white-space: nowrap; }
+.hv-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.hv-history .hv-row { gap: 16px; }
+.hv-history .hv-cell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+.hv-history .hv-cell-main { color: #191917; }
+.hv-history button.hv-row { width: 100%; border: 0; border-bottom: 1px solid #ECEAE4; background: none; text-align: left; font: inherit; font-size: 13px; color: #43433F; cursor: pointer; }
+.hv-history button.hv-row:hover { background: rgba(255,255,255,0.7); }
+.hv-history-empty { font-size: 13px; color: #6E6E69; padding: 14px; margin: 0; }
+@media (max-width: 760px) {
+  .hv-history .hv-row { display: flex !important; flex-wrap: wrap; row-gap: 3px; column-gap: 12px; }
+  .hv-history .hv-row.is-head { display: none !important; }
+  .hv-history .hv-cell { font-size: 12px; color: #6E6E69; }
+  .hv-history .hv-cell-main { flex-basis: 100%; font-size: 13px; color: #191917; }
+}
+/* Detail pages: main column and a side pane like the run view's panel */
+.hv-detail { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-items: start; }
+.hv-side { display: flex; flex-direction: column; border: 1px solid #E8E5DF; border-radius: 12px; background: #FFFFFF; position: sticky; top: 16px; }
+.hv-pane { padding: 16px 18px; border-bottom: 1px solid #EEEBE6; }
+.hv-pane:last-child { border-bottom: 0; }
+.hv-pane-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.hv-pane-head h3 { margin: 0; font-size: 13px; font-weight: 500; color: #191917; }
+.hv-pane-head > span { font-size: 11.5px; color: #8F8A81; }
+.hv-props { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 9px 12px; margin: 0; font-size: 12.5px; }
+.hv-props dt { color: #6E6A63; }
+.hv-props dd { margin: 0; color: #1F1D1A; min-width: 0; }
+.hv-tag { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border: 1px solid #E4E1DA; border-radius: 6px; background: #FFFFFF; font-size: 12px; color: #1F1D1A; }
+.hv-tag i { width: 6px; height: 6px; border-radius: 50%; background: #3F5E9A; }
+.hv-block-title { margin: 0 0 8px; font-family: 'Newsreader', Georgia, serif; font-weight: 400; font-size: 19px; letter-spacing: -0.01em; color: #191917; }
+@media (max-width: 980px) {
+  .hv-detail { grid-template-columns: minmax(0, 1fr); }
+  .hv-side { position: static; }
+}
+/* A rail laid out across the page (import and setup steps) */
+.hv-app .hv-rail.is-row { flex-direction: row; flex-wrap: wrap; gap: 10px 0; }
+.hv-app .hv-rail.is-row::before { display: none; }
+.hv-app .hv-rail.is-row li { align-items: center; padding-right: 14px; margin-right: 14px; }
+.hv-app .hv-rail.is-row li:not(:last-child)::after { content: ""; position: absolute; right: -8px; top: 50%; width: 16px; height: 1px; background: #DCD9D3; }
+.hv-app .hv-rail.is-row .ar-step-dot { margin-top: 0; }
+@media (max-width: 640px) { .hv-app .hv-rail.is-row { flex-direction: column; } .hv-app .hv-rail.is-row li::after { display: none; } }

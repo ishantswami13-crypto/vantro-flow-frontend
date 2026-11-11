@@ -1,5 +1,6 @@
 "use client";
 
+import { StepRail } from "@/components/hv/Pieces";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -569,27 +570,31 @@ function RunView({ run, catalog }: { run: RunLike; catalog: WorkflowCatalog | nu
       </div>
       {run.summary && <p style={{ fontSize: 13, color: V.body, margin: 0 }}>{run.summary}</p>}
       {run.error && <p style={{ fontSize: 12.5, color: V.critical, margin: 0 }}>{run.error}</p>}
-      <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 6 }}>
-        {run.steps.map((s, i) => {
+      <StepRail
+        label="Run steps"
+        steps={run.steps.map((s, i) => {
           const ss = STEP_STATUS[s.status] || { label: s.status, color: V.neutralDot };
           const out = outputText(s);
-          return (
-            <li key={`${s.id}-${i}`} style={{ display: "grid", gridTemplateColumns: "22px 1fr", gap: 8, opacity: s.status === "SKIPPED" ? 0.55 : 1 }}>
-              <span style={{ ...small, fontWeight: 600 }}>{i + 1}.</span>
-              <div style={{ minWidth: 0 }}>
-                <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: V.ink }}>{label(s)}</span>
-                  <StatusDot label={ss.label} color={ss.color} />
-                  {s.durationMs != null && <span style={small}>{s.durationMs < 1000 ? `${s.durationMs} ms` : `${(s.durationMs / 1000).toFixed(1)} s`}</span>}
-                </div>
-                {s.summary && <p style={{ fontSize: 12.5, color: V.secondary, margin: "2px 0 0" }}>{s.summary}</p>}
-                {out && <p style={{ ...small, margin: "2px 0 0" }}>{out}</p>}
-                {s.response && <p style={{ ...small, margin: "2px 0 0", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", wordBreak: "break-all" }}>{s.response.slice(0, 240)}</p>}
-              </div>
-            </li>
-          );
+          return {
+            key: `${s.id}-${i}`,
+            state: s.status === "DONE" || s.status === "PASSED" ? "done" : s.status === "FAILED" || s.status === "BLOCKED" ? "failed" : s.status === "WAITING_APPROVAL" ? "active" : "waiting",
+            label: (
+              <span className="flex items-center flex-wrap" style={{ gap: 8, opacity: s.status === "SKIPPED" ? 0.6 : 1 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: V.ink }}>{label(s)}</span>
+                <span style={{ fontSize: 12, color: ss.color }}>{ss.label}</span>
+                {s.durationMs != null && <span style={small}>{s.durationMs < 1000 ? `${s.durationMs} ms` : `${(s.durationMs / 1000).toFixed(1)} s`}</span>}
+              </span>
+            ),
+            detail: (s.summary || out || s.response) ? (
+              <>
+                {s.summary && <span className="block" style={{ fontSize: 12.5, color: V.secondary }}>{s.summary}</span>}
+                {out && <span className="block">{out}</span>}
+                {s.response && <span className="block" style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", wordBreak: "break-all" }}>{s.response.slice(0, 240)}</span>}
+              </>
+            ) : null,
+          };
         })}
-      </ol>
+      />
     </div>
   );
 }

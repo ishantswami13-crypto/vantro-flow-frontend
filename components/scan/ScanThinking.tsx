@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ThinkingDots } from "@/components/v32/ui";
-import { IconCheck } from "@/components/v32/icons";
+import { StepRail } from "@/components/hv/Pieces";
 
 // What Scan is doing while the answer is on its way, shown as steps the way
 // Harvey shows its thinking. POST /api/ai-chat does not stream progress, so
@@ -26,19 +25,11 @@ export function ScanThinking() {
   const current = AT_MS.reduce((acc, at, i) => (elapsed >= at ? i : acc), 0);
 
   return (
-    <div role="status" aria-live="polite" className="fade-once" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {STEPS.map((s, i) => {
-        if (i > current) return null;
-        const done = i < current;
-        return (
-          <div key={s} className="rise-in" style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: done ? "#6E6E69" : "#43433F" }}>
-            <span style={{ width: 16, display: "inline-flex", justifyContent: "center" }}>
-              {done ? <IconCheck size={13} /> : <ThinkingDots />}
-            </span>
-            {s}
-          </div>
-        );
-      })}
+    <div role="status" aria-live="polite" className="fade-once">
+      <StepRail
+        label="What Starlane is doing"
+        steps={STEPS.map((s, i) => ({ key: s, label: s, state: i < current ? "done" : i === current ? "active" : "waiting" }))}
+      />
       <span className="sr-only">{STEPS[current]}</span>
     </div>
   );

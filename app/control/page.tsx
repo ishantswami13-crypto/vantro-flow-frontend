@@ -12,6 +12,8 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { ReviewLine, StatTiles, PageHeader, StatusDot, Sep, Lettermark, EmptyLine, Button } from "@/components/v32/ui";
 import { ControlSubnav, type ControlTab } from "@/components/control/ControlSubnav";
 import { api, type Connector, type CortexHealthResponse, type UserSettings } from "@/lib/api";
+import { HistoryTable } from "@/components/hv/Pieces";
+import { auditRows, AUDIT_COLUMNS, AUDIT_TEMPLATE } from "@/components/control/AuditHistory";
 
 // Control — what Starlane can see, what it's doing, and whether it's
 // right. Overview is built from ONLY two real endpoints that already
@@ -221,7 +223,27 @@ function OverviewTab() {
           <OutcomesSection stats={health.data.stats} />
         </div>
       )}
+
+      <RecentActivity />
     </div>
+  );
+}
+
+// The latest audit entries, like Harvey's history table; the full trail is on Audit.
+function RecentActivity() {
+  const audit = useQuery({ queryKey: ["control-audit"], queryFn: () => api.audit.list(), staleTime: 15_000 });
+  const events = (audit.data?.events || []).slice(0, 6);
+  if (!audit.isLoading && events.length === 0) return null;
+  return (
+    <HistoryTable
+      title="Recent activity"
+      aside="Newest first"
+      action={<Link href="/control/audit" className="underline">Full audit</Link>}
+      columns={AUDIT_COLUMNS}
+      template={AUDIT_TEMPLATE}
+      rows={auditRows(events)}
+      loading={audit.isLoading}
+    />
   );
 }
 

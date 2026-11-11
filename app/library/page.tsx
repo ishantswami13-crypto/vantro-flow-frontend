@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { FileIcon, FileName } from "@/components/hv/Pieces";
 import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ModelPicker } from "@/components/scan/ModelPicker";
@@ -25,6 +26,7 @@ type Item = {
 };
 type Folder = { id: string; name: string; modified_at: string | null; count: number; items: Item[] };
 type Vault = { folders: Folder[]; last_synced_at: string | null };
+const FILE_TYPES = new Set(["CSV", "XLSX", "XLS", "PDF", "JSON", "TXT"]);
 
 const MODES = {
   table: { label: "Review table", suffix: " Answer as a table." },
@@ -263,8 +265,8 @@ export default function VaultPage() {
                     tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter") open(i); }}>
                     <td>
                       <span className="vt-name">
-                        {i.type === "Folder" ? <FolderGlyph /> : <DocGlyph kind={i.type} />}
-                        <span className="vt-name-text">{i.name}</span>
+                        {i.type === "Folder" ? <FileIcon folder /> : <FileIcon name={/\.[a-z0-9]{2,5}$/i.test(i.name) ? i.name : `x.${i.type.toLowerCase()}`} />}
+                        <span className="vt-name-text">{i.type === "Folder" ? i.name : <FileName name={i.name} ext={/\.[a-z0-9]{2,5}$/i.test(i.name) || !FILE_TYPES.has(i.type.toUpperCase()) ? null : i.type} />}</span>
                       </span>
                       <span className="vt-mobile">{[i.category, sizeOf(i) || (i.folder ? items(i.folder.count) : ""), dateOf(i.modified_at)].filter(Boolean).join(" · ")}</span>
                     </td>
@@ -307,14 +309,4 @@ const FilterGlyph = () => <G size={13}><path d="M2.5 4.5h11M4.5 8h7M6.5 11.5h3" 
 const ExtGlyph = () => <G size={12}><path d="M9 3h4v4M13 3L7.5 8.5M11.5 9.5v3.5h-8.5v-8.5h3.5" /></G>;
 function FolderGlyph({ size = 16 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M1.5 4.2c0-.6.5-1.2 1.2-1.2h3.4l1.4 1.5h5.8c.7 0 1.2.5 1.2 1.2v6.6c0 .6-.5 1.2-1.2 1.2H2.7c-.7 0-1.2-.6-1.2-1.2z" fill="#9C9A94" /></svg>;
-}
-function DocGlyph({ kind }: { kind: string }) {
-  const c = kind === "XLSX" || kind === "CSV" ? "#3E7D52" : kind === "JSON" ? "#6B5B95" : kind === "Ledger" ? "#B5543C" : "#8A877F";
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style={{ flexShrink: 0 }}>
-      <path d="M3.5 1.5h6l3 3v10h-9z" fill="#FFFFFF" stroke="#CFCBC2" />
-      <path d="M9.5 1.5v3h3" fill="none" stroke="#CFCBC2" />
-      <rect x="5" y="8" width="6" height="1.6" rx=".4" fill={c} /><rect x="5" y="10.8" width="4" height="1.4" rx=".4" fill={c} opacity=".55" />
-    </svg>
-  );
 }

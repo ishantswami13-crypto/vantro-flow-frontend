@@ -5,6 +5,7 @@
 // Nothing is written until "Import and analyse"; the backend commits only
 // the column choices shown here.
 
+import { StepRail } from "@/components/hv/Pieces";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -187,6 +188,17 @@ export default function ImportPage() {
           Upload the file you already have: a sales register, an outstanding report or an export from your accounting system, as CSV or Excel.
           You check what each column means before anything is saved. Starlane then works out what needs a decision, from your data only.
         </p>
+
+        <StepRail
+          className="is-row mb-8"
+          label="Import steps"
+          steps={[
+            { key: "file", label: "Choose a file", state: file && preview ? "done" : "active" },
+            { key: "map", label: "Check what each column means", state: result ? "done" : preview ? (busy === "commit" ? "done" : "active") : "waiting" },
+            { key: "save", label: "Import and analyse", state: result ? "done" : busy === "commit" ? "active" : "waiting" },
+            { key: "see", label: "See what needs a decision", state: result ? "done" : "waiting" },
+          ]}
+        />
 
         {error && <div className="mb-6"><Notice tone="bad" title="That didn't work">{error}</Notice></div>}
 
