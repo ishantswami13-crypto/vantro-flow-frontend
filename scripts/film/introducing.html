@@ -21,7 +21,7 @@
 html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
 body { font-family: "Hanken", "Jakarta", system-ui, sans-serif; color: #1A1916; -webkit-font-smoothing: antialiased; }
 .abs { position: absolute; }
-.stage { position: absolute; inset: 0; overflow: hidden; background: #000; }
+.stage { position: absolute; inset: 0; overflow: hidden; background: #000; perspective: 2600px; perspective-origin: 50% 40%; }
 svg.s { display: block; flex-shrink: 0; }
 
 /* Painted texture behind the app */
@@ -38,7 +38,18 @@ svg.s { display: block; flex-shrink: 0; }
 
 /* Camera: the whole product moves as one */
 #cam { position: absolute; inset: 0; transform-origin: 0 0; }
-#app { left: 96px; top: 96px; width: 1728px; height: 1040px; display: grid; grid-template-columns: 88px 1fr; border-radius: 12px 12px 0 0; overflow: hidden; background: #F4F2EE; box-shadow: 0 50px 120px -20px rgb(0 0 0 / .75), 0 0 0 1px rgb(255 255 255 / .06); }
+#app { left: 96px; top: 96px; width: 1728px; height: 1040px; transform-origin: 50% 0; display: grid; grid-template-columns: 88px 1fr; border-radius: 12px 12px 0 0; overflow: hidden; background: #F4F2EE; box-shadow: 0 80px 160px -30px rgb(0 0 0 / .85), 0 30px 60px -20px rgb(0 0 0 / .5), 0 0 0 1px rgb(255 255 255 / .08); }
+#cam { transform-style: preserve-3d; }
+#glow { position: absolute; left: 50%; top: 52%; width: 2200px; height: 1300px; margin: -650px 0 0 -1100px; border-radius: 50%; background: radial-gradient(closest-side, rgb(214 226 220 / .20), rgb(214 226 220 / .06) 55%, transparent); pointer-events: none; }
+#sheen { position: absolute; inset: 0; z-index: 30; pointer-events: none; background: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / .05) 48%, transparent 60%); mix-blend-mode: screen; }
+#grain { position: absolute; left: 0; top: 0; z-index: 40; pointer-events: none; opacity: .07; mix-blend-mode: overlay; }
+#letterbox { position: absolute; inset: 0; z-index: 41; pointer-events: none; box-shadow: inset 0 0 220px 40px rgb(0 0 0 / .55); }
+#card { position: absolute; inset: 0; z-index: 35; display: grid; place-items: center; align-content: center; gap: 26px; background: radial-gradient(70% 70% at 50% 45%, #1A1D1B, #070807 75%); opacity: 0; }
+#card h2 { font-family: "Newsreader"; font-weight: 300; font-size: 104px; letter-spacing: -0.025em; line-height: 1.02; color: #F4F2EC; text-align: center; }
+#card h2 span { display: inline-block; }
+#card p { font-size: 27px; letter-spacing: .01em; color: rgb(244 242 236 / .58); text-align: center; max-width: 1000px; line-height: 1.45; }
+#card small { font-size: 15px; letter-spacing: .22em; text-transform: uppercase; color: rgb(244 242 236 / .42); }
+
 
 /* Rail, like a compact icon sidebar */
 .rail { background: #151513; display: flex; flex-direction: column; align-items: center; padding-top: 22px; gap: 4px; }
@@ -217,7 +228,7 @@ svg.s { display: block; flex-shrink: 0; }
 </head>
 <body>
 <div class="stage">
-  <div id="texwrap"><canvas id="tex" width="1120" height="660"></canvas><div id="vignette"></div></div>
+  <div id="texwrap"><canvas id="tex" width="1120" height="660"></canvas><div id="vignette"></div><div id="glow"></div></div>
 
   <div id="cam">
     <div class="abs" id="app">
@@ -400,10 +411,29 @@ svg.s { display: block; flex-shrink: 0; }
   <div class="abs" id="tc">Agents</div>
   <p class="abs" id="es">Finance work at global scale, done and shown.</p>
   <p class="abs" id="fine">Sample data · Fictional business</p>
+  <div id="card"><small id="cardk"></small><h2 id="cardh"></h2><p id="cardp"></p></div>
+  <div id="sheen"></div>
+  <canvas id="grain" width="2048" height="1208"></canvas>
+  <div id="letterbox"></div>
 </div>
 
 <script>
-const DURATION = 60;
+const CARDS = [
+  { a: 15.95, b: 16.6, len: 2.6, k: "Agents", h: "Give an agent the work.", p: "It plans the steps, reads every ledger and returns a result you can check." },
+  { a: 30.85, b: 31.4, len: 2.6, k: "Evidence", h: "Every figure, sourced.", p: "Each number links to the entry, the bank line or the policy it came from." },
+  { a: 43.95, b: 44.55, len: 2.6, k: "Control", h: "People approve. Everything is recorded.", p: "Approval chains by amount, entity and region, with an audit trail on every action." },
+];
+const DURATION = 60 + CARDS.reduce((n, c) => n + c.len - (c.b - c.a), 0);
+function warp(T) {
+  let off = 0;
+  for (const c of CARDS) {
+    const start = c.a + off;
+    if (T < start) return { t: T - off };
+    if (T < start + c.len) { const k = (T - start) / c.len; return { t: k < .5 ? c.a : c.b, c, k }; }
+    off += c.len - (c.b - c.a);
+  }
+  return { t: T - off };
+}
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const ramp = (t, a, b) => clamp((t - a) / (b - a));
 const ease = (x) => 1 - Math.pow(1 - x, 3);
@@ -420,6 +450,9 @@ for (const el of $$("[data-mark]")) {
   el.innerHTML = k === "tile" ? markTile(s)
     : `<svg class="s" width="${s}" height="${s}" viewBox="0 0 1000 1000"><path d="${BRAND.m}" fill="${k === "glyph-w" ? "#F2F1EC" : "#1B1B18"}"/></svg>`;
 }
+(function grain() { const g = $("#grain").getContext("2d"), im = g.createImageData(2048, 1208), r = rng(5);
+  for (let i = 0; i < im.data.length; i += 4) { const v = 128 + (r() - .5) * 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
+  g.putImageData(im, 0, 0); })();
 $("#tw").innerHTML = `<svg width="${5338 * .118}" height="${1126 * .118}" viewBox="0 0 5338 1126"><path d="${BRAND.w}"/></svg>`;
 
 // Painted texture: dark moss, olive and earth, with grain. Seeded, drawn once.
@@ -514,7 +547,7 @@ const CURSOR = [
 const CURSOR_SEGS = [[14.4, 16.4], [19.9, 21.6], [34.3, 36.6], [46.3, 48.5]];
 const center = (sel) => { const r = $(sel).getBoundingClientRect(); return [r.left + r.width * .32, r.top + r.height * .5]; };
 
-function render(t) {
+function scene(t, T) {
   // Texture.
   const texA = ease(ramp(t, 3.4, 5.0)) * (1 - ramp(t, 52.2, 53.2));
   $("#texwrap").style.opacity = texA;
@@ -537,7 +570,7 @@ function render(t) {
   const aIn = ease(ramp(t, 3.8, 5.4)), aOut = inOut(ramp(t, 51.6, 52.6));
   const app = $("#app");
   app.style.opacity = aIn * (1 - aOut);
-  app.style.transform = `translateY(${(1 - aIn) * 240 + aOut * 180}px)`;
+  app.style.transform = `translateY(${(1 - aIn) * 260 + aOut * 180}px) rotateX(${(1 - aIn) * 16 + aOut * 8}deg)`;
   const askOn = ease(ramp(t, 6.0, 6.8)) * (1 - aOut);
   $("#ask").style.opacity = askOn;
   $("#ask").style.transform = `translateY(${(1 - ease(ramp(t, 6.0, 6.8))) * 20}px)`;
@@ -547,7 +580,10 @@ function render(t) {
   const push = inOut(ramp(t, 36.7, 39.2)) * (1 - inOut(ramp(t, 42.3, 43.9)));
   const s = 1 + .06 * drift + .13 * push;
   const ox = drift > 0 && t < 17 ? 900 : 1700, oy = drift > 0 && t < 17 ? 300 : 560;
-  $("#cam").style.transform = `translate(${-ox * (s - 1)}px, ${-oy * (s - 1)}px) scale(${s})`;
+  const ry = 1.6 * Math.sin(T / 9.5), rx = 1.2 + .9 * Math.sin(T / 12 + .7);
+  $("#cam").style.transform = `translate(${-ox * (s - 1)}px, ${-oy * (s - 1)}px) scale(${s}) rotateX(${rx}deg) rotateY(${ry}deg)`;
+  $("#sheen").style.backgroundPosition = `${(T * 37) % 3000 - 1500}px 0`;
+  $("#sheen").style.opacity = .6 + .4 * Math.sin(T / 5);
 
   // Scenes.
   const s1 = 1 - ramp(t, 16.0, 16.5);
@@ -605,7 +641,7 @@ function render(t) {
   $("#typed").textContent = MSG.slice(0, Math.round(MSG.length * ramp(t, 45.3, 47.1)));
   const ok = t >= 47.75;
   $("#tick").textContent = t >= 48.0 ? "10:14 · delivered" : "10:14";
-  $("#approve").textContent = ok ? "Approved" : "Approve and send once";
+  $("#approve").textContent = ok ? "Approved" : "Approve as CFO and send once";
   $("#approve").style.background = ok ? "#2D6B47" : "#161513";
 
   // Cursor (in stage space; targets are measured after the camera moves).
@@ -626,6 +662,23 @@ function render(t) {
   $("#ripple").style.transform = `translate(${x + 6}px, ${y + 6}px) scale(${.4 + Math.max(rp, 0) * .8})`;
 }
 
+const words = (h, k) => h.split(" ").map((w, i) => { const e = ease(clamp((k - .08 - i * .025) / .12)); return `<span style="opacity:${e};transform:translateY(${(1 - e) * 26}px);filter:blur(${(1 - e) * 6}px)">${w}</span>`; }).join(" ");
+function render(T) {
+  const w = warp(T);
+  scene(w.t, T);
+  const card = $("#card");
+  if (w.c) {
+    const k = w.k, inA = ease(clamp(k / .2)), outA = 1 - ease(clamp((k - .8) / .2));
+    card.style.opacity = Math.min(inA, outA);
+    $("#cardk").textContent = w.c.k; $("#cardk").style.opacity = ease(clamp((k - .05) / .15));
+    $("#cardh").innerHTML = words(w.c.h, k);
+    const pe = ease(clamp((k - .3) / .15)); $("#cardp").textContent = w.c.p; $("#cardp").style.opacity = pe; $("#cardp").style.transform = `translateY(${(1 - pe) * 14}px)`;
+    card.style.transform = `scale(${1.04 - .04 * ease(k)})`;
+  } else card.style.opacity = 0;
+  // Grain moves every frame, like film.
+  const f = Math.floor(T * 30), gx = (f * 7919) % 64, gy = (f * 104729) % 64;
+  $("#grain").style.transform = `translate(${-gx}px, ${-gy}px)`;
+}
 window.__film = { DURATION, render };
 if (!/[?&]drive/.test(location.search)) {
   const t0 = performance.now();
