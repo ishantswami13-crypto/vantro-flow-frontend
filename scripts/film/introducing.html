@@ -1,12 +1,22 @@
 <!doctype html>
 <!--
   "Introducing Starlane Agents", the homepage film, the composition.
-  One 1920x1080 stage, 60 seconds. Every frame is a pure function of time:
-  render(t) places everything, so render.mjs can step through it frame by frame
-  and encode a real video (public/film/). The Starlane S and wordmark are
-  injected by render.mjs from components/brand. Scenes: title card, the Command
-  Center, giving an agent work and watching it run, the review it produced, the
-  owner's approval, end card. Sample data on a fictional multinational group.
+  One 1920x1080 stage, 62 seconds. Every frame is a pure function of time:
+  render(t) draws everything, so render.mjs can step through it frame by frame
+  and encode a real video (public/film/).
+
+  Art direction: a hand-made paper collage. Torn and cut paper, pencil lines,
+  charcoal scribbles, typewritten clauses and turning paper solids, all drawn
+  procedurally on canvas and moving on twelve frames a second like stop motion.
+  The product sits inside that world as clean white windows and cards.
+  Palette: paper, ink, graphite, stone, sage, slate, clay, plum.
+
+  Story: the paper world of ledgers and terms, the Starlane home, the agents,
+  giving an agent the close, the sources it reads, letters of ledgers and
+  invoices that resolve into "Evidence.", what it found, what it produced, the
+  CFO's approval, and the Starlane mark. The S and the wordmark are injected by
+  render.mjs from components/brand. Sample data on a fictional multinational
+  group.
 -->
 <html lang="en">
 <head>
@@ -14,677 +24,615 @@
 <title>Introducing Starlane Agents film</title>
 <style>
 @font-face { font-family: "Newsreader"; src: url(../../public/fonts/newsreader-normal-latin.woff2) format("woff2"); font-weight: 200 800; }
-@font-face { font-family: "Jakarta"; src: url(../../public/fonts/plus-jakarta-sans-normal-latin.woff2) format("woff2"); font-weight: 200 800; }
 @font-face { font-family: "Hanken"; src: url(../../public/fonts/hanken-grotesk-normal-latin.woff2) format("woff2"); font-weight: 100 900; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
-body { font-family: "Hanken", "Jakarta", system-ui, sans-serif; color: #1A1916; -webkit-font-smoothing: antialiased; }
-.abs { position: absolute; }
-.stage { position: absolute; inset: 0; overflow: hidden; background: #000; perspective: 2600px; perspective-origin: 50% 40%; }
-svg.s { display: block; flex-shrink: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: #ECEBE6; }
+body { font-family: "Hanken", system-ui, sans-serif; color: #1F1E1C; -webkit-font-smoothing: antialiased; }
+.stage { position: absolute; inset: 0; overflow: hidden; }
+canvas.full { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+#grain { position: absolute; left: -64px; top: -64px; opacity: .10; mix-blend-mode: multiply; pointer-events: none; }
+#ui { position: absolute; inset: 0; transform-origin: 50% 50%; }
+.p { position: absolute; opacity: 0; }
 
-/* Painted texture behind the app */
-#texwrap { position: absolute; inset: 0; }
-#tex { position: absolute; left: 0; top: 0; width: 1120px; height: 660px; transform-origin: 0 0; }
-#vignette { position: absolute; inset: 0; background: radial-gradient(90% 85% at 50% 45%, transparent 50%, rgb(0 0 0 / .5)); }
+/* App window */
+.win { left: 310px; top: 160px; width: 1300px; height: 760px; background: #FBFAF7; border-radius: 16px; overflow: hidden; display: flex;
+  box-shadow: 0 40px 90px -40px rgb(40 36 30 / .45), 0 0 0 1px rgb(40 36 30 / .08); }
+.rail { width: 66px; background: #1B1B18; display: flex; flex-direction: column; align-items: center; gap: 24px; padding-top: 20px; flex-shrink: 0; }
+.rail i { width: 22px; height: 22px; border-radius: 6px; border: 1.6px solid rgb(242 241 236 / .4); }
+.rail i.on { background: rgb(242 241 236 / .9); border-color: transparent; }
+.main { flex: 1; position: relative; padding: 0 80px; }
+.glow { position: absolute; inset: 0; background: radial-gradient(46% 52% at 50% 52%, rgb(214 222 222 / .55), transparent 75%); }
+.serif { font-family: "Newsreader"; font-weight: 400; letter-spacing: -0.015em; }
+.hello { text-align: center; font-size: 50px; margin-top: 150px; position: relative; }
+.box { position: relative; margin: 34px auto 0; width: 760px; background: #fff; border-radius: 14px; box-shadow: 0 14px 40px -18px rgb(40 36 30 / .3), 0 0 0 1px rgb(40 36 30 / .09); overflow: hidden; }
+.box .top { display: flex; justify-content: space-between; padding: 12px 18px; background: #F6F5F1; font-size: 15px; color: #5E7A6E; font-weight: 600; }
+.box .top span:last-child { color: #6B6965; font-weight: 500; }
+.box .body { padding: 18px 20px 16px; font-size: 19px; line-height: 1.45; color: #1F1E1C; min-height: 128px; }
+.box .ph { color: #8C8A85; }
+.box .att { display: inline-flex; gap: 10px; align-items: center; background: #F2F1EC; border-radius: 10px; padding: 9px 14px; font-size: 14px; color: #3F3E3B; margin-bottom: 14px; }
+.box .att small { display: block; color: #7A7873; font-size: 12px; }
+.box .foot { display: flex; justify-content: space-between; align-items: center; padding: 0 18px 14px; color: #6B6965; font-size: 22px; }
+.send { width: 32px; height: 32px; border-radius: 8px; background: #1B1B18; color: #fff; display: grid; place-items: center; font-size: 17px; }
+.recent { width: 760px; margin: 30px auto 0; position: relative; }
+.recent h5 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #8C8A85; font-weight: 600; margin-bottom: 8px; }
+.row { display: flex; gap: 16px; align-items: center; padding: 12px 14px; border-radius: 10px; font-size: 17px; }
+.row code { font-family: "JetBrains Mono", monospace; font-size: 13px; color: #8C8A85; width: 110px; }
+.row em { margin-left: auto; font-style: normal; color: #8C8A85; font-size: 15px; }
+.caret { display: inline-block; width: 2px; height: 1.05em; background: #1F1E1C; vertical-align: -3px; margin-left: 1px; }
 
-/* Title card */
-#tw { left: 0; right: 0; display: flex; justify-content: center; }
-#tw svg path { fill: #fff; }
-#tc { left: 0; right: 0; text-align: center; font-family: "Jakarta"; font-weight: 800; font-size: 176px; letter-spacing: -0.035em; line-height: 1; color: #fff; }
-#es { left: 0; right: 0; text-align: center; font-size: 30px; color: rgb(255 255 255 / .7); }
-#fine { left: 0; right: 0; bottom: 54px; text-align: center; font-size: 17px; letter-spacing: .08em; text-transform: uppercase; color: rgb(255 255 255 / .42); }
+/* Cards that float in the collage */
+.card { width: 360px; background: #fff; border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start;
+  box-shadow: 0 16px 36px -16px rgb(40 36 30 / .35), 0 0 0 1px rgb(40 36 30 / .07); }
+.ico { width: 30px; height: 30px; border-radius: 8px; background: #EDF0EC; flex-shrink: 0; display: grid; place-items: center; }
+.ico svg { width: 16px; height: 16px; }
+.card b { display: block; font-size: 17px; font-weight: 600; letter-spacing: -0.005em; }
+.card span { display: block; font-size: 14.5px; color: #6B6965; margin-top: 3px; line-height: 1.35; }
 
-/* Camera: the whole product moves as one */
-#cam { position: absolute; inset: 0; transform-origin: 0 0; }
-#app { left: 96px; top: 96px; width: 1728px; height: 1040px; transform-origin: 50% 0; display: grid; grid-template-columns: 88px 1fr; border-radius: 12px 12px 0 0; overflow: hidden; background: #F4F2EE; box-shadow: 0 80px 160px -30px rgb(0 0 0 / .85), 0 30px 60px -20px rgb(0 0 0 / .5), 0 0 0 1px rgb(255 255 255 / .08); }
-#cam { transform-style: preserve-3d; }
-#glow { position: absolute; left: 50%; top: 52%; width: 2200px; height: 1300px; margin: -650px 0 0 -1100px; border-radius: 50%; background: radial-gradient(closest-side, rgb(214 226 220 / .20), rgb(214 226 220 / .06) 55%, transparent); pointer-events: none; }
-#sheen { position: absolute; inset: 0; z-index: 30; pointer-events: none; background: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / .05) 48%, transparent 60%); mix-blend-mode: screen; }
-#grain { position: absolute; left: 0; top: 0; z-index: 40; pointer-events: none; opacity: .07; mix-blend-mode: overlay; }
-#letterbox { position: absolute; inset: 0; z-index: 41; pointer-events: none; box-shadow: inset 0 0 220px 40px rgb(0 0 0 / .55); }
-#card { position: absolute; inset: 0; z-index: 35; display: grid; place-items: center; align-content: center; gap: 26px; background: radial-gradient(70% 70% at 50% 45%, #1A1D1B, #070807 75%); opacity: 0; }
-#card h2 { font-family: "Newsreader"; font-weight: 300; font-size: 104px; letter-spacing: -0.025em; line-height: 1.02; color: #F4F2EC; text-align: center; }
-#card h2 span { display: inline-block; }
-#card p { font-size: 27px; letter-spacing: .01em; color: rgb(244 242 236 / .58); text-align: center; max-width: 1000px; line-height: 1.45; }
-#card small { font-size: 15px; letter-spacing: .22em; text-transform: uppercase; color: rgb(244 242 236 / .42); }
+/* Sources */
+.grp { width: 600px; }
+.grp h6 { display: flex; gap: 10px; align-items: center; font-size: 17px; font-weight: 500; color: #4A4945; margin: 0 0 10px; }
+.list { background: #fff; border-radius: 12px; box-shadow: 0 14px 34px -18px rgb(40 36 30 / .35), 0 0 0 1px rgb(40 36 30 / .07); padding: 6px 0; margin-bottom: 26px; }
+.list p { display: flex; align-items: center; gap: 12px; padding: 9px 18px; font-size: 16.5px; opacity: 0; }
+.list p i { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.list p em { margin-left: auto; font-style: normal; color: #8C8A85; font-size: 15px; }
+.reason { width: 560px; font-size: 19px; line-height: 1.5; color: #4A4945; border-left: 1.5px solid #C9C6BE; padding-left: 20px; }
+.reason b { display: block; font-weight: 500; color: #1F1E1C; margin-bottom: 6px; }
+.tag { display: flex; gap: 10px; align-items: center; font-size: 17px; color: #4A4945; }
 
+/* Approval */
+.apv { padding: 56px 70px 0; flex: 1; }
+.apv h1 { font-size: 48px; }
+.apv .sub { font-size: 19px; color: #6B6965; margin-top: 10px; max-width: 900px; }
+.cols { display: flex; gap: 36px; margin-top: 34px; }
+.letter { flex: 1.25; background: #fff; border-radius: 14px; box-shadow: 0 14px 34px -18px rgb(40 36 30 / .3), 0 0 0 1px rgb(40 36 30 / .08); padding: 24px 28px; }
+.letter small { font-size: 14px; color: #7A7873; letter-spacing: .02em; }
+.letter p { font-size: 19px; line-height: 1.55; margin-top: 12px; }
+.meta { flex: 1; }
+.meta dl { display: grid; grid-template-columns: 170px 1fr; row-gap: 14px; font-size: 17px; }
+.meta dt { color: #8C8A85; }
+.btn { display: inline-flex; margin-top: 30px; background: #1B1B18; color: #F4F2EC; border-radius: 10px; padding: 15px 22px; font-size: 18px; font-weight: 500; }
+.btn.done { background: #E3EBE5; color: #2E4D3F; }
+.audit { margin-top: 16px; font-size: 16px; color: #2E4D3F; display: flex; gap: 10px; align-items: center; }
 
-/* Rail, like a compact icon sidebar */
-.rail { background: #151513; display: flex; flex-direction: column; align-items: center; padding-top: 22px; gap: 4px; }
-.rail .logo { margin-bottom: 18px; }
-.ri { width: 70px; padding: 9px 0 8px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; color: #9C988F; font-size: 13px; }
-.ri svg { width: 22px; height: 22px; }
-.ri.on { background: #2A2926; color: #fff; }
-.rail hr { width: 40px; border: 0; border-top: 1px solid #2E2D2A; margin: 10px 0; }
-
-.main { position: relative; overflow: hidden; }
-.scr { position: absolute; inset: 0; padding: 44px 58px; }
-.h1 { font-family: "Newsreader"; font-weight: 400; font-size: 60px; letter-spacing: -0.015em; line-height: 1.05; color: #161513; }
-.auto { display: flex; align-items: center; gap: 12px; margin-top: 30px; font-size: 25px; font-weight: 500; color: #1A1916; }
-.auto em { font-style: normal; color: #8A867E; font-weight: 400; }
-.auto .car { width: 12px; height: 12px; border-left: 2px solid #8A867E; border-top: 2px solid #8A867E; transform: rotate(45deg) translate(3px, 3px); margin-left: 6px; }
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 24px; }
-.stat { height: 118px; border-radius: 10px; background: #EAE7E1; padding: 18px 20px; }
-.stat .v { font-family: "Newsreader"; font-size: 50px; line-height: 1; color: #161513; }
-.stat .l { margin-top: 12px; font-size: 18px; color: #6E6A62; }
-.tabs { display: flex; gap: 10px; margin-top: 44px; }
-.tabs span { padding: 10px 16px; border-radius: 8px; font-size: 18px; color: #6E6A62; }
-.tabs span.on { background: #EAE7E1; color: #1A1916; font-weight: 600; }
-
-.tbl { margin-top: 22px; position: relative; }
-.th, .tr { display: grid; grid-template-columns: 1.55fr 1fr 1fr .62fr; align-items: center; padding: 0 20px; }
-.th { height: 54px; border-radius: 10px; background: #EAE7E1; font-size: 17px; color: #6E6A62; }
-.tr { height: 92px; border-bottom: 1px solid #E3E0D9; position: relative; }
-.tr .doc { display: flex; gap: 16px; align-items: center; }
-.tr .doc i { width: 22px; height: 26px; border-radius: 4px; background: #DDE6F7; position: relative; }
-.tr .doc i::after { content: ""; position: absolute; left: 5px; right: 5px; top: 8px; height: 2px; background: #6E8FD0; box-shadow: 0 5px 0 #6E8FD0; }
-.tr .n { font-size: 20px; color: #1A1916; }
-.tr .c { margin-top: 3px; font-size: 16px; color: #77736B; }
-.tr .up { font-size: 17px; color: #6E6A62; }
-.tr.sel { background: #fff; border-radius: 10px; border-bottom-color: transparent; box-shadow: 0 10px 30px -10px rgb(30 20 10 / .25); z-index: 3; }
-.pill { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; border-radius: 6px; font-size: 15px; font-weight: 500; white-space: nowrap; }
-.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.p-ready { background: #DCE5F8; color: #2A55B8; }
-.p-prog { background: #F6E9CF; color: #8F5E10; }
-.p-ok { background: #DDEEE3; color: #2D6B47; }
-.p-wait { background: #ECE9E3; color: #6E6A62; }
-.cnt { display: flex; gap: 14px; font-size: 18px; font-weight: 600; }
-.cnt span { display: inline-flex; align-items: center; gap: 5px; }
-.g { color: #2E7D4F; } .o { color: #C7701A; } .r { color: #C2362B; }
-.ic-ok, .ic-half, .ic-bad { width: 15px; height: 15px; border-radius: 50%; display: inline-block; }
-.ic-ok { background: #2E7D4F; } .ic-half { border: 2px solid #C7701A; background: linear-gradient(90deg, #C7701A 50%, transparent 50%); } .ic-bad { background: #C2362B; }
-.draft { display: inline-flex; align-items: center; gap: 8px; font-size: 17px; color: #77736B; }
-#scrim { position: absolute; inset: 0; background: rgb(60 45 35 / .16); z-index: 2; pointer-events: none; }
-
-/* Right-hand detail panel */
-#panel { position: absolute; top: 0; right: 0; bottom: 0; width: 600px; background: #fff; z-index: 4; box-shadow: -30px 0 60px -30px rgb(30 20 10 / .35); padding: 0 34px; }
-.pbar { display: flex; justify-content: space-between; align-items: center; height: 58px; border-bottom: 1px solid #ECE9E3; margin: 0 -34px; padding: 0 30px; color: #6E6A62; font-size: 22px; }
-.ptitle { margin-top: 36px; font-size: 27px; font-weight: 500; color: #161513; }
-.props { margin-top: 26px; display: grid; grid-template-columns: 140px 1fr; row-gap: 20px; font-size: 17px; align-items: center; }
-.props dt { color: #6E6A62; } .props dd { color: #1A1916; display: flex; align-items: center; gap: 8px; }
-.av { width: 22px; height: 22px; border-radius: 50%; background: #ECE9E3; display: inline-grid; place-items: center; font-size: 12px; color: #6E6A62; }
-.lnk { text-decoration: underline; text-underline-offset: 3px; }
-.ptabs { display: flex; gap: 10px; margin-top: 40px; }
-.ptabs span { padding: 9px 14px; border-radius: 8px; font-size: 17px; color: #6E6A62; }
-.ptabs span.on { background: #F1EFEA; color: #1A1916; font-weight: 600; }
-.trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
-.trio div { height: 96px; border-radius: 10px; background: #F4F2EE; padding: 14px 14px; }
-.trio b { display: block; font-family: "Newsreader"; font-weight: 400; font-size: 36px; line-height: 1; color: #161513; }
-.trio span { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 16px; font-weight: 500; }
-.psum { margin-top: 22px; font-size: 17px; line-height: 1.55; color: #2B2926; min-height: 110px; }
-.act { margin-top: 26px; font-size: 15px; color: #6E6A62; }
-.feed { margin-top: 14px; display: grid; gap: 14px; }
-.feed p { display: flex; align-items: center; gap: 10px; font-size: 15px; color: #6E6A62; }
-.feed b { color: #1A1916; font-weight: 600; }
-
-/* Ask Starlane */
-#ask { right: 64px; bottom: 44px; height: 76px; padding: 0 30px 0 12px; border-radius: 999px; background: #1E1D1B; display: flex; align-items: center; gap: 16px; color: #fff; font-size: 26px; font-weight: 500; box-shadow: 0 16px 40px -10px rgb(0 0 0 / .5); z-index: 9; }
-#ask .disc { width: 54px; height: 54px; border-radius: 50%; background: #F3F1EC; display: grid; place-items: center; }
-
-/* Agents screen */
-.sub { margin-top: 14px; font-size: 21px; color: #6E6A62; }
-.run { margin-top: 34px; display: grid; grid-template-columns: 1fr 520px; gap: 28px; }
-.card { background: #fff; border-radius: 12px; border: 1px solid #E6E3DC; padding: 10px 28px; }
-.step { display: grid; grid-template-columns: 40px 1fr auto; gap: 16px; align-items: center; height: 84px; border-bottom: 1px solid #EFEDE8; }
-.step:last-child { border-bottom: 0; }
-.step .dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #D6D2C9; display: grid; place-items: center; }
-.step .dot svg { width: 16px; height: 16px; }
-.step p { font-size: 21px; } .step small { display: block; margin-top: 3px; font-size: 15px; color: #8A867E; }
-.step > span { font-size: 15px; color: #8A867E; }
-.step.done .dot { background: #161513; border-color: #161513; }
-.step.live .dot { border-color: #161513; border-top-color: transparent; }
-.meta { padding: 24px 28px; }
-.meta h3 { font-size: 15px; font-weight: 500; color: #6E6A62; }
-.meta dl { margin-top: 16px; display: grid; grid-template-columns: 1fr auto; row-gap: 18px; font-size: 18px; }
-.meta dt { color: #6E6A62; }
-.meta dd { text-align: right; }
-
-/* Approval screen */
-.apv { margin-top: 34px; display: grid; grid-template-columns: 640px 1fr; gap: 34px; }
-.phone { border-radius: 22px; background: #E9E2D6; padding: 30px; height: 470px; }
-.to { font-size: 16px; color: #5F5B53; margin-bottom: 14px; }
-.bub { background: #fff; border-radius: 4px 16px 16px 16px; padding: 20px 22px; font-size: 20px; line-height: 1.5; box-shadow: 0 1px 1px rgb(0 0 0 / .08); }
-.bub small { display: block; margin-top: 10px; text-align: right; font-size: 14px; color: #8A857C; }
-.btn { display: inline-flex; align-items: center; height: 62px; padding: 0 28px; border-radius: 6px; background: #161513; color: #fff; font-size: 20px; font-weight: 600; }
-.btn2 { display: inline-flex; align-items: center; height: 62px; padding: 0 24px; border-radius: 6px; border: 1.5px solid #D6D2C9; font-size: 19px; color: #3F3D39; margin-left: 12px; }
-.res { margin-top: 18px; display: grid; gap: 12px; }
-.res div { display: flex; justify-content: space-between; align-items: center; height: 76px; padding: 0 24px; border-radius: 12px; background: #fff; border: 1px solid #E6E3DC; font-size: 19px; }
-.res div p { display: flex; align-items: center; gap: 12px; }
-
-#cursor { left: 0; top: 0; width: 34px; height: 34px; z-index: 20; }
-#ripple { left: 0; top: 0; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; border: 2px solid rgb(22 21 19 / .5); z-index: 20; }
-
-/* ── Introducing Starlane Agents: the scenes this film adds ─────────────── */
-#tc { font-size: 196px; }
-
-/* Scene 1: Command Center */
-.cch { display: flex; justify-content: space-between; align-items: center; }
-.cch .tools { display: flex; align-items: center; gap: 14px; font-size: 17px; color: #3F3D39; }
-.tog { width: 34px; height: 20px; border-radius: 99px; background: #161513; position: relative; display: inline-block; vertical-align: middle; margin-right: 8px; }
-.tog::after { content: ""; position: absolute; left: 3px; top: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
-.ghost { height: 40px; padding: 0 14px; border-radius: 6px; border: 1px solid #DEDAD2; background: #fff; display: inline-flex; align-items: center; }
-.askb { height: 40px; padding: 0 14px 0 8px; border-radius: 6px; background: #161513; color: #fff; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
-.rec { margin-top: 26px; height: 56px; border-radius: 10px; background: #fff; border: 1px solid #E6E3DC; display: flex; align-items: center; gap: 12px; padding: 0 16px; font-size: 18px; color: #2B2926; }
-.grid2 { margin-top: 22px; display: grid; grid-template-columns: 1fr 1.2fr; gap: 22px; }
-.ccard { background: #fff; border-radius: 12px; border: 1px solid #E6E3DC; padding: 22px 26px 16px; height: 386px; position: relative; overflow: hidden; }
-.ccard .big { font-family: "Newsreader"; font-size: 64px; line-height: 1; color: #161513; display: flex; align-items: baseline; gap: 12px; }
-.ccard .big em { font-family: "Hanken"; font-style: normal; font-size: 17px; color: #2E7D4F; font-weight: 600; }
-.ccard .lab { margin-top: 8px; font-size: 16px; color: #6E6A62; }
-.ccard h4 { font-size: 21px; font-weight: 500; color: #161513; }
-.ccard .lab2 { margin-top: 4px; font-size: 15px; color: #77736B; }
-.sel2 { position: absolute; right: 22px; top: 20px; display: flex; gap: 8px; }
-.sel2 span { height: 34px; padding: 0 12px; border-radius: 6px; border: 1px solid #DEDAD2; font-size: 14px; color: #3F3D39; display: inline-flex; align-items: center; gap: 6px; }
-.ccard svg.ch { position: absolute; left: 26px; right: 26px; bottom: 44px; }
-.leg { position: absolute; left: 26px; bottom: 14px; display: flex; gap: 18px; font-size: 13px; color: #77736B; }
-.leg i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
-.ccard2 { height: 300px; }
-.hbar { display: grid; grid-template-columns: 210px 1fr 90px; align-items: center; gap: 14px; height: 36px; font-size: 16px; color: #3F3D39; }
-.hbar b { display: block; height: 14px; border-radius: 3px; background: #2F3433; transform-origin: 0 50%; }
-.hbar span:last-child { text-align: right; color: #77736B; font-size: 15px; }
-
-/* Scene 2: Agents */
-.prompt { margin: 70px auto 0; width: 1080px; border-radius: 16px; background: #fff; border: 1px solid #E2DED6; box-shadow: 0 24px 60px -30px rgb(30 20 10 / .35); padding: 28px 30px 22px; }
-.prompt .q { min-height: 120px; font-size: 27px; line-height: 1.45; color: #161513; }
-.prompt .q .caret { display: inline-block; width: 2px; height: 30px; background: #161513; vertical-align: -5px; margin-left: 2px; }
-.prompt .row { margin-top: 18px; display: flex; align-items: center; gap: 10px; }
-.chip { height: 38px; padding: 0 14px; border-radius: 8px; background: #F1EFEA; font-size: 16px; color: #3F3D39; display: inline-flex; align-items: center; gap: 8px; }
-.runb { margin-left: auto; height: 46px; padding: 0 22px; border-radius: 8px; background: #161513; color: #fff; font-size: 18px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; }
-.sugg { width: 1080px; margin: 26px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.sugg div { border-radius: 12px; border: 1px solid #E2DED6; padding: 18px 20px; font-size: 17px; line-height: 1.4; color: #3F3D39; background: #F8F7F4; }
-.sugg small { display: block; margin-bottom: 8px; font-size: 13px; color: #8A867E; text-transform: uppercase; letter-spacing: .06em; }
-.agh { text-align: center; }
-.agh .h1 { font-size: 64px; }
-.agh .sub { margin-top: 12px; }
-
-#runv { position: absolute; inset: 0; padding: 44px 58px; }
-.rgrid { margin-top: 30px; display: grid; grid-template-columns: 1fr 560px; gap: 28px; height: 800px; }
-.thread { padding: 6px 4px; }
-.ubub { margin-left: auto; max-width: 720px; border-radius: 14px; background: #ECE9E3; padding: 18px 22px; font-size: 20px; line-height: 1.5; color: #1A1916; }
-.sreply { margin-top: 30px; display: grid; grid-template-columns: 40px 1fr; gap: 16px; }
-.sreply p { font-size: 21px; line-height: 1.55; color: #2B2926; min-height: 100px; }
-.files { margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-left: 56px; }
-.file { border-radius: 12px; border: 1px solid #E2DED6; background: #fff; padding: 16px 18px; display: grid; grid-template-columns: 38px 1fr; gap: 12px; align-items: center; }
-.file p { font-size: 16px; color: #161513; font-weight: 500; line-height: 1.3; }
-.file small { display: block; margin-top: 2px; font-size: 13px; color: #8A867E; font-weight: 400; }
-.fi { width: 38px; height: 46px; border-radius: 6px; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
-.fi.x { background: #2E7D4F; } .fi.w { background: #2F5DB8; } .fi.p { background: #B8432F; }
-.prog { background: #fff; border-radius: 12px; border: 1px solid #E6E3DC; padding: 22px 26px; }
-.prog h3 { font-size: 15px; font-weight: 500; color: #6E6A62; display: flex; justify-content: space-between; }
-.pst { display: grid; grid-template-columns: 30px 1fr; gap: 14px; padding: 13px 0; align-items: start; }
-.pst .dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #D6D2C9; display: grid; place-items: center; margin-top: 1px; }
-.pst .dot svg { width: 13px; height: 13px; }
-.pst p { font-size: 18px; line-height: 1.4; color: #1A1916; }
-.pst.done p { color: #9A968E; text-decoration: line-through; text-decoration-color: #B9B5AC; }
-.pst.done .dot { background: #2E7D4F; border-color: #2E7D4F; }
-.pst.live .dot { border-color: #161513; border-top-color: transparent; }
-.pst.todo p { color: #B3AFA6; }
-.outs { margin-top: 18px; border-top: 1px solid #EFEDE8; padding-top: 16px; }
-.outs h3 { margin-bottom: 8px; }
-.orow { display: flex; align-items: center; gap: 12px; height: 46px; font-size: 16px; color: #2B2926; }
-.orow .fi { width: 26px; height: 32px; font-size: 8px; border-radius: 4px; }
+/* End */
+#end { position: absolute; left: 0; right: 0; top: 560px; text-align: center; opacity: 0; }
+#endrow { display: inline-flex; align-items: center; gap: 30px; }
+#endrow .serif { font-size: 118px; font-weight: 300; line-height: 1; }
+#endline { font-size: 30px; color: #55534F; margin-top: 34px; }
+#fine { font-size: 15px; letter-spacing: .16em; text-transform: uppercase; color: #8C8A85; margin-top: 70px; }
 </style>
 </head>
 <body>
 <div class="stage">
-  <div id="texwrap"><canvas id="tex" width="1120" height="660"></canvas><div id="vignette"></div><div id="glow"></div></div>
+  <canvas class="full" id="paper" width="1920" height="1080"></canvas>
+  <canvas class="full" id="back" width="1920" height="1080"></canvas>
+  <div id="ui">
 
-  <div id="cam">
-    <div class="abs" id="app">
-      <aside class="rail">
-        <span class="logo" data-mark="tile" data-size="40"></span>
-        <div class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"/></svg>New</div>
-        <div class="ri" data-rail="cc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>Home</div>
-        <div class="ri" data-rail="ag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="9" r="4"/><path d="M5 20c1-3.5 3.8-5 7-5s6 1.5 7 5"/></svg>Agents</div>
-        <div class="ri" data-rail="ap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12.5 10 17l9-10"/></svg>Approvals</div>
-        <div class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3Zm0 0v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Books</div>
-        <hr>
-        <div class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 4h8l-1 6 3 3H6l3-3zM12 13v7"/></svg>Pinned</div>
-        <div class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>Recent</div>
-      </aside>
-
+    <!-- Home -->
+    <div class="p win" id="home" data-in="10" data-out="15" data-fade=".0">
+      <div class="rail"><span data-mark="glyph-w" data-size="26"></span><i class="on"></i><i></i><i></i><i></i></div>
       <div class="main">
-        <!-- Scene 1: Command Center -->
-        <section class="scr" id="scr1">
-          <div class="cch">
-            <h1 class="h1">Halden Group Command Center</h1>
-            <div class="tools" data-a="5.4"><span class="ghost">All entities · 14 ⌄</span><span class="ghost">USD ⌄</span><span class="ghost">View all analytics</span><span class="askb"><span data-mark="glyph-w" data-size="22"></span>Ask Starlane</span></div>
-          </div>
-          <p class="rec" data-a="5.7"><span data-mark="tile" data-size="26"></span>Starlane reviewed 12,480 invoices across 14 entities and 9 currencies overnight. 4 actions need a decision.</p>
-          <div class="grid2">
-            <div class="ccard" data-a="6.0">
-              <p class="big"><span data-pct="86.4 6.4 8.4"></span><em>↑ 4%</em></p>
-              <p class="lab">Collected on time</p>
-              <div class="sel2"><span>6 months ⌄</span><span>2026 ⌄</span></div>
-              <svg class="ch" id="hair" width="740" height="210" viewBox="0 0 740 210"></svg>
-              <div class="leg"><span><i style="background:#2F3433"></i>Halden Group</span><span><i style="background:#C9C5BC"></i>Last year</span></div>
-            </div>
-            <div class="ccard" data-a="6.2">
-              <h4>Cash at risk by region</h4>
-              <p class="lab2">Share of overdue value in each region, converted at booked rates</p>
-              <div class="sel2"><span>This week ⌄</span></div>
-              <svg class="ch" id="bars" width="820" height="250" viewBox="0 0 890 250"></svg>
-              <div class="leg"><span><i style="background:#2F3433"></i>Overdue</span><span><i style="background:#C9C5BC"></i>Last quarter</span><span><i style="background:#7A4B3C"></i>Needs attention</span></div>
-            </div>
-          </div>
-          <div class="grid2">
-            <div class="ccard ccard2" data-a="6.5">
-              <p class="big"><span data-money="48.2 6.9 8.9 $"></span><em style="color:#C2362B">↑ 6%</em></p>
-              <p class="lab">Overdue across the group</p>
-              <svg class="ch" id="hair2" width="740" height="130" viewBox="0 0 740 130"></svg>
-            </div>
-            <div class="ccard ccard2" data-a="6.7">
-              <h4>Top overdue customers</h4>
-              <p class="lab2">By days past due</p>
-              <div style="margin-top:22px" id="hbars"></div>
-            </div>
-          </div>
-        </section>
+        <p class="hello serif" data-in="10.3">Good morning, Lena</p>
+        <div class="box" data-in="10.6">
+          <div class="top"><span>Halden Group · 14 entities</span><span>All regions · USD</span></div>
+          <div class="body"><span class="ph">Ask Starlane anything across the group</span></div>
+          <div class="foot"><span>+</span><span class="send">↑</span></div>
+        </div>
+        <div class="recent">
+          <h5 data-in="11.0">Recent work</h5>
+          <div class="row" data-in="11.2" id="hrow"><code>AGT-20418</code>EMEA overdue review · 6 entities<em>Collections · 2h</em></div>
+          <div class="row" data-in="11.4"><code>AGT-20402</code>October close · intercompany, 14 entities<em>Reconciliation · Yesterday</em></div>
+          <div class="row" data-in="11.6"><code>AGT-20377</code>13-week cash forecast by region<em>Treasury · Mon</em></div>
+        </div>
+      </div>
+    </div>
 
-        <!-- Scene 2: Agents -->
-        <section class="scr" id="scr2">
-          <div id="ask0">
-            <div class="agh"><h1 class="h1" style="margin-top:60px">What should Starlane work on?</h1><p class="sub">Agents plan the work, read your records and hand back a result you can check.</p></div>
-            <div class="prompt">
-              <p class="q"><span id="qtext"></span><span class="caret" id="caret"></span></p>
-              <div class="row"><span class="chip"><span data-mark="tile" data-size="20"></span>Halden Group · EMEA, 6 entities</span><span class="chip">ERP ledgers · Bank feeds · Credit policy</span><span class="runb" id="runbtn">Run <span style="font-size:20px">→</span></span></div>
-            </div>
-            <div class="sugg">
-              <div><small>Close</small>Reconcile intercompany balances across all 14 entities for October</div>
-              <div><small>Treasury</small>Forecast 13-week cash by region and currency, every assumption shown</div>
-              <div><small>Credit</small>Flag every customer above 80% of its credit limit, group-wide</div>
-            </div>
-          </div>
-          <div id="runv">
-            <h1 class="h1">EMEA overdue review</h1>
-            <p class="sub">Collections agent · 6 entities · 4 currencies · started by Group Finance · read-only</p>
-            <div class="rgrid">
-              <div class="thread">
-                <p class="ubub" id="ubub"></p>
-                <div class="sreply" data-a="22.4"><span data-mark="tile" data-size="40"></span><p id="reply"></p></div>
-                <div class="files">
-                  <div class="file" data-a="28.6"><span class="fi x">XLSX</span><p>EMEA_overdue_review.xlsx<small>1,284 invoices · 6 entities</small></p></div>
-                  <div class="file" data-a="28.8"><span class="fi w">DOCX</span><p>Dunning_letters.docx<small>212 letters · 5 languages</small></p></div>
-                  <div class="file" data-a="29.0"><span class="fi p">PDF</span><p>CFO_cash_at_risk_memo.pdf<small>4 pages · every figure sourced</small></p></div>
-                </div>
-              </div>
-              <div class="prog" data-a="21.9">
-                <h3><span>Progress</span><span id="pcount"></span></h3>
-                <div style="margin-top:8px">
-                  <div class="pst" data-ps="22.6 23.6"><span class="dot"></span><p>Read 1,284 open invoices across 6 entities</p></div>
-                  <div class="pst" data-ps="23.6 24.6"><span class="dot"></span><p>Match 9,410 bank lines in EUR, GBP, CHF and SEK</p></div>
-                  <div class="pst" data-ps="24.6 25.6"><span class="dot"></span><p>Check promises, disputes and credit limits</p></div>
-                  <div class="pst" data-ps="25.6 26.8"><span class="dot"></span><p>Draft dunning letters in each customer's language</p></div>
-                  <div class="pst" data-ps="26.8 27.9"><span class="dot"></span><p>Write the CFO memo, every figure sourced</p></div>
-                </div>
-                <div class="outs" data-a="28.2">
-                  <h3><span>Outputs</span></h3>
-                  <p class="orow"><span class="fi x">XLS</span>EMEA_overdue_review.xlsx</p>
-                  <p class="orow"><span class="fi w">DOC</span>Dunning_letters.docx</p>
-                  <p class="orow"><span class="fi p">PDF</span>CFO_cash_at_risk_memo.pdf</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+    <!-- Agents hub -->
+    <div class="p card" style="left:300px;top:292px" data-in="15.8" data-out="20"><span class="ico" data-ico="a"></span><div><b>Collections agent</b><span>Chases every invoice past terms, in each customer's language</span></div></div>
+    <div class="p card" style="left:1260px;top:292px" data-in="16.05" data-out="20"><span class="ico" data-ico="b"></span><div><b>Reconciliation agent</b><span>Matches bank lines to ledgers across 14 entities</span></div></div>
+    <div class="p card" style="left:300px;top:690px" data-in="16.3" data-out="20"><span class="ico" data-ico="c"></span><div><b>Treasury agent</b><span>Forecasts 13-week cash by region and currency</span></div></div>
+    <div class="p card" style="left:1260px;top:690px" data-in="16.55" data-out="20"><span class="ico" data-ico="d"></span><div><b>Credit agent</b><span>Watches exposure against every credit limit</span></div></div>
 
-<!-- Scene A: Collections Intelligence -->
-        <section class="scr" id="scrA">
-          <h1 class="h1">Receivables Review · EMEA</h1>
-          <p class="auto" data-a="31.3"><span data-mark="tile" data-size="30"></span>Starlane auto-reviewed 1,284 invoices across 6 entities <em>since yesterday.</em><span class="car"></span></p>
-          <div class="stats">
-            <div class="stat" data-a="31.6"><p class="v" data-count="412 31.7 32.9"></p><p class="l">Ready to review</p></div>
-            <div class="stat" data-a="31.75"><p class="v" data-count="38 31.8 32.7"></p><p class="l">Assigned to you</p></div>
-            <div class="stat" data-a="31.9"><p class="v" data-count="9 31.9 32.6"></p><p class="l">Sources connected</p></div>
-            <div class="stat" data-a="32.05"><p class="v" data-money="18.4 32.0 33.3 €"></p><p class="l">Overdue across EMEA</p></div>
+    <!-- The ask -->
+    <div class="p win" id="ask" data-in="23.5" data-out="28" data-fade=".0">
+      <div class="rail"><span data-mark="glyph-w" data-size="26"></span><i></i><i class="on"></i><i></i><i></i></div>
+      <div class="main">
+        <div class="glow"></div>
+        <p class="hello serif" style="margin-top:170px;font-size:44px" data-in="23.7">Let's close October for Halden Group</p>
+        <div class="box" data-in="24.0">
+          <div class="top"><span>EMEA · 6 entities ⌄</span><span>ERP ledgers · Bank feeds · Credit policy</span></div>
+          <div class="body">
+            <div class="att"><span data-mark="tile" data-size="22"></span><div>1,284 open invoices<small>6 ledgers · 4 currencies</small></div></div>
+            <div id="asktext"></div>
           </div>
-          <div class="tabs" data-a="32.3"><span class="on">My reviews (38)</span><span>All (1,284)</span></div>
-          <div class="tbl">
-            <div class="th" data-a="32.5"><span>Reviewed invoice</span><span>Status</span><span>Starlane summary</span><span>Last updated</span></div>
-            <div class="tr" data-a="32.7"><div class="doc"><i></i><div><p class="n">Arlo Freight Ltd · INV-UK-88102</p><p class="c">Halden UK · GBP</p></div></div><span><span class="pill p-ready">Ready for review</span></span><span class="cnt"><span class="g"><i class="ic-ok"></i>6</span><span class="o"><i class="ic-half"></i>4</span><span class="r"><i class="ic-bad"></i>1</span></span><span class="up">Just now</span></div>
-            <div class="tr" id="rowG" data-a="32.85"><div class="doc"><i></i><div><p class="n">Meridian GmbH · INV-DE-20418</p><p class="c">Halden GmbH · EUR</p></div></div><span><span class="pill p-ready">Ready for review</span></span><span class="cnt"><span class="g"><i class="ic-ok"></i>8</span><span class="o"><i class="ic-half"></i>6</span><span class="r"><i class="ic-bad"></i>3</span></span><span class="up">Just now</span></div>
-            <div class="tr" data-a="33.0"><div class="doc"><i></i><div><p class="n">Kestrel Retail SA · INV-FR-31077</p><p class="c">Halden France · EUR</p></div></div><span data-prog="43.1"></span><span data-sum="43.3 5 2 0"></span><span class="up">Just now</span></div>
-            <div class="tr" data-a="33.15"><div class="doc"><i></i><div><p class="n">Nordvik AB · INV-SE-5521</p><p class="c">Halden Nordics · SEK</p></div></div><span data-prog="43.7"></span><span data-sum="43.9 7 1 1"></span><span class="up">Just now</span></div>
-            <div class="tr" data-a="33.3"><div class="doc"><i></i><div><p class="n">Castell SpA · INV-IT-7740</p><p class="c">Halden Italia · EUR</p></div></div><span data-prog="99"></span><span data-sum="99 0 0 0"></span><span class="up">Just now</span></div>
-            <div class="tr" data-a="33.45"><div class="doc"><i></i><div><p class="n">Alpenwerk AG · INV-CH-3318</p><p class="c">Halden Schweiz · CHF</p></div></div><span data-prog="99"></span><span data-sum="99 0 0 0"></span><span class="up">Just now</span></div>
-            <div id="scrim"></div>
-          </div>
+          <div class="foot"><span>+</span><span class="send" id="sendb">↑</span></div>
+        </div>
+      </div>
+    </div>
 
-          <aside id="panel">
-            <div class="pbar"><span>···</span><span>✕</span></div>
-            <p class="ptitle">Meridian GmbH · INV-DE-20418</p>
-            <dl class="props">
-              <dt data-p="37.1">Customer</dt><dd data-p="37.1">Meridian GmbH · Halden GmbH</dd>
-              <dt data-p="37.25">Status</dt><dd data-p="37.25"><span class="pill p-prog">In progress</span></dd>
-              <dt data-p="37.4">Assignee</dt><dd data-p="37.4"><span class="av">L</span>Lena Fischer, AR lead EMEA</dd>
-              <dt data-p="37.55">Source</dt><dd data-p="37.55"><span data-mark="tile" data-size="20"></span><span class="lnk">General ledger · Halden GmbH · 20418</span></dd>
-              <dt data-p="37.7">Due date</dt><dd data-p="37.7">17 September 2026</dd>
-            </dl>
-            <div class="ptabs" data-p="38.0"><span class="on">Summary</span><span>Request</span></div>
-            <div class="trio">
-              <div data-p="38.2"><b data-count="8 38.3 38.9"></b><span class="g">Matched <i class="ic-ok"></i></span></div>
-              <div data-p="38.35"><b data-count="6 38.4 39.0"></b><span class="o">Needs review <i class="ic-half"></i></span></div>
-              <div data-p="38.5"><b data-count="3 38.5 39.1"></b><span class="r">At risk <i class="ic-bad"></i></span></div>
-            </div>
-            <p class="psum" id="psum"></p>
-            <p class="act" data-p="41.1">Activity</p>
-            <div class="feed">
-              <p data-p="41.3"><span class="av">L</span><b>Lena</b> started a thread · 5m ago</p>
-              <p data-p="41.6"><span data-mark="tile" data-size="22"></span><b>Collections agent</b> drafted a dunning letter · 1h ago</p>
-              <p data-p="41.9"><span data-mark="tile" data-size="22"></span><b>Credit agent</b> flagged 82% of credit limit · 2h ago</p>
-            </div>
-          </aside>
-        </section>
+    <!-- Sources and reasoning -->
+    <div class="p grp" style="left:90px;top:96px" data-in="28.1" data-out="33">
+      <h6><svg width="18" height="18" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10" stroke="#4A4945" stroke-width="2" fill="none"/></svg>Reading ledgers · 6 entities</h6>
+      <div class="list">
+        <p data-l="28.4"><i style="background:#5E7A6E"></i>Halden_GmbH_GL_2026-10.csv<em>ERP</em></p>
+        <p data-l="28.6"><i style="background:#5E7A6E"></i>Halden_UK_GL_2026-10.csv<em>ERP</em></p>
+        <p data-l="28.8"><i style="background:#5E7A6E"></i>Halden_France_GL_2026-10.csv<em>ERP</em></p>
+        <p data-l="29.0"><i style="background:#9C93A6"></i>Intercompany_matrix_Oct.xlsx<em>Excel</em></p>
+      </div>
+      <h6><svg width="18" height="18" viewBox="0 0 24 24"><path d="M3 10h18M5 10v8m5-8v8m4-8v8m5-8v8M3 20h18M12 3l9 5H3z" stroke="#4A4945" stroke-width="1.8" fill="none"/></svg>Matching bank feeds · 4 currencies</h6>
+      <div class="list">
+        <p data-l="29.4"><i style="background:#A9B7C3"></i>Bank_EUR_camt053_Oct.xml<em>9,410 lines</em></p>
+        <p data-l="29.6"><i style="background:#A9B7C3"></i>Bank_GBP_camt053_Oct.xml<em>Bank</em></p>
+        <p data-l="29.8"><i style="background:#A9B7C3"></i>Bank_CHF_SEK_Oct.xml<em>Bank</em></p>
+      </div>
+    </div>
+    <div class="p tag" style="left:1110px;top:560px" data-in="29.3" data-out="33"><span data-mark="tile" data-size="24"></span>Credit policy CR-4</div>
+    <div class="p reason" style="left:1110px;top:620px" data-in="29.6" data-out="33"><b>Reasoning</b><span id="reasontext"></span></div>
 
-                <!-- Scene C: Approval -->
-        <section class="scr" id="scrC">
-          <h1 class="h1">Approve the dunning letter</h1>
-          <p class="sub">Over €1,000,000, two approvals: regional controller, then CFO. Sent once, exactly as written, and recorded.</p>
-          <div class="apv">
-            <div class="phone" data-a="44.9">
-              <p class="to">To Meridian GmbH, accounts payable · Email</p>
-              <div class="bub"><span id="typed"></span><small id="tick">10:14</small></div>
-            </div>
-            <div>
-              <div class="card meta" data-a="45.2">
-                <h3>Waiting for you</h3>
-                <dl><dt>Customer</dt><dd>Meridian GmbH</dd><dt>Entity</dt><dd>Halden GmbH · Germany</dd><dt>Amount</dt><dd>€2,460,000</dd><dt>Regional controller</dt><dd>Lena Fischer ✓</dd><dt>Final approval</dt><dd>You, CFO</dd></dl>
-                <div style="margin-top:26px"><span class="btn" id="approve">Approve as CFO and send once</span><span class="btn2">Edit</span></div>
-              </div>
-              <div class="res">
-                <div data-a="48.1"><p><span data-mark="tile" data-size="26"></span>Sent once, as written · 10:14 CET</p><span class="pill p-ok">Sent</span></div>
-                <div data-a="49.1"><p><span data-mark="tile" data-size="26"></span>Audit record A-77314 · 2 approvals · policy CR-4</p><span class="pill p-ok">Recorded</span></div>
-              </div>
-            </div>
+    <!-- What it found, in the lens -->
+    <div class="p card" style="left:250px;top:250px" data-in="40.0" data-out="44.5"><span class="ico" data-ico="b"></span><div><b>9,410 bank lines matched</b><span>EUR, GBP, CHF and SEK, to six ledgers</span></div></div>
+    <div class="p card" style="left:1310px;top:250px" data-in="40.3" data-out="44.5"><span class="ico" data-ico="a"></span><div><b>€2.46M overdue · Meridian GmbH</b><span>Four invoices, 63 days on average</span></div></div>
+    <div class="p card" style="left:250px;top:730px" data-in="40.6" data-out="44.5"><span class="ico" data-ico="d"></span><div><b>82% of credit limit</b><span>Against €3.0M under policy CR-4</span></div></div>
+    <div class="p card" style="left:1310px;top:730px" data-in="40.9" data-out="44.5"><span class="ico" data-ico="c"></span><div><b>1 invoice in dispute</b><span>Held back from dunning until resolved</span></div></div>
+
+    <!-- What it produced -->
+    <div class="p card" style="left:300px;top:292px" data-in="45.2" data-out="50"><span class="ico" data-ico="x"></span><div><b>EMEA_overdue_review.xlsx</b><span>1,284 invoices · 6 entities · every figure sourced</span></div></div>
+    <div class="p card" style="left:1260px;top:292px" data-in="45.45" data-out="50"><span class="ico" data-ico="w"></span><div><b>Dunning_letters.docx</b><span>212 letters in 5 languages, for approval</span></div></div>
+    <div class="p card" style="left:300px;top:690px" data-in="45.7" data-out="50"><span class="ico" data-ico="p"></span><div><b>CFO_cash_at_risk_memo.pdf</b><span>4 pages, each number linked to its entry</span></div></div>
+    <div class="p card" style="left:1260px;top:690px" data-in="45.95" data-out="50"><span class="ico" data-ico="d"></span><div><b>Approval chain</b><span>Over €1M: regional controller, then CFO</span></div></div>
+
+    <!-- Approval -->
+    <div class="p win" id="apv" data-in="50.5" data-out="55.5" data-fade=".0">
+      <div class="rail"><span data-mark="glyph-w" data-size="26"></span><i></i><i></i><i class="on"></i><i></i></div>
+      <div class="apv">
+        <h1 class="serif" data-in="50.7">Approve the dunning letter</h1>
+        <p class="sub" data-in="50.9">Over €1,000,000, two approvals: regional controller, then CFO. Sent once, exactly as written, and recorded.</p>
+        <div class="cols">
+          <div class="letter" data-in="51.1"><small>To Meridian GmbH, accounts payable · Email · German and English</small>
+            <p>Dear Meridian accounts team, four invoices totalling €2,460,000 are now 63 days overdue (INV-DE-20418, 20433, 20457, 20502). Please confirm a payment date by Friday. Kind regards, Credit Control, Halden GmbH.</p></div>
+          <div class="meta" data-in="51.3">
+            <dl><dt>Entity</dt><dd>Halden GmbH · Germany</dd><dt>Amount</dt><dd>€2,460,000</dd><dt>Controller</dt><dd>Lena Fischer ✓</dd><dt>Final approval</dt><dd>You, CFO</dd><dt>Source</dt><dd>GL · Bank EUR · CR-4</dd></dl>
+            <span class="btn" id="apb">Approve as CFO and send once</span>
+            <p class="audit p" data-in="53.6"><span data-mark="tile" data-size="22"></span>Audit record A-77314 · 2 approvals · policy CR-4</p>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   </div>
-
-  <div class="abs" id="ask"><span class="disc"><span data-mark="glyph" data-size="30"></span></span>Ask Starlane</div>
-  <svg class="abs" id="cursor" viewBox="0 0 24 24"><path d="M4 2.5 19.5 12l-7 1.6L9.4 20.5z" fill="#161513" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>
-  <div class="abs" id="ripple"></div>
-
-  <div class="abs" id="tw"></div>
-  <div class="abs" id="tc">Agents</div>
-  <p class="abs" id="es">Finance work at global scale, done and shown.</p>
-  <p class="abs" id="fine">Sample data · Fictional business</p>
-  <div id="card"><small id="cardk"></small><h2 id="cardh"></h2><p id="cardp"></p></div>
-  <div id="sheen"></div>
+  <canvas class="full" id="front" width="1920" height="1080"></canvas>
+  <div id="end"><div id="endrow"><span id="wm"></span><span class="serif">Agents</span></div><p id="endline">Finance work at global scale, done and shown.</p><p id="fine">Sample data · Fictional business</p></div>
   <canvas id="grain" width="2048" height="1208"></canvas>
-  <div id="letterbox"></div>
 </div>
 
 <script>
-const CARDS = [
-  { a: 15.95, b: 16.6, len: 2.6, k: "Agents", h: "Give an agent the work.", p: "It plans the steps, reads every ledger and returns a result you can check." },
-  { a: 30.85, b: 31.4, len: 2.6, k: "Evidence", h: "Every figure, sourced.", p: "Each number links to the entry, the bank line or the policy it came from." },
-  { a: 43.95, b: 44.55, len: 2.6, k: "Control", h: "People approve. Everything is recorded.", p: "Approval chains by amount, entity and region, with an audit trail on every action." },
-];
-const DURATION = 60 + CARDS.reduce((n, c) => n + c.len - (c.b - c.a), 0);
-function warp(T) {
-  let off = 0;
-  for (const c of CARDS) {
-    const start = c.a + off;
-    if (T < start) return { t: T - off };
-    if (T < start + c.len) { const k = (T - start) / c.len; return { t: k < .5 ? c.a : c.b, c, k }; }
-    off += c.len - (c.b - c.a);
-  }
-  return { t: T - off };
-}
+const W = 1920, H = 1080, DURATION = 62;
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const ramp = (t, a, b) => clamp((t - a) / (b - a));
 const ease = (x) => 1 - Math.pow(1 - x, 3);
 const inOut = (x) => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const backOut = (x) => 1 + 2.9 * Math.pow(x - 1, 3) + 1.9 * Math.pow(x - 1, 2);
+const lerp = (a, b, k) => a + (b - a) * k;
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+const PAL = { paper: "#ECEBE6", ink: "#1F1E1C", graph: "#55534F", stone: "#B8B2A7", sage: "#A8B7AC", slate: "#A9B7C3",
+  clay: "#C7A79B", plum: "#4B4150", lilac: "#A79DB0", green: "#2E3D37", fog: "#DCDDD8", white: "#F7F6F2" };
 
 // Brand: the S and the wordmark, from components/brand (injected by render.mjs).
 const BRAND = window.__BRAND || { m: "M0 0h1000v1000H0z", w: "M0 0h5338v1126H0z" };
-const markTile = (s) => `<svg class="s" width="${s}" height="${s}" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#1B1B18"/><path transform="translate(22 22.56) scale(0.056)" d="${BRAND.m}" fill="#F2F1EC"/></svg>`;
+const SPATH = new Path2D(BRAND.m);
+const markTile = (s) => `<svg width="${s}" height="${s}" viewBox="0 0 100 100" style="display:block"><rect width="100" height="100" rx="22" fill="#1B1B18"/><path transform="translate(22 22.56) scale(0.056)" d="${BRAND.m}" fill="#F2F1EC"/></svg>`;
 for (const el of $$("[data-mark]")) {
   const s = Number(el.dataset.size), k = el.dataset.mark;
   el.style.display = "inline-flex";
-  el.innerHTML = k === "tile" ? markTile(s)
-    : `<svg class="s" width="${s}" height="${s}" viewBox="0 0 1000 1000"><path d="${BRAND.m}" fill="${k === "glyph-w" ? "#F2F1EC" : "#1B1B18"}"/></svg>`;
+  el.innerHTML = k === "tile" ? markTile(s) : `<svg width="${s}" height="${s}" viewBox="0 0 1000 1000"><path d="${BRAND.m}" fill="${k === "glyph-w" ? "#F2F1EC" : "#1B1B18"}"/></svg>`;
 }
-(function grain() { const g = $("#grain").getContext("2d"), im = g.createImageData(2048, 1208), r = rng(5);
-  for (let i = 0; i < im.data.length; i += 4) { const v = 128 + (r() - .5) * 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
-  g.putImageData(im, 0, 0); })();
-$("#tw").innerHTML = `<svg width="${5338 * .118}" height="${1126 * .118}" viewBox="0 0 5338 1126"><path d="${BRAND.w}"/></svg>`;
+const ICO = { a: "M4 7h16v10H4zM4 7l8 6 8-6", b: "M4 8h11m0 0-3-3m3 3-3 3M20 16H9m0 0 3-3m-3 3 3 3", c: "M4 18l5-6 4 3 7-8", d: "M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z",
+  x: "M5 4h14v16H5zM5 10h14M5 15h14M11 4v16", w: "M6 3h9l4 4v14H6zM9 11h7M9 15h7", p: "M6 3h9l4 4v14H6zM9 13h3m-3 4h6" };
+for (const el of $$("[data-ico]")) el.innerHTML = `<svg viewBox="0 0 24 24"><path d="${ICO[el.dataset.ico]}" fill="none" stroke="#3F5A4E" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+$("#wm").innerHTML = `<svg width="${5338 * .1}" height="${1126 * .1}" viewBox="0 0 5338 1126" style="display:block"><path d="${BRAND.w}" fill="#1F1E1C"/></svg>`;
 
-// Painted texture: dark moss, olive and earth, with grain. Seeded, drawn once.
-function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-(function paintTexture() {
-  const c = $("#tex"), g = c.getContext("2d"), r = rng(23), w = c.width, h = c.height;
-  g.fillStyle = "#171A19"; g.fillRect(0, 0, w, h);
-  const blots = [["58 72 70", .9], ["150 168 164", .45], ["36 48 46", .9], ["96 112 108", .6], ["22 26 25", .9], ["186 198 194", .3]];
-  for (let i = 0; i < 90; i++) {
-    const [col, a] = blots[i % blots.length], x = r() * w, y = r() * h, rad = 50 + r() * 240;
+// ---------- Paper and textures, drawn once ----------
+const mk = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+const rgb = (hex) => { const n = parseInt(hex.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const tone = (hex, f, a = 1) => { const [r, g, b] = rgb(hex); const m = (v) => Math.round(clamp(f >= 1 ? v + (255 - v) * (f - 1) : v * f, 0, 255)); return `rgba(${m(r)},${m(g)},${m(b)},${a})`; };
+function noise(g, w, h, amt, seed) {
+  const im = g.getImageData(0, 0, w, h), d = im.data, r = rng(seed);
+  for (let i = 0; i < d.length; i += 4) { const v = (r() - .5) * amt; d[i] += v; d[i + 1] += v; d[i + 2] += v; }
+  g.putImageData(im, 0, 0);
+}
+function mottle(g, w, h, hex, n, spread, seed) {
+  const r = rng(seed);
+  for (let i = 0; i < n; i++) {
+    const x = r() * w, y = r() * h, rad = 20 + r() * spread, f = .86 + r() * .28;
     const gr = g.createRadialGradient(x, y, 0, x, y, rad);
-    gr.addColorStop(0, `rgb(${col} / ${a * (.25 + r() * .35)})`); gr.addColorStop(1, `rgb(${col} / 0)`);
-    g.fillStyle = gr; g.beginPath(); g.ellipse(x, y, rad * (1 + r()), rad, r() * Math.PI, 0, Math.PI * 2); g.fill();
+    gr.addColorStop(0, tone(hex, f, .45)); gr.addColorStop(1, tone(hex, f, 0));
+    g.fillStyle = gr; g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
   }
-  const img = g.getImageData(0, 0, w, h), d = img.data;
-  for (let i = 0; i < d.length; i += 4) { const n = (r() - .5) * 34 + (r() < .014 ? 40 : 0); d[i] += n; d[i + 1] += n; d[i + 2] += n; }
-  g.putImageData(img, 0, 0);
+}
+function makeTex(kind, hex, seed) {
+  const S = 420, c = mk(S, S), g = c.getContext("2d"), r = rng(seed);
+  g.fillStyle = hex; g.fillRect(0, 0, S, S);
+  mottle(g, S, S, hex, 36, 120, seed + 1);
+  g.lineCap = "round";
+  if (kind === "hatch" || kind === "cross") {
+    const passes = kind === "cross" ? [-.9, .7] : [-.9];
+    for (const ang of passes) for (let i = 0; i < 420; i++) {
+      const x = r() * S, y = r() * S, L = 30 + r() * 110, a = ang + (r() - .5) * .12;
+      g.strokeStyle = tone(hex, .55 + r() * .2, .18 + r() * .3); g.lineWidth = .7 + r() * 1.1;
+      g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L); g.stroke();
+    }
+  } else if (kind === "dense") {
+    for (let x = 0; x < S; x += 2.2 + r() * 2) {
+      g.strokeStyle = tone(hex, .5 + r() * .35, .25 + r() * .4); g.lineWidth = .6 + r() * 1.2;
+      g.beginPath(); g.moveTo(x, 0); g.lineTo(x + (r() - .5) * 6, S); g.stroke();
+    }
+  } else if (kind === "charcoal") {
+    for (let i = 0; i < 2600; i++) { g.fillStyle = tone(hex, r() < .5 ? .6 : 1.5, .25 * r()); g.fillRect(r() * S, r() * S, 1 + r() * 3, 1 + r() * 2); }
+    for (let i = 0; i < 120; i++) { const x = r() * S, y = r() * S; g.strokeStyle = tone(hex, 1.35, .12 + r() * .15); g.lineWidth = .8 + r() * 2.5; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 40 + r() * 160, y + (r() - .5) * 20); g.stroke(); }
+  } else if (kind === "grid") {
+    g.strokeStyle = tone(hex, .62, .5); g.lineWidth = 1;
+    for (let v = 0; v <= S; v += 21) { g.beginPath(); g.moveTo(v + .5, 0); g.lineTo(v + .5, S); g.moveTo(0, v + .5); g.lineTo(S, v + .5); g.stroke(); }
+  } else if (kind === "stipple") {
+    for (let i = 0; i < 5200; i++) { g.fillStyle = tone(hex, .45 + r() * .3, .35 * r()); const s = .8 + r() * 1.8; g.fillRect(r() * S, r() * S, s, s); }
+  }
+  noise(g, S, S, 26, seed + 2);
+  return c;
+}
+const TEX = new Map();
+function pat(g, f) {
+  if (typeof f === "string") return f;
+  const key = f.join("|") + "|" + g.canvas.id;
+  if (!TEX.has(key)) { const tk = f.join("|"); if (!TEX.has(tk)) TEX.set(tk, makeTex(f[0], PAL[f[1]] || f[1], f[2] || 7)); TEX.set(key, g.createPattern(TEX.get(tk), "repeat")); }
+  return TEX.get(key);
+}
+
+(function paper() {
+  const g = $("#paper").getContext("2d");
+  g.fillStyle = PAL.paper; g.fillRect(0, 0, W, H);
+  mottle(g, W, H, "#E4E3DE", 160, 340, 3); mottle(g, W, H, "#F4F3EF", 90, 300, 4);
+  noise(g, W, H, 14, 5);
+  const gr = $("#grain").getContext("2d"), im = gr.createImageData(2048, 1208), r = rng(9);
+  for (let i = 0; i < im.data.length; i += 4) { const v = 150 + r() * 105; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
+  gr.putImageData(im, 0, 0);
 })();
 
-// Scene 1 charts, built once; render(t) only grows them.
-const NS = "http://www.w3.org/2000/svg";
-const N = 120;
-function hairChart(svg, w, h, fn, line) {
-  const out = [];
-  for (let i = 0; i < N; i++) {
-    const x = 6 + i * (w - 12) / (N - 1), v = fn(i / (N - 1)) * (h - 14);
-    const l = document.createElementNS(NS, "line");
-    l.setAttribute("x1", x); l.setAttribute("x2", x); l.setAttribute("y1", h); l.setAttribute("y2", h - v);
-    l.setAttribute("stroke", "#8E918F"); l.setAttribute("stroke-width", "1.4");
-    svg.appendChild(l); out.push({ l, v, i });
+// ---------- Drawing helpers ----------
+function torn(pts, rough, seed) {
+  const r = rng(seed), out = [];
+  for (let i = 0; i < pts.length; i++) {
+    const [x0, y0] = pts[i], [x1, y1] = pts[(i + 1) % pts.length], L = Math.hypot(x1 - x0, y1 - y0) || 1, n = Math.max(2, L / 12 | 0);
+    const nx = -(y1 - y0) / L, ny = (x1 - x0) / L;
+    for (let j = 0; j < n; j++) { const k = j / n, o = (r() - .5) * rough; out.push([x0 + (x1 - x0) * k + nx * o, y0 + (y1 - y0) * k + ny * o]); }
   }
-  let path = null;
-  if (line) {
-    path = document.createElementNS(NS, "path");
-    let d = "";
-    for (let i = 0; i <= 60; i++) { const x = 6 + i * (w - 12) / 60, y = h - line(i / 60) * (h - 14); d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1); }
-    path.setAttribute("d", d); path.setAttribute("fill", "none"); path.setAttribute("stroke", "#C9C5BC"); path.setAttribute("stroke-width", "2.2");
-    svg.appendChild(path);
-    const len = path.getTotalLength(); path.style.strokeDasharray = len; path.dataset.len = len;
-  }
-  return { hairs: out, h, path };
+  return out;
 }
-const H1 = hairChart($("#hair"), 740, 210,
-  (t) => Math.min(1, .08 + .3 * Math.pow(t, 1.5) + (t > .45 ? .16 * (1 - Math.exp(-(t - .45) * 12)) : 0) + (t > .8 ? .5 * Math.pow((t - .8) / .2, 1.6) : 0)),
-  (t) => .12 + .42 / (1 + Math.exp(-(t - .4) * 7)) + .1 * t);
-const H2 = hairChart($("#hair2"), 740, 130, (t) => clamp(.15 + .55 / (1 + Math.exp(-(t - .3) * 14)) + .25 / (1 + Math.exp(-(t - .7) * 12))));
-const GROUPS = [["N. America", .72, .86, 0], ["UK & Ireland", .6, .4, 0], ["DACH", .5, .41, 0], ["France", .48, .52, 0], ["Nordics", .33, .28, 0], ["Middle East", .24, .47, 1], ["APAC", .16, .28, 1]];
-const BARS = [];
-(function bars() {
-  const svg = $("#bars"), w = 890, h = 250, top = 10, bot = 26, gw = (w - 60) / GROUPS.length;
-  for (let k = 0; k <= 4; k++) {
-    const y = top + (h - top - bot) * k / 4, l = document.createElementNS(NS, "line");
-    l.setAttribute("x1", 40); l.setAttribute("x2", w); l.setAttribute("y1", y); l.setAttribute("y2", y); l.setAttribute("stroke", "#EFEDE8"); svg.appendChild(l);
-    const tx = document.createElementNS(NS, "text"); tx.setAttribute("x", 0); tx.setAttribute("y", y + 4); tx.setAttribute("font-size", "12"); tx.setAttribute("fill", "#9A968E"); tx.textContent = (100 - k * 25) + "%"; svg.appendChild(tx);
+const SH = {
+  rect: (w, h, rough = 3, seed = 1) => torn([[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]], rough, seed),
+  tri: (w, h, rough = 3, seed = 1) => torn([[0, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]], rough, seed),
+  disc: (rx, ry = rx, rough = 2, seed = 1) => torn(Array.from({ length: 28 }, (_, i) => [Math.cos(i / 28 * 6.283) * rx, Math.sin(i / 28 * 6.283) * ry]), rough, seed),
+  half: (r, rough = 2, seed = 1) => torn([...Array.from({ length: 15 }, (_, i) => [Math.cos(Math.PI + i / 14 * Math.PI) * r, Math.sin(Math.PI + i / 14 * Math.PI) * r])], rough, seed),
+  rock: (rad, seed = 1) => { const r = rng(seed), n = 7 + (r() * 3 | 0); return torn(Array.from({ length: n }, (_, i) => { const a = i / n * 6.283 + r() * .4, q = rad * (.55 + r() * .45); return [Math.cos(a) * q, Math.sin(a) * q]; }), rad * .06, seed + 1); },
+};
+function poly(g, pts) { g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath(); }
+function shadowOn(g, k = 1) { g.shadowColor = `rgba(40,36,30,${.2 * k})`; g.shadowBlur = 16; g.shadowOffsetY = 7; }
+function piece(g, shape, fill, x, y, rot, s, o = {}) {
+  if (s <= 0.001) return;
+  g.save(); g.translate(x, y); g.rotate(rot); g.scale(s, s);
+  if (o.shadow !== false) shadowOn(g);
+  g.globalAlpha = o.alpha ?? 1; poly(g, shape); g.fillStyle = pat(g, fill); g.fill();
+  g.restore();
+}
+// Cut-paper entrance and exit: a quick overshoot in, a quick shrink out.
+function pop(t, t0, t1 = 1e9, d = .3) { if (t < t0 || t >= t1) return 0; return Math.min(backOut(clamp((t - t0) / d)), ease(clamp((t1 - t) / d))); }
+
+// Paper solids: any convex polyhedron, turned in 3D and lit from the upper left.
+const CUBE_V = Array.from({ length: 8 }, (_, i) => [i & 1 ? .5 : -.5, i & 2 ? .5 : -.5, i & 4 ? .5 : -.5]);
+const CUBE_F = [[0, 1, 3, 2], [4, 6, 7, 5], [0, 2, 6, 4], [1, 5, 7, 3], [0, 4, 5, 1], [2, 3, 7, 6]];
+const WEDGE_V = [[-.5, .5, -.5], [.5, .5, -.5], [.5, .5, .5], [-.5, .5, .5], [-.5, -.5, 0], [.5, -.5, 0]];
+const WEDGE_F = [[0, 1, 2, 3], [0, 1, 5, 4], [3, 2, 5, 4], [0, 3, 4], [1, 2, 5]];
+const LIGHT = (() => { const v = [-.45, -.65, -.62], l = Math.hypot(...v); return v.map((x) => x / l); })();
+function solid(g, o) {
+  const { x, y, size, yaw = 0, pitch = 0, roll = 0, dims = [1, 1, 1], fills, verts = CUBE_V, faces = CUBE_F, alpha = 1, shadow = true } = o;
+  if (size <= .5) return [];
+  const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch), cr = Math.cos(roll), sr = Math.sin(roll), persp = 2200;
+  const R = verts.map(([a, b, c]) => {
+    a *= dims[0] * size; b *= dims[1] * size; c *= dims[2] * size;
+    let X = a * cy + c * sy, Z = -a * sy + c * cy, Y = b;
+    const Y2 = Y * cp - Z * sp; Z = Y * sp + Z * cp; Y = Y2;
+    const X2 = X * cr - Y * sr; Y = X * sr + Y * cr; X = X2;
+    return [X, Y, Z];
+  });
+  const P = R.map(([X, Y, Z]) => { const f = persp / (persp + Z); return [x + X * f, y + Y * f]; });
+  const C = R.reduce((s, v) => [s[0] + v[0] / R.length, s[1] + v[1] / R.length, s[2] + v[2] / R.length], [0, 0, 0]);
+  const vis = [];
+  faces.forEach((f, i) => {
+    const a = R[f[0]], b = R[f[1]], c = R[f[2]];
+    const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    const fc = f.reduce((s, j) => [s[0] + R[j][0] / f.length, s[1] + R[j][1] / f.length, s[2] + R[j][2] / f.length], [0, 0, 0]);
+    if (n[0] * (fc[0] - C[0]) + n[1] * (fc[1] - C[1]) + n[2] * (fc[2] - C[2]) < 0) n = n.map((q) => -q);
+    const l = Math.hypot(...n) || 1; n = n.map((q) => q / l);
+    if (n[2] < -0.001) vis.push({ f, i, n, z: fc[2] });
+  });
+  vis.sort((p, q) => q.z - p.z);
+  g.save(); g.globalAlpha = alpha;
+  if (shadow) { // one soft shadow under the whole solid
+    g.save(); shadowOn(g, 1.2); g.fillStyle = "rgba(0,0,0,1)"; g.globalAlpha = alpha * .25;
+    for (const v of vis) { poly(g, v.f.map((j) => P[j])); g.fill(); } g.restore();
   }
-  GROUPS.forEach(([name, a, b, warn], i) => {
-    const cx = 60 + gw * i + gw / 2, H = h - top - bot;
-    [[a, warn ? "#7A4B3C" : "#2F3433", -11], [b, "#C9C5BC", 3]].forEach(([v, col, dx], j) => {
-      const r = document.createElementNS(NS, "rect");
-      r.setAttribute("x", cx + dx); r.setAttribute("width", 9); r.setAttribute("fill", col); r.setAttribute("rx", 1.5);
-      svg.appendChild(r); BARS.push({ r, v: v * H, base: h - bot, i: i * 2 + j });
-    });
-    const tx = document.createElementNS(NS, "text"); tx.setAttribute("x", cx); tx.setAttribute("y", h - 6); tx.setAttribute("font-size", "12"); tx.setAttribute("fill", "#77736B"); tx.setAttribute("text-anchor", "middle"); tx.textContent = name; svg.appendChild(tx);
+  for (const v of vis) {
+    const pts = v.f.map((j) => P[j]);
+    poly(g, pts); g.fillStyle = pat(g, fills[v.i % fills.length]); g.fill();
+    const lit = clamp(v.n[0] * LIGHT[0] + v.n[1] * LIGHT[1] + v.n[2] * LIGHT[2]);
+    g.fillStyle = lit > .62 ? `rgba(255,255,255,${(lit - .62) * .5})` : `rgba(20,18,16,${(.62 - lit) * .55})`; g.fill();
+    g.strokeStyle = "rgba(30,28,25,.28)"; g.lineWidth = 1; g.stroke();
+  }
+  g.restore();
+  return vis.map((v) => ({ i: v.i, pts: v.f.map((j) => P[j]) }));
+}
+
+// The Starlane frame: a deep square frame whose opening shifts as if it turns, the S inside.
+function sframe(g, x, y, S, depth, dx, dy, fills, s = 1, glyph = 1) {
+  if (s <= .001) return;
+  g.save(); g.translate(x, y); g.scale(s, s);
+  const h = S / 2, q = h - depth;
+  const o = [[-h, -h], [h, -h], [h, h], [-h, h]], i = [[-q + dx, -q + dy], [q + dx, -q + dy], [q + dx, q + dy], [-q + dx, q + dy]];
+  shadowOn(g, 1.3); poly(g, o); g.fillStyle = pat(g, fills[0]); g.fill(); g.shadowColor = "transparent";
+  const sides = [[o[0], o[1], i[1], i[0], .9], [o[1], o[2], i[2], i[1], .62], [o[2], o[3], i[3], i[2], .45], [o[3], o[0], i[0], i[3], .75]];
+  sides.forEach(([a, b, c, d, f], k) => { poly(g, [a, b, c, d]); g.fillStyle = pat(g, fills[k % fills.length]); g.fill(); g.fillStyle = `rgba(20,18,16,${(1 - f) * .6})`; g.fill(); g.strokeStyle = "rgba(30,28,25,.3)"; g.lineWidth = 1; g.stroke(); });
+  poly(g, i); g.fillStyle = PAL.white; g.fill(); g.strokeStyle = "rgba(30,28,25,.35)"; g.stroke();
+  if (glyph > 0) { const gs = (q * 2) * .44 / 1000; g.save(); g.globalAlpha = glyph; g.translate(dx - 500 * gs, dy - 500 * gs); g.scale(gs, gs); g.fillStyle = PAL.ink; g.fill(SPATH); g.restore(); }
+  g.restore();
+}
+
+// Charcoal strokes, drawn on progressively.
+function strokeOn(g, pts, k, w, fill, seed) {
+  const n = Math.floor(pts.length * clamp(k)); if (n < 2) return;
+  const r = rng(seed); g.save(); g.lineCap = "round"; g.lineJoin = "round"; g.strokeStyle = pat(g, fill);
+  for (let pass = 0; pass < 4; pass++) {
+    const ox = (r() - .5) * w * .5, oy = (r() - .5) * w * .5;
+    g.beginPath(); g.moveTo(pts[0][0] + ox, pts[0][1] + oy); for (let i = 1; i < n; i++) g.lineTo(pts[i][0] + ox, pts[i][1] + oy);
+    g.globalAlpha = pass ? .4 : .92; g.lineWidth = pass ? w * .45 : w; g.stroke();
+  }
+  g.restore();
+}
+const loops = (cx, cy, len, amp, nLoops, seed) => { const r = rng(seed), ph = r() * 6; return Array.from({ length: 360 }, (_, i) => { const k = i / 359, a = k * nLoops * 6.283 + ph; return [cx + (k - .5) * len + amp * Math.cos(a) * .9, cy + amp * .75 * Math.sin(a) + Math.sin(k * 4 + ph) * amp * .5]; }); };
+const arc = (cx, cy, rx, ry, a0, a1, wob, seed) => { const r = rng(seed); return Array.from({ length: 200 }, (_, i) => { const a = lerp(a0, a1, i / 199), w = 1 + (r() - .5) * wob; return [cx + Math.cos(a) * rx * w, cy + Math.sin(a) * ry * w]; }); };
+function pencil(g, x0, y0, x1, y1, k, a = .6, w = 1.2) {
+  if (k <= 0) return; g.save(); g.strokeStyle = `rgba(35,33,30,${a})`; g.lineWidth = w; g.lineCap = "round";
+  g.beginPath(); g.moveTo(x0, y0); g.lineTo(lerp(x0, x1, k), lerp(y0, y1, k)); g.stroke(); g.restore();
+}
+function typed(g, str, x, y, rot, k, size, seed) {
+  g.save(); g.translate(x, y); g.rotate(rot); g.font = `${size}px "Courier 10 Pitch", "Courier New", monospace`;
+  const r = rng(seed), n = Math.floor(clamp(k) * str.length); let c = 0, line = 0, col = 0;
+  for (const ch of str) {
+    if (c++ >= n) break;
+    if (ch === "\n") { line++; col = 0; continue; }
+    g.fillStyle = `rgba(30,29,27,${.5 + r() * .5})`; g.fillText(ch, col * size * .6 + (r() - .5) * .8, line * size * 1.18 + (r() - .5) * 1.6); col++;
+  }
+  g.restore();
+}
+function glyph(g, ch, x, y, size, rot, fill, s = 1, font = "Newsreader", weight = 500) {
+  if (s <= .001) return; g.save(); g.translate(x, y); g.rotate(rot); g.scale(s, s);
+  g.font = `${weight} ${size}px "${font}"`; g.textAlign = "center"; g.textBaseline = "alphabetic";
+  shadowOn(g, .8); g.fillStyle = pat(g, fill); g.fillText(ch, 0, 0); g.restore();
+}
+function strip(g, text, x, y, w, h, fill, s, size = 46) {
+  if (s <= .001) return; g.save(); g.translate(x, y); g.scale(s, 1);
+  shadowOn(g, .7); poly(g, SH.rect(w, h, 2, x | 0)); g.fillStyle = pat(g, fill); g.fill(); g.shadowColor = "transparent";
+  g.font = `500 ${size}px "Hanken"`; g.textBaseline = "middle"; g.fillStyle = PAL.ink;
+  const chars = [...text]; chars.forEach((c, i) => g.fillText(c, -w / 2 + 34 + i * (w - 68) / chars.length, 3));
+  g.restore();
+}
+// The white window that grows out of the collage before a product scene.
+const WIN = { x: 310, y: 160, w: 1300, h: 760 };
+function growCard(g, t, a, b) {
+  const k = inOut(ramp(t, a, b)); if (k <= 0 || t > b + .05) return;
+  const w = lerp(40, WIN.w, k), h = lerp(30, WIN.h, k), cx = WIN.x + WIN.w / 2, cy = WIN.y + WIN.h / 2;
+  g.save(); shadowOn(g, 1.4); g.fillStyle = "#FBFAF7"; g.beginPath(); g.roundRect(cx - w / 2, cy - h / 2, w, h, 16 * k); g.fill(); g.restore();
+}
+
+// ---------- Scenes. tc is time on twelve frames a second, for the paper. ----------
+const SWARM = (() => {
+  const r = rng(77), kinds = ["rock", "rect", "disc", "tri", "half"], fills = [["wash", "stone"], ["hatch", "graph"], ["charcoal", "ink"], ["wash", "lilac"], ["stipple", "slate"], ["dense", "stone"], ["wash", "clay"], ["grid", "fog"], ["charcoal", "graph"], ["wash", "sage"]];
+  return Array.from({ length: 38 }, (_, i) => {
+    const a = r() * 6.283, d = Math.sqrt(r()), sz = 26 + r() * r() * 150, k = kinds[(r() * kinds.length) | 0];
+    const shape = k === "rock" ? SH.rock(sz, i + 10) : k === "rect" ? SH.rect(sz * 1.6, sz * (.3 + r() * .8), 3, i) : k === "disc" ? SH.disc(sz * .6, sz * .6, 2, i) : k === "tri" ? SH.tri(sz, sz, 3, i) : SH.half(sz * .7, 2, i);
+    return { shape, fill: fills[(r() * fills.length) | 0], x: 1000 + Math.cos(a) * d * 760, y: 540 + Math.sin(a) * d * 400, rot: r() * 6.283, t0: 4.6 + i * .085, drift: [(r() - .5) * 40, (r() - .5) * 30] };
   });
 })();
-const TOP = [["Arlo Freight Inc. · US", 41], ["Meridian GmbH · DE", 37], ["Kestrel Retail plc · UK", 26], ["Sora Trading KK · JP", 22]];
-$("#hbars").innerHTML = TOP.map(([n, d]) => `<div class="hbar"><span>${n}</span><span><b data-w="${d / 45}"></b></span><span>${d} days</span></div>`).join("");
-const HB = $$("#hbars b");
+const SC = { // shapes used by name
+  slateBig: SH.rect(1150, 400, 4, 2), stoneRock: SH.rock(420, 3), stripV: SH.rect(24, 170, 2, 4), barTop: SH.rect(220, 64, 3, 5),
+  dot1: SH.disc(24, 24, 1.5, 6), dot2: SH.disc(30, 30, 1.5, 7), halfs: [SH.half(36, 1.5, 8), SH.half(36, 1.5, 9), SH.half(36, 1.5, 10)],
+  plumTop: SH.rect(760, 96, 4, 11), lilacTR: SH.rect(250, 190, 3, 12), gridBL: SH.rect(300, 170, 2, 13), slateCorner: SH.rect(520, 300, 4, 14),
+  ovals: [SH.disc(40, 120, 1.5, 15), SH.disc(40, 120, 1.5, 16), SH.disc(40, 120, 1.5, 17)], blob: SH.rock(40, 18), gridA: SH.rect(260, 200, 2, 19), gridB: SH.rect(300, 160, 2, 20),
+};
+const RING = arc(760, 1010, 340, 300, Math.PI * 1.02, Math.PI * 2.02, .03, 21);
+const SCRIB = loops(1080, 560, 300, 70, 3.2, 22), SCRIB2 = loops(1660, 820, 160, 40, 2.4, 23), SCRIB3 = loops(1450, 250, 180, 50, 2.2, 24);
+const CLAUSE = "Payment is due within thirty (30) days\nof the invoice date. Amounts unpaid after\nthat date accrue interest at 1.5% a month.";
 
-
-const fades = $$("[data-a]").map((el) => ({ el, a: Number(el.dataset.a) }));
-const pfades = $$("[data-p]").map((el) => ({ el, a: Number(el.dataset.p) }));
-const counts = $$("[data-count]").map((el) => { const [v, a, b] = el.dataset.count.split(" ").map(Number); return { el, v, a, b, f: (n) => String(Math.round(n)) }; })
-  .concat($$("[data-money]").map((el) => { const [v, a, b, sym] = el.dataset.money.split(" "); return { el, v: Number(v), a: Number(a), b: Number(b), f: (n) => `${sym}${n.toFixed(1)}M` }; }))
-  .concat($$("[data-pct]").map((el) => { const [v, a, b] = el.dataset.pct.split(" ").map(Number); return { el, v, a, b, f: (n) => n.toFixed(1) + "%" }; }));
-const progs = $$("[data-prog]").map((el) => ({ el, t: Number(el.dataset.prog) }));
-const sums = $$("[data-sum]").map((el) => { const [t, g, o, r] = el.dataset.sum.split(" ").map(Number); return { el, t, g, o, r }; });
-const psteps = $$("[data-ps]").map((el) => { const [a, b] = el.dataset.ps.split(" ").map(Number); return { el, a, b }; });
-const rails = $$("[data-rail]");
-const CHECK = '<svg viewBox="0 0 16 16"><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const ASK = "Review every invoice more than 60 days overdue across our EMEA entities, draft dunning letters in each customer's language for controller approval, and write a cash-at-risk memo for the CFO.";
-const REPLY = "I'll read the open invoices in all six ledgers, match the bank feeds in each currency, check promises, disputes and credit limits, then prepare the review, the letters and a memo. Nothing is sent and nothing in your books changes.";
-const SUMMARY = "Four invoices totalling €2,460,000 are 63 days overdue on average, and two promised payment dates were missed. Bank feeds show no receipt since 2 September. Exposure is 82% of the €3,000,000 credit limit, and one invoice is in dispute.";
-const MSG = "Dear Meridian accounts team, four invoices totalling €2,460,000 are now 63 days overdue (INV-DE-20418, 20433, 20457, 20502). Please confirm a payment date by Friday. Kind regards, Credit Control, Halden GmbH.";
-
-// Cursor path: [time, target, press]
-const CURSOR = [
-  [14.4, [1300, 980]], [15.6, '[data-rail="ag"]'], [15.85, '[data-rail="ag"]', 1], [16.4, '[data-rail="ag"]'],
-  [19.9, [1500, 980]], [20.9, "#runbtn"], [21.1, "#runbtn", 1], [21.6, "#runbtn"],
-  [34.3, [1500, 1060]], [35.7, "#rowG"], [35.95, "#rowG", 1], [36.6, "#rowG"],
-  [46.3, [1500, 1000]], [47.5, "#approve"], [47.75, "#approve", 1], [48.5, "#approve"]];
-const CURSOR_SEGS = [[14.4, 16.4], [19.9, 21.6], [34.3, 36.6], [46.3, 48.5]];
-const center = (sel) => { const r = $(sel).getBoundingClientRect(); return [r.left + r.width * .32, r.top + r.height * .5]; };
-
-function scene(t, T) {
-  // Texture.
-  const texA = ease(ramp(t, 3.4, 5.0)) * (1 - ramp(t, 52.2, 53.2));
-  $("#texwrap").style.opacity = texA;
-  $("#tex").style.transform = `translate(${-140 - 90 * Math.sin(t / 13)}px, ${-110 + 40 * Math.sin(t / 17 + 1)}px) scale(${2.05 + .06 * Math.sin(t / 10)})`;
-
-  // Title and end cards.
-  const tIn = ease(ramp(t, .3, 1.5)), cIn = ease(ramp(t, .8, 2.0)), tOut = inOut(ramp(t, 3.0, 3.9));
-  const eW = ease(ramp(t, 53.2, 54.4)), eC = ease(ramp(t, 53.5, 54.7)), eS = ease(ramp(t, 54.2, 55.1));
-  const end = t > 30;
-  const tw = $("#tw"), tc = $("#tc");
-  tw.style.top = (end ? 250 : 290) + "px"; tc.style.top = (end ? 430 : 470) + "px";
-  tw.style.opacity = end ? eW : tIn * (1 - tOut);
-  tc.style.opacity = end ? eC : cIn * (1 - tOut);
-  tw.style.transform = `translateY(${end ? (1 - eW) * 22 : (1 - tIn) * 22 - tOut * 26}px)`;
-  tc.style.transform = `translateY(${end ? (1 - eC) * 30 : (1 - cIn) * 30 - tOut * 26}px) scale(${1 + tOut * .03})`;
-  $("#es").style.opacity = eS; $("#es").style.top = "680px"; $("#es").style.transform = `translateY(${(1 - eS) * 14}px)`;
-  $("#fine").style.opacity = Math.max(ease(ramp(t, 1.4, 2.2)) * (1 - tOut), eS) * .9;
-
-  // App rises in, sinks out.
-  const aIn = ease(ramp(t, 3.8, 5.4)), aOut = inOut(ramp(t, 51.6, 52.6));
-  const app = $("#app");
-  app.style.opacity = aIn * (1 - aOut);
-  app.style.transform = `translateY(${(1 - aIn) * 260 + aOut * 180}px) rotateX(${(1 - aIn) * 16 + aOut * 8}deg)`;
-  const askOn = ease(ramp(t, 6.0, 6.8)) * (1 - aOut);
-  $("#ask").style.opacity = askOn;
-  $("#ask").style.transform = `translateY(${(1 - ease(ramp(t, 6.0, 6.8))) * 20}px)`;
-
-  // Camera: a slow drift on the Command Center, then a push in on the review panel.
-  const drift = inOut(ramp(t, 5.0, 15.6)) * (1 - inOut(ramp(t, 15.6, 16.6)));
-  const push = inOut(ramp(t, 36.7, 39.2)) * (1 - inOut(ramp(t, 42.3, 43.9)));
-  const s = 1 + .06 * drift + .13 * push;
-  const ox = drift > 0 && t < 17 ? 900 : 1700, oy = drift > 0 && t < 17 ? 300 : 560;
-  const ry = 1.6 * Math.sin(T / 9.5), rx = 1.2 + .9 * Math.sin(T / 12 + .7);
-  $("#cam").style.transform = `translate(${-ox * (s - 1)}px, ${-oy * (s - 1)}px) scale(${s}) rotateX(${rx}deg) rotateY(${ry}deg)`;
-  $("#sheen").style.backgroundPosition = `${(T * 37) % 3000 - 1500}px 0`;
-  $("#sheen").style.opacity = .6 + .4 * Math.sin(T / 5);
-
-  // Scenes.
-  const s1 = 1 - ramp(t, 16.0, 16.5);
-  const s2 = ramp(t, 16.1, 16.6) * (1 - ramp(t, 30.8, 31.3));
-  const sA = ramp(t, 30.9, 31.4) * (1 - ramp(t, 43.9, 44.4));
-  const sC = ramp(t, 44.0, 44.5);
-  $("#scr1").style.opacity = s1; $("#scr2").style.opacity = s2; $("#scrA").style.opacity = sA; $("#scrC").style.opacity = sC;
-  $("#scr2").style.transform = `translateX(${(1 - s2) * (t < 24 ? 30 : -30)}px)`;
-  $("#scrA").style.transform = `translateX(${(1 - sA) * (t < 38 ? 30 : -30)}px)`;
-  $("#scrC").style.transform = `translateX(${(1 - sC) * 30}px)`;
-  const railOn = t < 15.9 ? "cc" : t < 31 ? "ag" : t < 44.2 ? "cc" : "ap";
-  rails.forEach((r) => r.classList.toggle("on", r.dataset.rail === railOn));
-
-  for (const { el, a } of fades) { const i = ease(ramp(t, a, a + .6)); el.style.opacity = i; el.style.transform = `translateY(${(1 - i) * 18}px)`; }
-  for (const { el, a } of pfades) { const i = ease(ramp(t, a, a + .5)); el.style.opacity = i; el.style.transform = `translateY(${(1 - i) * 10}px)`; }
-  for (const c of counts) c.el.textContent = c.f(c.v * ease(ramp(t, c.a, c.b)));
-
-  // Scene 1 charts grow.
-  for (const { l, v, i } of H1.hairs) { const k = ease(ramp(t, 6.6 + i * .012, 7.6 + i * .012)); l.setAttribute("y2", H1.h - v * k); }
-  for (const { l, v, i } of H2.hairs) { const k = ease(ramp(t, 7.2 + i * .01, 8.2 + i * .01)); l.setAttribute("y2", H2.h - v * k); }
-  if (H1.path) H1.path.style.strokeDashoffset = H1.path.dataset.len * (1 - inOut(ramp(t, 7.4, 9.6)));
-  for (const b of BARS) { const k = ease(ramp(t, 6.8 + b.i * .07, 7.8 + b.i * .07)); b.r.setAttribute("y", b.base - b.v * k); b.r.setAttribute("height", Math.max(0, b.v * k)); }
-  HB.forEach((b, i) => { b.style.width = (Number(b.dataset.w) * 100) + "%"; b.style.transform = `scaleX(${ease(ramp(t, 7.4 + i * .12, 8.6 + i * .12))})`; });
-
-  // Scene 2: the ask, then the run.
-  const q = ASK.slice(0, Math.round(ASK.length * ramp(t, 17.0, 20.2)));
-  $("#qtext").textContent = q; $("#caret").style.opacity = t < 21.1 && Math.floor(t * 2.4) % 2 === 0 ? 1 : 0;
-  const rv = ramp(t, 21.4, 21.9);
-  $("#ask0").style.opacity = 1 - rv; $("#ask0").style.transform = `translateY(${-rv * 30}px)`;
-  $("#runv").style.opacity = rv; $("#runv").style.transform = `translateY(${(1 - rv) * 30}px)`;
-  $("#ubub").textContent = ASK;
-  $("#reply").textContent = REPLY.slice(0, Math.round(REPLY.length * ramp(t, 22.6, 25.2)));
-  let doneN = 0;
-  for (const p of psteps) {
-    const done = t >= p.b, live = t >= p.a && !done, dot = p.el.querySelector(".dot");
-    if (done) doneN++;
-    p.el.className = "pst" + (done ? " done" : live ? " live" : " todo");
-    dot.innerHTML = done ? CHECK : ""; dot.style.transform = live ? `rotate(${t * 540}deg)` : "";
+function opening(g, t) {
+  // Paper world of terms and ledgers.
+  piece(g, SC.slateBig, ["wash", "slate", 31], 820, 880, -.04, pop(t, .2, 7.0));
+  piece(g, SC.stoneRock, ["wash", "stone", 32], 1480, 90, .3, pop(t, .5, 7.2));
+  strokeOn(g, RING, ramp(t, .8, 3.4), 28, ["charcoal", "ink", 33], 1);
+  if (t < 7.0) {
+    const c = pop(t, 1.0, 7.0);
+    solid(g, { x: 380, y: 320, size: 120 * c, yaw: .6 + t * .35, pitch: -.5, roll: .1, fills: [["hatch", "lilac", 34], ["wash", "clay", 35], ["cross", "stone", 36]] });
+    const b = pop(t, 1.4, 6.6);
+    solid(g, { x: 250, y: 760, size: 150 * b, dims: [2.6, .42, .55], yaw: -.35, pitch: .3, fills: [["charcoal", "ink", 37], ["hatch", "graph", 38], ["dense", "stone", 39]] });
   }
-  $("#pcount").textContent = `${doneN} of ${psteps.length}`;
-
-  // Scene 3: the review table and panel.
-  for (const p of progs) p.el.innerHTML = t >= p.t ? '<span class="pill p-ready">Ready for review</span>' : '<span class="pill p-prog">In progress</span>';
-  for (const x of sums) x.el.innerHTML = t >= x.t
-    ? `<span class="cnt"><span class="g"><i class="ic-ok"></i>${x.g}</span><span class="o"><i class="ic-half"></i>${x.o}</span><span class="r"><i class="ic-bad"></i>${x.r}</span></span>`
-    : `<span class="draft">${markTile(18)}Drafting letter${".".repeat(1 + Math.floor(t * 3) % 3)}</span>`;
-  const picked = t >= 35.95;
-  $("#rowG").classList.toggle("sel", picked);
-  const pIn = inOut(ramp(t, 36.2, 37.0));
-  $("#panel").style.transform = `translateX(${(1 - pIn) * 105}%)`;
-  $("#scrim").style.opacity = pIn;
-  $("#psum").textContent = SUMMARY.slice(0, Math.round(SUMMARY.length * ramp(t, 39.1, 41.0)));
-
-  // Scene 4: approval.
-  $("#typed").textContent = MSG.slice(0, Math.round(MSG.length * ramp(t, 45.3, 47.1)));
-  const ok = t >= 47.75;
-  $("#tick").textContent = t >= 48.0 ? "10:14 · delivered" : "10:14";
-  $("#approve").textContent = ok ? "Approved" : "Approve as CFO and send once";
-  $("#approve").style.background = ok ? "#2D6B47" : "#161513";
-
-  // Cursor (in stage space; targets are measured after the camera moves).
-  let x = 0, y = 0, rp = -1;
-  for (let i = 0; i < CURSOR.length - 1; i++) {
-    const [t0, p0, pr0] = CURSOR[i], [t1, p1] = CURSOR[i + 1];
-    if (t >= t0 && t <= t1) {
-      const a0 = typeof p0 === "string" ? center(p0) : p0, a1 = typeof p1 === "string" ? center(p1) : p1, k = inOut(ramp(t, t0, t1));
-      x = a0[0] + (a1[0] - a0[0]) * k; y = a0[1] + (a1[1] - a0[1]) * k;
-    }
-    if (pr0 && t >= t0 && t < t0 + .6) rp = (t - t0) / .6;
-  }
-  const seg = CURSOR_SEGS.find(([a, b]) => t >= a && t <= b + .4);
-  if (seg && t > seg[1]) { const p = CURSOR.filter((c) => c[0] === seg[1])[0][1]; [x, y] = typeof p === "string" ? center(p) : p; }
-  const vis = seg ? Math.min(ramp(t, seg[0], seg[0] + .3), 1 - ramp(t, seg[1], seg[1] + .4)) : 0;
-  $("#cursor").style.opacity = vis; $("#cursor").style.transform = `translate(${x}px, ${y}px)`;
-  $("#ripple").style.opacity = rp >= 0 ? (1 - rp) * vis : 0;
-  $("#ripple").style.transform = `translate(${x + 6}px, ${y + 6}px) scale(${.4 + Math.max(rp, 0) * .8})`;
+  for (const [x0, y0, x1, y1, a] of [[980, 330, 1520, 30, 1.2], [1060, 430, 1720, 250, 1.5], [1180, 640, 1640, 610, 1.8], [560, 590, 1110, 575, 2.1], [1500, 190, 1590, 500, 2.4]]) pencil(g, x0, y0, x1, y1, ramp(t, a, a + 1.1) * (t < 7.1 ? 1 : 0));
+  if (t < 7.2) typed(g, CLAUSE, 430, 420, -.17, ramp(t, 1.6, 4.4), 23, 40);
+  piece(g, SC.dot1, ["stipple", "graph", 41], 1450, 360, 0, pop(t, 2.0, 7.0));
+  piece(g, SC.dot2, ["wash", "fog", 42], 1535, 335, 0, pop(t, 2.3, 7.0));
+  SC.halfs.forEach((s, i) => piece(g, s, ["wash", "plum", 43], 1040 + i * 34, 420, Math.PI / 2, pop(t, 2.5 + i * .12, 6.8)));
+  piece(g, SC.stripV, ["wash", "lilac", 44], 1215, 330, .05, pop(t, 2.8, 6.9));
+  piece(g, SC.barTop, ["charcoal", "ink", 45], 1800, 90, 0, pop(t, 3.0, 7.0));
+  // The swarm.
+  for (const p of SWARM) { const s = pop(t, p.t0, 9.55 + (p.t0 % .3)); piece(g, p.shape, p.fill, p.x + p.drift[0] * (t - p.t0), p.y + p.drift[1] * (t - p.t0), p.rot + (t - p.t0) * .15, s); }
+  strokeOn(g, SCRIB, ramp(t, 5.0, 6.6) * (t < 9.5 ? 1 : 0), 13, ["charcoal", "ink", 46], 2);
+  strokeOn(g, SCRIB2, ramp(t, 6.0, 7.2) * (t < 9.5 ? 1 : 0), 9, ["charcoal", "graph", 47], 3);
+  if (t > 5.2 && t < 9.5) glyph(g, "Ledger", 1330, 50, 230, 0, ["charcoal", "ink", 48], pop(t, 5.2, 9.5), "Newsreader", 600);
+  if (t > 6.2 && t < 9.5) typed(g, "Close 2026-10 · all entities", 1420, 300, .04, ramp(t, 6.2, 7.6), 22, 49);
+  if (t > 6.4 && t < 9.6) sframe(g, 1720, 600, 150, 34, 8, -6, [["hatch", "stone", 50], ["wash", "graph", 51]], pop(t, 6.4, 9.6), 0);
+  if (t > 7.0 && t < 9.6) solid(g, { x: 1130, y: 640, size: 140 * pop(t, 7.0, 9.6), yaw: .7 + t * .4, pitch: -.55, fills: [["charcoal", "graph", 52], ["hatch", "stone", 53], ["wash", "fog", 54]] });
+  growCard(g, t, 9.25, 10.0);
 }
 
-const words = (h, k) => h.split(" ").map((w, i) => { const e = ease(clamp((k - .08 - i * .025) / .12)); return `<span style="opacity:${e};transform:translateY(${(1 - e) * 26}px);filter:blur(${(1 - e) * 6}px)">${w}</span>`; }).join(" ");
+function edges(g, t, a, b, seed) { // paper around a product window
+  piece(g, SC.plumTop, ["wash", "plum", seed], 860, 70, -.01, pop(t, a, b));
+  piece(g, SC.lilacTR, ["dense", "lilac", seed + 1], 1760, 150, .03, pop(t, a + .1, b));
+  piece(g, SC.gridBL, ["grid", "fog", seed + 2], 210, 990, -.02, pop(t, a + .2, b));
+  solid(g, { x: 165, y: 600, size: 230 * pop(t, a + .15, b), dims: [.5, 2.1, .5], yaw: .55, pitch: -.18, fills: [["dense", "stone", seed + 3], ["hatch", "graph", seed + 4], ["wash", "fog", seed + 5]] });
+  solid(g, { x: 1770, y: 860, size: 150 * pop(t, a + .25, b), yaw: .8 + t * .2, pitch: -.5, fills: [["charcoal", "ink", seed + 6], ["hatch", "slate", seed + 7], ["wash", "clay", seed + 8]] });
+}
+
+function hub(g, t, t0, t1, v) {
+  const cx = 960, cy = 540;
+  const F = v ? [[["wash", "clay", 60], ["hatch", "plum", 61], ["wash", "fog", 62]], [["wash", "slate", 63], ["charcoal", "graph", 64]], [["hatch", "lilac", 65], ["wash", "stone", 66]], [["wash", "sage", 67], ["charcoal", "green", 68]]]
+    : [[["wash", "slate", 70], ["charcoal", "plum", 71], ["wash", "fog", 72]], [["wash", "clay", 73], ["hatch", "graph", 74]], [["wash", "lilac", 75], ["charcoal", "ink", 76]], [["dense", "stone", 77], ["wash", "sage", 78]]];
+  const corners = [[190, 150, 1], [1730, 150, -1], [190, 930, -1], [1730, 930, 1]];
+  corners.forEach(([x, y, d], i) => solid(g, { x, y, size: 260 * pop(t, t0 + i * .1, t1), yaw: d * (.65 + (t - t0) * .1), pitch: (y < 540 ? -.45 : .45), fills: F[i] }));
+  [[640, 190, .4], [1280, 190, -.4], [640, 890, .4], [1280, 890, -.4]].forEach(([x, y, d], i) =>
+    solid(g, { x, y, size: 90 * pop(t, t0 + .4 + i * .08, t1), verts: WEDGE_V, faces: WEDGE_F, yaw: d + (t - t0) * .2 * Math.sign(d), pitch: y < 540 ? .3 : -.3 + Math.PI, fills: [["wash", "slate", 80 + i], ["charcoal", "graph", 84 + i], ["wash", "clay", 88]] }));
+  const ends = [[660, 330], [1260, 330], [660, 728], [1260, 728], [960, 120], [960, 960]];
+  ends.forEach(([x, y], i) => pencil(g, cx, cy, x, y, ease(ramp(t, t0 + .5 + i * .07, t0 + 1.3 + i * .07)) * (t < t1 ? 1 : 0), .5, 1.1));
+  sframe(g, cx, cy, 300, 62, 22 * Math.sin((t - t0) * .7), 14 * Math.cos((t - t0) * .55), v ? [["charcoal", "graph", 90], ["hatch", "stone", 91]] : [["charcoal", "ink", 92], ["wash", "stone", 93]], pop(t, t0, t1), ramp(t, t0 + .3, t0 + .8));
+}
+
+function beams(g, t) {
+  const k = ramp(t, 20, 23.2), e = inOut(k);
+  const F = [[["charcoal", "ink", 100], ["hatch", "graph", 101], ["wash", "fog", 102]], [["dense", "stone", 103], ["wash", "slate", 104], ["hatch", "graph", 105]]];
+  for (let i = 0; i < 5; i++) {
+    const s = pop(t, 20 + i * .06, 23.3, .25);
+    solid(g, { x: 960 + (i % 2 ? 1 : -1) * 380 * (1 - e) + (i - 2) * 40, y: 540 + (i - 2) * 200 * lerp(1.25, .9, e), size: 600 * s, dims: [2.6, .3, .55], yaw: lerp(-.95, -.15, e), pitch: lerp(.55, .2, e), roll: lerp(-.25, 0, e), fills: F[i % 2] });
+  }
+  growCard(g, t, 22.9, 23.5);
+}
+
+function sources(g, t) {
+  sframe(g, 930, 560, 240, 50, -14 + 10 * Math.sin(t * .8), 10 * Math.cos(t * .6), [["charcoal", "ink", 110], ["hatch", "plum", 111]], pop(t, 28.0, 33), 1);
+  piece(g, SC.blob, ["charcoal", "ink", 112], 1040, 420, 0, pop(t, 28.4, 33));
+  SC.ovals.forEach((s, i) => piece(g, s, ["dense", "fog", 113], 70 + i * 62, 980, 0, pop(t, 28.6 + i * .1, 33)));
+  strokeOn(g, arc(1900, 360, 260, 300, Math.PI * .6, Math.PI * 1.4, .02, 114), ramp(t, 28.5, 30), 2, "rgba(40,38,34,.6)", 5);
+  piece(g, SC.slateCorner, ["wash", "slate", 115], 1880, 170, .02, pop(t, 28.2, 33));
+  strokeOn(g, SCRIB3, ramp(t, 30, 31.2), 8, ["charcoal", "graph", 116], 6);
+}
+
+const BIG = [["L", 290, 470, 330, -.1, ["charcoal", "ink", 120]], ["E", 560, 880, 440, .05, ["hatch", "graph", 121]], ["D", 1250, 380, 380, .08, ["wash", "plum", 122]],
+  ["G", 1520, 860, 360, -.06, ["charcoal", "green", 123]], ["R", 1700, 470, 280, .1, ["dense", "stone", 124]], ["B", 880, 300, 300, -.04, ["cross", "ink", 125]], ["I", 140, 900, 300, .02, ["wash", "clay", 126]], ["N", 1120, 920, 330, -.08, ["stipple", "graph", 127]]];
+const WORD = "Evidence.";
+let WORDX = null;
+function kinetic(g, t) {
+  if (!WORDX) { g.save(); g.font = `400 176px "Newsreader"`; const w = g.measureText(WORD).width; WORDX = [...WORD].map((c, j) => 960 - w / 2 + g.measureText(WORD.slice(0, j)).width + g.measureText(c).width / 2); g.restore(); }
+  piece(g, SC.gridA, ["grid", "fog", 130], 430, 290, -.03, pop(t, 33.1, 35.7));
+  piece(g, SC.gridB, ["grid", "fog", 131], 1480, 650, .02, pop(t, 33.3, 35.7));
+  piece(g, SC.slateCorner, ["wash", "plum", 132], 1610, 300, .1, pop(t, 33.5, 35.7));
+  const m = inOut(ramp(t, 35.6, 37.0));
+  if (t < 35.6) BIG.forEach(([c, x, y, s, r, f], i) => glyph(g, c, x + Math.sin(t * 2 + i) * 6, y, s, r, f, pop(t, 33.0 + i * .16, 35.6)));
+  strip(g, "LEDGERS", 1040, 470, 860, 82, ["wash", "fog", 133], pop(t, 33.4, 35.7));
+  strip(g, "INVOICES", 900, 610, 900, 82, ["wash", "stone", 134], pop(t, 33.7, 35.7));
+  strip(g, "BANK LINES", 1100, 750, 980, 82, ["wash", "fog", 135], pop(t, 34.0, 35.7));
+  if (t >= 35.6) [...WORD].forEach((c, j) => {
+    const [, x, y, s, r, f] = BIG[j % BIG.length];
+    glyph(g, c, lerp(x, WORDX[j], m), lerp(y, 600, m), lerp(s, 176, m), lerp(r, 0, m), m > .82 ? PAL.ink : f, 1, "Newsreader", Math.round(lerp(600, 400, m)));
+  });
+  if (t >= 36.2) { // fine pencil rules either side of the word
+    pencil(g, 960 - 520, 640, 960 - 520 + 1040, 640, ease(ramp(t, 36.4, 37.6)), .35, 1);
+  }
+}
+
+function lens(g, t) {
+  const o = inOut(ramp(t, 39.0, 39.9)), rx = 820, ry = lerp(4, 410, o), cx = 960, cy = 540;
+  g.save(); g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, 6.283); g.clip();
+  const fills = [["wash", "lilac", 140], ["hatch", "stone", 141], ["grid", "fog", 142], ["wash", "clay", 143], ["stipple", "slate", 144], ["dense", "sage", 145], ["wash", "plum", 146], ["hatch", "slate", 147]];
+  const rot = Math.floor(t * 12) / 12 * .05;
+  for (let i = 0; i < 8; i++) { const a0 = rot + i * Math.PI / 4, a1 = a0 + Math.PI / 4; g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, 1200, a0, a1); g.closePath(); g.fillStyle = pat(g, fills[i]); g.fill(); g.strokeStyle = "rgba(30,28,25,.35)"; g.stroke(); }
+  g.beginPath(); g.ellipse(cx, cy, 300, 300 * Math.min(1, ry / 300), 0, 0, 6.283); g.fillStyle = pat(g, ["wash", "fog", 148]); g.fill(); g.strokeStyle = "rgba(30,28,25,.4)"; g.stroke();
+  g.restore();
+  g.save(); g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, 6.283); g.strokeStyle = "rgba(30,28,25,.55)"; g.lineWidth = 1.5; g.stroke(); g.restore();
+  if (o > .6) sframe(g, cx, cy, 190, 40, 8 * Math.sin(t), 6 * Math.cos(t * .8), [["charcoal", "ink", 149], ["hatch", "stone", 150]], pop(t, 39.6, 44.5), 1);
+  solid(g, { x: 1700, y: 160, size: 110 * pop(t, 39.8, 44.5), yaw: t * .4, pitch: -.5, fills: [["charcoal", "graph", 151], ["wash", "slate", 152]] });
+  piece(g, SC.halfs[0], ["wash", "plum", 153], 190, 940, 0, pop(t, 40, 44.5));
+}
+
+function approveEdges(g, t) { edges(g, t, 49.9, 55.5, 160); growCard(g, t, 49.95, 50.55); }
+
+function ending(g, t) {
+  const e = inOut(ramp(t, 55.6, 58.4)), up = inOut(ramp(t, 59.0, 60.2));
+  const cx = 960, cy = lerp(540, 380, up), size = lerp(300, 120, up);
+  const sa = 1 - up;
+  if (sa > 0) [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([dx, dy], i) => {
+    const L = 1300 * ease(ramp(t, 55.8 + i * .1, 57.4 + i * .1)), a = Math.atan2(dy * 540, dx * 960);
+    g.save(); g.globalAlpha = sa; g.translate(cx, cy); g.rotate(a); shadowOn(g, .8); poly(g, SH.rect(L, 70, 2, 170 + i).map(([x, y]) => [x + L / 2, y])); g.fillStyle = pat(g, ["wash", "white", 171]); g.fill(); g.restore();
+  });
+  solid(g, { x: cx, y: cy, size: size * pop(t, 55.5, 99), yaw: lerp(2.3, 0, e), pitch: lerp(.75, 0, e), fills: [["charcoal", "ink", 172], ["charcoal", "graph", 173], ["hatch", "ink", 174]] });
+  const gl = ramp(t, 58.1, 58.7);
+  if (gl > 0) { const f = 2200 / (2200 - size / 2), gs = size * f * .5 / 1000; g.save(); g.globalAlpha = gl; g.translate(cx - 500 * gs, cy - 500 * gs); g.scale(gs, gs); g.fillStyle = "#F2F1EC"; g.fill(SPATH); g.restore(); }
+}
+
+// ---------- Product layer ----------
+const ASK = "Review every invoice more than 60 days overdue across our EMEA entities, draft dunning letters in each customer's language for controller approval, and write a cash-at-risk memo for the CFO.";
+const REASON = "Meridian GmbH has four invoices past 60 days. Two promised dates were missed and the EUR feed shows no receipt since 2 September. I should check the credit limit and any open dispute before drafting.";
+function ui(t) {
+  for (const el of $$("[data-in]")) {
+    const a = +el.dataset.in, b = +(el.dataset.out || 1e9), fadeIn = el.dataset.fade !== undefined ? +el.dataset.fade : .45;
+    const i = fadeIn > 0 ? ease(ramp(t, a, a + fadeIn)) : (t >= a ? 1 : 0), o = t < b ? 1 : 0;
+    el.style.opacity = Math.min(i, o);
+    if (fadeIn > 0) el.style.transform = `translateY(${(1 - i) * 22}px)`;
+  }
+  for (const el of $$("[data-l]")) { const k = ease(ramp(t, +el.dataset.l, +el.dataset.l + .3)); el.style.opacity = k; el.style.transform = `translateX(${(1 - k) * -14}px)`; }
+  $("#hrow").style.background = t > 12.8 && t < 15 ? "#EFEEE9" : "transparent";
+  const n = Math.floor(ASK.length * ramp(t, 24.4, 27.0));
+  $("#asktext").innerHTML = ASK.slice(0, n) + (t < 27.4 && Math.floor(t * 2.4) % 2 === 0 ? '<span class="caret"></span>' : "");
+  $("#sendb").style.background = t > 27.3 ? "#3F5A4E" : "#1B1B18";
+  $("#reasontext").textContent = REASON.slice(0, Math.floor(REASON.length * ramp(t, 29.9, 32.6)));
+  const done = t >= 53.0;
+  $("#apb").className = "btn" + (done ? " done" : ""); $("#apb").textContent = done ? "Approved by CFO · sent once · 10:14 CET" : "Approve as CFO and send once";
+  $("#apb").style.transform = t > 52.8 && t < 53.0 ? "scale(.97)" : "none";
+  const en = ease(ramp(t, 59.6, 60.6));
+  $("#end").style.opacity = en; $("#end").style.transform = `translateY(${(1 - en) * 20}px)`;
+  $("#fine").style.opacity = ramp(t, 60.4, 61);
+}
+
+const back = $("#back").getContext("2d"), front = $("#front").getContext("2d");
+function cam(t) { // a slow push inside each scene
+  const cuts = [0, 10, 15, 20, 23.5, 28, 33, 39, 44.5, 50, 55.5, 62];
+  let i = 0; while (i < cuts.length - 2 && t >= cuts[i + 1]) i++;
+  const k = (t - cuts[i]) / (cuts[i + 1] - cuts[i]);
+  const s = [1.0, 1.0, 1.06, 1.0, 1.0, 1.0, 1.0, 1.0, 1.06, 1.0, 1.0][i] + [.06, .025, -.06, .04, .02, .03, .05, .04, -.06, .02, .03][i] * k;
+  const x = i === 0 ? -k * 120 : 0;
+  return { s, x };
+}
 function render(T) {
-  const w = warp(T);
-  scene(w.t, T);
-  const card = $("#card");
-  if (w.c) {
-    const k = w.k, inA = ease(clamp(k / .2)), outA = 1 - ease(clamp((k - .8) / .2));
-    card.style.opacity = Math.min(inA, outA);
-    $("#cardk").textContent = w.c.k; $("#cardk").style.opacity = ease(clamp((k - .05) / .15));
-    $("#cardh").innerHTML = words(w.c.h, k);
-    const pe = ease(clamp((k - .3) / .15)); $("#cardp").textContent = w.c.p; $("#cardp").style.opacity = pe; $("#cardp").style.transform = `translateY(${(1 - pe) * 14}px)`;
-    card.style.transform = `scale(${1.04 - .04 * ease(k)})`;
-  } else card.style.opacity = 0;
-  // Grain moves every frame, like film.
-  const f = Math.floor(T * 30), gx = (f * 7919) % 64, gy = (f * 104729) % 64;
-  $("#grain").style.transform = `translate(${-gx}px, ${-gy}px)`;
+  const t = T, tc = Math.floor(T * 12) / 12;
+  const c = cam(T);
+  for (const g of [back, front]) { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); g.setTransform(c.s, 0, 0, c.s, W / 2 * (1 - c.s) + c.x, H / 2 * (1 - c.s)); }
+  $("#ui").style.transform = `translateX(${c.x}px) scale(${c.s})`;
+  if (t < 10.05) opening(back, tc);
+  else if (t < 15) edges(back, tc, 10, 15, 200);
+  else if (t < 20) hub(back, tc, 15, 20, 0);
+  else if (t < 23.5) beams(back, t);
+  else if (t < 28) { piece(back, SC.slateCorner, ["wash", "slate", 210], 120, 120, -.05, pop(tc, 23.5, 28)); solid(back, { x: 1790, y: 940, size: 120 * pop(tc, 23.7, 28), yaw: tc * .3, pitch: .5, fills: [["hatch", "lilac", 211], ["wash", "fog", 212]] }); }
+  else if (t < 33) sources(back, tc);
+  else if (t < 39) kinetic(back, tc);
+  else if (t < 44.5) lens(back, tc);
+  else if (t < 50) hub(back, tc, 44.5, 50, 1);
+  else if (t < 55.5) approveEdges(back, tc);
+  else ending(back, t < 58.4 ? tc : t);
+  // A few paper pieces cross in front of the product, like a hand placing them.
+  if (t >= 10 && t < 15) { piece(front, SC.halfs[1], ["wash", "clay", 220], 1560, 930, -.4, pop(tc, 10.6, 15)); strokeOn(front, SCRIB2.map(([x, y]) => [x - 1450, y + 120]), ramp(tc, 12, 13), 8, ["charcoal", "ink", 221], 9); }
+  if (t >= 50.5 && t < 55.5) piece(front, SC.dot2, ["charcoal", "ink", 222], 1580, 180, 0, pop(tc, 51, 55.5));
+  ui(t);
+  const f = Math.floor(T * 12), gx = (f * 7919) % 64, gy = (f * 104729) % 64;
+  $("#grain").style.transform = `translate(${gx}px, ${gy}px)`;
 }
 window.__film = { DURATION, render };
-if (!/[?&]drive/.test(location.search)) {
-  const t0 = performance.now();
-  const tick = () => { render(((performance.now() - t0) / 1000) % DURATION); requestAnimationFrame(tick); };
-  document.fonts.ready.then(() => requestAnimationFrame(tick));
-} else render(0);
+if (!location.search.includes("drive")) { const t0 = performance.now(); const loop = () => { render(((performance.now() - t0) / 1000) % DURATION); requestAnimationFrame(loop); }; loop(); }
 </script>
 </body>
 </html>

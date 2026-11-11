@@ -21,8 +21,8 @@ export function IntroducingFilm() {
   return (
     <FilmPlayer
       src="/film/introducing"
-      duration={66}
-      label="Introducing Starlane Agents, a 66 second film with music: the Command Center for a fourteen-entity group fills in across regions and currencies, group finance gives an agent the EMEA overdue review, the agent reads six ledgers and the bank feeds step by step and returns a review, dunning letters and a CFO memo, the team opens Meridian GmbH with the evidence behind each figure, and the CFO gives the second approval before one letter is sent and recorded."
+      duration={62}
+      label="Introducing Starlane Agents, a 62 second film with music, made as a moving paper collage: terms, ledgers and charcoal marks gather into the Starlane home for a fourteen-entity group, four agents appear around the Starlane mark, group finance asks for the October close across EMEA, the agent reads six ledgers and four bank feeds, the words ledgers, invoices and bank lines resolve into Evidence, the findings and the review, letters and CFO memo it produced appear, and the CFO approves one letter that is sent once and recorded."
     />
   );
 }

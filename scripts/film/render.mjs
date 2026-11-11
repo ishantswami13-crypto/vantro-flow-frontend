@@ -28,7 +28,7 @@ const brand = {
 const args = process.argv.slice(2);
 const film = args.includes("--film") ? args[args.indexOf("--film") + 1] : "introducing";
 // Where the poster (a frame from the middle) and the title still come from.
-const STILLS = { introducing: { poster: 10, title: 1.9 }, "command-center": { poster: 14, title: 1.9 } }[film];
+const STILLS = { introducing: { poster: 18, title: 61 }, "command-center": { poster: 14, title: 1.9 } }[film];
 if (!STILLS) throw new Error("unknown film " + film);
 const stillAt = args.includes("--still") ? Number(args[args.indexOf("--still") + 1]) : null;
 
@@ -69,7 +69,7 @@ const run = (a) => new Promise((r, j) => spawn("ffmpeg", ["-y", "-loglevel", "er
 const score = path.join(outDir, ".score.wav");
 await new Promise((r, j) => spawn(process.execPath, [path.join(here, "score.mjs"), film, score], { stdio: "inherit" }).on("close", (c) => (c === 0 ? r() : j(new Error("score " + c)))));
 const out = (ext) => path.join(outDir, `${film}.${ext}`);
-await run(["-i", master, "-i", score, "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-tune", "animation", "-pix_fmt", "yuv420p",
+await run(["-i", master, "-i", score, "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "28", "-tune", "grain", "-pix_fmt", "yuv420p",
   "-c:a", "aac", "-b:a", "128k", "-shortest", "-movflags", "+faststart", out("mp4")]);
 await run(["-i", master, "-i", score, "-map", "0:v", "-map", "1:a", "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "38", "-row-mt", "1", "-deadline", "good", "-cpu-used", "2",
   "-c:a", "libopus", "-b:a", "96k", "-shortest", out("webm")]);
