@@ -16,13 +16,13 @@ export function CommandCenterVideo() {
 
 // The homepage launch film (60 seconds, rendered from
 // scripts/film/introducing.html): the Command Center, giving an agent work and
-// watching it run, the review it produced, and the owner's approval.
+// watching it run across a multi-entity group, the review it produced, and a two-step approval.
 export function IntroducingFilm() {
   return (
     <FilmPlayer
       src="/film/introducing"
       duration={60}
-      label="Introducing Starlane Agents, a 60 second film with music: the Command Center fills in, the owner gives an agent a piece of work, the agent reads the records step by step and returns a review, reminder drafts and a memo, the owner opens Gupta Traders with the evidence behind each figure, and approves one reminder."
+      label="Introducing Starlane Agents, a 60 second film with music: the Command Center for a fourteen-entity group fills in across regions and currencies, group finance gives an agent the EMEA overdue review, the agent reads six ledgers and the bank feeds step by step and returns a review, dunning letters and a CFO memo, the team opens Meridian GmbH with the evidence behind each figure, and the CFO gives the second approval before one letter is sent and recorded."
     />
   );
 }
