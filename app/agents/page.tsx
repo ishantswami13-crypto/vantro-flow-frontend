@@ -15,6 +15,8 @@ import { useLoad, errorText } from "@/components/os/shared";
 import { V, PageHeader, Subnav, Lettermark, StatusDot, EmptyLine, ErrorBanner, SkeletonRows, ago } from "@/components/v32/ui";
 import { IconAgents, IconArrowRight } from "@/components/v32/icons";
 import { agentStatus, PERMISSION_LABEL } from "@/components/agents/shared";
+import GiveWork from "@/components/agents/GiveWork";
+import RecentRuns from "@/components/agents/RecentRuns";
 
 export default function AgentsPage() {
   const { data, error, loading } = useLoad(() => osApi.agents());
@@ -25,7 +27,7 @@ export default function AgentsPage() {
     <DashboardLayout pageTitle="Agents">
       <PageHeader
         title="Agents"
-        subtitle="Ready agents that work on your data, and when each last ran"
+        subtitle="Give an agent work, watch it run, and see what it found"
       >
         <div style={{ marginTop: 18 }}>
           <Subnav
@@ -44,6 +46,10 @@ export default function AgentsPage() {
         {loading && <SkeletonRows rows={3} height={150} />}
         {!!error && <ErrorBanner>Agents could not be loaded: {errorText(error)}</ErrorBanner>}
 
+        {data && tab === "running" && agents.some((a) => a.runnable) && (
+          <GiveWork agents={agents} />
+        )}
+
         {data && tab === "running" && (
           agents.length === 0 ? <EmptyLine icon={<IconAgents size={17} />} title="No agent is registered for this workspace" /> : (
             <div className="lib-grid agent-grid">
@@ -53,7 +59,10 @@ export default function AgentsPage() {
                   <Link key={a.key} href={`/agents/${encodeURIComponent(a.key)}`} className="lib-card agent-card rise-in" style={{ animationDelay: `${i * 40}ms` }}>
                     <div className="flex items-center justify-between">
                       <Lettermark letter={a.name} size={38} />
-                      <span style={{ color: "#6E6E69" }}><IconArrowRight size={14} /></span>
+                      <span className="flex items-center" style={{ gap: 8, color: "#6E6E69" }}>
+                        {a.runnable && a.status !== "STOPPED" && <span className="agent-start">Can start</span>}
+                        <IconArrowRight size={14} />
+                      </span>
                     </div>
                     <div>
                       <div style={{ fontFamily: V.serif, fontSize: 18, color: "#191917", letterSpacing: "-0.01em" }}>{a.name}</div>
@@ -94,8 +103,10 @@ export default function AgentsPage() {
             </div>
           )
         )}
+        {data && tab === "running" && <RecentRuns agents={agents} />}
+
         <p style={{ fontSize: 12, color: "#6E6E69", margin: 0, maxWidth: 640 }}>
-          Each agent is fixed code: none calls a language model or sends a message on its own. Stop one from{" "}
+          Each agent is fixed code: none calls a language model or sends a message on its own. Agents marked &ldquo;Can start&rdquo; take work from the box above; the others run inside their own flows. Stop one from{" "}
           <Link className="underline" href="/control/decisions">Control, Decisions</Link>.
         </p>
       </div>

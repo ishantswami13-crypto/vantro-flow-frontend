@@ -4,8 +4,8 @@
 // list uses: an agent is one of the workers that really runs in Starlane,
 // addressed by its key. Unknown keys say so instead of rendering made-up
 // detail. Stopping an agent lives on Control, Decisions. Agents that are safe
-// to run on demand (POST /api/os/agents/:key/run) get a Run now button, and
-// recent runs come from GET /api/os/agents/:key/runs.
+// to run on demand (POST /api/os/agents/:key/run) get a box to give them work,
+// which opens the live run; recent runs come from GET /api/os/agents/:key/runs.
 
 import { useState } from "react";
 import Link from "next/link";
@@ -16,6 +16,7 @@ import { osApi } from "@/lib/os";
 import { useLoad, errorText } from "@/components/os/shared";
 import { Subnav, Lettermark, StatusDot, Sep, Button, EmptyLine, ErrorBanner, SkeletonRows, ago } from "@/components/v32/ui";
 import { agentStatus, PERMISSION_LABEL } from "@/components/agents/shared";
+import GiveWork from "@/components/agents/GiveWork";
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -49,25 +50,10 @@ function Fact({ label, value }: { label: string; value: string }) {
 export default function AgentDetail() {
   const params = useParams<{ id: string }>();
   const id = params?.id ? decodeURIComponent(params.id) : "";
-  const { data, error, loading, reload } = useLoad(() => osApi.agents());
+  const { data, error, loading } = useLoad(() => osApi.agents());
   const runs = useLoad(() => osApi.agentRuns(id));
   const [tab, setTab] = useState<"overview" | "rules">("overview");
-  const [running, setRunning] = useState(false);
-  const [runError, setRunError] = useState<string | null>(null);
   const a = data?.agents.find((x) => x.key === id);
-
-  async function runNow() {
-    setRunning(true);
-    setRunError(null);
-    try {
-      await osApi.runAgent(id);
-      await Promise.all([reload(), runs.reload()]);
-    } catch (err) {
-      setRunError(errorText(err));
-    } finally {
-      setRunning(false);
-    }
-  }
 
   return (
     <DashboardLayout pageTitle="Agent">
@@ -96,16 +82,18 @@ export default function AgentDetail() {
                 </div>
               </div>
               <div className="flex items-center" style={{ gap: 8 }}>
-                {a.runnable && (
-                  <Button small primary onClick={runNow} disabled={running || a.status === "STOPPED"} title={a.status === "STOPPED" ? "Stopped on Control" : undefined}>
-                    {running ? "Running…" : "Run now"}
-                  </Button>
-                )}
                 <Button small href="/control/decisions">Pause or stop</Button>
               </div>
             </div>
 
-            {runError && <ErrorBanner>The run did not finish: {runError}</ErrorBanner>}
+            {a.runnable ? (
+              <GiveWork agents={data!.agents} fixedKey={a.key} title={`Give the ${a.name.toLowerCase()} work`} />
+            ) : (
+              <p style={{ fontSize: 12.5, color: "#63635F", margin: 0, maxWidth: 640, lineHeight: 1.6 }}>
+                This agent runs inside its own flow, so it cannot be given work from here.{" "}
+                {a.key === "starlane.collections_agent" ? <>It drafts follow-ups on <Link className="underline" href="/missions">Missions</Link>, and each one waits for your approval.</> : <>It checks outcomes after their waiting period on its own.</>}
+              </p>
+            )}
 
             <Subnav
               active={tab}
