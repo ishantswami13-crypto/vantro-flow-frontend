@@ -13,10 +13,16 @@ const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
 // Each film: length, chords [start seconds, root midi, chord tones as midi], bells [time, midi].
 const FILMS = {
   introducing: {
-    dur: 60,
-    chords: [[0, 50, [62, 66, 69, 73, 76]], [8, 47, [59, 62, 66, 69, 73]], [16, 43, [59, 62, 66, 69, 73]], [24, 45, [61, 64, 69, 71, 76]],
-      [31, 50, [62, 66, 69, 73, 78]], [38, 47, [62, 66, 69, 71, 74]], [44, 43, [62, 66, 67, 71, 74]], [50, 45, [61, 64, 69, 73, 76]], [54, 50, [62, 66, 69, 73, 81]]],
-    bells: [[0.4, 81], [4.0, 78], [16.1, 76], [21.2, 81], [31.0, 78], [36.0, 74], [44.1, 76], [47.8, 81], [53.3, 78], [54.4, 86]],
+    dur: 66,
+    chords: [[0, 50, [62, 66, 69, 73, 76]], [4.2, 47, [59, 62, 66, 69, 73]], [10, 43, [59, 62, 66, 69, 73]], [15.95, 40, [55, 59, 62, 66, 71]],
+      [18.6, 45, [61, 64, 69, 71, 76]], [25, 50, [62, 66, 69, 73, 78]], [32.8, 42, [57, 61, 64, 68, 73]], [35.4, 47, [62, 66, 69, 71, 74]],
+      [41, 43, [62, 66, 67, 71, 74]], [47.95, 40, [55, 59, 62, 67, 71]], [50.6, 45, [61, 64, 69, 73, 76]], [56, 50, [62, 66, 69, 73, 81]]],
+    bells: [[0.4, 81], [4.0, 78], [16.0, 76], [17.2, 83], [23.35, 81], [32.85, 78], [34.0, 85], [48.0, 76], [49.2, 83], [51.75, 81], [59.3, 78], [60.5, 86]],
+    // Eighth-note arpeggio on the chord tones while the product is on screen, silent under the chapter cards.
+    arp: { from: 4.4, to: 58.6, step: 0.3, mutes: [[15.6, 18.6], [32.4, 35.0], [47.6, 50.2]] },
+    // A soft low hit on each cut, and a rising air swell into it.
+    hits: [4.0, 15.95, 32.8, 47.95, 59.2],
+    swells: [15.95, 32.8, 47.95, 59.2],
   },
   "command-center": {
     dur: 38,
@@ -60,6 +66,48 @@ for (const [at, note] of f.bells) {
     const t = k / RATE, env = Math.min(1, t / .006) * Math.exp(-t * 1.25);
     const s = .22 * env * (Math.sin(2 * Math.PI * fr * t) + .28 * Math.sin(2 * Math.PI * fr * 2.76 * t) * Math.exp(-t * 3) + .12 * Math.sin(2 * Math.PI * fr * 2 * t));
     L[i0 + k] += s * Math.cos(pan * Math.PI / 2); R[i0 + k] += s * Math.sin(pan * Math.PI / 2);
+  }
+}
+
+// Arpeggio: soft plucked chord tones an octave up, panned left and right.
+if (f.arp) {
+  const chordAt = (t) => { let c = f.chords[0]; for (const x of f.chords) if (x[0] <= t) c = x; return c; };
+  const ORDER = [0, 2, 4, 1, 3, 4, 2, 3];
+  let k = 0;
+  for (let at = f.arp.from; at < f.arp.to; at += f.arp.step, k++) {
+    if (f.arp.mutes.some(([a, b]) => at >= a && at < b)) continue;
+    const tones = chordAt(at)[2], note = tones[ORDER[k % 8] % tones.length] + 12, fr = midi(note);
+    const i0 = Math.round(at * RATE), len = Math.round(1.6 * RATE), pan = k % 2 ? .3 : .7;
+    const fade = Math.min(1, (at - f.arp.from) / 3) * Math.min(1, (f.arp.to - at) / 3);
+    const vel = (.75 + .25 * ((k * 37) % 7) / 6) * (k % 4 === 0 ? 1 : .7) * fade;
+    for (let j = 0; j < len && i0 + j < n; j++) {
+      const t = j / RATE, env = Math.min(1, t / .004) * Math.exp(-t * 5.5);
+      const v = .05 * vel * env * (Math.sin(2 * Math.PI * fr * t) + .35 * Math.sin(4 * Math.PI * fr * t) * Math.exp(-t * 9) + .1 * Math.sin(6 * Math.PI * fr * t) * Math.exp(-t * 14));
+      L[i0 + j] += v * Math.cos(pan * Math.PI / 2); R[i0 + j] += v * Math.sin(pan * Math.PI / 2);
+    }
+  }
+}
+// Low hits: a short falling sine, felt more than heard.
+for (const at of f.hits || []) {
+  const i0 = Math.round(at * RATE), len = Math.round(2.2 * RATE);
+  let ph = 0;
+  for (let j = 0; j < len && i0 + j < n; j++) {
+    const t = j / RATE, fr = 42 + 38 * Math.exp(-t * 9), env = Math.min(1, t / .01) * Math.exp(-t * 2.4);
+    ph += 2 * Math.PI * fr / RATE;
+    const v = .55 * env * Math.sin(ph);
+    L[i0 + j] += v; R[i0 + j] += v;
+  }
+}
+// Swells: filtered noise that opens up over 1.4s and stops on the cut.
+for (const at of f.swells || []) {
+  let seed = Math.round(at * 1000), lpL = 0, lpR = 0;
+  const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296 - .5; };
+  const i1 = Math.round(at * RATE), i0 = Math.max(0, i1 - Math.round(1.4 * RATE));
+  for (let i = i0; i < i1 && i < n; i++) {
+    const k = (i - i0) / (i1 - i0), a = .02 + .25 * k * k;
+    lpL += a * (rnd() - lpL); lpR += a * (rnd() - lpR);
+    const g = .32 * k * k;
+    L[i] += lpL * g; R[i] += lpR * g;
   }
 }
 
