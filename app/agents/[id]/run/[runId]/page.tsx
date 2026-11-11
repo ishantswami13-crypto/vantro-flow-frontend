@@ -277,7 +277,7 @@ export default function AgentRunDetail() {
                   {files.length === 0 ? <p className="ar-note">{d.files.length ? "No file matches." : "This run recorded no output files."}</p> : (
                     <ul className="ar-files">
                       {files.map((f) => (
-                        <li key={f.name}><button type="button" onClick={f.download} title={`Download ${f.name}`}><span className="ar-file-ic">{I.doc}</span><span className="truncate">{f.name}</span></button></li>
+                        <li key={f.name}><button type="button" onClick={f.download} title={`Download ${f.name}`}><span className={`ar-file-ic ${/\.csv$/i.test(f.name) ? "is-sheet" : ""}`}>{I.doc}</span><span className="truncate">{f.name.replace(/\.[a-z]+$/i, "")}</span><span className="ar-ext">{(f.name.match(/\.[a-z]+$/i) || [""])[0]}</span></button></li>
                       ))}
                     </ul>
                   )}

@@ -326,6 +326,8 @@ export interface AgentRun {
   finishedAt: string | null;
   durationMs: number | null;
   summary: string | null;
+  /** The work the person gave the agent when they started it. */
+  instruction?: string | null;
   error: string | null;
   input?: Record<string, unknown> | null;
   output?: Record<string, unknown> | null;

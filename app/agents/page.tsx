@@ -16,6 +16,7 @@ import { V, PageHeader, Subnav, Lettermark, StatusDot, EmptyLine, ErrorBanner, S
 import { IconAgents, IconArrowRight } from "@/components/v32/icons";
 import { agentStatus, PERMISSION_LABEL } from "@/components/agents/shared";
 import GiveWork from "@/components/agents/GiveWork";
+import RecentRuns from "@/components/agents/RecentRuns";
 
 export default function AgentsPage() {
   const { data, error, loading } = useLoad(() => osApi.agents());
@@ -102,6 +103,8 @@ export default function AgentsPage() {
             </div>
           )
         )}
+        {data && tab === "running" && <RecentRuns agents={agents} />}
+
         <p style={{ fontSize: 12, color: "#6E6E69", margin: 0, maxWidth: 640 }}>
           Each agent is fixed code: none calls a language model or sends a message on its own. Agents marked &ldquo;Can start&rdquo; take work from the box above; the others run inside their own flows. Stop one from{" "}
           <Link className="underline" href="/control/decisions">Control, Decisions</Link>.
