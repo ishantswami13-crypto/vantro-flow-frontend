@@ -1,7 +1,9 @@
-// Renders scripts/film/command-center.html to a real video, frame by frame.
+// Renders a film composition (scripts/film/<name>.html) to a real video, frame
+// by frame, with its score from score.mjs as the soundtrack.
 //
-//   node scripts/film/render.mjs              # public/film/command-center.{mp4,webm,jpg}
-//   node scripts/film/render.mjs --still 12   # one PNG at 12s, for checking a frame
+//   node scripts/film/render.mjs                           # introducing: public/film/introducing.{mp4,webm,jpg}
+//   node scripts/film/render.mjs --film command-center     # the Command Center film
+//   node scripts/film/render.mjs --film introducing --still 12   # one PNG at 12s, for checking a frame
 //
 // Needs Playwright (Chromium) and ffmpeg on the PATH. Every frame is drawn by
 // the page's render(t), so the output is identical on every run.
@@ -24,18 +26,22 @@ const brand = {
 };
 
 const args = process.argv.slice(2);
+const film = args.includes("--film") ? args[args.indexOf("--film") + 1] : "introducing";
+// Where the poster (a frame from the middle) and the title still come from.
+const STILLS = { introducing: { poster: 10, title: 1.9 }, "command-center": { poster: 14, title: 1.9 } }[film];
+if (!STILLS) throw new Error("unknown film " + film);
 const stillAt = args.includes("--still") ? Number(args[args.indexOf("--still") + 1]) : null;
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
 await page.addInitScript((b) => { window.__BRAND = b; }, brand);
-await page.goto(pathToFileURL(path.join(here, "command-center.html")).href + "?drive");
+await page.goto(pathToFileURL(path.join(here, `${film}.html`)).href + "?drive");
 await page.evaluate(() => document.fonts.ready);
 const duration = await page.evaluate(() => window.__film.DURATION);
 
 if (stillAt !== null) {
   await page.evaluate((t) => window.__film.render(t), stillAt);
-  const file = path.join(process.env.FILM_STILL_DIR || here, `still-${stillAt}.png`);
+  const file = path.join(process.env.FILM_STILL_DIR || here, `${film}-still-${stillAt}.png`);
   await page.screenshot({ path: file });
   console.log(file);
   await browser.close();
@@ -60,9 +66,14 @@ await new Promise((r, j) => ff.on("close", (c) => (c === 0 ? r() : j(new Error("
 await browser.close();
 
 const run = (a) => new Promise((r, j) => spawn("ffmpeg", ["-y", "-loglevel", "error", ...a], { stdio: "inherit" }).on("close", (c) => (c === 0 ? r() : j(new Error("ffmpeg " + c)))));
-await run(["-i", master, "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-tune", "animation", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", path.join(outDir, "command-center.mp4")]);
-await run(["-i", master, "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "38", "-row-mt", "1", "-deadline", "good", "-cpu-used", "2", "-an", path.join(outDir, "command-center.webm")]);
-await run(["-ss", "14", "-i", master, "-frames:v", "1", "-q:v", "3", path.join(outDir, "command-center-poster.jpg")]);
-await run(["-ss", "1.9", "-i", master, "-frames:v", "1", "-q:v", "3", path.join(outDir, "command-center-title.jpg")]);
-rmSync(master);
+const score = path.join(outDir, ".score.wav");
+await new Promise((r, j) => spawn(process.execPath, [path.join(here, "score.mjs"), film, score], { stdio: "inherit" }).on("close", (c) => (c === 0 ? r() : j(new Error("score " + c)))));
+const out = (ext) => path.join(outDir, `${film}.${ext}`);
+await run(["-i", master, "-i", score, "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-tune", "animation", "-pix_fmt", "yuv420p",
+  "-c:a", "aac", "-b:a", "128k", "-shortest", "-movflags", "+faststart", out("mp4")]);
+await run(["-i", master, "-i", score, "-map", "0:v", "-map", "1:a", "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "38", "-row-mt", "1", "-deadline", "good", "-cpu-used", "2",
+  "-c:a", "libopus", "-b:a", "96k", "-shortest", out("webm")]);
+await run(["-ss", String(STILLS.poster), "-i", master, "-frames:v", "1", "-q:v", "3", path.join(outDir, `${film}-poster.jpg`)]);
+await run(["-ss", String(STILLS.title), "-i", master, "-frames:v", "1", "-q:v", "3", path.join(outDir, `${film}-title.jpg`)]);
+rmSync(master); rmSync(score);
 console.log("done:", outDir);
