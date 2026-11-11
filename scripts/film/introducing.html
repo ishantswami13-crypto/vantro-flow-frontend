@@ -6,7 +6,7 @@
   and encode a real video (public/film/). The Starlane S and wordmark are
   injected by render.mjs from components/brand. Scenes: title card, the Command
   Center, giving an agent work and watching it run, the review it produced, the
-  owner's approval, end card. Sample data on fictional businesses.
+  owner's approval, end card. Sample data on a fictional multinational group.
 -->
 <html lang="en">
 <head>
@@ -237,30 +237,30 @@ svg.s { display: block; flex-shrink: 0; }
         <!-- Scene 1: Command Center -->
         <section class="scr" id="scr1">
           <div class="cch">
-            <h1 class="h1">Halden's Command Center</h1>
-            <div class="tools" data-a="5.4"><span><i class="tog"></i>Peers</span><span class="ghost">View all analytics</span><span class="askb"><span data-mark="glyph-w" data-size="22"></span>Ask Starlane</span></div>
+            <h1 class="h1">Halden Group Command Center</h1>
+            <div class="tools" data-a="5.4"><span class="ghost">All entities · 14 ⌄</span><span class="ghost">USD ⌄</span><span class="ghost">View all analytics</span><span class="askb"><span data-mark="glyph-w" data-size="22"></span>Ask Starlane</span></div>
           </div>
-          <p class="rec" data-a="5.7"><span data-mark="tile" data-size="26"></span>There are 4 recommended actions to protect this month's cash</p>
+          <p class="rec" data-a="5.7"><span data-mark="tile" data-size="26"></span>Starlane reviewed 12,480 invoices across 14 entities and 9 currencies overnight. 4 actions need a decision.</p>
           <div class="grid2">
             <div class="ccard" data-a="6.0">
               <p class="big"><span data-pct="86.4 6.4 8.4"></span><em>↑ 4%</em></p>
               <p class="lab">Collected on time</p>
               <div class="sel2"><span>6 months ⌄</span><span>2026 ⌄</span></div>
               <svg class="ch" id="hair" width="740" height="210" viewBox="0 0 740 210"></svg>
-              <div class="leg"><span><i style="background:#2F3433"></i>Halden</span><span><i style="background:#C9C5BC"></i>Last year</span></div>
+              <div class="leg"><span><i style="background:#2F3433"></i>Halden Group</span><span><i style="background:#C9C5BC"></i>Last year</span></div>
             </div>
             <div class="ccard" data-a="6.2">
-              <h4>Cash at risk by customer group</h4>
-              <p class="lab2">Share of overdue value in each group</p>
+              <h4>Cash at risk by region</h4>
+              <p class="lab2">Share of overdue value in each region, converted at booked rates</p>
               <div class="sel2"><span>This week ⌄</span></div>
-              <svg class="ch" id="bars" width="890" height="250" viewBox="0 0 890 250"></svg>
+              <svg class="ch" id="bars" width="820" height="250" viewBox="0 0 890 250"></svg>
               <div class="leg"><span><i style="background:#2F3433"></i>Overdue</span><span><i style="background:#C9C5BC"></i>Last quarter</span><span><i style="background:#7A4B3C"></i>Needs attention</span></div>
             </div>
           </div>
           <div class="grid2">
             <div class="ccard ccard2" data-a="6.5">
-              <p class="big"><span data-inr="1460000 6.9 8.9"></span><em style="color:#C2362B">↑ 6%</em></p>
-              <p class="lab">Overdue across customers</p>
+              <p class="big"><span data-money="48.2 6.9 8.9 $"></span><em style="color:#C2362B">↑ 6%</em></p>
+              <p class="lab">Overdue across the group</p>
               <svg class="ch" id="hair2" width="740" height="130" viewBox="0 0 740 130"></svg>
             </div>
             <div class="ccard ccard2" data-a="6.7">
@@ -277,41 +277,41 @@ svg.s { display: block; flex-shrink: 0; }
             <div class="agh"><h1 class="h1" style="margin-top:60px">What should Starlane work on?</h1><p class="sub">Agents plan the work, read your records and hand back a result you can check.</p></div>
             <div class="prompt">
               <p class="q"><span id="qtext"></span><span class="caret" id="caret"></span></p>
-              <div class="row"><span class="chip"><span data-mark="tile" data-size="20"></span>Halden UK</span><span class="chip">Ledgers · Bank · Promise log</span><span class="runb" id="runbtn">Run <span style="font-size:20px">→</span></span></div>
+              <div class="row"><span class="chip"><span data-mark="tile" data-size="20"></span>Halden Group · EMEA, 6 entities</span><span class="chip">ERP ledgers · Bank feeds · Credit policy</span><span class="runb" id="runbtn">Run <span style="font-size:20px">→</span></span></div>
             </div>
             <div class="sugg">
-              <div><small>Collections</small>Chase every invoice over 30 days and draft reminders for approval</div>
-              <div><small>Close</small>Match October bank lines to the ledger and list what is left</div>
-              <div><small>Suppliers</small>Which supplier bills should we pay this week, and why</div>
+              <div><small>Close</small>Reconcile intercompany balances across all 14 entities for October</div>
+              <div><small>Treasury</small>Forecast 13-week cash by region and currency, every assumption shown</div>
+              <div><small>Credit</small>Flag every customer above 80% of its credit limit, group-wide</div>
             </div>
           </div>
           <div id="runv">
-            <h1 class="h1">Overdue review, Halden UK</h1>
-            <p class="sub">Collections agent · started by you · read-only</p>
+            <h1 class="h1">EMEA overdue review</h1>
+            <p class="sub">Collections agent · 6 entities · 4 currencies · started by Group Finance · read-only</p>
             <div class="rgrid">
               <div class="thread">
                 <p class="ubub" id="ubub"></p>
                 <div class="sreply" data-a="22.4"><span data-mark="tile" data-size="40"></span><p id="reply"></p></div>
                 <div class="files">
-                  <div class="file" data-a="28.6"><span class="fi x">XLSX</span><p>Overdue_review_UK.xlsx<small>14 invoices · 3 sources</small></p></div>
-                  <div class="file" data-a="28.8"><span class="fi w">DOCX</span><p>Reminder_drafts.docx<small>6 drafts · waiting for you</small></p></div>
-                  <div class="file" data-a="29.0"><span class="fi p">PDF</span><p>Cash_at_risk_memo.pdf<small>2 pages · every figure sourced</small></p></div>
+                  <div class="file" data-a="28.6"><span class="fi x">XLSX</span><p>EMEA_overdue_review.xlsx<small>1,284 invoices · 6 entities</small></p></div>
+                  <div class="file" data-a="28.8"><span class="fi w">DOCX</span><p>Dunning_letters.docx<small>212 letters · 5 languages</small></p></div>
+                  <div class="file" data-a="29.0"><span class="fi p">PDF</span><p>CFO_cash_at_risk_memo.pdf<small>4 pages · every figure sourced</small></p></div>
                 </div>
               </div>
               <div class="prog" data-a="21.9">
                 <h3><span>Progress</span><span id="pcount"></span></h3>
                 <div style="margin-top:8px">
-                  <div class="pst" data-ps="22.6 23.6"><span class="dot"></span><p>Read 14 open invoices from TallyPrime</p></div>
-                  <div class="pst" data-ps="23.6 24.6"><span class="dot"></span><p>Match bank lines and find what is still unpaid</p></div>
-                  <div class="pst" data-ps="24.6 25.6"><span class="dot"></span><p>Check the promise log for missed dates</p></div>
-                  <div class="pst" data-ps="25.6 26.8"><span class="dot"></span><p>Draft reminders in each customer's language</p></div>
-                  <div class="pst" data-ps="26.8 27.9"><span class="dot"></span><p>Write the cash-at-risk memo with sources</p></div>
+                  <div class="pst" data-ps="22.6 23.6"><span class="dot"></span><p>Read 1,284 open invoices across 6 entities</p></div>
+                  <div class="pst" data-ps="23.6 24.6"><span class="dot"></span><p>Match 9,410 bank lines in EUR, GBP, CHF and SEK</p></div>
+                  <div class="pst" data-ps="24.6 25.6"><span class="dot"></span><p>Check promises, disputes and credit limits</p></div>
+                  <div class="pst" data-ps="25.6 26.8"><span class="dot"></span><p>Draft dunning letters in each customer's language</p></div>
+                  <div class="pst" data-ps="26.8 27.9"><span class="dot"></span><p>Write the CFO memo, every figure sourced</p></div>
                 </div>
                 <div class="outs" data-a="28.2">
                   <h3><span>Outputs</span></h3>
-                  <p class="orow"><span class="fi x">XLS</span>Overdue_review_UK.xlsx</p>
-                  <p class="orow"><span class="fi w">DOC</span>Reminder_drafts.docx</p>
-                  <p class="orow"><span class="fi p">PDF</span>Cash_at_risk_memo.pdf</p>
+                  <p class="orow"><span class="fi x">XLS</span>EMEA_overdue_review.xlsx</p>
+                  <p class="orow"><span class="fi w">DOC</span>Dunning_letters.docx</p>
+                  <p class="orow"><span class="fi p">PDF</span>CFO_cash_at_risk_memo.pdf</p>
                 </div>
               </div>
             </div>
@@ -320,34 +320,34 @@ svg.s { display: block; flex-shrink: 0; }
 
 <!-- Scene A: Collections Intelligence -->
         <section class="scr" id="scrA">
-          <h1 class="h1">Collections Intelligence</h1>
-          <p class="auto" data-a="31.3"><span data-mark="tile" data-size="30"></span>Starlane auto-reviewed 12 invoices for you <em>since your last visit.</em><span class="car"></span></p>
+          <h1 class="h1">Receivables Review · EMEA</h1>
+          <p class="auto" data-a="31.3"><span data-mark="tile" data-size="30"></span>Starlane auto-reviewed 1,284 invoices across 6 entities <em>since yesterday.</em><span class="car"></span></p>
           <div class="stats">
-            <div class="stat" data-a="31.6"><p class="v" data-count="24 31.7 32.9"></p><p class="l">Ready to review</p></div>
-            <div class="stat" data-a="31.75"><p class="v" data-count="7 31.8 32.7"></p><p class="l">Assigned to you</p></div>
-            <div class="stat" data-a="31.9"><p class="v" data-count="4 31.9 32.6"></p><p class="l">Sources connected</p></div>
-            <div class="stat" data-a="32.05"><p class="v" data-inr="1460000 32.0 33.3"></p><p class="l">Overdue across customers</p></div>
+            <div class="stat" data-a="31.6"><p class="v" data-count="412 31.7 32.9"></p><p class="l">Ready to review</p></div>
+            <div class="stat" data-a="31.75"><p class="v" data-count="38 31.8 32.7"></p><p class="l">Assigned to you</p></div>
+            <div class="stat" data-a="31.9"><p class="v" data-count="9 31.9 32.6"></p><p class="l">Sources connected</p></div>
+            <div class="stat" data-a="32.05"><p class="v" data-money="18.4 32.0 33.3 €"></p><p class="l">Overdue across EMEA</p></div>
           </div>
-          <div class="tabs" data-a="32.3"><span class="on">My reviews (17)</span><span>All (24)</span></div>
+          <div class="tabs" data-a="32.3"><span class="on">My reviews (38)</span><span>All (1,284)</span></div>
           <div class="tbl">
             <div class="th" data-a="32.5"><span>Reviewed invoice</span><span>Status</span><span>Starlane summary</span><span>Last updated</span></div>
-            <div class="tr" data-a="32.7"><div class="doc"><i></i><div><p class="n">Shree Hardware · INV-0987</p><p class="c">Shree Hardware</p></div></div><span><span class="pill p-ready">Ready for review</span></span><span class="cnt"><span class="g"><i class="ic-ok"></i>6</span><span class="o"><i class="ic-half"></i>4</span><span class="r"><i class="ic-bad"></i>1</span></span><span class="up">Just now</span></div>
-            <div class="tr" id="rowG" data-a="32.85"><div class="doc"><i></i><div><p class="n">Gupta Traders · INV-1042</p><p class="c">Gupta Traders</p></div></div><span><span class="pill p-ready">Ready for review</span></span><span class="cnt"><span class="g"><i class="ic-ok"></i>8</span><span class="o"><i class="ic-half"></i>6</span><span class="r"><i class="ic-bad"></i>3</span></span><span class="up">Just now</span></div>
-            <div class="tr" data-a="33.0"><div class="doc"><i></i><div><p class="n">Patel Plumbing · INV-1051</p><p class="c">Patel Plumbing Works</p></div></div><span data-prog="43.1"></span><span data-sum="43.3 5 2 0"></span><span class="up">Just now</span></div>
-            <div class="tr" data-a="33.15"><div class="doc"><i></i><div><p class="n">Om Sanitary · INV-1058</p><p class="c">Om Sanitary Stores</p></div></div><span data-prog="43.7"></span><span data-sum="43.9 7 1 1"></span><span class="up">Just now</span></div>
-            <div class="tr" data-a="33.3"><div class="doc"><i></i><div><p class="n">Kaveri Builders · INV-1063</p><p class="c">Kaveri Builders</p></div></div><span data-prog="99"></span><span data-sum="99 0 0 0"></span><span class="up">Just now</span></div>
-            <div class="tr" data-a="33.45"><div class="doc"><i></i><div><p class="n">Mehta Industries · INV-1066</p><p class="c">Mehta Industries</p></div></div><span data-prog="99"></span><span data-sum="99 0 0 0"></span><span class="up">Just now</span></div>
+            <div class="tr" data-a="32.7"><div class="doc"><i></i><div><p class="n">Arlo Freight Ltd · INV-UK-88102</p><p class="c">Halden UK · GBP</p></div></div><span><span class="pill p-ready">Ready for review</span></span><span class="cnt"><span class="g"><i class="ic-ok"></i>6</span><span class="o"><i class="ic-half"></i>4</span><span class="r"><i class="ic-bad"></i>1</span></span><span class="up">Just now</span></div>
+            <div class="tr" id="rowG" data-a="32.85"><div class="doc"><i></i><div><p class="n">Meridian GmbH · INV-DE-20418</p><p class="c">Halden GmbH · EUR</p></div></div><span><span class="pill p-ready">Ready for review</span></span><span class="cnt"><span class="g"><i class="ic-ok"></i>8</span><span class="o"><i class="ic-half"></i>6</span><span class="r"><i class="ic-bad"></i>3</span></span><span class="up">Just now</span></div>
+            <div class="tr" data-a="33.0"><div class="doc"><i></i><div><p class="n">Kestrel Retail SA · INV-FR-31077</p><p class="c">Halden France · EUR</p></div></div><span data-prog="43.1"></span><span data-sum="43.3 5 2 0"></span><span class="up">Just now</span></div>
+            <div class="tr" data-a="33.15"><div class="doc"><i></i><div><p class="n">Nordvik AB · INV-SE-5521</p><p class="c">Halden Nordics · SEK</p></div></div><span data-prog="43.7"></span><span data-sum="43.9 7 1 1"></span><span class="up">Just now</span></div>
+            <div class="tr" data-a="33.3"><div class="doc"><i></i><div><p class="n">Castell SpA · INV-IT-7740</p><p class="c">Halden Italia · EUR</p></div></div><span data-prog="99"></span><span data-sum="99 0 0 0"></span><span class="up">Just now</span></div>
+            <div class="tr" data-a="33.45"><div class="doc"><i></i><div><p class="n">Alpenwerk AG · INV-CH-3318</p><p class="c">Halden Schweiz · CHF</p></div></div><span data-prog="99"></span><span data-sum="99 0 0 0"></span><span class="up">Just now</span></div>
             <div id="scrim"></div>
           </div>
 
           <aside id="panel">
             <div class="pbar"><span>···</span><span>✕</span></div>
-            <p class="ptitle">Gupta Traders · INV-1042</p>
+            <p class="ptitle">Meridian GmbH · INV-DE-20418</p>
             <dl class="props">
-              <dt data-p="37.1">Customer</dt><dd data-p="37.1">Gupta Traders</dd>
+              <dt data-p="37.1">Customer</dt><dd data-p="37.1">Meridian GmbH · Halden GmbH</dd>
               <dt data-p="37.25">Status</dt><dd data-p="37.25"><span class="pill p-prog">In progress</span></dd>
-              <dt data-p="37.4">Assignee</dt><dd data-p="37.4"><span class="av">R</span>Ravi Mehta</dd>
-              <dt data-p="37.55">Source</dt><dd data-p="37.55"><span data-mark="tile" data-size="20"></span><span class="lnk">TallyPrime · Voucher 1042</span></dd>
+              <dt data-p="37.4">Assignee</dt><dd data-p="37.4"><span class="av">L</span>Lena Fischer, AR lead EMEA</dd>
+              <dt data-p="37.55">Source</dt><dd data-p="37.55"><span data-mark="tile" data-size="20"></span><span class="lnk">General ledger · Halden GmbH · 20418</span></dd>
               <dt data-p="37.7">Due date</dt><dd data-p="37.7">17 September 2026</dd>
             </dl>
             <div class="ptabs" data-p="38.0"><span class="on">Summary</span><span>Request</span></div>
@@ -359,31 +359,31 @@ svg.s { display: block; flex-shrink: 0; }
             <p class="psum" id="psum"></p>
             <p class="act" data-p="41.1">Activity</p>
             <div class="feed">
-              <p data-p="41.3"><span class="av">R</span><b>Ravi</b> started a thread · 5m ago</p>
-              <p data-p="41.6"><span data-mark="tile" data-size="22"></span><b>Collections agent</b> drafted a reminder · 1h ago</p>
-              <p data-p="41.9"><span data-mark="tile" data-size="22"></span><b>Assignment agent</b> assigned to Ravi · 2h ago</p>
+              <p data-p="41.3"><span class="av">L</span><b>Lena</b> started a thread · 5m ago</p>
+              <p data-p="41.6"><span data-mark="tile" data-size="22"></span><b>Collections agent</b> drafted a dunning letter · 1h ago</p>
+              <p data-p="41.9"><span data-mark="tile" data-size="22"></span><b>Credit agent</b> flagged 82% of credit limit · 2h ago</p>
             </div>
           </aside>
         </section>
 
                 <!-- Scene C: Approval -->
         <section class="scr" id="scrC">
-          <h1 class="h1">Approve the reminder</h1>
-          <p class="sub">Exactly this text, sent once. Starlane will not change it or send again without you.</p>
+          <h1 class="h1">Approve the dunning letter</h1>
+          <p class="sub">Over €1,000,000, two approvals: regional controller, then CFO. Sent once, exactly as written, and recorded.</p>
           <div class="apv">
             <div class="phone" data-a="44.9">
-              <p class="to">To Gupta Traders · WhatsApp</p>
+              <p class="to">To Meridian GmbH, accounts payable · Email</p>
               <div class="bub"><span id="typed"></span><small id="tick">10:14</small></div>
             </div>
             <div>
               <div class="card meta" data-a="45.2">
                 <h3>Waiting for you</h3>
-                <dl><dt>Customer</dt><dd>Gupta Traders</dd><dt>Amount</dt><dd>₹6,00,000</dd><dt>Drafted by</dt><dd>Collections agent</dd></dl>
-                <div style="margin-top:26px"><span class="btn" id="approve">Approve and send once</span><span class="btn2">Edit</span></div>
+                <dl><dt>Customer</dt><dd>Meridian GmbH</dd><dt>Entity</dt><dd>Halden GmbH · Germany</dd><dt>Amount</dt><dd>€2,460,000</dd><dt>Regional controller</dt><dd>Lena Fischer ✓</dd><dt>Final approval</dt><dd>You, CFO</dd></dl>
+                <div style="margin-top:26px"><span class="btn" id="approve">Approve as CFO and send once</span><span class="btn2">Edit</span></div>
               </div>
               <div class="res">
-                <div data-a="48.1"><p><span data-mark="tile" data-size="26"></span>Sent once, as written · 10:14</p><span class="pill p-ok">Sent</span></div>
-                <div data-a="49.1"><p><span data-mark="tile" data-size="26"></span>₹6,00,000 received against INV-1042</p><span class="pill p-ok">In TallyPrime</span></div>
+                <div data-a="48.1"><p><span data-mark="tile" data-size="26"></span>Sent once, as written · 10:14 CET</p><span class="pill p-ok">Sent</span></div>
+                <div data-a="49.1"><p><span data-mark="tile" data-size="26"></span>Audit record A-77314 · 2 approvals · policy CR-4</p><span class="pill p-ok">Recorded</span></div>
               </div>
             </div>
           </div>
@@ -398,7 +398,7 @@ svg.s { display: block; flex-shrink: 0; }
 
   <div class="abs" id="tw"></div>
   <div class="abs" id="tc">Agents</div>
-  <p class="abs" id="es">Finance work, done and shown.</p>
+  <p class="abs" id="es">Finance work at global scale, done and shown.</p>
   <p class="abs" id="fine">Sample data · Fictional business</p>
 </div>
 
@@ -466,7 +466,7 @@ const H1 = hairChart($("#hair"), 740, 210,
   (t) => Math.min(1, .08 + .3 * Math.pow(t, 1.5) + (t > .45 ? .16 * (1 - Math.exp(-(t - .45) * 12)) : 0) + (t > .8 ? .5 * Math.pow((t - .8) / .2, 1.6) : 0)),
   (t) => .12 + .42 / (1 + Math.exp(-(t - .4) * 7)) + .1 * t);
 const H2 = hairChart($("#hair2"), 740, 130, (t) => clamp(.15 + .55 / (1 + Math.exp(-(t - .3) * 14)) + .25 / (1 + Math.exp(-(t - .7) * 12))));
-const GROUPS = [["Distributors", .72, .86, 0], ["Retail", .6, .4, 0], ["Exporters", .5, .41, 0], ["Wholesale", .48, .52, 0], ["Projects", .33, .28, 0], ["Online", .24, .47, 1], ["Other", .16, .28, 1]];
+const GROUPS = [["N. America", .72, .86, 0], ["UK & Ireland", .6, .4, 0], ["DACH", .5, .41, 0], ["France", .48, .52, 0], ["Nordics", .33, .28, 0], ["Middle East", .24, .47, 1], ["APAC", .16, .28, 1]];
 const BARS = [];
 (function bars() {
   const svg = $("#bars"), w = 890, h = 250, top = 10, bot = 26, gw = (w - 60) / GROUPS.length;
@@ -485,25 +485,25 @@ const BARS = [];
     const tx = document.createElementNS(NS, "text"); tx.setAttribute("x", cx); tx.setAttribute("y", h - 6); tx.setAttribute("font-size", "12"); tx.setAttribute("fill", "#77736B"); tx.setAttribute("text-anchor", "middle"); tx.textContent = name; svg.appendChild(tx);
   });
 })();
-const TOP = [["Arlo Freight", 41], ["Meridian GmbH", 37], ["Kestrel Retail", 26], ["Sora Imports", 22]];
+const TOP = [["Arlo Freight Inc. · US", 41], ["Meridian GmbH · DE", 37], ["Kestrel Retail plc · UK", 26], ["Sora Trading KK · JP", 22]];
 $("#hbars").innerHTML = TOP.map(([n, d]) => `<div class="hbar"><span>${n}</span><span><b data-w="${d / 45}"></b></span><span>${d} days</span></div>`).join("");
 const HB = $$("#hbars b");
 
-const inr = (n) => "₹" + Math.round(n).toLocaleString("en-IN");
+
 const fades = $$("[data-a]").map((el) => ({ el, a: Number(el.dataset.a) }));
 const pfades = $$("[data-p]").map((el) => ({ el, a: Number(el.dataset.p) }));
 const counts = $$("[data-count]").map((el) => { const [v, a, b] = el.dataset.count.split(" ").map(Number); return { el, v, a, b, f: (n) => String(Math.round(n)) }; })
-  .concat($$("[data-inr]").map((el) => { const [v, a, b] = el.dataset.inr.split(" ").map(Number); return { el, v, a, b, f: inr }; }))
+  .concat($$("[data-money]").map((el) => { const [v, a, b, sym] = el.dataset.money.split(" "); return { el, v: Number(v), a: Number(a), b: Number(b), f: (n) => `${sym}${n.toFixed(1)}M` }; }))
   .concat($$("[data-pct]").map((el) => { const [v, a, b] = el.dataset.pct.split(" ").map(Number); return { el, v, a, b, f: (n) => n.toFixed(1) + "%" }; }));
 const progs = $$("[data-prog]").map((el) => ({ el, t: Number(el.dataset.prog) }));
 const sums = $$("[data-sum]").map((el) => { const [t, g, o, r] = el.dataset.sum.split(" ").map(Number); return { el, t, g, o, r }; });
 const psteps = $$("[data-ps]").map((el) => { const [a, b] = el.dataset.ps.split(" ").map(Number); return { el, a, b }; });
 const rails = $$("[data-rail]");
 const CHECK = '<svg viewBox="0 0 16 16"><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const ASK = "Review every invoice more than 30 days overdue in Halden UK, draft reminders for my approval, and write me a cash-at-risk memo.";
-const REPLY = "I'll read the open invoices and bank lines, check the promise log, then prepare the review, the reminder drafts and a short memo. Nothing is sent and nothing in your books changes.";
-const SUMMARY = "Three invoices totalling ₹6,00,000 are 47 days overdue on average, and two payment promises were missed. Bank lines show no payment since 2 September. Gupta Traders usually pays within a week of a firm reminder from the owner.";
-const MSG = "Namaste Gupta ji. Three invoices totalling ₹6,00,000 are now 47 days overdue (INV-1042, 1057, 1063). Please share a payment date today. Thank you, Narmada Pipes & Fittings.";
+const ASK = "Review every invoice more than 60 days overdue across our EMEA entities, draft dunning letters in each customer's language for controller approval, and write a cash-at-risk memo for the CFO.";
+const REPLY = "I'll read the open invoices in all six ledgers, match the bank feeds in each currency, check promises, disputes and credit limits, then prepare the review, the letters and a memo. Nothing is sent and nothing in your books changes.";
+const SUMMARY = "Four invoices totalling €2,460,000 are 63 days overdue on average, and two promised payment dates were missed. Bank feeds show no receipt since 2 September. Exposure is 82% of the €3,000,000 credit limit, and one invoice is in dispute.";
+const MSG = "Dear Meridian accounts team, four invoices totalling €2,460,000 are now 63 days overdue (INV-DE-20418, 20433, 20457, 20502). Please confirm a payment date by Friday. Kind regards, Credit Control, Halden GmbH.";
 
 // Cursor path: [time, target, press]
 const CURSOR = [
@@ -593,7 +593,7 @@ function render(t) {
   for (const p of progs) p.el.innerHTML = t >= p.t ? '<span class="pill p-ready">Ready for review</span>' : '<span class="pill p-prog">In progress</span>';
   for (const x of sums) x.el.innerHTML = t >= x.t
     ? `<span class="cnt"><span class="g"><i class="ic-ok"></i>${x.g}</span><span class="o"><i class="ic-half"></i>${x.o}</span><span class="r"><i class="ic-bad"></i>${x.r}</span></span>`
-    : `<span class="draft">${markTile(18)}Drafting reminder${".".repeat(1 + Math.floor(t * 3) % 3)}</span>`;
+    : `<span class="draft">${markTile(18)}Drafting letter${".".repeat(1 + Math.floor(t * 3) % 3)}</span>`;
   const picked = t >= 35.95;
   $("#rowG").classList.toggle("sel", picked);
   const pIn = inOut(ramp(t, 36.2, 37.0));
@@ -604,7 +604,7 @@ function render(t) {
   // Scene 4: approval.
   $("#typed").textContent = MSG.slice(0, Math.round(MSG.length * ramp(t, 45.3, 47.1)));
   const ok = t >= 47.75;
-  $("#tick").textContent = t >= 48.0 ? "10:14 ✓✓" : "10:14";
+  $("#tick").textContent = t >= 48.0 ? "10:14 · delivered" : "10:14";
   $("#approve").textContent = ok ? "Approved" : "Approve and send once";
   $("#approve").style.background = ok ? "#2D6B47" : "#161513";
 
