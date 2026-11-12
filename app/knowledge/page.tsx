@@ -4,8 +4,9 @@
 // Scope decides who can read a collection (only me, a team, or the whole
 // organization) and the server enforces it on every search, including an
 // agent's. Search is full-text over the stored text and every result
-// carries its citation. Documents are text today; files are read as text in
-// this browser before upload.
+// carries its citation. Text files are read in this browser; PDF and Word
+// (.docx) files are sent to the server, which reads their text and keeps only
+// the text. A scanned PDF or a legacy .doc is refused with the reason.
 
 import { Fragment, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,7 +17,10 @@ import { platformApi, type Collection } from "@/lib/platform";
 import { useActiveOrg, useWorkspace, can, PlatformErrorBanner, Loading, Chip, Field, Section, useAction, InlineError, when } from "@/components/platform/ui";
 
 const TEXT_FILES = ".txt,.md,.markdown,.csv,.tsv,.json,.html,.htm,.xml,.log,.yaml,.yml";
+const SERVER_FILES = ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const MAX_CHARS = 1_000_000;
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+const isServerFile = (f: File) => /\.(pdf|docx)$/i.test(f.name);
 
 /** Show «highlighted» search terms without rendering any HTML from the server. */
 function Snippet({ text }: { text: string }) {
@@ -35,6 +39,7 @@ function CollectionView({ c, onDeleted }: { c: Collection; onDeleted: () => void
   const [content, setContent] = useState("");
   const [source, setSource] = useState<{ name: string; type: string } | null>(null);
   const [reading, setReading] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [openDoc, setOpenDoc] = useState<string | null>(null);
   const doc = useQuery({ queryKey: ["platform", "document", openDoc], queryFn: () => platformApi.document(openDoc as string).then((r) => r.document), enabled: !!openDoc });
   const act = useAction();
@@ -42,20 +47,31 @@ function CollectionView({ c, onDeleted }: { c: Collection; onDeleted: () => void
 
   async function pick(file: File | undefined) {
     if (!file) return;
+    act.setError(null);
+    if (isServerFile(file)) {
+      if (file.size > MAX_UPLOAD_BYTES) { act.setError("Files up to 15 MB can be added to Knowledge."); return; }
+      setFile(file); setContent(""); setSource(null);
+      setTitle((t) => t || file.name.replace(/\.[^.]+$/, ""));
+      return;
+    }
+    if (/\.(doc|xls|xlsx|ppt|pptx)$/i.test(file.name)) { act.setError("Only Word (.docx) and PDF are read from documents. Save older .doc files as .docx or PDF."); return; }
     if (file.size > 4 * MAX_CHARS) { act.setError("That file is too large. Text documents up to about 1 million characters are supported."); return; }
     setReading(file.name);
     try {
       const text = await file.text();
       if (text.length > MAX_CHARS) { act.setError("That file has more than 1 million characters. Split it into smaller documents."); return; }
-      if (/\u0000/.test(text.slice(0, 2000))) { act.setError("That file is not text. PDF and Office files are not supported yet: paste their text or save them as .txt."); return; }
+      if (/\u0000/.test(text.slice(0, 2000))) { act.setError("That file is not text. Choose a PDF, a Word (.docx) file or a text file."); return; }
+      setFile(null);
       setContent(text);
       setTitle((t) => t || file.name.replace(/\.[^.]+$/, ""));
       setSource({ name: file.name, type: file.type || "text/plain" });
     } finally { setReading(null); }
   }
   async function add() {
-    const r = await act.run(() => platformApi.addDocument(c.id, { title: title.trim(), content, sourceName: source?.name, mimeType: source?.type, sourceKind: source ? "upload" : "paste" }));
-    if (r) { setTitle(""); setContent(""); setSource(null); await refresh(); }
+    const r = await act.run(() => file
+      ? platformApi.uploadDocument(c.id, file, title.trim() || undefined)
+      : platformApi.addDocument(c.id, { title: title.trim(), content, sourceName: source?.name, mimeType: source?.type, sourceKind: source ? "upload" : "paste" }));
+    if (r) { setTitle(""); setContent(""); setSource(null); setFile(null); await refresh(); }
   }
 
   return (
@@ -73,15 +89,22 @@ function CollectionView({ c, onDeleted }: { c: Collection; onDeleted: () => void
         <Section title="Add a document">
           <div className="pf-stack" style={{ gap: 10 }}>
             <Field label="Title" htmlFor="doc-title"><input id="doc-title" className="pf-input" maxLength={200} value={title} onChange={(e) => setTitle(e.target.value)} /></Field>
-            <Field label="Text" htmlFor="doc-text" hint={source ? `From ${source.name} (${content.length.toLocaleString()} characters)` : "Paste the text, or choose a text file."}>
-              <textarea id="doc-text" className="pf-textarea" rows={6} value={content} onChange={(e) => { setContent(e.target.value); setSource(null); }} />
-            </Field>
+            {file ? (
+              <div className="pf-note" role="status">
+                <strong style={{ fontWeight: 500 }}>{file.name}</strong> ({(file.size / 1024).toFixed(file.size < 10240 ? 1 : 0)} KB). Starlane reads its text when you add it and keeps only the text. Scanned PDFs without a text layer are refused.{" "}
+                <button type="button" onClick={() => setFile(null)} style={{ textDecoration: "underline" }}>Remove</button>
+              </div>
+            ) : (
+              <Field label="Text" htmlFor="doc-text" hint={source ? `From ${source.name} (${content.length.toLocaleString()} characters)` : "Paste the text, or choose a PDF, Word (.docx) or text file."}>
+                <textarea id="doc-text" className="pf-textarea" rows={6} value={content} onChange={(e) => { setContent(e.target.value); setSource(null); }} />
+              </Field>
+            )}
             <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
               <label className="btn-secondary-v32 inline-flex items-center gap-1.5" style={{ padding: "6px 12px", borderRadius: 6, fontSize: 12.5, border: "1px solid #E4E1DA", cursor: "pointer" }}>
-                <IconUpload size={12} /> {reading ? `Reading ${reading}…` : "Choose a text file"}
-                <input type="file" accept={TEXT_FILES} style={{ display: "none" }} onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
+                <IconUpload size={12} /> {reading ? `Reading ${reading}…` : file ? "Choose another file" : "Choose a file"}
+                <input type="file" aria-label="Choose a PDF, Word or text file" accept={`${SERVER_FILES},${TEXT_FILES}`} style={{ display: "none" }} onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
               </label>
-              <Button small primary disabled={act.busy || !title.trim() || !content.trim()} onClick={add}>{act.busy ? "Adding…" : "Add document"}</Button>
+              <Button small primary disabled={act.busy || (file ? false : !title.trim() || !content.trim())} onClick={add}>{act.busy ? (file ? "Reading and adding…" : "Adding…") : "Add document"}</Button>
             </div>
             <InlineError error={act.error} />
           </div>

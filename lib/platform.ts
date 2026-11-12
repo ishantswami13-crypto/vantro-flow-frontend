@@ -34,12 +34,14 @@ async function call<T>(method: string, path: string, body?: unknown, { headers =
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const org = activeOrgId();
+  // A file upload goes as multipart: the browser sets its own Content-Type with the boundary.
+  const form = typeof FormData !== 'undefined' && body instanceof FormData;
   try {
     const res = await fetchWithRetry(`${API_BASE}/api/platform${path}`, {
       method,
-      headers: { 'Content-Type': 'application/json', ...authHeaders(), ...(org ? { 'X-Starlane-Org': org } : {}), ...headers },
+      headers: { ...(form ? {} : { 'Content-Type': 'application/json' }), ...authHeaders(), ...(org ? { 'X-Starlane-Org': org } : {}), ...headers },
       credentials: 'include',
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : form ? (body as FormData) : JSON.stringify(body),
       signal: controller.signal,
     });
     let data: Record<string, unknown> = {};
@@ -202,6 +204,13 @@ export const platformApi = {
   createCollection: (body: { name: string; description?: string; scope: string; teamId?: string | null }) => call<{ id: string }>('POST', '/knowledge/collections', body),
   deleteCollection: (id: string) => call('DELETE', `/knowledge/collections/${id}`),
   documents: (id: string) => call<{ documents: KDocument[] }>('GET', `/knowledge/collections/${id}/documents`),
+  /** PDF, Word (.docx) or text file: the server reads the text and keeps only the text. */
+  uploadDocument: (id: string, file: File, title?: string) => {
+    const fd = new FormData();
+    fd.append('file', file, file.name);
+    if (title) fd.append('title', title);
+    return call<{ id: string; chunkCount: number; extracted: { kind: string; characters: number; pages?: number } }>('POST', `/knowledge/collections/${id}/documents/upload`, fd, { timeoutMs: 90_000 });
+  },
   addDocument: (id: string, body: { title: string; content: string; sourceName?: string; mimeType?: string; sourceKind?: 'upload' | 'paste' }) => call<{ id: string; chunkCount: number }>('POST', `/knowledge/collections/${id}/documents`, body, { timeoutMs: 60_000 }),
   deleteDocument: (cid: string, did: string) => call('DELETE', `/knowledge/collections/${cid}/documents/${did}`),
   search: (text: string) => call<{ results: SearchResult[]; searchedCollections: number }>('GET', `/knowledge/search${q({ q: text })}`),
