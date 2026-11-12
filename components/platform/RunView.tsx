@@ -10,7 +10,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { platformApi, RISK_LABEL, type ExecutionDetail, type Step } from "@/lib/platform";
 import { Button } from "@/components/v32/ui";
-import { ExecStatusChip, Chip, duration, when, PlatformErrorBanner, Loading, useAction, InlineError } from "@/components/platform/ui";
+import { ExecStatusChip, Chip, duration, when, PlatformErrorBanner, Loading, useAction, InlineError, money } from "@/components/platform/ui";
 
 const LIVE = new Set(["queued", "running", "awaiting_approval"]);
 
@@ -146,6 +146,7 @@ export function RunSide({ ex, canRun }: { ex: ExecutionDetail; canRun: boolean }
           <dt>Model</dt><dd>{ex.modelUsed || "–"}</dd>
           <dt>Calls</dt><dd>{ex.modelCalls} model, {ex.toolCalls} tool</dd>
           <dt>Tokens</dt><dd>{(ex.inputTokens + ex.outputTokens).toLocaleString()}</dd>
+          {"cost" in ex && ex.cost && (<><dt>Model cost</dt><dd title={ex.cost.available ? undefined : ex.cost.reason}>{ex.cost.available ? money(ex.cost.value, ex.cost.currency) : "Not measured"}</dd></>)}
           {ex.parentExecutionId && (<><dt>Handed off from</dt><dd><Link href={`/command/runs/${ex.parentExecutionId}`} style={{ textDecoration: "underline" }}>Parent run</Link></dd></>)}
         </dl>
       </div>

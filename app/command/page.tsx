@@ -14,7 +14,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, Button, EmptyLine, ago } from "@/components/v32/ui";
 import { IconAgents, IconArrowRight } from "@/components/v32/icons";
 import { platformApi } from "@/lib/platform";
-import { useActiveOrg, useWorkspace, PlatformErrorBanner, Loading, Kpi, MeasuredKpi, Section, ExecStatusChip, Chip, duration, when } from "@/components/platform/ui";
+import { useActiveOrg, useWorkspace, PlatformErrorBanner, Loading, Kpi, MeasuredKpi, Section, ExecStatusChip, Chip, duration, when, money } from "@/components/platform/ui";
 
 export default function CommandCenterPage() {
   const org = useActiveOrg();
@@ -66,7 +66,7 @@ export default function CommandCenterPage() {
               <Kpi label="Runs in the last 24 hours" value={d.executions.last24h} />
               <MeasuredKpi label="Success rate, last 7 days" m={d.executions.successRate} format={(v) => `${Math.round(v * 100)}%`} />
               <MeasuredKpi label="Median run time, last 7 days" m={d.executions.medianDurationMs} format={(v) => duration(v)} />
-              <MeasuredKpi label="Model cost" m={d.usage.cost} format={(v) => String(v)} />
+              <MeasuredKpi label="Model cost, last 7 days" m={d.usage.cost} format={(v) => money(v, d.usage.cost.currency)} />
               <MeasuredKpi label="Business outcomes" m={d.quality.outcomes} format={(v) => String(v)} />
             </div>
 

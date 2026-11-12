@@ -97,6 +97,13 @@ export function when(iso: string | null | undefined): string {
 }
 
 /** A measured value, or the reason it is not measured. Never a made-up number. */
+/** Money in the organization's price currency; small amounts keep enough decimals to be honest. */
+export function money(v: number, currency: string): string {
+  const digits = v === 0 ? 2 : v < 0.01 ? 4 : v < 1 ? 3 : 2;
+  try { return new Intl.NumberFormat(undefined, { style: "currency", currency, minimumFractionDigits: digits, maximumFractionDigits: digits }).format(v); }
+  catch { return `${v.toFixed(digits)} ${currency}`; }
+}
+
 export function MeasuredKpi<T>({ label, m, format }: { label: string; m: Measured<T>; format: (v: T) => string }) {
   return (
     <div className="pf-kpi">

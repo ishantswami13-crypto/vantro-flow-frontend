@@ -74,7 +74,11 @@ export interface Workspace {
 export interface AppInfo { key: string; name: string; summary: string; status: 'available' | 'planned'; requires: string | null; items: { href: string; label: string }[]; enabled: boolean; suggested: boolean }
 export interface Member { userId: string; role: Role; email: string; name: string | null; joinedAt: string }
 export interface Team { id: string; name: string; description: string | null; memberCount: number; isMember: boolean; members: { userId: string; email: string }[] }
-export interface Policy { disabledTools: string[]; defaultApproverRole: Role; maxConcurrentExecutions: number; dailyExecutionLimit: number; membersMayShareWithOrganization: boolean; ceilings: { maxConcurrentExecutions: number; dailyExecutionLimit: number } }
+export interface ModelPrices { currency: string; models: Record<string, { input: number; output: number }> }
+export interface ModelCost { model: string; calls: number; inputTokens: number; outputTokens: number; price: { input: number; output: number } | null; cost: number | null }
+/** A cost figure: measured only when every model it covers has a price. */
+export type Cost = ({ available: true; value: number } | { available: false; reason: string; unpriced?: string[] }) & { currency: string; byModel?: ModelCost[] };
+export interface Policy { modelPrices: ModelPrices; disabledTools: string[]; defaultApproverRole: Role; maxConcurrentExecutions: number; dailyExecutionLimit: number; membersMayShareWithOrganization: boolean; ceilings: { maxConcurrentExecutions: number; dailyExecutionLimit: number } }
 
 export type ToolStatus = 'available' | 'configuration_required' | 'unavailable' | 'disabled_by_policy' | 'planned';
 export type Risk = 'read' | 'internal_write' | 'external' | 'financial';
@@ -110,10 +114,12 @@ export interface Execution {
   input: Record<string, unknown>; output: { text?: string; data?: Record<string, unknown> | null; citations?: { documentId: string; title: string; collectionName: string; chunk: number; citation: string }[]; note?: string } | null;
   errorClass: string | null; errorMessage: string | null; attempts: number; maxAttempts: number; cancelRequested: boolean;
   modelCalls: number; toolCalls: number; inputTokens: number; outputTokens: number; modelUsed: string | null;
+  usageByModel?: Record<string, { calls: number; input: number; output: number }>;
   requestedByEmail: string | null; parentExecutionId: string | null; createdAt: string; startedAt: string | null; finishedAt: string | null; durationMs: number | null; pendingApprovals?: number;
 }
 export interface Step { key: string; kind: 'model' | 'tool' | 'approval' | 'system'; name: string | null; status: string; input: unknown; output: unknown; error: string | null; durationMs: number | null; at: string }
 export interface ExecutionDetail extends Execution {
+  cost: Cost;
   steps: Step[];
   approvals: { id: string; stepKey: string; tool: string; summary: string; risk: Risk; status: string; approverRole: Role; decidedAt: string | null; decisionNote: string | null; decidedBy: string | null }[];
   children: { id: string; agentId: string; status: ExecStatus; createdAt: string }[];
@@ -135,7 +141,7 @@ export interface CommandCenter {
   executions: { running: number; queued: number; awaitingApproval: number; last7d: { completed: number; failed: number; cancelled: number }; last24h: number; successRate: Measured<number>; medianDurationMs: Measured<number> };
   approvals: { pending: number | null };
   triggers: { last7d: Record<string, number>; upcoming: { agentId: string; agentName: string; at: string }[] };
-  usage: { modelCalls: number; toolCalls: number; inputTokens: number; outputTokens: number; cost: Measured<number> };
+  usage: { modelCalls: number; toolCalls: number; inputTokens: number; outputTokens: number; cost: Cost };
   quality: { outcomes: Measured<number> };
   alerts: { kind: string; severity: string; title: string; detail?: string | null; href: string | null }[];
   recent: { id: string; agentId: string; agentName: string; status: ExecStatus; mode: string; trigger: string; createdAt: string; durationMs: number | null; errorClass: string | null; modelCalls: number; toolCalls: number; tokens: number }[];
@@ -167,7 +173,7 @@ export const platformApi = {
   removeTeamMember: (id: string, userId: string) => call('DELETE', `/teams/${id}/members/${userId}`),
   policy: () => call<{ policy: Policy }>('GET', '/policies'),
   updatePolicy: (body: Partial<Policy>) => call<{ policy: Policy }>('PUT', '/policies', body),
-  usage: () => call<{ limits: { dailyExecutionLimit: number; maxConcurrentExecutions: number; aiDailyTokenBudget: number }; today: { executions: number }; daily: { day: string; executions: number; tokens: number; modelCalls: number; failed: number }[]; perAgent: { agentId: string; name: string; executions: number; tokens: number }[]; cost: Measured<number> }>('GET', '/usage'),
+  usage: () => call<{ limits: { dailyExecutionLimit: number; maxConcurrentExecutions: number; aiDailyTokenBudget: number }; today: { executions: number }; daily: { day: string; executions: number; tokens: number; modelCalls: number; failed: number }[]; perAgent: { agentId: string; name: string; executions: number; tokens: number; cost: { available: boolean; value?: number; currency: string; reason?: string } }[]; cost: Cost; prices: ModelPrices }>('GET', '/usage'),
   audit: (cursor?: string | null) => call<{ events: AuditEvent[]; nextCursor: string | null }>('GET', `/audit${q({ cursor })}`),
   activity: (cursor?: string | null) => call<{ events: AuditEvent[]; nextCursor: string | null }>('GET', `/activity${q({ cursor })}`),
 

@@ -9,9 +9,9 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, Subnav, Button, EmptyLine } from "@/components/v32/ui";
-import { platformApi, type Role, type Policy } from "@/lib/platform";
+import { platformApi, type Role, type Policy, type ModelPrices } from "@/lib/platform";
 import AuditList from "@/components/platform/AuditList";
-import { useActiveOrg, useWorkspace, can, PlatformErrorBanner, Loading, Chip, Field, Section, useAction, InlineError, when, MeasuredKpi, Kpi } from "@/components/platform/ui";
+import { useActiveOrg, useWorkspace, can, PlatformErrorBanner, Loading, Chip, Field, Section, useAction, InlineError, when, MeasuredKpi, Kpi, money } from "@/components/platform/ui";
 
 type Tab = "general" | "apps" | "members" | "teams" | "policies" | "usage" | "audit";
 const ROLE_HELP: Record<Role, string> = {
@@ -269,6 +269,7 @@ function Policies() {
         </Field>
       </div>
       <label className="pf-toggle"><input type="checkbox" checked={p.membersMayShareWithOrganization} disabled={!manage} onChange={(e) => set({ membersMayShareWithOrganization: e.target.checked })} />Members may share agents and knowledge with the whole organization</label>
+      <ModelPricesEditor value={p.modelPrices} disabled={!manage} onChange={(v) => set({ modelPrices: v })} />
       <Section title="Tools turned off for every agent">
         {tools.isLoading ? <Loading rows={2} /> : (
           <div className="pf-list">
@@ -283,12 +284,65 @@ function Policies() {
       </Section>
       {manage ? (
         <div className="flex items-center" style={{ gap: 10 }}>
-          <Button primary disabled={act.busy} onClick={async () => { const r = await act.run(() => platformApi.updatePolicy({ disabledTools: p.disabledTools, defaultApproverRole: p.defaultApproverRole, maxConcurrentExecutions: p.maxConcurrentExecutions, dailyExecutionLimit: p.dailyExecutionLimit, membersMayShareWithOrganization: p.membersMayShareWithOrganization })); if (r) { setP(r.policy); setSaved(true); await invalidate(); } }}>Save policies</Button>
+          <Button primary disabled={act.busy} onClick={async () => { const r = await act.run(() => platformApi.updatePolicy({ disabledTools: p.disabledTools, defaultApproverRole: p.defaultApproverRole, maxConcurrentExecutions: p.maxConcurrentExecutions, dailyExecutionLimit: p.dailyExecutionLimit, membersMayShareWithOrganization: p.membersMayShareWithOrganization, modelPrices: p.modelPrices })); if (r) { setP(r.policy); setSaved(true); await invalidate(); } }}>Save policies</Button>
           {saved && <span style={{ fontSize: 12.5, color: "#477054" }}>Saved.</span>}
         </div>
       ) : <div className="pf-note">Only admins and the owner can change policies.</div>}
       <InlineError error={act.error} />
     </div>
+  );
+}
+
+const CURRENCIES = ["USD", "INR", "EUR", "GBP", "AED", "SGD", "AUD", "CAD", "JPY"];
+
+/** Prices per million tokens for the models this organization uses. Starlane never assumes a provider's price. */
+function ModelPricesEditor({ value, onChange, disabled }: { value: ModelPrices; onChange: (v: ModelPrices) => void; disabled: boolean }) {
+  const ws = useWorkspace();
+  const used = useQuery({ queryKey: ["platform", "usage", ws.data?.organization.id], queryFn: () => platformApi.usage(), enabled: can(ws.data, "usage.view") });
+  const [adding, setAdding] = useState("");
+  const seen = (used.data?.cost.byModel || []).map((m) => m.model);
+  const names = [...new Set([...seen, ...Object.keys(value.models)])].sort();
+  const setPrice = (model: string, k: "input" | "output", raw: string) => {
+    const cur = value.models[model] || { input: NaN, output: NaN };
+    onChange({ ...value, models: { ...value.models, [model]: { ...cur, [k]: raw === "" ? NaN : Number(raw) } } });
+  };
+  const remove = (model: string) => { const next = { ...value.models }; delete next[model]; onChange({ ...value, models: next }); };
+  return (
+    <Section title="Model prices">
+      <p style={{ fontSize: 12.5, color: "#6E6A63", margin: "0 0 10px" }}>Starlane records the tokens each model uses but does not know what your provider charges you. Enter the price per million tokens from your provider's bill or price page. Cost is shown only for models with a price.</p>
+      <div className="flex items-center" style={{ gap: 8, marginBottom: 10 }}>
+        <label htmlFor="mp-cur" style={{ fontSize: 12.5, color: "#43433F" }}>Currency</label>
+        <select id="mp-cur" className="pf-select" style={{ width: 110 }} value={value.currency} disabled={disabled} onChange={(e) => onChange({ ...value, currency: e.target.value })}>
+          {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+      {names.length === 0 ? <p style={{ fontSize: 12.5, color: "#8F8A81", margin: 0 }}>No model has been used yet. Models appear here after their first run, or add one below.</p> : (
+        <div className="pf-list">
+          {names.map((m) => {
+            const pr = value.models[m];
+            const seenRow = used.data?.cost.byModel?.find((x) => x.model === m);
+            return (
+              <div key={m} className="pf-row" style={{ flexWrap: "wrap" }}>
+                <div className="pf-row-main">
+                  <div className="pf-row-title">{m}</div>
+                  <div className="pf-row-sub">{seenRow ? `${(seenRow.inputTokens + seenRow.outputTokens).toLocaleString()} tokens in the last 30 days` : "Not used in the last 30 days"}{pr ? "" : " · no price set"}</div>
+                </div>
+                <label style={{ fontSize: 12, color: "#6E6A63" }}>Input <input aria-label={`Input price for ${m}`} type="number" min={0} step="any" className="pf-input" style={{ width: 96, marginLeft: 4 }} value={pr && Number.isFinite(pr.input) ? pr.input : ""} disabled={disabled} onChange={(e) => setPrice(m, "input", e.target.value)} /></label>
+                <label style={{ fontSize: 12, color: "#6E6A63" }}>Output <input aria-label={`Output price for ${m}`} type="number" min={0} step="any" className="pf-input" style={{ width: 96, marginLeft: 4 }} value={pr && Number.isFinite(pr.output) ? pr.output : ""} disabled={disabled} onChange={(e) => setPrice(m, "output", e.target.value)} /></label>
+                {pr && !disabled && <Button small onClick={() => remove(m)}>Clear</Button>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {!disabled && (
+        <div className="flex items-center" style={{ gap: 8, marginTop: 10 }}>
+          <input aria-label="Model to price" className="pf-input" style={{ maxWidth: 280 }} placeholder="provider/model, for example anthropic/claude-sonnet" value={adding} onChange={(e) => setAdding(e.target.value.trim())} />
+          <Button small disabled={!/^[a-z0-9_-]+\/\S+$/.test(adding)} onClick={() => { setPrice(adding, "input", ""); setAdding(""); }}>Add model</Button>
+        </div>
+      )}
+      <p style={{ fontSize: 12, color: "#8F8A81", margin: "8px 0 0" }}>Prices are per million tokens, in {value.currency}.</p>
+    </Section>
   );
 }
 
@@ -307,11 +361,16 @@ function Usage() {
         <Kpi label="Runs, last 30 days" value={total} />
         <Kpi label="Tokens, last 30 days" value={tokens.toLocaleString()} />
         <Kpi label="Runs at once (limit)" value={d.limits.maxConcurrentExecutions} />
-        <MeasuredKpi label="Spend" m={d.cost} format={(v) => String(v)} />
+        <MeasuredKpi label="Model cost, last 30 days" m={d.cost} format={(v) => money(v, d.cost.currency)} />
       </div>
+      <Section title="By model, last 30 days">
+        {(d.cost.byModel || []).length === 0 ? <p style={{ fontSize: 12.5, color: "#8F8A81", margin: 0 }}>No model has been used in the last 30 days.</p> : (
+          <div className="pf-list">{(d.cost.byModel || []).map((m) => <div key={m.model} className="pf-row"><div className="pf-row-main"><div className="pf-row-title">{m.model}</div><div className="pf-row-sub">{m.calls} call{m.calls === 1 ? "" : "s"} · {m.inputTokens.toLocaleString()} input and {m.outputTokens.toLocaleString()} output tokens</div></div><span style={{ fontSize: 12.5, color: m.cost == null ? "#8C6826" : "#43433F" }}>{m.cost == null ? "No price set" : money(m.cost, d.cost.currency)}</span></div>)}</div>
+        )}
+      </Section>
       <Section title="By agent, last 30 days">
         {d.perAgent.length === 0 ? <p style={{ fontSize: 12.5, color: "#8F8A81", margin: 0 }}>No agents yet.</p> : (
-          <div className="pf-list">{d.perAgent.map((a) => <div key={a.agentId} className="pf-row"><div className="pf-row-main"><div className="pf-row-title">{a.name}</div></div><span style={{ fontSize: 12.5, color: "#43433F" }}>{a.executions} run{a.executions === 1 ? "" : "s"} · {a.tokens.toLocaleString()} tokens</span></div>)}</div>
+          <div className="pf-list">{d.perAgent.map((a) => <div key={a.agentId} className="pf-row"><div className="pf-row-main"><div className="pf-row-title">{a.name}</div></div><span style={{ fontSize: 12.5, color: "#43433F" }}>{a.executions} run{a.executions === 1 ? "" : "s"} · {a.tokens.toLocaleString()} tokens{a.cost.available && a.cost.value != null ? ` · ${money(a.cost.value, a.cost.currency)}` : ""}</span></div>)}</div>
         )}
       </Section>
       <Section title="By day">
