@@ -299,6 +299,11 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
               )}
             </Link>
             )}
+            {canPinHere && (
+              <button type="button" onClick={() => togglePin(here, pageTitle!)} className="sb-icon-btn" aria-label="Pin this page" title="Pin this page">
+                <IconBookmark size={14} />
+              </button>
+            )}
             <button onClick={() => setSearchOpen(true)} className="sb-icon-btn" aria-label="Search Starlane (Ctrl+K)" title="Search (Ctrl+K)">
               <IconSearch size={15} />
             </button>
@@ -338,8 +343,8 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
           </nav>
 
           {serverNav ? serverNav.filter(g => g.key !== "workspace").map(g => (
-            <nav key={g.key} aria-label={g.label} className="sb-group flex flex-col" style={{ gap: 1 }}>
-              <p className="sb-label">{g.label}</p>
+            <FoldGroup key={g.key} id={g.key} label={g.label} slim={slim} defaultOpen={g.key === "applications"}
+              forceOpen={g.items.some(i => navActive(i.href) || (i.children || []).some(c => navActive(c.href)))}>
               {g.items.map(i => (
                 <div key={i.key}>
                   <NavRow href={i.href} label={i.label} Icon={(i.app && APP_ICONS[i.app]) || NAV_ICONS[i.icon] || IconSpaces} active={navActive(i.href)} onClick={onClose} />
@@ -349,7 +354,7 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
                   ))}
                 </div>
               ))}
-            </nav>
+            </FoldGroup>
           )) : (
             <nav aria-label="Apps" className="sb-group flex flex-col" style={{ gap: 1 }}>
               <p className="sb-label">Apps</p>
@@ -359,7 +364,7 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
             </nav>
           )}
 
-          {!slim && (pins.length > 0 || canPinHere) && (
+          {!slim && pins.length > 0 && (
             <nav aria-label="Pinned" className="sb-group flex flex-col" style={{ gap: 1 }}>
               <p className="sb-label">Pinned</p>
               {pins.map(p => {
@@ -372,16 +377,11 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
                   </div>
                 );
               })}
-              {canPinHere && (
-                <button type="button" className="sb-recent sb-pin-here text-left" onClick={() => togglePin(here, pageTitle!)}>
-                  <IconBookmark size={12} /> Pin this page
-                </button>
-              )}
+
             </nav>
           )}
 
-          <nav aria-label="Recent conversations" className="sb-group flex flex-col" style={{ gap: 1 }}>
-            <p className="sb-label">Recents</p>
+          <FoldGroup id="recents" label="Recents" slim={slim} defaultOpen={recent.length + recentDecisions.length > 0} forceOpen={isActive(HISTORY_NAV_ITEM.href)}>
             {recent.map(t => {
               const active = pathname === `/scan/${t.id}`;
               return (
@@ -417,10 +417,9 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
               );
             })}
             <NavRow href={HISTORY_NAV_ITEM.href} label={HISTORY_NAV_ITEM.label} Icon={HISTORY_NAV_ITEM.icon} active={isActive(HISTORY_NAV_ITEM.href)} onClick={onClose} />
-          </nav>
+          </FoldGroup>
 
-          <nav aria-label="Spaces" className="sb-group flex flex-col" style={{ gap: 1 }}>
-            <p className="sb-label">Spaces</p>
+          <FoldGroup id="spaces" label="Spaces" slim={slim} defaultOpen={false} forceOpen={isActive("/space") || isActive("/spaces") || V32_SECONDARY_NAV_ITEMS.some(n => isActive(n.href))}>
             {spaces.entities.length === 0 && businessName && (
               <Link href="/space" onClick={onClose} title={businessName} aria-current={isActive("/space") ? "page" : undefined} className={`sb-row ${isActive("/space") ? "is-active" : ""}`}>
                 <span className="sb-space" aria-hidden="true">{businessName.trim()[0]?.toUpperCase()}</span>
@@ -444,7 +443,7 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
             {V32_SECONDARY_NAV_ITEMS.map(n => (
               <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
             ))}
-          </nav>
+          </FoldGroup>
 
           {moreOpen && (
             <div
@@ -585,5 +584,33 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
         </div>
       )}
     </>
+  );
+}
+
+
+/** A sidebar group whose label folds it away. Starts open when told to (or
+ *  when the page being viewed is inside it); the choice is remembered in this
+ *  browser. */
+function FoldGroup({ id, label, defaultOpen, forceOpen, children, slim }: { id: string; label: string; defaultOpen: boolean; forceOpen?: boolean; children: React.ReactNode; slim?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  useEffect(() => {
+    try { const v = localStorage.getItem(`starlane_sb_${id}`); if (v === "1" || v === "0") setOpen(v === "1"); } catch { /* storage unavailable */ }
+  }, [id]);
+  const shown = slim || open || !!forceOpen;
+  function toggle() {
+    const next = !shown;
+    setOpen(next);
+    try { localStorage.setItem(`starlane_sb_${id}`, next ? "1" : "0"); } catch { /* storage unavailable */ }
+  }
+  return (
+    <nav aria-label={label} className="sb-group flex flex-col" style={{ gap: 1 }}>
+      {!slim && (
+        <button type="button" className="sb-label sb-fold" aria-expanded={shown} onClick={toggle}>
+          <span>{label}</span>
+          <svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10" className="sb-fold-chev" style={{ transform: shown ? "rotate(90deg)" : "none" }}><path d="M3.5 2l3 3-3 3" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+      )}
+      {shown && <div className="flex flex-col sb-fold-body" style={{ gap: 1 }}>{children}</div>}
+    </nav>
   );
 }

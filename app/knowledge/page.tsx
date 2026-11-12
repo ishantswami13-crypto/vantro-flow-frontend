@@ -86,32 +86,6 @@ function CollectionView({ c, onDeleted }: { c: Collection; onDeleted: () => void
         {c.canWrite && <Button small disabled={act.busy} onClick={() => { if (window.confirm(`Delete "${c.name}" and its ${c.documentCount} document(s)? Agents that use it will lose access. This cannot be undone.`)) act.run(async () => { await platformApi.deleteCollection(c.id); await refresh(); onDeleted(); }); }}><IconTrash size={12} /> Delete collection</Button>}
       </div>
 
-      {c.canWrite && (
-        <Section title="Add a document">
-          <div className="pf-stack" style={{ gap: 10 }}>
-            <Field label="Title" htmlFor="doc-title"><input id="doc-title" className="pf-input" maxLength={200} value={title} onChange={(e) => setTitle(e.target.value)} /></Field>
-            {file ? (
-              <div className="pf-note" role="status">
-                <strong style={{ fontWeight: 500 }}>{file.name}</strong> ({(file.size / 1024).toFixed(file.size < 10240 ? 1 : 0)} KB). Starlane reads its text when you add it and keeps only the text. Scanned PDFs without a text layer are refused.{" "}
-                <button type="button" onClick={() => setFile(null)} style={{ textDecoration: "underline" }}>Remove</button>
-              </div>
-            ) : (
-              <Field label="Text" htmlFor="doc-text" hint={source ? `From ${source.name} (${content.length.toLocaleString()} characters)` : "Paste the text, or choose a PDF, Word (.docx) or text file."}>
-                <textarea id="doc-text" className="pf-textarea" rows={6} value={content} onChange={(e) => { setContent(e.target.value); setSource(null); }} />
-              </Field>
-            )}
-            <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
-              <label className="btn-secondary-v32 inline-flex items-center gap-1.5" style={{ padding: "6px 12px", borderRadius: 6, fontSize: 12.5, border: "1px solid #E4E1DA", cursor: "pointer" }}>
-                <IconUpload size={12} /> {reading ? `Reading ${reading}…` : file ? "Choose another file" : "Choose a file"}
-                <input type="file" aria-label="Choose a PDF, Word or text file" accept={`${SERVER_FILES},${TEXT_FILES}`} style={{ display: "none" }} onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
-              </label>
-              <Button small primary disabled={act.busy || (file ? false : !title.trim() || !content.trim())} onClick={add}>{act.busy ? (file ? "Reading and adding…" : "Adding…") : "Add document"}</Button>
-            </div>
-            <InlineError error={act.error} />
-          </div>
-        </Section>
-      )}
-
       <Section title="Documents">
         {docs.isLoading ? <Loading rows={3} /> : docs.error ? <PlatformErrorBanner error={docs.error} what="Documents" /> : (docs.data?.documents || []).length === 0 ? (
           <p style={{ fontSize: 12.5, color: "#8F8A81", margin: 0 }}>No documents yet.</p>
@@ -133,6 +107,32 @@ function CollectionView({ c, onDeleted }: { c: Collection; onDeleted: () => void
           </div>
         )}
       </Section>
+
+      {c.canWrite && (
+        <Section title="Add a document" description="Paste text or choose a PDF, Word or text file. Agents with access can cite it once it is added.">
+          <div className="pf-stack" style={{ gap: 10 }}>
+            <Field label="Title" htmlFor="doc-title"><input id="doc-title" className="pf-input" maxLength={200} value={title} onChange={(e) => setTitle(e.target.value)} /></Field>
+            {file ? (
+              <div className="pf-note" role="status">
+                <strong style={{ fontWeight: 500 }}>{file.name}</strong> ({(file.size / 1024).toFixed(file.size < 10240 ? 1 : 0)} KB). Starlane reads its text when you add it and keeps only the text. Scanned PDFs without a text layer are refused.{" "}
+                <button type="button" onClick={() => setFile(null)} style={{ textDecoration: "underline" }}>Remove</button>
+              </div>
+            ) : (
+              <Field label="Text" htmlFor="doc-text" hint={source ? `From ${source.name} (${content.length.toLocaleString()} characters)` : "Paste the text, or choose a PDF, Word (.docx) or text file."}>
+                <textarea id="doc-text" className="pf-textarea" rows={4} value={content} onChange={(e) => { setContent(e.target.value); setSource(null); }} />
+              </Field>
+            )}
+            <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
+              <label className="btn-secondary-v32 inline-flex items-center gap-1.5" style={{ padding: "6px 12px", borderRadius: 6, fontSize: 12.5, border: "1px solid #E4E1DA", cursor: "pointer" }}>
+                <IconUpload size={12} /> {reading ? `Reading ${reading}…` : file ? "Choose another file" : "Choose a file"}
+                <input type="file" aria-label="Choose a PDF, Word or text file" accept={`${SERVER_FILES},${TEXT_FILES}`} style={{ display: "none" }} onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
+              </label>
+              <Button small primary disabled={act.busy || (file ? false : !title.trim() || !content.trim())} onClick={add}>{act.busy ? (file ? "Reading and adding…" : "Adding…") : "Add document"}</Button>
+            </div>
+            <InlineError error={act.error} />
+          </div>
+        </Section>
+      )}
     </div>
   );
 }

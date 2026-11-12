@@ -32,14 +32,6 @@ function FolderIcon() {
   );
 }
 
-function AgentIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" aria-hidden="true">
-      <rect x="2.2" y="2.2" width="11.6" height="11.6" rx="2.4" />
-      <path d="M5.4 8h5.2M8 5.4v5.2" />
-    </svg>
-  );
-}
 
 export function HomeWorkspace() {
   const router = useRouter();
@@ -140,7 +132,7 @@ export function HomeWorkspace() {
           <div className="hw-cards">
             {runnable.map((a) => (
               <Link key={a.key} href={`/agents/${encodeURIComponent(a.key)}`} className="hw-card">
-                <span className="hw-card-i"><AgentIcon /></span>
+                <span className="hw-card-i hw-card-mono" aria-hidden="true">{(a.name || "?").trim().charAt(0).toUpperCase()}</span>
                 <span className="hw-card-t">{a.name}</span>
                 <span className="hw-card-s">{a.lastRunAt ? `Last run ${relTime(a.lastRunAt)}` : "Not run yet"}</span>
               </Link>

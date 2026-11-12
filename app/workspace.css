@@ -176,3 +176,35 @@ a.ws-alert:hover { box-shadow: var(--ws-shadow-hover); }
 @media (prefers-reduced-motion: reduce) {
   .hv-app a.lib-card.agent-card:hover, a.ws-cell:hover::after { translate: none; transform: none; }
 }
+
+/* ── Sidebar: fewer, quieter groups that fold ── */
+.hv-app .sb .sb-row { height: 32px; font-size: 13.5px; }
+.hv-app .sb-group { margin-top: 6px; }
+.hv-app .sb-group:has(> .sb-fold[aria-expanded="true"]) { margin-top: 14px; margin-bottom: 6px; }
+.hv-app .sb-fold { display: flex; width: 100%; align-items: center; justify-content: space-between; background: none; border: 0; cursor: pointer; padding: 4px 10px 6px; border-radius: 6px; text-align: left; transition: color .15s ease; }
+.hv-app .sb-fold:hover { color: #E8E5DF; }
+.hv-app .sb-fold-chev { opacity: 0; transition: transform .18s ease, opacity .15s ease; }
+.hv-app .sb-fold:hover .sb-fold-chev, .hv-app .sb-fold:focus-visible .sb-fold-chev, .hv-app .sb-fold[aria-expanded="false"] .sb-fold-chev { opacity: .8; }
+.hv-app .sb-fold-body { animation: sb-fold-in .18s ease both; }
+@keyframes sb-fold-in { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .hv-app .sb-fold-body { animation: none; } .hv-app .sb-fold-chev { transition: none; } }
+
+/* ── Home: white cards with a monogram, serif section titles ── */
+.hv-app .hw-h { font-family: 'Newsreader', Georgia, serif; font-weight: 400; font-size: 21px; letter-spacing: -0.014em; }
+.hv-app .hw-sub { font-size: 13px; color: var(--ws-muted); }
+.hv-app .hw-sec { margin-top: 44px; }
+.hv-app .hw-card { min-height: 128px; padding: 18px 20px; border: 0; border-radius: var(--ws-radius); background: var(--ws-card); box-shadow: var(--ws-shadow); transition: box-shadow .2s ease, translate .2s ease; }
+.hv-app .hw-card:hover { background: var(--ws-card); box-shadow: var(--ws-shadow-hover); translate: 0 -2px; }
+.hv-app .hw-card-t { font-family: 'Newsreader', Georgia, serif; font-weight: 400; font-size: 18px; letter-spacing: -0.012em; }
+.hv-app .hw-card-s { font-size: 12.5px; color: var(--ws-muted); }
+.hv-app .hw-card-mono { left: 20px; top: 18px; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-family: 'Newsreader', Georgia, serif; font-size: 16px; color: #FFFFFF; background: linear-gradient(145deg, #2A2926 0%, #0F0E0D 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10); }
+.hv-app .hw-pill { height: 32px; padding: 0 14px; font-size: 13px; border-color: var(--ws-line-2); box-shadow: 0 1px 2px rgba(15, 14, 13, 0.04); }
+.hv-app .hw-list { border-top: 0; background: var(--ws-card); border-radius: var(--ws-radius); box-shadow: var(--ws-shadow); overflow: hidden; }
+.hv-app .hw-list li { border-bottom: 1px solid var(--ws-line); }
+.hv-app .hw-list li:last-child { border-bottom: 0; }
+.hv-app .hw-row { padding: 14px 18px; }
+
+/* ── Quieter attention marks ── */
+.ws-alert-ic { width: 8px; height: 8px; border-radius: 999px; font-size: 0; background: var(--ws-warn); margin: 0 4px 0 2px; }
+.ws-alert.is-high .ws-alert-ic { background: var(--ws-bad); }
+.ws-alert::before { width: 2px; }
