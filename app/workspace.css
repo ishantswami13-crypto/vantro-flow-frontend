@@ -208,3 +208,19 @@ a.ws-alert:hover { box-shadow: var(--ws-shadow-hover); }
 .ws-alert-ic { width: 8px; height: 8px; border-radius: 999px; font-size: 0; background: var(--ws-warn); margin: 0 4px 0 2px; }
 .ws-alert.is-high .ws-alert-ic { background: var(--ws-bad); }
 .ws-alert::before { width: 2px; }
+
+/* ── A list inside a panel runs edge to edge: one frame, not two ── */
+.ws-panel-body > .pf-list { box-shadow: none; border-radius: 0; margin: 0 -22px; border-top: 1px solid var(--ws-line); }
+.ws-panel-body > .pf-list:last-child { margin-bottom: -22px; border-radius: 0 0 var(--ws-radius) var(--ws-radius); }
+.ws-panel-body > .pf-list:first-child { margin-top: -4px; }
+.ws-panel-body > .pf-list .pf-row { padding-left: 22px; padding-right: 22px; }
+.ws-panel-body > .pf-stack > .pf-list { box-shadow: 0 0 0 1px var(--ws-line); }
+
+/* ── Tabs that filter a page (not under a header): a quiet segmented control ── */
+.hv-app .v32-wrap .pf-stack > .hv-tabs, .hv-app .v32-wrap .pf-stack > div > .hv-tabs { display: inline-flex !important; align-self: flex-start; width: auto; max-width: 100%; padding: 4px; gap: 2px !important; background: rgba(15, 14, 13, 0.045); border-radius: 11px; }
+.hv-app .v32-wrap .pf-stack > .hv-tabs .hv-tab, .hv-app .v32-wrap .pf-stack > div > .hv-tabs .hv-tab { border-radius: 8px !important; padding: 6px 12px !important; }
+.hv-app .v32-wrap .pf-stack > .hv-tabs .hv-tab[aria-selected="true"], .hv-app .v32-wrap .pf-stack > div > .hv-tabs .hv-tab[aria-selected="true"] { background: #FFFFFF !important; box-shadow: 0 1px 2px rgba(15, 14, 13, 0.08), 0 0 0 1px rgba(15, 14, 13, 0.05) !important; }
+
+/* ── Side pane on detail pages ── */
+.hv-app .hv-side .hv-block-title { font-size: 18px; }
+.hv-app .hv-side .pf-pre { max-height: 280px; }

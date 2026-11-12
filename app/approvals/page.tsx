@@ -13,9 +13,9 @@ import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, Subnav, Button } from "@/components/v32/ui";
-import { IconPrepared, IconArrowRight } from "@/components/v32/icons";
+import { IconPrepared } from "@/components/v32/icons";
 import { platformApi, RISK_LABEL, STATUS_LABEL, type Approval } from "@/lib/platform";
-import { useActiveOrg, PlatformErrorBanner, isPlatformNotReady, Loading, Chip, when, useAction, InlineError, Section, EmptyState } from "@/components/platform/ui";
+import { useActiveOrg, PlatformErrorBanner, isPlatformNotReady, Loading, Chip, when, useAction, InlineError, Section, EmptyState, StatBand } from "@/components/platform/ui";
 
 type Tab = "pending" | "approved" | "rejected" | "all";
 
@@ -42,7 +42,7 @@ function Detail({ id, onDone }: { id: string; onDone: () => void }) {
       <div>
         <div className="flex items-center flex-wrap" style={{ gap: 8, marginBottom: 6 }}>
           <Chip tone={a.risk === "financial" || a.risk === "external" ? "bad" : "warn"}>{RISK_LABEL[a.risk]}</Chip>
-          <Chip tone={a.status === "approved" ? "good" : a.status === "rejected" ? "bad" : a.status === "pending" ? "warn" : undefined}>{a.status}</Chip>
+          <Chip tone={a.status === "approved" ? "good" : a.status === "rejected" ? "bad" : a.status === "pending" ? "warn" : undefined}>{a.status.charAt(0).toUpperCase() + a.status.slice(1)}</Chip>
           {a.executionMode === "test" && <Chip>Test run</Chip>}
         </div>
         <h2 className="hv-block-title" style={{ fontSize: 22 }}>{a.summary}</h2>
@@ -50,17 +50,17 @@ function Detail({ id, onDone }: { id: string; onDone: () => void }) {
           <Link href={`/agents/studio/${a.agentId}`} style={{ textDecoration: "underline" }}>{a.agentName}</Link> wants to use <strong style={{ fontWeight: 500 }}>{a.tool}</strong>. Requested {when(a.createdAt)}{a.requestedByEmail ? ` in a run started by ${a.requestedByEmail}` : ""}. Approver: {a.approverRole} or above.
         </p>
       </div>
-      <Section title="Exactly what will run">
+      <Section plain title="Exactly what will run">
         <pre className="pf-pre">{show(a.arguments)}</pre>
         <p style={{ fontSize: 12, color: "#8F8A81", margin: "6px 0 0" }}>If approved, the run continues with these arguments and nothing else.</p>
       </Section>
       {(a.evidence || []).length > 0 && (
-        <Section title="What the agent had seen">
+        <Section plain title="What the agent had seen">
           <pre className="pf-pre">{show(a.evidence)}</pre>
         </Section>
       )}
       {Object.keys(a.executionInput || {}).length > 0 && (
-        <Section title="The run's input"><pre className="pf-pre">{show(a.executionInput)}</pre></Section>
+        <Section plain title="The run's input"><pre className="pf-pre">{show(a.executionInput)}</pre></Section>
       )}
       <p style={{ margin: 0, fontSize: 12.5, color: "#6E6A63" }}>Run status: {STATUS_LABEL[a.executionStatus] || a.executionStatus} · <Link href={`/command/runs/${a.executionId}`} style={{ textDecoration: "underline" }}>open the run</Link></p>
 
@@ -80,7 +80,7 @@ function Detail({ id, onDone }: { id: string; onDone: () => void }) {
       )}
 
       {!!a.history?.length && (
-        <Section title="History">
+        <Section plain title="History">
           <div className="pf-list">
             {a.history.map((h) => (
               <div key={h.id} className="pf-row"><div className="pf-row-main"><div className="pf-row-title">{h.action.replace(/[._]/g, " ")}</div><div className="pf-row-sub">{h.actor_email || "Starlane"} · {when(h.created_at)}</div></div></div>
@@ -117,14 +117,7 @@ export default function ApprovalsPage() {
       <PageHeader eyebrow="Workspace" divider title="Approvals" subtitle="Everything waiting on a person, with what it will do and why" />
       <div className="pf-stack fade-once" style={{ marginTop: 18 }}>
         {others.length > 0 && (
-          <div className="pf-kpis">
-            {others.map((q) => (
-              <Link key={q.key} href={q.href} className="pf-kpi hover-lift" style={{ display: "block" }}>
-                <div className="pf-kpi-v">{q.pending}</div>
-                <div className="pf-kpi-l flex items-center justify-between">{q.label} <IconArrowRight size={12} /></div>
-              </Link>
-            ))}
-          </div>
+          <StatBand title="Also waiting elsewhere" cells={others.map((q) => ({ label: q.label, value: q.pending, href: q.href }))} />
         )}
         <Subnav label="Agent approvals" active={tab} onChange={(k) => { setTab(k as Tab); open(null); }} items={[
           { key: "pending", label: "Waiting", count: tab === "pending" && list.data ? items.length : null },
@@ -146,7 +139,7 @@ export default function ApprovalsPage() {
                       <div className="pf-row-title">{a.summary}</div>
                       <div className="pf-row-sub">{a.agentName} · {RISK_LABEL[a.risk]} · {when(a.createdAt)}</div>
                     </div>
-                    <Chip tone={a.status === "approved" ? "good" : a.status === "rejected" ? "bad" : a.status === "pending" ? "warn" : undefined}>{a.status}</Chip>
+                    <Chip tone={a.status === "approved" ? "good" : a.status === "rejected" ? "bad" : a.status === "pending" ? "warn" : undefined}>{a.status.charAt(0).toUpperCase() + a.status.slice(1)}</Chip>
                   </button>
                 ))}
               </div>

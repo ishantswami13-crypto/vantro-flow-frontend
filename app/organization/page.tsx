@@ -11,7 +11,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, Subnav, Button, EmptyLine } from "@/components/v32/ui";
 import { platformApi, PlatformError, type Role, type Policy, type ModelPrices } from "@/lib/platform";
 import AuditList from "@/components/platform/AuditList";
-import { useActiveOrg, useWorkspace, can, PlatformErrorBanner, Loading, Chip, Field, Section, useAction, InlineError, when, MeasuredKpi, Kpi, money } from "@/components/platform/ui";
+import { useActiveOrg, useWorkspace, can, PlatformErrorBanner, Loading, Chip, Field, Section, useAction, InlineError, when, money, StatBand } from "@/components/platform/ui";
 
 type Tab = "general" | "apps" | "members" | "teams" | "policies" | "usage" | "audit";
 const ROLE_HELP: Record<Role, string> = {
@@ -402,13 +402,13 @@ function Usage() {
   const tokens = d.daily.reduce((s, x) => s + x.tokens, 0);
   return (
     <div className="pf-stack" style={{ maxWidth: 900 }}>
-      <div className="pf-kpis">
-        <Kpi label={`Runs today (limit ${d.limits.dailyExecutionLimit})`} value={d.today.executions} />
-        <Kpi label="Runs, last 30 days" value={total} />
-        <Kpi label="Tokens, last 30 days" value={tokens.toLocaleString()} />
-        <Kpi label="Runs at once (limit)" value={d.limits.maxConcurrentExecutions} />
-        <MeasuredKpi label="Model cost, last 30 days" m={d.cost} format={(v) => money(v, d.cost.currency)} />
-      </div>
+      <StatBand cells={[
+        { label: "Runs today", value: d.today.executions, note: `Limit ${d.limits.dailyExecutionLimit} a day` },
+        { label: "Runs, last 30 days", value: total },
+        { label: "Tokens, last 30 days", value: tokens.toLocaleString() },
+        { label: "Runs at once", value: d.limits.maxConcurrentExecutions, note: "Limit" },
+        { label: "Model cost, last 30 days", measured: d.cost, format: (v: number) => money(v, d.cost.currency) },
+      ]} />
       <Section title="By model, last 30 days">
         {(d.cost.byModel || []).length === 0 ? <p style={{ fontSize: 12.5, color: "#8F8A81", margin: 0 }}>No model has been used in the last 30 days.</p> : (
           <div className="pf-list">{(d.cost.byModel || []).map((m) => <div key={m.model} className="pf-row"><div className="pf-row-main"><div className="pf-row-title">{m.model}</div><div className="pf-row-sub">{m.calls} call{m.calls === 1 ? "" : "s"} · {m.inputTokens.toLocaleString()} input and {m.outputTokens.toLocaleString()} output tokens</div></div><span style={{ fontSize: 12.5, color: m.cost == null ? "#8C6826" : "#43433F" }}>{m.cost == null ? "No price set" : money(m.cost, d.cost.currency)}</span></div>)}</div>
