@@ -214,6 +214,7 @@ function Members() {
           <div className="pf-list">
             {(q.data?.members || []).map((m) => (
               <div key={m.userId} className="pf-row">
+                <span className="ws-avatar" aria-hidden>{(m.name || m.email || "?").trim().charAt(0).toUpperCase()}</span>
                 <div className="pf-row-main"><div className="pf-row-title">{m.name || m.email}</div><div className="pf-row-sub">{m.email} · joined {when(m.joinedAt)}</div></div>
                 {manage && m.role !== "owner" && (isOwner || m.role !== "admin") ? (
                   <>
@@ -222,7 +223,7 @@ function Members() {
                     </select>
                     <Button small disabled={act.busy} onClick={() => { if (window.confirm(`Remove ${m.email} from this organization? Their private agents stay but stop running for them.`)) act.run(async () => { await platformApi.removeMember(m.userId); await invalidate(); }); }}>Remove</Button>
                   </>
-                ) : <Chip tone={m.role === "owner" ? "good" : undefined}>{m.role}</Chip>}
+                ) : <Chip tone={m.role === "owner" ? "good" : undefined}>{m.role.charAt(0).toUpperCase() + m.role.slice(1)}</Chip>}
               </div>
             ))}
           </div>

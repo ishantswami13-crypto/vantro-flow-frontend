@@ -53,8 +53,11 @@ export default function NewAgentPage() {
         <Field label="What should this agent do?" htmlFor="objective" hint="Say what it works on, when it runs, what it should produce, and anything it must never do.">
           <textarea id="objective" className="pf-textarea" rows={5} maxLength={2000} value={objective} onChange={(e) => setObjective(e.target.value)} placeholder="For example: answer questions from our HR handbook and cite the section." />
         </Field>
-        <div className="flex flex-wrap" style={{ gap: 6 }}>
-          {EXAMPLES.map((e) => <button key={e} type="button" className="pf-chip" style={{ cursor: "pointer", whiteSpace: "normal", textAlign: "left" }} onClick={() => setObjective(e)}>{e}</button>)}
+        <div>
+          <div className="ws-band-title">Or start from one of these</div>
+          <div className="ws-ideas">
+            {EXAMPLES.map((e) => <button key={e} type="button" className={`ws-idea ${objective === e ? "is-on" : ""}`} onClick={() => setObjective(e)}>{e}</button>)}
+          </div>
         </div>
         <div className="flex items-center" style={{ gap: 10 }}>
           <Button primary disabled={!canCreate || objective.trim().length < 10 || drafting.busy} onClick={makeDraft}>{drafting.busy ? "Drafting…" : draft ? "Draft again" : "Draft the agent"}</Button>
