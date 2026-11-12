@@ -23,12 +23,19 @@ export default function AdminErrorsDashboard() {
   // a field. Naming the shape once removes both.
   const [events, setEvents] = useState<ErrorEvent[]>([]);
   const [summary, setSummary] = useState<ErrorSummary>({ totalErrors: 0, criticalErrors: 0 });
+  // A failed load used to be swallowed, so a non-admin (or a backend outage)
+  // saw "0 errors" — a green that was never measured. Say what happened.
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    const fail = (err: unknown) => {
+      const status = (err as { status?: number })?.status;
+      setLoadError(status === 403 ? 'This page is only for Starlane administrators.' : 'Error data could not be loaded, so these numbers are not current.');
+    };
     request<{ summary: ErrorSummary }>('/api/admin/error-summary')
-      .then(res => setSummary(res.summary)).catch(() => {});
+      .then(res => setSummary(res.summary)).catch(fail);
     request<{ data: ErrorEvent[] }>('/api/admin/error-events')
-      .then(res => setEvents(res.data)).catch(() => {});
+      .then(res => setEvents(res.data)).catch(fail);
   }, []);
 
   const resolve = async (id: string) => {
@@ -39,14 +46,17 @@ export default function AdminErrorsDashboard() {
   return (
     <div className="p-8 bg-bg text-primary min-h-screen">
       <h1 className="text-2xl font-bold mb-6 text-primary">Error Intelligence Dashboard</h1>
+      {loadError && (
+        <p role="alert" className="mb-6 px-4 py-3 bg-danger-dim border border-danger/30 rounded-lg text-sm text-danger">{loadError}</p>
+      )}
       <div className="flex gap-4 mb-8">
         <div className="card-premium p-6 w-64">
           <div className="section-label">Total Errors Today</div>
-          <div className="text-3xl font-bold mt-2 text-primary metric-value">{summary.totalErrors}</div>
+          <div className="text-3xl font-bold mt-2 text-primary metric-value">{loadError ? "—" : summary.totalErrors}</div>
         </div>
         <div className="card-premium p-6 w-64 border-danger/30">
           <div className="section-label">Critical Errors</div>
-          <div className="text-3xl font-bold mt-2 text-danger metric-value">{summary.criticalErrors}</div>
+          <div className="text-3xl font-bold mt-2 text-danger metric-value">{loadError ? "—" : summary.criticalErrors}</div>
         </div>
       </div>
 
