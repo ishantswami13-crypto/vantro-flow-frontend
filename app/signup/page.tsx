@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FiEye, FiEyeOff, FiRefreshCw, FiCheckCircle, FiArrowRight } from "react-icons/fi";
 import { saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
+import { takePendingInvite } from "@/lib/platform";
 import { INDUSTRY_OPTIONS } from "@/lib/businessTypes";
 import { AuthShell, AuthHead, AuthError, Spinner } from "@/components/auth/AuthShell";
 
@@ -127,7 +128,7 @@ function SignupForm() {
       const data = await res.json();
       if (!res.ok||!data.success) throw new Error(data.error||"Signup failed");
       if (data.needs_otp) { setPreToken(data.pre_token); setVerifiedUser({email:data.user.email,phone:data.user.phone}); setOtpStep(true); }
-      else { await saveAuth(data.token,data.user,true,data.csrf_token); posthog.identify(data.user.id,{email:data.user.email,plan:data.user.plan}); router.push("/onboarding"); }
+      else { await saveAuth(data.token,data.user,true,data.csrf_token); posthog.identify(data.user.id,{email:data.user.email,plan:data.user.plan}); router.push(takePendingInvite() || "/onboarding"); }
     } catch (err: unknown) { setError(err instanceof Error?err.message:"Signup failed"); }
     finally { setLoading(false); }
   }
@@ -140,7 +141,7 @@ function SignupForm() {
     // onboarding_done/hasBusinessData and bounces straight to /dashboard
     // for any account that shouldn't see it (defense in depth if this
     // redirect target ever changes).
-    router.push("/onboarding");
+    router.push(takePendingInvite() || "/onboarding");
   };
 
   if (otpStep && preToken && verifiedUser)

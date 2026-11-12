@@ -72,6 +72,28 @@ export interface Workspace {
   organizations: { id: string; name: string | null; role: Role }[]; needsSetup: boolean; model: { configured: boolean };
 }
 export interface AppInfo { key: string; name: string; summary: string; status: 'available' | 'planned'; requires: string | null; items: { href: string; label: string }[]; enabled: boolean; suggested: boolean }
+export interface Invitation { id: string; email: string; role: Role; status: 'pending' | 'accepted' | 'revoked' | 'expired'; emailSent: boolean; invitedByEmail: string | null; createdAt: string; expiresAt: string; acceptedAt: string | null; revokedAt: string | null }
+export interface InvitationPreview { organizationName: string | null; role: Role; status: Invitation['status']; expiresAt: string; emailMatches: boolean; emailVerified: boolean; invitedEmail: string | null }
+
+// An invite link opened before signing in is remembered for an hour, so
+// sign-in and sign-up can bring the person back to it.
+const PENDING_INVITE_KEY = 'starlane_pending_invite';
+const INVITE_PATH = /^\/invite\/[A-Za-z0-9_-]{40,64}$/;
+export function rememberPendingInvite(path: string | null) {
+  try {
+    if (path && INVITE_PATH.test(path)) localStorage.setItem(PENDING_INVITE_KEY, JSON.stringify({ path, at: Date.now() }));
+    else localStorage.removeItem(PENDING_INVITE_KEY);
+  } catch { /* storage unavailable */ }
+}
+export function takePendingInvite(): string | null {
+  try {
+    const raw = localStorage.getItem(PENDING_INVITE_KEY);
+    localStorage.removeItem(PENDING_INVITE_KEY);
+    const v = raw ? JSON.parse(raw) : null;
+    return v && INVITE_PATH.test(v.path) && Date.now() - Number(v.at) < 3_600_000 ? v.path : null;
+  } catch { return null; }
+}
+
 export interface Member { userId: string; role: Role; email: string; name: string | null; joinedAt: string }
 export interface Team { id: string; name: string; description: string | null; memberCount: number; isMember: boolean; members: { userId: string; email: string }[] }
 export interface ModelPrices { currency: string; models: Record<string, { input: number; output: number }> }
@@ -164,6 +186,11 @@ export const platformApi = {
   setup: (body: { name: string; industry: string; operatingContext?: string; apps: string[] }) => call('POST', '/organization/setup', body),
   members: () => call<{ members: Member[] }>('GET', '/members'),
   addMember: (email: string, memberRole: Role) => call('POST', '/members', { email, memberRole }),
+  invitations: () => call<{ invitations: Invitation[] }>('GET', '/invitations'),
+  invite: (email: string, memberRole: Role, sendEmail: boolean) => call<{ invitation: Invitation; url: string; emailSent: boolean; emailNote: string | null }>('POST', '/invitations', { email, memberRole, sendEmail }),
+  revokeInvitation: (id: string) => call('DELETE', `/invitations/${id}`),
+  invitationByToken: (token: string) => call<{ invitation: InvitationPreview }>('GET', `/invitations/by-token/${encodeURIComponent(token)}`),
+  acceptInvitation: (token: string) => call<{ organizationId: string; role: Role; alreadyMember: boolean }>('POST', `/invitations/by-token/${encodeURIComponent(token)}/accept`, {}),
   changeRole: (userId: string, memberRole: Role) => call('PATCH', `/members/${userId}`, { memberRole }),
   removeMember: (userId: string) => call('DELETE', `/members/${userId}`),
   teams: () => call<{ teams: Team[] }>('GET', '/teams'),

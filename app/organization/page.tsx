@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, Subnav, Button, EmptyLine } from "@/components/v32/ui";
-import { platformApi, type Role, type Policy, type ModelPrices } from "@/lib/platform";
+import { platformApi, PlatformError, type Role, type Policy, type ModelPrices } from "@/lib/platform";
 import AuditList from "@/components/platform/AuditList";
 import { useActiveOrg, useWorkspace, can, PlatformErrorBanner, Loading, Chip, Field, Section, useAction, InlineError, when, MeasuredKpi, Kpi, money } from "@/components/platform/ui";
 
@@ -146,20 +146,66 @@ function Members() {
   const act = useAction();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("member");
+  const [mail, setMail] = useState(true);
+  const [result, setResult] = useState<{ text: string; url?: string; note?: string | null } | null>(null);
+  const [copied, setCopied] = useState(false);
   const manage = can(ws.data, "members.manage");
   const isOwner = ws.data?.role === "owner";
+  const invites = useQuery({ queryKey: ["platform", "invitations", ws.data?.organization.id], queryFn: () => platformApi.invitations(), enabled: manage });
+  const open = (invites.data?.invitations || []).filter((i) => i.status === "pending");
+  // An existing account is added at once; anyone else gets an invitation link.
+  async function add() {
+    setResult(null); setCopied(false);
+    const addr = email.trim();
+    await act.run(async () => {
+      try {
+        await platformApi.addMember(addr, role);
+        setResult({ text: `${addr} was added as ${role}.` });
+      } catch (e) {
+        if (!(e instanceof PlatformError) || e.code !== "USER_NOT_FOUND") throw e;
+        const r = await platformApi.invite(addr, role, mail);
+        setResult({ text: `${addr} has no Starlane account yet, so an invitation was created.${r.emailSent ? " It was emailed to them." : ""}`, url: r.url, note: r.emailNote });
+      }
+      setEmail(""); await invalidate();
+    });
+  }
   return (
     <div className="pf-stack" style={{ maxWidth: 820 }}>
       {manage && (
-        <Section title="Add a member">
+        <Section title="Add or invite a member">
           <div className="flex flex-wrap items-end" style={{ gap: 8 }}>
-            <div style={{ flex: 1, minWidth: 220 }}><Field label="Email of a Starlane account" htmlFor="m-email"><input id="m-email" type="email" className="pf-input" value={email} onChange={(e) => setEmail(e.target.value)} /></Field></div>
+            <div style={{ flex: 1, minWidth: 220 }}><Field label="Email" htmlFor="m-email"><input id="m-email" type="email" className="pf-input" value={email} onChange={(e) => setEmail(e.target.value)} /></Field></div>
             <div style={{ width: 150 }}><Field label="Role" htmlFor="m-role"><select id="m-role" className="pf-select" value={role} onChange={(e) => setRole(e.target.value as Role)}>
               {isOwner && <option value="admin">Admin</option>}<option value="member">Member</option><option value="viewer">Viewer</option>
             </select></Field></div>
-            <Button primary disabled={act.busy || !/\S+@\S+\.\S+/.test(email)} onClick={() => act.run(async () => { await platformApi.addMember(email.trim(), role); setEmail(""); await invalidate(); })}>Add</Button>
+            <Button primary disabled={act.busy || !/\S+@\S+\.\S+/.test(email)} onClick={add}>Add or invite</Button>
           </div>
-          <p style={{ fontSize: 12, color: "#8F8A81", margin: "6px 0 0" }}>The person needs a Starlane account already. Starlane does not send invitation emails from here.</p>
+          <label className="pf-toggle" style={{ marginTop: 8 }}><input type="checkbox" checked={mail} onChange={(e) => setMail(e.target.checked)} />If they have no account yet, email them the invitation link</label>
+          <p style={{ fontSize: 12, color: "#8F8A81", margin: "6px 0 0" }}>Someone who already has a Starlane account is added straight away. Anyone else gets a link that works only when they sign in with this email. It expires in 7 days.</p>
+          {result && (
+            <div className="pf-note" role="status" style={{ marginTop: 10 }}>
+              {result.text}{result.note ? ` ${result.note}` : ""}
+              {result.url && (
+                <div className="flex items-center" style={{ gap: 8, marginTop: 8 }}>
+                  <input aria-label="Invitation link" readOnly className="pf-input" value={result.url} onFocus={(e) => e.target.select()} />
+                  <Button small onClick={() => { navigator.clipboard?.writeText(result.url!).then(() => setCopied(true)).catch(() => {}); }}>{copied ? "Copied" : "Copy link"}</Button>
+                </div>
+              )}
+              {result.url && <div style={{ fontSize: 12, color: "#8F8A81", marginTop: 6 }}>This link is shown only now. Revoke the invitation below to cancel it.</div>}
+            </div>
+          )}
+        </Section>
+      )}
+      {manage && open.length > 0 && (
+        <Section title="Invitations waiting" aside={`${open.length}`}>
+          <div className="pf-list">
+            {open.map((i) => (
+              <div key={i.id} className="pf-row">
+                <div className="pf-row-main"><div className="pf-row-title">{i.email}</div><div className="pf-row-sub">{i.role} · {i.emailSent ? "emailed" : "link shared by hand"} · expires {when(i.expiresAt)}{i.invitedByEmail ? ` · by ${i.invitedByEmail}` : ""}</div></div>
+                {(isOwner || i.role !== "admin") && <Button small disabled={act.busy} onClick={() => { if (window.confirm(`Revoke the invitation for ${i.email}? The link stops working.`)) act.run(async () => { await platformApi.revokeInvitation(i.id); await invalidate(); }); }}>Revoke</Button>}
+              </div>
+            ))}
+          </div>
         </Section>
       )}
       <InlineError error={act.error} />
