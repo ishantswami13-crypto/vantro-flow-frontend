@@ -1,0 +1,178 @@
+/* Workspace finish: the agent platform screens (Command Center, Agents,
+   Studio, Knowledge, Approvals, Connections, Organization, Usage, runs).
+   Starlane's own system: warm paper, ink type, Newsreader for figures and
+   titles, Inter for everything read at size. One elevation, one radius,
+   one rhythm, so every screen reads as the same product. Loaded after
+   globals.css and atlas.css so it is the last word for these classes. */
+
+.hv-app {
+  --ws-paper: #F7F6F2;
+  --ws-card: #FFFFFF;
+  --ws-ink: #0F0E0D;
+  --ws-body: #3A3834;
+  --ws-muted: #6B675F;
+  --ws-faint: #9A958C;
+  --ws-line: rgba(15, 14, 13, 0.08);
+  --ws-line-2: rgba(15, 14, 13, 0.14);
+  --ws-wash: #F3F1EC;
+  --ws-radius: 14px;
+  --ws-radius-sm: 10px;
+  --ws-shadow: 0 0 0 1px rgba(15, 14, 13, 0.06), 0 1px 2px rgba(15, 14, 13, 0.04), 0 12px 32px -20px rgba(15, 14, 13, 0.14);
+  --ws-shadow-hover: 0 0 0 1px rgba(15, 14, 13, 0.10), 0 2px 4px rgba(15, 14, 13, 0.04), 0 18px 40px -22px rgba(15, 14, 13, 0.24);
+  --ws-good: #3D6B4F;
+  --ws-warn: #8A6420;
+  --ws-bad: #A0463F;
+}
+.hv-app .v32-main { background: var(--ws-paper) !important; }
+.hv-app .v32-wrap { -webkit-font-smoothing: antialiased; font-feature-settings: "cv11", "ss01"; }
+
+/* ── Page header: a larger title, calm subtitle, a hairline under it ── */
+.hv-app .v32-wrap .hv-title { font-size: 40px !important; letter-spacing: -0.022em !important; line-height: 1.05 !important; }
+.ws-header { padding-bottom: 22px; border-bottom: 1px solid var(--ws-line); margin-bottom: 24px; }
+.ws-header + * { margin-top: 0 !important; }
+.ws-header.has-tabs { padding-bottom: 0; }
+.ws-header.has-tabs .hv-tabs { margin: 0 0 -1px !important; }
+.ws-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; letter-spacing: 0.02em; color: var(--ws-muted); margin-bottom: 12px; }
+.ws-eyebrow::before { content: ""; width: 14px; height: 1px; background: currentColor; opacity: .5; }
+
+/* Tabs under a header: words on the hairline, ink underline when active */
+.ws-header.has-tabs .hv-tab { border-radius: 0 !important; background: transparent !important; box-shadow: none !important; padding: 10px 2px 12px !important; margin-right: 18px; font-size: 13.5px !important; border-bottom: 2px solid transparent; }
+.ws-header.has-tabs .hv-tab[aria-selected="true"], .ws-header.has-tabs .hv-tab[aria-current="page"] { border-bottom-color: var(--ws-ink); color: var(--ws-ink) !important; }
+.ws-header.has-tabs .hv-tab:hover { background: transparent !important; color: var(--ws-ink) !important; }
+
+/* ── Buttons: one height, softer corners ── */
+.hv-app .v32-wrap .btn-primary-v32, .hv-app .v32-wrap .btn-secondary-v32 { border-radius: 9px !important; min-height: 36px; letter-spacing: -0.005em; }
+.hv-app .v32-wrap .btn-primary-v32 { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 1px 2px rgba(15, 14, 13, 0.18); }
+.hv-app .v32-wrap .btn-secondary-v32 { box-shadow: 0 1px 2px rgba(15, 14, 13, 0.05); border-color: var(--ws-line-2) !important; }
+
+/* ── Surfaces ── */
+.hv-app .pf-list, .hv-app .hv-side, .hv-app .pf-kpi, .ws-panel, .ws-band {
+  background: var(--ws-card); border: 0 !important; border-radius: var(--ws-radius); box-shadow: var(--ws-shadow);
+}
+.hv-app .pf-list { overflow: hidden; }
+.hv-app .pf-row { padding: 15px 20px; gap: 14px; border-top: 1px solid var(--ws-line); transition: background-color .15s ease; }
+.hv-app .pf-row:first-child { border-top: 0; }
+.hv-app a.pf-row:hover, .hv-app button.pf-row:hover { background: #FAF9F6; }
+.hv-app .pf-row-title { font-size: 14px; font-weight: 500; color: var(--ws-ink); letter-spacing: -0.005em; }
+.hv-app .pf-row-sub { font-size: 12.5px; color: var(--ws-muted); margin-top: 3px; }
+.hv-app .hv-pane { padding: 18px 20px; border-bottom: 1px solid var(--ws-line); }
+.hv-app .hv-pane-head h3 { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ws-muted); }
+.hv-app .hv-props { font-size: 13px; }
+.hv-app .hv-detail { gap: 32px; }
+
+/* Panels: a titled card for a group of settings */
+.ws-panel { display: block; }
+.ws-panel + .ws-panel { margin-top: 0; }
+.ws-panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 18px 22px 0; }
+.ws-panel-head h2 { margin: 0; font-family: 'Newsreader', Georgia, serif; font-weight: 400; font-size: 20px; letter-spacing: -0.012em; color: var(--ws-ink); }
+.ws-panel-head p { margin: 4px 0 0; font-size: 13px; color: var(--ws-muted); line-height: 1.5; }
+.ws-panel-aside { font-size: 12.5px; color: var(--ws-muted); white-space: nowrap; }
+.ws-panel-aside a, .ws-panel-aside button { color: var(--ws-body); text-decoration: underline; text-decoration-color: var(--ws-line-2); text-underline-offset: 3px; }
+.ws-panel-body { padding: 16px 22px 22px; }
+.ws-panel-body > .pf-list { box-shadow: 0 0 0 1px var(--ws-line); border-radius: var(--ws-radius-sm); }
+
+/* Section heading outside a panel */
+.hv-app .hv-block-title { font-size: 21px; letter-spacing: -0.014em; }
+.ws-section-aside { font-size: 12.5px; color: var(--ws-muted); }
+.ws-section-aside a, .ws-section-aside button { color: var(--ws-body); text-decoration: underline; text-decoration-color: var(--ws-line-2); text-underline-offset: 3px; }
+
+/* ── Figures: one band, cells split by hairlines ── */
+.ws-band-title { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ws-muted); }
+.ws-band-title span { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ws-faint); }
+.ws-band { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); overflow: hidden; }
+.ws-cell { position: relative; padding: 20px 22px 22px; min-width: 0; box-shadow: -1px 0 0 var(--ws-line); text-decoration: none; display: block; color: inherit; }
+.ws-cell:first-child { box-shadow: none; }
+a.ws-cell { transition: background-color .15s ease; }
+a.ws-cell:hover { background: #FAF9F6; }
+a.ws-cell::after { content: "→"; position: absolute; top: 18px; right: 18px; font-size: 13px; color: var(--ws-faint); opacity: 0; transition: opacity .15s ease, transform .15s ease; transform: translateX(-3px); }
+a.ws-cell:hover::after { opacity: 1; transform: none; }
+.ws-cell-l { font-size: 12.5px; color: var(--ws-muted); line-height: 1.35; }
+.ws-cell-v { margin-top: 10px; font-family: 'Newsreader', Georgia, serif; font-weight: 400; font-size: 38px; line-height: 1; letter-spacing: -0.025em; color: var(--ws-ink); font-variant-numeric: tabular-nums; }
+.ws-cell-v.is-na { color: #C9C5BD; }
+.ws-cell-n { margin-top: 10px; font-size: 12px; line-height: 1.45; color: var(--ws-faint); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+@media (max-width: 1100px) {
+  .ws-band { grid-template-columns: repeat(min(var(--cols, 4), 3), minmax(0, 1fr)); }
+  .ws-cell { box-shadow: -1px 0 0 var(--ws-line), 0 -1px 0 var(--ws-line); }
+}
+@media (max-width: 640px) {
+  .ws-band { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ws-cell { padding: 16px 16px 18px; }
+  .ws-cell-v { font-size: 32px; }
+  .ws-cell:last-child:nth-child(odd) { grid-column: span 2; }
+}
+/* Old tile grid, where a page still uses it */
+.hv-app .pf-kpis { gap: 12px; }
+.hv-app .pf-kpi { padding: 18px 20px; }
+.hv-app .pf-kpi-v { font-size: 34px; letter-spacing: -0.02em; }
+.hv-app .pf-kpi-l { font-size: 12.5px; }
+
+/* ── Attention list: a quiet rule on the left in the alert's tone ── */
+.ws-alerts { display: flex; flex-direction: column; gap: 10px; }
+.ws-alert { position: relative; display: flex; align-items: center; gap: 14px; padding: 14px 18px 14px 20px; background: var(--ws-card); border-radius: 12px; box-shadow: var(--ws-shadow); text-decoration: none; color: inherit; overflow: hidden; }
+.ws-alert::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--ws-warn); }
+.ws-alert.is-high::before { background: var(--ws-bad); }
+.ws-alert-ic { flex: none; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; background: rgba(138, 100, 32, 0.09); color: var(--ws-warn); font-size: 14px; font-weight: 600; }
+.ws-alert.is-high .ws-alert-ic { background: rgba(160, 70, 63, 0.09); color: var(--ws-bad); }
+.ws-alert-t { font-size: 14px; font-weight: 500; color: var(--ws-ink); }
+.ws-alert-d { font-size: 12.5px; color: var(--ws-muted); margin-top: 2px; }
+a.ws-alert:hover { box-shadow: var(--ws-shadow-hover); }
+
+/* ── Chips: dot + word, a hairline, no fill ── */
+.hv-app .pf-chip { height: 22px; padding: 0 9px; font-size: 11.5px; font-weight: 500; color: var(--ws-body); background: #FFFFFF; box-shadow: inset 0 0 0 1px var(--ws-line-2); letter-spacing: 0.005em; }
+.hv-app .pf-chip.is-good { color: var(--ws-good); background: rgba(61, 107, 79, 0.07); box-shadow: inset 0 0 0 1px rgba(61, 107, 79, 0.18); }
+.hv-app .pf-chip.is-warn { color: var(--ws-warn); background: rgba(138, 100, 32, 0.07); box-shadow: inset 0 0 0 1px rgba(138, 100, 32, 0.18); }
+.hv-app .pf-chip.is-bad { color: var(--ws-bad); background: rgba(160, 70, 63, 0.07); box-shadow: inset 0 0 0 1px rgba(160, 70, 63, 0.18); }
+
+/* ── Notes ── */
+.hv-app .pf-note { font-size: 13px; padding: 12px 14px; border-radius: 10px; background: var(--ws-wash); color: var(--ws-body); box-shadow: inset 0 0 0 1px var(--ws-line); }
+.hv-app .pf-note.is-warn { background: #FBF6EC; color: #6A4D19; box-shadow: inset 0 0 0 1px rgba(138, 100, 32, 0.16); }
+.hv-app .pf-pre { border-radius: 10px; background: #F5F3EE; box-shadow: inset 0 0 0 1px var(--ws-line); font-size: 12.5px; padding: 12px 14px; }
+
+/* ── Forms ── */
+.hv-app .pf-input, .hv-app .pf-select, .hv-app .pf-textarea {
+  font-size: 14px; border-radius: 10px; border: 1px solid var(--ws-line-2); background: #FFFFFF; color: var(--ws-ink);
+  box-shadow: 0 1px 2px rgba(15, 14, 13, 0.04); transition: border-color .15s ease, box-shadow .15s ease;
+}
+.hv-app .pf-input, .hv-app .pf-select { height: 40px; padding: 0 12px; }
+.hv-app .pf-textarea { padding: 10px 12px; line-height: 1.6; }
+.hv-app .pf-input:hover, .hv-app .pf-select:hover, .hv-app .pf-textarea:hover { border-color: rgba(15, 14, 13, 0.22); }
+.hv-app .pf-input:focus, .hv-app .pf-select:focus, .hv-app .pf-textarea:focus { border-color: var(--ws-ink); box-shadow: 0 0 0 4px rgba(15, 14, 13, 0.07); }
+.hv-app .pf-input:disabled, .hv-app .pf-select:disabled, .hv-app .pf-textarea:disabled { background: #FAF9F6; color: var(--ws-body); box-shadow: none; }
+.hv-app .pf-field { gap: 7px; }
+.hv-app .pf-field > label, .hv-app .pf-field > .pf-label { font-size: 13px; font-weight: 500; color: var(--ws-ink); }
+.hv-app .pf-field .pf-hint { font-size: 12.5px; color: var(--ws-faint); }
+.hv-app .pf-grid2 { gap: 18px 20px; }
+.hv-app .pf-stack { gap: 22px; }
+.hv-app .page-search { height: 40px; border-radius: 10px; border: 1px solid var(--ws-line-2); box-shadow: 0 1px 2px rgba(15, 14, 13, 0.04); }
+.hv-app .page-search input { font-size: 14px; }
+
+/* ── Studio steps: numbered marks joined by a line ── */
+.ws-steps { display: flex; align-items: center; gap: 0; margin: 0 0 28px; padding: 6px; background: var(--ws-card); border-radius: 14px; box-shadow: var(--ws-shadow); overflow-x: auto; }
+.ws-step { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 14px; border-radius: 10px; font-size: 13.5px; font-weight: 500; color: var(--ws-muted); background: none; border: 0; cursor: pointer; white-space: nowrap; transition: background-color .15s ease, color .15s ease; }
+.ws-step:hover { color: var(--ws-ink); background: var(--ws-wash); }
+.ws-step-n { width: 22px; height: 22px; flex: none; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600; color: var(--ws-muted); box-shadow: inset 0 0 0 1px var(--ws-line-2); background: #FFFFFF; font-variant-numeric: tabular-nums; }
+.ws-step.is-on { color: #FFFFFF; background: var(--ws-ink); }
+.ws-step.is-on .ws-step-n { background: rgba(255, 255, 255, 0.14); color: #FFFFFF; box-shadow: none; }
+@media (max-width: 760px) { .ws-step { flex: 0 0 auto; padding: 9px 11px; } }
+
+/* ── Agent and template cards ── */
+.hv-app .agent-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.hv-app .lib-card.agent-card {
+  background: var(--ws-card) !important; border: 0 !important; border-radius: var(--ws-radius) !important; box-shadow: var(--ws-shadow) !important;
+  padding: 22px; gap: 16px; min-height: 230px; transition: box-shadow .2s ease, translate .2s ease;
+}
+.hv-app a.lib-card.agent-card:hover, .hv-app .lib-card.agent-card:focus-visible { box-shadow: var(--ws-shadow-hover) !important; translate: 0 -2px; }
+.hv-app .agent-purpose { font-size: 13.5px; color: var(--ws-muted); line-height: 1.6; }
+.hv-app .agent-foot { border-top: 1px solid var(--ws-line); padding-top: 14px; font-size: 12.5px; color: var(--ws-muted); }
+.ws-mono { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 11px; font-family: 'Newsreader', Georgia, serif; color: #FFFFFF; background: linear-gradient(145deg, #2A2926 0%, #0F0E0D 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 1px 2px rgba(15, 14, 13, 0.2); }
+
+/* ── Empty states: a framed invitation, not a stray line ── */
+.ws-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 48px 24px; background: var(--ws-card); border-radius: var(--ws-radius); box-shadow: var(--ws-shadow); }
+.ws-empty-ic { width: 46px; height: 46px; border-radius: 13px; display: inline-flex; align-items: center; justify-content: center; color: var(--ws-body); background: var(--ws-wash); box-shadow: inset 0 0 0 1px var(--ws-line); margin-bottom: 16px; }
+.ws-empty-t { font-family: 'Newsreader', Georgia, serif; font-size: 22px; letter-spacing: -0.014em; color: var(--ws-ink); }
+.ws-empty-b { margin-top: 8px; max-width: 460px; font-size: 13.5px; line-height: 1.6; color: var(--ws-muted); }
+.ws-empty-a { margin-top: 20px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hv-app a.lib-card.agent-card:hover, a.ws-cell:hover::after { translate: none; transform: none; }
+}

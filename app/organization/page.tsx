@@ -461,7 +461,7 @@ export default function OrganizationPage() {
 
   return (
     <DashboardLayout pageTitle="Organization">
-      <PageHeader title={ws.data?.organization.name || "Organization"} subtitle={ws.data ? `${ws.data.organization.industry || "Industry not set"} · you are ${ws.data.role === "owner" ? "the owner" : `a${ws.data.role === "admin" ? "n" : ""} ${ws.data.role}`}` : undefined}>
+      <PageHeader eyebrow="Organization" divider title={ws.data?.organization.name || "Organization"} subtitle={ws.data ? `${ws.data.organization.industry || "Industry not set"} · you are ${ws.data.role === "owner" ? "the owner" : `a${ws.data.role === "admin" ? "n" : ""} ${ws.data.role}`}` : undefined}>
         <div style={{ marginTop: 18 }}><Subnav label="Organization settings" active={tab} onChange={go} items={tabs.map((t) => ({ key: t.key, label: t.label }))} /></div>
       </PageHeader>
       <div className="fade-once" style={{ marginTop: 18 }}>

@@ -45,7 +45,7 @@ export default function NewAgentPage() {
 
   return (
     <DashboardLayout pageTitle="New agent">
-      <PageHeader title="New agent" subtitle="Describe the work. Starlane drafts the agent, and you review every part of it before it runs." right={<Button href="/agents?view=templates">Start from a template</Button>} />
+      <PageHeader eyebrow="Agents" divider title="New agent" subtitle="Describe the work. Starlane drafts the agent, and you review every part of it before it runs." right={<Button href="/agents?view=templates">Start from a template</Button>} />
       <div className="pf-stack fade-once" style={{ marginTop: 22, maxWidth: 880 }}>
         <PlatformErrorBanner error={ws.error} what="Agent creation" />
         {ws.data && !canCreate && <div className="pf-note">Your role in this organization ({ws.data.role}) can view agents but not create them.</div>}

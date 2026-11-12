@@ -41,7 +41,7 @@ export default function ConnectionsPage() {
 
   return (
     <DashboardLayout pageTitle="Connections">
-      <PageHeader title="Connections" subtitle="The systems your agents and apps can use, and their real state" right={<Button href="/sources">Set up data sources</Button>} />
+      <PageHeader eyebrow="Organization" divider title="Connections" subtitle="The systems your agents and apps can use, and their real state" right={<Button href="/sources">Set up data sources</Button>} />
       <div className="pf-stack fade-once" style={{ marginTop: 18 }}>
         <PlatformErrorBanner error={q.error} what="Connections" />
         {q.data?.stateError && <div className="pf-note is-warn">Some connection states could not be read just now: {q.data.stateError}</div>}

@@ -11,11 +11,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { V, PageHeader, Subnav, Lettermark, EmptyLine, Button, SearchField, ago } from "@/components/v32/ui";
+import { V, PageHeader, Subnav, Button, SearchField, ago } from "@/components/v32/ui";
 import { IconAgents, IconArrowRight } from "@/components/v32/icons";
 import BuiltInAgents from "@/components/agents/BuiltInAgents";
 import { platformApi, describeTrigger, type AgentSummary } from "@/lib/platform";
-import { useActiveOrg, useWorkspace, can, PlatformErrorBanner, isPlatformNotReady, Loading, AgentStatusChip, ExecStatusChip, Chip, useAction, InlineError } from "@/components/platform/ui";
+import { useActiveOrg, useWorkspace, can, PlatformErrorBanner, isPlatformNotReady, Loading, AgentStatusChip, ExecStatusChip, Chip, useAction, InlineError, Monogram, EmptyState } from "@/components/platform/ui";
 
 type View = "all" | "mine" | "team" | "organization" | "drafts" | "active" | "inactive" | "templates" | "builtin";
 const VIEWS: { key: View; label: string }[] = [
@@ -35,14 +35,14 @@ function AgentCard({ a, i }: { a: AgentSummary; i: number }) {
   return (
     <Link href={`/agents/studio/${a.id}`} className="lib-card agent-card rise-in" style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}>
       <div className="flex items-center justify-between">
-        <Lettermark letter={a.name} size={38} />
+        <Monogram name={a.name} size={42} />
         <span className="flex items-center" style={{ gap: 8, color: "#6E6E69" }}>
           <AgentStatusChip status={a.status} />
           <IconArrowRight size={14} />
         </span>
       </div>
       <div>
-        <div style={{ fontFamily: V.serif, fontSize: 18, color: "#191917", letterSpacing: "-0.01em" }}>{a.name}</div>
+        <div style={{ fontFamily: V.serif, fontSize: 21, lineHeight: 1.2, color: "#0F0E0D", letterSpacing: "-0.015em" }}>{a.name}</div>
         <div className="agent-purpose">{a.description || "No description yet."}</div>
       </div>
       <div className="flex flex-wrap" style={{ gap: 6 }}>
@@ -72,12 +72,12 @@ function Templates({ canCreate }: { canCreate: boolean }) {
         {(q.data?.templates || []).map((t, i) => (
           <div key={t.key} className="lib-card agent-card rise-in" style={{ animationDelay: `${i * 30}ms`, cursor: "default" }}>
             <div className="flex items-center justify-between">
-              <Lettermark letter={t.name} size={38} />
+              <Monogram name={t.name} size={42} />
               <Chip tone={t.ready ? "good" : "warn"}>{t.ready ? "Ready to use" : "Needs setup"}</Chip>
             </div>
             <div>
               <div style={{ fontSize: 11.5, color: "#8F8A81", marginBottom: 3 }}>{t.category}</div>
-              <div style={{ fontFamily: V.serif, fontSize: 18, color: "#191917", letterSpacing: "-0.01em" }}>{t.name}</div>
+              <div style={{ fontFamily: V.serif, fontSize: 21, lineHeight: 1.2, color: "#0F0E0D", letterSpacing: "-0.015em" }}>{t.name}</div>
               <div className="agent-purpose">{t.description}</div>
             </div>
             {t.missing.length > 0 && (
@@ -133,7 +133,7 @@ export default function AgentsPage() {
 
   return (
     <DashboardLayout pageTitle="Agents">
-      <PageHeader
+      <PageHeader eyebrow="Workspace" divider
         title="Agents"
         subtitle="Build agents for your organization's work, test them, and run them with approvals where it matters"
         right={canCreate ? <Button primary href="/agents/new">New agent</Button> : undefined}
@@ -161,7 +161,7 @@ export default function AgentsPage() {
             {q.isLoading && <Loading rows={3} height={150} />}
             <PlatformErrorBanner error={q.error} what="Agents" />
             {q.data && agents.length === 0 && (
-              <EmptyLine
+              <EmptyState
                 icon={<IconAgents size={17} />}
                 title={debounced ? `No agent matches "${debounced}"` : view === "all" ? "No custom agents yet" : "Nothing here yet"}
                 body={view === "all" && !debounced ? "Describe the work in a sentence or start from a template. Every agent is tested before it can be turned on." : undefined}

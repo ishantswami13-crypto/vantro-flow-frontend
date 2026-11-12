@@ -15,7 +15,7 @@ export default function RunPage() {
   const ex = q.data;
   return (
     <DashboardLayout pageTitle={ex ? `Run of ${ex.agentName}` : "Run"}>
-      <PageHeader
+      <PageHeader eyebrow="Run" divider
         title={ex ? ex.agentName : "Run"}
         subtitle={ex ? `${ex.mode === "test" ? "Test run" : "Live run"} ${id.slice(0, 8)}` : undefined}
         right={<Button href="/command">Command Center</Button>}

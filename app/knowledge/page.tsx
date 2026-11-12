@@ -12,10 +12,10 @@
 import { Fragment, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { PageHeader, Button, EmptyLine } from "@/components/v32/ui";
+import { PageHeader, Button } from "@/components/v32/ui";
 import { IconLibrary, IconUpload, IconTrash } from "@/components/v32/icons";
 import { platformApi, type Collection } from "@/lib/platform";
-import { useActiveOrg, useWorkspace, can, PlatformErrorBanner, Loading, Chip, Field, Section, useAction, InlineError, when } from "@/components/platform/ui";
+import { useActiveOrg, useWorkspace, can, PlatformErrorBanner, Loading, Chip, Field, Section, useAction, InlineError, when, EmptyState } from "@/components/platform/ui";
 
 const TEXT_FILES = ".txt,.md,.markdown,.csv,.tsv,.json,.html,.htm,.xml,.log,.yaml,.yml";
 const SERVER_FILES = ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -191,7 +191,7 @@ export default function KnowledgePage() {
 
   return (
     <DashboardLayout pageTitle="Knowledge">
-      <PageHeader title="Knowledge" subtitle="Documents your people and agents can search, with a citation for every answer" right={canWrite ? <Button primary onClick={() => setSelected("new")}>New collection</Button> : undefined} />
+      <PageHeader eyebrow="Workspace" divider title="Knowledge" subtitle="Documents your people and agents can search, with a citation for every answer" right={canWrite ? <Button primary onClick={() => setSelected("new")}>New collection</Button> : undefined} />
       <div className="pf-stack fade-once" style={{ marginTop: 18 }}>
         <PlatformErrorBanner error={cols.error} what="Knowledge" />
         <form className="flex items-center" style={{ gap: 8, maxWidth: 640 }} onSubmit={(e) => { e.preventDefault(); setSubmitted(query); }}>
@@ -228,7 +228,7 @@ export default function KnowledgePage() {
           <div className="hv-detail" style={{ gridTemplateColumns: "minmax(0, 300px) minmax(0, 1fr)" }}>
             <div>
               {list.length === 0 ? (
-                <EmptyLine icon={<IconLibrary size={17} />} title="No collections yet" body={canWrite ? "Create a collection, add documents, then give agents access to it." : "Nobody has shared a collection with you yet."} />
+                <EmptyState icon={<IconLibrary size={18} />} title="No collections yet" body={canWrite ? "Create a collection, add documents, then give agents access to it." : "Nobody has shared a collection with you yet."} />
               ) : (
                 <div className="pf-list">
                   {list.map((c) => (

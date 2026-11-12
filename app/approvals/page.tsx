@@ -12,10 +12,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { PageHeader, Subnav, Button, EmptyLine } from "@/components/v32/ui";
+import { PageHeader, Subnav, Button } from "@/components/v32/ui";
 import { IconPrepared, IconArrowRight } from "@/components/v32/icons";
 import { platformApi, RISK_LABEL, STATUS_LABEL, type Approval } from "@/lib/platform";
-import { useActiveOrg, PlatformErrorBanner, isPlatformNotReady, Loading, Chip, when, useAction, InlineError, Section } from "@/components/platform/ui";
+import { useActiveOrg, PlatformErrorBanner, isPlatformNotReady, Loading, Chip, when, useAction, InlineError, Section, EmptyState } from "@/components/platform/ui";
 
 type Tab = "pending" | "approved" | "rejected" | "all";
 
@@ -114,7 +114,7 @@ export default function ApprovalsPage() {
 
   return (
     <DashboardLayout pageTitle="Approvals">
-      <PageHeader title="Approvals" subtitle="Everything waiting on a person, with what it will do and why" />
+      <PageHeader eyebrow="Workspace" divider title="Approvals" subtitle="Everything waiting on a person, with what it will do and why" />
       <div className="pf-stack fade-once" style={{ marginTop: 18 }}>
         {others.length > 0 && (
           <div className="pf-kpis">
@@ -137,7 +137,7 @@ export default function ApprovalsPage() {
         <div className="hv-detail" style={{ gridTemplateColumns: selected ? "minmax(0, 380px) minmax(0, 1fr)" : undefined }}>
           <div>
             {list.data && items.length === 0 ? (
-              <EmptyLine icon={<IconPrepared size={17} />} title={tab === "pending" ? "Nothing is waiting for you" : "Nothing here"} body={tab === "pending" ? "When an agent wants to do something that needs a person, it pauses and asks here." : undefined} />
+              <EmptyState icon={<IconPrepared size={18} />} title={tab === "pending" ? "Nothing is waiting for you" : "Nothing here"} body={tab === "pending" ? "When an agent wants to do something that needs a person, it pauses and asks here." : undefined} />
             ) : items.length > 0 && (
               <div className="pf-list">
                 {items.map((a) => (

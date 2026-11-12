@@ -14,7 +14,7 @@ export default function ActivityPage() {
   const ws = useWorkspace();
   return (
     <DashboardLayout pageTitle="Activity">
-      <PageHeader title="Activity" subtitle="What changed in this organization, newest first" right={can(ws.data, "audit.view") ? <Button href="/organization?tab=audit">Full audit log</Button> : undefined} />
+      <PageHeader eyebrow="Organization" divider title="Activity" subtitle="What changed in this organization, newest first" right={can(ws.data, "audit.view") ? <Button href="/organization?tab=audit">Full audit log</Button> : undefined} />
       <div className="fade-once" style={{ marginTop: 18 }}><AuditList kind="activity" /></div>
     </DashboardLayout>
   );

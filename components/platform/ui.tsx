@@ -128,16 +128,112 @@ export function Field({ label, hint, children, htmlFor }: { label: React.ReactNo
   );
 }
 
-export function Section({ title, aside, children }: { title: React.ReactNode; aside?: React.ReactNode; children: React.ReactNode }) {
+/** A titled group. Drawn as a panel unless `plain` (a heading over the content). */
+export function Section({ title, aside, children, plain, description }: { title: React.ReactNode; aside?: React.ReactNode; children: React.ReactNode; plain?: boolean; description?: React.ReactNode }) {
+  if (!plain) return <Panel title={title} aside={aside} description={description}>{children}</Panel>;
   return (
     <section>
-      <div className="flex items-baseline justify-between gap-3" style={{ marginBottom: 10 }}>
+      <div className="flex items-baseline justify-between gap-3" style={{ marginBottom: 12 }}>
         <h2 className="hv-block-title" style={{ margin: 0 }}>{title}</h2>
-        {aside && <div style={{ fontSize: 12.5, color: "#6E6A63" }}>{aside}</div>}
+        {aside && <div className="ws-section-aside">{aside}</div>}
       </div>
+      {description && <p style={{ margin: "-6px 0 12px", fontSize: 13, color: "#6B675F", lineHeight: 1.5 }}>{description}</p>}
       {children}
     </section>
   );
+}
+
+/** A titled card holding one group of settings or one list. */
+export function Panel({ title, aside, description, children }: { title?: React.ReactNode; aside?: React.ReactNode; description?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section className="ws-panel">
+      {(title || aside) && (
+        <div className="ws-panel-head">
+          <div className="min-w-0">
+            {title && <h2>{title}</h2>}
+            {description && <p>{description}</p>}
+          </div>
+          {aside && <div className="ws-panel-aside">{aside}</div>}
+        </div>
+      )}
+      <div className="ws-panel-body">{children}</div>
+    </section>
+  );
+}
+
+/** One figure in a band: a counted value, or a measured value that may say
+ *  why it is not measured. Never a made-up number. */
+export type BandCell =
+  | { label: string; value: React.ReactNode; href?: string; note?: React.ReactNode }
+  | { label: string; measured: Measured<any>; format: (v: any) => string; href?: string };
+
+/** Headline figures in one card, split by hairlines. */
+export function StatBand({ title, aside, cells }: { title?: React.ReactNode; aside?: React.ReactNode; cells: BandCell[] }) {
+  return (
+    <div>
+      {title && <div className="ws-band-title">{title}{aside && <span>{aside}</span>}</div>}
+      <div className="ws-band" style={{ ["--cols" as string]: cells.length } as React.CSSProperties}>
+        {cells.map((c) => {
+          let value: React.ReactNode; let note: React.ReactNode = null; let na = false; let title: string | undefined;
+          if ("measured" in c) {
+            if (c.measured.available) value = c.format(c.measured.value);
+            else { value = "—"; na = true; note = c.measured.reason; title = `Not measured: ${c.measured.reason}`; }
+          } else { value = c.value; note = c.note ?? null; }
+          const body = (
+            <>
+              <div className="ws-cell-l">{c.label}</div>
+              <div className={`ws-cell-v ${na ? "is-na" : ""}`} aria-label={na ? "Not measured" : undefined}>{value}</div>
+              {note && <div className="ws-cell-n">{na ? <>Not measured. {note}</> : note}</div>}
+            </>
+          );
+          return c.href
+            ? <Link key={c.label} href={c.href} className="ws-cell" title={title}>{body}</Link>
+            : <div key={c.label} className="ws-cell" title={title}>{body}</div>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Things that need someone, each with a tone rule on the left. */
+export function AlertList({ alerts }: { alerts: { title: string; detail?: string | null; href?: string | null; severity?: string }[] }) {
+  if (!alerts.length) return null;
+  return (
+    <div className="ws-alerts" role="region" aria-label="Needs attention">
+      {alerts.map((a, i) => {
+        const high = a.severity === "high";
+        const inner = (
+          <>
+            <span className="ws-alert-ic" aria-hidden>!</span>
+            <div className="min-w-0" style={{ flex: 1 }}>
+              <div className="ws-alert-t"><span className="sr-only">{high ? "Needs attention: " : "Check: "}</span>{a.title}</div>
+              {a.detail && <div className="ws-alert-d">{a.detail}</div>}
+            </div>
+            {a.href && <span aria-hidden style={{ color: "#9A958C" }}>→</span>}
+          </>
+        );
+        const cls = `ws-alert ${high ? "is-high" : ""}`;
+        return a.href ? <Link key={i} href={a.href} className={cls}>{inner}</Link> : <div key={i} className={cls}>{inner}</div>;
+      })}
+    </div>
+  );
+}
+
+/** A framed empty state for a page's main area. */
+export function EmptyState({ icon, title, body, action }: { icon?: React.ReactNode; title: React.ReactNode; body?: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="ws-empty fade-once">
+      {icon && <span className="ws-empty-ic" aria-hidden>{icon}</span>}
+      <div className="ws-empty-t">{title}</div>
+      {body && <div className="ws-empty-b">{body}</div>}
+      {action && <div className="ws-empty-a">{action}</div>}
+    </div>
+  );
+}
+
+/** Serif initial on an ink tile, the mark for an agent or template. */
+export function Monogram({ name, size = 40 }: { name: string; size?: number }) {
+  return <span className="ws-mono" aria-hidden style={{ width: size, height: size, fontSize: Math.round(size * 0.48) }}>{(name || "?").trim().charAt(0).toUpperCase()}</span>;
 }
 
 /** Small async-action helper: busy flag and error message for one button. */

@@ -25,7 +25,7 @@ import {
 } from "@/lib/platform";
 import {
   useActiveOrg, useWorkspace, can, Field, Section, Chip, AgentStatusChip, ExecStatusChip, Loading, PlatformErrorBanner,
-  useAction, InlineError, duration, when,
+  useAction, InlineError, duration, when, Panel,
 } from "@/components/platform/ui";
 import { useExecution, RunBody } from "@/components/platform/RunView";
 
@@ -364,7 +364,7 @@ export default function AgentStudioPage() {
 
   return (
     <DashboardLayout pageTitle={agent?.name || "Agent studio"}>
-      <PageHeader
+      <PageHeader eyebrow="Agent studio" divider
         title={agent?.name || "Agent studio"}
         subtitle={agent ? <span className="flex items-center flex-wrap" style={{ gap: 8 }}><AgentStatusChip status={agent.status} />{agent.publishedVersion != null ? `Version ${agent.publishedVersion} published` : "Draft, not published"}{agent.draftDiffersFromPublished && agent.publishedVersion != null ? " · unpublished changes" : ""}{agent.ownerEmail ? ` · owner ${agent.ownerEmail}` : ""}</span> : undefined}
         right={agent && <>
@@ -379,29 +379,37 @@ export default function AgentStudioPage() {
 
       {agent && def && (
         <>
-          <nav className="pf-stages" aria-label="Studio stages">
+          <nav className="ws-steps" aria-label="Studio stages">
             {STAGES.map((s, i) => (
-              <button key={s.key} type="button" className={`pf-stage ${stage === s.key ? "is-on" : ""}`} aria-current={stage === s.key ? "step" : undefined} onClick={() => go(s.key)}>
-                <b>{i + 1}</b>{s.label}
+              <button key={s.key} type="button" className={`ws-step ${stage === s.key ? "is-on" : ""}`} aria-current={stage === s.key ? "step" : undefined} onClick={() => go(s.key)}>
+                <span className="ws-step-n" aria-hidden>{i + 1}</span>{s.label}
               </button>
             ))}
           </nav>
           {!agent.canEdit && <div className="pf-note" style={{ marginBottom: 16 }}>You can view this agent but not change it. Its owner or an organization admin can.</div>}
           {agent.status === "archived" && <div className="pf-note" style={{ marginBottom: 16 }}>This agent is archived. Restore it in the Deploy stage to change it.</div>}
 
-          <div className="fade-once" style={{ maxWidth: 920 }}>
+          <div className="fade-once" style={{ maxWidth: 980 }}>
             {stage === "objective" && (
               <div className="pf-stack">
+              <Panel title="Identity" description="How people find this agent in the library.">
                 <div className="pf-grid2">
                   <Field label="Name" htmlFor="name"><input id="name" className="pf-input" maxLength={80} value={def.name} disabled={!editable} onChange={(e) => patch({ name: e.target.value })} /></Field>
                   <Field label="Short description" htmlFor="desc"><input id="desc" className="pf-input" maxLength={500} value={def.description} disabled={!editable} onChange={(e) => patch({ description: e.target.value })} /></Field>
                 </div>
+              </Panel>
+              <Panel title="The job" description="What the agent is for and how it should work. It reads this on every run.">
+                <div className="pf-stack">
                 <Field label="Objective" htmlFor="obj" hint="The job, in one or two sentences. The agent sees this on every run."><textarea id="obj" className="pf-textarea" rows={3} maxLength={2000} value={def.objective} disabled={!editable} onChange={(e) => patch({ objective: e.target.value })} /></Field>
                 <Field label="Instructions" htmlFor="instr" hint="How to do the job: steps, tone, what to check, what never to do."><textarea id="instr" className="pf-textarea" rows={9} maxLength={8000} value={def.instructions} disabled={!editable} onChange={(e) => patch({ instructions: e.target.value })} /></Field>
+                </div>
+              </Panel>
+              <Panel title="What good looks like" description="The results you expect and how you will judge a run.">
                 <div className="pf-grid2">
                   <Field label="Expected results" htmlFor="outs" hint="One per line."><textarea id="outs" className="pf-textarea" rows={4} value={def.expected_outputs.join("\n")} disabled={!editable} onChange={(e) => patch({ expected_outputs: lines(e.target.value) })} /></Field>
                   <Field label="Success criteria" htmlFor="succ" hint="One per line. How you will judge a good run."><textarea id="succ" className="pf-textarea" rows={4} value={def.success_criteria.join("\n")} disabled={!editable} onChange={(e) => patch({ success_criteria: lines(e.target.value) })} /></Field>
                 </div>
+              </Panel>
               </div>
             )}
 
