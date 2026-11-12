@@ -206,7 +206,15 @@ canvas.full { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px
 </div>
 
 <script>
-const W = 1920, H = 1080, DURATION = 62;
+const W = 1920, H = 1080;
+// Cuts: shorter films made from spans of this one (start, end in film seconds).
+// ?cut=command-center is the 38 second Command Center film used on the
+// platform and resources pages: the home, the sources, Evidence, what the agent
+// found, the approval and the end card.
+const CUTS = { "command-center": [[3.5, 15], [28.5, 33], [33.5, 39], [39, 44], [50, 55.5], [55.5, 61.5]] };
+const CUT = CUTS[new URLSearchParams(location.search).get("cut")];
+const DURATION = CUT ? CUT.reduce((n, [a, b]) => n + b - a, 0) : 62;
+function source(T) { if (!CUT) return T; for (const [a, b] of CUT) { if (T < b - a) return a + T; T -= b - a; } const l = CUT[CUT.length - 1]; return l[1]; }
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const ramp = (t, a, b) => clamp((t - a) / (b - a));
 const ease = (x) => 1 - Math.pow(1 - x, 3);
@@ -608,7 +616,7 @@ function cam(t) { // a slow push inside each scene
   const x = i === 0 ? -k * 120 : 0;
   return { s, x };
 }
-function render(T) {
+function draw(T) {
   const t = T, tc = Math.floor(T * 12) / 12;
   const c = cam(T);
   for (const g of [back, front]) { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); g.setTransform(c.s, 0, 0, c.s, W / 2 * (1 - c.s) + c.x, H / 2 * (1 - c.s)); }
@@ -631,6 +639,7 @@ function render(T) {
   const f = Math.floor(T * 12), gx = (f * 7919) % 64, gy = (f * 104729) % 64;
   $("#grain").style.transform = `translate(${gx}px, ${gy}px)`;
 }
+const render = (T) => draw(source(T));
 window.__film = { DURATION, render };
 if (!location.search.includes("drive")) { const t0 = performance.now(); const loop = () => { render(((performance.now() - t0) / 1000) % DURATION); requestAnimationFrame(loop); }; loop(); }
 </script>

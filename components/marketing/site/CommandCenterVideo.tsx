@@ -1,22 +1,22 @@
 import { FilmPlayer } from "./FilmPlayer";
 
-// The Command Center film (38 seconds, rendered from
-// scripts/film/command-center.html) in the launch-video player.
-// Sample data on a fictional business.
+// The Command Center film (38 seconds, a cut of the collage film in
+// scripts/film/introducing.html) in the launch-video player.
+// Sample data on a fictional multinational group.
 export function CommandCenterVideo() {
   return (
     <FilmPlayer
       src="/film/command-center"
       duration={38}
-      label="Starlane Command Center, a 38 second product film: Starlane reviews twelve overdue invoices, opens Gupta Traders with the evidence behind each figure, a collections agent prepares a reminder, and the owner approves it once."
+      label="Starlane Command Center, a 38 second film with music, made as a moving paper collage: the Starlane home for a fourteen-entity group, the agent reading six ledgers and four bank feeds, the words ledgers, invoices and bank lines resolving into Evidence, what it found for Meridian GmbH, and the CFO approving one dunning letter that is sent once and recorded."
       caption="Sample data on a fictional business"
     />
   );
 }
 
-// The homepage launch film (60 seconds, rendered from
-// scripts/film/introducing.html): the Command Center, giving an agent work and
-// watching it run across a multi-entity group, the review it produced, and a two-step approval.
+// The homepage launch film (62 seconds, rendered from
+// scripts/film/introducing.html), a moving paper collage: the home, the agents,
+// giving an agent the close, its sources, what it found and produced, and the CFO approval.
 export function IntroducingFilm() {
   return (
     <FilmPlayer

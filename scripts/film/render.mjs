@@ -1,4 +1,4 @@
-// Renders a film composition (scripts/film/<name>.html) to a real video, frame
+// Renders a film (a cut of scripts/film/introducing.html) to a real video, frame
 // by frame, with its score from score.mjs as the soundtrack.
 //
 //   node scripts/film/render.mjs                           # introducing: public/film/introducing.{mp4,webm,jpg}
@@ -28,14 +28,16 @@ const brand = {
 const args = process.argv.slice(2);
 const film = args.includes("--film") ? args[args.indexOf("--film") + 1] : "introducing";
 // Where the poster (a frame from the middle) and the title still come from.
-const STILLS = { introducing: { poster: 18, title: 61 }, "command-center": { poster: 14, title: 1.9 } }[film];
+// Each film is a cut of the one collage composition, introducing.html.
+const STILLS = { introducing: { poster: 18, title: 61 }, "command-center": { poster: 24, title: 37 } }[film];
+const query = film === "introducing" ? "?drive" : `?drive&cut=${film}`;
 if (!STILLS) throw new Error("unknown film " + film);
 const stillAt = args.includes("--still") ? Number(args[args.indexOf("--still") + 1]) : null;
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
 await page.addInitScript((b) => { window.__BRAND = b; }, brand);
-await page.goto(pathToFileURL(path.join(here, `${film}.html`)).href + "?drive");
+await page.goto(pathToFileURL(path.join(here, "introducing.html")).href + query);
 await page.evaluate(() => document.fonts.ready);
 const duration = await page.evaluate(() => window.__film.DURATION);
 
