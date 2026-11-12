@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { V, PageHeader, Subnav, Button, SearchField, ago } from "@/components/v32/ui";
+import { PageHeader, Subnav, Button, SearchField, ago } from "@/components/v32/ui";
 import { IconAgents, IconArrowRight } from "@/components/v32/icons";
 import BuiltInAgents from "@/components/agents/BuiltInAgents";
 import { platformApi, describeTrigger, type AgentSummary } from "@/lib/platform";
@@ -35,14 +35,14 @@ function AgentCard({ a, i }: { a: AgentSummary; i: number }) {
   return (
     <Link href={`/agents/studio/${a.id}`} className="lib-card agent-card rise-in" style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}>
       <div className="flex items-center justify-between">
-        <Monogram name={a.name} size={42} />
+        <Monogram name={a.name} size={34} />
         <span className="flex items-center" style={{ gap: 8, color: "#6E6E69" }}>
           <AgentStatusChip status={a.status} />
           <IconArrowRight size={14} />
         </span>
       </div>
       <div>
-        <div style={{ fontFamily: V.serif, fontSize: 21, lineHeight: 1.2, color: "#0F0E0D", letterSpacing: "-0.015em" }}>{a.name}</div>
+        <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.3, color: "#0F0E0D", letterSpacing: "-0.01em" }}>{a.name}</div>
         <div className="agent-purpose">{a.description || "No description yet."}</div>
       </div>
       <div className="flex flex-wrap" style={{ gap: 6 }}>
@@ -72,12 +72,12 @@ function Templates({ canCreate }: { canCreate: boolean }) {
         {(q.data?.templates || []).map((t, i) => (
           <div key={t.key} className="lib-card agent-card rise-in" style={{ animationDelay: `${i * 30}ms`, cursor: "default" }}>
             <div className="flex items-center justify-between">
-              <Monogram name={t.name} size={42} />
+              <Monogram name={t.name} size={34} />
               <Chip tone={t.ready ? "good" : "warn"}>{t.ready ? "Ready to use" : "Needs setup"}</Chip>
             </div>
             <div>
               <div style={{ fontSize: 11.5, color: "#8F8A81", marginBottom: 3 }}>{t.category}</div>
-              <div style={{ fontFamily: V.serif, fontSize: 21, lineHeight: 1.2, color: "#0F0E0D", letterSpacing: "-0.015em" }}>{t.name}</div>
+              <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.3, color: "#0F0E0D", letterSpacing: "-0.01em" }}>{t.name}</div>
               <div className="agent-purpose">{t.description}</div>
             </div>
             {t.missing.length > 0 && (
@@ -88,7 +88,7 @@ function Templates({ canCreate }: { canCreate: boolean }) {
             <div className="agent-foot">
               <span>{(t.definition.tools || []).length} tool{(t.definition.tools || []).length === 1 ? "" : "s"}</span>
               {canCreate && (
-                <Button small primary disabled={act.busy} onClick={() => { setUsing(t.key); act.run(async () => { const r = await platformApi.createAgent({ templateKey: t.key }); router.push(`/agents/studio/${r.id}`); }); }}>
+                <Button small disabled={act.busy} onClick={() => { setUsing(t.key); act.run(async () => { const r = await platformApi.createAgent({ templateKey: t.key }); router.push(`/agents/studio/${r.id}`); }); }}>
                   {act.busy && using === t.key ? "Creating…" : "Use template"}
                 </Button>
               )}

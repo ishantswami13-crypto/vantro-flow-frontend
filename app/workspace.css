@@ -242,3 +242,84 @@ a.ws-alert:hover { box-shadow: var(--ws-shadow-hover); }
 .ws-idea { text-align: left; padding: 16px 18px; border: 0; border-radius: 12px; background: var(--ws-card); box-shadow: var(--ws-shadow); font: inherit; font-size: 13.5px; line-height: 1.55; color: var(--ws-body); cursor: pointer; transition: box-shadow .2s ease, translate .2s ease; }
 .ws-idea:hover { box-shadow: var(--ws-shadow-hover); translate: 0 -1px; color: var(--ws-ink); }
 .ws-idea.is-on { box-shadow: 0 0 0 1.5px var(--ws-ink), var(--ws-shadow); color: var(--ws-ink); }
+
+/* ════════════════════════════════════════════════════════════════
+   Light shell. A pale stone rail with ink text, and the work itself on
+   one white sheet inset from the edges, framed by a hairline. Inside the
+   sheet everything is Inter at reading size: page titles are set in the
+   sans, figures stay tabular, and colour is kept for status only. The
+   serif is kept for the Starlane wordmark and the home greeting.
+   ════════════════════════════════════════════════════════════════ */
+.hv-app {
+  --hv-rail: #F2F1EE; --hv-rail-hi: rgba(15, 14, 13, 0.065); --hv-rail-text: #2F2D2A; --hv-rail-dim: #7A766F;
+  --ws-paper: #FFFFFF;
+  --ws-radius: 12px;
+  --ws-radius-sm: 8px;
+  --ws-shadow: 0 0 0 1px rgba(15, 14, 13, 0.08);
+  --ws-shadow-hover: 0 0 0 1px rgba(15, 14, 13, 0.16), 0 4px 14px -8px rgba(15, 14, 13, 0.14);
+  background: var(--hv-rail);
+}
+@media (min-width: 1024px) {
+  .hv-app .hv-canvas { margin: 8px 8px 8px 0; border-radius: 12px; background: #FFFFFF; box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.07), 0 1px 3px rgba(15, 14, 13, 0.04); }
+}
+.hv-app .hv-canvas, .hv-app .v32-main { background: #FFFFFF !important; }
+
+/* Rail */
+.hv-app .sb { background: var(--hv-rail); color: var(--hv-rail-text); }
+.hv-app .sb-mark, .hv-app .sb-mark:hover { color: var(--ws-ink); }
+.hv-app .sb-icon-btn { color: var(--hv-rail-dim); }
+.hv-app .sb-icon-btn:hover { background: rgba(15, 14, 13, 0.06); color: var(--ws-ink); }
+.hv-app .sb .sb-row { height: 31px; font-size: 13.5px; color: var(--hv-rail-text); }
+.hv-app .sb .sb-row svg { color: var(--hv-rail-dim); }
+.hv-app .sb .sb-row:hover { background: rgba(15, 14, 13, 0.045); color: var(--ws-ink); }
+.hv-app .sb .sb-row:hover svg { color: var(--ws-ink); }
+.hv-app .sb .sb-row.is-active { background: #FFFFFF; color: var(--ws-ink); font-weight: 500; box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.07), 0 1px 2px rgba(15, 14, 13, 0.05); }
+.hv-app .sb .sb-row.is-active svg { color: var(--ws-ink); }
+.hv-app .sb-label, .hv-app .sb-fold { color: var(--hv-rail-dim); }
+.hv-app .sb-fold:hover { color: var(--ws-ink); }
+.hv-app .sb-recent { color: #55524D; }
+.hv-app .sb-recent::before { background: #B3AFA7; }
+.hv-app .sb-recent:hover { background: rgba(15, 14, 13, 0.045); color: var(--ws-ink); }
+.hv-app .sb-recent.is-active { background: #FFFFFF; color: var(--ws-ink); box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.07); }
+.hv-app .sb-count { color: var(--hv-rail-dim); }
+.hv-app .sb ::-webkit-scrollbar-thumb { background: rgba(15, 14, 13, 0.12); }
+.hv-app .sb-avatar { background: #FFFFFF; color: var(--ws-ink); box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.12); font-family: var(--hv-sans); font-size: 11px; font-weight: 600; }
+
+/* Page header: sans title, quieter */
+.hv-app .v32-wrap .hv-title { font-family: var(--hv-sans) !important; font-weight: 600 !important; font-size: 24px !important; line-height: 1.2 !important; letter-spacing: -0.018em !important; }
+.hv-app .v32-wrap .hv-title + * , .hv-app .ws-header p { font-size: 13.5px; }
+.ws-header { padding-bottom: 16px; margin-bottom: 20px; }
+.ws-eyebrow { margin-bottom: 8px; font-size: 12px; letter-spacing: 0; }
+.ws-eyebrow::before { display: none; }
+
+/* Titles inside the sheet are sans too */
+.ws-panel-head h2, .hv-app .hv-block-title, .ws-empty-t { font-family: var(--hv-sans) !important; font-weight: 600 !important; font-size: 15px !important; letter-spacing: -0.01em !important; }
+.ws-empty-t { font-size: 16px !important; }
+.ws-cell-v { font-family: var(--hv-sans); font-weight: 500; font-size: 28px; letter-spacing: -0.02em; }
+.ws-mono, .hv-app .hw-card-mono { font-family: var(--hv-sans); font-weight: 600; font-size: 13px; background: #F2F1EE; color: var(--ws-ink); box-shadow: inset 0 0 0 1px rgba(15, 14, 13, 0.08); border-radius: 8px; }
+.hv-app .hw-h { font-family: var(--hv-sans); font-weight: 600; font-size: 15px; letter-spacing: -0.01em; }
+.hv-app .hw-card-t { font-family: var(--hv-sans); font-weight: 500; font-size: 14px; letter-spacing: -0.005em; }
+
+/* Status pills: soft fill and a dot, no outline */
+.hv-app .pf-chip, .hv-app .pf-chip.is-good, .hv-app .pf-chip.is-warn, .hv-app .pf-chip.is-bad { box-shadow: none; }
+.hv-app .pf-chip { border: 0 !important; background: #F2F1EE; color: #4A4742; font-weight: 500; }
+.hv-app .pf-chip.is-good, .hv-app .pf-chip[data-tone="good"] { background: #EAF2EC; color: #2F5A40; }
+.hv-app .pf-chip.is-warn, .hv-app .pf-chip[data-tone="warn"] { background: #FBF1DE; color: #7A561A; }
+.hv-app .pf-chip.is-bad, .hv-app .pf-chip[data-tone="bad"] { background: #F8E8E6; color: #8E3B34; }
+
+/* Lists and panels: hairlines on white, no lift */
+.hv-app .pf-row:hover { background: #FAFAF8; }
+.hv-app .hv-side { box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.08) !important; }
+.hv-app .ws-band-title { text-transform: none !important; letter-spacing: -0.005em !important; font-size: 13px !important; font-weight: 600 !important; color: var(--ws-ink) !important; }
+.hv-app .ws-band-title + * { margin-top: 0; }
+@media (min-width: 1024px) { .hv-app .sb { width: 240px; padding: 14px 10px 10px; } }
+.hv-app .sb-mark { font-size: 23px; }
+
+/* Studio steps: a stone track, the current step lifted on white */
+.ws-steps { padding: 4px; background: #F2F1EE; box-shadow: none; border-radius: 10px; margin-bottom: 24px; }
+.ws-step { padding: 7px 12px; border-radius: 7px; font-size: 13px; }
+.ws-step:hover { background: rgba(15, 14, 13, 0.04); }
+.ws-step.is-on { color: var(--ws-ink); background: #FFFFFF; box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.07), 0 1px 2px rgba(15, 14, 13, 0.06); }
+.ws-step-n { width: 18px; height: 18px; font-size: 10.5px; background: transparent; }
+.ws-step.is-on .ws-step-n { background: var(--ws-ink); color: #FFFFFF; box-shadow: none; }
+.hv-app .pf-note { background: #F7F6F3; border-color: transparent; }

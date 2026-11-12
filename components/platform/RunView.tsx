@@ -12,6 +12,8 @@ import { platformApi, RISK_LABEL, type ExecutionDetail, type Step } from "@/lib/
 import { Button } from "@/components/v32/ui";
 import { ExecStatusChip, Chip, duration, when, PlatformErrorBanner, Loading, useAction, InlineError, money } from "@/components/platform/ui";
 
+const cap = (v: string | null | undefined) => (v ? v.charAt(0).toUpperCase() + v.slice(1).replace(/_/g, " ") : "");
+
 const LIVE = new Set(["queued", "running", "awaiting_approval"]);
 
 export function useExecution(id: string | null) {
@@ -46,9 +48,9 @@ export function StepList({ steps }: { steps: Step[] }) {
           <button type="button" className="pf-row w-full text-left" aria-expanded={open === s.key} onClick={() => setOpen(open === s.key ? null : s.key)}>
             <div className="pf-row-main">
               <div className="pf-row-title">{stepLabel(s)}</div>
-              <div className="pf-row-sub">{s.status}{s.durationMs != null ? ` · ${duration(s.durationMs)}` : ""}{s.error ? ` · ${s.error}` : ""}</div>
+              <div className="pf-row-sub">{cap(s.status === "dry_run" ? "dry run" : s.status)}{s.durationMs != null ? ` · ${duration(s.durationMs)}` : ""}{s.error ? ` · ${s.error}` : ""}</div>
             </div>
-            <Chip tone={s.status === "completed" ? "good" : s.status === "failed" ? "bad" : s.status === "blocked" || s.status === "dry_run" ? "warn" : undefined}>{s.status === "dry_run" ? "dry run (test)" : s.status}</Chip>
+            <Chip tone={s.status === "completed" ? "good" : s.status === "failed" ? "bad" : s.status === "blocked" || s.status === "dry_run" ? "warn" : undefined}>{s.status === "dry_run" ? "Dry run (test)" : cap(s.status)}</Chip>
           </button>
           {open === s.key && (
             <div style={{ padding: "0 16px 14px", display: "grid", gap: 8 }}>
@@ -138,7 +140,7 @@ export function RunSide({ ex, canRun }: { ex: ExecutionDetail; canRun: boolean }
           <dt>Agent</dt><dd><Link href={`/agents/studio/${ex.agentId}`} style={{ textDecoration: "underline" }}>{ex.agentName}</Link></dd>
           <dt>Mode</dt><dd>{ex.mode === "test" ? "Test (writes are dry runs)" : "Live"}</dd>
           <dt>Version</dt><dd>{ex.agentVersion != null ? `v${ex.agentVersion}` : "Draft"}</dd>
-          <dt>Trigger</dt><dd>{ex.trigger}</dd>
+          <dt>Trigger</dt><dd>{cap(ex.trigger)}</dd>
           <dt>Requested by</dt><dd>{ex.requestedByEmail || "–"}</dd>
           <dt>Created</dt><dd>{when(ex.createdAt)}</dd>
           <dt>Duration</dt><dd>{duration(ex.durationMs)}</dd>

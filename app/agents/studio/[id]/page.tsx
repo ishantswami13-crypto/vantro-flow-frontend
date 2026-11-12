@@ -107,7 +107,7 @@ function RunInputs({ def, prefix, onChange }: { def: AgentDefinition; prefix: st
       {def.input_schema.fields.length > 0 && (
         <div className="pf-grid2">
           {def.input_schema.fields.map((f) => (
-            <Field key={f.name} label={`${f.name}${f.required ? " (required)" : ""}`} hint={f.description || undefined} htmlFor={`${prefix}-${f.name}`}>
+            <Field key={f.name} label={`${f.name.charAt(0).toUpperCase()}${f.name.slice(1).replace(/_/g, " ")}${f.required ? " (required)" : ""}`} hint={f.description || undefined} htmlFor={`${prefix}-${f.name}`}>
               {f.type === "boolean" ? (
                 <label className="pf-toggle"><input id={`${prefix}-${f.name}`} type="checkbox" checked={values[f.name] === true} onChange={(e) => setValues({ ...values, [f.name]: e.target.checked })} />Yes</label>
               ) : (
