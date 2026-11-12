@@ -4,7 +4,8 @@
 // Scope decides who can read a collection (only me, a team, or the whole
 // organization) and the server enforces it on every search, including an
 // agent's. Search is full-text over the stored text and every result
-// carries its citation. Text files are read in this browser; PDF and Word
+// carries its citation. Search is by words, and also by meaning when the
+// server has embeddings switched on; the page says which ran. Text files are read in this browser; PDF and Word
 // (.docx) files are sent to the server, which reads their text and keeps only
 // the text. A scanned PDF or a legacy .doc is refused with the reason.
 
@@ -199,8 +200,13 @@ export default function KnowledgePage() {
         </form>
         {submitted.trim().length > 1 && (
           <Section title={`Results for "${submitted}"`} aside={search.data ? `${search.data.results.length} passage${search.data.results.length === 1 ? "" : "s"} in ${search.data.searchedCollections} collection${search.data.searchedCollections === 1 ? "" : "s"}` : undefined}>
+            {search.data && (
+              <p style={{ fontSize: 12, color: "#8F8A81", margin: "0 0 8px" }}>
+                {search.data.mode === "hybrid" ? "Searched by meaning and by words." : "Searched by words."}{search.data.note ? ` ${search.data.note}` : ""}
+              </p>
+            )}
             {search.isLoading ? <Loading rows={2} /> : search.error ? <PlatformErrorBanner error={search.error} what="Search" /> : (search.data?.results || []).length === 0 ? (
-              <p style={{ fontSize: 12.5, color: "#8F8A81", margin: 0 }}>Nothing matched. Search looks for the words themselves, so try the terms the document uses.</p>
+              <p style={{ fontSize: 12.5, color: "#8F8A81", margin: 0 }}>{search.data?.mode === "hybrid" ? "Nothing matched by meaning or by words." : "Nothing matched. Word search looks for the words themselves, so try the terms the document uses."}</p>
             ) : (
               <div className="pf-list">
                 {(search.data?.results || []).map((r, i) => (
@@ -208,7 +214,7 @@ export default function KnowledgePage() {
                     <span style={{ fontSize: 12, color: "#8F8A81", minWidth: 22 }}>[{i + 1}]</span>
                     <div className="pf-row-main">
                       <div style={{ fontSize: 13.5, color: "#1F1D1A", lineHeight: 1.55 }}><Snippet text={r.snippet} /></div>
-                      <div className="pf-row-sub">{r.citation}</div>
+                      <div className="pf-row-sub">{r.citation}{r.matchedBy?.length ? ` · matched by ${r.matchedBy.join(" and ")}` : ""}</div>
                     </div>
                   </button>
                 ))}

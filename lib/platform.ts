@@ -155,7 +155,7 @@ export interface Approval {
 }
 export interface Collection { id: string; name: string; description: string | null; scope: 'personal' | 'team' | 'organization'; teamId: string | null; teamName: string | null; ownerEmail: string | null; documentCount: number; notReadyCount: number; lastAddedAt: string | null; canWrite: boolean }
 export interface KDocument { id: string; title: string; sourceKind: string; sourceName: string | null; mimeType: string | null; byteSize: number; status: string; statusDetail: string | null; chunkCount: number; createdAt: string; uploadedBy: string | null }
-export interface SearchResult { documentId: string; title: string; collectionId: string; collectionName: string; chunk: number; snippet: string; score: number; citation: string }
+export interface SearchResult { documentId: string; title: string; collectionId: string; collectionName: string; chunk: number; snippet: string; score: number; citation: string; matchedBy?: ('words' | 'meaning')[]; similarity?: number }
 export interface Connection { id: string; name: string; provider: string | null; category: string; categoryLabel: string; summary: string; status: 'connected' | 'available' | 'configuration_required' | 'planned'; reason: string | null; health: string | null; lastSyncAt: string | null; lastError: string | null; setupHref: string | null; usedBy: string[] }
 export type Measured<T> = { available: true; value: T; sample?: number } | { available: false; reason: string };
 export interface CommandCenter {
@@ -246,7 +246,7 @@ export const platformApi = {
   },
   addDocument: (id: string, body: { title: string; content: string; sourceName?: string; mimeType?: string; sourceKind?: 'upload' | 'paste' }) => call<{ id: string; chunkCount: number }>('POST', `/knowledge/collections/${id}/documents`, body, { timeoutMs: 60_000 }),
   deleteDocument: (cid: string, did: string) => call('DELETE', `/knowledge/collections/${cid}/documents/${did}`),
-  search: (text: string) => call<{ results: SearchResult[]; searchedCollections: number }>('GET', `/knowledge/search${q({ q: text })}`),
+  search: (text: string) => call<{ results: SearchResult[]; searchedCollections: number; mode?: 'words' | 'hybrid'; note?: string | null }>('GET', `/knowledge/search${q({ q: text })}`),
   document: (id: string) => call<{ document: { title: string; text: string; truncated: boolean; citation: string; collectionName: string } }>('GET', `/knowledge/documents/${id}`),
 
   connections: () => call<{ connections: Connection[]; counts: Record<string, number>; stateError: string | null }>('GET', '/connections'),
