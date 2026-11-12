@@ -31,7 +31,8 @@ export default function AdminPage() {
         headers: { ...authHeaders() }, credentials: "include",
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (res.status === 403) throw new Error("This page is only for Starlane administrators.");
+      if (!res.ok) throw new Error(data.error || "Failed to load stats");
       setStats(data.stats);
     } catch (err: any) {
       setError(err.message || "Failed to load stats");
@@ -65,7 +66,7 @@ export default function AdminPage() {
 
       {error && (
         <div className="mb-6 px-4 py-3 bg-danger-dim border border-danger/30 rounded-lg text-sm text-danger">
-          {error} — Make sure your email is in the ADMIN_EMAILS Railway env var.
+          {error}
         </div>
       )}
 

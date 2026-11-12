@@ -1665,7 +1665,8 @@ button:disabled { cursor: default; }
 @media (max-width: 760px) {
   .chat-start.has-workspace { padding-top: 8vh; }
   .hw-cards { grid-template-columns: 1fr; }
-  .hw-card { min-height: 84px; }
+  .hw-card { min-height: 0; }
+  .hw-card-i { position: static; margin-bottom: 10px; }
   .hw-row { grid-template-columns: 10px minmax(0, 1fr) auto; }
   .hw-row-d { display: none; }
   .hw-pills { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; margin-bottom: 32px; padding-bottom: 4px; }
