@@ -166,6 +166,8 @@ export interface CommandCenter {
   usage: { modelCalls: number; toolCalls: number; inputTokens: number; outputTokens: number; cost: Cost };
   quality: { outcomes: Measured<number> };
   alerts: { kind: string; severity: string; title: string; detail?: string | null; href: string | null }[];
+  daily?: { day: string; completed: number; failed: number; other: number }[];
+  byAgent?: { agentId: string; agentName: string; runs: number; failed: number }[];
   recent: { id: string; agentId: string; agentName: string; status: ExecStatus; mode: string; trigger: string; createdAt: string; durationMs: number | null; errorClass: string | null; modelCalls: number; toolCalls: number; tokens: number }[];
   model: { configured: string[]; preferred: string | null } | null;
 }

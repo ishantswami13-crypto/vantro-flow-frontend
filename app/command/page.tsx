@@ -14,6 +14,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, Button, ago } from "@/components/v32/ui";
 import { IconAgents } from "@/components/v32/icons";
 import { platformApi } from "@/lib/platform";
+import { ChartCard, DailyRuns, AgentBars, Legend } from "@/components/platform/Charts";
 import { useActiveOrg, useWorkspace, PlatformErrorBanner, Loading, StatBand, AlertList, EmptyState, Section, ExecStatusChip, duration, when, money } from "@/components/platform/ui";
 
 export default function CommandCenterPage() {
@@ -42,7 +43,25 @@ export default function CommandCenterPage() {
 
         {d && (
           <>
+            {(d.approvals.pending ?? 0) > 0 && (
+              <Link href="/approvals" className="ws-notice"><b aria-hidden="true">S</b>{d.approvals.pending === 1 ? "There is 1 agent action waiting for your approval" : `There are ${d.approvals.pending} agent actions waiting for your approval`}</Link>
+            )}
             <AlertList alerts={d.alerts} />
+
+            {d.daily && d.daily.length > 0 && (
+              <div className="ws-charts">
+                <ChartCard
+                  figure={d.executions.last7d.completed + d.executions.last7d.failed + d.executions.last7d.cancelled}
+                  figureNote="Runs in the last 7 days"
+                  legend={<Legend items={[{ label: "Completed", tone: "ink" }, { label: "Failed", tone: "bad" }, { label: "Other", tone: "light" }]} />}
+                >
+                  <DailyRuns days={d.daily} />
+                </ChartCard>
+                <ChartCard title="Runs by agent" sub="The agents that ran most in the last 7 days" legend={<Legend items={[{ label: "Runs", tone: "ink" }, { label: "Of which failed", tone: "bad" }]} />}>
+                  {d.byAgent && d.byAgent.length > 0 ? <AgentBars rows={d.byAgent} /> : <p style={{ margin: 0, fontSize: 13, color: "#8F8A81" }}>No agent has run in the last 7 days.</p>}
+                </ChartCard>
+              </div>
+            )}
 
             <StatBand
               title="Right now"

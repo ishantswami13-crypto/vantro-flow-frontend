@@ -242,79 +242,6 @@ a.ws-alert:hover { box-shadow: var(--ws-shadow-hover); }
 .ws-idea { text-align: left; padding: 16px 18px; border: 0; border-radius: 12px; background: var(--ws-card); box-shadow: var(--ws-shadow); font: inherit; font-size: 13.5px; line-height: 1.55; color: var(--ws-body); cursor: pointer; transition: box-shadow .2s ease, translate .2s ease; }
 .ws-idea:hover { box-shadow: var(--ws-shadow-hover); translate: 0 -1px; color: var(--ws-ink); }
 .ws-idea.is-on { box-shadow: 0 0 0 1.5px var(--ws-ink), var(--ws-shadow); color: var(--ws-ink); }
-
-/* ════════════════════════════════════════════════════════════════
-   Light shell. A pale stone rail with ink text, and the work itself on
-   one white sheet inset from the edges, framed by a hairline. Inside the
-   sheet everything is Inter at reading size: page titles are set in the
-   sans, figures stay tabular, and colour is kept for status only. The
-   serif is kept for the Starlane wordmark and the home greeting.
-   ════════════════════════════════════════════════════════════════ */
-.hv-app {
-  --hv-rail: #F2F1EE; --hv-rail-hi: rgba(15, 14, 13, 0.065); --hv-rail-text: #2F2D2A; --hv-rail-dim: #7A766F;
-  --ws-paper: #FFFFFF;
-  --ws-radius: 12px;
-  --ws-radius-sm: 8px;
-  --ws-shadow: 0 0 0 1px rgba(15, 14, 13, 0.08);
-  --ws-shadow-hover: 0 0 0 1px rgba(15, 14, 13, 0.16), 0 4px 14px -8px rgba(15, 14, 13, 0.14);
-  background: var(--hv-rail);
-}
-@media (min-width: 1024px) {
-  .hv-app .hv-canvas { margin: 8px 8px 8px 0; border-radius: 12px; background: #FFFFFF; box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.07), 0 1px 3px rgba(15, 14, 13, 0.04); }
-}
-.hv-app .hv-canvas, .hv-app .v32-main { background: #FFFFFF !important; }
-
-/* Rail */
-.hv-app .sb { background: var(--hv-rail); color: var(--hv-rail-text); }
-.hv-app .sb-mark, .hv-app .sb-mark:hover { color: var(--ws-ink); }
-.hv-app .sb-icon-btn { color: var(--hv-rail-dim); }
-.hv-app .sb-icon-btn:hover { background: rgba(15, 14, 13, 0.06); color: var(--ws-ink); }
-.hv-app .sb .sb-row { height: 31px; font-size: 13.5px; color: var(--hv-rail-text); }
-.hv-app .sb .sb-row svg { color: var(--hv-rail-dim); }
-.hv-app .sb .sb-row:hover { background: rgba(15, 14, 13, 0.045); color: var(--ws-ink); }
-.hv-app .sb .sb-row:hover svg { color: var(--ws-ink); }
-.hv-app .sb .sb-row.is-active { background: #FFFFFF; color: var(--ws-ink); font-weight: 500; box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.07), 0 1px 2px rgba(15, 14, 13, 0.05); }
-.hv-app .sb .sb-row.is-active svg { color: var(--ws-ink); }
-.hv-app .sb-label, .hv-app .sb-fold { color: var(--hv-rail-dim); }
-.hv-app .sb-fold:hover { color: var(--ws-ink); }
-.hv-app .sb-recent { color: #55524D; }
-.hv-app .sb-recent::before { background: #B3AFA7; }
-.hv-app .sb-recent:hover { background: rgba(15, 14, 13, 0.045); color: var(--ws-ink); }
-.hv-app .sb-recent.is-active { background: #FFFFFF; color: var(--ws-ink); box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.07); }
-.hv-app .sb-count { color: var(--hv-rail-dim); }
-.hv-app .sb ::-webkit-scrollbar-thumb { background: rgba(15, 14, 13, 0.12); }
-.hv-app .sb-avatar { background: #FFFFFF; color: var(--ws-ink); box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.12); font-family: var(--hv-sans); font-size: 11px; font-weight: 600; }
-
-/* Page header: sans title, quieter */
-.hv-app .v32-wrap .hv-title { font-family: var(--hv-sans) !important; font-weight: 600 !important; font-size: 24px !important; line-height: 1.2 !important; letter-spacing: -0.018em !important; }
-.hv-app .v32-wrap .hv-title + * , .hv-app .ws-header p { font-size: 13.5px; }
-.ws-header { padding-bottom: 16px; margin-bottom: 20px; }
-.ws-eyebrow { margin-bottom: 8px; font-size: 12px; letter-spacing: 0; }
-.ws-eyebrow::before { display: none; }
-
-/* Titles inside the sheet are sans too */
-.ws-panel-head h2, .hv-app .hv-block-title, .ws-empty-t { font-family: var(--hv-sans) !important; font-weight: 600 !important; font-size: 15px !important; letter-spacing: -0.01em !important; }
-.ws-empty-t { font-size: 16px !important; }
-.ws-cell-v { font-family: var(--hv-sans); font-weight: 500; font-size: 28px; letter-spacing: -0.02em; }
-.ws-mono, .hv-app .hw-card-mono { font-family: var(--hv-sans); font-weight: 600; font-size: 13px; background: #F2F1EE; color: var(--ws-ink); box-shadow: inset 0 0 0 1px rgba(15, 14, 13, 0.08); border-radius: 8px; }
-.hv-app .hw-h { font-family: var(--hv-sans); font-weight: 600; font-size: 15px; letter-spacing: -0.01em; }
-.hv-app .hw-card-t { font-family: var(--hv-sans); font-weight: 500; font-size: 14px; letter-spacing: -0.005em; }
-
-/* Status pills: soft fill and a dot, no outline */
-.hv-app .pf-chip, .hv-app .pf-chip.is-good, .hv-app .pf-chip.is-warn, .hv-app .pf-chip.is-bad { box-shadow: none; }
-.hv-app .pf-chip { border: 0 !important; background: #F2F1EE; color: #4A4742; font-weight: 500; }
-.hv-app .pf-chip.is-good, .hv-app .pf-chip[data-tone="good"] { background: #EAF2EC; color: #2F5A40; }
-.hv-app .pf-chip.is-warn, .hv-app .pf-chip[data-tone="warn"] { background: #FBF1DE; color: #7A561A; }
-.hv-app .pf-chip.is-bad, .hv-app .pf-chip[data-tone="bad"] { background: #F8E8E6; color: #8E3B34; }
-
-/* Lists and panels: hairlines on white, no lift */
-.hv-app .pf-row:hover { background: #FAFAF8; }
-.hv-app .hv-side { box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.08) !important; }
-.hv-app .ws-band-title { text-transform: none !important; letter-spacing: -0.005em !important; font-size: 13px !important; font-weight: 600 !important; color: var(--ws-ink) !important; }
-.hv-app .ws-band-title + * { margin-top: 0; }
-@media (min-width: 1024px) { .hv-app .sb { width: 240px; padding: 14px 10px 10px; } }
-.hv-app .sb-mark { font-size: 23px; }
-
 /* Studio steps: a stone track, the current step lifted on white */
 .ws-steps { padding: 4px; background: #F2F1EE; box-shadow: none; border-radius: 10px; margin-bottom: 24px; }
 .ws-step { padding: 7px 12px; border-radius: 7px; font-size: 13px; }
@@ -327,9 +254,98 @@ a.ws-alert:hover { box-shadow: var(--ws-shadow-hover); }
 /* Slim rail on the light shell */
 @media (min-width: 1024px) {
   .hv-app .sb.sb-slim { width: 60px; padding: 14px 10px 10px; }
-  .hv-app .sb-slim .sb-mark-glyph { width: 26px; height: 26px; border-radius: 7px; background: var(--ws-ink); color: #FFFFFF; }
-  .hv-app .sb-slim .sb-group { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(15, 14, 13, 0.07); }
+  .hv-app .sb-slim .sb-mark-glyph { width: 26px; height: 26px; border-radius: 7px; background: #F4F2EE; color: #0F0E0D; }
+  .hv-app .sb-slim .sb-group { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
   .hv-app .sb-slim .sb-row { width: 38px; height: 36px; margin: 0 auto; border-radius: 9px; }
   .hv-app .sb-slim .sb-fold-body { animation: none; }
   .hv-app .sb-slim .sb-row > svg + * { display: none; }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   Match the product views on Starlane's own landing page
+   (components/marketing/hx/HeroDashboard): a near-black rail with labels,
+   a warm grey page, flat white cards with no outline, a serif page title
+   and serif headline figures, Inter for everything read at size.
+   ════════════════════════════════════════════════════════════════ */
+.hv-app {
+  --hv-rail: #100E0A; --hv-rail-hi: #33312D; --hv-rail-text: #D9D6D1; --hv-rail-dim: #9E9A94;
+  --ws-paper: #F7F5F4;
+  --ws-radius: 12px;
+  --ws-radius-sm: 8px;
+  --ws-shadow: none;
+  --ws-shadow-hover: 0 1px 2px rgba(15, 14, 13, 0.05), 0 10px 24px -14px rgba(15, 14, 13, 0.22);
+  --ws-line: rgba(15, 14, 13, 0.07);
+}
+.hv-app .v32-main { background: #F7F5F4 !important; }
+.hv-app .sb { background: #100E0A; }
+.hv-app .sb .sb-row.is-active { background: #33312D; }
+
+/* Page header: the serif title on its own, small actions to the right */
+.hv-app .v32-wrap .hv-title { font-size: 34px !important; letter-spacing: -0.014em !important; line-height: 1.1 !important; }
+.ws-header { border-bottom: 0; padding-bottom: 6px; margin-bottom: 18px; }
+.ws-header.has-tabs { border-bottom: 1px solid var(--ws-line); padding-bottom: 0; }
+.ws-eyebrow { display: none; }
+.hv-app .v32-wrap .btn-primary-v32, .hv-app .v32-wrap .btn-secondary-v32 { min-height: 32px; border-radius: 7px !important; font-size: 13.5px; }
+.hv-app .v32-wrap .btn-secondary-v32 { background: #FFFFFF; border-color: transparent !important; box-shadow: none; }
+.hv-app .v32-wrap .btn-secondary-v32:hover { background: #FFFFFF; box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.12); }
+
+/* Cards: white on the grey page, no outline */
+.hv-app .pf-list, .hv-app .hv-side, .hv-app .pf-kpi, .ws-panel, .ws-band { background: #FFFFFF; box-shadow: none !important; border: 0 !important; border-radius: 12px; }
+.ws-panel-head h2 { font-family: var(--hv-sans); font-weight: 500; font-size: 17px; letter-spacing: -0.01em; }
+.ws-panel-body > .pf-list { box-shadow: none !important; }
+.ws-cell { box-shadow: -1px 0 0 #F0EEEB; }
+.ws-cell-v { font-size: 44px; letter-spacing: -0.02em; }
+.hv-app .ws-band-title { text-transform: none; letter-spacing: -0.005em; font-size: 14px; font-weight: 500; color: var(--ws-ink); }
+.hv-app .hv-pane-head h3 { font-size: 13px; font-weight: 500; letter-spacing: -0.005em; text-transform: none; color: var(--ws-ink); }
+.ws-alert { background: #FFFFFF; box-shadow: none; border: 0; }
+.hv-app .pf-row { border-color: #F0EEEB; }
+.hv-app .pf-row:hover { background: #FBFAF9; }
+.hv-app .pf-input, .hv-app .pf-textarea, .hv-app .pf-select { background: #FFFFFF; }
+
+/* Status: soft fill with a dot, as in the review table on the landing page */
+.hv-app .pf-chip, .hv-app .pf-chip.is-good, .hv-app .pf-chip.is-warn, .hv-app .pf-chip.is-bad { box-shadow: none; border: 0; }
+.hv-app .pf-chip { background: #F1EFEC; color: #4A4742; }
+.hv-app .pf-chip.is-good { background: #EAF2EC; color: #2F5A40; }
+.hv-app .pf-chip.is-warn { background: #FBF0D9; color: #7A561A; }
+.hv-app .pf-chip.is-bad { background: #F8E7E5; color: #8E3B34; }
+
+/* Studio steps on the grey page */
+.ws-steps { background: #EDEBE7; }
+
+/* Monograms: dark tiles, serif initial, like the landing sidebar */
+.ws-mono, .hv-app .hw-card-mono { background: #1E1C1B; color: #FFFFFF; box-shadow: none; }
+
+/* ── Command Center charts, in the landing page's style ── */
+.ws-charts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 16px; }
+@media (max-width: 900px) { .ws-charts { grid-template-columns: minmax(0, 1fr); } }
+.ws-chart { background: #FFFFFF; border-radius: 12px; padding: 20px 22px 16px; display: flex; flex-direction: column; min-width: 0; }
+.ws-chart-big { font-family: 'Newsreader', Georgia, serif; font-size: 46px; line-height: 1; letter-spacing: -0.02em; color: var(--ws-ink); font-variant-numeric: tabular-nums; }
+.ws-chart-t { margin: 0; font-size: 17px; font-weight: 500; letter-spacing: -0.01em; color: var(--ws-ink); }
+.ws-chart-note { margin-top: 6px; font-size: 13px; color: var(--ws-muted); }
+.ws-chart-body { margin-top: 18px; flex: 1; min-height: 0; }
+.ws-chart-leg { display: flex; flex-wrap: wrap; gap: 16px; margin: 14px -22px 0; padding: 12px 22px 0; border-top: 1px solid #F0EEEB; font-size: 12px; color: var(--ws-muted); }
+.ws-chart-leg span { display: inline-flex; align-items: center; gap: 6px; }
+.ws-key { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.ws-key.is-ink, .ws-daily-stack b.is-ink, .ws-hbar-track b.is-ink { background: repeating-linear-gradient(90deg, #3E4350 0 1px, #5A606D 1px 2px); }
+.ws-key.is-bad, .ws-daily-stack b.is-bad, .ws-hbar-track b.is-bad { background: #8A5A55; }
+.ws-key.is-light, .ws-daily-stack b.is-light { background: #DADCE0; }
+.ws-daily { display: flex; gap: 8px; height: 168px; }
+.ws-daily-y { display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 20px; font-size: 10.5px; color: #8F8A81; text-align: right; min-width: 14px; font-variant-numeric: tabular-nums; }
+.ws-daily-y span { transform: translateY(50%); }
+.ws-daily-y span:first-child { transform: translateY(-20%); }
+.ws-daily-plot { position: relative; flex: 1; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; padding-bottom: 20px; }
+.ws-grid { position: absolute; left: 0; right: 0; height: 1px; background: #F0EEEB; margin-bottom: 20px; }
+.ws-daily-col { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; min-width: 0; }
+.ws-daily-stack { width: min(14px, 70%); height: 100%; display: flex; flex-direction: column; justify-content: flex-end; gap: 1px; }
+.ws-daily-stack b { display: block; width: 100%; border-radius: 2px; min-height: 2px; }
+.ws-daily-x { position: absolute; bottom: -20px; font-size: 10.5px; color: #8F8A81; white-space: nowrap; }
+.ws-hbars { display: flex; flex-direction: column; gap: 10px; }
+.ws-hbar { display: grid; grid-template-columns: minmax(90px, 160px) minmax(0, 1fr) 64px; align-items: center; gap: 12px; font-size: 12.5px; color: var(--ws-body); text-decoration: none; }
+.ws-hbar:hover .ws-hbar-n { color: var(--ws-ink); text-decoration: underline; text-underline-offset: 3px; }
+.ws-hbar-n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-hbar-track { display: flex; height: 10px; gap: 1px; }
+.ws-hbar-track b { display: block; height: 100%; border-radius: 2px; }
+.ws-hbar-v { font-size: 11.5px; color: var(--ws-muted); font-variant-numeric: tabular-nums; }
+.ws-notice { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #FFFFFF; border-radius: 10px; font-size: 13.5px; color: #4A4843; text-decoration: none; }
+.ws-notice b { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 4px; background: #0F0E0D; color: #FFFFFF; font-family: 'Newsreader', Georgia, serif; font-size: 12px; }
+a.ws-notice:hover { color: var(--ws-ink); }

@@ -77,11 +77,11 @@ async function subscribeToPush() {
 }
 
 export default function DashboardLayout({ children, pageTitle, slimRail = false, bare = false }: DashboardLayoutProps) {
-  // The rail is icons only by default on desktop; the person can widen it
-  // and the choice is remembered on this browser.
-  const [railSlim, setRailSlim] = useState(true);
+  // The rail shows labels by default; the person can fold it to icons and
+  // the choice is remembered on this browser.
+  const [railSlim, setRailSlim] = useState(false);
   useEffect(() => {
-    try { if (window.localStorage.getItem("starlane.rail") === "wide") setRailSlim(false); } catch { /* storage blocked */ }
+    try { if (window.localStorage.getItem("starlane.rail") === "slim") setRailSlim(true); } catch { /* storage blocked */ }
   }, []);
   const toggleRail = () => setRailSlim((v) => {
     try { window.localStorage.setItem("starlane.rail", v ? "wide" : "slim"); } catch { /* storage blocked */ }
