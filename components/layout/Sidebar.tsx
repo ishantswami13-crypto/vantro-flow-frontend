@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { FiLogOut, FiX, FiUser, FiSliders, FiCommand, FiSettings } from "react-icons/fi";
+import { FiLogOut, FiX, FiUser, FiSliders, FiCommand, FiSettings, FiSidebar } from "react-icons/fi";
 import { api, getUser, clearAuth } from "@/lib/api";
 import { getSmartHiddenRoutes } from "@/lib/businessTypes";
 import { getUserContext, getGrantedFeatures, ROUTE_TO_FEATURE, type FeatureKey } from "@/lib/featureGating";
@@ -46,9 +46,9 @@ const NAV_ICONS: Record<string, PrimaryNavItem["icon"]> = {
 };
 const APP_ICONS: Record<string, PrimaryNavItem["icon"]> = { finance: IconBank, procurement: IconBill, sales: IconSparkle };
 
-interface SidebarProps { open: boolean; onClose: () => void; slim?: boolean; pageTitle?: string; }
+interface SidebarProps { open: boolean; onClose: () => void; slim?: boolean; pageTitle?: string; onToggleSlim?: () => void; }
 
-export default function Sidebar({ open, onClose, slim = false, pageTitle }: SidebarProps) {
+export default function Sidebar({ open, onClose, slim = false, pageTitle, onToggleSlim }: SidebarProps) {
   const pathname = usePathname();
   const [userName, setUserName]           = useState("User");
   const [businessName, setBusinessName]   = useState("");
@@ -307,6 +307,11 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
             <button onClick={() => setSearchOpen(true)} className="sb-icon-btn" aria-label="Search Starlane (Ctrl+K)" title="Search (Ctrl+K)">
               <IconSearch size={15} />
             </button>
+            {onToggleSlim && (
+              <button type="button" onClick={onToggleSlim} className="sb-icon-btn hidden lg:inline-flex" aria-label="Collapse sidebar" title="Collapse sidebar">
+                <FiSidebar size={14} />
+              </button>
+            )}
             <button aria-label="Close menu" onClick={onClose} className="sb-icon-btn lg:hidden">
               <FiX size={14} />
             </button>
@@ -342,7 +347,11 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
             </button>
           </nav>
 
-          {serverNav ? serverNav.filter(g => g.key !== "workspace").map(g => (
+          {serverNav ? serverNav.filter(g => g.key !== "workspace")
+            // The icon rail keeps only the apps and the group you are in; the
+            // rest stays one click away under More.
+            .filter(g => !slim || g.key === "applications" || g.items.some(i => navActive(i.href) || (i.children || []).some(c => navActive(c.href))))
+            .map(g => (
             <FoldGroup key={g.key} id={g.key} label={g.label} slim={slim} defaultOpen={g.key === "applications"}
               forceOpen={g.items.some(i => navActive(i.href) || (i.children || []).some(c => navActive(c.href)))}>
               {g.items.map(i => (
@@ -381,7 +390,7 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
             </nav>
           )}
 
-          <FoldGroup id="recents" label="Recents" slim={slim} defaultOpen={recent.length + recentDecisions.length > 0} forceOpen={isActive(HISTORY_NAV_ITEM.href)}>
+          {(!slim || isActive(HISTORY_NAV_ITEM.href)) && <FoldGroup id="recents" label="Recents" slim={slim} defaultOpen={recent.length + recentDecisions.length > 0} forceOpen={isActive(HISTORY_NAV_ITEM.href)}>
             {recent.map(t => {
               const active = pathname === `/scan/${t.id}`;
               return (
@@ -417,9 +426,9 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
               );
             })}
             <NavRow href={HISTORY_NAV_ITEM.href} label={HISTORY_NAV_ITEM.label} Icon={HISTORY_NAV_ITEM.icon} active={isActive(HISTORY_NAV_ITEM.href)} onClick={onClose} />
-          </FoldGroup>
+          </FoldGroup>}
 
-          <FoldGroup id="spaces" label="Spaces" slim={slim} defaultOpen={false} forceOpen={isActive("/space") || isActive("/spaces") || V32_SECONDARY_NAV_ITEMS.some(n => isActive(n.href))}>
+          {(!slim || (isActive("/space") || isActive("/spaces") || V32_SECONDARY_NAV_ITEMS.some(n => isActive(n.href)))) && <FoldGroup id="spaces" label="Spaces" slim={slim} defaultOpen={false} forceOpen={isActive("/space") || isActive("/spaces") || V32_SECONDARY_NAV_ITEMS.some(n => isActive(n.href))}>
             {spaces.entities.length === 0 && businessName && (
               <Link href="/space" onClick={onClose} title={businessName} aria-current={isActive("/space") ? "page" : undefined} className={`sb-row ${isActive("/space") ? "is-active" : ""}`}>
                 <span className="sb-space" aria-hidden="true">{businessName.trim()[0]?.toUpperCase()}</span>
@@ -443,7 +452,7 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
             {V32_SECONDARY_NAV_ITEMS.map(n => (
               <NavRow key={n.href} href={n.href} label={n.label} Icon={n.icon} active={isActive(n.href)} onClick={onClose} />
             ))}
-          </FoldGroup>
+          </FoldGroup>}
 
           {moreOpen && (
             <div
@@ -467,6 +476,16 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
                     );
                   })}
                 </div>
+                {slim && serverNav && serverNav.filter(g => g.key !== "workspace" && g.key !== "applications").map(g => (
+                  <div key={g.key} style={{ marginBottom: 10 }}>
+                    <p className="sb-label">{g.label}</p>
+                    {g.items.map(i => (
+                      <Link key={i.key} href={i.href} onClick={() => { setMoreOpen(false); onClose(); }} className={`sb-row ${navActive(i.href) ? "is-active" : ""}`}>
+                        <span className="flex-1 truncate">{i.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                ))}
                 {MORE_GROUPS.map(({ label, items }) => {
                   const visibleItems = items.filter(n => !(hiddenRoutes.size > 0 && hiddenRoutes.has(n.href)) && !isRouteLocked(n.href));
                   if (visibleItems.length === 0) return null;
@@ -495,6 +514,13 @@ export default function Sidebar({ open, onClose, slim = false, pageTitle }: Side
             </div>
           )}
         </div>
+
+        {slim && (
+          <div className="sb-slim-tools hidden lg:flex flex-col items-center shrink-0" style={{ gap: 2, paddingTop: 8 }}>
+            <button type="button" onClick={() => setSearchOpen(true)} className="sb-icon-btn" aria-label="Search Starlane (Ctrl+K)" title="Search (Ctrl+K)"><IconSearch size={15} /></button>
+            {onToggleSlim && <button type="button" onClick={onToggleSlim} className="sb-icon-btn" aria-label="Expand sidebar" title="Expand sidebar"><FiSidebar size={14} /></button>}
+          </div>
+        )}
 
         {/* Settings and the account */}
         <div ref={accountRef} className="relative shrink-0" style={{ paddingTop: 8, marginTop: 8 }}>

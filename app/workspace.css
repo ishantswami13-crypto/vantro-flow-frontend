@@ -56,7 +56,7 @@
 .hv-app .pf-row-title { font-size: 14px; font-weight: 500; color: var(--ws-ink); letter-spacing: -0.005em; }
 .hv-app .pf-row-sub { font-size: 12.5px; color: var(--ws-muted); margin-top: 3px; }
 .hv-app .hv-pane { padding: 18px 20px; border-bottom: 1px solid var(--ws-line); }
-.hv-app .hv-pane-head h3 { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ws-muted); }
+.hv-app .hv-pane-head h3 { font-size: 13px; font-weight: 600; letter-spacing: -0.005em; color: var(--ws-ink); }
 .hv-app .hv-props { font-size: 13px; }
 .hv-app .hv-detail { gap: 32px; }
 
@@ -323,3 +323,13 @@ a.ws-alert:hover { box-shadow: var(--ws-shadow-hover); }
 .ws-step-n { width: 18px; height: 18px; font-size: 10.5px; background: transparent; }
 .ws-step.is-on .ws-step-n { background: var(--ws-ink); color: #FFFFFF; box-shadow: none; }
 .hv-app .pf-note { background: #F7F6F3; border-color: transparent; }
+
+/* Slim rail on the light shell */
+@media (min-width: 1024px) {
+  .hv-app .sb.sb-slim { width: 60px; padding: 14px 10px 10px; }
+  .hv-app .sb-slim .sb-mark-glyph { width: 26px; height: 26px; border-radius: 7px; background: var(--ws-ink); color: #FFFFFF; }
+  .hv-app .sb-slim .sb-group { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(15, 14, 13, 0.07); }
+  .hv-app .sb-slim .sb-row { width: 38px; height: 36px; margin: 0 auto; border-radius: 9px; }
+  .hv-app .sb-slim .sb-fold-body { animation: none; }
+  .hv-app .sb-slim .sb-row > svg + * { display: none; }
+}

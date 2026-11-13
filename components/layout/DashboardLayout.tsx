@@ -77,6 +77,16 @@ async function subscribeToPush() {
 }
 
 export default function DashboardLayout({ children, pageTitle, slimRail = false, bare = false }: DashboardLayoutProps) {
+  // The rail is icons only by default on desktop; the person can widen it
+  // and the choice is remembered on this browser.
+  const [railSlim, setRailSlim] = useState(true);
+  useEffect(() => {
+    try { if (window.localStorage.getItem("starlane.rail") === "wide") setRailSlim(false); } catch { /* storage blocked */ }
+  }, []);
+  const toggleRail = () => setRailSlim((v) => {
+    try { window.localStorage.setItem("starlane.rail", v ? "wide" : "slim"); } catch { /* storage blocked */ }
+    return !v;
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNotifBanner, setShowNotifBanner] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
@@ -171,7 +181,7 @@ export default function DashboardLayout({ children, pageTitle, slimRail = false,
 
   return (
     <div className="hv-app flex h-screen overflow-hidden">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} slim={slimRail} pageTitle={pageTitle} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} slim={slimRail || railSlim} onToggleSlim={slimRail ? undefined : toggleRail} pageTitle={pageTitle} />
 
       <div className="hv-canvas flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onMenuToggle={() => setSidebarOpen(true)} pageTitle={pageTitle} />
