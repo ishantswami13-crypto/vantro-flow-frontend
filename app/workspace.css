@@ -1,0 +1,351 @@
+/* Workspace finish: the agent platform screens (Command Center, Agents,
+   Studio, Knowledge, Approvals, Connections, Organization, Usage, runs).
+   Starlane's own system: warm paper, ink type, Newsreader for figures and
+   titles, Inter for everything read at size. One elevation, one radius,
+   one rhythm, so every screen reads as the same product. Loaded after
+   globals.css and atlas.css so it is the last word for these classes. */
+
+.hv-app {
+  --ws-paper: #F7F6F2;
+  --ws-card: #FFFFFF;
+  --ws-ink: #0F0E0D;
+  --ws-body: #3A3834;
+  --ws-muted: #6B675F;
+  --ws-faint: #9A958C;
+  --ws-line: rgba(15, 14, 13, 0.08);
+  --ws-line-2: rgba(15, 14, 13, 0.14);
+  --ws-wash: #F3F1EC;
+  --ws-radius: 14px;
+  --ws-radius-sm: 10px;
+  --ws-shadow: 0 0 0 1px rgba(15, 14, 13, 0.06), 0 1px 2px rgba(15, 14, 13, 0.04), 0 12px 32px -20px rgba(15, 14, 13, 0.14);
+  --ws-shadow-hover: 0 0 0 1px rgba(15, 14, 13, 0.10), 0 2px 4px rgba(15, 14, 13, 0.04), 0 18px 40px -22px rgba(15, 14, 13, 0.24);
+  --ws-good: #3D6B4F;
+  --ws-warn: #8A6420;
+  --ws-bad: #A0463F;
+}
+.hv-app .v32-main { background: var(--ws-paper) !important; }
+.hv-app .v32-wrap { -webkit-font-smoothing: antialiased; font-feature-settings: "cv11", "ss01"; }
+
+/* ── Page header: a larger title, calm subtitle, a hairline under it ── */
+.hv-app .v32-wrap .hv-title { font-size: 40px !important; letter-spacing: -0.022em !important; line-height: 1.05 !important; }
+.ws-header { padding-bottom: 22px; border-bottom: 1px solid var(--ws-line); margin-bottom: 24px; }
+.ws-header + * { margin-top: 0 !important; }
+.ws-header.has-tabs { padding-bottom: 0; }
+.ws-header.has-tabs .hv-tabs { margin: 0 0 -1px !important; }
+.ws-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; letter-spacing: 0.02em; color: var(--ws-muted); margin-bottom: 12px; }
+.ws-eyebrow::before { content: ""; width: 14px; height: 1px; background: currentColor; opacity: .5; }
+
+/* Tabs under a header: words on the hairline, ink underline when active */
+.ws-header.has-tabs .hv-tab { border-radius: 0 !important; background: transparent !important; box-shadow: none !important; padding: 10px 2px 12px !important; margin-right: 18px; font-size: 13.5px !important; border-bottom: 2px solid transparent; }
+.ws-header.has-tabs .hv-tab[aria-selected="true"], .ws-header.has-tabs .hv-tab[aria-current="page"] { border-bottom-color: var(--ws-ink); color: var(--ws-ink) !important; }
+.ws-header.has-tabs .hv-tab:hover { background: transparent !important; color: var(--ws-ink) !important; }
+
+/* ── Buttons: one height, softer corners ── */
+.hv-app .v32-wrap .btn-primary-v32, .hv-app .v32-wrap .btn-secondary-v32 { border-radius: 9px !important; min-height: 36px; letter-spacing: -0.005em; }
+.hv-app .v32-wrap .btn-primary-v32 { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 1px 2px rgba(15, 14, 13, 0.18); }
+.hv-app .v32-wrap .btn-secondary-v32 { box-shadow: 0 1px 2px rgba(15, 14, 13, 0.05); border-color: var(--ws-line-2) !important; }
+
+/* ── Surfaces ── */
+.hv-app .pf-list, .hv-app .hv-side, .hv-app .pf-kpi, .ws-panel, .ws-band {
+  background: var(--ws-card); border: 0 !important; border-radius: var(--ws-radius); box-shadow: var(--ws-shadow);
+}
+.hv-app .pf-list { overflow: hidden; }
+.hv-app .pf-row { padding: 15px 20px; gap: 14px; border-top: 1px solid var(--ws-line); transition: background-color .15s ease; }
+.hv-app .pf-row:first-child { border-top: 0; }
+.hv-app a.pf-row:hover, .hv-app button.pf-row:hover { background: #FAF9F6; }
+.hv-app .pf-row-title { font-size: 14px; font-weight: 500; color: var(--ws-ink); letter-spacing: -0.005em; }
+.hv-app .pf-row-sub { font-size: 12.5px; color: var(--ws-muted); margin-top: 3px; }
+.hv-app .hv-pane { padding: 18px 20px; border-bottom: 1px solid var(--ws-line); }
+.hv-app .hv-pane-head h3 { font-size: 13px; font-weight: 600; letter-spacing: -0.005em; color: var(--ws-ink); }
+.hv-app .hv-props { font-size: 13px; }
+.hv-app .hv-detail { gap: 32px; }
+
+/* Panels: a titled card for a group of settings */
+.ws-panel { display: block; }
+.ws-panel + .ws-panel { margin-top: 0; }
+.ws-panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 18px 22px 0; }
+.ws-panel-head h2 { margin: 0; font-family: 'Newsreader', Georgia, serif; font-weight: 400; font-size: 20px; letter-spacing: -0.012em; color: var(--ws-ink); }
+.ws-panel-head p { margin: 4px 0 0; font-size: 13px; color: var(--ws-muted); line-height: 1.5; }
+.ws-panel-aside { font-size: 12.5px; color: var(--ws-muted); white-space: nowrap; }
+.ws-panel-aside a, .ws-panel-aside button { color: var(--ws-body); text-decoration: underline; text-decoration-color: var(--ws-line-2); text-underline-offset: 3px; }
+.ws-panel-body { padding: 16px 22px 22px; }
+.ws-panel-body > .pf-list { box-shadow: 0 0 0 1px var(--ws-line); border-radius: var(--ws-radius-sm); }
+
+/* Section heading outside a panel */
+.hv-app .hv-block-title { font-size: 21px; letter-spacing: -0.014em; }
+.ws-section-aside { font-size: 12.5px; color: var(--ws-muted); }
+.ws-section-aside a, .ws-section-aside button { color: var(--ws-body); text-decoration: underline; text-decoration-color: var(--ws-line-2); text-underline-offset: 3px; }
+
+/* ── Figures: one band, cells split by hairlines ── */
+.ws-band-title { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ws-muted); }
+.ws-band-title span { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ws-faint); }
+.ws-band { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); overflow: hidden; }
+.ws-cell { position: relative; padding: 20px 22px 22px; min-width: 0; box-shadow: -1px 0 0 var(--ws-line); text-decoration: none; display: block; color: inherit; }
+.ws-cell:first-child { box-shadow: none; }
+a.ws-cell { transition: background-color .15s ease; }
+a.ws-cell:hover { background: #FAF9F6; }
+a.ws-cell::after { content: "→"; position: absolute; top: 18px; right: 18px; font-size: 13px; color: var(--ws-faint); opacity: 0; transition: opacity .15s ease, transform .15s ease; transform: translateX(-3px); }
+a.ws-cell:hover::after { opacity: 1; transform: none; }
+.ws-cell-l { font-size: 12.5px; color: var(--ws-muted); line-height: 1.35; }
+.ws-cell-v { margin-top: 10px; font-family: 'Newsreader', Georgia, serif; font-weight: 400; font-size: 38px; line-height: 1; letter-spacing: -0.025em; color: var(--ws-ink); font-variant-numeric: tabular-nums; }
+.ws-cell-v.is-na { color: #C9C5BD; }
+.ws-cell-n { margin-top: 10px; font-size: 12px; line-height: 1.45; color: var(--ws-faint); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+@media (max-width: 1100px) {
+  .ws-band { grid-template-columns: repeat(min(var(--cols, 4), 3), minmax(0, 1fr)); }
+  .ws-cell { box-shadow: -1px 0 0 var(--ws-line), 0 -1px 0 var(--ws-line); }
+}
+@media (max-width: 640px) {
+  .ws-band { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ws-cell { padding: 16px 16px 18px; }
+  .ws-cell-v { font-size: 32px; }
+  .ws-cell:last-child:nth-child(odd) { grid-column: span 2; }
+}
+/* Old tile grid, where a page still uses it */
+.hv-app .pf-kpis { gap: 12px; }
+.hv-app .pf-kpi { padding: 18px 20px; }
+.hv-app .pf-kpi-v { font-size: 34px; letter-spacing: -0.02em; }
+.hv-app .pf-kpi-l { font-size: 12.5px; }
+
+/* ── Attention list: a quiet rule on the left in the alert's tone ── */
+.ws-alerts { display: flex; flex-direction: column; gap: 10px; }
+.ws-alert { position: relative; display: flex; align-items: center; gap: 14px; padding: 14px 18px 14px 20px; background: var(--ws-card); border-radius: 12px; box-shadow: var(--ws-shadow); text-decoration: none; color: inherit; overflow: hidden; }
+.ws-alert::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--ws-warn); }
+.ws-alert.is-high::before { background: var(--ws-bad); }
+.ws-alert-ic { flex: none; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; background: rgba(138, 100, 32, 0.09); color: var(--ws-warn); font-size: 14px; font-weight: 600; }
+.ws-alert.is-high .ws-alert-ic { background: rgba(160, 70, 63, 0.09); color: var(--ws-bad); }
+.ws-alert-t { font-size: 14px; font-weight: 500; color: var(--ws-ink); }
+.ws-alert-d { font-size: 12.5px; color: var(--ws-muted); margin-top: 2px; }
+a.ws-alert:hover { box-shadow: var(--ws-shadow-hover); }
+
+/* ── Chips: dot + word, a hairline, no fill ── */
+.hv-app .pf-chip { height: 22px; padding: 0 9px; font-size: 11.5px; font-weight: 500; color: var(--ws-body); background: #FFFFFF; box-shadow: inset 0 0 0 1px var(--ws-line-2); letter-spacing: 0.005em; }
+.hv-app .pf-chip.is-good { color: var(--ws-good); background: rgba(61, 107, 79, 0.07); box-shadow: inset 0 0 0 1px rgba(61, 107, 79, 0.18); }
+.hv-app .pf-chip.is-warn { color: var(--ws-warn); background: rgba(138, 100, 32, 0.07); box-shadow: inset 0 0 0 1px rgba(138, 100, 32, 0.18); }
+.hv-app .pf-chip.is-bad { color: var(--ws-bad); background: rgba(160, 70, 63, 0.07); box-shadow: inset 0 0 0 1px rgba(160, 70, 63, 0.18); }
+
+/* ── Notes ── */
+.hv-app .pf-note { font-size: 13px; padding: 12px 14px; border-radius: 10px; background: var(--ws-wash); color: var(--ws-body); box-shadow: inset 0 0 0 1px var(--ws-line); }
+.hv-app .pf-note.is-warn { background: #FBF6EC; color: #6A4D19; box-shadow: inset 0 0 0 1px rgba(138, 100, 32, 0.16); }
+.hv-app .pf-pre { border-radius: 10px; background: #F5F3EE; box-shadow: inset 0 0 0 1px var(--ws-line); font-size: 12.5px; padding: 12px 14px; }
+
+/* ── Forms ── */
+.hv-app .pf-input, .hv-app .pf-select, .hv-app .pf-textarea {
+  font-size: 14px; border-radius: 10px; border: 1px solid var(--ws-line-2); background: #FFFFFF; color: var(--ws-ink);
+  box-shadow: 0 1px 2px rgba(15, 14, 13, 0.04); transition: border-color .15s ease, box-shadow .15s ease;
+}
+.hv-app .pf-input, .hv-app .pf-select { height: 40px; padding: 0 12px; }
+.hv-app .pf-textarea { padding: 10px 12px; line-height: 1.6; }
+.hv-app .pf-input:hover, .hv-app .pf-select:hover, .hv-app .pf-textarea:hover { border-color: rgba(15, 14, 13, 0.22); }
+.hv-app .pf-input:focus, .hv-app .pf-select:focus, .hv-app .pf-textarea:focus { border-color: var(--ws-ink); box-shadow: 0 0 0 4px rgba(15, 14, 13, 0.07); }
+.hv-app .pf-input:disabled, .hv-app .pf-select:disabled, .hv-app .pf-textarea:disabled { background: #FAF9F6; color: var(--ws-body); box-shadow: none; }
+.hv-app .pf-field { gap: 7px; }
+.hv-app .pf-field > label, .hv-app .pf-field > .pf-label { font-size: 13px; font-weight: 500; color: var(--ws-ink); }
+.hv-app .pf-field .pf-hint { font-size: 12.5px; color: var(--ws-faint); }
+.hv-app .pf-grid2 { gap: 18px 20px; }
+.hv-app .pf-stack { gap: 22px; }
+.hv-app .page-search { height: 40px; border-radius: 10px; border: 1px solid var(--ws-line-2); box-shadow: 0 1px 2px rgba(15, 14, 13, 0.04); }
+.hv-app .page-search input { font-size: 14px; }
+
+/* ── Studio steps: numbered marks joined by a line ── */
+.ws-steps { display: flex; align-items: center; gap: 0; margin: 0 0 28px; padding: 6px; background: var(--ws-card); border-radius: 14px; box-shadow: var(--ws-shadow); overflow-x: auto; }
+.ws-step { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 14px; border-radius: 10px; font-size: 13.5px; font-weight: 500; color: var(--ws-muted); background: none; border: 0; cursor: pointer; white-space: nowrap; transition: background-color .15s ease, color .15s ease; }
+.ws-step:hover { color: var(--ws-ink); background: var(--ws-wash); }
+.ws-step-n { width: 22px; height: 22px; flex: none; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600; color: var(--ws-muted); box-shadow: inset 0 0 0 1px var(--ws-line-2); background: #FFFFFF; font-variant-numeric: tabular-nums; }
+.ws-step.is-on { color: #FFFFFF; background: var(--ws-ink); }
+.ws-step.is-on .ws-step-n { background: rgba(255, 255, 255, 0.14); color: #FFFFFF; box-shadow: none; }
+@media (max-width: 760px) { .ws-step { flex: 0 0 auto; padding: 9px 11px; } }
+
+/* ── Agent and template cards ── */
+.hv-app .agent-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.hv-app .lib-card.agent-card {
+  background: var(--ws-card) !important; border: 0 !important; border-radius: var(--ws-radius) !important; box-shadow: var(--ws-shadow) !important;
+  padding: 22px; gap: 16px; min-height: 230px; transition: box-shadow .2s ease, translate .2s ease;
+}
+.hv-app a.lib-card.agent-card:hover, .hv-app .lib-card.agent-card:focus-visible { box-shadow: var(--ws-shadow-hover) !important; translate: 0 -2px; }
+.hv-app .agent-purpose { font-size: 13.5px; color: var(--ws-muted); line-height: 1.6; }
+.hv-app .agent-foot { border-top: 1px solid var(--ws-line); padding-top: 14px; font-size: 12.5px; color: var(--ws-muted); }
+.ws-mono { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 11px; font-family: 'Newsreader', Georgia, serif; color: #FFFFFF; background: linear-gradient(145deg, #2A2926 0%, #0F0E0D 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 1px 2px rgba(15, 14, 13, 0.2); }
+
+/* ── Empty states: a framed invitation, not a stray line ── */
+.ws-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 48px 24px; background: var(--ws-card); border-radius: var(--ws-radius); box-shadow: var(--ws-shadow); }
+.ws-empty-ic { width: 46px; height: 46px; border-radius: 13px; display: inline-flex; align-items: center; justify-content: center; color: var(--ws-body); background: var(--ws-wash); box-shadow: inset 0 0 0 1px var(--ws-line); margin-bottom: 16px; }
+.ws-empty-t { font-family: 'Newsreader', Georgia, serif; font-size: 22px; letter-spacing: -0.014em; color: var(--ws-ink); }
+.ws-empty-b { margin-top: 8px; max-width: 460px; font-size: 13.5px; line-height: 1.6; color: var(--ws-muted); }
+.ws-empty-a { margin-top: 20px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hv-app a.lib-card.agent-card:hover, a.ws-cell:hover::after { translate: none; transform: none; }
+}
+
+/* ── Sidebar: fewer, quieter groups that fold ── */
+.hv-app .sb .sb-row { height: 32px; font-size: 13.5px; }
+.hv-app .sb-group { margin-top: 6px; }
+.hv-app .sb-group:has(> .sb-fold[aria-expanded="true"]) { margin-top: 14px; margin-bottom: 6px; }
+.hv-app .sb-fold { display: flex; width: 100%; align-items: center; justify-content: space-between; background: none; border: 0; cursor: pointer; padding: 4px 10px 6px; border-radius: 6px; text-align: left; transition: color .15s ease; }
+.hv-app .sb-fold:hover { color: #E8E5DF; }
+.hv-app .sb-fold-chev { opacity: 0; transition: transform .18s ease, opacity .15s ease; }
+.hv-app .sb-fold:hover .sb-fold-chev, .hv-app .sb-fold:focus-visible .sb-fold-chev, .hv-app .sb-fold[aria-expanded="false"] .sb-fold-chev { opacity: .8; }
+.hv-app .sb-fold-body { animation: sb-fold-in .18s ease both; }
+@keyframes sb-fold-in { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .hv-app .sb-fold-body { animation: none; } .hv-app .sb-fold-chev { transition: none; } }
+
+/* ── Home: white cards with a monogram, serif section titles ── */
+.hv-app .hw-h { font-family: 'Newsreader', Georgia, serif; font-weight: 400; font-size: 21px; letter-spacing: -0.014em; }
+.hv-app .hw-sub { font-size: 13px; color: var(--ws-muted); }
+.hv-app .hw-sec { margin-top: 44px; }
+.hv-app .hw-card { min-height: 128px; padding: 18px 20px; border: 0; border-radius: var(--ws-radius); background: var(--ws-card); box-shadow: var(--ws-shadow); transition: box-shadow .2s ease, translate .2s ease; }
+.hv-app .hw-card:hover { background: var(--ws-card); box-shadow: var(--ws-shadow-hover); translate: 0 -2px; }
+.hv-app .hw-card-t { font-family: 'Newsreader', Georgia, serif; font-weight: 400; font-size: 18px; letter-spacing: -0.012em; }
+.hv-app .hw-card-s { font-size: 12.5px; color: var(--ws-muted); }
+.hv-app .hw-card-mono { left: 20px; top: 18px; width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-family: 'Newsreader', Georgia, serif; font-size: 16px; color: #FFFFFF; background: linear-gradient(145deg, #2A2926 0%, #0F0E0D 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10); }
+.hv-app .hw-pill { height: 32px; padding: 0 14px; font-size: 13px; border-color: var(--ws-line-2); box-shadow: 0 1px 2px rgba(15, 14, 13, 0.04); }
+.hv-app .hw-list { border-top: 0; background: var(--ws-card); border-radius: var(--ws-radius); box-shadow: var(--ws-shadow); overflow: hidden; }
+.hv-app .hw-list li { border-bottom: 1px solid var(--ws-line); }
+.hv-app .hw-list li:last-child { border-bottom: 0; }
+.hv-app .hw-row { padding: 14px 18px; }
+
+/* ── Quieter attention marks ── */
+.ws-alert-ic { width: 8px; height: 8px; border-radius: 999px; font-size: 0; background: var(--ws-warn); margin: 0 4px 0 2px; }
+.ws-alert.is-high .ws-alert-ic { background: var(--ws-bad); }
+.ws-alert::before { width: 2px; }
+
+/* ── A list inside a panel runs edge to edge: one frame, not two ── */
+.ws-panel-body > .pf-list { box-shadow: none; border-radius: 0; margin: 0 -22px; border-top: 1px solid var(--ws-line); }
+.ws-panel-body > .pf-list:last-child { margin-bottom: -22px; border-radius: 0 0 var(--ws-radius) var(--ws-radius); }
+.ws-panel-body > .pf-list:first-child { margin-top: -4px; }
+.ws-panel-body > .pf-list .pf-row { padding-left: 22px; padding-right: 22px; }
+.ws-panel-body > .pf-stack > .pf-list { box-shadow: 0 0 0 1px var(--ws-line); }
+
+/* ── Tabs that filter a page (not under a header): a quiet segmented control ── */
+.hv-app .v32-wrap .pf-stack > .hv-tabs, .hv-app .v32-wrap .pf-stack > div > .hv-tabs { display: inline-flex !important; align-self: flex-start; width: auto; max-width: 100%; padding: 4px; gap: 2px !important; background: rgba(15, 14, 13, 0.045); border-radius: 11px; }
+.hv-app .v32-wrap .pf-stack > .hv-tabs .hv-tab, .hv-app .v32-wrap .pf-stack > div > .hv-tabs .hv-tab { border-radius: 8px !important; padding: 6px 12px !important; }
+.hv-app .v32-wrap .pf-stack > .hv-tabs .hv-tab[aria-selected="true"], .hv-app .v32-wrap .pf-stack > div > .hv-tabs .hv-tab[aria-selected="true"] { background: #FFFFFF !important; box-shadow: 0 1px 2px rgba(15, 14, 13, 0.08), 0 0 0 1px rgba(15, 14, 13, 0.05) !important; }
+
+/* ── Side pane on detail pages ── */
+.hv-app .hv-side .hv-block-title { font-size: 18px; }
+.hv-app .hv-side .pf-pre { max-height: 280px; }
+
+/* ── Activity: a timeline grouped by day ── */
+.ws-feed { list-style: none; margin: 0; padding: 6px 0; background: var(--ws-card); border-radius: var(--ws-radius); box-shadow: var(--ws-shadow); position: relative; }
+.ws-feed::before { content: ""; position: absolute; left: 27px; top: 22px; bottom: 22px; width: 1px; background: var(--ws-line); }
+.ws-feed-item { position: relative; display: flex; align-items: flex-start; gap: 16px; padding: 12px 20px 12px 22px; }
+.ws-feed-dot { position: relative; z-index: 1; flex: none; width: 11px; height: 11px; margin-top: 4px; border-radius: 999px; background: #FFFFFF; box-shadow: inset 0 0 0 2px #2A2926; }
+.ws-feed-dot.is-bad { box-shadow: inset 0 0 0 2px var(--ws-bad); }
+.ws-feed-t { font-size: 14px; font-weight: 500; color: var(--ws-ink); }
+.ws-feed-n { font-weight: 400; color: var(--ws-body); }
+.ws-feed-s { margin-top: 3px; font-size: 12.5px; color: var(--ws-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-feed-w { flex: none; font-size: 12.5px; color: var(--ws-faint); font-variant-numeric: tabular-nums; padding-top: 1px; }
+.ws-avatar { flex: none; width: 32px; height: 32px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--ws-body); background: var(--ws-wash); box-shadow: inset 0 0 0 1px var(--ws-line); }
+
+/* ── Starting points on New agent ── */
+.ws-ideas { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.ws-idea { text-align: left; padding: 16px 18px; border: 0; border-radius: 12px; background: var(--ws-card); box-shadow: var(--ws-shadow); font: inherit; font-size: 13.5px; line-height: 1.55; color: var(--ws-body); cursor: pointer; transition: box-shadow .2s ease, translate .2s ease; }
+.ws-idea:hover { box-shadow: var(--ws-shadow-hover); translate: 0 -1px; color: var(--ws-ink); }
+.ws-idea.is-on { box-shadow: 0 0 0 1.5px var(--ws-ink), var(--ws-shadow); color: var(--ws-ink); }
+/* Studio steps: a stone track, the current step lifted on white */
+.ws-steps { padding: 4px; background: #F2F1EE; box-shadow: none; border-radius: 10px; margin-bottom: 24px; }
+.ws-step { padding: 7px 12px; border-radius: 7px; font-size: 13px; }
+.ws-step:hover { background: rgba(15, 14, 13, 0.04); }
+.ws-step.is-on { color: var(--ws-ink); background: #FFFFFF; box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.07), 0 1px 2px rgba(15, 14, 13, 0.06); }
+.ws-step-n { width: 18px; height: 18px; font-size: 10.5px; background: transparent; }
+.ws-step.is-on .ws-step-n { background: var(--ws-ink); color: #FFFFFF; box-shadow: none; }
+.hv-app .pf-note { background: #F7F6F3; border-color: transparent; }
+
+/* Slim rail on the light shell */
+@media (min-width: 1024px) {
+  .hv-app .sb.sb-slim { width: 60px; padding: 14px 10px 10px; }
+  .hv-app .sb-slim .sb-mark-glyph { width: 26px; height: 26px; border-radius: 7px; background: #F4F2EE; color: #0F0E0D; }
+  .hv-app .sb-slim .sb-group { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
+  .hv-app .sb-slim .sb-row { width: 38px; height: 36px; margin: 0 auto; border-radius: 9px; }
+  .hv-app .sb-slim .sb-fold-body { animation: none; }
+  .hv-app .sb-slim .sb-row > svg + * { display: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   Match the product views on Starlane's own landing page
+   (components/marketing/hx/HeroDashboard): a near-black rail with labels,
+   a warm grey page, flat white cards with no outline, a serif page title
+   and serif headline figures, Inter for everything read at size.
+   ════════════════════════════════════════════════════════════════ */
+.hv-app {
+  --hv-rail: #100E0A; --hv-rail-hi: #33312D; --hv-rail-text: #D9D6D1; --hv-rail-dim: #9E9A94;
+  --ws-paper: #F7F5F4;
+  --ws-radius: 12px;
+  --ws-radius-sm: 8px;
+  --ws-shadow: none;
+  --ws-shadow-hover: 0 1px 2px rgba(15, 14, 13, 0.05), 0 10px 24px -14px rgba(15, 14, 13, 0.22);
+  --ws-line: rgba(15, 14, 13, 0.07);
+}
+.hv-app .v32-main { background: #F7F5F4 !important; }
+.hv-app .sb { background: #100E0A; }
+.hv-app .sb .sb-row.is-active { background: #33312D; }
+
+/* Page header: the serif title on its own, small actions to the right */
+.hv-app .v32-wrap .hv-title { font-size: 34px !important; letter-spacing: -0.014em !important; line-height: 1.1 !important; }
+.ws-header { border-bottom: 0; padding-bottom: 6px; margin-bottom: 18px; }
+.ws-header.has-tabs { border-bottom: 1px solid var(--ws-line); padding-bottom: 0; }
+.ws-eyebrow { display: none; }
+.hv-app .v32-wrap .btn-primary-v32, .hv-app .v32-wrap .btn-secondary-v32 { min-height: 32px; border-radius: 7px !important; font-size: 13.5px; }
+.hv-app .v32-wrap .btn-secondary-v32 { background: #FFFFFF; border-color: transparent !important; box-shadow: none; }
+.hv-app .v32-wrap .btn-secondary-v32:hover { background: #FFFFFF; box-shadow: 0 0 0 1px rgba(15, 14, 13, 0.12); }
+
+/* Cards: white on the grey page, no outline */
+.hv-app .pf-list, .hv-app .hv-side, .hv-app .pf-kpi, .ws-panel, .ws-band { background: #FFFFFF; box-shadow: none !important; border: 0 !important; border-radius: 12px; }
+.ws-panel-head h2 { font-family: var(--hv-sans); font-weight: 500; font-size: 17px; letter-spacing: -0.01em; }
+.ws-panel-body > .pf-list { box-shadow: none !important; }
+.ws-cell { box-shadow: -1px 0 0 #F0EEEB; }
+.ws-cell-v { font-size: 44px; letter-spacing: -0.02em; }
+.hv-app .ws-band-title { text-transform: none; letter-spacing: -0.005em; font-size: 14px; font-weight: 500; color: var(--ws-ink); }
+.hv-app .hv-pane-head h3 { font-size: 13px; font-weight: 500; letter-spacing: -0.005em; text-transform: none; color: var(--ws-ink); }
+.ws-alert { background: #FFFFFF; box-shadow: none; border: 0; }
+.hv-app .pf-row { border-color: #F0EEEB; }
+.hv-app .pf-row:hover { background: #FBFAF9; }
+.hv-app .pf-input, .hv-app .pf-textarea, .hv-app .pf-select { background: #FFFFFF; }
+
+/* Status: soft fill with a dot, as in the review table on the landing page */
+.hv-app .pf-chip, .hv-app .pf-chip.is-good, .hv-app .pf-chip.is-warn, .hv-app .pf-chip.is-bad { box-shadow: none; border: 0; }
+.hv-app .pf-chip { background: #F1EFEC; color: #4A4742; }
+.hv-app .pf-chip.is-good { background: #EAF2EC; color: #2F5A40; }
+.hv-app .pf-chip.is-warn { background: #FBF0D9; color: #7A561A; }
+.hv-app .pf-chip.is-bad { background: #F8E7E5; color: #8E3B34; }
+
+/* Studio steps on the grey page */
+.ws-steps { background: #EDEBE7; }
+
+/* Monograms: dark tiles, serif initial, like the landing sidebar */
+.ws-mono, .hv-app .hw-card-mono { background: #1E1C1B; color: #FFFFFF; box-shadow: none; }
+
+/* ── Command Center charts, in the landing page's style ── */
+.ws-charts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 16px; }
+@media (max-width: 900px) { .ws-charts { grid-template-columns: minmax(0, 1fr); } }
+.ws-chart { background: #FFFFFF; border-radius: 12px; padding: 20px 22px 16px; display: flex; flex-direction: column; min-width: 0; }
+.ws-chart-big { font-family: 'Newsreader', Georgia, serif; font-size: 46px; line-height: 1; letter-spacing: -0.02em; color: var(--ws-ink); font-variant-numeric: tabular-nums; }
+.ws-chart-t { margin: 0; font-size: 17px; font-weight: 500; letter-spacing: -0.01em; color: var(--ws-ink); }
+.ws-chart-note { margin-top: 6px; font-size: 13px; color: var(--ws-muted); }
+.ws-chart-body { margin-top: 18px; flex: 1; min-height: 0; }
+.ws-chart-leg { display: flex; flex-wrap: wrap; gap: 16px; margin: 14px -22px 0; padding: 12px 22px 0; border-top: 1px solid #F0EEEB; font-size: 12px; color: var(--ws-muted); }
+.ws-chart-leg span { display: inline-flex; align-items: center; gap: 6px; }
+.ws-key { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.ws-key.is-ink, .ws-daily-stack b.is-ink, .ws-hbar-track b.is-ink { background: repeating-linear-gradient(90deg, #3E4350 0 1px, #5A606D 1px 2px); }
+.ws-key.is-bad, .ws-daily-stack b.is-bad, .ws-hbar-track b.is-bad { background: #8A5A55; }
+.ws-key.is-light, .ws-daily-stack b.is-light { background: #DADCE0; }
+.ws-daily { display: flex; gap: 8px; height: 168px; }
+.ws-daily-y { display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 20px; font-size: 10.5px; color: #8F8A81; text-align: right; min-width: 14px; font-variant-numeric: tabular-nums; }
+.ws-daily-y span { transform: translateY(50%); }
+.ws-daily-y span:first-child { transform: translateY(-20%); }
+.ws-daily-plot { position: relative; flex: 1; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; padding-bottom: 20px; }
+.ws-grid { position: absolute; left: 0; right: 0; height: 1px; background: #F0EEEB; margin-bottom: 20px; }
+.ws-daily-col { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; min-width: 0; }
+.ws-daily-stack { width: min(14px, 70%); height: 100%; display: flex; flex-direction: column; justify-content: flex-end; gap: 1px; }
+.ws-daily-stack b { display: block; width: 100%; border-radius: 2px; min-height: 2px; }
+.ws-daily-x { position: absolute; bottom: -20px; font-size: 10.5px; color: #8F8A81; white-space: nowrap; }
+.ws-hbars { display: flex; flex-direction: column; gap: 10px; }
+.ws-hbar { display: grid; grid-template-columns: minmax(90px, 160px) minmax(0, 1fr) 64px; align-items: center; gap: 12px; font-size: 12.5px; color: var(--ws-body); text-decoration: none; }
+.ws-hbar:hover .ws-hbar-n { color: var(--ws-ink); text-decoration: underline; text-underline-offset: 3px; }
+.ws-hbar-n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-hbar-track { display: flex; height: 10px; gap: 1px; }
+.ws-hbar-track b { display: block; height: 100%; border-radius: 2px; }
+.ws-hbar-v { font-size: 11.5px; color: var(--ws-muted); font-variant-numeric: tabular-nums; }
+.ws-notice { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #FFFFFF; border-radius: 10px; font-size: 13.5px; color: #4A4843; text-decoration: none; }
+.ws-notice b { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 4px; background: #0F0E0D; color: #FFFFFF; font-family: 'Newsreader', Georgia, serif; font-size: 12px; }
+a.ws-notice:hover { color: var(--ws-ink); }

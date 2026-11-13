@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./fonts.css";
 import "./globals.css";
 import "./atlas.css";
+import "./workspace.css";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import ReactQueryProvider from "@/components/providers/ReactQueryProvider";
 import { Analytics } from "@vercel/analytics/next";
