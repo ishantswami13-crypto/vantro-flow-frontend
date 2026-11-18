@@ -3,18 +3,50 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import StarlaneWordmark from "@/components/brand/StarlaneWordmark";
-import { MENUS, PLAIN, LOGIN, BANNER, type Menu } from "./topbar-data";
+import { MENUS, PLAIN, LOGIN, type Menu } from "./topbar-data";
 
-// The public top bar: an announcement banner, then a sticky header with the
-// wordmark, six destinations, sign in and one call to action. Four
-// destinations open a full-width mega menu (columns of links and a featured
-// card). The header and its menus are ink, matching the reference; the light
-// tokens (.tb-light) are kept for a page that wants a paper header.
+// The public top bar: a sticky header with the wordmark, six destinations,
+// sign in and one call to action. Four destinations open a full-width mega
+// menu (columns of links and a featured card). Like the reference, the header
+// is a translucent, blurred bar that takes the colour of the section beneath
+// it: paper with ink text over light sections, ink with paper text over dark
+// ones, switching as you scroll.
 
 type Theme = "light" | "dark";
 
 // React 18 has no boolean `inert`; an empty string sets the attribute.
 const inert = (on: boolean) => (on ? ({ inert: "" } as Record<string, string>) : {});
+
+// Lightness (0 to 1) and alpha of a computed background colour, or null when
+// the browser reports a format this does not read.
+function readBg(v: string): { l: number; a: number } | null {
+  const n = v.match(/-?[\d.]+/g)?.map(Number);
+  if (!n || n.length < 3) return null;
+  if (v.startsWith("rgb")) return { l: (0.2126 * n[0] + 0.7152 * n[1] + 0.0722 * n[2]) / 255, a: n.length > 3 ? n[3] : 1 };
+  if (v.startsWith("oklab") || v.startsWith("oklch")) return { l: n[0] > 1 ? n[0] / 100 : n[0], a: v.includes("/") ? n[n.length - 1] : 1 };
+  return null;
+}
+
+// The theme of the section under the header's middle line, as the reference
+// does it: the section (or footer) decides, not a picture or film inside it,
+// so the bar stays paper over a dark video on a paper section. A section can
+// say so outright with data-nav-theme. Paper when unsure.
+function themeUnder(header: HTMLElement, skip: HTMLElement | null): Theme {
+  const r = header.getBoundingClientRect();
+  const y = Math.max(1, r.top + r.height / 2);
+  for (const el of document.elementsFromPoint(window.innerWidth / 2, y)) {
+    if (skip?.contains(el)) continue;
+    const sec = el.closest("[data-nav-theme], section, footer") ?? el;
+    const said = sec.getAttribute("data-nav-theme");
+    if (said === "dark" || said === "light") return said;
+    for (let n: Element | null = sec; n && n !== document.documentElement; n = n.parentElement) {
+      const bg = readBg(getComputedStyle(n).backgroundColor);
+      if (bg && bg.a > 0.5) return bg.l < 0.45 ? "dark" : "light";
+    }
+    break;
+  }
+  return "light";
+}
 
 function Chevron() {
   return (
@@ -47,25 +79,30 @@ export function TopBar() {
   const headerRef = useRef<HTMLElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const path = usePathname() ?? "/";
-  const theme: Theme = "dark";
+  const [theme, setTheme] = useState<Theme>("light");
   const [open, setOpen] = useState<string | null>(null);
   const [login, setLogin] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [mobileSec, setMobileSec] = useState<string | null>(null);
-  const [banner, setBanner] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const closeT = useRef<number | undefined>(undefined);
   const openT = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    try { if (sessionStorage.getItem("sl-banner") === BANNER.id) setBanner(false); } catch { /* storage blocked */ }
-  }, []);
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 4);
-    fn();
+    let raf = 0;
+    const read = () => {
+      raf = 0;
+      setScrolled(window.scrollY > 4);
+      if (headerRef.current) setTheme(themeUnder(headerRef.current, wrapRef.current));
+    };
+    const fn = () => { if (!raf) raf = requestAnimationFrame(read); };
+    read();
+    // Sections can paint in after load (fonts, reveals), so read once more.
+    const late = window.setTimeout(read, 400);
     window.addEventListener("scroll", fn, { passive: true });
-    return () => window.removeEventListener("scroll", fn);
-  }, []);
+    window.addEventListener("resize", fn);
+    return () => { window.removeEventListener("scroll", fn); window.removeEventListener("resize", fn); cancelAnimationFrame(raf); clearTimeout(late); };
+  }, [path]);
 
   const closeAll = useCallback(() => { setOpen(null); setLogin(false); setMobile(false); }, []);
   useEffect(() => { closeAll(); }, [path, closeAll]);
@@ -103,19 +140,10 @@ export function TopBar() {
   const hoverStay = () => clearTimeout(closeT.current);
 
   const isCurrent = (hrefs: string[]) => hrefs.some((h) => { const p = h.split("#")[0]; return p !== "/" && (path === p || path.startsWith(p + "/")); });
-  const dismissBanner = () => { setBanner(false); try { sessionStorage.setItem("sl-banner", BANNER.id); } catch { /* storage blocked */ } };
   const active = MENUS.find((m) => m.id === open) ?? null;
 
   return (
     <div ref={wrapRef} className={`tb tb-${theme}${open ? " tb-has-open" : ""}`}>
-      {banner && (
-        <div className="tb-banner" role="region" aria-label="Announcement">
-          <p><span>{BANNER.text}</span> <Link href={BANNER.href}>{BANNER.cta}</Link></p>
-          <button type="button" className="tb-banner-x" aria-label="Dismiss announcement" onClick={dismissBanner}>
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden><path d="m2 2 10 10M12 2 2 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>
-          </button>
-        </div>
-      )}
       <header ref={headerRef} className={`tb-head${scrolled ? " is-scrolled" : ""}`} onMouseLeave={hoverLeave} onMouseEnter={hoverStay}>
         <nav className="tb-bar" aria-label="Main navigation">
           <Link href="/" aria-label="Starlane home" className="tb-mark"><StarlaneWordmark height={26} title={null} /></Link>

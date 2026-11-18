@@ -100,6 +100,9 @@
 .hx-hero-side { padding-top: calc(11px * var(--s)); display: grid; gap: calc(32px * var(--s)); justify-items: start; }
 .hx-hero-side .hx-lead { max-width: calc(680px * var(--s)); }
 .hx-hero.stack .hx-hero-g { grid-template-columns: 1fr; }
+/* The app's "main h1" rule (globals.css) must not reach the public site's
+   display type: keep the reference's tracking and ink. */
+.hx main h1.hx-d1 { letter-spacing: -0.0125em !important; color: var(--fg, #0F0E0D); }
 .hx-hero.stack .hx-d1 { max-width: calc(1100px * var(--s)); }
 .hx-hero.stack .hx-hero-side { padding-top: calc(40px * var(--s)); }
 .hx-hero.stack .hx-lead { max-width: calc(300px * var(--s)); font-size: calc(18px * var(--s)); }
@@ -267,7 +270,9 @@
 .acc-vt .dw-host { position: absolute; left: -1.35%; top: 7.74%; width: 206%; box-shadow: 0 10px 30px rgba(0,0,0,.18); clip-path: inset(0 0 0 3.47% round 10px 0 0 0); }
 
 /* Film block: scales up into place */
-.hx-film { margin: calc(64px * var(--s)) auto 0; width: calc(100% - 2 * 138px * var(--s)); }
+.hx-film { margin: calc(64px * var(--s)) auto 0; width: 100%; }
+/* Opens out from 80% to the full container as it scrolls up, like the reference. */
+.hx-grow.is-grow { width: calc(80% + 20% * var(--g, 0)); will-change: width; }
 .hx-film-h { display: inline; }
 .hx-film-wm { display: inline-block !important; height: .74em; width: auto; vertical-align: -0.02em; margin: 0 .04em; }
 .hx-film-frame { position: relative; overflow: hidden; border-radius: 4px; aspect-ratio: 16 / 9; background: #C9C8C6; }
@@ -335,6 +340,42 @@
 .hx-rail i { display: grid; place-items: center; margin-top: calc(28px * var(--s)); width: calc(36px * var(--s)); height: calc(36px * var(--s)); border-radius: 50%; background: rgb(250 250 249 / .14); font-style: normal; transition: background-color .3s, transform .4s var(--hx-out); }
 .hx-rail > a:hover i { background: rgb(250 250 249 / .28); transform: translateX(4px); }
 .hx-rail-nav { display: flex; gap: 8px; }
+
+/* Stories: a centred 16:9 slide, neighbours peeking to the screen edge, named
+   tabs below. Measured from the reference at 1440: slide 905 wide, 17 apart. */
+.hx-st { --sw: min(62.85vw, 1200px); --sg: calc(17px * var(--s)); margin-top: calc(64px * var(--s)); }
+.hx-st-view { width: 100vw; margin-left: calc(50% - 50vw); overflow: hidden; }
+.hx-st-track { display: flex; gap: var(--sg); transform: translateX(calc(50vw - var(--sw) / 2 - var(--on) * (var(--sw) + var(--sg)))); transition: transform .9s cubic-bezier(.7, 0, .3, 1); }
+.hx-st-slide { position: relative; flex: none; width: var(--sw); aspect-ratio: 16 / 9; overflow: hidden; border-radius: 4px; isolation: isolate; color: #FAFAF9; background: #1B1A18; }
+.hx-st-art { position: absolute; inset: 0; z-index: -1; }
+.hx-st-art > * { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hx-st-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgb(15 14 13 / .55), rgb(15 14 13 / .1) 70%); }
+.hx-st-copy { position: absolute; left: 17.7%; top: 32.5%; display: grid; justify-items: start; gap: calc(36px * var(--s)); max-width: calc(440px * var(--s)); transition: opacity .6s var(--hx-out); }
+.hx-st-copy p { margin: 0; font-family: var(--serif); font-size: calc(32px * var(--s)); line-height: 1.06; letter-spacing: -0.01em; text-wrap: pretty; }
+.hx-st-go { display: grid; place-items: center; width: calc(72px * var(--s)); height: calc(72px * var(--s)); border-radius: 50%; background: rgb(250 250 249 / .16); border: 1px solid rgb(250 250 249 / .14); color: #FAFAF9; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); transition: background-color .3s, transform .45s var(--hx-out); }
+.hx-st-go:hover { background: rgb(250 250 249 / .28); transform: scale(1.06); }
+.hx-st-go:focus-visible { outline: 2px solid #FAFAF9; outline-offset: 4px; }
+.hx-st-slide:not(.on) .hx-st-copy { opacity: .9; }
+.hx-st-peek { position: absolute; inset: 0; z-index: 2; border: 0; padding: 0; background: transparent; cursor: pointer; }
+.hx-st-tabs { display: flex; justify-content: center; flex-wrap: wrap; align-items: center; margin-top: calc(64px * var(--s)); }
+.hx-st-tabs button { position: relative; padding: calc(16px * var(--s)) calc(28px * var(--s)); border: 0; background: none; color: inherit; font: inherit; font-size: calc(15px * var(--s)); font-weight: 500; opacity: .3; cursor: pointer; transition: opacity .3s; }
+.hx-st-tabs button + button::before { content: ""; position: absolute; left: 0; top: 50%; width: 1px; height: calc(24px * var(--s)); translate: 0 -50%; background: currentColor; opacity: .9; }
+.hx-st-tabs button:hover { opacity: .7; }
+.hx-st-tabs button.on { opacity: 1; }
+.hx-st-tabs button:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
+@media (max-width: 767px) {
+  .hx-st { margin-top: 40px; }
+  .hx-st-view { width: auto; margin-left: 0; overflow: visible; }
+  .hx-st.stack .hx-st-track { flex-direction: column; gap: 40px; transform: none; }
+  .hx-st.stack .hx-st-slide { width: auto; aspect-ratio: auto; overflow: visible; background: none; }
+  .hx-st.stack .hx-st-art { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 4px; z-index: 0; }
+  .hx-st.stack .hx-st-art::after { display: none; }
+  .hx-st.stack .hx-st-copy { position: static; max-width: none; margin-top: 20px; gap: 16px; }
+  .hx-st-copy p { font-size: 28px; }
+  .hx-st-go { width: 44px; height: 44px; }
+  .hx-st.stack .hx-st-tabs { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .hx-st-track { transition: none; } }
 .hx-rail-nav button { width: calc(32px * var(--s)); height: calc(32px * var(--s)); border-radius: 4px; border: 1px solid var(--fg); background: none; color: var(--fg); cursor: pointer; transition: background-color .3s; }
 .hx-rail-nav button:hover { background: color-mix(in oklab, var(--fg) 12%, transparent); }
 

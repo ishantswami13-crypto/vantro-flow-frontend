@@ -10,13 +10,6 @@ export type Menu = {
   featured: { href: string; title: string; blurb: string; pairs: Array<[string, string]> };
 };
 
-export const BANNER = {
-  id: "command-center-film",
-  text: "New: one morning in the Starlane Command Center, from overnight review to an approved reminder, in 38 seconds",
-  cta: "Watch the film",
-  href: "/platform#film",
-};
-
 export const PLAIN: MenuLink[] = [
   { href: "/pilots", label: "Customers" },
   { href: "/security", label: "Security" },
