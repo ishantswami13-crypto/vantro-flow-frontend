@@ -204,3 +204,82 @@ export function ResourceFilter({ types, topics }: { types: string[]; topics: str
     </div>
   );
 }
+
+/**
+ * Grows its child from 80% to the full container width as it scrolls up the
+ * screen, the way the reference's launch film opens out. Static (full width)
+ * under reduced motion and before hydration.
+ */
+export function GrowOnScroll({ children, className = "", id }: { children: React.ReactNode; className?: string; id?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || still()) return;
+    let raf = 0;
+    const read = () => {
+      raf = 0;
+      const vh = window.innerHeight;
+      const top = el.getBoundingClientRect().top;
+      // 0 while the top is in the lower fifth of the screen, 1 once it
+      // reaches the header line.
+      const g = Math.min(1, Math.max(0, (vh * 0.8 - top) / (vh * 0.8 - 80)));
+      el.style.setProperty("--g", g.toFixed(3));
+    };
+    const fn = () => { if (!raf) raf = requestAnimationFrame(read); };
+    el.classList.add("is-grow");
+    read();
+    window.addEventListener("scroll", fn, { passive: true });
+    window.addEventListener("resize", fn);
+    return () => { window.removeEventListener("scroll", fn); window.removeEventListener("resize", fn); cancelAnimationFrame(raf); el.classList.remove("is-grow"); };
+  }, []);
+  return <div ref={ref} id={id} className={`hx-grow ${className}`}>{children}</div>;
+}
+
+export type Story = { href: string; tab: string; title: string; art: React.ReactNode };
+
+/**
+ * A centred 16:9 slide with its neighbours peeking either side, and a row of
+ * named tabs underneath: the active tab is full strength, the rest dimmed.
+ * Advances on a timer while on screen; arrows on the slide and the tabs move it
+ * by hand.
+ */
+export function Stories({ items, label, ms = 7000 }: { items: Story[]; label: string; ms?: number }) {
+  const [on, setOn] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const next = useCallback(() => setOn((v) => (v + 1) % items.length), [items.length]);
+  const { paused } = useAutoplay(ref, ms, next, on);
+  // On phones the reference stacks every story, picture above title.
+  const [stack, setStack] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const fn = () => setStack(mq.matches);
+    fn();
+    mq.addEventListener("change", fn);
+    return () => mq.removeEventListener("change", fn);
+  }, []);
+  return (
+    <div ref={ref} className={`hx-st${paused ? " paused" : ""}${stack ? " stack" : ""}`} role="region" aria-roledescription="carousel" aria-label={label} style={{ "--dur": `${ms}ms`, "--on": on } as React.CSSProperties}>
+      <div className="hx-st-view">
+        <div className="hx-st-track">
+          {items.map((s, i) => (
+            <div key={s.href} className={`hx-st-slide${i === on || stack ? " on" : ""}`} aria-hidden={!stack && i !== on} {...((!stack && i !== on ? { inert: "" } : {}) as Record<string, string>)}>
+              <div className="hx-st-art" aria-hidden>{s.art}</div>
+              <div className="hx-st-copy">
+                <p>{s.title}</p>
+                <Link href={s.href} className="hx-st-go" aria-label={`Open walkthrough: ${s.tab}`}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden><path d="M4 9h10m-4-4 4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </Link>
+              </div>
+              {!stack && i !== on && <button type="button" className="hx-st-peek" tabIndex={-1} aria-hidden onClick={() => setOn(i)} />}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="hx-st-tabs" role="tablist" aria-label={`${label}: choose one`}>
+        {items.map((s, i) => (
+          <button key={s.href} type="button" role="tab" aria-selected={i === on} className={i === on ? "on" : ""} onClick={() => setOn(i)}>{s.tab}</button>
+        ))}
+      </div>
+    </div>
+  );
+}

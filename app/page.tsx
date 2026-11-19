@@ -4,7 +4,7 @@ import { SITE, SITE_URL, pageMetadata } from "@/lib/site";
 import { JsonLd } from "@/components/marketing/JsonLd";
 import { HxShell, Paint } from "@/components/marketing/hx/Shell";
 import { Hero, CenterHead, DuoCards, StatRows, Controls } from "@/components/marketing/hx/Blocks";
-import { SourceGrid, Accordion, Quotes, Rail } from "@/components/marketing/hx/Interactive";
+import { SourceGrid, Accordion, Quotes, Stories, GrowOnScroll } from "@/components/marketing/hx/Interactive";
 import { LedgerMock, DecisionMock, MemoryMock, PlanMock } from "@/components/marketing/hx/Mocks";
 import { HeroDashboard } from "@/components/marketing/hx/HeroDashboard";
 import { CloseWindow, ReviewWindow, DuoPaint, AgentRunView, AccFrame } from "@/components/marketing/hx/DuoViews";
@@ -62,11 +62,11 @@ const QUOTES = [
 ];
 
 const RAIL = [
-  { href: "/product/bridge", k: "Walkthrough", t: "The Bridge: what you are owed, what is overdue and what needs you today.", tone: "night" as const },
-  { href: "/product/watch", k: "Walkthrough", t: "Watch: promises missed and invoices slipping, raised once with evidence.", tone: "umber" as const },
-  { href: "/product/missions", k: "Walkthrough", t: "Missions: one objective with a deadline, planned step by step.", tone: "ink" as const },
-  { href: "/product/simulate", k: "Walkthrough", t: "Simulate: likely collections, every assumption visible and yours.", tone: "slate" as const },
-  { href: "/product/memory", k: "Walkthrough", t: "Memory: what Starlane learned about how you get paid.", tone: "plum" as const },
+  { href: "/product/bridge", tab: "The Bridge", t: "The Bridge: what you are owed, what is overdue and what needs you today.", tone: "night" as const },
+  { href: "/product/watch", tab: "Watch", t: "Watch: promises missed and invoices slipping, raised once with evidence.", tone: "umber" as const },
+  { href: "/product/missions", tab: "Missions", t: "Missions: one objective with a deadline, planned step by step.", tone: "ink" as const },
+  { href: "/product/simulate", tab: "Simulate", t: "Simulate: likely collections, every assumption visible and yours.", tone: "slate" as const },
+  { href: "/product/memory", tab: "Memory", t: "Memory: what Starlane learned about how you get paid.", tone: "plum" as const },
 ];
 
 const FACTS: Array<[string, string, string]> = [
@@ -125,7 +125,7 @@ export default function HomePage() {
           >
             <Link href="/access" className="hx-btn">Request a Demo</Link>
           </CenterHead>
-          <div className="hx-film hx-r scale" id="film"><IntroducingFilm /></div>
+          <GrowOnScroll className="hx-film" id="film"><IntroducingFilm /></GrowOnScroll>
         </div>
       </section>
 
@@ -144,20 +144,11 @@ export default function HomePage() {
 
       <section className="hx-s ink pt160" aria-labelledby="see-h">
         <div className="hx-w">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 24 }}>
             <h2 id="see-h" className="hx-h2 hx-r">See the Work, Step by Step</h2>
             <Link href="/product" className="hx-btn sm line hx-r">See the Product Guide</Link>
           </div>
-          <Rail label="Product walkthroughs">
-            {RAIL.map((r, i) => (
-              <Link key={r.href} href={r.href}>
-                <Paint id={`rail-${i}`} tone={r.tone} seed={i * 6 + 3} />
-                <small>{r.k}</small>
-                <p>{r.t}</p>
-                <i aria-hidden>→</i>
-              </Link>
-            ))}
-          </Rail>
+          <Stories label="Product walkthroughs" items={RAIL.map((r, i) => ({ href: r.href, tab: r.tab, title: r.t, art: <Paint id={`rail-${i}`} tone={r.tone} seed={i * 6 + 3} /> }))} />
         </div>
       </section>
 
