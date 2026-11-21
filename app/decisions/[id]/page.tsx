@@ -42,7 +42,13 @@ const INTENT_WORDS: Record<string, string> = {
   CREATE_DUNNING_RULES: "Create reminder rules",
   CHANGE_PAYMENT_TERMS: "Shorten default terms for new invoices",
   CREATE_PO: "Draft a purchase order",
+  PREPARE_CUSTOMER_UPDATE: "Prepare delay updates to customers for your approval",
 };
+
+// Supplier-delay decisions are a fixed calculation (stock and inbound goods
+// allocated to orders, earliest promise first), not a simulation: they show
+// counts, never a range of futures.
+const isDeterministic = (kind: string) => kind === "SUPPLIER_DELAY";
 
 function stepsOf(o?: DecisionOption | null): string[] {
   if (!o || o.isDoNothing) return [];
@@ -81,6 +87,19 @@ function OptionCard({ o, d, max, recommended, selected, canChoose, onChoose, bus
 
       {!o.valid && o.invalidReason && <p className="text-[12px] mt-3" style={{ color: C.bad }}>{o.invalidReason}</p>}
 
+      {isDeterministic(d.kind) ? (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 text-[12px]">
+          <div>
+            <p style={{ color: C.faint }}>Orders late</p>
+            <p className="tabular-nums" style={{ color: C.ink }}>{o.futures.ordersLate ?? "—"}{o.futures.valueAtRisk != null ? ` · ${money(o.futures.valueAtRisk, d.currency)}` : ""}</p>
+          </div>
+          <div>
+            <p style={{ color: C.faint }}>Customers told before the date</p>
+            <p className="tabular-nums" style={{ color: C.ink }}>{o.futures.customersToldInAdvance ?? 0}</p>
+          </div>
+        </div>
+      ) : (
+      <>
       <div className="mt-4">
         <p className="text-[12px] mb-2" style={{ color: C.faint }}>{h.label} · 80% range</p>
         <RangeBar interval={h.interval} max={max} currency={d.currency} highlight={recommended} />
@@ -122,6 +141,8 @@ function OptionCard({ o, d, max, recommended, selected, canChoose, onChoose, bus
           </div>
         )}
       </div>
+      </>
+      )}
 
       {!o.isDoNothing && (
         <div className="flex flex-wrap gap-2 mt-4">
@@ -296,8 +317,8 @@ function Verification({ detail, onVerify, busy }: { detail: DecisionDetail; onVe
 // Where the decision is in its life, on the shared step rail: found in the
 // ledger, your choice, your approval, carried out (or recorded, in shadow
 // mode), and the outcome checked against the books.
-function decisionSteps(status: string, shadow: boolean): RailStep[] {
-  const labels = ["Found in your ledger", "You choose an option", "You approve it", shadow ? "Recorded in shadow mode" : "Starlane carries it out", "Outcome checked in your books"];
+function decisionSteps(status: string, shadow: boolean, kind = ""): RailStep[] {
+  const labels = [kind === "SUPPLIER_DELAY" ? "Found in your orders and purchases" : "Found in your ledger", "You choose an option", "You approve it", shadow ? "Recorded in shadow mode" : "Starlane carries it out", "Outcome checked in your books"];
   const stage: Record<string, number> = { OPEN: 1, NEEDS_INFORMATION: 1, SELECTED: 2, APPROVED: 3, EXECUTING: 3, SHADOWED: 4, EXECUTED: 4, VERIFIED: 5, RESOLVED: 5 };
   const stopped = ["REJECTED", "EXPIRED", "SUPERSEDED"].includes(status);
   const at = stopped ? 1 : stage[status] ?? 1;
@@ -394,7 +415,7 @@ export default function DecisionDetailPage() {
           {d.evidence.length > 0 && <span className="dd-chip">Evidence · {d.evidence.length} record{d.evidence.length === 1 ? "" : "s"}</span>}
         </div>
         <h1 className="text-[28px] lg:text-[34px] max-w-[820px]" style={{ color: C.ink }}>{d.title}</h1>
-        <StepRail className="is-row mt-4 mb-1" label="Where this decision is" steps={decisionSteps(d.status, detail.pilotMode === "SHADOW")} />
+        <StepRail className="is-row mt-4 mb-1" label="Where this decision is" steps={decisionSteps(d.status, detail.pilotMode === "SHADOW", d.kind)} />
         {d.description && <p className="text-[15px] mt-3 max-w-[760px] leading-[1.55]" style={{ color: C.body }}><mark className="dd-bottom">Bottom line:</mark> {d.description}</p>}
 
         {/* The evidence behind the headline, one card per kind of figure, as
@@ -498,6 +519,10 @@ export default function DecisionDetailPage() {
                   ))}
                 </ul>
               </div>
+            ) : isDeterministic(d.kind) ? (
+              (rec.wouldChangeIf || []).length > 0 && (
+                <p className="text-[12px] mt-3" style={{ color: C.faint }}>This would change if {(rec.wouldChangeIf || []).map((w) => w.label).join("; ")}.</p>
+              )
             ) : (
               <p className="text-[12px] mt-3" style={{ color: C.faint }}>No single assumption, moved across its full range, changes this recommendation.</p>
             )}
@@ -562,7 +587,9 @@ export default function DecisionDetailPage() {
             ))}
           </div>
           <p className="text-[12px] mt-3" style={{ color: C.faint }}>
-            Ranges are the middle 80% of simulated futures built from this customer&apos;s own payment history. The marker is the expected value.
+            {isDeterministic(d.kind)
+              ? "Counts come from a fixed calculation: stock on hand and inbound goods are allocated to open orders, earliest promised date first. No simulation and no language model."
+              : <>Ranges are the middle 80% of simulated futures built from this customer&apos;s own payment history. The marker is the expected value.</>}
           </p>
         </section>
 

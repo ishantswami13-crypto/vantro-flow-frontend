@@ -31,6 +31,7 @@ export interface DecisionOption {
     creditLossAvoided?: Interval; marginLost?: Interval;
     value?: Interval; bestShare?: number; robustness?: number | null;
     stockoutProbability?: number; expectedCost?: Interval; workingCapitalFreed?: Interval;
+    ordersLate?: number; valueAtRisk?: number; customersToldInAdvance?: number;
   };
 }
 
