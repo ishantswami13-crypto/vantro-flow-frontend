@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { FiEye, FiEyeOff, FiArrowRight, FiCheck } from "react-icons/fi";
 import { api, saveAuth } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
+import { takePendingInvite } from "@/lib/platform";
 import { SignInOptions } from "@/components/auth/SignInOptions";
 import { AuthShell, AuthHead, AuthError, Spinner } from "@/components/auth/AuthShell";
 
@@ -55,7 +56,7 @@ export default function LoginPage() {
     posthog.identify(data.user.id, { email: data.user.email, name: data.user.business_name, plan: data.user.plan });
     posthog.capture("user_logged_in");
     if (appState) { setSignedInAs(data.user.email); await openApp(); }
-    else router.push("/bridge");
+    else router.push(takePendingInvite() || "/bridge");
   };
 
   useEffect(() => {

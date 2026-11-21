@@ -88,7 +88,7 @@ export default function ReceivablesReviewPage() {
           <div className="flex items-center gap-2">
             <EntityPicker />
             <CurrencyPicker totals={curView.totals} cur={curView.cur} setCur={curView.setCur} />
-            <Link href="/command" className="sp-btn">Command Center</Link>
+            <Link href="/command/finance" className="sp-btn">Finance overview</Link>
             <button type="button" className="sp-go" onClick={() => ask("Who owes us the most right now, and who should I call first today?")}><StarlaneMark variant="glyph" size={10} /> Ask Starlane</button>
           </div>
         </div>

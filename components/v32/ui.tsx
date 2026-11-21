@@ -38,16 +38,21 @@ export const V = {
 };
 
 /** Page title row: Fraunces 26px, an optional one-line subtitle and a right slot. */
-export function PageHeader({ title, subtitle, right, children }: {
+export function PageHeader({ title, subtitle, right, children, eyebrow, divider }: {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   right?: React.ReactNode;
   children?: React.ReactNode;
+  /** A short context line above the title ("Workspace", "Organization"). */
+  eyebrow?: React.ReactNode;
+  /** Close the header with a hairline; tabs passed as children sit on it. */
+  divider?: boolean;
 }) {
   return (
-    <div className="fade-once">
+    <div className={`fade-once ${divider ? `ws-header ${children ? "has-tabs" : ""}` : ""}`}>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
+          {eyebrow && <div className="ws-eyebrow">{eyebrow}</div>}
           <h1 className="hv-title" style={{ margin: 0, fontFamily: V.serif, fontWeight: 400, fontSize: 37, lineHeight: 1.08, letterSpacing: "-0.012em", color: "#0F0E0D" }}>{title}</h1>
           {subtitle && <div style={{ fontSize: 14, color: "#6E6A64", marginTop: 8, lineHeight: 1.5 }}>{subtitle}</div>}
         </div>

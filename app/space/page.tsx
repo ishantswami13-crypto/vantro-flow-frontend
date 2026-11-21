@@ -381,7 +381,7 @@ function ReportsTab({ userId, onAsk }: { userId?: string; onAsk: (q: string) => 
         <div><h2 className="sp-h">Reports</h2><p className="sp-sub">Worked out from this space&rsquo;s invoices, as of today</p></div>
         <div className="flex items-center gap-2">
           <CurrencyPicker totals={curView.totals} cur={curView.cur} setCur={curView.setCur} />
-          <Link href="/command" className="sp-btn">Command Center</Link>
+          <Link href="/command/finance" className="sp-btn">Finance overview</Link>
         </div>
       </div>
       <CurrencyLine totals={curView.totals} cur={curView.cur} setCur={curView.setCur} />
