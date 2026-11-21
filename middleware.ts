@@ -14,7 +14,7 @@ export const PROTECTED = [
   // The seven surfaces and their supporting pages — guarded server-side so a
   // signed-out visitor never sees a page shell before the client-side bounce.
   '/bridge', '/command', '/scan', '/watch', '/simulate', '/prepared', '/missions', '/memory', '/workflows',
-  '/agents', '/knowledge', '/organization', '/activity', '/space', '/review', '/sources', '/discover', '/intelligence', '/outreach', '/reconcile', '/spaces', '/payables',
+  '/agents', '/connectors', '/factory', '/security-center', '/knowledge', '/organization', '/activity', '/space', '/review', '/sources', '/discover', '/intelligence', '/outreach', '/reconcile', '/spaces', '/payables',
 ];
 
 // Home of the signed-in product (the V32 Bridge).

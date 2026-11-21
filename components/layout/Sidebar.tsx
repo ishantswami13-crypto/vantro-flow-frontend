@@ -14,7 +14,7 @@ import { V32_NAV_ITEMS, V32_APPS_NAV_ITEMS, V32_SECONDARY_NAV_ITEMS, V32_WORKSPA
 import { listThreads, SCAN_THREADS_EVENT, type ScanThread } from "@/lib/scanStore";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { decisionsApi } from "@/lib/decisions";
-import { IconBell, IconSearch, IconMore, IconPlus, IconBookmark, IconBookmarkFilled, IconSpaces, IconAgents, IconLibrary, IconMissions, IconChart, IconSources, IconPrepared, IconHistory, IconSettings, IconControl, IconBank, IconBill, IconSparkle, IconCheck } from "@/components/v32/icons";
+import { IconBell, IconSearch, IconMore, IconPlus, IconBookmark, IconBookmarkFilled, IconSpaces, IconAgents, IconLibrary, IconMissions, IconChart, IconSources, IconPrepared, IconHistory, IconSettings, IconControl, IconBank, IconBill, IconSparkle, IconCheck, IconLink } from "@/components/v32/icons";
 import { useWorkspace } from "@/components/platform/ui";
 import { platformApi, setActiveOrgId, type NavGroup } from "@/lib/platform";
 import { listPins, togglePin, PINS_EVENT, type Pin } from "@/lib/pins";
@@ -43,6 +43,7 @@ const NAV_ICONS: Record<string, PrimaryNavItem["icon"]> = {
   plus: IconPlus, agents: IconAgents, library: IconLibrary, workflows: IconMissions, chart: IconChart,
   spaces: IconSpaces, sources: IconSources, prepared: IconPrepared, history: IconHistory, settings: IconSettings,
   members: IconSpaces, control: IconControl, app: IconSpaces,
+  plug: IconLink, shield: IconControl, factory: IconSparkle,
 };
 const APP_ICONS: Record<string, PrimaryNavItem["icon"]> = { finance: IconBank, procurement: IconBill, sales: IconSparkle };
 

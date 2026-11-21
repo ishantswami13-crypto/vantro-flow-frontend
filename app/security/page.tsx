@@ -5,6 +5,7 @@ import { JsonLd } from "@/components/marketing/JsonLd";
 import { HxShell } from "@/components/marketing/hx/Shell";
 import { Hero, IconCards, Controls, Faq, Cards } from "@/components/marketing/hx/Blocks";
 import { CONTROLS } from "@/components/marketing/hx/data";
+import { TrustFrameworks } from "@/components/marketing/TrustFrameworks";
 
 export const metadata: Metadata = pageMetadata({
   path: "/security",
@@ -20,22 +21,26 @@ export const viewport: Viewport = { themeColor: "#0F0E0D" };
 // not implied.
 
 const PROTECTION: Array<[string, string, string]> = [
-  ["eye", "Read-only by design", "TallyPrime is read through export only. Each desktop bridge device has its own credential, which you can revoke. Nothing in your books is created, changed or deleted."],
+  ["eye", "Read-only for your books", "TallyPrime is read through export only. Each desktop bridge device has its own credential, which you can revoke. Nothing in your books is created, changed or deleted."],
   ["check", "A person decides", "Proposed actions wait in an approval queue. Opening an approval link changes nothing; you confirm with a button on the page, and higher-risk action types always need approval."],
   ["stop", "Hard limits", "Starlane is blocked from marking payments received, changing amounts or deleting records, whatever it is asked."],
   ["once", "Runs at most once", "Each approved action is claimed atomically and runs at most once. The message text you approve is the text that is sent."],
   ["log", "Append-only audit trail", "Who decided, when, and the values before and after, in a log that is only ever added to."],
+  ["log", "Tamper-evident audit", "Each audit event is chained to the one before it with SHA-256, and the database refuses edits and deletes. Admins can verify the chain and export it for an auditor."],
+  ["lock", "Encrypted credentials", "Keys and tokens for connected apps are encrypted with AES-256-GCM before they are stored and are never shown again. Calls to other apps are https only and can never reach private networks."],
+  ["check", "Changes to other apps wait for you", "Agents can read from connected apps. Anything that would change data in another app, or call an MCP tool, waits for a person to approve the exact request."],
+  ["eye", "Your data, on request", "Any member can download everything stored about them, and an owner can export the whole organization or schedule its deletion."],
   ["lock", "Scoped and hashed", "Every request is scoped to the signed-in account; one account is one business. Passwords are hashed with bcrypt and sign-in is rate-limited."],
 ];
 
 const FAQ: Array<[string, string]> = [
-  ["Does Starlane change anything in my accounting system?", "No. Connections are read-only. TallyPrime is read through export only, and each bridge device has its own credential, which you can revoke."],
+  ["Does Starlane change anything in my accounting system?", "No. Accounting connections are read-only. TallyPrime is read through export only, and each bridge device has its own credential, which you can revoke."],
   ["Will Starlane message my customers or suppliers?", "Not unless outbound messaging is enabled for your account, and then only with text a person has approved, sent once."],
   ["Are the figures made up by AI?", "No language model produces the figures. They come from your records, simple calculations and simulations you can inspect, each labelled fact, calculation, assumption or estimate."],
   ["Who can see my data?", "Every request is scoped to your account, and one account is one business."],
   ["How is the site and app protected in transit?", "HTTPS with HTTP Strict Transport Security, standard security headers, and a content security policy on the web app."],
   ["Does Starlane hold SOC 2 or ISO 27001?", "No. Starlane does not hold third-party certifications and does not claim compliance with frameworks it has not been assessed against."],
-  ["Do you support SSO and multi-user organisations?", "Not yet. Multi-user organisations and single sign-on are not supported today."],
+  ["Do you support SSO, MFA and multi-user organisations?", "Organisations with Owner, Admin, Member and Viewer roles are supported. Single sign-on (SAML or OIDC), SCIM and multi-factor sign-in are not built yet."],
   ["Is there a bug bounty?", "There is no bug bounty programme. Please report vulnerabilities privately, as described below."],
 ];
 
@@ -71,6 +76,13 @@ export default function SecurityPage() {
             href="/privacy" cta="Read the Privacy Policy"
             items={FAQ}
           />
+        </div>
+      </section>
+
+      <section id="frameworks" className="hx-s pt128 pb128" aria-labelledby="fw-h">
+        <div className="hx-w">
+          <h2 id="fw-h" className="hx-h2 hx-r">Certifications and Frameworks</h2>
+          <TrustFrameworks />
         </div>
       </section>
 
