@@ -70,7 +70,7 @@ export interface Organization { id: string; ownerUserId: string; name: string | 
 export interface Workspace {
   organization: Organization; role: Role; permissions: string[]; apps: string[]; navigation: NavGroup[];
   organizations: { id: string; name: string | null; role: Role }[]; needsSetup: boolean; model: { configured: boolean };
-  security?: { mfaRequiredFor: MfaRequiredFor; mfaSatisfied: boolean; mfaEnabled: boolean; signedInWith: 'password' | 'mfa' | 'sso' };
+  security?: { mfaRequiredFor: MfaRequiredFor; mfaSatisfied: boolean; mfaEnabled: boolean; signedInWith: 'password' | 'mfa' | 'sso'; sessionMaxHours?: number | null };
 }
 export type MfaRequiredFor = 'none' | 'admins' | 'everyone';
 export interface AppInfo { key: string; name: string; summary: string; status: 'available' | 'planned'; requires: string | null; items: { href: string; label: string }[]; enabled: boolean; suggested: boolean }
@@ -223,7 +223,12 @@ export type FactoryRequest =
 
 export interface SsoSettings {
   redirectUri: string;
-  connection: { protocol: 'oidc'; issuer: string; clientId: string; hasClientSecret: boolean; scopes: string[]; jitRole: 'viewer' | 'member' | 'admin'; enforce: boolean; status: 'draft' | 'active'; testedAt: string | null; updatedAt: string } | null;
+  connection: {
+    protocol: 'oidc' | 'saml'; issuer: string; clientId: string | null; hasClientSecret: boolean; scopes: string[]; jitRole: 'viewer' | 'member' | 'admin'; enforce: boolean; status: 'draft' | 'active'; testedAt: string | null; updatedAt: string;
+    saml?: { ssoUrl: string; certificates: { subject: string; validTo: string | null; expired: boolean; sha256: string | null }[]; emailAttribute: string | null } | null;
+  } | null;
+  /** What to enter in the identity provider for SAML. */
+  serviceProvider?: { entityId: string; acsUrl: string; metadataUrl: string };
   domains: { domain: string; verified: boolean; verifiedAt: string | null; dnsRecord: { type: 'TXT'; name: string; value: string } }[];
   supports: { oidc: boolean; saml: boolean; scim: boolean };
 }
@@ -245,7 +250,8 @@ export async function downloadPlatformFile(path: string, filename: string): Prom
 }
 
 /** Public, no sign-in: the frameworks and their honest status. */
-export async function fetchTrust(): Promise<{ frameworks: PublicFramework[]; certifications: string[]; statement: string }> {
+export interface PublicControl { area: string; name: string; detail: string }
+export async function fetchTrust(): Promise<{ frameworks: PublicFramework[]; certifications: string[]; statement: string; designedAround?: string; controls?: PublicControl[]; notYet?: string[] }> {
   const res = await fetch(`${API_BASE}/api/trust`, { credentials: 'omit' });
   if (!res.ok) throw new Error(`Trust status unavailable (${res.status})`);
   return res.json();
@@ -352,8 +358,10 @@ export const platformApi = {
 
   mfaPolicy: () => call<{ requiredFor: MfaRequiredFor; values: MfaRequiredFor[] }>('GET', '/security/mfa-policy'),
   setMfaPolicy: (requiredFor: MfaRequiredFor) => call<{ requiredFor: MfaRequiredFor }>('PUT', '/security/mfa-policy', { requiredFor }),
+  sessionPolicy: () => call<{ maxHours: number | null }>('GET', '/security/session-policy'),
+  setSessionPolicy: (maxHours: number | null) => call<{ maxHours: number | null }>('PUT', '/security/session-policy', { maxHours }),
   sso: () => call<SsoSettings>('GET', '/sso'),
-  saveSso: (body: { issuer: string; clientId: string; clientSecret?: string; jitRole?: string }) => call<SsoSettings>('PUT', '/sso', body, { timeoutMs: 45_000 }),
+  saveSso: (body: { protocol?: 'oidc'; issuer: string; clientId: string; clientSecret?: string; jitRole?: string } | { protocol: 'saml'; metadataXml?: string; entityId?: string; ssoUrl?: string; certificate?: string; emailAttribute?: string; jitRole?: string }) => call<SsoSettings>('PUT', '/sso', body, { timeoutMs: 45_000 }),
   removeSso: () => call('DELETE', '/sso'),
   enforceSso: (enforce: boolean) => call<SsoSettings>('PUT', '/sso/enforce', { enforce }),
   testSso: () => call<{ authorizeUrl: string }>('POST', '/sso/test', {}),

@@ -18,7 +18,7 @@ import {
   FiToggleLeft, FiToggleRight, FiPlus, FiSend,
   FiAlertCircle, FiCopy, FiInfo,
 } from "react-icons/fi";
-import { api, getUser, clearAuth, type DunningRule, type DeliveryLine, type DeliveryStatus, authHeaders } from "@/lib/api";
+import { api, getUser, clearAuth, saveAuth, type DunningRule, type DeliveryLine, type DeliveryStatus, authHeaders } from "@/lib/api";
 import { INDUSTRY_OPTIONS, setBusinessType } from "@/lib/businessTypes";
 import { RegionSettingsCard } from "@/components/settings/RegionSettingsCard";
 import { getRegion, taxLabel } from "@/lib/locale";
@@ -178,7 +178,10 @@ function SettingsPageInner() {
     if (profile.password) {
       setSaving(true);
       try {
-        await api.settings.changePassword(profile.current_password, profile.password);
+        const changed = await api.settings.changePassword(profile.current_password, profile.password);
+        // Every other session was ended; keep this browser signed in with the fresh one.
+        const keepUser = changed.user || getUser();
+        if (changed.token && keepUser) await saveAuth(changed.token, keepUser, true, changed.csrf_token);
         setProfile(p => ({ ...p, current_password: "", password: "" }));
         showSaved();
       } catch (err: any) { setError(err.message || "Password was not changed"); }

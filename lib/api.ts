@@ -257,7 +257,14 @@ function ensureDataUrl(value: string, mimeType: string): string {
 /** A sign-in answer: a session, or a request for the second step. */
 export type SignInResult =
   | { token: string; csrf_token?: string | null; user: User; mfaRequired?: undefined }
-  | { mfaRequired: true; mfaToken: string; token?: undefined; user?: undefined; csrf_token?: undefined };
+  | { mfaRequired: true; mfaToken: string; methods?: ('totp' | 'passkey')[]; token?: undefined; user?: undefined; csrf_token?: undefined };
+
+/** A session answer from a sign-in or a sign-in setting change. */
+export type SessionResult = { token: string; csrf_token?: string | null; user: User };
+
+/** A place this account is signed in (web or the Starlane apps). */
+export interface AccountSession { id: string; kind: 'web' | 'app'; current: boolean; device: string; signedInWith: string; twoStep: boolean; network: string | null; createdAt: string; lastSeenAt: string; expiresAt: string }
+export interface Passkey { id: string; name: string; syncs: boolean; transports: string[]; createdAt: string; lastUsedAt: string | null }
 
 async function signInCall<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -290,8 +297,23 @@ export const api = {
     ssoStart: (email: string) => signInCall<{ authorizeUrl: string }>('/api/auth/sso/start', { email }),
     ssoExchange: (id: string, code: string) =>
       signInCall<{ token: string; csrf_token?: string | null; user: User; organizationId: string }>('/api/auth/sso/exchange', { id, code }),
+    // Passkeys (WebAuthn). The options/response objects are the WebAuthn JSON
+    // forms handled by @simplewebauthn/browser.
+    passkeySignInOptions: () => signInCall<{ options: any }>('/api/auth/passkey/options', {}),
+    passkeySignIn: (response: unknown) => signInCall<SessionResult>('/api/auth/passkey/verify', { response }),
+    mfaPasskeyOptions: (mfaToken: string) => signInCall<{ options: any }>('/api/auth/mfa/passkey/options', { mfaToken }),
+    mfaPasskeyVerify: (mfaToken: string, response: unknown) => signInCall<SessionResult>('/api/auth/mfa/passkey/verify', { mfaToken, response }),
+    passkeys: () => request<{ available: boolean; passkeys: Passkey[]; rpID: string }>('/api/auth/passkeys'),
+    passkeyRegisterOptions: () => request<{ options: any }>('/api/auth/passkeys/options', { method: 'POST', body: '{}' }),
+    passkeyRegister: (response: unknown, name: string) => request<SessionResult & { passkey: { id: string; name: string } }>('/api/auth/passkeys', { method: 'POST', body: JSON.stringify({ response, name }) }),
+    renamePasskey: (id: string, name: string) => request<{ success: true }>(`/api/auth/passkeys/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify({ name }) }),
+    removePasskey: (id: string) => request<{ success: true }>(`/api/auth/passkeys/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    // Where this account is signed in.
+    accountSessions: () => request<{ sessions: AccountSession[] }>('/api/auth/account-sessions'),
+    endSession: (id: string) => request<{ endedCurrent: boolean }>(`/api/auth/account-sessions/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    signOutEverywhere: () => request<SessionResult>('/api/auth/account-sessions/sign-out-everywhere', { method: 'POST', body: '{}' }),
     // Your own second factor (signed in).
-    mfaStatus: () => request<{ enabled: boolean; enabledAt: string | null; recoveryCodesLeft: number; canEnable: boolean; sessionVerified: boolean }>('/api/auth/mfa'),
+    mfaStatus: () => request<{ enabled: boolean; enabledAt: string | null; recoveryCodesLeft: number; canEnable: boolean; sessionVerified: boolean; passkeys?: number }>('/api/auth/mfa'),
     mfaSetup: () => request<{ secret: string; otpauthUri: string }>('/api/auth/mfa/setup', { method: 'POST', body: '{}' }),
     mfaConfirm: (code: string) => request<{ recoveryCodes: string[]; token: string; csrf_token?: string | null; user: User }>('/api/auth/mfa/confirm', { method: 'POST', body: JSON.stringify({ code }) }),
     mfaDisable: (code: string) => request<{ enabled: false }>('/api/auth/mfa/disable', { method: 'POST', body: JSON.stringify({ code }) }),
@@ -639,7 +661,8 @@ export const api = {
     get: () => request<{ settings: UserSettings }>('/api/settings'),
     deliveryStatus: () => request<DeliveryStatus>('/api/settings/delivery-status'),
     changePassword: (current_password: string, new_password: string) =>
-      request<{ success: boolean; message: string }>('/api/auth/change-password', { method: 'POST', body: JSON.stringify({ current_password, new_password }) }),
+      // Other sessions end; the answer carries a fresh session for this browser.
+      request<{ success: boolean; message: string; token?: string; csrf_token?: string | null; user?: User }>('/api/auth/change-password', { method: 'POST', body: JSON.stringify({ current_password, new_password }) }),
     update: (body: Partial<UserSettings>) =>
       request<{ settings: UserSettings }>('/api/settings', { method: 'PATCH', body: JSON.stringify(body) }),
     saveWhatsApp: (body: { provider: string; interakt_api_key?: string; wati_api_url?: string; wati_token?: string }) =>

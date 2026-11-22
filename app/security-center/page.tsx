@@ -18,7 +18,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, Button, Subnav } from "@/components/v32/ui";
 import { platformApi, downloadPlatformFile, type ControlStatus, type RetentionPolicy } from "@/lib/platform";
 import { useActiveOrg, useWorkspace, can, PlatformErrorBanner, Loading, Chip, when, Section, Field, useAction, InlineError, StatBand } from "@/components/platform/ui";
-import { TwoStepSignIn, MfaRule, SingleSignOn } from "@/components/platform/SignInSecurity";
+import { TwoStepSignIn, Passkeys, SignedInDevices, MfaRule, SessionLength, SingleSignOn } from "@/components/platform/SignInSecurity";
 
 type Tab = "posture" | "audit" | "retention" | "signin" | "sso" | "privacy";
 const MEMBER_TABS: Tab[] = ["signin", "privacy"];
@@ -66,7 +66,7 @@ function SecurityCenter() {
         {tab === "posture" && admin && <PostureTab />}
         {tab === "audit" && admin && <AuditTab />}
         {tab === "retention" && admin && <RetentionTab manage={can(ws.data, "policies.manage")} />}
-        {tab === "signin" && <><TwoStepSignIn />{admin && <MfaRule manage={can(ws.data, "policies.manage")} />}</>}
+        {tab === "signin" && <><Passkeys /><TwoStepSignIn /><SignedInDevices />{admin && <><MfaRule manage={can(ws.data, "policies.manage")} /><SessionLength manage={can(ws.data, "policies.manage")} /></>}</>}
         {tab === "sso" && sso && <SingleSignOn flash={{ tested: params.get("sso") === "tested", error: params.get("sso_error") }} />}
         {tab === "privacy" && <PrivacyTab owner={ws.data?.role === "owner"} />}
       </div>

@@ -6,6 +6,7 @@ import { HxShell } from "@/components/marketing/hx/Shell";
 import { Hero, IconCards, Controls, Faq, Cards } from "@/components/marketing/hx/Blocks";
 import { CONTROLS } from "@/components/marketing/hx/data";
 import { TrustFrameworks } from "@/components/marketing/TrustFrameworks";
+import { PublicControls } from "@/components/marketing/PublicControls";
 
 export const metadata: Metadata = pageMetadata({
   path: "/security",
@@ -30,6 +31,9 @@ const PROTECTION: Array<[string, string, string]> = [
   ["lock", "Encrypted credentials", "Keys and tokens for connected apps are encrypted with AES-256-GCM before they are stored and are never shown again. Calls to other apps are https only and can never reach private networks."],
   ["check", "Changes to other apps wait for you", "Agents can read from connected apps. Anything that would change data in another app, or call an MCP tool, waits for a person to approve the exact request."],
   ["eye", "Your data, on request", "Any member can download everything stored about them, and an owner can export the whole organization or schedule its deletion."],
+  ["key", "Passkeys and two-step sign-in", "Sign in with a passkey on your phone, laptop or security key, or add an authenticator-app code after your password. Organizations can require a second factor for admins or for everyone."],
+  ["shield", "Single sign-on", "SAML 2.0 or OpenID Connect with your identity provider, for email domains you prove you own. An organization can make it the only way in."],
+  ["stop", "Sessions you can end", "See every device signed in to your account and end any of them, or sign out everywhere. A password change ends every other session, and organizations can set a maximum session length."],
   ["lock", "Scoped and hashed", "Every request is scoped to the signed-in account; one account is one business. Passwords are hashed with bcrypt and sign-in is rate-limited."],
 ];
 
@@ -39,8 +43,8 @@ const FAQ: Array<[string, string]> = [
   ["Are the figures made up by AI?", "No language model produces the figures. They come from your records, simple calculations and simulations you can inspect, each labelled fact, calculation, assumption or estimate."],
   ["Who can see my data?", "Every request is scoped to your account, and one account is one business."],
   ["How is the site and app protected in transit?", "HTTPS with HTTP Strict Transport Security, standard security headers, and a content security policy on the web app."],
-  ["Does Starlane hold SOC 2 or ISO 27001?", "No. Starlane does not hold third-party certifications and does not claim compliance with frameworks it has not been assessed against."],
-  ["Do you support SSO, MFA and multi-user organisations?", "Organisations with Owner, Admin, Member and Viewer roles are supported. Single sign-on (SAML or OIDC), SCIM and multi-factor sign-in are not built yet."],
+  ["Does Starlane hold SOC 2 or ISO 27001?", "No. Starlane is designed around SOC 2 and ISO/IEC 27001 controls, but it holds no certification and no independent auditor has assessed it. It does not claim compliance with frameworks it has not been assessed against."],
+  ["Do you support SSO, MFA and multi-user organisations?", "Yes. Organisations have Owner, Admin, Member and Viewer roles. Single sign-on works with SAML 2.0 and OpenID Connect providers, and people can sign in with passkeys or add an authenticator-app code. Automatic user provisioning (SCIM) is not built yet."],
   ["Is there a bug bounty?", "There is no bug bounty programme. Please report vulnerabilities privately, as described below."],
 ];
 
@@ -72,10 +76,17 @@ export default function SecurityPage() {
         <div className="hx-w">
           <Faq
             title="Security Is Stated Plainly, Including What Is Absent"
-            body="We would rather lose a deal than imply something exists. Starlane does not hold certifications, does not support SSO yet and has no bug bounty programme. Every control listed on this page is in the product today."
+            body="We would rather lose a deal than imply something exists. Starlane does not hold certifications, has not had an independent penetration test and has no bug bounty programme. Every control listed on this page is in the product today."
             href="/privacy" cta="Read the Privacy Policy"
             items={FAQ}
           />
+        </div>
+      </section>
+
+      <section id="security-controls" className="hx-s alt pt128 pb128" aria-labelledby="sc-h">
+        <div className="hx-w">
+          <h2 id="sc-h" className="hx-h2 hx-r" style={{ marginBottom: "calc(32px * var(--s))" }}>Designed Around SOC 2 and ISO 27001 Controls</h2>
+          <PublicControls />
         </div>
       </section>
 
