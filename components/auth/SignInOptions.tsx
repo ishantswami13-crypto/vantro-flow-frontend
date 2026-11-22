@@ -6,9 +6,10 @@
 // Starlane ID.
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import type { User } from "@/lib/api";
+import type { SignInResult } from "@/lib/api";
 
-type Session = { token: string; csrf_token?: string | null; user: User };
+// A session, or { mfaRequired, mfaToken } when the account has two-step sign-in on.
+type Session = SignInResult;
 type Providers = { google: { clientId: string } | null; apple: { clientId: string } | null; phone: boolean };
 
 declare global {

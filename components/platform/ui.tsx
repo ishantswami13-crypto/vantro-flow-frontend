@@ -52,6 +52,13 @@ export function messageOf(err: unknown): string {
 /** Error line for a platform call; says plainly when the platform is not installed yet. */
 export function PlatformErrorBanner({ error, what }: { error: unknown; what: string }) {
   if (!error) return null;
+  if (error instanceof PlatformError && error.code === "MFA_REQUIRED") {
+    return (
+      <div className="pf-note is-warn" role="status">
+        This organization requires two-step sign-in. <Link className="underline" href="/security-center?tab=signin">Turn it on for your account</Link>, then sign out and sign in again with your code.
+      </div>
+    );
+  }
   if (isPlatformNotReady(error)) {
     return (
       <div className="pf-note is-warn" role="status">

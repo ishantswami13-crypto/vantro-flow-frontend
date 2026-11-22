@@ -254,6 +254,11 @@ function ensureDataUrl(value: string, mimeType: string): string {
   return value.startsWith('data:') ? value : `data:${mimeType};base64,${value}`;
 }
 
+/** A sign-in answer: a session, or a request for the second step. */
+export type SignInResult =
+  | { token: string; csrf_token?: string | null; user: User; mfaRequired?: undefined }
+  | { mfaRequired: true; mfaToken: string; token?: undefined; user?: undefined; csrf_token?: undefined };
+
 async function signInCall<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: body === undefined ? 'GET' : 'POST',
@@ -276,8 +281,21 @@ export const api = {
   auth: {
     signup: (body: { email: string; phone: string; business_name: string; password: string }) =>
       request<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
+    // With two-step sign-in on, the answer is { mfaRequired, mfaToken } instead of a session.
     login: (body: { email: string; password: string }) =>
-      request<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+      signInCall<SignInResult>('/api/auth/login', body),
+    mfaVerify: (mfaToken: string, code: string) =>
+      signInCall<{ token: string; csrf_token?: string | null; user: User; method: 'totp' | 'recovery'; recoveryCodesLeft: number }>('/api/auth/mfa/verify', { mfaToken, code }),
+    // Organization single sign-on (OIDC).
+    ssoStart: (email: string) => signInCall<{ authorizeUrl: string }>('/api/auth/sso/start', { email }),
+    ssoExchange: (id: string, code: string) =>
+      signInCall<{ token: string; csrf_token?: string | null; user: User; organizationId: string }>('/api/auth/sso/exchange', { id, code }),
+    // Your own second factor (signed in).
+    mfaStatus: () => request<{ enabled: boolean; enabledAt: string | null; recoveryCodesLeft: number; canEnable: boolean; sessionVerified: boolean }>('/api/auth/mfa'),
+    mfaSetup: () => request<{ secret: string; otpauthUri: string }>('/api/auth/mfa/setup', { method: 'POST', body: '{}' }),
+    mfaConfirm: (code: string) => request<{ recoveryCodes: string[]; token: string; csrf_token?: string | null; user: User }>('/api/auth/mfa/confirm', { method: 'POST', body: JSON.stringify({ code }) }),
+    mfaDisable: (code: string) => request<{ enabled: false }>('/api/auth/mfa/disable', { method: 'POST', body: JSON.stringify({ code }) }),
+    mfaRecoveryCodes: (code: string) => request<{ recoveryCodes: string[] }>('/api/auth/mfa/recovery-codes', { method: 'POST', body: JSON.stringify({ code }) }),
     // csrf_token is a secondary self-heal path (see the X-CSRF-Token
     // response-header mirror in request() above, which fires on every
     // authenticated call, not just this one) — kept here too since this
@@ -288,10 +306,10 @@ export const api = {
     // bounce the person off the sign-in page.
     providers: () => signInCall<{ google: { clientId: string } | null; apple: { clientId: string } | null; phone: boolean }>('/api/auth/providers'),
     oauth: (provider: 'google' | 'apple', body: { credential: string; name?: string }) =>
-      signInCall<{ token: string; csrf_token?: string | null; user: User }>(`/api/auth/oauth/${provider}`, body),
+      signInCall<SignInResult>(`/api/auth/oauth/${provider}`, body),
     phoneStart: (phone: string) => signInCall<{ success: boolean; message: string }>('/api/auth/phone/start', { phone }),
     phoneVerify: (phone: string, code: string) =>
-      signInCall<{ token: string; csrf_token?: string | null; user: User }>('/api/auth/phone/verify', { phone, code }),
+      signInCall<SignInResult>('/api/auth/phone/verify', { phone, code }),
     // A single-use code the desktop app trades for its own session.
     desktopHandoff: (state: string) => signInCall<{ code: string }>('/api/auth/desktop/handoff', { state }),
     // The desktop app's own window signing in to the website: trades the

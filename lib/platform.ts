@@ -70,7 +70,9 @@ export interface Organization { id: string; ownerUserId: string; name: string | 
 export interface Workspace {
   organization: Organization; role: Role; permissions: string[]; apps: string[]; navigation: NavGroup[];
   organizations: { id: string; name: string | null; role: Role }[]; needsSetup: boolean; model: { configured: boolean };
+  security?: { mfaRequiredFor: MfaRequiredFor; mfaSatisfied: boolean; mfaEnabled: boolean; signedInWith: 'password' | 'mfa' | 'sso' };
 }
+export type MfaRequiredFor = 'none' | 'admins' | 'everyone';
 export interface AppInfo { key: string; name: string; summary: string; status: 'available' | 'planned'; requires: string | null; items: { href: string; label: string }[]; enabled: boolean; suggested: boolean }
 export interface Invitation { id: string; email: string; role: Role; status: 'pending' | 'accepted' | 'revoked' | 'expired'; emailSent: boolean; invitedByEmail: string | null; createdAt: string; expiresAt: string; acceptedAt: string | null; revokedAt: string | null }
 export interface InvitationPreview { organizationName: string | null; role: Role; status: Invitation['status']; expiresAt: string; emailMatches: boolean; emailVerified: boolean; invitedEmail: string | null }
@@ -219,6 +221,13 @@ export type FactoryRequest =
   | { source: 'connection'; connectionId: string; includeActions?: boolean; autoTest?: boolean }
   | { source: 'objectives'; objectives: string[]; autoTest?: boolean };
 
+export interface SsoSettings {
+  redirectUri: string;
+  connection: { protocol: 'oidc'; issuer: string; clientId: string; hasClientSecret: boolean; scopes: string[]; jitRole: 'viewer' | 'member' | 'admin'; enforce: boolean; status: 'draft' | 'active'; testedAt: string | null; updatedAt: string } | null;
+  domains: { domain: string; verified: boolean; verifiedAt: string | null; dnsRecord: { type: 'TXT'; name: string; value: string } }[];
+  supports: { oidc: boolean; saml: boolean; scim: boolean };
+}
+
 /** A file download from the platform API (export endpoints), with the org header. */
 export async function downloadPlatformFile(path: string, filename: string): Promise<void> {
   const org = activeOrgId();
@@ -340,6 +349,17 @@ export const platformApi = {
   privacyRequests: () => call<{ requests: PrivacyRequest[]; erasure: { enabled: boolean; graceDays: number } }>('GET', '/privacy/requests'),
   requestErasure: (confirmEmail: string) => call<{ request: PrivacyRequest; willRun: boolean; note: string | null }>('POST', '/privacy/erasure', { confirmEmail }),
   cancelErasure: (id: string) => call('POST', `/privacy/erasure/${id}/cancel`, {}),
+
+  mfaPolicy: () => call<{ requiredFor: MfaRequiredFor; values: MfaRequiredFor[] }>('GET', '/security/mfa-policy'),
+  setMfaPolicy: (requiredFor: MfaRequiredFor) => call<{ requiredFor: MfaRequiredFor }>('PUT', '/security/mfa-policy', { requiredFor }),
+  sso: () => call<SsoSettings>('GET', '/sso'),
+  saveSso: (body: { issuer: string; clientId: string; clientSecret?: string; jitRole?: string }) => call<SsoSettings>('PUT', '/sso', body, { timeoutMs: 45_000 }),
+  removeSso: () => call('DELETE', '/sso'),
+  enforceSso: (enforce: boolean) => call<SsoSettings>('PUT', '/sso/enforce', { enforce }),
+  testSso: () => call<{ authorizeUrl: string }>('POST', '/sso/test', {}),
+  addSsoDomain: (domain: string) => call<SsoSettings>('POST', '/sso/domains', { domain }),
+  verifySsoDomain: (domain: string) => call<SsoSettings>('POST', `/sso/domains/${encodeURIComponent(domain)}/verify`, {}),
+  removeSsoDomain: (domain: string) => call('DELETE', `/sso/domains/${encodeURIComponent(domain)}`),
 
   factory: () => call<FactoryOverview>('GET', '/factory'),
   buildAgents: (body: FactoryRequest) => call<FactoryBuild>('POST', '/factory/builds', body, { timeoutMs: 120_000 }),

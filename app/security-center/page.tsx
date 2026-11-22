@@ -6,8 +6,10 @@
 //             Starlane holds no certification; nothing here says otherwise.
 //   Audit     verify the tamper-evident hash chain and export the log.
 //   Retention how long call logs, webhook payloads and run traces are kept.
+//   Sign-in   your own two-step sign-in; admins also set the org's rule.
+//   SSO       single sign-on through the organization's identity provider.
 //   Your data export everything stored about you, or ask for erasure.
-// Admins see all four. Everyone sees "Your data".
+// Admins see every tab. Everyone sees "Sign-in" and "Your data".
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -16,8 +18,10 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, Button, Subnav } from "@/components/v32/ui";
 import { platformApi, downloadPlatformFile, type ControlStatus, type RetentionPolicy } from "@/lib/platform";
 import { useActiveOrg, useWorkspace, can, PlatformErrorBanner, Loading, Chip, when, Section, Field, useAction, InlineError, StatBand } from "@/components/platform/ui";
+import { TwoStepSignIn, MfaRule, SingleSignOn } from "@/components/platform/SignInSecurity";
 
-type Tab = "posture" | "audit" | "retention" | "privacy";
+type Tab = "posture" | "audit" | "retention" | "signin" | "sso" | "privacy";
+const MEMBER_TABS: Tab[] = ["signin", "privacy"];
 const CONTROL: Record<ControlStatus, { label: string; tone?: "good" | "warn" | "bad" }> = {
   in_place: { label: "In place", tone: "good" },
   partial: { label: "Partial", tone: "warn" },
@@ -40,11 +44,19 @@ function SecurityCenter() {
   const ws = useWorkspace();
   const params = useSearchParams();
   const admin = can(ws.data, "security.view");
+  const sso = can(ws.data, "sso.manage");
   const [tab, setTab] = useState<Tab>((params.get("tab") as Tab) || "posture");
-  useEffect(() => { if (ws.data && !admin) setTab("privacy"); }, [ws.data, admin]);
-  const items = admin
-    ? [{ key: "posture", label: "Posture" }, { key: "audit", label: "Audit evidence" }, { key: "retention", label: "Retention" }, { key: "privacy", label: "Your data" }]
-    : [{ key: "privacy", label: "Your data" }];
+  useEffect(() => {
+    if (!ws.data) return;
+    if (!admin && !MEMBER_TABS.includes(tab)) setTab("signin");
+    else if (tab === "sso" && !sso) setTab("signin");
+  }, [ws.data, admin, sso, tab]);
+  const items = [
+    ...(admin ? [{ key: "posture", label: "Posture" }, { key: "audit", label: "Audit evidence" }, { key: "retention", label: "Retention" }] : []),
+    { key: "signin", label: "Sign-in" },
+    ...(sso ? [{ key: "sso", label: "Single sign-on" }] : []),
+    { key: "privacy", label: "Your data" },
+  ];
   return (
     <DashboardLayout pageTitle="Security and privacy">
       <PageHeader eyebrow={admin ? "Administration" : "Organization"} divider title="Security and privacy" subtitle="What is in place, checked live, and what is not. Starlane holds no security certification today.">
@@ -54,6 +66,8 @@ function SecurityCenter() {
         {tab === "posture" && admin && <PostureTab />}
         {tab === "audit" && admin && <AuditTab />}
         {tab === "retention" && admin && <RetentionTab manage={can(ws.data, "policies.manage")} />}
+        {tab === "signin" && <><TwoStepSignIn />{admin && <MfaRule manage={can(ws.data, "policies.manage")} />}</>}
+        {tab === "sso" && sso && <SingleSignOn flash={{ tested: params.get("sso") === "tested", error: params.get("sso_error") }} />}
         {tab === "privacy" && <PrivacyTab owner={ws.data?.role === "owner"} />}
       </div>
     </DashboardLayout>
