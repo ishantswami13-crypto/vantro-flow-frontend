@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FiEye, FiEyeOff, FiArrowRight, FiCheck } from "react-icons/fi";
-import { api, saveAuth } from "@/lib/api";
+import { api, saveAuth, type SignInResult } from "@/lib/api";
 import { posthog } from "@/lib/posthog";
 import { takePendingInvite } from "@/lib/platform";
 import { SignInOptions } from "@/components/auth/SignInOptions";
@@ -18,7 +18,13 @@ export default function LoginPage() {
   const [showPass, setShowPass]     = useState(false);
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState("");
-  const [step, setStep]             = useState<"email"|"password">("email");
+  const [step, setStep]             = useState<"email"|"password"|"mfa">("email");
+  const [mfaToken, setMfaToken]     = useState<string | null>(null);
+  const [mfaCode, setMfaCode]       = useState("");
+  const [mfaMethods, setMfaMethods] = useState<string[]>(["totp"]);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  const [canPasskey, setCanPasskey] = useState(false);
+  const [ssoBusy, setSsoBusy]       = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [form, setForm]             = useState({ email: "", password: "" });
   const [emailValid, setEmailValid] = useState(false);
@@ -28,6 +34,8 @@ export default function LoginPage() {
   const [handedOff, setHandedOff]   = useState<string | null>(null);
 
   useEffect(() => {
+    const ssoError = new URLSearchParams(window.location.search).get("sso_error");
+    if (ssoError) setError(ssoError.slice(0, 300));
     const st = new URLSearchParams(window.location.search).get("app");
     if (st && APP_STATE_RE.test(st)) {
       setAppState(st);
@@ -51,7 +59,9 @@ export default function LoginPage() {
     } finally { setLoading(false); }
   };
 
-  const finishSignIn = async (data: { token: string; csrf_token?: string | null; user: any }, remember = true) => {
+  const finishSignIn = async (data: SignInResult, remember = true) => {
+    // Two-step sign-in: the password (or Google, Apple, phone) was right; now the code.
+    if (data.mfaRequired) { setMfaToken(data.mfaToken); setMfaMethods(data.methods?.length ? data.methods : ["totp"]); setMfaCode(""); setStep("mfa"); return; }
     await saveAuth(data.token, data.user, remember, data.csrf_token);
     posthog.identify(data.user.id, { email: data.user.email, name: data.user.business_name, plan: data.user.plan });
     posthog.capture("user_logged_in");
@@ -64,6 +74,57 @@ export default function LoginPage() {
     if (saved) { setForm(f => ({ ...f, email: saved })); setEmailValid(true); }
   }, []);
   useEffect(() => { if (step === "password") setTimeout(() => passRef.current?.focus(), 150); }, [step]);
+
+  const handleMfa = async (ev: React.FormEvent) => {
+    ev.preventDefault(); if (!mfaToken) return;
+    setError(""); setLoading(true);
+    try {
+      await finishSignIn(await api.auth.mfaVerify(mfaToken, mfaCode.trim()), rememberMe);
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code;
+      if (code === "MFA_TOKEN_INVALID") { setStep("password"); setMfaToken(null); }
+      setError(err instanceof Error ? err.message : "That code is not right.");
+    } finally { setLoading(false); }
+  };
+
+  // Passkeys: the browser asks for a fingerprint, face or device PIN. A
+  // cancelled prompt is not an error.
+  useEffect(() => { setCanPasskey(typeof window !== "undefined" && !!window.PublicKeyCredential); }, []);
+  const passkeyCancelled = (e: unknown) => e instanceof Error && (e.name === "NotAllowedError" || e.name === "AbortError");
+  const signInWithPasskey = async () => {
+    setError(""); setPasskeyBusy(true);
+    try {
+      const { startAuthentication } = await import("@simplewebauthn/browser");
+      const { options } = await api.auth.passkeySignInOptions();
+      let response;
+      try { response = await startAuthentication({ optionsJSON: options }); } catch (e) { if (passkeyCancelled(e)) return; throw e; }
+      await finishSignIn(await api.auth.passkeySignIn(response), rememberMe);
+    } catch (err: unknown) { setError(err instanceof Error ? err.message : "The passkey did not work."); }
+    finally { setPasskeyBusy(false); }
+  };
+  const verifyWithPasskey = async () => {
+    if (!mfaToken) return;
+    setError(""); setPasskeyBusy(true);
+    try {
+      const { startAuthentication } = await import("@simplewebauthn/browser");
+      const { options } = await api.auth.mfaPasskeyOptions(mfaToken);
+      let response;
+      try { response = await startAuthentication({ optionsJSON: options }); } catch (e) { if (passkeyCancelled(e)) return; throw e; }
+      await finishSignIn(await api.auth.mfaPasskeyVerify(mfaToken, response), rememberMe);
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code;
+      if (code === "MFA_TOKEN_INVALID") { setStep("password"); setMfaToken(null); }
+      setError(err instanceof Error ? err.message : "The passkey did not work.");
+    } finally { setPasskeyBusy(false); }
+  };
+
+  // Organization single sign-on: the server finds the organization by the email's verified domain.
+  const startSso = async () => {
+    if (!validateEmail(form.email)) { setError("Enter your work email first."); return; }
+    setError(""); setSsoBusy(true);
+    try { window.location.href = (await api.auth.ssoStart(form.email)).authorizeUrl; }
+    catch (err: unknown) { setError(err instanceof Error ? err.message : "Single sign-on is not available for this email."); setSsoBusy(false); }
+  };
 
   const validateEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
@@ -91,7 +152,7 @@ export default function LoginPage() {
         title={appState ? "Sign in to the app" : "Welcome back"}
         lead={step === "email"
           ? (appState ? "Sign in here and Starlane on your computer opens signed in." : "Sign in to your Starlane workspace.")
-          : "Enter your password to continue."}
+          : step === "mfa" ? (mfaMethods.includes("passkey") ? (mfaMethods.includes("totp") ? "Use your passkey, or enter the code from your authenticator app or a recovery code." : "Use your passkey to finish signing in.") : "Enter the 6-digit code from your authenticator app, or one of your recovery codes.") : "Enter your password to continue."}
       />
 
       {error && <AuthError>{error}</AuthError>}
@@ -127,6 +188,35 @@ export default function LoginPage() {
             </div>
           </div>
           <button type="submit" className="sl-btn" disabled={!emailValid}>Continue <FiArrowRight size={16}/></button>
+          <button type="button" className="sl-btn ghost" onClick={startSso} disabled={!emailValid || ssoBusy}>
+            {ssoBusy ? <><Spinner/> Opening your company sign-in…</> : "Sign in with SSO"}
+          </button>
+          {canPasskey && (
+            <button type="button" className="sl-btn ghost" onClick={signInWithPasskey} disabled={passkeyBusy}>
+              {passkeyBusy ? <><Spinner/> Waiting for your passkey…</> : "Sign in with a passkey"}
+            </button>
+          )}
+        </form>
+      )}
+
+      {!handedOff && step === "mfa" && (
+        <form className="sl-auth-form" onSubmit={handleMfa}>
+          {mfaMethods.includes("passkey") && canPasskey && (
+            <button type="button" className="sl-btn" onClick={verifyWithPasskey} disabled={passkeyBusy || loading}>
+              {passkeyBusy ? <><Spinner/> Waiting for your passkey…</> : "Use a passkey"}
+            </button>
+          )}
+          {mfaMethods.includes("totp") && <>
+          <div className="sl-field">
+            <label htmlFor="mfa-code">Authentication code</label>
+            <input id="mfa-code" className="sl-input" autoFocus={!mfaMethods.includes("passkey")} inputMode="text" autoComplete="one-time-code" placeholder="123 456"
+              value={mfaCode} onChange={e=>{setMfaCode(e.target.value);setError("");}} maxLength={14} />
+          </div>
+          <button type="submit" className={mfaMethods.includes("passkey") && canPasskey ? "sl-btn ghost" : "sl-btn"} disabled={loading||mfaCode.trim().length<6}>
+            {loading ? <><Spinner/> Checking…</> : <>Verify code <FiArrowRight size={16}/></>}
+          </button>
+          </>}
+          <button type="button" className="sl-btn ghost" onClick={()=>{setStep("email");setMfaToken(null);setForm(f=>({...f,password:""}));setError("");}}>Start again</button>
         </form>
       )}
 

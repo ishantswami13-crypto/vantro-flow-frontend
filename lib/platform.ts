@@ -70,7 +70,9 @@ export interface Organization { id: string; ownerUserId: string; name: string | 
 export interface Workspace {
   organization: Organization; role: Role; permissions: string[]; apps: string[]; navigation: NavGroup[];
   organizations: { id: string; name: string | null; role: Role }[]; needsSetup: boolean; model: { configured: boolean };
+  security?: { mfaRequiredFor: MfaRequiredFor; mfaSatisfied: boolean; mfaEnabled: boolean; signedInWith: 'password' | 'mfa' | 'sso'; sessionMaxHours?: number | null };
 }
+export type MfaRequiredFor = 'none' | 'admins' | 'everyone';
 export interface AppInfo { key: string; name: string; summary: string; status: 'available' | 'planned'; requires: string | null; items: { href: string; label: string }[]; enabled: boolean; suggested: boolean }
 export interface Invitation { id: string; email: string; role: Role; status: 'pending' | 'accepted' | 'revoked' | 'expired'; emailSent: boolean; invitedByEmail: string | null; createdAt: string; expiresAt: string; acceptedAt: string | null; revokedAt: string | null }
 export interface InvitationPreview { organizationName: string | null; role: Role; status: Invitation['status']; expiresAt: string; emailMatches: boolean; emailVerified: boolean; invitedEmail: string | null }
@@ -179,6 +181,82 @@ const q = (o: Record<string, string | number | null | undefined>) => {
   return s ? `?${s}` : '';
 };
 
+// ── Connected apps (any software: OpenAPI import, catalog, MCP) ──────────
+export type AuthType = 'none' | 'api_key' | 'bearer' | 'basic' | 'oauth2_client_credentials' | 'oauth2_authorization_code';
+export interface AppOperation { id: string; method: string; path: string | null; summary: string; risk: 'read' | 'external'; parameters?: { name: string; in: string; required: boolean; type?: string; description?: string }[]; body?: { required: boolean } | null; readOnlyHint?: boolean | null }
+export interface AppConnection {
+  id: string; name: string; source: 'openapi' | 'catalog' | 'mcp'; catalogKey: string | null; baseUrl: string;
+  auth: { type: AuthType; in: string | null; name: string | null; clientId: string | null; scopes: string[]; authorizeUrl: string | null; tokenUrl: string | null };
+  hasCredentials: boolean; status: 'active' | 'disabled' | 'authorization_required'; operationCounts: { read: number; external: number };
+  spec: { title?: string; version?: string; format?: string; readOnly?: boolean; skipped?: number; totalOperations?: number };
+  lastUsedAt: string | null; lastError: string | null; createdAt: string; updatedAt: string; operations?: AppOperation[];
+}
+export interface CatalogEntry { key: string; name: string; category: string; docs: string; baseUrl: string; baseUrlFields: { name: string; label: string }[]; auth: { type: AuthType; in?: string; name?: string; scopes?: string[]; hint?: string }; operations: AppOperation[]; verified: boolean }
+export interface SpecPreview { title: string; version: string | null; format: string; baseUrl: string | null; auth: { type?: AuthType; in?: string; name?: string } | null; operations: AppOperation[]; skipped: unknown[]; totalOperations: number }
+export interface ConnectorCall { id: string; connection_id: string; connection_name: string | null; operation_id: string; method: string; risk: string; actor_kind: string; actor_email: string | null; execution_id: string | null; status_code: number | null; ok: boolean; duration_ms: number | null; error: string | null; created_at: string }
+export interface CallResult { status: number; ok: boolean; json: unknown; text: string | null; bodyPreview: string | null; operation: { id: string; method: string; risk: string; summary: string } }
+export interface AuthInput { type?: AuthType; in?: string; name?: string; secret?: string; clientId?: string; clientSecret?: string; tokenUrl?: string; authorizeUrl?: string; scopes?: string }
+
+// ── Security, privacy and the agent factory ─────────────────────────────
+export type ControlStatus = 'in_place' | 'partial' | 'needs_configuration' | 'not_in_place' | 'outside_the_app';
+export interface SecurityControl { id: string; name: string; area: string; status: ControlStatus; detail: string }
+export interface FrameworkPosture { key: string; name: string; kind: string; status: string; controlsInPlace: number; controlsTotal: number; stillNeeded: string[] }
+export interface Posture { generatedAt: string; counts: Partial<Record<ControlStatus, number>>; controls: SecurityControl[]; frameworks: FrameworkPosture[]; auditChain: { intact: boolean; checked: number; head: { id: string; hash: string; count: number } | null } | null }
+export interface ChainVerification { intact: boolean; checked: number; beforeChain: number; head: { id: string; hash: string; count: number } | null; firstChained: { id: string; at: string } | null; problems: { id: string; problem: string }[]; verifiedAt: string }
+export interface RetentionPolicy { connectorCallsDays: number; webhookEventsDays: number; executionTraceDays: number; updatedAt: string | null; configured: boolean }
+export interface PrivacyRequest { id: string; kind: 'export' | 'erasure'; scope: string; status: 'scheduled' | 'completed' | 'cancelled' | 'failed'; scheduled_for: string | null; completed_at: string | null; result: Record<string, unknown> | null; created_at: string; mine: boolean }
+export interface PublicFramework { key: string; name: string; kind: string; status: string; statusLabel: string; what: string; grantedBy: string; stillNeeded: string[] }
+export interface FactoryTemplate { key: string; name: string; category: string; description: string; missing: { tool: string; name: string; status: string; reason: string | null }[]; ready: boolean }
+export interface FactoryOverview {
+  packs: { key: string; name: string; description: string; templates: FactoryTemplate[] }[];
+  templates: FactoryTemplate[];
+  connections: { id: string; name: string; source: string; operationCounts: { read: number; external: number } }[];
+  builds: { id: string; source: string; request: Record<string, unknown>; agentCount: number; testCount: number; skipped: { name: string; reason: string }[]; createdAt: string; requestedBy: string | null }[];
+  limits: { maxPerBuild: number };
+}
+export interface FactoryBuild { buildId: string; createdAt: string; created: { id: string; name: string; templateKey: string | null; draftedBy: string | null; missing: { tool: string; name: string; reason: string | null }[]; ready: boolean; testExecutionId?: string; testError?: string }[]; skipped: { name: string; reason: string }[]; testExecutionIds: string[] }
+export type FactoryRequest =
+  | { source: 'pack'; pack: string; autoTest?: boolean }
+  | { source: 'templates'; templateKeys: string[]; autoTest?: boolean }
+  | { source: 'connection'; connectionId: string; includeActions?: boolean; autoTest?: boolean }
+  | { source: 'objectives'; objectives: string[]; autoTest?: boolean };
+
+export interface SsoSettings {
+  redirectUri: string;
+  connection: {
+    protocol: 'oidc' | 'saml'; issuer: string; clientId: string | null; hasClientSecret: boolean; scopes: string[]; jitRole: 'viewer' | 'member' | 'admin'; enforce: boolean; status: 'draft' | 'active'; testedAt: string | null; updatedAt: string;
+    saml?: { ssoUrl: string; certificates: { subject: string; validTo: string | null; expired: boolean; sha256: string | null }[]; emailAttribute: string | null } | null;
+  } | null;
+  /** What to enter in the identity provider for SAML. */
+  serviceProvider?: { entityId: string; acsUrl: string; metadataUrl: string };
+  domains: { domain: string; verified: boolean; verifiedAt: string | null; dnsRecord: { type: 'TXT'; name: string; value: string } }[];
+  supports: { oidc: boolean; saml: boolean; scim: boolean };
+}
+
+/** A file download from the platform API (export endpoints), with the org header. */
+export async function downloadPlatformFile(path: string, filename: string): Promise<void> {
+  const org = activeOrgId();
+  const res = await fetchWithRetry(`${API_BASE}/api/platform${path}`, { headers: { ...authHeaders(), ...(org ? { 'X-Starlane-Org': org } : {}) }, credentials: 'include' });
+  if (!res.ok) {
+    let body: { error?: string; code?: string } = {};
+    try { body = await res.json(); } catch { /* not json */ }
+    throw new PlatformError(res.status, body);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Public, no sign-in: the frameworks and their honest status. */
+export interface PublicControl { area: string; name: string; detail: string }
+export async function fetchTrust(): Promise<{ frameworks: PublicFramework[]; certifications: string[]; statement: string; designedAround?: string; controls?: PublicControl[]; notYet?: string[] }> {
+  const res = await fetch(`${API_BASE}/api/trust`, { credentials: 'omit' });
+  if (!res.ok) throw new Error(`Trust status unavailable (${res.status})`);
+  return res.json();
+}
+
 export const platformApi = {
   workspace: () => call<Workspace>('GET', '/workspace'),
   appAccess: (key: string) => call<{ enabled: boolean; canEnable?: boolean; app?: { key: string; name: string } }>('GET', `/apps/${key}/access`),
@@ -253,6 +331,46 @@ export const platformApi = {
 
   connections: () => call<{ connections: Connection[]; counts: Record<string, number>; stateError: string | null }>('GET', '/connections'),
   commandCenter: () => call<CommandCenter>('GET', '/command-center'),
+
+  appConnections: () => call<{ connections: AppConnection[] }>('GET', '/connectors'),
+  appConnection: (id: string) => call<{ connection: AppConnection }>('GET', `/connectors/${id}`),
+  connectorCatalog: () => call<{ catalog: CatalogEntry[]; oauthRedirectUri: string }>('GET', '/connectors/catalog'),
+  previewOpenApi: (body: { spec?: string; specUrl?: string; readOnly?: boolean }) => call<{ preview: SpecPreview }>('POST', '/connectors/openapi/preview', body, { timeoutMs: 45_000 }),
+  importOpenApi: (body: { name?: string; spec?: string; specUrl?: string; baseUrl?: string; readOnly?: boolean; auth?: AuthInput }) => call<{ connection: AppConnection }>('POST', '/connectors/openapi', body, { timeoutMs: 45_000 }),
+  addCatalogApp: (body: { catalogKey: string; name?: string; readOnly?: boolean; baseUrlFields?: Record<string, string>; auth?: AuthInput }) => call<{ connection: AppConnection }>('POST', '/connectors/catalog', body),
+  addMcpServer: (body: { name?: string; url: string; auth?: AuthInput }) => call<{ connection: AppConnection }>('POST', '/connectors/mcp', body, { timeoutMs: 45_000 }),
+  setAppEnabled: (id: string, enabled: boolean) => call<{ status: string }>('POST', `/connectors/${id}/${enabled ? 'enable' : 'disable'}`, {}),
+  setAppCredentials: (id: string, body: AuthInput) => call<{ status: string }>('PUT', `/connectors/${id}/credentials`, body),
+  refreshMcpTools: (id: string) => call<{ connection: AppConnection }>('POST', `/connectors/${id}/refresh-tools`, {}, { timeoutMs: 45_000 }),
+  authorizeApp: (id: string, returnTo = '/connectors') => call<{ authorizeUrl: string; expiresInSeconds: number }>('POST', `/connectors/${id}/authorize`, { returnTo }),
+  callApp: (id: string, body: { operationId: string; params?: Record<string, unknown>; body?: unknown; confirm?: boolean }) => call<{ result: CallResult }>('POST', `/connectors/${id}/call`, body, { timeoutMs: 45_000, headers: body.confirm ? { 'Idempotency-Key': newIdempotencyKey() } : {} }),
+  removeApp: (id: string) => call('DELETE', `/connectors/${id}`),
+  connectorCalls: (connectionId?: string | null) => call<{ calls: ConnectorCall[] }>('GET', `/connectors/calls${q({ connectionId, limit: 50 })}`),
+
+  posture: () => call<Posture>('GET', '/security/posture'),
+  verifyAudit: () => call<{ verification: ChainVerification }>('GET', '/security/audit/verify', undefined, { timeoutMs: 60_000 }),
+  retention: () => call<{ policy: RetentionPolicy; classes: Record<string, { label: string; min: number; max: number; default: number }> }>('GET', '/security/retention'),
+  setRetention: (body: Partial<Pick<RetentionPolicy, 'connectorCallsDays' | 'webhookEventsDays' | 'executionTraceDays'>>) => call<{ policy: RetentionPolicy }>('PUT', '/security/retention', body),
+  applyRetention: () => call<{ removed: Record<string, number>; ranAt: string }>('POST', '/security/retention/apply', {}),
+  privacyRequests: () => call<{ requests: PrivacyRequest[]; erasure: { enabled: boolean; graceDays: number } }>('GET', '/privacy/requests'),
+  requestErasure: (confirmEmail: string) => call<{ request: PrivacyRequest; willRun: boolean; note: string | null }>('POST', '/privacy/erasure', { confirmEmail }),
+  cancelErasure: (id: string) => call('POST', `/privacy/erasure/${id}/cancel`, {}),
+
+  mfaPolicy: () => call<{ requiredFor: MfaRequiredFor; values: MfaRequiredFor[] }>('GET', '/security/mfa-policy'),
+  setMfaPolicy: (requiredFor: MfaRequiredFor) => call<{ requiredFor: MfaRequiredFor }>('PUT', '/security/mfa-policy', { requiredFor }),
+  sessionPolicy: () => call<{ maxHours: number | null }>('GET', '/security/session-policy'),
+  setSessionPolicy: (maxHours: number | null) => call<{ maxHours: number | null }>('PUT', '/security/session-policy', { maxHours }),
+  sso: () => call<SsoSettings>('GET', '/sso'),
+  saveSso: (body: { protocol?: 'oidc'; issuer: string; clientId: string; clientSecret?: string; jitRole?: string } | { protocol: 'saml'; metadataXml?: string; entityId?: string; ssoUrl?: string; certificate?: string; emailAttribute?: string; jitRole?: string }) => call<SsoSettings>('PUT', '/sso', body, { timeoutMs: 45_000 }),
+  removeSso: () => call('DELETE', '/sso'),
+  enforceSso: (enforce: boolean) => call<SsoSettings>('PUT', '/sso/enforce', { enforce }),
+  testSso: () => call<{ authorizeUrl: string }>('POST', '/sso/test', {}),
+  addSsoDomain: (domain: string) => call<SsoSettings>('POST', '/sso/domains', { domain }),
+  verifySsoDomain: (domain: string) => call<SsoSettings>('POST', `/sso/domains/${encodeURIComponent(domain)}/verify`, {}),
+  removeSsoDomain: (domain: string) => call('DELETE', `/sso/domains/${encodeURIComponent(domain)}`),
+
+  factory: () => call<FactoryOverview>('GET', '/factory'),
+  buildAgents: (body: FactoryRequest) => call<FactoryBuild>('POST', '/factory/builds', body, { timeoutMs: 120_000 }),
 };
 
 export const RISK_LABEL: Record<Risk, string> = { read: 'Reads', internal_write: 'Writes inside Starlane', external: 'Acts outside Starlane', financial: 'Financial' };
