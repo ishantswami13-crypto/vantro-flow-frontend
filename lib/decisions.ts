@@ -31,6 +31,7 @@ export interface DecisionOption {
     creditLossAvoided?: Interval; marginLost?: Interval;
     value?: Interval; bestShare?: number; robustness?: number | null;
     stockoutProbability?: number; expectedCost?: Interval; workingCapitalFreed?: Interval;
+    ordersLate?: number; valueAtRisk?: number; customersToldInAdvance?: number;
   };
 }
 
@@ -280,6 +281,30 @@ async function call<T>(method: 'GET' | 'POST' | 'PUT', path: string, body?: unkn
   }
 }
 
+// ── Inbound shipments and supplier delays (backend: lib/routes/decisions.js) ──
+
+export interface InboundShipment {
+  id: string;
+  product_id: string | null;
+  product_name: string | null;
+  sku: string | null;
+  quantity: string | number;
+  received_quantity: string | number | null;
+  expected_at: string | null;
+  original_expected_at: string | null;
+  delay_reason: string | null;
+  delay_reported_at: string | null;
+  supplier_name: string | null;
+  bill_number: string | null;
+}
+
+export interface ReportDelayResponse {
+  shipment: { id: string; expected_at: string; original_expected_at: string | null; delay_reason: string | null };
+  decision: { id: string; status: string; title: string } | null;
+  finding: { reason?: string } | null;
+  discovery: { status: string; discovered: number; revised: number; resolved: number; degraded: { detector: string; error: string }[] };
+}
+
 // ── Bring your own data (backend: lib/domain/decisions/ledgerImport.js) ──
 
 export type LedgerField =
@@ -417,6 +442,8 @@ export const decisionsApi = {
   dataProfile: () => call<DataProfile>('GET', '/data-profile'),
   feedback: (id: string, kind: FeedbackKind, note?: string, optionKey?: string) => call<{ recorded: boolean; label: string }>('POST', `/${encodeURIComponent(id)}/feedback`, { kind, note, optionKey }),
   similar: (id: string) => call<SimilarResponse>('GET', `/${encodeURIComponent(id)}/similar`),
+  inboundShipments: () => call<{ shipments: InboundShipment[] }>('GET', '/inbound-shipments'),
+  reportSupplierDelay: (body: { purchaseLineItemId: string; newExpectedAt: string; reason?: string }) => call<ReportDelayResponse>('POST', '/report-supplier-delay', body, 120_000),
   getFeedback: (id: string) => call<{ feedback: { kind: FeedbackKind; label: string; note: string | null; optionKey: string | null; at: string }[] }>('GET', `/${encodeURIComponent(id)}/feedback`),
 };
 
