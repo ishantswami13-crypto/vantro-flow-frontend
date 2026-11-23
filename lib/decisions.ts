@@ -296,6 +296,15 @@ export interface InboundShipment {
   delay_reported_at: string | null;
   supplier_name: string | null;
   bill_number: string | null;
+  stock_follows?: 'STARLANE' | 'EXTERNAL' | null;
+  source_system?: string | null;
+  external_ref?: string | null;
+  sku_as_imported?: string | null;
+  product_name_as_imported?: string | null;
+  received_before_tracking?: string | number | null;
+  unit_price?: string | number | null;
+  currency?: string | null;
+  receipt_count?: number;
 }
 
 export interface ReportDelayResponse {
@@ -303,6 +312,131 @@ export interface ReportDelayResponse {
   decision: { id: string; status: string; title: string } | null;
   finding: { reason?: string } | null;
   discovery: { status: string; discovered: number; revised: number; resolved: number; degraded: { detector: string; error: string }[] };
+}
+
+// ── Operating data: open orders, purchase lines, goods receipts ──
+// (backend: lib/domain/operations/operationalImport.js, lib/domain/inventory/goodsReceipt.js)
+// Quantities and money arrive as exact decimal strings. Display only; never
+// do arithmetic on them that is written back.
+
+export type OpsKind = 'orders' | 'purchase_lines';
+export type OpsField =
+  | 'customer_name' | 'customer_ref' | 'order_ref' | 'line_ref' | 'record_id' | 'product_name' | 'sku' | 'quantity'
+  | 'outstanding_quantity' | 'unit_price' | 'currency' | 'order_date' | 'promised_date' | 'status'
+  | 'supplier_name' | 'supplier_ref' | 'supplier_tax_id' | 'po_ref' | 'received_quantity' | 'expected_date' | 'purchase_date' | 'unit_cost';
+
+/** A product question the owner answers: link to a product id, import unlinked, or skip the rows. */
+export type ReviewChoice = string | 'UNLINKED' | 'SKIP';
+
+export interface OpsImportOptions {
+  mapping: Partial<Record<OpsField, string | null>>;
+  dateOrders: Record<string, 'DMY' | 'MDY'>;
+  sourceSystem: string;
+  currency?: string | null;
+  stockFollows?: 'STARLANE' | 'EXTERNAL';
+  reviewChoices: Record<string, ReviewChoice>;
+}
+
+export interface OpsLimitation { key: string; severity: 'blocking' | 'reduces' | 'info'; message: string; rows?: number[] }
+
+export interface OpsSummary {
+  kind: OpsKind;
+  counts: {
+    rows: number | null; accepted: number; new: number; updated: number; unchanged: number; closedSkipped: number;
+    reviewRequired: number; skippedByChoice: number; conflicts: number; rejected: number; duplicateRows: number; unlinked: number;
+  };
+  review: { key: string; label: string; reason: string; candidates: { id: string; name: string; sku: string | null }[]; unknown: boolean; rows: number[]; count: number }[];
+  rejectedByReason: { reason: string; count: number; rows: number[]; example: string }[];
+  conflicts: { row: number; ref: string | null; details: string[] }[];
+  changes: { row: number; ref: string | null; changes: { field: string; from: unknown; to: unknown }[] }[];
+  limitations: OpsLimitation[];
+  sample: {
+    row: number; action: 'INSERT' | 'UPDATE'; party: string; ref: string | null; product: string | null; productBasis: string | null;
+    sku: string | null; productNameInFile: string | null; quantity: string; outstanding: string | null; received: string | null;
+    price: string | null; currency: string | null; dueDate: string | null; status: string | null;
+  }[];
+  notInThisFile: number;
+  entities?: { customersCreated: number; suppliersCreated: number; documentsCreated: number; productSupplierLinks: number };
+}
+
+export interface OpsPreview {
+  ok: true;
+  kind: OpsKind;
+  file: { name: string; type: string; sheet: string | null; rows: number; columns: string[]; sampleRows: string[][]; hash: string };
+  alreadyImported: { batchId: string; filename: string; at: string } | null;
+  proposal: {
+    fields: Partial<Record<OpsField, { header: string; verdict: 'CONFIRMED' | 'SUGGESTED'; reason: string; fit: number }>>;
+    dateOrders: Record<string, { order: 'DMY' | 'MDY' | null; verdict: 'PROVEN' | 'ASSUMED' | 'CONFLICT' | 'NOT_NEEDED'; reason: string }>;
+    unmapped: string[];
+    needsConfirmation: { key: string; message: string; reason: string; field?: OpsField; header?: string }[];
+    missingRequired: string[];
+  };
+  suggestedInput: OpsImportOptions;
+  tenant: { hasTallyStock: boolean; hasTallyPurchases: boolean };
+  mappingErrors: string[];
+  summary: OpsSummary | null;
+}
+
+export interface DiscoveryAfterChange {
+  discovery: { status: string; discovered: number; revised: number; resolved: number; degraded: { detector: string; error: string }[] } | null;
+  discoveryError: string | null;
+  supplierDelayDecisions: { id: string; title: string; status: string }[];
+}
+
+export interface OpsCommit extends DiscoveryAfterChange {
+  import: { batchId: string; alreadyImported: boolean; importedAt: string | null };
+  summary: OpsSummary | null;
+}
+
+export interface OpenOrderLine {
+  id: string; order_id: string; customer_name: string | null; order_ref: string | null; order_status: string | null; line_status: string | null;
+  product_id: string | null; product_name: string | null; sku: string | null; sku_as_imported: string | null; product_name_as_imported: string | null;
+  quantity: string; outstanding_quantity: string | null; unit_price: string | null; currency: string | null; needed_by: string | null;
+  source_system: string | null; source_updated_at: string | null; missing: string[];
+}
+
+export interface OpsImportBatch {
+  id: string; kind: OpsKind; sourceSystem: string | null; filename: string; status: string; completed_at: string | null;
+  rows_total: number | null; rows_accepted: number | null; rows_rejected: number | null; rows_review_required: number | null; error_message: string | null;
+}
+
+export interface PurchaseLineSummary {
+  id: string; orderedQuantity: string; receivedQuantity: string; outstandingQuantity: string; overReceived: string | null;
+  stockFollows: 'STARLANE' | 'EXTERNAL'; productId: string | null; lineStatus: string | null;
+}
+
+export interface GoodsReceipt {
+  id: string; purchaseLineId: string; kind: 'RECEIPT' | 'CORRECTION'; quantity: string; receivedOn: string;
+  reference: string | null; notes: string | null; stockPosted: boolean; stockMovementId: string | null;
+  receivedBefore: string; receivedAfter: string; orderedQuantity: string; recordedAt: string;
+}
+
+export interface ReceiptHistory {
+  line: PurchaseLineSummary & { productName: string | null; sku: string | null; supplierName: string | null; purchaseRef: string | null; receivedBeforeTracking: string };
+  receipts: GoodsReceipt[];
+}
+
+export interface RecordReceiptBody {
+  kind: 'RECEIPT' | 'CORRECTION';
+  quantity: string;
+  receivedOn: string;
+  reference?: string;
+  notes?: string;
+  /** One per receipt the owner means to record; reused unchanged on every retry of it. */
+  idempotencyKey: string;
+}
+
+export interface RecordReceiptResponse extends DiscoveryAfterChange {
+  duplicate: boolean;
+  receipt: GoodsReceipt;
+  line: PurchaseLineSummary;
+  stock: { posted: boolean; reason: string | null };
+}
+
+/** A fresh idempotency key for one receipt. */
+export function newReceiptKey(): string {
+  const rnd = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+  return `rcpt-${rnd}`;
 }
 
 // ── Bring your own data (backend: lib/domain/decisions/ledgerImport.js) ──
@@ -412,6 +546,28 @@ async function upload<T>(path: string, file: ImportSource, options?: ImportOptio
   }
 }
 
+async function uploadOps<T>(path: string, file: File, kind: OpsKind, options?: OpsImportOptions | null): Promise<T> {
+  const form = new FormData();
+  form.append('kind', kind);
+  form.append('file', file);
+  if (options) form.append('options', JSON.stringify(options));
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 180_000);
+  try {
+    const res = await fetch(`${API_BASE}/api/decisions${path}`, { method: 'POST', headers: { ...authHeaders() }, credentials: 'include', body: form, signal: controller.signal });
+    let data: Record<string, unknown> = {};
+    try { data = await res.json(); } catch { data = {}; }
+    if (res.status === 401 && typeof window !== 'undefined') window.location.href = '/login';
+    if (!res.ok) throw new DecisionApiError(res.status, data);
+    return data as T;
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw new DecisionApiError(0, { error: 'The upload timed out. Check your connection and try again.' });
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export type SimilarDecision = {
   id: string; title: string; status: string; decidedAt: string | null; createdAt: string;
   chosen: string | null; outcome: { status: string; detail: string | null; attribution: string | null };
@@ -444,6 +600,12 @@ export const decisionsApi = {
   similar: (id: string) => call<SimilarResponse>('GET', `/${encodeURIComponent(id)}/similar`),
   inboundShipments: () => call<{ shipments: InboundShipment[] }>('GET', '/inbound-shipments'),
   reportSupplierDelay: (body: { purchaseLineItemId: string; newExpectedAt: string; reason?: string }) => call<ReportDelayResponse>('POST', '/report-supplier-delay', body, 120_000),
+  opsImportPreview: (file: File, kind: OpsKind, options?: OpsImportOptions | null) => uploadOps<OpsPreview>('/operations/import/preview', file, kind, options),
+  opsImportCommit: (file: File, kind: OpsKind, options: OpsImportOptions) => uploadOps<OpsCommit>('/operations/import/commit', file, kind, options),
+  opsImports: () => call<{ imports: OpsImportBatch[] }>('GET', '/operations/imports'),
+  openOrders: () => call<{ lines: OpenOrderLine[]; checkable: number }>('GET', '/operations/open-orders'),
+  receipts: (lineId: string) => call<ReceiptHistory>('GET', `/purchase-lines/${encodeURIComponent(lineId)}/receipts`),
+  recordReceipt: (lineId: string, body: RecordReceiptBody) => call<RecordReceiptResponse>('POST', `/purchase-lines/${encodeURIComponent(lineId)}/receipts`, body, 120_000),
   getFeedback: (id: string) => call<{ feedback: { kind: FeedbackKind; label: string; note: string | null; optionKey: string | null; at: string }[] }>('GET', `/${encodeURIComponent(id)}/feedback`),
 };
 
