@@ -59,6 +59,7 @@ export default function DecisionsPage() {
             <Link href="/decisions/shipments" className="text-[13px] hover-dim" style={{ color: C.muted }}>Inbound shipments</Link>
             <Link href="/decisions/open-orders" className="text-[13px] hover-dim" style={{ color: C.muted }}>Open orders</Link>
             <Link href="/decisions/operations-import" className="text-[13px] hover-dim" style={{ color: C.muted }}>Import orders &amp; POs</Link>
+            <Link href="/decisions/feeds" className="text-[13px] hover-dim" style={{ color: C.muted }}>Data feeds</Link>
             <Link href="/decisions/import" className="text-[13px] hover-dim" style={{ color: C.muted }}>Bring data</Link>
             <Link href="/decisions/proof" className="text-[13px] hover-dim" style={{ color: C.muted }}>Track record</Link>
             <Button variant="secondary" size="sm" loading={discover.isPending} icon={<FiRefreshCw size={13} />} onClick={() => discover.mutate()}>

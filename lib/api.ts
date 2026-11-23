@@ -921,6 +921,8 @@ export interface Connector {
   connect?: { kind: 'oauth' | 'sheet_link' | 'http_api' | 'webhook_in' | 'api_key'; path?: string; preset?: string; requiresEnv?: string[]; fields?: AppConnectorField[] };
   /** A live app connector (backend lib/connectors/apps): read-only, behind a feature flag. */
   app?: boolean;
+  /** Operational records it can bring in through Data feeds (products, components, orders, purchase_lines). */
+  feedKinds?: string[];
   availability: 'available' | 'not_available'; syncMode: string; summary: string;
   unavailableReason?: string; objects: string[]; access: string[]; setup: string[];
   /** What Starlane can do through it: READ, SEARCH, SUBSCRIBE, WRITE, EXECUTE. */

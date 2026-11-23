@@ -1,7 +1,9 @@
 "use client";
 
-// Live app connectors: Zoho Books, QuickBooks Online, Razorpay and WhatsApp
-// Business (backend lib/connectors/apps).
+// Live app connectors: Zoho Books, QuickBooks Online, Razorpay, WhatsApp
+// Business, and the feed apps Shopify, WooCommerce and Zoho Inventory
+// (backend lib/connectors/apps; feed apps bring records in through
+// /decisions/feeds, not Sync now).
 //
 // Only connectors the backend reports as available appear here; until an
 // app's feature flag is on and its developer credentials are set it stays
@@ -10,6 +12,7 @@
 // shown again. All state shown comes from GET /api/connectors.
 
 import { useState } from "react";
+import Link from "next/link";
 import { api, type Connector } from "@/lib/api";
 import { Button, Card, StatusDot, V, ago } from "@/components/v32/ui";
 
@@ -76,6 +79,8 @@ function AppCard({ c, onChanged }: { c: Connector; onChanged: () => void }) {
   const h = HEALTH[c.state.health] || { label: c.state.health.replace(/_/g, " "), color: V.neutralDot };
   const needsReconnect = account?.status === "AUTH_REQUIRED";
   const receiveOnly = c.id === "whatsapp_business";
+  // Shopify, WooCommerce and Zoho Inventory bring records in through Data feeds only.
+  const feedOnly = !!c.feedKinds?.length && !["zoho_books", "quickbooks", "razorpay"].includes(c.id);
 
   const connect = async () => {
     if (c.connect?.kind === "api_key") { setShowForm(!showForm); return; }
@@ -111,7 +116,8 @@ function AppCard({ c, onChanged }: { c: Connector; onChanged: () => void }) {
           <p style={{ ...small, margin: "4px 0 0", lineHeight: 1.5 }}>{c.summary}</p>
         </div>
         <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
-          {account && !needsReconnect && !receiveOnly && <Button small onClick={sync} disabled={!!busy}>{busy === "sync" ? "Syncing…" : "Sync now"}</Button>}
+          {account && !needsReconnect && !receiveOnly && !feedOnly && <Button small onClick={sync} disabled={!!busy}>{busy === "sync" ? "Syncing…" : "Sync now"}</Button>}
+          {account && !needsReconnect && c.feedKinds?.length ? <Link href="/decisions/feeds" style={{ fontSize: 13, color: V.ink, textDecoration: "underline" }}>Data feeds</Link> : null}
           {(!account || needsReconnect) && (
             <Button small primary onClick={connect} disabled={!!busy}>
               {busy === "connect" ? `Opening ${c.provider || c.name}…` : needsReconnect ? "Connect again" : "Connect"}
@@ -125,7 +131,8 @@ function AppCard({ c, onChanged }: { c: Connector; onChanged: () => void }) {
           {account.label || c.name}
           {receiveOnly
             ? ` · ${c.state.messagesReceived || 0} message${c.state.messagesReceived === 1 ? "" : "s"} received${c.state.lastSyncAt ? `, last ${ago(c.state.lastSyncAt)}` : ""}`
-            : c.state.lastSyncAt ? ` · last synced ${ago(c.state.lastSyncAt)}` : " · not synced yet"}
+            : feedOnly ? " · records come in through Data feeds"
+              : c.state.lastSyncAt ? ` · last synced ${ago(c.state.lastSyncAt)}` : " · not synced yet"}
         </p>
       )}
       {c.state.lastError && <p style={{ fontSize: 12.5, color: V.critical, margin: "8px 0 0" }}>{c.state.lastError}</p>}
