@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FiArrowLeft, FiCheck, FiX } from "react-icons/fi";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import FeedbackBar from "@/components/decisions/FeedbackBar";
+import DecisionReconciliation from "@/components/decisions/DecisionReconciliation";
 import { ErrorState } from "@/components/ui/ErrorState";
 import Button from "@/components/ui/Button";
 import { C, ConfidencePill, Notice, Pill, RangeBar, SectionLabel, Skeleton } from "@/components/decisions/ui";
@@ -392,6 +393,8 @@ export default function DecisionDetailPage() {
   const recOption = rec ? d.options.find((o) => o.key === rec.key) : undefined;
   const chosen = d.options.find((o) => o.key === d.selectedOption) || null;
   const canChoose = ["OPEN", "NEEDS_INFORMATION", "SELECTED"].includes(d.status);
+  // A superseded or resolved decision is history: never shown as a current recommendation.
+  const isCurrent = detail.lineage ? detail.lineage.current : !["SUPERSEDED", "RESOLVED", "REJECTED", "EXPIRED"].includes(d.status);
   const days = daysUntil(d.deadline || d.window?.latestSafeAt || null);
   const cod = (d.window?.costOfDelayPerWeek as unknown as { valueLost?: number } | null) || null;
   const steps = stepsOf(chosen);
@@ -417,6 +420,7 @@ export default function DecisionDetailPage() {
         <h1 className="text-[28px] lg:text-[34px] max-w-[820px]" style={{ color: C.ink }}>{d.title}</h1>
         <StepRail className="is-row mt-4 mb-1" label="Where this decision is" steps={decisionSteps(d.status, detail.pilotMode === "SHADOW", d.kind)} />
         {d.description && <p className="text-[15px] mt-3 max-w-[760px] leading-[1.55]" style={{ color: C.body }}><mark className="dd-bottom">Bottom line:</mark> {d.description}</p>}
+        <DecisionReconciliation detail={detail} />
 
         {/* The evidence behind the headline, one card per kind of figure, as
             on the public site: a ledger fact, a calculation, an assumption and
@@ -503,7 +507,7 @@ export default function DecisionDetailPage() {
         </section>
 
         {/* Recommendation */}
-        {rec && (
+        {rec && isCurrent && (
           <section className="mt-10 rounded-md p-5" style={{ background: "#FFFFFF", border: "1px solid rgba(25,25,23,0.10)", boxShadow: "inset 2px 0 0 #191917, 0 1px 2px rgba(25,25,23,0.04)" }}>
             <SectionLabel>{rec.informationFirst ? "Find out first" : "Starlane suggests"}</SectionLabel>
             <p className="text-[18px]" style={{ color: C.ink, fontWeight: 500 }}>{rec.label}</p>
