@@ -413,7 +413,7 @@ export default function DecisionDetailPage() {
         <div className="flex flex-wrap items-center gap-2 text-[12px] mb-2" style={{ color: C.faint }}>
           <span>{STATUS_LABEL[d.status] || d.status}</span>
           <span>·</span>
-          <span>Analysed {relTime(d.updatedAt)} from data as of {shortDate(d.asOf)}</span>
+          <span>{isCurrent ? <>Analysed {relTime(d.updatedAt)} from data as of {shortDate(d.asOf)}</> : <>Closed {relTime(d.resolvedAt || d.updatedAt)} · last analysed from data as of {shortDate(d.asOf)}</>}</span>
           {detail.pilotMode === "SHADOW" && <Pill tone="accent">Shadow mode</Pill>}
           {d.evidence.length > 0 && <span className="dd-chip">Evidence · {d.evidence.length} record{d.evidence.length === 1 ? "" : "s"}</span>}
         </div>

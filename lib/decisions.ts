@@ -119,6 +119,7 @@ export interface Decision extends Omit<DecisionListItem, 'recommendation'> {
   modelVersions?: Record<string, string>;
   definitions?: Record<string, unknown>;
   resolutionReason?: string | null;
+  resolvedAt?: string | null;
 }
 
 export interface DecisionEvent {
