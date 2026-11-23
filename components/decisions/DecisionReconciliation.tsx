@@ -13,7 +13,17 @@
 
 import Link from "next/link";
 import { C, Notice, SectionLabel } from "@/components/decisions/ui";
-import { money, shortDate, type DecisionDetail } from "@/lib/decisions";
+import { shortDate, type DecisionDetail } from "@/lib/decisions";
+
+// Exact amounts here: this is the audit view, where ₹2.6L vs ₹2,62,575 matters.
+function money(v: number | null | undefined, currency?: string | null): string {
+  if (v == null || !Number.isFinite(v)) return "—";
+  try {
+    return new Intl.NumberFormat("en-IN", { style: "currency", currency: currency || "INR", maximumFractionDigits: 2, minimumFractionDigits: 0 }).format(v);
+  } catch {
+    return `${currency || ""} ${v.toLocaleString("en-IN")}`.trim();
+  }
+}
 
 const NOTICE_STATE: Record<string, { label: string; tone: string }> = {
   AWAITING_APPROVAL: { label: "Draft, waiting for your approval. Not sent.", tone: C.body },
