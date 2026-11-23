@@ -1,24 +1,33 @@
 // Data feeds (backend lib/routes/feeds.js): products, bills of materials,
-// customer orders and purchase orders kept up to date from a Google Sheet,
-// any file address, a connected app, or rows other software pushes. Every
-// run goes through the same checked import as a file upload.
+// customer orders and purchase orders kept up to date from a connected app,
+// Tally (through the Starlane bridge), a Google Sheet, any file address, an
+// SFTP folder, a report emailed to the owner's Gmail, or rows other software
+// pushes. Every run goes through the same checked import as a file upload.
 
 import { API_BASE, authHeaders, fetchWithRetry } from '@/lib/api';
 import { DecisionApiError, type OpsKind, type OpsImportOptions, type OpsPreview, type OpsSummary } from '@/lib/decisions';
 
-export type FeedSourceType = 'sheet_link' | 'file_url' | 'push' | 'app';
+export type FeedSourceType = 'sheet_link' | 'file_url' | 'push' | 'app' | 'tally' | 'sftp' | 'email';
 export type FeedStatus = 'ACTIVE' | 'PAUSED' | 'NEEDS_ATTENTION';
 export type RunStatus = 'running' | 'imported' | 'unchanged' | 'needs_attention' | 'failed';
 
 export interface FeedRun {
   id: string; trigger: 'manual' | 'schedule' | 'push' | 'setup'; status: RunStatus; startedAt: string; finishedAt: string | null;
   rowsReceived: number; rowsAccepted: number; rowsRejected: number; rowsReview: number; batchId: string | null; error: string | null;
-  details: { note?: string; truncated?: string; counts?: OpsSummary['counts']; errors?: string[]; columns?: string[] | null };
+  details: { note?: string; origin?: string; truncated?: string; counts?: OpsSummary['counts']; errors?: string[]; columns?: string[] | null };
 }
 
 export interface Feed {
   id: string; name: string; kind: OpsKind; kindLabel: string; sourceType: FeedSourceType;
-  source: { url: string | null; connectorId: string | null; headerName: string | null; hasHeader: boolean | null };
+  source: {
+    url: string | null; connectorId: string | null; headerName: string | null; hasHeader: boolean | null;
+    // sftp
+    host?: string; port?: number; username?: string; folder?: string; pattern?: string; authKind?: 'password' | 'key' | null; hostKey?: string | null; lastFile?: string | null;
+    // email
+    from?: string; subject?: string | null; filename?: string | null; lastReceivedAt?: string | null;
+    // tally
+    company?: string | null;
+  };
   mapping: Partial<OpsImportOptions> & { auto?: boolean; canonical?: boolean };
   autoMapping: boolean; intervalMinutes: number | null; status: FeedStatus; statusReason: string | null;
   nextRunAt: string | null; lastRunAt: string | null; lastSuccessAt: string | null; lastBatchId: string | null; pushPath: string | null;
@@ -40,11 +49,17 @@ export interface FeedSourceInput {
   url?: string;
   connectorId?: string;
   header?: { name: string; value: string } | null;
+  // sftp (password or privateKey is sent once, stored encrypted, never returned)
+  host?: string; port?: number | null; username?: string; password?: string; privateKey?: string; passphrase?: string; folder?: string; pattern?: string;
+  // email (read from the connected Gmail)
+  from?: string; subject?: string; filename?: string;
+  // tally
+  company?: string;
 }
 
 export interface FeedPreviewResponse {
   ok: true; kind: OpsKind; sourceType: FeedSourceType; columns: FeedColumn[];
-  rowsReceived?: number | null; truncated?: boolean; empty?: boolean;
+  rowsReceived?: number | null; truncated?: boolean; empty?: boolean; note?: string | null; origin?: string; hostKey?: string;
   preview: OpsPreview | null; suggestedInput?: OpsImportOptions;
 }
 
@@ -90,6 +105,7 @@ export const feedsApi = {
   update: (id: string, body: { name?: string; intervalMinutes?: number | null; status?: 'ACTIVE' | 'PAUSED'; mapping?: Partial<OpsImportOptions> & { auto?: boolean } }) =>
     call<{ feed: Feed }>('PATCH', `/${encodeURIComponent(id)}`, body),
   run: (id: string) => call<{ run: RunResult; feed: Feed | null }>('POST', `/${encodeURIComponent(id)}/run`, {}),
+  previewSaved: (id: string) => call<FeedPreviewResponse>('POST', `/${encodeURIComponent(id)}/preview`, {}),
   runs: (id: string) => call<{ runs: FeedRun[] }>('GET', `/${encodeURIComponent(id)}/runs`),
   rotateKey: (id: string) => call<{ pushKey: string; pushUrl: string }>('POST', `/${encodeURIComponent(id)}/rotate-key`, {}),
   remove: (id: string) => call<{ deleted: true }>('DELETE', `/${encodeURIComponent(id)}`),

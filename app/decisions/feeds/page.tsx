@@ -5,9 +5,10 @@
 // uploading files by hand.
 //
 // Sources: a connected app (Shopify, WooCommerce, Zoho Inventory, QuickBooks
-// Online), a Google Sheet link, any file address (an ERP's scheduled export,
-// a shared CSV / Excel / JSON link), or rows another tool pushes with the
-// feed's own key. Every run goes through the same checked import as a file
+// Online, Xero), Tally through the Starlane bridge, a Google Sheet link, any
+// file address (an ERP's scheduled export, a shared CSV / Excel / JSON link),
+// an SFTP folder, a report emailed to the owner's Gmail, or rows another tool
+// pushes with the feed's own key. Every run goes through the same checked import as a file
 // upload: the owner confirms the columns once here, and a run whose data no
 // longer fits that confirmation imports nothing and asks again.
 //
@@ -24,16 +25,30 @@ import { FIELDS, KIND_TEXT, KIND_ORDER, MappingSection, label, selectStyle } fro
 import type { OpsKind, OpsImportOptions } from "@/lib/decisions";
 import {
   feedsApi, everyLabel,
-  type Feed, type FeedApp, type FeedColumn, type FeedPreviewResponse, type FeedRun, type FeedSourceType, type RunResult,
+  type Feed, type FeedApp, type FeedColumn, type FeedPreviewResponse, type FeedRun, type FeedSourceInput, type FeedSourceType, type RunResult,
 } from "@/lib/feeds";
 
 const SOURCE_TEXT: Record<FeedSourceType, { title: string; what: string }> = {
-  app: { title: "A connected app", what: "Shopify, WooCommerce, Zoho Inventory or QuickBooks Online, read on a schedule." },
+  app: { title: "A connected app", what: "Shopify, WooCommerce, Zoho Inventory, QuickBooks Online or Xero, read on a schedule." },
+  tally: { title: "Tally", what: "Open sales orders, purchase orders and stock, sent by the Starlane bridge on the computer running Tally each time it syncs." },
   sheet_link: { title: "A Google Sheet", what: "A tab shared as “Anyone with the link can view”, read on a schedule." },
   file_url: { title: "A file address", what: "Any https link to a CSV, Excel or JSON file: an ERP’s scheduled export, a report URL, a shared Dropbox or Drive file." },
+  sftp: { title: "An SFTP folder", what: "The newest export your ERP or warehouse system drops in a folder on an SFTP server, read on a schedule." },
+  email: { title: "A report emailed to you", what: "The newest CSV or Excel attachment from a sender, read from your connected Gmail. Nothing is sent." },
   push: { title: "Other software sends it", what: "Your ERP, a script, Zapier, Make or n8n sends rows to Starlane with this feed’s own key." },
 };
-const SOURCE_ORDER: FeedSourceType[] = ["app", "sheet_link", "file_url", "push"];
+const SOURCE_ORDER: FeedSourceType[] = ["app", "tally", "sheet_link", "file_url", "sftp", "email", "push"];
+// Sources that send on their own schedule: no Run now, no interval here.
+const ARRIVING: FeedSourceType[] = ["push", "tally"];
+
+function sourceLine(f: Feed, app: FeedApp | null | undefined) {
+  if (f.sourceType === "app") return app?.label || app?.name || f.source.connectorId;
+  if (f.sourceType === "push") return "Pushed by other software";
+  if (f.sourceType === "tally") return `Tally${f.source.company ? ` (${f.source.company})` : ""}, sent by the Starlane bridge`;
+  if (f.sourceType === "sftp") return `${f.source.username}@${f.source.host}${f.source.port && f.source.port !== 22 ? `:${f.source.port}` : ""}${f.source.folder} · ${f.source.pattern}`;
+  if (f.sourceType === "email") return `Emails from ${f.source.from}${f.source.subject ? ` with “${f.source.subject}”` : ""}`;
+  return f.source.url;
+}
 
 const RUN_TEXT: Record<FeedRun["status"], { label: string; tone: "good" | "neutral" | "warn" | "bad" }> = {
   imported: { label: "Imported", tone: "good" },
@@ -134,18 +149,20 @@ function FeedCard({ f, apps }: { f: Feed; apps: FeedApp[] }) {
             <Pill tone={status.tone}>{status.label}</Pill>
           </div>
           <p className="text-[12.5px] mt-1" style={{ color: C.muted }}>
-            {f.kindLabel} · {f.sourceType === "app" ? (app?.label || app?.name || f.source.connectorId) : f.sourceType === "push" ? "Pushed by other software" : f.source.url}
-            {f.sourceType !== "push" && <> · {everyLabel(f.intervalMinutes)}</>}
+            {f.kindLabel} · <span className="break-all">{sourceLine(f, app)}</span>
+            {!ARRIVING.includes(f.sourceType) && <> · {everyLabel(f.intervalMinutes)}</>}
           </p>
           {f.statusReason && <p className="text-[12.5px] mt-2" style={{ color: C.warn }}>{f.statusReason}</p>}
           <p className="text-[12.5px] mt-2" style={{ color: C.body }}>
-            {f.lastRun ? <>Last run {when(f.lastRun.startedAt)}: <Pill tone={RUN_TEXT[f.lastRun.status].tone}>{RUN_TEXT[f.lastRun.status].label}</Pill> {f.lastRun.error && f.lastRun.error === f.statusReason ? null : runSentence(f.lastRun)}</> : f.sourceType === "push" ? "Waiting for the first delivery." : "Not run yet."}
+            {f.lastRun ? <>Last run {when(f.lastRun.startedAt)}: <Pill tone={RUN_TEXT[f.lastRun.status].tone}>{RUN_TEXT[f.lastRun.status].label}</Pill> {f.lastRun.error && f.lastRun.error === f.statusReason ? null : runSentence(f.lastRun)}</> : f.sourceType === "push" ? "Waiting for the first delivery." : f.sourceType === "tally" ? "Waiting for the bridge to send from Tally. It sends on its next sync (update the bridge if it is older than this feature)." : "Not run yet."}
           </p>
+          {f.lastRun?.details?.origin && <p className="text-[12px] mt-1" style={{ color: C.faint }}>Read {f.lastRun.details.origin}.</p>}
+          {f.sourceType === "sftp" && f.source.hostKey && <p className="text-[12px] mt-1 break-all" style={{ color: C.faint }}>Server identity {f.source.hostKey}</p>}
           {f.lastRun?.details?.truncated && <p className="text-[12px] mt-1" style={{ color: C.warn }}>{f.lastRun.details.truncated}</p>}
           {f.nextRunAt && f.intervalMinutes && <p className="text-[12px] mt-1" style={{ color: C.faint }}>Next run around {when(f.nextRunAt)}.</p>}
         </div>
         <div className="flex items-center flex-wrap gap-2">
-          {f.sourceType !== "push" && (
+          {!ARRIVING.includes(f.sourceType) && (
             <Button size="sm" loading={busy === "run"} disabled={!!busy || f.status === "PAUSED"} onClick={() => act("run", async () => {
               const r = await feedsApi.run(f.id);
               setMsg({ tone: r.run.status === "imported" || r.run.status === "unchanged" ? "good" : "bad", text: runSentence(r.run) || r.run.status });
@@ -167,7 +184,7 @@ function FeedCard({ f, apps }: { f: Feed; apps: FeedApp[] }) {
           }}>Delete</Button>
         </div>
       </div>
-      {f.status === "NEEDS_ATTENTION" && f.sourceType !== "app" && <Reconfirm f={f} onDone={refresh} />}
+      {f.status === "NEEDS_ATTENTION" && f.sourceType !== "app" && f.sourceType !== "tally" && <Reconfirm f={f} onDone={refresh} />}
       {key && <PushKey pushKey={key.pushKey} pushUrl={key.pushUrl} kind={f.kind} />}
       {msg && <p className="text-[12.5px] mt-3" style={{ color: msg.tone === "bad" ? C.bad : C.body }}>{msg.text}</p>}
       {showRuns && (
@@ -213,7 +230,8 @@ function Reconfirm({ f, onDone }: { f: Feed; onDone: () => void }) {
   async function load() {
     setBusy(true); setErr(null);
     try {
-      const r = await feedsApi.preview({ kind: f.kind, sourceType: f.sourceType, source: { url: f.source.url || undefined } });
+      // Read with the feed's saved settings (header, SFTP password or key), so nothing needs typing again.
+      const r = await feedsApi.previewSaved(f.id);
       setP(r);
       if (r.preview) setOpts({ ...r.preview.suggestedInput, sourceSystem: f.mapping.sourceSystem || "", currency: f.mapping.currency ?? null, ...(f.kind === "purchase_lines" ? { stockFollows: f.mapping.stockFollows || "STARLANE" } : {}) });
     } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
@@ -232,7 +250,7 @@ function Reconfirm({ f, onDone }: { f: Feed; onDone: () => void }) {
           <Button size="sm" onClick={save} loading={busy}>Save and run</Button>
         </>
       )}
-      {f.sourceType === "file_url" && f.source.hasHeader && p && <p className="text-[12px] mt-2" style={{ color: C.faint }}>The check above reads the file without the saved request header; if the file needs it, delete the feed and add it again.</p>}
+      {p?.empty && <p className="text-[12.5px] mt-2" style={{ color: C.muted }}>{p.note || "The source has no records right now."}</p>}
       {err && <p className="text-[12.5px] mt-2" style={{ color: C.bad }}>{err}</p>}
     </div>
   );
@@ -306,6 +324,9 @@ function AddFeed({ data, onDone, onCancel }: { data: { apps: FeedApp[]; interval
   const [connectorId, setConnectorId] = useState<string>("");
   const [url, setUrl] = useState("");
   const [header, setHeader] = useState({ name: "", value: "" });
+  const [company, setCompany] = useState("");
+  const [ftp, setFtp] = useState({ host: "", port: "", username: "", auth: "password" as "password" | "key", password: "", privateKey: "", passphrase: "", folder: "/", pattern: "*.csv" });
+  const [mail, setMail] = useState({ from: "", subject: "", filename: "" });
   const [preview, setPreview] = useState<FeedPreviewResponse | null>(null);
   const [opts, setOpts] = useState<OpsImportOptions | null>(null);
   const [sourceSystem, setSourceSystem] = useState("");
@@ -318,7 +339,21 @@ function AddFeed({ data, onDone, onCancel }: { data: { apps: FeedApp[]; interval
 
   const appsForKind = useMemo(() => data.apps.filter((a) => a.kinds.includes(kind)), [data.apps, kind]);
   const columns = data.kinds.find((k) => k.kind === kind)?.columns || [];
-  const source = sourceType === "app" ? { connectorId } : sourceType === "push" ? {} : { url, ...(sourceType === "file_url" && header.name ? { header } : {}) };
+  const source: FeedSourceInput = sourceType === "app" ? { connectorId }
+    : sourceType === "push" ? {}
+      : sourceType === "tally" ? (company.trim() ? { company: company.trim() } : {})
+        : sourceType === "sftp" ? {
+          host: ftp.host.trim(), port: ftp.port ? Number(ftp.port) : null, username: ftp.username.trim(), folder: ftp.folder.trim() || "/", pattern: ftp.pattern.trim() || "*.csv",
+          ...(ftp.auth === "key" ? { privateKey: ftp.privateKey, ...(ftp.passphrase ? { passphrase: ftp.passphrase } : {}) } : { password: ftp.password }),
+        }
+          : sourceType === "email" ? { from: mail.from.trim(), ...(mail.subject.trim() ? { subject: mail.subject.trim() } : {}), ...(mail.filename.trim() ? { filename: mail.filename.trim() } : {}) }
+            : { url, ...(sourceType === "file_url" && header.name ? { header } : {}) };
+  const arriving = ARRIVING.includes(sourceType);
+  const tallyKindOk = sourceType !== "tally" || kind !== "components";
+  const canRead = sourceType === "app" ? !!connectorId
+    : sourceType === "sftp" ? !!(ftp.host.trim() && ftp.username.trim() && (ftp.auth === "key" ? ftp.privateKey.trim() : ftp.password))
+      : sourceType === "email" ? !!mail.from.trim()
+        : !!url.trim();
 
   function resetCheck() { setPreview(null); setOpts(null); setError(null); }
 
@@ -335,9 +370,10 @@ function AddFeed({ data, onDone, onCancel }: { data: { apps: FeedApp[]; interval
     setBusy("save"); setError(null);
     try {
       const mapping = sourceType === "app" ? { stockFollows: kind === "purchase_lines" ? stockFollows : undefined }
+        : sourceType === "tally" ? {}
         : sourceType === "push" ? { sourceSystem, auto: true, ...(kind === "purchase_lines" ? { stockFollows } : {}) }
           : { ...(opts as OpsImportOptions), sourceSystem: sourceSystem || opts?.sourceSystem || "", ...(kind === "purchase_lines" ? { stockFollows } : {}) };
-      const r = await feedsApi.create({ name: name || undefined, kind, sourceType, source, mapping, intervalMinutes: sourceType === "push" || interval === "" ? null : interval });
+      const r = await feedsApi.create({ name: name || undefined, kind, sourceType, source, mapping, intervalMinutes: arriving || interval === "" ? null : interval });
       setDone(r);
     } catch (e) { setError((e as Error).message); } finally { setBusy(null); }
   }
@@ -351,13 +387,16 @@ function AddFeed({ data, onDone, onCancel }: { data: { apps: FeedApp[]; interval
             First run: {RUN_TEXT[done.firstRun.status].label}. {runSentence(done.firstRun)}
           </p>
         )}
+        {done.feed.sourceType === "tally" && <p className="text-[13px] mt-2" style={{ color: C.body }}>It fills in the next time the Starlane bridge syncs from Tally.</p>}
         {done.pushKey && done.pushUrl && <PushKey pushKey={done.pushKey} pushUrl={done.pushUrl} kind={kind} />}
         <div className="mt-4"><Button onClick={onDone}>Done</Button></div>
       </section>
     );
   }
 
-  const canSave = sourceType === "push"
+  const canSave = sourceType === "tally"
+    ? tallyKindOk
+    : sourceType === "push"
     ? !!sourceSystem.trim()
     : sourceType === "app"
       ? !!preview && !preview.preview?.mappingErrors.length
@@ -430,8 +469,95 @@ function AddFeed({ data, onDone, onCancel }: { data: { apps: FeedApp[]; interval
             </label>
           </div>
         )}
+        {sourceType === "tally" && (
+          <div className="grid gap-3">
+            {!tallyKindOk
+              ? <Notice tone="warn" title="Tally does not keep bills of materials">Choose customer orders, purchase orders or products and stock, or bring a bill of materials in from a file.</Notice>
+              : <p className="text-[13px]" style={{ color: C.body }}>
+                  The Starlane bridge on the computer running Tally sends these on each sync: {kind === "products" ? "every stock item with its unit, group and closing stock" : `${kind === "orders" ? "sales orders" : "purchase orders"} from the last six months, with what is still outstanding after the ${kind === "orders" ? "delivery notes and sales invoices" : "receipt notes and purchase invoices"} made against them`}. It needs to be paired (<Link href="/sources" style={{ color: C.accent }}>Sources › Tally</Link>) and up to date.{kind === "purchase_lines" ? " Tally books the stock when goods arrive, so Starlane never adds it twice." : ""}
+                </p>}
+            <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+              Tally company (optional; leave empty for every company the bridge syncs)
+              <input value={company} onChange={(e) => setCompany(e.target.value)} maxLength={100} placeholder="Exactly as named in Tally" className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
+            </label>
+          </div>
+        )}
+        {sourceType === "sftp" && (
+          <div className="grid gap-3">
+            <div className="grid sm:grid-cols-3 gap-3">
+              <label className="flex flex-col gap-1 text-[12.5px] sm:col-span-2" style={{ color: C.muted }}>
+                Server
+                <input value={ftp.host} onChange={(e) => { setFtp({ ...ftp, host: e.target.value }); resetCheck(); }} placeholder="sftp.example.com" autoComplete="off" className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
+              </label>
+              <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+                Port
+                <input value={ftp.port} onChange={(e) => { setFtp({ ...ftp, port: e.target.value.replace(/\D/g, "") }); resetCheck(); }} placeholder="22" inputMode="numeric" className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
+              </label>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+                User name
+                <input value={ftp.username} onChange={(e) => { setFtp({ ...ftp, username: e.target.value }); resetCheck(); }} autoComplete="off" className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
+              </label>
+              <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+                Sign in with
+                <select value={ftp.auth} onChange={(e) => { setFtp({ ...ftp, auth: e.target.value as "password" | "key" }); resetCheck(); }} className="text-[14px] rounded-md px-3 py-2" style={inputStyle}>
+                  <option value="password">A password</option>
+                  <option value="key">A private key</option>
+                </select>
+              </label>
+            </div>
+            {ftp.auth === "password" ? (
+              <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+                Password (stored encrypted, never shown again)
+                <input type="password" autoComplete="new-password" value={ftp.password} onChange={(e) => { setFtp({ ...ftp, password: e.target.value }); resetCheck(); }} className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
+              </label>
+            ) : (
+              <>
+                <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+                  Private key (stored encrypted, never shown again)
+                  <textarea value={ftp.privateKey} onChange={(e) => { setFtp({ ...ftp, privateKey: e.target.value }); resetCheck(); }} rows={4} spellCheck={false} placeholder="-----BEGIN OPENSSH PRIVATE KEY-----" className="text-[12px] rounded-md px-3 py-2 font-mono" style={inputStyle} />
+                </label>
+                <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+                  Key passphrase (if it has one)
+                  <input type="password" autoComplete="off" value={ftp.passphrase} onChange={(e) => { setFtp({ ...ftp, passphrase: e.target.value }); resetCheck(); }} className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
+                </label>
+              </>
+            )}
+            <div className="grid sm:grid-cols-2 gap-3">
+              <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+                Folder
+                <input value={ftp.folder} onChange={(e) => { setFtp({ ...ftp, folder: e.target.value }); resetCheck(); }} placeholder="/exports/orders" className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
+              </label>
+              <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+                File name or pattern (the newest match is read)
+                <input value={ftp.pattern} onChange={(e) => { setFtp({ ...ftp, pattern: e.target.value }); resetCheck(); }} placeholder="open-orders-*.csv" className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
+              </label>
+            </div>
+            <p className="text-[12px]" style={{ color: C.faint }}>Starlane only lists the folder and reads the file; it never writes, moves or deletes anything there. The server’s identity is remembered on the first read, and a different server is refused.</p>
+          </div>
+        )}
+        {sourceType === "email" && (
+          <div className="grid gap-3">
+            <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+              Sender address, or just its domain
+              <input value={mail.from} onChange={(e) => { setMail({ ...mail, from: e.target.value }); resetCheck(); }} placeholder="reports@erp.example.com" autoComplete="off" className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
+            </label>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+                Words in the subject (optional)
+                <input value={mail.subject} onChange={(e) => { setMail({ ...mail, subject: e.target.value }); resetCheck(); }} placeholder="Daily stock report" maxLength={100} className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
+              </label>
+              <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+                Attachment name or pattern (optional)
+                <input value={mail.filename} onChange={(e) => { setMail({ ...mail, filename: e.target.value }); resetCheck(); }} placeholder="stock-*.xlsx" className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
+              </label>
+            </div>
+            <p className="text-[12px]" style={{ color: C.faint }}>Read from the Gmail you connected under <Link href="/sources" style={{ color: C.accent }}>Sources</Link>: the newest email from this sender in the last 30 days with a CSV, Excel or JSON attachment. Starlane only searches and reads; it never sends, moves or deletes mail.</p>
+          </div>
+        )}
         {sourceType === "push" && <PushColumns columns={columns} />}
-        {kind === "purchase_lines" && (
+        {kind === "purchase_lines" && sourceType !== "tally" && (
           <fieldset className="mt-4 rounded-[8px] px-4 py-3" style={{ border: `1px solid ${C.line}` }}>
             <legend className="text-[12.5px] px-1" style={{ color: C.muted }}>Who records stock when these goods arrive?</legend>
             {([["STARLANE", "Starlane: receipts recorded here add to stock"], ["EXTERNAL", "My accounting system (e.g. Tally purchase vouchers) books stock"]] as const).map(([v, l]) => (
@@ -443,15 +569,17 @@ function AddFeed({ data, onDone, onCancel }: { data: { apps: FeedApp[]; interval
         )}
       </div>
 
-      {sourceType !== "push" && (
+      {!arriving && (
         <>
           <SectionLabel>3. Check what Starlane reads</SectionLabel>
           <div className="mb-4">
-            <Button size="sm" variant="secondary" loading={busy === "preview"} disabled={busy === "save" || (sourceType === "app" ? !connectorId : !url.trim())} onClick={() => check(null)}>
+            <Button size="sm" variant="secondary" loading={busy === "preview"} disabled={busy === "save" || !canRead} onClick={() => check(null)}>
               {preview ? "Read it again" : "Read the source"}
             </Button>
           </div>
-          {preview?.empty && <div className="mb-4"><Notice tone="neutral" title="The source has no records right now">You can still save the feed; it imports when records appear.</Notice></div>}
+          {preview?.empty && <div className="mb-4"><Notice tone="neutral" title="The source has no records right now">{preview.note ? `${preview.note} ` : ""}You can still save the feed; it imports when records appear.</Notice></div>}
+          {preview?.origin && <p className="text-[12.5px] mb-3" style={{ color: C.muted }}>Read {preview.origin}.</p>}
+          {preview?.hostKey && <p className="text-[12px] mb-3 break-all" style={{ color: C.faint }}>Server identity {preview.hostKey}. Starlane remembers it when you save and refuses a different one later.</p>}
           {preview?.truncated && <div className="mb-4"><Notice tone="warn" title="More records than one run reads">The first runs read the most recent records; the rest come in as earlier ones close.</Notice></div>}
           {preview?.preview && sourceType === "app" && <AppCheck p={preview} />}
           {preview?.preview && opts && sourceType !== "app" && (
@@ -465,19 +593,19 @@ function AddFeed({ data, onDone, onCancel }: { data: { apps: FeedApp[]; interval
         </>
       )}
 
-      <SectionLabel>{sourceType === "push" ? "3" : "4"}. Name and schedule</SectionLabel>
+      <SectionLabel>{arriving ? "3" : "4"}. {arriving ? "Name" : "Name and schedule"}</SectionLabel>
       <div className="grid sm:grid-cols-3 gap-3 mb-5 max-w-[860px]">
         <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
           Feed name
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder={`${KIND_TEXT[kind].title}`} maxLength={80} className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
         </label>
-        {sourceType !== "app" && (
+        {sourceType !== "app" && sourceType !== "tally" && (
           <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
             Which system the records come from
             <input value={sourceSystem} onChange={(e) => { setSourceSystem(e.target.value); if (opts) setOpts({ ...opts, sourceSystem: e.target.value }); }} placeholder="e.g. Tally, our ERP, Orders sheet" maxLength={60} className="text-[14px] rounded-md px-3 py-2" style={inputStyle} />
           </label>
         )}
-        {sourceType !== "push" && (
+        {!arriving && (
           <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
             How often
             <select value={interval} onChange={(e) => setIntervalMinutes(e.target.value === "" ? "" : Number(e.target.value))} className="text-[14px] rounded-md px-3 py-2" style={inputStyle}>
@@ -490,9 +618,9 @@ function AddFeed({ data, onDone, onCancel }: { data: { apps: FeedApp[]; interval
 
       {error && <div className="mb-4"><Notice tone="bad" title="That didn't work">{error}</Notice></div>}
       <Button onClick={save} loading={busy === "save"} disabled={!canSave || busy === "preview"}>
-        {sourceType === "push" ? "Save and show the key" : "Save and run it now"} <FiArrowRight size={13} />
+        {sourceType === "push" ? "Save and show the key" : sourceType === "tally" ? "Save" : "Save and run it now"} <FiArrowRight size={13} />
       </Button>
-      {sourceType !== "push" && !preview && <span className="text-[12px] ml-3" style={{ color: C.faint }}>Read the source first.</span>}
+      {!arriving && !preview && <span className="text-[12px] ml-3" style={{ color: C.faint }}>Read the source first.</span>}
     </section>
   );
 }
