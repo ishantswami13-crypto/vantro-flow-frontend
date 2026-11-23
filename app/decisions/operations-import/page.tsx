@@ -1,7 +1,8 @@
 "use client";
 
-// Import operating data: open customer orders and open purchase orders,
-// from the CSV or Excel export a business already has. The flow is
+// Import operating data from the CSV or Excel exports a business already
+// has, in four kinds: products with stock on hand, components (bill of
+// materials), open purchase orders, and open customer orders. The flow is
 //   choose file -> check columns -> answer product questions -> review rows -> import
 // Every preview call writes nothing. "Import" sends exactly the choices shown
 // here; the backend writes the whole file in one transaction, then re-runs
@@ -9,8 +10,9 @@
 // deleted. Nothing here sends anything to anyone.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { FiUploadCloud, FiArrowRight } from "react-icons/fi";
+import { FiUploadCloud, FiArrowRight, FiDownload } from "react-icons/fi";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Button from "@/components/ui/Button";
 import { StepRail } from "@/components/hv/Pieces";
@@ -26,9 +28,22 @@ const LABEL: Record<OpsField, string> = {
   unit_price: "Unit price", currency: "Currency", order_date: "Order date", promised_date: "Promised delivery date", status: "Status",
   supplier_name: "Supplier name", supplier_ref: "Supplier code", supplier_tax_id: "Supplier GSTIN", po_ref: "Purchase order number",
   received_quantity: "Quantity already received", expected_date: "Expected delivery date", purchase_date: "PO date", unit_cost: "Unit cost",
+  on_hand: "Stock on hand", unit: "Unit", category: "Category", finished_sku: "Finished product SKU", finished_name: "Finished product name",
+  component_sku: "Component SKU", component_name: "Component name", quantity_per_unit: "Quantity per finished unit",
+};
+const label = (kind: OpsKind, f: OpsField) => (kind === "products" && f === "unit_price" ? "Selling price" : LABEL[f]);
+const HELP: Partial<Record<OpsField, string>> = {
+  on_hand: "Physical stock today. Never include goods still on order.",
+  quantity_per_unit: "How many of the component one finished unit uses.",
 };
 
 const FIELDS: Record<OpsKind, { field: OpsField; required?: boolean; date?: boolean }[]> = {
+  products: [
+    { field: "sku" }, { field: "product_name", required: true }, { field: "on_hand" }, { field: "unit" }, { field: "unit_price" }, { field: "category" },
+  ],
+  components: [
+    { field: "finished_sku" }, { field: "finished_name" }, { field: "component_sku" }, { field: "component_name" }, { field: "quantity_per_unit", required: true },
+  ],
   orders: [
     { field: "customer_name", required: true }, { field: "order_ref", required: true }, { field: "sku" }, { field: "product_name" },
     { field: "quantity", required: true }, { field: "outstanding_quantity" }, { field: "promised_date", date: true }, { field: "unit_price" },
@@ -42,15 +57,19 @@ const FIELDS: Record<OpsKind, { field: OpsField; required?: boolean; date?: bool
   ],
 };
 
-const KIND_TEXT: Record<OpsKind, { title: string; what: string; noun: string }> = {
-  orders: { title: "Open customer orders", what: "Sales orders not yet fully delivered: who ordered what, how many are still to deliver, and the date you promised.", noun: "order line" },
-  purchase_lines: { title: "Open purchase orders", what: "Goods you have ordered from suppliers: how many, how many have arrived, and when the rest is expected.", noun: "purchase line" },
+const KIND_TEXT: Record<OpsKind, { title: string; what: string; noun: string; template: string }> = {
+  products: { title: "Products and stock on hand", what: "Your item master: SKU, name and the physical stock you hold today.", noun: "product", template: "/templates/starlane-products-template.csv" },
+  components: { title: "Components (bill of materials)", what: "Which components, and how many, make one finished product. Skip this if you only resell.", noun: "component link", template: "/templates/starlane-components-template.csv" },
+  purchase_lines: { title: "Open purchase orders", what: "Goods you have ordered from suppliers: how many, how many have arrived, and when the rest is expected.", noun: "purchase line", template: "/templates/starlane-purchase-orders-template.csv" },
+  orders: { title: "Open customer orders", what: "Sales orders not yet fully delivered: who ordered what, how many are still to deliver, and the date you promised.", noun: "order line", template: "/templates/starlane-sales-orders-template.csv" },
 };
+const KIND_ORDER: OpsKind[] = ["products", "components", "purchase_lines", "orders"];
 
 const selectStyle = { border: `1px solid ${C.line}`, color: C.ink, background: "#fff" } as const;
 
 export default function OperationsImportPage() {
-  const [kind, setKind] = useState<OpsKind>("purchase_lines");
+  const [kind, setKind] = useState<OpsKind>("products");
+  const qc = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<OpsPreview | null>(null);
   const [opts, setOpts] = useState<OpsImportOptions | null>(null);
@@ -98,6 +117,7 @@ export default function OperationsImportPage() {
     setBusy("commit"); setError(null);
     try {
       setResult(await decisionsApi.opsImportCommit(file, kind, opts));
+      qc.invalidateQueries({ queryKey: ["ops-imports"] });
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -110,15 +130,15 @@ export default function OperationsImportPage() {
   const stale = !!opts && optsKey !== lastSent.current && !!preview && busy !== "commit";
 
   return (
-    <DashboardLayout pageTitle="Import orders and purchases">
+    <DashboardLayout pageTitle="Import business records">
       <div>
         <Link href="/decisions/shipments" className="text-[13px] hover-dim" style={{ color: C.muted }}>← Inbound shipments</Link>
         <h1 className="hv-title mt-3 mb-2" style={{ color: "#0F0E0D", fontSize: 37, lineHeight: 1.08, letterSpacing: "-0.012em", fontFamily: "var(--serif, 'Newsreader', Georgia, serif)", fontWeight: 400 }}>
-          Import orders and purchases
+          Import business records
         </h1>
         <p className="text-[14px] max-w-[700px] mb-6" style={{ color: C.muted }}>
-          Upload the export you already have from Tally, Zoho, Busy or a sheet. You confirm what each column means and see every row Starlane would accept, reject or ask about before anything is saved.
-          Starlane never fills in a value the file does not have, and never deletes a line because a newer file leaves it out.
+          Upload the CSV or Excel exports you already have, one file per kind: products first, then components, purchase orders and customer orders. You confirm what each column means and see every row Starlane would accept, reject or ask about before anything is saved.
+          Starlane never fills in a value the file does not have, and never deletes anything because a newer file leaves it out.
         </p>
 
         <StepRail
@@ -136,14 +156,14 @@ export default function OperationsImportPage() {
         {error && <div className="mb-6"><Notice tone="bad" title="That didn't work">{error}</Notice></div>}
 
         {result ? (
-          <ResultView kind={kind} r={result} onAnother={() => reset()} />
+          <ResultView kind={kind} r={result} onAnother={(k) => reset(k)} />
         ) : (
           <>
             {/* 1. File */}
             <section className="mb-10">
               <SectionLabel>What are you importing?</SectionLabel>
-              <div className="grid sm:grid-cols-2 gap-3 mb-5" role="radiogroup" aria-label="What the file contains">
-                {(["purchase_lines", "orders"] as OpsKind[]).map((k) => (
+              <div className="grid sm:grid-cols-2 gap-3 mb-3" role="radiogroup" aria-label="What the file contains">
+                {KIND_ORDER.map((k, i) => (
                   <button
                     key={k}
                     type="button"
@@ -153,11 +173,14 @@ export default function OperationsImportPage() {
                     className="text-left rounded-[8px] px-4 py-3"
                     style={{ background: "#fff", border: `1px solid ${kind === k ? C.ink : C.line}` }}
                   >
-                    <p className="text-[14px]" style={{ color: C.ink, fontWeight: 500 }}>{KIND_TEXT[k].title}</p>
+                    <p className="text-[14px]" style={{ color: C.ink, fontWeight: 500 }}><span style={{ color: C.faint }}>{i + 1}.</span> {KIND_TEXT[k].title}</p>
                     <p className="text-[12.5px] mt-0.5" style={{ color: C.muted }}>{KIND_TEXT[k].what}</p>
                   </button>
                 ))}
               </div>
+              <a href={KIND_TEXT[kind].template} download className="inline-flex items-center gap-1.5 text-[12.5px] mb-5 hover-dim" style={{ color: C.accent }}>
+                <FiDownload size={12} /> Download a sample {KIND_TEXT[kind].title.toLowerCase()} CSV
+              </a>
               <label
                 className="flex items-center gap-3 rounded-[8px] px-4 py-4 cursor-pointer"
                 style={{ background: "#fff", border: `1px dashed ${C.line}` }}
@@ -227,8 +250,54 @@ export default function OperationsImportPage() {
             )}
           </>
         )}
+        <ImportHistory />
       </div>
     </DashboardLayout>
+  );
+}
+
+function ImportHistory() {
+  const q = useQuery({ queryKey: ["ops-imports"], queryFn: decisionsApi.opsImports, staleTime: 10_000 });
+  const rows = q.data?.imports || [];
+  if (!rows.length) return null;
+  return (
+    <section className="mt-4 mb-10">
+      <SectionLabel>Recent imports</SectionLabel>
+      <div className="rounded-[8px] overflow-x-auto" style={{ border: `1px solid ${C.line}`, background: "#fff" }}>
+        <table className="w-full text-[12.5px] tabular-nums">
+          <thead>
+            <tr style={{ background: C.wash, color: C.muted }}>
+              <th className="text-left font-normal px-3 py-2">When</th>
+              <th className="text-left font-normal px-3 py-2">What</th>
+              <th className="text-left font-normal px-3 py-2">File</th>
+              <th className="text-left font-normal px-3 py-2">From</th>
+              <th className="text-right font-normal px-3 py-2">Rows</th>
+              <th className="text-right font-normal px-3 py-2">Accepted</th>
+              <th className="text-right font-normal px-3 py-2">Rejected</th>
+              <th className="text-left font-normal px-3 py-2">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((b) => (
+              <tr key={b.id} style={{ borderTop: `1px solid ${C.line}`, color: C.body }}>
+                <td className="px-3 py-1.5">{b.completed_at ? new Date(b.completed_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—"}</td>
+                <td className="px-3 py-1.5">{KIND_TEXT[b.kind]?.title || b.kind}</td>
+                <td className="px-3 py-1.5">{b.filename}</td>
+                <td className="px-3 py-1.5">{b.sourceSystem || "—"}</td>
+                <td className="px-3 py-1.5 text-right">{b.rows_total ?? "—"}</td>
+                <td className="px-3 py-1.5 text-right">{b.rows_accepted ?? "—"}</td>
+                <td className="px-3 py-1.5 text-right">{b.rows_rejected ?? "—"}</td>
+                <td className="px-3 py-1.5">
+                  <Pill tone={b.status === "COMPLETED" ? "good" : b.status === "FAILED" ? "bad" : "neutral"} title={b.error_message || undefined}>
+                    {b.status === "COMPLETED" ? "Imported" : b.status === "FAILED" ? "Failed, nothing saved" : b.status.toLowerCase()}
+                  </Pill>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
@@ -260,13 +329,13 @@ function MappingSection({ kind, p, opts, setOpts }: { kind: OpsKind; p: OpsPrevi
           />
           <span style={{ color: C.faint }}>Lines are matched to earlier imports from the same system, so use the same name each time.</span>
         </label>
-        <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
+        {(kind === "orders" || kind === "purchase_lines") && <label className="flex flex-col gap-1 text-[12.5px]" style={{ color: C.muted }}>
           Currency when a row has none
           <select value={opts.currency || ""} onChange={(e) => setOpts({ ...opts, currency: e.target.value || null })} className="text-[14px] rounded-md px-3 py-2" style={selectStyle}>
             <option value="">None: leave the value uncounted</option>
             {["INR", "USD", "EUR", "GBP", "AED", "SGD"].map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
-        </label>
+        </label>}
       </div>
 
       {kind === "purchase_lines" && (
@@ -305,12 +374,14 @@ function MappingSection({ kind, p, opts, setOpts }: { kind: OpsKind; p: OpsPrevi
               return (
                 <tr key={field} style={{ borderTop: `1px solid ${C.line}` }}>
                   <td className="px-4 py-2 align-top" style={{ color: C.ink }}>
-                    {LABEL[field]}{required ? <span style={{ color: C.bad }}> *</span> : null}
-                    {(field === "sku" || field === "product_name") && <span className="block text-[11.5px]" style={{ color: C.faint }}>SKU or name: at least one</span>}
+                    {label(kind, field)}{required ? <span style={{ color: C.bad }}> *</span> : null}
+                    {(kind === "orders" || kind === "purchase_lines") && (field === "sku" || field === "product_name") && <span className="block text-[11.5px]" style={{ color: C.faint }}>SKU or name: at least one</span>}
+                    {kind === "components" && /_sku$|_name$/.test(field) && <span className="block text-[11.5px]" style={{ color: C.faint }}>SKU or name: at least one</span>}
+                    {HELP[field] && <span className="block text-[11.5px]" style={{ color: C.faint }}>{HELP[field]}</span>}
                   </td>
                   <td className="px-4 py-2 align-top">
                     <select
-                      aria-label={LABEL[field]}
+                      aria-label={label(kind, field)}
                       value={header}
                       onChange={(e) => setOpts({ ...opts, mapping: { ...opts.mapping, [field]: e.target.value || null } })}
                       className="text-[13px] rounded-md px-2 py-1.5 w-full max-w-[240px]"
@@ -413,7 +484,36 @@ function RowsSection({ kind, s }: { kind: OpsKind; s: OpsSummary }) {
         <Stat label="Conflicts" value={c.conflicts} tone={c.conflicts ? "warn" : undefined} sub={c.closedSkipped ? `${c.closedSkipped} closed lines skipped` : undefined} />
       </div>
 
-      {s.sample.length > 0 && (
+      {s.sample.length > 0 && (kind === "products" || kind === "components") && (
+        <div className="rounded-[8px] overflow-x-auto mb-5" style={{ border: `1px solid ${C.line}`, background: "#fff" }}>
+          <table className="w-full text-[12.5px] tabular-nums">
+            <thead>
+              <tr style={{ background: C.wash, color: C.muted }}>
+                <th className="text-left font-normal px-3 py-2">Row</th>
+                <th className="text-left font-normal px-3 py-2">{kind === "products" ? "SKU" : "Finished product"}</th>
+                <th className="text-left font-normal px-3 py-2">{kind === "products" ? "Product" : "Component"}</th>
+                <th className="text-right font-normal px-3 py-2">{kind === "products" ? "Stock on hand" : "Per finished unit"}</th>
+                {kind === "products" && <th className="text-right font-normal px-3 py-2">Selling price</th>}
+                <th className="text-left font-normal px-3 py-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {s.sample.map((r) => (
+                <tr key={r.row} style={{ borderTop: `1px solid ${C.line}`, color: C.body }}>
+                  <td className="px-3 py-1.5" style={{ color: C.faint }}>{r.row}</td>
+                  <td className="px-3 py-1.5">{kind === "products" ? (r.sku || <span style={{ color: C.faint }}>none</span>) : r.party}</td>
+                  <td className="px-3 py-1.5">{r.product}</td>
+                  <td className="px-3 py-1.5 text-right">{r.quantity ?? <span style={{ color: C.faint }}>unchanged</span>}</td>
+                  {kind === "products" && <td className="px-3 py-1.5 text-right">{r.price ?? <span style={{ color: C.faint }}>not given</span>}</td>}
+                  <td className="px-3 py-1.5"><Pill tone={r.action === "INSERT" ? "accent" : "neutral"}>{r.action === "INSERT" ? "New" : "Update"}</Pill></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {c.new + c.updated > s.sample.length && <p className="text-[12px] px-3 py-2" style={{ color: C.faint }}>First {s.sample.length} of {c.new + c.updated} shown.</p>}
+        </div>
+      )}
+      {s.sample.length > 0 && (kind === "orders" || kind === "purchase_lines") && (
         <div className="rounded-[8px] overflow-x-auto mb-5" style={{ border: `1px solid ${C.line}`, background: "#fff" }}>
           <table className="w-full text-[12.5px] tabular-nums">
             <thead>
@@ -494,16 +594,17 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-function ResultView({ kind, r, onAnother }: { kind: OpsKind; r: OpsCommit; onAnother: () => void }) {
+function ResultView({ kind, r, onAnother }: { kind: OpsKind; r: OpsCommit; onAnother: (next?: OpsKind) => void }) {
+  const next = KIND_ORDER[KIND_ORDER.indexOf(kind) + 1];
   const s = r.summary;
   const decisions = r.supplierDelayDecisions || [];
   const entities = s?.entities;
   const lines = useMemo(() => {
     if (!s) return [];
     const out = [`${s.counts.new} new and ${s.counts.updated} updated ${KIND_TEXT[kind].noun}${s.counts.new + s.counts.updated === 1 ? "" : "s"} saved.`];
-    if (entities && (entities.customersCreated || entities.suppliersCreated)) {
-      out.push(kind === "orders" ? `${entities.customersCreated} new customer${entities.customersCreated === 1 ? "" : "s"} added.` : `${entities.suppliersCreated} new supplier${entities.suppliersCreated === 1 ? "" : "s"} added.`);
-    }
+    if (kind === "orders" && entities?.customersCreated) out.push(`${entities.customersCreated} new customer${entities.customersCreated === 1 ? "" : "s"} added.`);
+    if (kind === "purchase_lines" && entities?.suppliersCreated) out.push(`${entities.suppliersCreated} new supplier${entities.suppliersCreated === 1 ? "" : "s"} added.`);
+    if (kind === "products" && entities?.openingStockRecorded) out.push(`Opening stock recorded for ${entities.openingStockRecorded} product${entities.openingStockRecorded === 1 ? "" : "s"}.`);
     if (s.counts.rejected) out.push(`${s.counts.rejected} rejected row${s.counts.rejected === 1 ? " was" : "s were"} left out.`);
     return out;
   }, [s, kind, entities]);
@@ -533,8 +634,10 @@ function ResultView({ kind, r, onAnother }: { kind: OpsKind; r: OpsCommit; onAno
         </div>
       )}
       <div className="flex flex-wrap gap-3 mt-6">
-        <Link href={kind === "orders" ? "/decisions/open-orders" : "/decisions/shipments"}><Button variant="secondary" size="sm">{kind === "orders" ? "Review open orders" : "Review inbound shipments"}</Button></Link>
-        <Button variant="ghost" size="sm" onClick={onAnother}>Import another file</Button>
+        {next && <Button size="sm" onClick={() => onAnother(next)}>Next: {KIND_TEXT[next].title.toLowerCase()}</Button>}
+        {kind === "orders" && <Link href="/decisions/open-orders"><Button variant="secondary" size="sm">Review open orders</Button></Link>}
+        {(kind === "orders" || kind === "purchase_lines") && <Link href="/decisions/shipments"><Button variant="secondary" size="sm">Review inbound shipments</Button></Link>}
+        <Button variant="ghost" size="sm" onClick={() => onAnother()}>Import another file</Button>
       </div>
     </section>
   );

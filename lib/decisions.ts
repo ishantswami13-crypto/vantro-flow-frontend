@@ -319,11 +319,12 @@ export interface ReportDelayResponse {
 // Quantities and money arrive as exact decimal strings. Display only; never
 // do arithmetic on them that is written back.
 
-export type OpsKind = 'orders' | 'purchase_lines';
+export type OpsKind = 'products' | 'components' | 'orders' | 'purchase_lines';
 export type OpsField =
   | 'customer_name' | 'customer_ref' | 'order_ref' | 'line_ref' | 'record_id' | 'product_name' | 'sku' | 'quantity'
   | 'outstanding_quantity' | 'unit_price' | 'currency' | 'order_date' | 'promised_date' | 'status'
-  | 'supplier_name' | 'supplier_ref' | 'supplier_tax_id' | 'po_ref' | 'received_quantity' | 'expected_date' | 'purchase_date' | 'unit_cost';
+  | 'supplier_name' | 'supplier_ref' | 'supplier_tax_id' | 'po_ref' | 'received_quantity' | 'expected_date' | 'purchase_date' | 'unit_cost'
+  | 'on_hand' | 'unit' | 'category' | 'finished_sku' | 'finished_name' | 'component_sku' | 'component_name' | 'quantity_per_unit';
 
 /** A product question the owner answers: link to a product id, import unlinked, or skip the rows. */
 export type ReviewChoice = string | 'UNLINKED' | 'SKIP';
@@ -356,7 +357,10 @@ export interface OpsSummary {
     price: string | null; currency: string | null; dueDate: string | null; status: string | null;
   }[];
   notInThisFile: number;
-  entities?: { customersCreated: number; suppliersCreated: number; documentsCreated: number; productSupplierLinks: number };
+  entities?: {
+    customersCreated?: number; suppliersCreated?: number; documentsCreated?: number; productSupplierLinks?: number;
+    productsCreated?: number; productsUpdated?: number; openingStockRecorded?: number; componentLinks?: number;
+  };
 }
 
 export interface OpsPreview {

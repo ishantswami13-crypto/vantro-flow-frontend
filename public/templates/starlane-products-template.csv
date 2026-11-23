@@ -1,0 +1,4 @@
+SKU,Item Name,Unit,Category,Stock On Hand,Selling Price
+MTR-1HP,Motor 1HP (example),pcs,component,4,
+PMP-A1,Pump A1 (example),pcs,finished,0,9000
+VLV-25,Valve 25mm (example),pcs,resale,40,400
