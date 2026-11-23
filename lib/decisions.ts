@@ -119,6 +119,7 @@ export interface Decision extends Omit<DecisionListItem, 'recommendation'> {
   modelVersions?: Record<string, string>;
   definitions?: Record<string, unknown>;
   resolutionReason?: string | null;
+  resolvedAt?: string | null;
 }
 
 export interface DecisionEvent {
@@ -175,6 +176,25 @@ export interface DecisionDetail {
   events: DecisionEvent[];
   pilotMode: 'SHADOW' | 'LIVE';
   externalSendEnabled: boolean;
+  /** Which decision this replaced / was replaced by, and whether it is current. */
+  lineage?: { supersedes: string | null; supersededBy: string | null; current: boolean };
+  /** Customer-update drafts this decision prepared and what each is now. */
+  notices?: DecisionNotice[];
+}
+
+export interface DecisionNotice {
+  id: string;
+  title: string;
+  status: string;
+  state: 'AWAITING_APPROVAL' | 'APPROVED_NOT_SENT' | 'WITHDRAWN' | 'NEEDS_REVIEW' | 'OUT_OF_STARLANE' | 'DISCARDED' | string;
+  blockReason: string | null;
+  message: string | null;
+  orderLineId: string | null;
+  neededBy: string | null;
+  revisedDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  approvedAt: string | null;
 }
 
 export interface HealthDimension { key: string; label: string; status: string; detail: string }
@@ -197,7 +217,7 @@ export interface TodayResponse {
 
 export interface DiscoverResponse {
   status: string;
-  discovered: number; revised: number; reobserved: number; resolved: number;
+  discovered: number; revised: number; reobserved: number; resolved: number; superseded?: number;
   watched: { kind: string; customer?: string; reason: string }[];
   degraded: { detector: string; error: string }[];
   durationMs: number;
@@ -663,8 +683,8 @@ export const STATUS_LABEL: Record<string, string> = {
   VERIFIED: 'Verified',
   REJECTED: 'Rejected',
   EXPIRED: 'Expired',
-  RESOLVED: 'Resolved on its own',
-  SUPERSEDED: 'Superseded',
+  RESOLVED: 'No longer applies',
+  SUPERSEDED: 'Replaced by a newer decision',
 };
 
 export const BAND_LABEL: Record<string, string> = {
