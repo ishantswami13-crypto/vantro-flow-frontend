@@ -57,6 +57,8 @@ export default function DecisionsPage() {
           <h1 className="hv-title" style={{ color: "#0F0E0D", fontSize: 37, lineHeight: 1.08, letterSpacing: "-0.012em", fontFamily: "var(--serif, 'Newsreader', Georgia, serif)", fontWeight: 400 }}>Decisions</h1>
           <div className="flex items-center gap-3">
             <Link href="/decisions/shipments" className="text-[13px] hover-dim" style={{ color: C.muted }}>Inbound shipments</Link>
+            <Link href="/decisions/open-orders" className="text-[13px] hover-dim" style={{ color: C.muted }}>Open orders</Link>
+            <Link href="/decisions/operations-import" className="text-[13px] hover-dim" style={{ color: C.muted }}>Import orders &amp; POs</Link>
             <Link href="/decisions/import" className="text-[13px] hover-dim" style={{ color: C.muted }}>Bring data</Link>
             <Link href="/decisions/proof" className="text-[13px] hover-dim" style={{ color: C.muted }}>Track record</Link>
             <Button variant="secondary" size="sm" loading={discover.isPending} icon={<FiRefreshCw size={13} />} onClick={() => discover.mutate()}>

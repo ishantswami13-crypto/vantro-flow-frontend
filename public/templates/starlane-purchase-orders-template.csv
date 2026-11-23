@@ -1,0 +1,3 @@
+PO No,Line,Vendor,GSTIN,Item Code,Item Name,Ordered Qty,Received Qty,Expected Date,PO Date,Rate,Currency,Status
+PO-901,1,Volt Motors (example),,MTR-1HP,Motor 1HP (example),50,10,2026-12-15,2026-11-01,4200,INR,Open
+PO-905,1,Ferro Castings (example),,IMP-SS,Impeller SS (example),50,0,2026-12-30,2026-11-10,800,INR,Open
